@@ -5,11 +5,11 @@ for passing it to the prediction method of computer vision models.
 import os
 from typing import Callable, Tuple
 
+import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
 
-from fedot_ind.core.architecture.settings.computational import backend_methods as np
 
 IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp",
                   ".pgm", ".tif", ".tiff", ".webp")
