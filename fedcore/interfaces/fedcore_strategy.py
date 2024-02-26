@@ -3,6 +3,8 @@ from typing import Optional
 from fedot.core.data.data import InputData, OutputData
 from fedot.core.operations.evaluation.evaluation_interfaces import EvaluationStrategy
 from fedot.core.operations.operation_parameters import OperationParameters
+from fedot.core.repository.dataset_types import DataTypesEnum
+
 from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS
 
 
@@ -16,18 +18,34 @@ class FedcorePruningStrategy(EvaluationStrategy):
             raise ValueError(
                 f'Impossible to obtain custom preprocessing strategy for {operation_type}')
 
+    def _convert_to_output(self, prediction, predict_data: InputData,
+                           output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
+        output_data = OutputData(idx=predict_data.idx,
+                                 features=predict_data.features,
+                                 predict=prediction,
+                                 task=predict_data.task,
+                                 target=predict_data.target,
+                                 data_type=output_data_type,
+                                 supplementary_data=predict_data.supplementary_data)
+        return output_data
+
     def __init__(self, operation_type: str, params: Optional[OperationParameters] = None):
         super().__init__(operation_type, params)
-        self.operation_impl = self._convert_to_operation(operation_type)
+        self.operation_impl = self._convert_to_operation(operation_type)(self.params_for_fit)
 
     def fit(self, train_data: InputData):
-        return self.operation_impl.fit(train_data)
+        self.operation_impl.fit(train_data)
+        return self.operation_impl
 
     def predict(self, trained_operation, predict_data: InputData, output_mode: str = 'default') -> OutputData:
-        return self.operation_impl.predict(trained_operation, predict_data, output_mode=output_mode)
+        pruned_model = trained_operation.predict(predict_data)
+        converted = self._convert_to_output(pruned_model, predict_data)
+        return converted
 
     def predict_for_fit(self, trained_operation, predict_data: InputData, output_mode: str = 'default') -> OutputData:
-        return self.operation_impl.predict_for_fit(trained_operation, predict_data, output_mode=output_mode)
+        pruned_model = trained_operation.predict_for_fit(predict_data)
+        converted = self._convert_to_output(pruned_model, predict_data)
+        return converted
 
 
 class FedcoreQuantisationStrategy(FedcorePruningStrategy):
@@ -36,4 +54,3 @@ class FedcoreQuantisationStrategy(FedcorePruningStrategy):
     def __init__(self, operation_type: str, params: Optional[OperationParameters] = None):
         super().__init__(operation_type, params)
         self.operation_impl = self._convert_to_operation(operation_type)
-

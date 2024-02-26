@@ -1,17 +1,14 @@
 from enum import Enum
-import torch_pruning as tp
+
+
+from fedcore.algorithm.pruning.pruners import BasePruner
+#from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
 from fedcore.models.backbone.resnet import *
 
 class AtomizedModel(Enum):
-    PRUNER_MODELS = {'magnitude_pruner': tp.pruner.MagnitudePruner,
-                     'group_norm_pruner': tp.pruner.GroupNormPruner,
-                     'batch_norm_pruner': tp.pruner.BNScalePruner,
-                     'growing_reg_pruner': tp.pruner.GrowingRegPruner}
+    PRUNER_MODELS = {'pruner_model':BasePruner}
 
-    QUANTISATION_MODELS = {'magnitude_pruner': tp.pruner.MagnitudePruner,
-                           'group_norm_pruner': tp.pruner.GroupNormPruner,
-                           'batch_norm_pruner': tp.pruner.BNScalePruner,
-                           'growing_reg_pruner': tp.pruner.GrowingRegPruner}
+    QUANTISATION_MODELS = {'quantisation_model':BasePruner}
 
     CLF_MODELS = {
         'ResNet18': resnet18,

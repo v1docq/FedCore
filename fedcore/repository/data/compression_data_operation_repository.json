@@ -15,121 +15,7 @@
 			],
 			"description": "Implementations of data sources in multi-modal pipelines"
 		},
-		"custom_preprocessing": {
-			"tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.clustering, TaskTypesEnum.ts_forecasting]",
-			"input_type": "[DataTypesEnum.table, DataTypesEnum.ts]",
-			"output_type": "[DataTypesEnum.table, DataTypesEnum.ts]",
-			"accepted_node_types": [
-				"any"
-			],
-			"forbidden_node_types": "[]",
-			"strategies": [
-				"fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy",
-				"IndustrialCustomPreprocessingStrategy"
-			],
-			"tags": [
-				"sklearn"
-			],
-			"description": "Implementations of the preprocessing from scikit-learn framework upg"
-		},
-		"sklearn_categorical": {
-			"tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.clustering]",
-			"input_type": "[DataTypesEnum.table]",
-			"output_type": "[DataTypesEnum.table]",
-			"accepted_node_types": ["primary"],
-			"forbidden_node_types": "[]",
-			"strategies": ["fedot.core.operations.evaluation.common_preprocessing", "FedotPreprocessingStrategy"],
-			"tags": ["sklearn"],
-			"description": "Implementations of OneHot encoding (etc.) from scikit-learn framework"},
-		"dimension_transformation": {
-			"tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.clustering, TaskTypesEnum.ts_forecasting]",
-			"input_type": "[DataTypesEnum.table]",
-			"output_type": "[DataTypesEnum.table]",
-			"accepted_node_types": ["any"],
-			"forbidden_node_types": "[]",
-			"strategies": ["fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy", "IndustrialCustomPreprocessingStrategy"],
-			"tags": ["sklearn"],
-			"description": "Implementations of the dimensionality transformation operations (e.g. PCA) from scikit-learn framework"},
-		"regression_preprocessing": {
-			"tasks": "[TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
-			"input_type": "[DataTypesEnum.table]",
-			"output_type": "[DataTypesEnum.table]",
-			"accepted_node_types": ["any"],
-			"forbidden_node_types": "[]",
-			"strategies": ["fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy", "IndustrialClassificationPreprocessingStrategy"],
-			"tags": ["sklearn"],
-			"description": "Implementations of the feature selection operations and robust data filtering from scikit-learn framework for regression task"},
-		"classification_preprocessing": {
-			"tasks": "[TaskTypesEnum.classification]",
-			"input_type": "[DataTypesEnum.table]",
-			"output_type": "[DataTypesEnum.table]",
-			"accepted_node_types": ["any"],
-			"forbidden_node_types": "[]",
-			"strategies": ["fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy", "IndustrialClassificationPreprocessingStrategy"],
-			"tags": ["sklearn"],
-			"description": "Implementations of the feature selection operations and robust data filtering from scikit-learn framework for classification task"},
-		"custom_time_series_transformation": {
-			"tasks": "[TaskTypesEnum.ts_forecasting]",
-			"input_type": "[DataTypesEnum.ts, DataTypesEnum.multi_ts]",
-			"output_type": "[DataTypesEnum.ts, DataTypesEnum.table]",
-			"accepted_node_types": ["any"],
-			"forbidden_node_types": "[]",
-			"strategies": ["fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy", "IndustrialForecastingPreprocessingStrategy"],
-			"tags": ["time_series"],
-			"description": "Preprocessing for converting uni-variate time-series into table form or transform it"},
-		"text_preprocessing": {
-			"tasks": "[TaskTypesEnum.classification]",
-			"input_type": "[DataTypesEnum.text]",
-			"output_type": "[DataTypesEnum.text, DataTypesEnum.table]",
-			"accepted_node_types": [
-				"any"
-			],
-			"forbidden_node_types": "[]",
-			"strategies": [
-				"fedot.core.operations.evaluation.text",
-				"FedotTextPreprocessingStrategy"
-			],
-			"tags": [
-				"text",
-				"non-default"
-			],
-			"description": "Preprocessing operations for text classification"
-		},
-		"text_preprocessing_sklearn": {
-			"description": "Text preprocessing sklearn",
-			"forbidden_node_types": "[]",
-			"input_type": "[DataTypesEnum.text]",
-			"output_type": "[DataTypesEnum.table]",
-			"strategies": [
-				"fedot.core.operations.evaluation.text",
-				"SkLearnTextVectorizeStrategy"
-			],
-			"tags": [
-				"text",
-				"nlp",
-				"non-default"
-			],
-			"tasks": "[TaskTypesEnum.classification]"
-		},
-		"text_classification_gensim": {
-			"description": "Text classification",
-			"forbidden_node_types": [
-				"secondary"
-			],
-			"input_type": "[DataTypesEnum.text]",
-			"output_type": "[DataTypesEnum.table]",
-			"strategies": [
-				"fedot.core.operations.evaluation.text",
-				"GensimTextVectorizeStrategy"
-			],
-			"tags": [
-				"text",
-				"nlp",
-				"non-default"
-			],
-			"tasks": "[TaskTypesEnum.classification]"
-		},
-    "industrial_preprocessing": {
+    "fedcore_pruning": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
@@ -138,14 +24,14 @@
       ],
       "forbidden_node_types": "[]",
       "strategies": [
-        "fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy",
-        "IndustrialPreprocessingStrategy"
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcorePruningStrategy"
       ],
       "tags": [
       ],
       "description": "Implementations of industrial preprocessing operations"
     },
-    "industrial_preprocessing_forecasting": {
+    "fedcore_quantisation": {
       "tasks": "[TaskTypesEnum.ts_forecasting]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
@@ -154,18 +40,26 @@
       ],
       "forbidden_node_types": "[]",
       "strategies": [
-        "fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy",
-        "IndustrialPreprocessingStrategy"
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreQuantisationStrategy"
       ],
       "tags": [
       ],
       "description": "Implementations of industrial preprocessing operations"
     }
   },
-    "data_source_img": {
-			"meta": "data_sources",
-			"input_type": "[DataTypesEnum.image]",
-			"output_type": "[DataTypesEnum.image]",
-			"tags": ["data_source_img", "nans-ignore", "categorical-ignore", "non_applicable_for_ts"]
-	}
+  "operations": {
+    "pruner_model": {
+      "meta": "fedcore_pruning",
+      "presets": [
+      ],
+      "tags": ["non-default"]
+    },
+    "quantisation_model": {
+      "meta": "fedcore_quantisation",
+      "presets": [
+      ],
+      "tags": ["non-default"]
+    }
+  }
 }
