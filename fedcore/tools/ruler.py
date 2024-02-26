@@ -1,9 +1,11 @@
+import time
+
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-import time
 from tqdm import tqdm
 
+from fedcore.architecture.dataset.dummy_clf import DummyDatasetCLF
 from fedcore.models.backbone.resnet import ResNet
 
 
@@ -93,25 +95,9 @@ class PerformanceEvaluator:
         print(f"Model size: {self.model_size} MB")
 
 
-class DummyDataset(torch.utils.data.Dataset):
-    def __init__(self, num_samples, channels=1):
-        self.num_samples = num_samples
-        self.data = torch.randn(num_samples, channels, 224, 224)
-        self.targets = torch.randint(0, 10, (num_samples,))
-        self.classes = list(range(10))
-
-    def __len__(self):
-        return self.num_samples
-
-    def __getitem__(self, idx):
-        return self.data[idx], self.targets[idx]
-
-
 if __name__ == "__main__":
     # Example usage:
     # load MNIST dataset
-    from torchvision.datasets import MNIST
-    from torchvision.transforms import ToTensor
 
     # data_set = MNIST(
     #     root='data',
@@ -119,7 +105,7 @@ if __name__ == "__main__":
     #     download=True,
     #     transform=ToTensor()
     # )
-    data_set = DummyDataset(num_samples=1000)
+    data_set = DummyDatasetCLF(num_samples=1000)
     # define model from dataset configuration
     resnet = ResNet(input_dim=1,
                     output_dim=len(data_set.classes),

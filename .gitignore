@@ -5,6 +5,7 @@ __pycache__/
 
 # IntelliJ project files
 /.idea
+.idea
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -98,3 +99,4 @@ env.bak/
 venv.bak/
 
 .local/
+/.idea/
