@@ -4,12 +4,8 @@ from copy import deepcopy
 import numpy as np
 from fedot.core.data.data import InputData
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-import torch_pruning as tp
 from typing import Optional
-import torch
 from fedot.core.operations.operation_parameters import OperationParameters
-from torchvision.models import resnet18
-from fedcore.models.model_repository import PRUNER_MODELS
 from fedcore.neural_compressor import PostTrainingQuantConfig
 from fedcore.neural_compressor import quantization
 

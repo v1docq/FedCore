@@ -7,8 +7,8 @@ import torch_pruning as tp
 from typing import Optional
 import torch
 from fedot.core.operations.operation_parameters import OperationParameters
-from torchvision.models import resnet18
-from fedcore.models.model_repository import PRUNER_MODELS
+
+from fedcore.repository.model_repository import PRUNER_MODELS
 
 
 class BasePruner(BaseCompressionModel):

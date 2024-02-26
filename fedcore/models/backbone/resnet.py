@@ -2,7 +2,6 @@ from typing import Any
 import torch
 from torch import nn
 from torchvision.models import ResNet, resnet101, resnet152, resnet18, resnet34, resnet50
-
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.layers import PrunedResNet, Bottleneck, BasicBlock
 
@@ -74,36 +73,6 @@ def pruned_resnet101(**kwargs: Any) -> PrunedResNet:
 def pruned_resnet152(**kwargs: Any) -> PrunedResNet:
     """Pruned ResNet-152."""
     return PrunedResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
-
-
-CLF_MODELS = {
-    'ResNet18': resnet18,
-    'ResNet34': resnet34,
-    'ResNet50': resnet50,
-    'ResNet101': resnet101,
-    'ResNet152': resnet152,
-    'ResNet18one': resnet18_one_channel,
-    'ResNet34one': resnet34_one_channel,
-    'ResNet50one': resnet50_one_channel,
-    'ResNet101one': resnet101_one_channel,
-    'ResNet152one': resnet152_one_channel,
-}
-
-CLF_MODELS_ONE_CHANNEL = {
-    'ResNet18one': resnet18_one_channel,
-    'ResNet34one': resnet34_one_channel,
-    'ResNet50one': resnet50_one_channel,
-    'ResNet101one': resnet101_one_channel,
-    'ResNet152one': resnet152_one_channel,
-}
-
-PRUNED_MODELS = {
-    "ResNet18": pruned_resnet18,
-    "ResNet34": pruned_resnet34,
-    "ResNet50": pruned_resnet50,
-    "ResNet101": pruned_resnet101,
-    "ResNet152": pruned_resnet152,
-}
 
 
 class ResNet:
