@@ -1,6 +1,8 @@
 import logging
 from typing import Union
 from fedot.core.data.data import InputData
+from fedot.core.repository.dataset_types import DataTypesEnum
+
 from fedcore.repository.constanst_repository import FEDOT_TASK
 
 
@@ -44,8 +46,9 @@ class DataCheck:
 
         self.input_data = InputData(features=example_inputs,
                                     idx=None,
+                                    features_names = example_inputs.num_classes,
                                     task=FEDOT_TASK['classification'],
-                                    data_type=None,
+                                    data_type=DataTypesEnum.image,
                                     target=nn_model
                                     )
         self.input_data.supplementary_data.is_auto_preprocessed = True

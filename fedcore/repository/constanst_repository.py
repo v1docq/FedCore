@@ -144,7 +144,8 @@ class ModelCompressionConstant(Enum):
     PRUNERS = {'magnitude_pruner': tp.pruner.MagnitudePruner,
                'group_norm_pruner': tp.pruner.GroupNormPruner,
                'batch_norm_pruner': tp.pruner.BNScalePruner,
-               'growing_reg_pruner': tp.pruner.GrowingRegPruner}
+               'growing_reg_pruner': tp.pruner.GrowingRegPruner,
+               'meta_pruner': tp.pruner.MetaPruner}
 
     PRUNING_IMPORTANCE = {"MagnitudeImportance": tp.importance.MagnitudeImportance,
                           "TaylorImportance": tp.importance.TaylorImportance,
@@ -156,6 +157,7 @@ class ModelCompressionConstant(Enum):
     PRUNING_NORMS = [0, 1, 2]
     PRUNING_REDUCTION = ["sum", "mean", "max", 'prod', 'first']
     PRUNING_NORMALIZE = ["sum", "mean", "max", 'gaussian']
+
 
 class TorchLossesConstant(Enum):
     CROSS_ENTROPY = nn.CrossEntropyLoss
