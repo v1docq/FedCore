@@ -11,8 +11,8 @@ from torch import nn
 from golem.core.tuning.simultaneous import SimultaneousTuner
 from golem.core.tuning.sequential import SequentialTuner
 
+
 class FedotOperationConstant(Enum):
-    EXCLUDED_OPERATION = ['fast_ica']
     FEDOT_TASK = {'classification': Task(TaskTypesEnum.classification),
                   'regression': Task(TaskTypesEnum.regression),
                   'ts_forecasting': Task(TaskTypesEnum.ts_forecasting,
@@ -117,14 +117,14 @@ class FedotOperationConstant(Enum):
     ]
 
     FEDOT_ASSUMPTIONS = {
-        'classification': PipelineBuilder().add_node('quantile_extractor').add_node('logit'),
-        'regression': PipelineBuilder().add_node('quantile_extractor').add_node('treg'),
-        'ts_forecasting': PipelineBuilder().add_node('ssa_forecaster')
+        'pruning': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
+                                                                      'epochs': 50}),
+        'quantisation': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
+                                                                           'epochs': 50}),
     }
 
     FEDOT_ENSEMBLE_ASSUMPTIONS = {
-        'classification': PipelineBuilder().add_node('logit'),
-        'regression': PipelineBuilder().add_node('treg')
+        'pruning': PipelineBuilder().add_node('logit')
     }
 
 
@@ -142,10 +142,20 @@ class ModelCompressionConstant(Enum):
         932: 'ResNet152',
     }
     PRUNERS = {'magnitude_pruner': tp.pruner.MagnitudePruner,
-                     'group_norm_pruner': tp.pruner.GroupNormPruner,
-                     'batch_norm_pruner': tp.pruner.BNScalePruner,
-                     'growing_reg_pruner': tp.pruner.GrowingRegPruner}
+               'group_norm_pruner': tp.pruner.GroupNormPruner,
+               'batch_norm_pruner': tp.pruner.BNScalePruner,
+               'growing_reg_pruner': tp.pruner.GrowingRegPruner}
 
+    PRUNING_IMPORTANCE = {"MagnitudeImportance": tp.importance.MagnitudeImportance,
+                          "TaylorImportance": tp.importance.TaylorImportance,
+                          "HessianImportance": tp.importance.HessianImportance,
+                          "BNScaleImportance": tp.importance.BNScaleImportance,
+                          "LAMPImportance": tp.importance.LAMPImportance,
+                          "RandomImportance": tp.importance.RandomImportance,
+                          }
+    PRUNING_NORMS = [0, 1, 2]
+    PRUNING_REDUCTION = ["sum", "mean", "max", 'prod', 'first']
+    PRUNING_NORMALIZE = ["sum", "mean", "max", 'gaussian']
 
 class TorchLossesConstant(Enum):
     CROSS_ENTROPY = nn.CrossEntropyLoss
@@ -153,10 +163,8 @@ class TorchLossesConstant(Enum):
     MSE = nn.MSELoss
 
 
-
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
-EXCLUDED_OPERATION = FedotOperationConstant.EXCLUDED_OPERATION.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
 FEDOT_HEAD_ENSEMBLE = FedotOperationConstant.FEDOT_HEAD_ENSEMBLE.value
 FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
@@ -174,8 +182,11 @@ HOER_LOSS = ModelCompressionConstant.HOER_LOSS.value
 ORTOGONAL_LOSS = ModelCompressionConstant.ORTOGONAL_LOSS.value
 MODELS_FROM_LENGTH = ModelCompressionConstant.MODELS_FROM_LENGTH.value
 PRUNERS = ModelCompressionConstant.PRUNERS.value
+PRUNING_IMPORTANCE = ModelCompressionConstant.PRUNING_IMPORTANCE.value
+PRUNING_NORMS = ModelCompressionConstant.PRUNING_NORMS.value
+PRUNING_REDUCTION = ModelCompressionConstant.PRUNING_REDUCTION.value
+PRUNING_NORMALIZE = ModelCompressionConstant.PRUNING_NORMALIZE.value
 
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
-
