@@ -1,8 +1,9 @@
-from typing import Any, List, Optional, Type, Union, Dict
+from typing import Dict, List, Optional, Type, Union
 
 import torch
 import torch.nn as nn
 from torch import Tensor
+from torch.nn import functional as F
 from torchvision.models.resnet import conv1x1, conv3x3
 
 
@@ -10,10 +11,10 @@ class BasicBlock(nn.Module):
     expansion: int = 1
 
     def __init__(
-        self,
-        sizes: Dict[str, Tensor],
-        stride: int = 1,
-        downsample: Optional[nn.Module] = None,
+            self,
+            sizes: Dict[str, Tensor],
+            stride: int = 1,
+            downsample: Optional[nn.Module] = None,
     ) -> None:
         super().__init__()
         norm_layer = nn.BatchNorm2d
@@ -48,14 +49,13 @@ class BasicBlock(nn.Module):
 
 
 class Bottleneck(nn.Module):
-
     expansion: int = 4
 
     def __init__(
-        self,
-        sizes: Dict[str, Tensor],
-        stride: int = 1,
-        downsample: Optional[nn.Module] = None,
+            self,
+            sizes: Dict[str, Tensor],
+            stride: int = 1,
+            downsample: Optional[nn.Module] = None,
     ) -> None:
         super().__init__()
         norm_layer = nn.BatchNorm2d
@@ -106,10 +106,10 @@ class PrunedResNet(nn.Module):
     """
 
     def __init__(
-        self,
-        block: Type[Union[BasicBlock, Bottleneck]],
-        layers: List[int],
-        sizes: Dict,
+            self,
+            block: Type[Union[BasicBlock, Bottleneck]],
+            layers: List[int],
+            sizes: Dict,
     ) -> None:
         super().__init__()
         self.inplanes = 64
@@ -142,11 +142,11 @@ class PrunedResNet(nn.Module):
         self.fc = nn.Linear(sizes['fc'][1], sizes['fc'][0])
 
     def _make_layer(
-        self,
-        block: Type[Union[BasicBlock, Bottleneck]],
-        blocks: int,
-        sizes: Dict,
-        stride: int = 1,
+            self,
+            block: Type[Union[BasicBlock, Bottleneck]],
+            blocks: int,
+            sizes: Dict,
+            stride: int = 1,
     ) -> nn.Sequential:
         downsample = None
         if 'downsample' in sizes.keys():
@@ -184,9 +184,6 @@ class PrunedResNet(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         return self._forward_impl(x)
-
-
-
 
 
 class DoubleConv(nn.Module):
