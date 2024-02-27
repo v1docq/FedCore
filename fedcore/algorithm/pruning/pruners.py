@@ -8,7 +8,7 @@ from typing import Optional
 import torch
 from fedot.core.operations.operation_parameters import OperationParameters
 
-from fedcore.repository.constanst_repository import PRUNERS
+from fedcore.repository.constanst_repository import PRUNERS, PRUNING_IMPORTANCE
 
 
 class BasePruner(BaseCompressionModel):
@@ -21,6 +21,15 @@ class BasePruner(BaseCompressionModel):
         self.epochs = params.get('epochs', 5)
         self.pruner_name = params.get('pruner_name', 'magnitude_pruner')
         self.pruning_channels = params.get('channels_to_prune', [2])
+        self.pruning_ratio = params.get('pruning_ratio', 0.5)
+        self.importance = params.get('importance', 'MagnitudeImportance')
+        self.importance_norm = params.get('importance_norm', 2)
+        self.importance_reduction = params.get('importance_reduction', 'mean')
+        self.importance_normalize = params.get('importance_normalize', 'mean')
+        # importance criterion for parameter selections
+        self.importance = PRUNING_IMPORTANCE[self.importance](p=self.importance_norm,
+                                                              group_reduction=self.importance_reduction,
+                                                              normalizer=self.importance_normalize)
         self.pruner = None
 
     def __repr__(self):
@@ -35,20 +44,18 @@ class BasePruner(BaseCompressionModel):
                                                    example_inputs=input_data.features)
 
         # Select some channels to prune. Here we prune the channels indexed by [2, 6, 9].
-        self.pruning_group = DG.get_pruning_group(self.model.conv1, tp.prune_conv_out_channels,
+        self.pruning_group = DG.get_pruning_group(self.model.conv1,
+                                                  tp.prune_conv_out_channels,
                                                   idxs=self.pruning_channels)
 
-        # importance criterion for parameter selections
-        self.importance = tp.importance.MagnitudeImportance(p=2, group_reduction='mean')
+        # ignore some layers that should not be pruned, e.g., the final classifier layer.
+        self.ignored_layers = []
+        for m in self.model.modules():
+            if isinstance(m, torch.nn.Linear) and m.out_features == 1000:
+                self.ignored_layers.append(m)  # DO NOT prune the final classifier!
 
     def predict_for_fit(self,
                         input_data: InputData, output_mode: str = 'default') -> np.array:
-
-        # ignore some layers that should not be pruned, e.g., the final classifier layer.
-        ignored_layers = []
-        for m in self.model.modules():
-            if isinstance(m, torch.nn.Linear) and m.out_features == 1000:
-                ignored_layers.append(m)  # DO NOT prune the final classifier!
 
         # Pruner initialization
         self.pruner = PRUNERS[self.pruner_name]
@@ -58,9 +65,9 @@ class BasePruner(BaseCompressionModel):
             global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
             importance=self.importance,  # importance criterion for parameter selection
             iterative_steps=self.epochs,  # the number of iterations to achieve target ratio
-            pruning_ratio=0.5,
+            pruning_ratio=self.pruning_ratio,
             # remove 50% channels, ResNet18 = {64, 128, 256, 512} => ResNet18_Half = {32, 64, 128, 256}
-            ignored_layers=ignored_layers,
+            ignored_layers=self.ignored_layers,
         )
 
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, input_data.features)
