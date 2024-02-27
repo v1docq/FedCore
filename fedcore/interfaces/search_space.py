@@ -1,7 +1,7 @@
 from hyperopt import hp
-from fedcore.repository.constanst_repository import PRUNING_IMPORTANCE,\
-    PRUNING_NORMALIZE, PRUNING_REDUCTION, PRUNING_NORMS
 
+from fedcore.repository.constanst_repository import PRUNING_IMPORTANCE, \
+    PRUNING_NORMALIZE, PRUNING_REDUCTION, PRUNING_NORMS
 
 fedcore_search_space = {
     'pruning':
@@ -13,7 +13,10 @@ fedcore_search_space = {
                                   'sampling-scope': [PRUNING_REDUCTION]},
          'importance_normalize': {'hyperopt-dist': hp.choice,
                                   'sampling-scope': [PRUNING_NORMALIZE]},
-         'pruning_ratio': {'hyperopt-dist': hp.choice, 'sampling-scope': [[x for x in range(0.1, 1, 0.1)]]}}
+         'pruning_ratio':{
+                'hyperopt-dist': hp.uniform,
+                'sampling-scope': [0.1, 1.0],
+                'type': 'continuous'}}
 }
 
 

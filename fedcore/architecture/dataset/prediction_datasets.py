@@ -6,14 +6,72 @@ import os
 from typing import Callable, Tuple
 
 import numpy as np
+import pandas as pd
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
-
+from torchvision.io import read_image
 
 IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp",
                   ".pgm", ".tif", ".tiff", ".webp")
 
+
+class CustomDatasetForImages(Dataset):
+    # defining constructor
+    def __init__(self, annotations, directory, transform=None):
+        # directory containing the images
+        self.directory = directory
+        annotations_file_dir = os.path.join(self.directory, annotations)
+        # loading the csv with info about images
+        self.labels_mask = pd.read_csv(annotations_file_dir)
+        # transform to be applied on images
+        self.transform = transform
+        self.labels = os.listdir(os.path.join(self.directory, 'labels'))
+        self.images_path = os.path.join(self.directory, 'images')
+        self.labels_path = os.path.join(self.directory, 'labels')
+
+    # getting the length
+    def __len__(self):
+        return len(self.labels)
+
+    # getting the data items
+    def __getitem__(self, idx):
+        # defining the image path
+        image_path = os.path.join(self.images_path, self.labels[idx]).replace('.txt', '.png')
+        label_path = os.path.join(self.labels_path, self.labels[idx])
+        # reading the images
+        image = read_image(image_path)
+        image = image.to(torch.float32)
+        annotation = np.loadtxt(label_path, ndmin=2)
+        labels = annotation[:, 0] + 1
+        boxes = annotation[:, 1:]
+        c, h, w = image.shape
+        boxes *= [w, h, w, h]
+        area = boxes[:, 2] * boxes[:, 3]
+        # x centre, y centre, w, h -> x1, y1, w, h
+        boxes[:, :2] -= boxes[:, 2:] / 2
+        boxes[:, 2:] += boxes[:, :2]  # x1, y1, w, h -> x1, y1, x2, y2
+
+        # apply the transform if not set to None
+        if self.transform:
+            image = self.transform(image)
+
+        target = {
+            'boxes': torch.tensor(boxes, dtype=torch.float32),
+            'labels': torch.tensor(labels, dtype=torch.int64),
+            'image_id': torch.tensor([idx]),
+            'area': torch.tensor(area, dtype=torch.float32),
+            'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64),
+        }
+        # returning the image and label
+        return image, target
+    @property
+    def shape(self):
+        return (len(self.labels),1)
+
+    @property
+    def num_classes(self):
+        return self.labels_mask.shape[0]
 
 class PredictionNumpyDataset(Dataset):
     """Class for prediction on numpy arrays.

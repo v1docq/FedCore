@@ -4,9 +4,10 @@ import warnings
 from copy import deepcopy
 from pathlib import Path
 from typing import Union
-
+import torch
 from fedcore.api.utils.checkers_collection import DataCheck
-from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results
+from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
+from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
 import numpy as np
 import pandas as pd
 from fedot.api.main import Fedot
@@ -96,8 +97,7 @@ class FedCore(Fedot):
 
     def __init_experiment_setup(self):
         self.logger.info('Initialising experiment setup')
-        fedcore_params = [param for param in self.config_dict.keys(
-        ) if param not in list(FEDOT_API_PARAMS.keys())]
+        fedcore_params = [param for param in self.config_dict.keys() if param not in list(FEDOT_API_PARAMS.keys())]
         [self.config_dict.pop(x, None) for x in fedcore_params]
 
     def __init_solver(self):
@@ -105,6 +105,7 @@ class FedCore(Fedot):
         self.repo = FedcoreModels().setup_repository()
         self.config_dict['initial_assumption'] = self.config_dict['initial_assumption'].build()
         self.logger.info('Initialising solver')
+        self.config_dict['problem'] = 'classification'
         solver = Fedot(**self.config_dict)
         return solver
 
@@ -162,19 +163,20 @@ class FedCore(Fedot):
 
             """
 
-        train_data = DataCheck(input_data=train_data, task=self.config_dict['problem']).check_input_data()
-        tuning_params = {} if tuning_params is None else tuning_params
-        tuned_metric = 0
-        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.config_dict['problem']]
-        for tuner_name, tuner_type in FEDOT_TUNER_STRATEGY.items():
-            model_to_tune = deepcopy(self.solver.current_pipeline) if isinstance(self.solver, Fedot) \
-                else deepcopy(self.solver)
-            tuning_params['tuner'] = tuner_type
-            pipeline_tuner, model_to_tune = build_tuner(
-                self, model_to_tune, tuning_params, train_data, mode)
-            if abs(pipeline_tuner.obtained_metric) > tuned_metric:
-                tuned_metric = abs(pipeline_tuner.obtained_metric)
-                self.solver = model_to_tune
+        # train_data = DataCheck(input_data=train_data, task=self.config_dict['problem']).check_input_data()
+        # tuning_params = {} if tuning_params is None else tuning_params
+        # tuned_metric = 0
+        # tuning_params['metric'] = FEDOT_TUNING_METRICS[self.config_dict['problem']]
+        # for tuner_name, tuner_type in FEDOT_TUNER_STRATEGY.items():
+        #     model_to_tune = deepcopy(self.solver.current_pipeline) if isinstance(self.solver, Fedot) \
+        #         else deepcopy(self.solver)
+        #     tuning_params['tuner'] = tuner_type
+        #     pipeline_tuner, model_to_tune = build_tuner(
+        #         self, model_to_tune, tuning_params, train_data, mode)
+        #     if abs(pipeline_tuner.obtained_metric) > tuned_metric:
+        #         tuned_metric = abs(pipeline_tuner.obtained_metric)
+        #         self.solver = model_to_tune
+        pass
 
     def get_metrics(self,
                     target: Union[list, np.array] = None,
@@ -217,6 +219,23 @@ class FedCore(Fedot):
             for p in dir_list:
                 self.solver.append(Pipeline().load(
                     f'{path}/{p}/0_pipeline_saved'))
+
+    def load_data(self, path):
+        path_to_data = os.path.join(PROJECT_PATH, path)
+        dir_list = os.listdir(path_to_data)
+        for x in dir_list:
+            if x.__contains__('dataset'):
+                directory = os.path.join(path_to_data, x)
+            elif x.__contains__('model'):
+                model_dir = os.path.join(path_to_data, x)
+                _ = [y for y in os.listdir(model_dir) if y.__contains__('.pt')][0]
+                path_to_model = os.path.join(model_dir, _)
+            else:
+                annotations = os.path.join(path_to_data, x)
+        torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
+        torch_dataset = CustomDatasetForImages(annotations=annotations,
+                                               directory=directory)
+        return (torch_dataset, torch_model)
 
     def save_best_model(self):
         if isinstance(self.solver, Fedot):
