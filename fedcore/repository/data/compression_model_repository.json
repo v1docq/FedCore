@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "fedcore_pruning": {
+      "tasks": "[TaskTypesEnum.classification]",
+      "input_type": "[DataTypesEnum.ts]",
+      "output_type": "[DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcorePruningStrategy"
+      ],
+      "tags": [
+        "non-default"
+      ],
+      "description": "Implementations of FedCore Pruning strategy"
+    },
+    "fedcore_quantisation": {
+      "tasks": "[TaskTypesEnum.classification]",
+      "input_type": "[DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreQuantisationStrategy"
+      ],
+      "tags": [
+        "non-default"
+      ],
+      "description": "Implementations of FedCore Quantisation strategy"
+    }
+  },
+  "operations": {
+    "pruner_model": {
+      "meta": "fedcore_pruning",
+      "presets": [],
+      "tags": [
+        "non-default"
+      ]
+    },
+    "quantisation_model": {
+      "meta": "fedcore_quantisation",
+      "presets": [],
+      "tags": [
+        "non-default"
+      ]
+    }
+  }
+}

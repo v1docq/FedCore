@@ -1,0 +1,10 @@
+{
+  "pruner_model": {
+    "epochs":5,
+    "pruner_name":"magnitude_pruner"
+  },
+   "quantisation_model": {
+    "epochs":5,
+    "quantisation_config":null
+  }
+}

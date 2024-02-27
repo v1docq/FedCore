@@ -7,8 +7,8 @@ import torch_pruning as tp
 from typing import Optional
 import torch
 from fedot.core.operations.operation_parameters import OperationParameters
-from torchvision.models import resnet18
-from fedcore.models.model_repository import PRUNER_MODELS
+
+from fedcore.repository.constanst_repository import PRUNERS
 
 
 class BasePruner(BaseCompressionModel):
@@ -20,22 +20,23 @@ class BasePruner(BaseCompressionModel):
         super().__init__(params)
         self.epochs = params.get('epochs', 5)
         self.pruner_name = params.get('pruner_name', 'magnitude_pruner')
-        self.pruner = PRUNER_MODELS[self.pruner_name]
+        self.pruning_channels = params.get('channels_to_prune', [2])
+        self.pruner = None
 
     def __repr__(self):
         return self.pruner_name
 
     def fit(self,
             input_data: InputData):
-        self.model = input_data.supplementary_data['model']
+        self.model = input_data.target
         self.model_for_inference = deepcopy(self.model)
         # build dependency graph for model
         DG = tp.DependencyGraph().build_dependency(self.model,
                                                    example_inputs=input_data.features)
 
         # Select some channels to prune. Here we prune the channels indexed by [2, 6, 9].
-        pruning_idxs = input_data.supplementary_data['channels_to_prune']
-        self.pruning_group = DG.get_pruning_group(self.model.conv1, tp.prune_conv_out_channels, idxs=pruning_idxs)
+        self.pruning_group = DG.get_pruning_group(self.model.conv1, tp.prune_conv_out_channels,
+                                                  idxs=self.pruning_channels)
 
         # importance criterion for parameter selections
         self.importance = tp.importance.MagnitudeImportance(p=2, group_reduction='mean')
@@ -50,6 +51,7 @@ class BasePruner(BaseCompressionModel):
                 ignored_layers.append(m)  # DO NOT prune the final classifier!
 
         # Pruner initialization
+        self.pruner = PRUNERS[self.pruner_name]
         self.pruner = self.pruner(
             self.model,
             input_data.features,
@@ -73,4 +75,4 @@ class BasePruner(BaseCompressionModel):
 
     def predict(self,
                 input_data: InputData, output_mode: str = 'default') -> np.array:
-        return self.predict_for_fit(input_data, output_mode)
+        return self.model if self.pruner is not None else self.predict_for_fit(input_data, output_mode)

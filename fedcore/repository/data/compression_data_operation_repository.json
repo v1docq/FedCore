@@ -1,0 +1,65 @@
+{
+	"metadata":{
+		"data_sources": {
+			"tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.clustering, TaskTypesEnum.ts_forecasting]",
+			"accepted_node_types": [
+				"PrimaryNode"
+			],
+			"forbidden_node_types": "[]",
+			"strategies": [
+				"fedot_ind.core.operation.interfaces.industrial_preprocessing_strategy",
+				"IndustrialDataSourceStrategy"
+			],
+			"tags": [
+				"non-default", "data_source"
+			],
+			"description": "Implementations of data sources in multi-modal pipelines"
+		},
+    "fedcore_pruning": {
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
+      "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcorePruningStrategy"
+      ],
+      "tags": [
+      ],
+      "description": "Implementations of industrial preprocessing operations"
+    },
+    "fedcore_quantisation": {
+      "tasks": "[TaskTypesEnum.ts_forecasting]",
+      "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreQuantisationStrategy"
+      ],
+      "tags": [
+      ],
+      "description": "Implementations of industrial preprocessing operations"
+    }
+  },
+  "operations": {
+    "pruner_model": {
+      "meta": "fedcore_pruning",
+      "presets": [
+      ],
+      "tags": ["non-default"]
+    },
+    "quantisation_model": {
+      "meta": "fedcore_quantisation",
+      "presets": [
+      ],
+      "tags": ["non-default"]
+    }
+  }
+}
