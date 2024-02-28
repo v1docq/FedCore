@@ -216,7 +216,7 @@ class MobileNet:
             output_dim: int = 2,
             model_name: str = 'MobileNetV3Small',
             **kwargs):
-        self.model = MODEL_ZOO[model_name.lower()](
+        self.model = MOBILENET_MODELS[model_name.lower()](
             input_dim=input_dim,
             num_classes=output_dim,
             **kwargs
@@ -226,11 +226,8 @@ class MobileNet:
         x = x.to(default_device())
         return self.model(x)
 
-    def __call__(self, *args, **kwargs):
-        return self.model(*args, **kwargs)
 
-
-MODEL_ZOO = {
+MOBILENET_MODELS = {
     'mobilenetv3small': MobileNetV3Small,
     'mobilenetv3large': MobileNetV3Large,
 }

@@ -1,7 +1,9 @@
 """U-Net model from https://github.com/milesial/Pytorch-UNet with small fix for compatibility."""
 import torch
 import torch.nn as nn
-from fedcore.models.network_impl.layers import DoubleConv, Down, Up, OutConv
+
+from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.models.network_impl.layers import DoubleConv, Down, OutConv, Up
 
 
 class UNet(nn.Module):
@@ -34,7 +36,8 @@ class UNet(nn.Module):
         x = self.up3(x, x2)
         x = self.up4(x, x1)
         logits = self.outc(x)
-        return {'out': logits}
+        # return {'out': logits}
+        return logits
 
     def use_checkpointing(self):
         self.inc = torch.utils.checkpoint(self.inc)
@@ -47,3 +50,12 @@ class UNet(nn.Module):
         self.up3 = torch.utils.checkpoint(self.up3)
         self.up4 = torch.utils.checkpoint(self.up4)
         self.outc = torch.utils.checkpoint(self.outc)
+
+
+class UNetwork:
+    def __init__(self, input_dim, output_dim):
+        self.model = UNet(n_channels=input_dim, n_classes=output_dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.to(default_device())
+        return self.model(x)

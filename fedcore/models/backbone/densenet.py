@@ -1,8 +1,9 @@
+from torch import nn
 from torchvision.models.densenet import densenet121, densenet161, densenet169, densenet201
 
 from fedcore.architecture.comptutaional.devices import default_device
 
-MODEL_ZOO = {
+DENSE_MODELS = {
     'densenet121': densenet121,
     'densenet169': densenet169,
     'densenet201': densenet201,
@@ -18,16 +19,13 @@ class DenseNetwork:
             model_name: str = 'densenet121',
             **kwargs
     ):
-        if model_name not in MODEL_ZOO:
-            raise ValueError(f'Unknown model name: {model_name}. Available models: {list(MODEL_ZOO.keys())}')
-        self.model = MODEL_ZOO[model_name](
-            num_init_features=input_dim,
-            num_classes=output_dim,
-            **kwargs
-        )
+        assert model_name in DENSE_MODELS, f'Unknown model name: {model_name}. ' \
+                                           f'Available models: {list(DENSE_MODELS.keys())}'
 
-    def __call__(self, *args, **kwargs):
-        return self.model(*args, **kwargs)
+        self.model = DENSE_MODELS[model_name](num_classes=output_dim)
+
+        if input_dim != 3:
+            self.model.features.conv0 = nn.Conv2d(input_dim, 64, kernel_size=7, stride=2, padding=3, bias=False)
 
     def forward(self, x):
         x = x.to(default_device())

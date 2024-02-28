@@ -4,7 +4,7 @@ from torchvision.models.efficientnet import _efficientnet_conf, efficientnet_b0,
     efficientnet_b4, efficientnet_b5, efficientnet_b6, efficientnet_b7
 from torchvision.ops import Conv2dNormActivation
 
-MODEL_ZOO = {
+EFFICIENTNET_MODELS = {
     'efficientnet_b0': efficientnet_b0,
     'efficientnet_b1': efficientnet_b1,
     'efficientnet_b2': efficientnet_b2,
@@ -24,9 +24,9 @@ class EfficientNet:
             model_name: str = 'efficientnet_b0',
             **kwargs
     ):
-        if model_name not in MODEL_ZOO:
-            raise ValueError(f'Unknown model name: {model_name}. Available models: {list(MODEL_ZOO.keys())}')
-        self.model = MODEL_ZOO[model_name](
+        if model_name not in EFFICIENTNET_MODELS:
+            raise ValueError(f'Unknown model name: {model_name}. Available models: {list(EFFICIENTNET_MODELS.keys())}')
+        self.model = EFFICIENTNET_MODELS[model_name](
             num_classes=output_dim,
             **kwargs
         )

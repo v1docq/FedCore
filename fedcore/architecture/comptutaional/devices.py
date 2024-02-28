@@ -1,3 +1,5 @@
+import sys
+
 import torch
 from fastai.torch_core import _has_mps
 from fastcore.basics import defaults
@@ -20,8 +22,10 @@ def default_device(device_type: str = 'CUDA'):
         return torch.device("cpu")
 
     if device_type is None:
-        if torch.cuda.is_available() or _has_mps():
+        if torch.cuda.is_available() or _has_mps() and sys.platform != 'darwin':
             device_type = True
+        else:
+            return torch.device("cpu")
     if device_type:
         if torch.cuda.is_available():
             return torch.device(torch.cuda.current_device())
