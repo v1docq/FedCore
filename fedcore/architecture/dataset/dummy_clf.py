@@ -1,8 +1,8 @@
 import torch
-from torch.utils.data import Dataset
 
 
-class DummyDatasetCLF(Dataset):
+class DummyDatasetCLF(torch.utils.data.Dataset):
+
     def __init__(self, num_samples, channels=1):
         self.num_samples = num_samples
         self.data = torch.randn(num_samples, channels, 224, 224)
