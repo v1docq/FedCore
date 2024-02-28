@@ -78,15 +78,12 @@ class PerformanceEvaluator:
         return self.throughput
 
     def measure_target_metric(self, metric_counter: MetricCounter = None):
-        total_data_size = 0
-        start_time = time.time()
         if not metric_counter:
             metric_counter = ClassificationMetricCounter()
         with torch.no_grad():
             with tqdm(desc='Measuring throughput', unit='batch') as pbar:
                 for inputs, labels in self.data_loader:
                     inputs = inputs.to(self.device)
-                    total_data_size += inputs.size(0)
                     prediction = self.model(inputs)
                     if len(prediction.size()) > 2:
                         prediction = prediction[0]
