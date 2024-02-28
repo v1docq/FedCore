@@ -83,6 +83,9 @@ class ResNet:
         model_list = {**CLF_MODELS, **CLF_MODELS_ONE_CHANNEL}
         self.model = model_list[model_name](num_classes=output_dim)
 
+    def __call__(self):
+        return self.model
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Implements the forward method of the model and returns predictions."""
         x = x.to(default_device())
