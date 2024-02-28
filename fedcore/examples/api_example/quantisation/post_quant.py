@@ -4,9 +4,12 @@ import torchvision.datasets
 from fedot.core.data.data import InputData
 from fedot.core.data.supplementary_data import SupplementaryData
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 from torchvision.transforms import transforms
+
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.utils.paths import data_path
 from fedcore.data.data import CompressionInputData
 from fedcore.neural_compressor.config import Torch2ONNXConfig
@@ -19,8 +22,8 @@ if __name__ == '__main__':
         [transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    model = resnet18()
-    torch.save(model.state_dict(), './base_model')
+    model = resnet18(pretrained=True).to(default_device())
+    model.fc = nn.Linear(512, 10).to(default_device())
 
     train_dataset = torchvision.datasets.CIFAR10(data_path('CIFAR10'), train=True, download=True,
                                                  transform=transform)

@@ -1,6 +1,8 @@
 from enum import Enum
 
 from fedcore.algorithm.pruning.pruners import BasePruner
+from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
+from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
 #from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
 from fedcore.models.backbone.resnet import *
 

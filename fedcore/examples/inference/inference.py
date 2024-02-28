@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = resnet18(pretrained=True).to(default_device())
+
     train_dataset = torchvision.datasets.CIFAR10(data_path('CIFAR10'), train=True, download=True,
                                                  transform=transform)
     train_dataloader = DataLoader(
@@ -41,6 +41,7 @@ if __name__ == '__main__':
 
     val_dataloader = DataLoader(val_dataset, batch_size=100, shuffle=False, num_workers=1)
 
+    model = resnet18(pretrained=True).to(default_device())
     model.fc = nn.Linear(512, 10).to(default_device())
 
     # Define the loss function and optimizer
