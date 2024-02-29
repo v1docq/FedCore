@@ -1,8 +1,10 @@
 from typing import List, Type, Union, Dict
+from typing import Dict, List, Optional, Type, Union
 
 from typing import Set, Any
 import torch.nn as nn
 from torch import Tensor
+from torch.nn import functional as F
 from torchvision.models.resnet import conv1x1, conv3x3
 from typing import Optional
 import torch
@@ -451,3 +453,4 @@ class DecomposedConv2d(Conv2d):
         self.U = Parameter(u)
         self.S = Parameter(s)
         self.Vh = Parameter(vh)
+

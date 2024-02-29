@@ -1,53 +1,9 @@
 from typing import Any
 import torch
 from torch import nn
-from torchvision.models import ResNet, resnet101, resnet152, resnet18, resnet34, resnet50
+from torchvision.models import resnet101, resnet152, resnet18, resnet34, resnet50
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.layers import PrunedResNet, Bottleneck, BasicBlock
-
-
-def resnet18_one_channel(**kwargs) -> ResNet:
-    """ResNet18 for one input channel"""
-    model = resnet18(**kwargs)
-    model.conv1 = nn.Conv2d(in_channels=1,
-                            out_channels=64,
-                            kernel_size=7,
-                            stride=2,
-                            padding=3,
-                            bias=False)
-    return model
-
-
-def resnet34_one_channel(**kwargs) -> ResNet:
-    """ResNet34 for one input channel"""
-    model = resnet34(**kwargs)
-    model.conv1 = nn.Conv2d(1, 64, kernel_size=7,
-                            stride=2, padding=3, bias=False)
-    return model
-
-
-def resnet50_one_channel(**kwargs) -> ResNet:
-    """ResNet50 for one input channel"""
-    model = resnet50(**kwargs)
-    model.conv1 = nn.Conv2d(1, 64, kernel_size=7,
-                            stride=2, padding=3, bias=False)
-    return model
-
-
-def resnet101_one_channel(**kwargs) -> ResNet:
-    """ResNet101 for one input channel"""
-    model = resnet101(**kwargs)
-    model.conv1 = nn.Conv2d(1, 64, kernel_size=7,
-                            stride=2, padding=3, bias=False)
-    return model
-
-
-def resnet152_one_channel(**kwargs) -> ResNet:
-    """ResNet152 for one input channel"""
-    model = resnet152(**kwargs)
-    model.conv1 = nn.Conv2d(1, 64, kernel_size=7,
-                            stride=2, padding=3, bias=False)
-    return model
 
 
 def pruned_resnet18(**kwargs: Any) -> PrunedResNet:
@@ -75,13 +31,39 @@ def pruned_resnet152(**kwargs: Any) -> PrunedResNet:
     return PrunedResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
 
 
+CLF_MODELS = {
+    'ResNet18': resnet18,
+    'ResNet34': resnet34,
+    'ResNet50': resnet50,
+    'ResNet101': resnet101,
+    'ResNet152': resnet152,
+}
+
+PRUNED_MODELS = {
+    "ResNet18": pruned_resnet18,
+    "ResNet34": pruned_resnet34,
+    "ResNet50": pruned_resnet50,
+    "ResNet101": pruned_resnet101,
+    "ResNet152": pruned_resnet152,
+}
+
+
 class ResNet:
     def __init__(self,
                  input_dim,
                  output_dim,
-                 model_name: str = 'ResNet18one'):
-        model_list = {**CLF_MODELS, **CLF_MODELS_ONE_CHANNEL}
+                 model_name: str = 'ResNet18'):
+        model_list = {**CLF_MODELS}
         self.model = model_list[model_name](num_classes=output_dim)
+
+        if input_dim != 3:
+            self.model.conv1 = nn.Conv2d(in_channels=input_dim,
+                                         out_channels=64,
+                                         kernel_size=7,
+                                         stride=2,
+                                         padding=3,
+                                         bias=False)
+
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Implements the forward method of the model and returns predictions."""
