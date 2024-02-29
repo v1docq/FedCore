@@ -1,14 +1,18 @@
 from enum import Enum
 
+
 from fedcore.algorithm.pruning.pruners import BasePruner
-# from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
+from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
+from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
+#from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
 from fedcore.models.backbone.resnet import *
 
 
 class AtomizedModel(Enum):
     PRUNER_MODELS = {'pruner_model': BasePruner}
 
-    QUANTISATION_MODELS = {'quantisation_model': BasePruner}
+    QUANTISATION_MODELS = {'post_training_quant': QuantPostModel,
+                           'training_aware_quant': QuantAwareModel}
 
     CLF_MODELS = {
         'ResNet18': resnet18,
@@ -48,6 +52,6 @@ RESNET_MODELS_ONE_CHANNEL = AtomizedModel.CLF_MODELS_ONE_CHANNEL.value
 
 def default_fedcore_availiable_operation(problem: str = 'pruning'):
     operation_dict = {'pruning': PRUNER_MODELS.keys(),
-                      'ts_forecasting': QUANTISATION_MODELS.keys()}
+                      'quantisation': QUANTISATION_MODELS.keys()}
 
     return operation_dict[problem]
