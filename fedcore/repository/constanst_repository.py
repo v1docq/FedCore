@@ -1,6 +1,9 @@
+import torch
 import torch_pruning as tp
 from enum import Enum
 from functools import partial
+
+import torchvision
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from fedot.core.repository.dataset_types import DataTypesEnum
 from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, RegressionMetricsEnum
@@ -153,10 +156,20 @@ class ModelCompressionConstant(Enum):
                           "BNScaleImportance": tp.importance.BNScaleImportance,
                           "LAMPImportance": tp.importance.LAMPImportance,
                           "RandomImportance": tp.importance.RandomImportance,
+                          "GroupNormImportance": tp.importance.GroupNormImportance,
+                          "GroupTaylorImportance": tp.importance.GroupTaylorImportance,
+                          "GroupHessianImportance": tp.importance.GroupHessianImportance
                           }
+    GROUP_PRUNING_IMPORTANCE = {"GroupNormImportance": tp.importance.GroupNormImportance,
+                                "GroupTaylorImportance": tp.importance.GroupTaylorImportance,
+                                "GroupHessianImportance": tp.importance.GroupHessianImportance
+                                }
     PRUNING_NORMS = [0, 1, 2]
     PRUNING_REDUCTION = ["sum", "mean", "max", 'prod', 'first']
     PRUNING_NORMALIZE = ["sum", "mean", "max", 'gaussian']
+    PRUNING_LAYERS_IMPL = (torchvision.ops.misc.Conv2dNormActivation,
+                           torch.nn.modules.container.Sequential,
+                           torch.nn.modules.conv.Conv2d)
 
 
 class TorchLossesConstant(Enum):
@@ -188,6 +201,8 @@ PRUNING_IMPORTANCE = ModelCompressionConstant.PRUNING_IMPORTANCE.value
 PRUNING_NORMS = ModelCompressionConstant.PRUNING_NORMS.value
 PRUNING_REDUCTION = ModelCompressionConstant.PRUNING_REDUCTION.value
 PRUNING_NORMALIZE = ModelCompressionConstant.PRUNING_NORMALIZE.value
+PRUNING_LAYERS_IMPL = ModelCompressionConstant.PRUNING_LAYERS_IMPL.value
+GROUP_PRUNING_IMPORTANCE = ModelCompressionConstant.GROUP_PRUNING_IMPORTANCE.value
 
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
