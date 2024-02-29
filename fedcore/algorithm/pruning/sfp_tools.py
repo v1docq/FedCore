@@ -7,8 +7,6 @@ from torch.linalg import vector_norm
 from torch.nn import Conv2d
 from torchvision.models import ResNet
 
-from fedot_ind.core.models.cnn.pruned_resnet import PRUNED_MODELS, PrunedResNet
-from fedot_ind.core.repository.constanst_repository import MODELS_FROM_LENGTH
 
 
 def percentage_filter_zeroing(conv: Conv2d, pruning_ratio: float) -> None:
@@ -247,43 +245,43 @@ def sizes_from_state_dict(state_dict: OrderedDict) -> Dict:
     sizes['fc'] = sd['fc']['weight'].shape
     return sizes
 
-
-def prune_resnet(model: ResNet) -> PrunedResNet:
-    """Prune ResNet
-
-    Args:
-        model: ResNet model.
-
-    Returns:
-        Pruned ResNet model.
-
-    Raises:
-        AssertionError if model is not Resnet.
-    """
-    assert isinstance(model, ResNet), "Supports only ResNet models"
-    model_type = MODELS_FROM_LENGTH[len(model.state_dict())]
-    pruned_sd = prune_resnet_state_dict(model.state_dict())
-    sizes = sizes_from_state_dict(pruned_sd)
-    model = PRUNED_MODELS[model_type](sizes=sizes)
-    model.load_state_dict(pruned_sd)
-    return model
-
-
-def load_sfp_resnet_model(
-        state_dict_path: str,
-) -> torch.nn.Module:
-    """Loads SFP state_dict to PrunedResNet model.
-
-    Args:
-        state_dict_path: Path to state_dict file.
-
-    Returns:
-        PrunedResNet model.
-    """
-    state_dict = torch.load(state_dict_path, map_location='cpu')
-    sizes = sizes_from_state_dict(state_dict)
-    model_type = MODELS_FROM_LENGTH[len(
-        list(filter((lambda x: not x.endswith('indices')), state_dict.keys())))]
-    model = PRUNED_MODELS[model_type](sizes=sizes)
-    model.load_state_dict(state_dict)
-    return model
+#
+# def prune_resnet(model: ResNet) -> PrunedResNet:
+#     """Prune ResNet
+#
+#     Args:
+#         model: ResNet model.
+#
+#     Returns:
+#         Pruned ResNet model.
+#
+#     Raises:
+#         AssertionError if model is not Resnet.
+#     """
+#     assert isinstance(model, ResNet), "Supports only ResNet models"
+#     model_type = MODELS_FROM_LENGTH[len(model.state_dict())]
+#     pruned_sd = prune_resnet_state_dict(model.state_dict())
+#     sizes = sizes_from_state_dict(pruned_sd)
+#     model = PRUNED_MODELS[model_type](sizes=sizes)
+#     model.load_state_dict(pruned_sd)
+#     return model
+#
+#
+# def load_sfp_resnet_model(
+#         state_dict_path: str,
+# ) -> torch.nn.Module:
+#     """Loads SFP state_dict to PrunedResNet model.
+#
+#     Args:
+#         state_dict_path: Path to state_dict file.
+#
+#     Returns:
+#         PrunedResNet model.
+#     """
+#     state_dict = torch.load(state_dict_path, map_location='cpu')
+#     sizes = sizes_from_state_dict(state_dict)
+#     model_type = MODELS_FROM_LENGTH[len(
+#         list(filter((lambda x: not x.endswith('indices')), state_dict.keys())))]
+#     model = PRUNED_MODELS[model_type](sizes=sizes)
+#     model.load_state_dict(state_dict)
+#     return model

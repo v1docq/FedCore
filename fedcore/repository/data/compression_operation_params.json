@@ -1,0 +1,15 @@
+{
+  "pruner_model": {
+    "epochs":5,
+    "pruner_name":"magnitude_pruner",
+    "pruning_ratio": 0.5,
+    "importance": "MagnitudeImportance",
+    "importance_norm": 2,
+    "importance_normalize": "mean",
+    "importance_reduction": "mean"
+  },
+   "quantisation_model": {
+    "epochs":5,
+    "quantisation_config":null
+  }
+}

@@ -4,13 +4,13 @@ import json
 import os
 from typing import Callable, Dict, Tuple
 
+import numpy as np
 import torch
 import yaml
 from PIL import Image
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from fedot_ind.core.architecture.settings.computational import backend_methods as np
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp',
                   '.pgm', '.tif', '.tiff', '.webp')

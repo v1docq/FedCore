@@ -2,7 +2,6 @@ from typing import Any
 import torch
 from torch import nn
 from torchvision.models import resnet101, resnet152, resnet18, resnet34, resnet50
-
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.layers import PrunedResNet, Bottleneck, BasicBlock
 

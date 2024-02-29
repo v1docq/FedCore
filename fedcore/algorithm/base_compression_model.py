@@ -1,9 +1,13 @@
+import os
+
 import torch_pruning as tp
 from typing import Optional
 import numpy as np
 import torch
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
+
+from fedcore.data.data import CompressionInputData
 
 
 class BaseCompressionModel:
@@ -58,14 +62,14 @@ class BaseCompressionModel:
                 prefix, map_location=torch.device('cpu')))
             os.remove(prefix)
 
-    def _fit_model(self, ts: InputData, split_data: bool = False):
+    def _fit_model(self, ts: CompressionInputData, split_data: bool = False):
         pass
 
     def _predict_model(self, x_test, output_mode: str = 'default'):
         pass
 
     def fit(self,
-            input_data: InputData):
+            input_data: CompressionInputData):
         """
         Method for feature generation for all series
         """
@@ -76,14 +80,14 @@ class BaseCompressionModel:
         self._save_and_clear_cache()
 
     def predict(self,
-                input_data: InputData, output_mode: str = 'default') -> np.array:
+                input_data: CompressionInputData, output_mode: str = 'default') -> np.array:
         """
         Method for feature generation for all series
         """
         return self._predict_model(input_data, output_mode)
 
     def predict_for_fit(self,
-                        input_data: InputData, output_mode: str = 'default') -> np.array:
+                        input_data: CompressionInputData, output_mode: str = 'default') -> np.array:
         """
         Method for feature generation for all series
         """
