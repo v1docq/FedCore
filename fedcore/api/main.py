@@ -15,8 +15,11 @@ from torch.utils.data import DataLoader
 from fedot.api.main import Fedot
 from fedot.core.pipelines.pipeline import Pipeline
 
+from fedcore.data.data import CompressionInputData
+from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
-from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS
+from fedcore.neural_compressor.config import Torch2ONNXConfig
+from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDOT_TASK
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 from fedcore.architecture.utils.loader import collate
@@ -62,6 +65,7 @@ class FedCore(Fedot):
         # init Fedot and Industrial hyperparams and path to results
         self.output_folder = kwargs.get('output_folder', None)
         self.preprocessing = kwargs.get('fedcore_preprocessing', False)
+        self.framework_config = kwargs.get('framework_config', None)
         self.backend_method = kwargs.get('backend', 'cpu')
         self.task_params = kwargs.get('task_params', None)
         self.model_params = kwargs.get('model_params', None)
@@ -108,6 +112,7 @@ class FedCore(Fedot):
         self.repo = FedcoreModels().setup_repository()
         self.config_dict['initial_assumption'] = self.config_dict['initial_assumption'].build()
         self.logger.info('Initialising solver')
+        self.__init_experiment_setup()
         self.config_dict['problem'] = 'classification'
         solver = Fedot(**self.config_dict)
         return solver
@@ -248,21 +253,34 @@ class FedCore(Fedot):
                 self.solver.append(Pipeline().load(
                     f'{path}/{p}/0_pipeline_saved'))
 
-    def load_data(self, path):
-        path_to_data = os.path.join(PROJECT_PATH, path)
-        dir_list = os.listdir(path_to_data)
-        for x in dir_list:
-            if x.__contains__('dataset'):
-                directory = os.path.join(path_to_data, x)
-            elif x.__contains__('model'):
-                model_dir = os.path.join(path_to_data, x)
-                _ = [y for y in os.listdir(model_dir) if y.__contains__('.pt')][0]
-                path_to_model = os.path.join(model_dir, _)
-            else:
-                annotations = os.path.join(path_to_data, x)
-        torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
-        torch_dataset = CustomDatasetForImages(annotations=annotations,
-                                               directory=directory)
+    def load_data(self, path: str = None, supplementary_data: dict = None):
+        if path is None and supplementary_data is not None:
+            # load data dynamically
+            torch_model = supplementary_data['torch_model']
+            torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
+                                                 idx=None,
+                                                 calib_dataloader=supplementary_data['test_dataset'],
+                                                 task=FEDOT_TASK['classification'],
+                                                 data_type=None,
+                                                 target=torch_model
+                                                 )
+            torch_dataset.supplementary_data.is_auto_preprocessed = True
+        else:
+            # load data from directory
+            path_to_data = os.path.join(PROJECT_PATH, path)
+            dir_list = os.listdir(path_to_data)
+            for x in dir_list:
+                if x.__contains__('dataset'):
+                    directory = os.path.join(path_to_data, x)
+                elif x.__contains__('model'):
+                    model_dir = os.path.join(path_to_data, x)
+                    _ = [y for y in os.listdir(model_dir) if y.__contains__('.pt')][0]
+                    path_to_model = os.path.join(model_dir, _)
+                else:
+                    annotations = os.path.join(path_to_data, x)
+            torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
+            torch_dataset = CustomDatasetForImages(annotations=annotations,
+                                                   directory=directory)
         return (torch_dataset, torch_model)
 
     def save_best_model(self):
@@ -276,3 +294,14 @@ class FedCore(Fedot):
             for idx, p in enumerate(self.solver.ensemble_branches):
                 Pipeline(p).save(f'./raf_ensemble/{idx}_ensemble_branch', create_subdir=True)
             Pipeline(self.solver.ensemble_head).save(f'./raf_ensemble/ensemble_head', create_subdir=True)
+
+    def convert_model(self, framework: str = 'ONNX', framework_config: dict = None):
+        if self.framework_config is None and framework_config is None:
+            return self.logger.info('You must specify configuration for model convertation')
+        else:
+            if framework == 'ONNX':
+                framework_config['example_inputs'] = 1
+                int8_onnx_config = Torch2ONNXConfig(**framework_config)
+                self.solver.export("int8-model.onnx", int8_onnx_config)
+                converted_model = ONNXInferenceModel("int8-model.onnx")
+        return converted_model

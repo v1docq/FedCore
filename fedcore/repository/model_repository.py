@@ -5,7 +5,6 @@ from torchvision.models.detection.faster_rcnn import fasterrcnn_resnet50_fpn_v2,
 from fedcore.algorithm.pruning.pruners import BasePruner
 from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
 from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
-#from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
 from fedcore.models.backbone.resnet import *
 
 
@@ -20,21 +19,9 @@ class AtomizedModel(Enum):
         'ResNet34': resnet34,
         'ResNet50': resnet50,
         'ResNet101': resnet101,
-        'ResNet152': resnet152,
-        # 'ResNet18one': resnet18_one_channel,
-        # 'ResNet34one': resnet34_one_channel,
-        # 'ResNet50one': resnet50_one_channel,
-        # 'ResNet101one': resnet101_one_channel,
-        # 'ResNet152one': resnet152_one_channel,
+        'ResNet152': resnet152
     }
 
-    CLF_MODELS_ONE_CHANNEL = {
-        # 'ResNet18one': resnet18_one_channel,
-        # 'ResNet34one': resnet34_one_channel,
-        # 'ResNet50one': resnet50_one_channel,
-        # 'ResNet101one': resnet101_one_channel,
-        # 'ResNet152one': resnet152_one_channel,
-    }
 
     PRUNED_MODELS = {
         "ResNet18": pruned_resnet18,
@@ -43,7 +30,7 @@ class AtomizedModel(Enum):
         "ResNet101": pruned_resnet101,
         "ResNet152": pruned_resnet152,
     }
-    
+
     DETECTION_MODELS = {
         "detection_model": fasterrcnn_mobilenet_v3_large_fpn
     }
