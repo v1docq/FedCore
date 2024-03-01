@@ -115,6 +115,7 @@ class FedCore(Fedot):
         self.__init_experiment_setup()
         self.config_dict['problem'] = 'classification'
         solver = Fedot(**self.config_dict)
+        solver = self.config_dict['initial_assumption']
         return solver
 
     def fit(self,
@@ -174,8 +175,7 @@ class FedCore(Fedot):
             the array with prediction values
 
         """
-        self.predict_data = deepcopy(
-            predict_data)  # we do not want to make inplace changes
+        self.predict_data = deepcopy(predict_data)  # we do not want to make inplace changes
         self.predict_data = DataCheck(input_data=self.predict_data,
                                       task=self.config_dict['problem'],
                                       task_params=self.task_params).check_input_data()
@@ -258,7 +258,8 @@ class FedCore(Fedot):
             # load data dynamically
             torch_model = supplementary_data['torch_model']
             torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
-                                                 idx=None,
+                                                 idx=[1],
+                                                 num_classes=100,
                                                  calib_dataloader=supplementary_data['test_dataset'],
                                                  task=FEDOT_TASK['classification'],
                                                  data_type=None,
@@ -279,8 +280,16 @@ class FedCore(Fedot):
                 else:
                     annotations = os.path.join(path_to_data, x)
             torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
-            torch_dataset = CustomDatasetForImages(annotations=annotations,
-                                                   directory=directory)
+            torch_dataloader = CustomDatasetForImages(annotations=annotations,
+                                                      directory=directory)
+            torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
+                                                 idx=[1],
+                                                 num_classes=torch_dataloader.num_classes,
+                                                 calib_dataloader=torch_dataloader,
+                                                 task=FEDOT_TASK['classification'],
+                                                 data_type=None,
+                                                 target=torch_model
+                                                 )
         return (torch_dataset, torch_model)
 
     def save_best_model(self):
@@ -295,13 +304,16 @@ class FedCore(Fedot):
                 Pipeline(p).save(f'./raf_ensemble/{idx}_ensemble_branch', create_subdir=True)
             Pipeline(self.solver.ensemble_head).save(f'./raf_ensemble/ensemble_head', create_subdir=True)
 
-    def convert_model(self, framework: str = 'ONNX', framework_config: dict = None):
+    def convert_model(self, framework: str = 'ONNX',
+                      framework_config: dict = None,
+                      supplementary_data: dict = None):
         if self.framework_config is None and framework_config is None:
             return self.logger.info('You must specify configuration for model convertation')
         else:
             if framework == 'ONNX':
-                framework_config['example_inputs'] = 1
-                int8_onnx_config = Torch2ONNXConfig(**framework_config)
-                self.solver.export("int8-model.onnx", int8_onnx_config)
+                self.framework_config['example_inputs'] = torch.unsqueeze(supplementary_data['train_dataset'][0][0],
+                                                                          dim=0)
+                int8_onnx_config = Torch2ONNXConfig(**self.framework_config)
+                supplementary_data['model_to_export'].export("int8-model.onnx", int8_onnx_config)
                 converted_model = ONNXInferenceModel("int8-model.onnx")
         return converted_model

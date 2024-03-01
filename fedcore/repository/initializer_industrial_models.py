@@ -1,22 +1,24 @@
 import pathlib
 
-import fedot.core.data.data_split as sp
 from fedot.api.api_utils.assumptions.assumptions_handler import AssumptionsHandler
 from fedot.core.data.data import InputData
+from fedot.core.data.merge.data_merger import DataMerger
 from fedot.core.data.multi_modal import MultiModalData
+from fedot.core.operations.operation import Operation
 from fedot.core.pipelines.tuning.search_space import PipelineSearchSpace
 from fedot.core.repository.operation_types_repository import OperationTypesRepository
 from fedot.utilities.memory import MemoryAnalytics
 
 from fedcore.architecture.utils.paths import PROJECT_PATH
+from fedcore.data.data import CompressionInputData
 from fedcore.interfaces.search_space import get_fedcore_search_space
 
 
 def _fit_assumption_and_check_correctness(self,
-                                         pipeline,
-                                         pipelines_cache,
-                                         preprocessing_cache,
-                                         eval_n_jobs: int = -1):
+                                          pipeline,
+                                          pipelines_cache,
+                                          preprocessing_cache,
+                                          eval_n_jobs: int = -1):
     """
     Check if initial pipeline can be fitted on a presented data
 
@@ -32,10 +34,13 @@ def _fit_assumption_and_check_correctness(self,
         pipeline.try_load_from_cache(pipelines_cache, preprocessing_cache)
         pipeline.fit(data_train, n_jobs=eval_n_jobs)
 
-        if pipelines_cache is not None:
-            pipelines_cache.save_pipeline(pipeline)
-        if preprocessing_cache is not None:
-            preprocessing_cache.add_preprocessor(pipeline)
+        try:
+            if pipelines_cache is not None:
+                pipelines_cache.save_pipeline(pipeline)
+            if preprocessing_cache is not None:
+                preprocessing_cache.add_preprocessor(pipeline)
+        except Exception:
+            _ = 1
 
         pipeline.predict(data_test)
         self.log.info('Initial pipeline was fitted successfully')
@@ -47,6 +52,32 @@ def _fit_assumption_and_check_correctness(self,
     except Exception as ex:
         self._raise_evaluating_exception(ex)
     return pipeline
+
+
+def _merge(self) -> 'InputData':
+    return self.main_output
+
+
+def _fit(self, params, data):
+    """This method is used for defining and running of the evaluation strategy
+    to train the operation with the data provided
+
+    Args:
+        params: hyperparameters for operation
+        data: data used for operation training
+
+    Returns:
+        tuple: trained operation and prediction on train data
+    """
+    self._init(data.task, params=params, n_samples_data=data.features.shape[0])
+
+    self.fitted_operation = self._eval_strategy.fit(train_data=data)
+
+    predict_train = self.predict_for_fit(self.fitted_operation, data, params)
+
+    return self.fitted_operation, predict_train
+
+
 def _train_test_data_setup(data):
     """ Function for train and test split for both InputData and MultiModalData
 
@@ -107,6 +138,8 @@ class FedcoreModels:
                 get_fedcore_search_space)
         setattr(AssumptionsHandler, "fit_assumption_and_check_correctness",
                 _fit_assumption_and_check_correctness)
+        setattr(DataMerger, 'merge', _merge)
+        setattr(Operation, 'fit', _fit)
 
         return OperationTypesRepository
 

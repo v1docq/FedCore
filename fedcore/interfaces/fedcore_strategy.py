@@ -23,10 +23,13 @@ class FedcorePruningStrategy(EvaluationStrategy):
 
     def _convert_to_output(self, prediction, predict_data: InputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
+        predict_data = predict_data.features if type(predict_data) is InputData else predict_data
         output_data = CompressionOutputData(idx=predict_data.idx,
                                             features=predict_data.features,
                                             predict=prediction,
+                                            calib_dataloader=predict_data.calib_dataloader,
                                             task=predict_data.task,
+                                            num_classes=predict_data.num_classes,
                                             target=predict_data.target,
                                             data_type=output_data_type,
                                             supplementary_data=predict_data.supplementary_data)
@@ -60,6 +63,7 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
         else:
             raise ValueError(
                 f'Impossible to obtain custom preprocessing strategy for {operation_type}')
+
     def __init__(self, operation_type: str, params: Optional[OperationParameters] = None):
         super().__init__(operation_type, params)
         self.operation_impl = self._convert_to_operation(operation_type)(self.params_for_fit)
@@ -68,15 +72,18 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
         self.operation_impl.fit(train_data)
         return self.operation_impl
 
-    def predict(self, trained_operation, predict_data: CompressionInputData, output_mode: str = 'default') -> OutputData:
+    def predict(self, trained_operation, predict_data: CompressionInputData,
+                output_mode: str = 'default') -> OutputData:
         pruned_model = trained_operation.predict(predict_data)
         converted = self._convert_to_output(pruned_model, predict_data)
         return converted
 
-    def predict_for_fit(self, trained_operation, predict_data: CompressionInputData, output_mode: str = 'default') -> OutputData:
+    def predict_for_fit(self, trained_operation, predict_data: CompressionInputData,
+                        output_mode: str = 'default') -> OutputData:
         pruned_model = trained_operation.predict_for_fit(predict_data)
         converted = self._convert_to_output(pruned_model, predict_data)
         return converted
+
     def _convert_to_output(self, prediction, predict_data: CompressionInputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
         output_data = CompressionOutputData(idx=predict_data.idx,
