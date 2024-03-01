@@ -64,14 +64,16 @@ class CustomDatasetForImages(Dataset):
             'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64),
         }
         # returning the image and label
-        return image, target
+        return image[np.newaxis, :, :, :], target
+
     @property
     def shape(self):
-        return (len(self.labels),1)
+        return (len(self.labels), 1)
 
     @property
     def num_classes(self):
         return self.labels_mask.shape[0]
+
 
 class PredictionNumpyDataset(Dataset):
     """Class for prediction on numpy arrays.

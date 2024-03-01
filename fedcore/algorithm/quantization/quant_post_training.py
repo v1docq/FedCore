@@ -1,6 +1,3 @@
-from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from copy import deepcopy
-
 import numpy as np
 from fedot.core.data.data import InputData
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -28,7 +25,8 @@ class QuantPostModel(BaseCompressionModel):
 
     def fit(self,
             input_data: CompressionInputData):
-        self.model = self.quantisation_model.fit(model=input_data.target,
+        model_to_quant = input_data.target if 'predict' not in vars(input_data) else input_data.predict
+        self.model = self.quantisation_model.fit(model=model_to_quant,
                                                  conf=self.quantisation_config,
                                                  calib_dataloader=input_data.calib_dataloader
                                                  )
