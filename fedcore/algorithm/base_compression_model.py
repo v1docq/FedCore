@@ -4,9 +4,9 @@ import torch_pruning as tp
 from typing import Optional
 import numpy as np
 import torch
-from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionInputData
 
 
@@ -67,6 +67,44 @@ class BaseCompressionModel:
 
     def _predict_model(self, x_test, output_mode: str = 'default'):
         pass
+
+    # def _load_pretrain_model(self):
+    #     init_model_with_pretrain(label2id=label2id, id2label=id2label, pretrain_path=teacher_path)
+    #
+    # def evaluate_model(self,
+    #                    input_data: CompressionInputData):
+    #     evaluate_model(CompressionInputData.model,
+    #                    CompressionInputData.calib_dataloader,
+    #                    CompressionInputData.target)
+
+    def finetune(self,
+                 finetune_object: callable,
+                 finetune_data):
+        self.optimizer = finetune_object.optimizer(finetune_object.model.parameters(),
+                                                   lr=finetune_object.learning_rate)
+        finetune_object.model.train()
+        for epoch in range(1):  # loop over the dataset multiple times
+            running_loss = 0.0
+            for i, data in enumerate(finetune_data.features.train_dataloader, 0):
+                # get the inputs; data is a list of [inputs, labels]
+                inputs, labels = data
+                # zero the parameter gradients
+                self.optimizer.zero_grad()
+
+                # forward + backward + optimize
+                outputs = finetune_object.model(inputs.to(default_device()))
+                loss = finetune_object.criterion(outputs, labels.to(default_device()))
+                loss.backward()
+                self.optimizer.step()
+
+                # print statistics
+                running_loss += loss.item()
+                if i % 20 == 0:  # print every 2000 mini-batches
+                    print('[%d, %5d] loss: %.3f' %
+                          (epoch + 1, i + 1, running_loss / 20))
+                    running_loss = 0.0
+        finetune_object.model.eval()
+        return finetune_object
 
     def fit(self,
             input_data: CompressionInputData):

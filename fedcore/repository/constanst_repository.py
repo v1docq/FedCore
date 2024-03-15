@@ -2,11 +2,13 @@ import torch
 import torch_pruning as tp
 from enum import Enum
 from functools import partial
-
+from golem.core.optimisers.genetic.operators.inheritance import GeneticSchemeTypesEnum
+from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
 import torchvision
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from fedot.core.repository.dataset_types import DataTypesEnum
-from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, RegressionMetricsEnum
+from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, RegressionMetricsEnum, \
+    QualityMetricsEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
 from golem.core.tuning.iopt_tuner import IOptTuner
 from golem.core.tuning.optuna_tuner import OptunaTuner
@@ -100,6 +102,12 @@ class FedotOperationConstant(Enum):
                            'classification': 'fedot_cls'}
     FEDOT_ATOMIZE_OPERATION = {'regression': 'fedot_regr',
                                'classification': 'fedot_cls'}
+
+    FEDOT_EVO_MULTI_STRATEGY = {'spea2': SelectionTypesEnum.spea2,
+                                'tournament': SelectionTypesEnum.tournament}
+    FEDOT_GENETIC_MULTI_STRATEGY = {'steady_state': GeneticSchemeTypesEnum.steady_state,
+                                    'generational': GeneticSchemeTypesEnum.generational,
+                                    'parameter_free': GeneticSchemeTypesEnum.parameter_free}
     AVAILABLE_CLS_OPERATIONS = [
         'rf',
         'logit',
@@ -176,7 +184,20 @@ class TorchLossesConstant(Enum):
     CROSS_ENTROPY = nn.CrossEntropyLoss
     MULTI_CLASS_CROSS_ENTROPY = nn.BCEWithLogitsLoss
     MSE = nn.MSELoss
+    KL_LOSS = nn.KLDivLoss  #
 
+class DistilationMetricsEnum(QualityMetricsEnum):
+    intermediate_layers_attention = 'intermediate_attention'
+    intermediate_layers_feature = 'intermediate_feature'
+    last_layer = 'last_layer'
+
+
+class InferenceMetricsEnum(QualityMetricsEnum):
+    latency = 'latency'
+    throughput = 'throughput'
+
+class CVMetricsEnum(QualityMetricsEnum):
+    cv_clf_metric = 'cv_clf_metric'
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
@@ -189,6 +210,8 @@ FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
+FEDOT_EVO_MULTI_STRATEGY = FedotOperationConstant.FEDOT_EVO_MULTI_STRATEGY.value
+FEDOT_GENETIC_MULTI_STRATEGY = FedotOperationConstant.FEDOT_GENETIC_MULTI_STRATEGY.value
 
 ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
@@ -207,3 +230,4 @@ GROUP_PRUNING_IMPORTANCE = ModelCompressionConstant.GROUP_PRUNING_IMPORTANCE.val
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
+KL_LOSS = TorchLossesConstant.KL_LOSS.value

@@ -4,19 +4,23 @@ from fedcore.repository.constanst_repository import PRUNING_IMPORTANCE, \
     PRUNING_NORMALIZE, PRUNING_REDUCTION, PRUNING_NORMS
 
 fedcore_search_space = {
-    'pruning':
-        {'window_size_method': {'hyperopt-dist': hp.choice,
-                                'sampling-scope': [list(PRUNING_IMPORTANCE.keys())]},
-         'importance_norm': {'hyperopt-dist': hp.choice,
-                             'sampling-scope': [PRUNING_NORMS]},
-         'importance_reduction': {'hyperopt-dist': hp.choice,
-                                  'sampling-scope': [PRUNING_REDUCTION]},
-         'importance_normalize': {'hyperopt-dist': hp.choice,
-                                  'sampling-scope': [PRUNING_NORMALIZE]},
-         'pruning_ratio':{
+    'pruning_model':
+        {
+            # 'window_size_method': {'hyperopt-dist': hp.choice,
+            #                     'sampling-scope': [list(PRUNING_IMPORTANCE.keys())]},
+            'importance_norm': {'hyperopt-dist': hp.choice,
+                                'sampling-scope': [PRUNING_NORMS]},
+            'importance_reduction': {'hyperopt-dist': hp.choice,
+                                     'sampling-scope': [PRUNING_REDUCTION]},
+            'importance_normalize': {'hyperopt-dist': hp.choice,
+                                     'sampling-scope': [PRUNING_NORMALIZE]},
+            'pruning_ratio': {
                 'hyperopt-dist': hp.uniform,
                 'sampling-scope': [0.1, 1.0],
-                'type': 'continuous'}}
+                'type': 'continuous'},
+            'pruning_iterations': {
+                'hyperopt-dist': hp.choice,
+                'sampling-scope': [[x for x in range(5, 50, 5)]]}}
 }
 
 
