@@ -53,7 +53,7 @@
     }
   },
   "operations": {
-    "pruner_model": {
+    "pruning_model": {
       "meta": "fedcore_pruning",
       "presets": [],
       "tags": [

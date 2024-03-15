@@ -2,24 +2,34 @@ import time
 
 import numpy as np
 import torch
+from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.dataset.dummy_clf import DummyDatasetCLF
 from fedcore.inference.onnx import ONNXInferenceModel
+from fedcore.metrics.metric_impl import MetricCounter, ClassificationMetricCounter
 from fedcore.metrics.cv_metrics import MetricCounter, ClassificationMetricCounter, ObjectDetectionMetricCounter
 from fedcore.models.backbone.resnet import ResNet
 
 
 class PerformanceEvaluator:
     def __init__(self, model, dataset, device=None, batch_size=32):
-        self.model = model.model if hasattr(model, 'model') else model
+        if hasattr(model, 'model'):
+            self.model = model.model
+        elif type(model) is Pipeline:
+            self.model = model.operator.root_node.fitted_operation.model
+        else:
+            self.model = model
         self.dataset = dataset
         self.batch_size = batch_size
-        self.data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        if type(dataset) is str:
+            self.data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        else:
+            self.data_loader = dataset
 
-        self.device = default_device() if not device else device
+        self.device = default_device() if device is None else device
         self.model.to(self.device)
 
         # Measured performance metrics
@@ -37,7 +47,7 @@ class PerformanceEvaluator:
         self.report()
         return result
 
-    def measure_latency(self, reps: int = 50):
+    def measure_latency(self, reps: int = 10):
         timings = np.zeros((reps, 1))
         if torch.cuda.is_available():
             self.warm_up_cuda()

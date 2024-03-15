@@ -258,11 +258,9 @@ class FedCore(Fedot):
             # load data dynamically
             torch_model = supplementary_data['torch_model']
             torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
-                                                 idx=[1],
-                                                 num_classes=100,
+                                                 num_classes=10,
                                                  calib_dataloader=supplementary_data['test_dataset'],
-                                                 task=FEDOT_TASK['classification'],
-                                                 data_type=None,
+                                                 train_dataloader=supplementary_data['train_dataset'],
                                                  target=torch_model
                                                  )
             torch_dataset.supplementary_data.is_auto_preprocessed = True
@@ -283,11 +281,8 @@ class FedCore(Fedot):
             torch_dataloader = CustomDatasetForImages(annotations=annotations,
                                                       directory=directory)
             torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
-                                                 idx=[1],
                                                  num_classes=torch_dataloader.num_classes,
                                                  calib_dataloader=torch_dataloader,
-                                                 task=FEDOT_TASK['classification'],
-                                                 data_type=None,
                                                  target=torch_model
                                                  )
         return (torch_dataset, torch_model)

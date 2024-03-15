@@ -1,8 +1,7 @@
 import logging
-import numpy as np
 import torch.nn
 import torchvision.datasets
-from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+from fedot.core.repository.tasks import Task, TaskTypesEnum
 from torch import nn, optim
 
 from torch.utils.data import DataLoader
@@ -15,7 +14,8 @@ from fedcore.api.main import FedCore
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.utils.paths import data_path
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import FEDOT_TASK
+from fedcore.metrics.multi_objective import MultiobjectiveCompression
+from fedcore.repository.initializer_industrial_models import FedcoreModels
 
 from fedcore.tools.ruler import PerformanceEvaluator
 
@@ -35,13 +35,17 @@ class CompressionBenchmark:
             **kwargs: Additional arguments that may be required by the
                 benchmark.
         """
+        self.repo = FedcoreModels().setup_repository()
         self.criterion = params.get('loss', nn.CrossEntropyLoss())
         self.optimizer = params.get('optimizer', optim.Adam)
-        self.epochs = params.get('epochs', 1)
+        self.epochs = params.get('epochs', 2)
         self.learning_rate = params.get('lr', 0.001)
         self.benchmark_type = {'quantisation': self.quant_model,
                                'pruning': self.quant_model}
+        self.optimisation_type = {'multi_objective': MultiobjectiveCompression()
+                                  }
         self.fedcore_setup = params.get('fedcore_setup', None)
+
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @property
@@ -82,18 +86,44 @@ class CompressionBenchmark:
         """
         model = self._init_model()
         train_dataset, test_dataset, train_dataloader, val_dataloader = self._init_dataset()
-        model, performance = self.evaluate_loop(model, train_dataloader, test_dataset, train_mode=False)
+        model, performance = self.evaluate_loop(model, train_dataloader, test_dataset)
 
-        compressed_model, compression_performance = self.benchmark_type[algo_type](model, val_dataloader,
-                                                                                   train_dataset, test_dataset,
+        compressed_model, compression_performance = self.benchmark_type[algo_type](model,
+                                                                                   val_dataloader,
+                                                                                   train_dataloader,
+                                                                                   train_dataset,
+                                                                                   test_dataset,
                                                                                    framework)
+        print('Before quantization')
+        print(performance)
+        print('After quantization')
+        print(compression_performance)
+        return compressed_model, compression_performance
+
+    def run_optimisation(self, algo_type: str = 'multi_objective', framework: str = "ONNX"):
+        """Run the benchmark and return the results.
+
+        Returns:
+            A dictionary containing the results of the benchmark.
+        """
+        model = self._init_model()
+        train_dataset, test_dataset, train_dataloader, val_dataloader = self._init_dataset()
+        # model, performance = self.evaluate_loop(model, train_dataloader, test_dataset)
+        input_data = CompressionInputData(num_classes=10,
+                                          calib_dataloader=val_dataloader,
+                                          train_dataloader=train_dataloader,
+                                          task=Task(TaskTypesEnum.classification),
+                                          target=model)
+        compressed_model, compression_performance = self.optimisation_type[algo_type].evaluate(input_data)
+        print('Before optimisation')
+        # print(performance)
+        print('After optimisation')
+        print(compression_performance)
         return compressed_model, compression_performance
 
     def evaluate_loop(self, model, train_dataloader, test_dataset, train_mode: bool = True):
         if not train_mode:
-            print('Before quantization')
             performance = self.evaluate_perfomance(model, test_dataset)
-            print(performance)
             return model, performance
         else:
             self.optimizer = self.optimizer(model.parameters(), lr=self.learning_rate)
@@ -117,15 +147,13 @@ class CompressionBenchmark:
                         print('[%d, %5d] loss: %.3f' %
                               (epoch + 1, i + 1, running_loss / 20))
                         running_loss = 0.0
-
-            print('Before quantization')
             performance = self.evaluate_perfomance(model, test_dataset)
-            print(performance)
             return model, performance
 
-    def quant_model(self, model, val_dataloader, train_dataset, test_dataset, framework):
+    def quant_model(self, model, val_dataloader, train_dataloader, train_dataset, test_dataset, framework):
         supplementary_data = {'torch_model': model.cpu(),
-                              'test_dataset': val_dataloader}
+                              'test_dataset': val_dataloader,
+                              'train_dataset': train_dataloader}
         fedcore_compressor = FedCore(**self.fedcore_setup)
         input_data = fedcore_compressor.load_data(path=None,
                                                   supplementary_data=supplementary_data)
@@ -135,9 +163,8 @@ class CompressionBenchmark:
                                            'model_to_export': quant_model}
         onnx_model = fedcore_compressor.convert_model(framework=framework,
                                                       supplementary_data=convertation_supplementary_data)
-        print('after quantization')
+
         performance = self.evaluate_perfomance(onnx_model, test_dataset)
-        print(performance)
         return onnx_model, performance
 
     def prune_model(self):
@@ -146,6 +173,4 @@ class CompressionBenchmark:
     def evaluate_perfomance(self, model, test_dataset):
         evaluator = PerformanceEvaluator(model, test_dataset, batch_size=64)
         performance = evaluator.eval()
-        print('after quantization')
-        print(performance)
         return performance

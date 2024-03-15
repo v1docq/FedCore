@@ -9,7 +9,7 @@ from fedcore.models.backbone.resnet import *
 
 
 class AtomizedModel(Enum):
-    PRUNER_MODELS = {'pruner_model': BasePruner}
+    PRUNER_MODELS = {'pruning_model': BasePruner}
 
     QUANTISATION_MODELS = {'post_training_quant': QuantPostModel,
                            'training_aware_quant': QuantAwareModel}

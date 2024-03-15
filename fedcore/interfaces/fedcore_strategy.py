@@ -24,15 +24,14 @@ class FedcorePruningStrategy(EvaluationStrategy):
     def _convert_to_output(self, prediction, predict_data: InputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
         predict_data = predict_data.features if type(predict_data) is InputData else predict_data
-        output_data = CompressionOutputData(idx=predict_data.idx,
-                                            features=predict_data.features,
-                                            predict=prediction,
+        output_data = CompressionOutputData(features=predict_data.features,
                                             calib_dataloader=predict_data.calib_dataloader,
                                             task=predict_data.task,
                                             num_classes=predict_data.num_classes,
                                             target=predict_data.target,
-                                            data_type=output_data_type,
+                                            data_type=DataTypesEnum.image,
                                             supplementary_data=predict_data.supplementary_data)
+        output_data.predict = prediction
         return output_data
 
     def __init__(self, operation_type: str, params: Optional[OperationParameters] = None):
@@ -97,6 +96,10 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
                                             supplementary_data=predict_data.supplementary_data)
         return output_data
 
+
+class FedcoreDistilationStrategy(FedcoreQuantisationStrategy):
+    __operations_by_types = QUANTISATION_MODELS
+
 class FedcoreDetectionStrategy(EvaluationStrategy):
     __operations_by_types = DETECTION_MODELS
 
@@ -129,8 +132,8 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         trained_operation.eval()
         pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
         prediction = [
-            pred[0]['boxes'].cpu().detach().numpy(), 
-            pred[0]['labels'].cpu().detach().numpy(), 
+            pred[0]['boxes'].cpu().detach().numpy(),
+            pred[0]['labels'].cpu().detach().numpy(),
             pred[0]['scores'].cpu().detach().numpy()
         ]
         converted = self._convert_to_output(prediction, predict_data)
@@ -141,7 +144,7 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
         converted = self._convert_to_output(pred, predict_data)
         return converted
-    
+
     def _convert_to_output(self, prediction, predict_data: CompressionInputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.dict) -> OutputData:
         output_data = CompressionOutputData(idx=predict_data.idx,

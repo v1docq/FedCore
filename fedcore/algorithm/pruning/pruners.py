@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import torchvision
 from fedot.core.data.data import InputData
-from torch import nn
+from torch import nn, optim
 from torchvision.models import VisionTransformer
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -12,6 +12,7 @@ from typing import Optional
 import torch
 from fedot.core.operations.operation_parameters import OperationParameters
 
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.constanst_repository import PRUNERS, PRUNING_IMPORTANCE, PRUNING_LAYERS_IMPL
 
 
@@ -22,13 +23,22 @@ class BasePruner(BaseCompressionModel):
 
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
-        self.epochs = params.get('epochs', 15)
+        # finetune params
+        self.criterion = params.get('loss', nn.CrossEntropyLoss())
+        self.optimizer = params.get('optimizer', optim.Adam)
+        self.learning_rate = params.get('lr', 0.001)
+
+        # pruning params
         self.pruner_name = params.get('pruner_name', 'group_norm_pruner')
-        self.pruning_ratio = params.get('pruning_ratio', 0.5)
         self.importance = params.get('importance', 'GroupNormImportance')
+
+        # pruning hyperparams
+        self.pruning_ratio = params.get('pruning_ratio', 0.5)
+        self.epochs = params.get('pruning_iterations', 15)
         self.importance_norm = params.get('importance_norm', 1)
         self.importance_reduction = params.get('importance_reduction', 'mean')
         self.importance_normalize = params.get('importance_normalize', 'mean')
+
         # importance criterion for parameter selections
         self.importance = PRUNING_IMPORTANCE[self.importance](group_reduction=self.importance_reduction,
                                                               normalizer=self.importance_normalize)
@@ -70,6 +80,10 @@ class BasePruner(BaseCompressionModel):
             # For ViT: Rounding the number of channels to the nearest multiple of num_heads
         return ignored_layers
 
+    def _finetune_purned_model(self, input_data):
+        self.finetune(finetune_object=self,
+                      finetune_data=input_data)
+
     def fit(self,
             input_data: InputData):
         self.model = input_data.target
@@ -83,8 +97,11 @@ class BasePruner(BaseCompressionModel):
 
         # Pruner initialization
         self.pruner = PRUNERS[self.pruner_name]
-        example_inputs = [b[0] for b in input_data.features.calib_dataloader]
-        example_inputs = example_inputs[0]
+        # list of tensors with dim size n_samples x n_channel x height x width
+        all_batches = [b[0] for b in input_data.features.calib_dataloader]
+        # take first batch
+        first_batch = all_batches[0]
+
         channel_groups = {}
         if isinstance(self.model, VisionTransformer):
             for m in self.model.modules():
@@ -93,7 +110,7 @@ class BasePruner(BaseCompressionModel):
 
         self.pruner = self.pruner(
             self.model,
-            example_inputs,
+            first_batch,
             global_pruning=True,  # If False, a uniform ratio will be assigned to different layers.
             importance=self.importance,  # importance criterion for parameter selection
             iterative_steps=self.epochs,  # the number of iterations to achieve target ratio
@@ -105,10 +122,10 @@ class BasePruner(BaseCompressionModel):
 
         )
         if True:
-            base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, example_inputs)
+            base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
             for i in range(self.epochs):
                 self.pruner.step()
-                macs, nparams = tp.utils.count_ops_and_params(self.model, example_inputs)
+                macs, nparams = tp.utils.count_ops_and_params(self.model,first_batch)
                 print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
                 print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
             ori_size = tp.utils.count_params(self.model)
@@ -127,6 +144,7 @@ class BasePruner(BaseCompressionModel):
                 params_after_prune = tp.utils.count_params(self.model)
                 print("Params: %s => %s" % (ori_size, params_after_prune))
                 out = self.model(example_inputs)
+        self._finetune_purned_model(input_data)
         return self.model
 
     def predict(self,
