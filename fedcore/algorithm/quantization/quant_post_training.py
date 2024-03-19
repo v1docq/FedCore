@@ -24,11 +24,11 @@ class QuantPostModel(BaseCompressionModel):
         return 'PostQuantisation'
 
     def fit(self,
-            input_data: CompressionInputData):
+            input_data: InputData):
         model_to_quant = input_data.target if 'predict' not in vars(input_data) else input_data.predict
         self.model = self.quantisation_model.fit(model=model_to_quant,
                                                  conf=self.quantisation_config,
-                                                 calib_dataloader=input_data.calib_dataloader
+                                                 calib_dataloader=input_data.features.calib_dataloader
                                                  )
 
     def predict_for_fit(self,

@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import Union, Optional
 
 import numpy as np
 import torch
@@ -26,7 +26,7 @@ class DataCheck:
     """
 
     def __init__(self,
-                 input_data: tuple = None,
+                 input_data: Union[InputData, tuple] = None,
                  cv_dataset: callable = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.input_data = input_data
@@ -44,7 +44,9 @@ class DataCheck:
 
         """
         compression_dataset, torch_model = None, None
-        if isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData)):
+        if isinstance(self.input_data, InputData):
+            return
+        elif isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData)):
             compression_dataset, torch_model = self.input_data[0], self.input_data[1]
         elif isinstance(self.input_data[0], str):
             path_to_files, path_to_labels, path_to_model = self.input_data[0], self.input_data[1], self.input_data[2]

@@ -4,6 +4,7 @@ import numpy as np
 from fedot.core.data.data import InputData
 from torch import nn, optim
 from torchvision.models import VisionTransformer
+from torchvision.ops import FrozenBatchNorm2d
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 import torch_pruning as tp
@@ -56,6 +57,8 @@ class BasePruner(BaseCompressionModel):
         for m in model.modules():
             if isinstance(m, nn.Linear) and m.out_features == self.num_classes:
                 ignored_layers.append(m)
+            # elif isinstance(m, FrozenBatchNorm2d):
+            #     ignored_layers.append(m)
         if model_name.__contains__('ssd'):
             ignored_layers.append(model.head)
         if model_name.__contains__('raft_larget'):
@@ -73,8 +76,11 @@ class BasePruner(BaseCompressionModel):
             ignored_layers.extend([model.head.classification_head.cls_logits, model.head.regression_head.bbox_reg,
                                    model.head.regression_head.bbox_ctrness])
         if model_name.__contains__('keypointrcnn_resnet50_fpn'):
-            ignored_layers.extend([model.rpn.head.cls_logits, model.backbone.fpn.layer_blocks, model.rpn.head.bbox_pred,
-                                   model.roi_heads.box_head, model.roi_heads.box_predictor,
+            ignored_layers.extend([model.rpn.head.cls_logits,
+                                   model.backbone.fpn.layer_blocks,
+                                   model.rpn.head.bbox_pred,
+                                   model.roi_heads.box_head,
+                                   model.roi_heads.box_predictor,
                                    model.roi_heads.keypoint_predictor])
         if model_name.__contains__('maskrcnn_resnet50_fpn_v2'):
             ignored_layers.extend([model.rpn.head.cls_logits, model.rpn.head.bbox_pred, model.roi_heads.box_predictor,

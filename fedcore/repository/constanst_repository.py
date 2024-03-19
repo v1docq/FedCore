@@ -25,44 +25,10 @@ class FedotOperationConstant(Enum):
     CV_TASK = ['classification', 'segmentation', 'object_detection']
     FEDCORE_CV_DATASET = {'classification': CustomDatasetForImages,
                           'segmentation': SemanticSegmentationDataset,
-                          'object_detection': COCODataset,
+                          'object_detection': CustomDatasetForImages,
                           'object_detection_YOLO': YOLODataset}
 
-    EXCLUDED_OPERATION_MUTATION = {
-        'regression': ['one_hot_encoding',
-                       'label_encoding',
-                       'isolation_forest_class',
-                       'tst_model',
-                       'omniscale_model',
-                       'isolation_forest_reg',
-                       'inception_model',
-                       'xcm_model',
-                       'resnet_model',
-                       'signal_extractor',
-                       'recurrence_extractor'
-                       ],
-        'ts_forecasting': [
-            'one_hot_encoding',
-            'label_encoding',
-            'isolation_forest_class'
-            'xgbreg',
-            'sgdr',
-            'treg',
-            'knnreg',
-            'dtreg'
-        ],
-        'classification': [
-            'isolation_forest_reg',
-            'tst_model',
-            'resnet_model',
-            'xcm_model',
-            'one_hot_encoding',
-            'label_encoding',
-            'isolation_forest_class',
-            'signal_extractor',
-            'knnreg',
-            'recurrence_extractor'
-        ]}
+    EXCLUDED_OPERATION_MUTATION = {}
     FEDOT_API_PARAMS = default_param_values_dict = dict(problem=None,
                                                         task_params=None,
                                                         timeout=None,
@@ -102,38 +68,20 @@ class FedotOperationConstant(Enum):
 
     FEDOT_EVO_MULTI_STRATEGY = {'spea2': SelectionTypesEnum.spea2,
                                 'tournament': SelectionTypesEnum.tournament}
+
     FEDOT_GENETIC_MULTI_STRATEGY = {'steady_state': GeneticSchemeTypesEnum.steady_state,
                                     'generational': GeneticSchemeTypesEnum.generational,
                                     'parameter_free': GeneticSchemeTypesEnum.parameter_free}
-    AVAILABLE_CLS_OPERATIONS = [
-        'rf',
-        'logit',
-        'scaling',
-        'normalization',
-        'xgboost',
-        'dt',
-        'mlp',
-        'kernel_pca']
+    AVAILABLE_CLS_OPERATIONS = []
 
-    AVAILABLE_REG_OPERATIONS = [
-        'scaling',
-        'normalization',
-        'xgbreg',
-        'dtreg',
-        'treg',
-        'kernel_pca'
-    ]
+    AVAILABLE_REG_OPERATIONS = []
 
     FEDOT_ASSUMPTIONS = {
-        'pruning': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
-                                                                      'epochs': 50}),
-        'quantisation': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
-                                                                           'epochs': 50}),
+        'pruning': PipelineBuilder().add_node('pruning_model'),
+        'quantisation': PipelineBuilder().add_node('post_training_quant'),
     }
 
-    FEDOT_ENSEMBLE_ASSUMPTIONS = {
-        'pruning': PipelineBuilder().add_node('logit')
-    }
+    FEDOT_ENSEMBLE_ASSUMPTIONS = {}
 
 
 class ModelCompressionConstant(Enum):
@@ -217,6 +165,33 @@ class CVMetricsEnum(QualityMetricsEnum):
     cv_clf_metric = 'cv_clf_metric'
 
 
+class ONNX_CONFIG(Enum):
+    INT8_CONFIG = {
+        'dtype': "int8",
+        'opset_version': 16,
+        'quant_format': "QDQ",  # or "QLinear"
+        'input_names': ["input"],
+        'output_names': ["output"],
+        'dynamic_axes': {'input': [0], 'output': [0]}
+    }
+    INT5_CONFIG = {
+        'dtype': "int5",
+        'opset_version': 16,
+        'quant_format': "QDQ",  # or "QLinear"
+        'input_names': ["input"],
+        'output_names': ["output"],
+        'dynamic_axes': {'input': [0], 'output': [0]}
+    }
+    INT4_CONFIG = {
+        'dtype': "int4",
+        'opset_version': 16,
+        'quant_format': "QDQ",  # or "QLinear"
+        'input_names': ["input"],
+        'output_names': ["output"],
+        'dynamic_axes': {'input': [0], 'output': [0]}
+    }
+
+
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
@@ -252,3 +227,5 @@ CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
 KL_LOSS = TorchLossesConstant.KL_LOSS.value
+
+ONNX_INT8_CONFIG = ONNX_CONFIG.INT8_CONFIG.value

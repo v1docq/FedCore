@@ -18,7 +18,7 @@ IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp",
 
 class CustomDatasetForImages(Dataset):
     # defining constructor
-    def __init__(self, annotations, directory, transform=None):
+    def __init__(self, directory, annotations, transform=None):
         # directory containing the images
         self.directory = directory
         annotations_file_dir = os.path.join(self.directory, annotations)
