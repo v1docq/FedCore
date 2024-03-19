@@ -44,12 +44,6 @@ class CompressionOutputData:
 
 
 class TrainParams:
-    n_epochs: int
-    learning_rate: float
-    batch_size: int
-    n_workers: int
-    device: torch.device
-
     loss_weight: float
     last_layer_loss_weight: float
     intermediate_attn_layers_weights: tp.Tuple[float, float, float, float]

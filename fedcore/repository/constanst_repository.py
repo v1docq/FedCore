@@ -35,7 +35,7 @@ class FedotOperationConstant(Enum):
     CV_TASK = ['classification', 'segmentation', 'object_detection']
     FEDCORE_CV_DATASET = {'classification': CustomDatasetForImages,
                           'segmentation': SemanticSegmentationDataset,
-                          'object_detection': COCODataset,
+                          'object_detection': CustomDatasetForImages,
                           'object_detection_YOLO': YOLODataset}
 
                   'regression': Task(TaskTypesEnum.regression)
@@ -106,29 +106,17 @@ class FedotOperationConstant(Enum):
 
     FEDOT_EVO_MULTI_STRATEGY = {'spea2': SelectionTypesEnum.spea2,
                                 'tournament': SelectionTypesEnum.tournament}
+
     FEDOT_GENETIC_MULTI_STRATEGY = {'steady_state': GeneticSchemeTypesEnum.steady_state,
                                     'generational': GeneticSchemeTypesEnum.generational,
                                     'parameter_free': GeneticSchemeTypesEnum.parameter_free}
-    AVAILABLE_CLS_OPERATIONS = [
-        'rf',
-        'logit',
-        'scaling',
-        'normalization',
-        'xgboost',
-        'dt',
-        'mlp',
-        'kernel_pca']
+    AVAILABLE_CLS_OPERATIONS = []
 
-    AVAILABLE_REG_OPERATIONS = [
-        'scaling',
-        'normalization',
-        'xgbreg',
-        'dtreg',
-        'treg',
-        'kernel_pca'
-    ]
+    AVAILABLE_REG_OPERATIONS = []
 
     FEDOT_ASSUMPTIONS = {
+        'pruning': PipelineBuilder().add_node('pruning_model'),
+        'quantisation': PipelineBuilder().add_node('post_training_quant'),
         'pruning': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
                                                                       'epochs': 50}),
         'quantisation': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
@@ -136,9 +124,7 @@ class FedotOperationConstant(Enum):
         'detection': PipelineBuilder().add_node('detection_model', params={'pretrained': True})
     }
 
-    FEDOT_ENSEMBLE_ASSUMPTIONS = {
-        'pruning': PipelineBuilder().add_node('logit')
-    }
+    FEDOT_ENSEMBLE_ASSUMPTIONS = {}
 
 
 class ModelCompressionConstant(Enum):
@@ -232,6 +218,33 @@ class CVMetricsEnum(QualityMetricsEnum):
     cv_clf_metric = 'cv_clf_metric'
 
 
+class ONNX_CONFIG(Enum):
+    INT8_CONFIG = {
+        'dtype': "int8",
+        'opset_version': 16,
+        'quant_format': "QDQ",  # or "QLinear"
+        'input_names': ["input"],
+        'output_names': ["output"],
+        'dynamic_axes': {'input': [0], 'output': [0]}
+    }
+    INT5_CONFIG = {
+        'dtype': "int5",
+        'opset_version': 16,
+        'quant_format': "QDQ",  # or "QLinear"
+        'input_names': ["input"],
+        'output_names': ["output"],
+        'dynamic_axes': {'input': [0], 'output': [0]}
+    }
+    INT4_CONFIG = {
+        'dtype': "int4",
+        'opset_version': 16,
+        'quant_format': "QDQ",  # or "QLinear"
+        'input_names': ["input"],
+        'output_names': ["output"],
+        'dynamic_axes': {'input': [0], 'output': [0]}
+    }
+
+
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
@@ -286,3 +299,5 @@ FEDOT_WORKER_NUM = ComputationalConstant.FEDOT_WORKER_NUM.value
 FEDOT_WORKER_TIMEOUT_PARTITION = ComputationalConstant.FEDOT_WORKER_TIMEOUT_PARTITION.value
 PATIENCE_FOR_EARLY_STOP = ComputationalConstant.PATIENCE_FOR_EARLY_STOP.value
 KL_LOSS = TorchLossesConstant.KL_LOSS.value
+
+ONNX_INT8_CONFIG = ONNX_CONFIG.INT8_CONFIG.value

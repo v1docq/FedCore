@@ -1,24 +1,36 @@
-import logging
 import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
 from typing import Union
+import logging
+
+import numpy as np
+import pandas as pd
+
 from tqdm import tqdm
 import torch
+import torchvision.datasets
+from torch import nn
+from torch.utils.data import DataLoader
+from torchvision import transforms
+import torch.nn
+
 from fedcore.api.utils.checkers_collection import DataCheck
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
 import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 from fedot.api.main import Fedot
 from fedot.core.pipelines.pipeline import Pipeline
-
-from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDOT_TASK, FEDCORE_CV_DATASET
+from fedcore.repository.model_repository import default_fedcore_availiable_operation, BACKBONE_MODELS
+from fedcore.architecture.utils.paths import data_path
+from fedcore.data.data import CompressionInputData
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 from fedcore.architecture.utils.loader import collate
@@ -107,6 +119,32 @@ class FedCore(Fedot):
         self.config_dict['initial_assumption'] = kwargs.get('initial_assumption',
                                                             FEDOT_ASSUMPTIONS[self.config_dict['problem']])
         self.__init_experiment_setup()
+
+    def _init_pretrain_dataset(self, dataset: str = 'CIFAR10'):
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        default_dataset = {'CIFAR10': torchvision.datasets.CIFAR10}
+        train_dataset = default_dataset[dataset](data_path(dataset), train=True, download=True,
+                                                 transform=transform)
+        val_dataset = default_dataset[dataset](data_path(dataset), train=False, download=True,
+                                               transform=transform)
+        val_dataset, test_dataset = torch.utils.data.random_split(val_dataset, [0.1, 0.9])
+        train_dataloader = DataLoader(
+            train_dataset,
+            batch_size=64,
+            shuffle=True,
+            num_workers=1
+        )
+
+        val_dataloader = DataLoader(val_dataset, batch_size=100, shuffle=False, num_workers=1)
+        return train_dataloader, val_dataloader
+
+    def _init_pretrain_model(self, model_name):
+        model = BACKBONE_MODELS[model_name](pretrained=True).to(default_device())
+        model.fc = nn.Linear(512, 10).to(default_device())
+        model.train()
+        return model
 
     def __init_experiment_setup(self):
         self.logger.info('Initialising experiment setup')
@@ -251,6 +289,11 @@ class FedCore(Fedot):
 
     def load_data(self, path: str = None, supplementary_data: dict = None):
         if path is None and supplementary_data is not None:
+            train_dataloader, val_dataloader = self._init_pretrain_dataset(dataset=supplementary_data['dataset_name'])
+            model = self._init_pretrain_model(supplementary_data['model_name'])
+            supplementary_data = {'torch_model': model.cpu(),
+                                  'test_dataset': val_dataloader,
+                                  'train_dataset': train_dataloader}
             # load data dynamically
             torch_model = supplementary_data['torch_model']
             torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
@@ -260,7 +303,7 @@ class FedCore(Fedot):
                                                  target=torch_model
                                                  )
             torch_dataset.supplementary_data.is_auto_preprocessed = True
-            self.train_data = (torch_dataset,torch_model)
+            self.train_data = (torch_dataset, torch_model)
         else:
             # load data from directory
             path_to_data = os.path.join(PROJECT_PATH, path)
@@ -272,9 +315,9 @@ class FedCore(Fedot):
                     model_dir = os.path.join(path_to_data, x)
                     _ = [y for y in os.listdir(model_dir) if y.__contains__('.pt')][0]
                     path_to_model = os.path.join(model_dir, _)
-                else:
+                elif x.__contains__('txt'):
                     annotations = os.path.join(path_to_data, x)
-            self.train_data = DataCheck(input_data=(path_to_data, annotations, path_to_model),
+            self.train_data = DataCheck(input_data=(directory, annotations, path_to_model),
                                         cv_dataset=self.cv_dataset).check_input_data()
         return self.train_data
 
@@ -297,9 +340,10 @@ class FedCore(Fedot):
             return self.logger.info('You must specify configuration for model convertation')
         else:
             if framework == 'ONNX':
-                self.framework_config['example_inputs'] = torch.unsqueeze(supplementary_data['train_dataset'][0][0],
+                example_input = next(iter(self.train_data.features.calib_dataloader))[0][0]
+                self.framework_config['example_inputs'] = torch.unsqueeze(example_input,
                                                                           dim=0)
-                int8_onnx_config = Torch2ONNXConfig(**self.framework_config)
-                supplementary_data['model_to_export'].export("int8-model.onnx", int8_onnx_config)
-                converted_model = ONNXInferenceModel("int8-model.onnx")
+                onnx_config = Torch2ONNXConfig(**self.framework_config)
+                supplementary_data['model_to_export'].export("converted-model.onnx", onnx_config)
+                converted_model = ONNXInferenceModel("converted-model.onnx")
         return converted_model

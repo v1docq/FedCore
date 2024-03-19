@@ -75,6 +75,7 @@ def visualise_pareto(front: Sequence[Individual],
     plt.clf()
     plt.close('all')
 
+
 class MultiobjectiveCompression:
     def __init__(self, params: Optional[OperationParameters] = {}):
 
@@ -162,23 +163,24 @@ class MultiobjectiveCompression:
         #                                     history=self.composer.history)
         #
         # self.composer.history.to_csv()
-            pass
+        pass
 
     def evaluate(self, input_data):
         if self.with_composition:
-            pipeline_compressed_tuned = self._with_composistion()
+            pipeline_pareto_front = self._with_composistion()
         else:
             tuner = (
                 TunerBuilder(Task(TaskTypesEnum.classification))
                 .with_tuner(OptunaTuner)
                 .with_n_jobs(1)
                 .with_iterations(10)
-                .with_timeout(30)
+                .with_timeout(60)
+                .with_early_stopping_rounds(5)
                 .with_metric(self.metrics)
                 .build(input_data)
             )
             pipeline_pareto_front = tuner.tune(self.pipeline_compressed)
         visualise_pareto(front=pipeline_pareto_front,
-                         objectives_numbers=(0,1),
+                         objectives_numbers=(0, 1),
                          objectives_names=('Accuracy', 'Latency'))
         return pipeline_pareto_front

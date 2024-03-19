@@ -83,12 +83,11 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
         converted = self._convert_to_output(pruned_model, predict_data)
         return converted
 
-    def _convert_to_output(self, prediction, predict_data: CompressionInputData,
+    def _convert_to_output(self, prediction, predict_data: InputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
-        output_data = CompressionOutputData(idx=predict_data.idx,
-                                            features=predict_data.features,
-                                            train_dataloader=predict_data.train_dataloader,
-                                            calib_dataloader=predict_data.calib_dataloader,
+        output_data = CompressionOutputData(features=predict_data.features,
+                                            train_dataloader=predict_data.features.train_dataloader,
+                                            calib_dataloader=predict_data.features.calib_dataloader,
                                             predict=prediction,
                                             task=predict_data.task,
                                             target=predict_data.target,
