@@ -1,20 +1,18 @@
 import torch
 import torch_pruning as tp
 from enum import Enum
-from functools import partial
 from golem.core.optimisers.genetic.operators.inheritance import GeneticSchemeTypesEnum
 from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
 import torchvision
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-from fedot.core.repository.dataset_types import DataTypesEnum
-from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, RegressionMetricsEnum, \
-    QualityMetricsEnum
+from fedot.core.repository.metrics_repository import QualityMetricsEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
-from golem.core.tuning.iopt_tuner import IOptTuner
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
-from golem.core.tuning.simultaneous import SimultaneousTuner
-from golem.core.tuning.sequential import SequentialTuner
+
+from fedcore.architecture.dataset.object_detection_datasets import COCODataset, YOLODataset
+from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
+from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset
 
 
 class FedotOperationConstant(Enum):
@@ -22,6 +20,14 @@ class FedotOperationConstant(Enum):
                   'regression': Task(TaskTypesEnum.regression),
                   'ts_forecasting': Task(TaskTypesEnum.ts_forecasting,
                                          TsForecastingParams(forecast_length=1))}
+
+    FEDCORE_TASK = ['pruning', 'quantisation', 'distilation', 'low_rank', 'evo_composed']
+    CV_TASK = ['classification', 'segmentation', 'object_detection']
+    FEDCORE_CV_DATASET = {'classification': CustomDatasetForImages,
+                          'segmentation': SemanticSegmentationDataset,
+                          'object_detection': COCODataset,
+                          'object_detection_YOLO': YOLODataset}
+
     EXCLUDED_OPERATION_MUTATION = {
         'regression': ['one_hot_encoding',
                        'label_encoding',
@@ -92,16 +98,7 @@ class FedotOperationConstant(Enum):
                                                         with_tuning=True
                                                         )
 
-    FEDOT_TUNING_METRICS = {'classification': ClassificationMetricsEnum.accuracy,
-                            'regression': RegressionMetricsEnum.RMSE}
-    FEDOT_TUNER_STRATEGY = {'sequential': partial(SequentialTuner, inverse_node_order=True),
-                            'simultaneous': SimultaneousTuner,
-                            'IOptTuner': IOptTuner,
-                            'optuna': OptunaTuner}
-    FEDOT_HEAD_ENSEMBLE = {'regression': 'fedot_regr',
-                           'classification': 'fedot_cls'}
-    FEDOT_ATOMIZE_OPERATION = {'regression': 'fedot_regr',
-                               'classification': 'fedot_cls'}
+    FEDOT_TUNER_STRATEGY = {'optuna': OptunaTuner}
 
     FEDOT_EVO_MULTI_STRATEGY = {'spea2': SelectionTypesEnum.spea2,
                                 'tournament': SelectionTypesEnum.tournament}
@@ -158,6 +155,24 @@ class ModelCompressionConstant(Enum):
                'growing_reg_pruner': tp.pruner.GrowingRegPruner,
                'meta_pruner': tp.pruner.MetaPruner}
 
+    PRUNER_REQUIRED_GRADS = {
+        "TaylorImportance": tp.importance.TaylorImportance,
+        "GroupTaylorImportance": tp.importance.GroupTaylorImportance,
+    }
+
+    PRUNER_REQUIRED_REG = {
+        "HessianImportance": tp.importance.HessianImportance,
+        "BNScaleImportance": tp.importance.BNScaleImportance,
+        "GroupNormImportance": tp.importance.GroupNormImportance,
+        "GroupHessianImportance": tp.importance.GroupHessianImportance
+    }
+
+    PRUNER_WITHOUT_REQUIREMENTS = {
+        "MagnitudeImportance": tp.importance.MagnitudeImportance,
+        "LAMPImportance": tp.importance.LAMPImportance,
+        "RandomImportance": tp.importance.RandomImportance
+    }
+
     PRUNING_IMPORTANCE = {"MagnitudeImportance": tp.importance.MagnitudeImportance,
                           "TaylorImportance": tp.importance.TaylorImportance,
                           "HessianImportance": tp.importance.HessianImportance,
@@ -186,6 +201,7 @@ class TorchLossesConstant(Enum):
     MSE = nn.MSELoss
     KL_LOSS = nn.KLDivLoss  #
 
+
 class DistilationMetricsEnum(QualityMetricsEnum):
     intermediate_layers_attention = 'intermediate_attention'
     intermediate_layers_feature = 'intermediate_feature'
@@ -196,22 +212,24 @@ class InferenceMetricsEnum(QualityMetricsEnum):
     latency = 'latency'
     throughput = 'throughput'
 
+
 class CVMetricsEnum(QualityMetricsEnum):
     cv_clf_metric = 'cv_clf_metric'
+
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
-FEDOT_HEAD_ENSEMBLE = FedotOperationConstant.FEDOT_HEAD_ENSEMBLE.value
 FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
-FEDOT_ATOMIZE_OPERATION = FedotOperationConstant.FEDOT_ATOMIZE_OPERATION.value
-FEDOT_TUNING_METRICS = FedotOperationConstant.FEDOT_TUNING_METRICS.value
 FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
 FEDOT_EVO_MULTI_STRATEGY = FedotOperationConstant.FEDOT_EVO_MULTI_STRATEGY.value
 FEDOT_GENETIC_MULTI_STRATEGY = FedotOperationConstant.FEDOT_GENETIC_MULTI_STRATEGY.value
+FEDCORE_TASK = FedotOperationConstant.FEDCORE_TASK.value
+CV_TASK = FedotOperationConstant.CV_TASK.value
+FEDCORE_CV_DATASET = FedotOperationConstant.FEDCORE_CV_DATASET.value
 
 ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
@@ -226,6 +244,9 @@ PRUNING_REDUCTION = ModelCompressionConstant.PRUNING_REDUCTION.value
 PRUNING_NORMALIZE = ModelCompressionConstant.PRUNING_NORMALIZE.value
 PRUNING_LAYERS_IMPL = ModelCompressionConstant.PRUNING_LAYERS_IMPL.value
 GROUP_PRUNING_IMPORTANCE = ModelCompressionConstant.GROUP_PRUNING_IMPORTANCE.value
+PRUNER_REQUIRED_REG = ModelCompressionConstant.PRUNER_REQUIRED_REG.value
+PRUNER_REQUIRED_GRADS = ModelCompressionConstant.PRUNER_REQUIRED_GRADS.value
+PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMENTS.value
 
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value

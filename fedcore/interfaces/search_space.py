@@ -8,19 +8,30 @@ fedcore_search_space = {
         {
             # 'window_size_method': {'hyperopt-dist': hp.choice,
             #                     'sampling-scope': [list(PRUNING_IMPORTANCE.keys())]},
+            'importance': {'hyperopt-dist': hp.choice,
+                           'sampling-scope': [['MagnitudeImportance',
+                                               'BNScaleImportance',
+                                               'GroupNormImportance',
+                                               'GroupTaylorImportance',
+                                               ]],
+                           'type': 'categorical'},
             'importance_norm': {'hyperopt-dist': hp.choice,
-                                'sampling-scope': [PRUNING_NORMS]},
+                                'sampling-scope': [PRUNING_NORMS],
+                                'type': 'categorical'},
             'importance_reduction': {'hyperopt-dist': hp.choice,
-                                     'sampling-scope': [PRUNING_REDUCTION]},
+                                     'sampling-scope': [PRUNING_REDUCTION],
+                                     'type': 'categorical'},
             'importance_normalize': {'hyperopt-dist': hp.choice,
-                                     'sampling-scope': [PRUNING_NORMALIZE]},
+                                     'sampling-scope': [PRUNING_NORMALIZE],
+                                     'type': 'categorical'},
             'pruning_ratio': {
                 'hyperopt-dist': hp.uniform,
                 'sampling-scope': [0.1, 1.0],
                 'type': 'continuous'},
             'pruning_iterations': {
                 'hyperopt-dist': hp.choice,
-                'sampling-scope': [[x for x in range(5, 50, 5)]]}}
+                'sampling-scope': [[x for x in range(5, 20, 5)]],
+                'type': 'categorical'}}
 }
 
 
