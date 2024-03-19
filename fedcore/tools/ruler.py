@@ -47,7 +47,7 @@ class PerformanceEvaluator:
         self.report()
         return result
 
-    def measure_latency(self, reps: int = 10):
+    def measure_latency(self, reps: int = 3):
         timings = np.zeros((reps, 1))
         if torch.cuda.is_available():
             self.warm_up_cuda()

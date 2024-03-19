@@ -1,21 +1,79 @@
 from typing import Optional
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-from golem.core.optimisers.genetic.gp_params import GPAlgorithmParameters
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from golem.visualisation.opt_viz_extra import OptHistoryExtraVisualizer
 
-from fedot.core.composer.composer_builder import ComposerBuilder
-from fedot.core.pipelines.node import PipelineNode
-from fedot.core.pipelines.pipeline_composer_requirements import PipelineComposerRequirements
 from fedot.core.pipelines.tuning.tuner_builder import TunerBuilder
 from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 from fedcore.repository.constanst_repository import FEDOT_GENETIC_MULTI_STRATEGY, FEDOT_EVO_MULTI_STRATEGY, \
     InferenceMetricsEnum, CVMetricsEnum
-from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
+import os
+from typing import Any, List, Sequence, Tuple, Optional
+from matplotlib import pyplot as plt
+from golem.core.optimisers.opt_history_objects.individual import Individual
+
+
+def visualise_pareto(front: Sequence[Individual],
+                     objectives_numbers: Tuple[int, int] = (0, 1),
+                     objectives_names: Sequence[str] = ('ROC-AUC', 'Complexity'),
+                     file_name: str = 'result_pareto.png', show: bool = False, save: bool = True,
+                     folder: str = '../../tmp/pareto',
+                     generation_num: int = None,
+                     individuals: Sequence[Individual] = None,
+                     minmax_x: List[float] = None,
+                     minmax_y: List[float] = None):
+    pareto_obj_first, pareto_obj_second = [], []
+    for ind in front:
+        fit_first = ind.fitness.values[objectives_numbers[0]]
+        pareto_obj_first.append(abs(fit_first))
+        fit_second = ind.fitness.values[objectives_numbers[1]]
+        pareto_obj_second.append(abs(fit_second))
+
+    fig, ax = plt.subplots()
+
+    if individuals is not None:
+        obj_first, obj_second = [], []
+        for ind in individuals:
+            fit_first = ind.fitness.values[objectives_numbers[0]]
+            obj_first.append(abs(fit_first))
+            fit_second = ind.fitness.values[objectives_numbers[1]]
+            obj_second.append(abs(fit_second))
+        ax.scatter(obj_first, obj_second, c='green')
+
+    ax.scatter(pareto_obj_first, pareto_obj_second, c='red')
+    plt.plot(pareto_obj_first, pareto_obj_second, color='r')
+
+    if generation_num is not None:
+        ax.set_title(f'Pareto frontier, Generation: {generation_num}', fontsize=15)
+    else:
+        ax.set_title('Pareto frontier', fontsize=15)
+    plt.xlabel(objectives_names[0], fontsize=15)
+    plt.ylabel(objectives_names[1], fontsize=15)
+
+    if minmax_x is not None:
+        plt.xlim(minmax_x[0], minmax_x[1])
+    if minmax_y is not None:
+        plt.ylim(minmax_y[0], minmax_y[1])
+    fig.set_figwidth(8)
+    fig.set_figheight(8)
+    if save:
+        if not os.path.isdir('../../tmp'):
+            os.mkdir('../../tmp')
+        if not os.path.isdir(f'{folder}'):
+            os.mkdir(f'{folder}')
+
+        path = f'{folder}/{file_name}'
+        plt.savefig(path, bbox_inches='tight')
+    if show:
+        plt.show()
+
+    plt.cla()
+    plt.clf()
+    plt.close('all')
 
 class MultiobjectiveCompression:
     def __init__(self, params: Optional[OperationParameters] = {}):
@@ -115,9 +173,12 @@ class MultiobjectiveCompression:
                 .with_tuner(OptunaTuner)
                 .with_n_jobs(1)
                 .with_iterations(10)
+                .with_timeout(30)
                 .with_metric(self.metrics)
                 .build(input_data)
             )
-            pipeline_compressed_tuned = tuner.tune(self.pipeline_compressed)
-
-        return pipeline_compressed_tuned
+            pipeline_pareto_front = tuner.tune(self.pipeline_compressed)
+        visualise_pareto(front=pipeline_pareto_front,
+                         objectives_numbers=(0,1),
+                         objectives_names=('Accuracy', 'Latency'))
+        return pipeline_pareto_front

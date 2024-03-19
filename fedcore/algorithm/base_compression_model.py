@@ -83,7 +83,7 @@ class BaseCompressionModel:
         self.optimizer = finetune_object.optimizer(finetune_object.model.parameters(),
                                                    lr=finetune_object.learning_rate)
         finetune_object.model.train()
-        for epoch in range(1):  # loop over the dataset multiple times
+        for epoch in range(5):  # loop over the dataset multiple times
             running_loss = 0.0
             for i, data in enumerate(finetune_data.features.train_dataloader, 0):
                 # get the inputs; data is a list of [inputs, labels]
@@ -99,9 +99,9 @@ class BaseCompressionModel:
 
                 # print statistics
                 running_loss += loss.item()
-                if i % 20 == 0:  # print every 2000 mini-batches
+                if i % 200 == 0:  # print every 20000 mini-batches
                     print('[%d, %5d] loss: %.3f' %
-                          (epoch + 1, i + 1, running_loss / 20))
+                          (epoch + 1, i + 1, running_loss / 200))
                     running_loss = 0.0
         finetune_object.model.eval()
         return finetune_object

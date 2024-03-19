@@ -7,7 +7,6 @@ from typing import Union
 from tqdm import tqdm
 import torch
 from fedcore.api.utils.checkers_collection import DataCheck
-from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
 from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
 import numpy as np
 import pandas as pd
@@ -19,7 +18,7 @@ from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.neural_compressor.config import Torch2ONNXConfig
-from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDOT_TASK
+from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDOT_TASK, FEDCORE_CV_DATASET
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 from fedcore.architecture.utils.loader import collate
@@ -62,19 +61,24 @@ class FedCore(Fedot):
 
     def __init__(self, **kwargs):
 
-        # init Fedot and Industrial hyperparams and path to results
-        self.output_folder = kwargs.get('output_folder', None)
-        self.preprocessing = kwargs.get('fedcore_preprocessing', False)
+        # init FedCore hyperparams
+        self.compression_task = kwargs.get('compression_task', 'pruning')
+        self.cv_task = kwargs.get('cv_task', 'classification')
+        self.cv_dataset = FEDCORE_CV_DATASET[self.cv_task]
+
+        # init backend and convertation params
         self.framework_config = kwargs.get('framework_config', None)
         self.backend_method = kwargs.get('backend', 'cpu')
-        self.task_params = kwargs.get('task_params', None)
-        self.model_params = kwargs.get('model_params', None)
+
+        # init path to results
         self.path_to_composition_results = kwargs.get('history_dir', None)
+        self.output_folder = kwargs.get('output_folder', None)
 
         # create dirs with results
         prefix = './composition_results' if self.path_to_composition_results is None else \
             self.path_to_composition_results
         Path(prefix).mkdir(parents=True, exist_ok=True)
+
         # create dirs with results
         if self.output_folder is None:
             self.output_folder = default_path_to_save_results
@@ -82,15 +86,17 @@ class FedCore(Fedot):
         else:
             Path(self.output_folder).mkdir(parents=True, exist_ok=True)
             del kwargs['output_folder']
+
         # init logger
         logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(name)s - %(message)s',
                             handlers=[logging.FileHandler(Path(self.output_folder) / 'log.log'),
                                       logging.StreamHandler()])
         super(Fedot, self).__init__()
+
         # init hidden state variables
         self.logger = logging.getLogger('FedCoreAPI')
         self.solver = None
-        # map Fedot params to Industrial params
+        # map Fedot params to FedCore params
         self.config_dict = kwargs
         self.config_dict['history_dir'] = prefix
         self.config_dict['available_operations'] = kwargs.get('available_operations',
@@ -132,7 +138,7 @@ class FedCore(Fedot):
         if self.config_dict['problem'] == 'detection':
             classes = list(input_data.classes.keys())
             loader = DataLoader(
-                input_data, 
+                input_data,
                 batch_size=1,
                 shuffle=False,
                 collate_fn=collate
@@ -152,7 +158,7 @@ class FedCore(Fedot):
                 self.train_data = input_preproc.check_input_data()
                 self.solver = self.__init_solver()
                 self.solver.fit(self.train_data)
-            
+
         else:
             self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
             input_preproc = DataCheck(input_data=self.train_data,
@@ -177,8 +183,7 @@ class FedCore(Fedot):
         """
         self.predict_data = deepcopy(predict_data)  # we do not want to make inplace changes
         self.predict_data = DataCheck(input_data=self.predict_data,
-                                      task=self.config_dict['problem'],
-                                      task_params=self.task_params).check_input_data()
+                                      cv_dataset=self.cv_dataset).check_input_data()
         predict = self.solver.predict(self.predict_data)
         return predict
 
@@ -242,16 +247,7 @@ class FedCore(Fedot):
             path (str): path to the model
 
         """
-        self.repo = FedcoreModels().setup_repository()
-
-        dir_list = os.listdir(path)
-        if 'fitted_operations' in dir_list:
-            self.solver = Pipeline().load(path)
-        else:
-            self.solver = []
-            for p in dir_list:
-                self.solver.append(Pipeline().load(
-                    f'{path}/{p}/0_pipeline_saved'))
+        pass
 
     def load_data(self, path: str = None, supplementary_data: dict = None):
         if path is None and supplementary_data is not None:
@@ -264,6 +260,7 @@ class FedCore(Fedot):
                                                  target=torch_model
                                                  )
             torch_dataset.supplementary_data.is_auto_preprocessed = True
+            self.train_data = (torch_dataset,torch_model)
         else:
             # load data from directory
             path_to_data = os.path.join(PROJECT_PATH, path)
@@ -277,15 +274,9 @@ class FedCore(Fedot):
                     path_to_model = os.path.join(model_dir, _)
                 else:
                     annotations = os.path.join(path_to_data, x)
-            torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
-            torch_dataloader = CustomDatasetForImages(annotations=annotations,
-                                                      directory=directory)
-            torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
-                                                 num_classes=torch_dataloader.num_classes,
-                                                 calib_dataloader=torch_dataloader,
-                                                 target=torch_model
-                                                 )
-        return (torch_dataset, torch_model)
+            self.train_data = DataCheck(input_data=(path_to_data, annotations, path_to_model),
+                                        cv_dataset=self.cv_dataset).check_input_data()
+        return self.train_data
 
     def save_best_model(self):
         if isinstance(self.solver, Fedot):

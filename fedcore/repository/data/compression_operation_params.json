@@ -1,7 +1,6 @@
 {
   "pruning_model": {
-    "epochs":5,
-    "pruner_name":"magnitude_pruner",
+    "pruning_iterations":5,
     "pruning_ratio": 0.5,
     "importance": "MagnitudeImportance",
     "importance_norm": 2,

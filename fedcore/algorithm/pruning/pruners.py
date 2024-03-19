@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import numpy as np
-import torchvision
 from fedot.core.data.data import InputData
 from torch import nn, optim
 from torchvision.models import VisionTransformer
@@ -9,11 +8,11 @@ from torchvision.models import VisionTransformer
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 import torch_pruning as tp
 from typing import Optional
-import torch
 from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.repository.constanst_repository import PRUNERS, PRUNING_IMPORTANCE, PRUNING_LAYERS_IMPL
+from fedcore.repository.constanst_repository import PRUNERS, PRUNING_IMPORTANCE, PRUNING_LAYERS_IMPL, \
+    PRUNER_REQUIRED_REG, PRUNER_REQUIRED_GRADS, PRUNER_WITHOUT_REQUIREMENTS
 
 
 class BasePruner(BaseCompressionModel):
@@ -28,13 +27,17 @@ class BasePruner(BaseCompressionModel):
         self.optimizer = params.get('optimizer', optim.Adam)
         self.learning_rate = params.get('lr', 0.001)
 
+        # pruning gradients params
+        self.criterion_for_grad = params.get('loss', nn.CrossEntropyLoss())
+        self.learning_rate_for_grad = params.get('lr', 0.001)
+
         # pruning params
-        self.pruner_name = params.get('pruner_name', 'group_norm_pruner')
-        self.importance = params.get('importance', 'GroupNormImportance')
+        self.pruner_name = params.get('pruner_name', 'meta_pruner')
+        self.importance = params.get('importance', 'MagnitudeImportance')
 
         # pruning hyperparams
         self.pruning_ratio = params.get('pruning_ratio', 0.5)
-        self.epochs = params.get('pruning_iterations', 15)
+        self.epochs = params.get('pruning_iterations', 2)
         self.importance_norm = params.get('importance_norm', 1)
         self.importance_reduction = params.get('importance_reduction', 'mean')
         self.importance_normalize = params.get('importance_normalize', 'mean')
@@ -42,6 +45,7 @@ class BasePruner(BaseCompressionModel):
         # importance criterion for parameter selections
         self.importance = PRUNING_IMPORTANCE[self.importance](group_reduction=self.importance_reduction,
                                                               normalizer=self.importance_normalize)
+
         self.pruner = None
 
     def __repr__(self):
@@ -80,14 +84,56 @@ class BasePruner(BaseCompressionModel):
             # For ViT: Rounding the number of channels to the nearest multiple of num_heads
         return ignored_layers
 
-    def _finetune_purned_model(self, input_data):
+    def _fix_attention_layer(self):
+        for name, m in self.model.named_modules():
+            if hasattr(m, 'attention_head_size'):
+                m.attention_head_size = m.attention_head_size // 4
+            if hasattr(m, 'all_head_size'):
+                m.all_head_size = m.all_head_size // 4
+
+    def _finetune_pruned_model(self, input_data):
         self.finetune(finetune_object=self,
                       finetune_data=input_data)
+
+    def _accumulate_grads(self, data, target, return_false=False):
+        data, target = data.to(default_device()), target.to(default_device())
+        out = self.model(data)
+        loss = self.criterion_for_grad(out, target)
+        loss.backward()
+        if return_false:
+            return loss
+
+    def _pruner_iteration_func(self, pruner: callable, input_data):
+        if isinstance(self.importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values())):
+            return pruner
+        elif isinstance(self.importance, tuple(PRUNER_REQUIRED_GRADS.values())):
+            for i, (data, target) in enumerate(input_data.features.calib_dataloader):
+                if i != 0:
+                    print(f"Gradients accumulation iter- {i}")
+                    print(f"==========================================")
+                    # we using 1 batch as example of pruning quality
+                    self._accumulate_grads(data, target)
+            return pruner
+        elif isinstance(self.importance, tuple(PRUNER_REQUIRED_REG.values())):
+            pruner.update_regularizer()
+            # <== initialize regularizer
+            for i, (data, target) in enumerate(input_data.features.calib_dataloader):
+                if i != 0:
+                    print(f"Pruning reg iter- {i}")
+                    print(f"==========================================")
+                    # we using 1 batch as example of pruning quality
+                    self.optimizer_for_grad.zero_grad()
+                    loss = self._accumulate_grads(data, target, True)  # after loss.backward()
+                    pruner.regularize(self.model, loss)  # <== for sparse training
+                    self.optimizer_for_grad.step()
+            return pruner
 
     def fit(self,
             input_data: InputData):
         self.model = input_data.target
         self.model_for_inference = deepcopy(self.model)
+        self.optimizer_for_grad = optim.Adam(self.model.parameters(),
+                                             lr=self.learning_rate_for_grad)
         self.num_classes = input_data.features.num_classes
         self.ignored_layers = self._filter_ignored_layers(self.model, str(self.model.__class__))
         self.model.cpu().eval()
@@ -121,30 +167,20 @@ class BasePruner(BaseCompressionModel):
             unwrapped_parameters=None
 
         )
-        if True:
-            base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
-            for i in range(self.epochs):
-                self.pruner.step()
-                macs, nparams = tp.utils.count_ops_and_params(self.model,first_batch)
-                print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-                print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
-            ori_size = tp.utils.count_params(self.model)
-        else:
-            print("==============Before pruning=================")
-            layer_channel_cfg = {}
-            for module in self.model.modules():
-                if module not in self.pruner.ignored_layers:
-                    if isinstance(module, nn.Conv2d):
-                        layer_channel_cfg[module] = module.out_channels
-                    elif isinstance(module, nn.Linear):
-                        layer_channel_cfg[module] = module.out_features
+
+        base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
+        for i in range(self.epochs):
+            self.pruner = self._pruner_iteration_func(self.pruner, input_data)
             self.pruner.step()
-            print("==============After pruning=================")
-            with torch.no_grad():
-                params_after_prune = tp.utils.count_params(self.model)
-                print("Params: %s => %s" % (ori_size, params_after_prune))
-                out = self.model(example_inputs)
-        self._finetune_purned_model(input_data)
+            print(f"Pruning iter - {i}")
+            print(f"==========================================")
+
+        print("==============After pruning=================")
+        macs, nparams = tp.utils.count_ops_and_params(self.model, first_batch)
+        print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
+        print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+
+        self._finetune_pruned_model(input_data)
         return self.model
 
     def predict(self,

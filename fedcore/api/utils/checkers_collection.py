@@ -1,8 +1,12 @@
 import logging
 from typing import Union
+
+import numpy as np
+import torch
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
 
+from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.repository.constanst_repository import FEDOT_TASK
 
 
@@ -22,6 +26,8 @@ class DataCheck:
     """
 
     def __init__(self,
+                 input_data: tuple = None,
+                 cv_dataset: callable = None):
                  input_data: Union[tuple, InputData] = None,
                  task: str = None,
                  task_params = None,
@@ -29,6 +35,7 @@ class DataCheck:
                  idx: int = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.input_data = input_data
+        self.cv_dataset = cv_dataset
         self.task = task
         self.task_params = task_params
         self.classes = classes
@@ -57,7 +64,27 @@ class DataCheck:
         else:
             if isinstance(self.input_data, tuple):
                 example_inputs, nn_model = self.input_data[0], self.input_data[1]
+        compression_dataset, torch_model = None, None
+        if isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData)):
+            compression_dataset, torch_model = self.input_data[0], self.input_data[1]
+        elif isinstance(self.input_data[0], str):
+            path_to_files, path_to_labels, path_to_model = self.input_data[0], self.input_data[1], self.input_data[2]
+            torch_dataloader, torch_model = self.cv_dataset(path_to_files, path_to_labels), \
+                                            torch.load(path_to_model, map_location=torch.device('cpu'))
+            compression_dataset = CompressionInputData(features=np.zeros((2, 2)),
+                                                       num_classes=torch_dataloader.num_classes,
+                                                       calib_dataloader=torch_dataloader,
+                                                       target=torch_model
+                                                       )
 
+        self.input_data = InputData(features=compression_dataset,  # CompressionInputData object
+                                    idx=np.arange(1),  # dummy value
+                                    features_names=compression_dataset.num_classes,  # CompressionInputData attribute
+                                    task=FEDOT_TASK['classification'],  # dummy value
+                                    data_type=DataTypesEnum.image,  # dummy value
+                                    target=torch_model  # model for compression
+                                    )
+        self.input_data.supplementary_data.is_auto_preprocessed = True
             self.input_data = InputData(features=example_inputs,
                                         idx=None,
                                         features_names = example_inputs.num_classes,

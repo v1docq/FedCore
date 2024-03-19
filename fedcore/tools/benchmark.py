@@ -108,7 +108,7 @@ class CompressionBenchmark:
         """
         model = self._init_model()
         train_dataset, test_dataset, train_dataloader, val_dataloader = self._init_dataset()
-        # model, performance = self.evaluate_loop(model, train_dataloader, test_dataset)
+        model, performance = self.evaluate_loop(model, train_dataloader, val_dataloader)
         input_data = CompressionInputData(num_classes=10,
                                           calib_dataloader=val_dataloader,
                                           train_dataloader=train_dataloader,
@@ -116,7 +116,7 @@ class CompressionBenchmark:
                                           target=model)
         compressed_model, compression_performance = self.optimisation_type[algo_type].evaluate(input_data)
         print('Before optimisation')
-        # print(performance)
+        print(performance)
         print('After optimisation')
         print(compression_performance)
         return compressed_model, compression_performance

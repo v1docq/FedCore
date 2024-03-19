@@ -17,7 +17,7 @@ from fedcore.tools.ruler import PerformanceEvaluator
 
 class CompressionMetric(Metric):
     default_value = 0
-
+    need_to_minimize = False
     @staticmethod
     @abstractmethod
     def metric(**kwargs) -> float:
@@ -38,6 +38,8 @@ class CompressionMetric(Metric):
         """
         metric = cls.default_value
         metric = cls.metric(pipeline, reference_data.features.calib_dataloader)
+        if cls.need_to_minimize:
+            metric = - metric
         return metric
 
 
@@ -75,6 +77,7 @@ class LastLayer(CompressionMetric):
 
 
 class Throughput(CompressionMetric):
+    need_to_minimize = True
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
@@ -82,6 +85,7 @@ class Throughput(CompressionMetric):
 
 
 class Latency(CompressionMetric):
+    need_to_minimize = False
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
@@ -90,6 +94,9 @@ class Latency(CompressionMetric):
 
 class CV_quality_metric(CompressionMetric):
     default_clf_metric = 'accuracy'
+    need_to_minimize = True
+    def __repr__(self):
+        ''
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
