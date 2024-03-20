@@ -1,10 +1,14 @@
 from enum import Enum
 
+import pandas as pd
+
+from fedcore.algorithm.distillation.distilator import BaseDistilator
 from torchvision.models.detection.faster_rcnn import fasterrcnn_resnet50_fpn_v2, fasterrcnn_mobilenet_v3_large_fpn
 
 from fedcore.algorithm.pruning.pruners import BasePruner
 from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
 from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
+from fedcore.models.backbone.chronos import chronos_small
 from fedcore.models.backbone.mobilenet import MobileNetV3Small, MobileNetV3Large
 from fedcore.models.backbone.resnet import *
 from torchvision.models.efficientnet import efficientnet_b0, efficientnet_b1, efficientnet_b2, \
@@ -12,12 +16,16 @@ from torchvision.models.efficientnet import efficientnet_b0, efficientnet_b1, ef
     efficientnet_b4, efficientnet_b5, efficientnet_b6, efficientnet_b7
 from torchvision.models.densenet import densenet121, densenet161, densenet169, densenet201
 
+from fedcore.models.backbone.segformer import segformer_pretrain
+
 
 class AtomizedModel(Enum):
     PRUNER_MODELS = {'pruning_model': BasePruner}
 
     QUANTISATION_MODELS = {'post_training_quant': QuantPostModel,
                            'training_aware_quant': QuantAwareModel}
+
+    DISTILATION_MODELS = {"distilation_model": BaseDistilator}
 
     MOBILENET_MODELS = {
         'mobilenetv3small': MobileNetV3Small,
@@ -43,12 +51,18 @@ class AtomizedModel(Enum):
     }
 
 
+    SEGFORMER_MODELS = {
+        'segformer': segformer_pretrain
+    }
+
     DENSENET_MODELS = {
         'densenet121': densenet121,
         'densenet169': densenet169,
         'densenet201': densenet201,
         'densenet161': densenet161,
     }
+
+    CHRONOS_MODELS = {'chronos-t5-small': chronos_small}
 
     PRUNED_RESNET_MODELS = {
         "ResNet18": pruned_resnet18,
@@ -65,10 +79,21 @@ class AtomizedModel(Enum):
 
 PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
 QUANTISATION_MODELS = AtomizedModel.QUANTISATION_MODELS.value
+DISTILATION_MODELS = AtomizedModel.DISTILATION_MODELS.value
+
 RESNET_MODELS = AtomizedModel.RESNET_MODELS.value
 DENSENET_MODELS = AtomizedModel.DENSENET_MODELS.value
 EFFICIENTNET_MODELS = AtomizedModel.EFFICIENTNET_MODELS.value
 MOBILENET_MODELS = AtomizedModel.MOBILENET_MODELS.value
+CHRONOS_MODELS = AtomizedModel.CHRONOS_MODELS.value
+SEGFORMER_MODELS = AtomizedModel.SEGFORMER_MODELS.value
+
+BACKBONE_MODELS = {**MOBILENET_MODELS,
+                   **EFFICIENTNET_MODELS,
+                   **DENSENET_MODELS,
+                   **RESNET_MODELS,
+                   **CHRONOS_MODELS,
+                   **SEGFORMER_MODELS}
 BACKBONE_MODELS = {**MOBILENET_MODELS, **EFFICIENTNET_MODELS, **DENSENET_MODELS, **RESNET_MODELS}
 RESNET_MODELS = AtomizedModel.CLF_MODELS.value
 RESNET_MODELS_ONE_CHANNEL = AtomizedModel.CLF_MODELS_ONE_CHANNEL.value
@@ -77,6 +102,8 @@ DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 def default_fedcore_availiable_operation(problem: str = 'pruning'):
     operation_dict = {'pruning': PRUNER_MODELS.keys(),
+                      'quantisation': QUANTISATION_MODELS.keys(),
+                      'distilation': DISTILATION_MODELS.keys()}
                       'quantisation': QUANTISATION_MODELS.keys(),
                       'detection': DETECTION_MODELS.keys()}
 

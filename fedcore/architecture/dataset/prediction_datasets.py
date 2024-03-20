@@ -12,6 +12,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.io import read_image
 
+
+
+
 IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp",
                   ".pgm", ".tif", ".tiff", ".webp")
 
@@ -33,6 +36,15 @@ class CustomDatasetForImages(Dataset):
     # getting the length
     def __len__(self):
         return len(self.labels)
+
+    def bbox_converter(self, center_X, center_y, width, height, image_width, image_height):
+        x1 = int((center_X - width / 2) * image_width)
+        x2 = int((center_X + width / 2) * image_width)
+        x2 = x2 - x1
+        y1 = int((center_y - height / 2) * image_height)
+        y2 = int((center_y + height / 2) * image_height)
+        y2 = y2 - y1
+        return [x1, y1, x2, y2]
 
     # getting the data items
     def __getitem__(self, idx):

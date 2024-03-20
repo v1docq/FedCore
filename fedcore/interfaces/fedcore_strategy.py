@@ -10,6 +10,8 @@ from fedot.core.repository.dataset_types import DataTypesEnum
 from fedcore.data.data import CompressionOutputData, CompressionInputData
 from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DETECTION_MODELS
 from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DISTILATION_MODELS
+
 
 class FedcorePruningStrategy(EvaluationStrategy):
     __operations_by_types = PRUNER_MODELS
@@ -97,7 +99,18 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
 
 
 class FedcoreDistilationStrategy(FedcoreQuantisationStrategy):
-    __operations_by_types = QUANTISATION_MODELS
+    __operations_by_types = DISTILATION_MODELS
+
+    def __init__(self, operation_type: str, params: Optional[OperationParameters] = None):
+        super().__init__(operation_type, params)
+        self.operation_impl = self._convert_to_operation(operation_type)(self.params_for_fit)
+
+    def _convert_to_operation(self, operation_type: str):
+        if operation_type in self.__operations_by_types.keys():
+            return self.__operations_by_types[operation_type]
+        else:
+            raise ValueError(
+                f'Impossible to obtain custom preprocessing strategy for {operation_type}')
 
 class FedcoreDetectionStrategy(EvaluationStrategy):
     __operations_by_types = DETECTION_MODELS

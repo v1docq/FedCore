@@ -113,11 +113,11 @@ class FedCore(Fedot):
         self.config_dict['history_dir'] = prefix
         self.config_dict['available_operations'] = kwargs.get('available_operations',
                                                               default_fedcore_availiable_operation(
-                                                                  self.config_dict['problem']))
+                                                                  self.compression_task))
 
         self.config_dict['optimizer'] = kwargs.get('optimizer', FedcoreEvoOptimizer)
         self.config_dict['initial_assumption'] = kwargs.get('initial_assumption',
-                                                            FEDOT_ASSUMPTIONS[self.config_dict['problem']])
+                                                            FEDOT_ASSUMPTIONS[self.compression_task])
         self.__init_experiment_setup()
 
     def _init_pretrain_dataset(self, dataset: str = 'CIFAR10'):
@@ -306,6 +306,7 @@ class FedCore(Fedot):
             self.train_data = (torch_dataset, torch_model)
         else:
             # load data from directory
+            annotations, path_to_model = None, None
             path_to_data = os.path.join(PROJECT_PATH, path)
             dir_list = os.listdir(path_to_data)
             for x in dir_list:
@@ -313,10 +314,12 @@ class FedCore(Fedot):
                     directory = os.path.join(path_to_data, x)
                 elif x.__contains__('model'):
                     model_dir = os.path.join(path_to_data, x)
-                    _ = [y for y in os.listdir(model_dir) if y.__contains__('.pt')][0]
+                    _ = [y for y in os.listdir(model_dir) if y.__contains__('.pt') or y.__contains__('.h5')][0]
                     path_to_model = os.path.join(model_dir, _)
                 elif x.__contains__('txt'):
                     annotations = os.path.join(path_to_data, x)
+            if path_to_model is None and supplementary_data is not None:
+                path_to_model = supplementary_data['model_name']
             self.train_data = DataCheck(input_data=(directory, annotations, path_to_model),
                                         cv_dataset=self.cv_dataset).check_input_data()
         return self.train_data

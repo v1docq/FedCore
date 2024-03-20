@@ -10,5 +10,8 @@
    "quantisation_model": {
     "epochs":5,
     "quantisation_config":null
+  },
+   "distilation_model": {
+    "epochs":5
   }
 }
