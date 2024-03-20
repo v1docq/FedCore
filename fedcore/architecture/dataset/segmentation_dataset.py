@@ -1,17 +1,50 @@
+import glob
+import os
+
+import cv2
+import torch
 from transformers import SegformerFeatureExtractor
+
 from PIL import Image
-
 from torch.utils.data import Dataset
-
+from torchvision.io import read_image
 import numpy as np
 
 from torch.utils.data import DataLoader
+import torch.utils.data as data
+
+
+class SegmentationDataset(data.Dataset):
+    def __init__(self, directory, annotations, transforms: callable = None):
+        super(SegmentationDataset, self).__init__()
+        self.img_files = glob.glob(os.path.join(directory, 'images', '*.png'))
+        self.mask_files = glob.glob(os.path.join(directory, 'labels', '*.png'))
+        self.transforms = transforms
+
+    def __getitem__(self, index):
+        image_path = self.img_files[index]
+        mask_path = self.mask_files[index]
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        mask = cv2.imread(mask_path, 0)
+        if self.transforms is not None:
+            # apply the transformations to both image and its mask
+            image = self.transforms(image)
+            mask = self.transforms(mask)
+        return image, mask
+
+    def __len__(self):
+        return len(self.img_files)
 
 
 class SemanticSegmentationDataset(Dataset):
     """Image (semantic) segmentation dataset."""
 
-    def __init__(self, root_dir, feature_extractor, train=True):
+    def __init__(self,
+                 root_dir,
+                 annotations,
+                 feature_extractor=SegformerFeatureExtractor(reduce_labels=True),
+                 train=True):
         """
         Args:
             root_dir (string): Root directory of the dataset containing the images + annotations.
@@ -22,9 +55,7 @@ class SemanticSegmentationDataset(Dataset):
         self.feature_extractor = feature_extractor
         self.train = train
 
-        split_name = "train.txt" if self.train else "test.txt"
-
-        with open(f"{root_dir}/{split_name}") as f:
+        with open(annotations) as f:
             self.images = [line.replace("\n", "") for line in f.readlines()]
 
         self.annotations = [
@@ -34,12 +65,19 @@ class SemanticSegmentationDataset(Dataset):
             for img_path in self.images
         ]
 
-        assert len(self.images) == len(
-            self.annotations
-        ), "There must be as many images as there are segmentation maps"
+        assert len(self.images) == len(self.annotations), \
+            "There must be as many images as there are segmentation maps"
 
     def __len__(self):
         return len(self.images)
+
+    @property
+    def shape(self):
+        return 1
+
+    @property
+    def num_classes(self):
+        return 1
 
     def __getitem__(self, idx):
         image = Image.open(self.images[idx])

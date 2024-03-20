@@ -15,7 +15,6 @@ from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.constanst_repository import PRUNERS, PRUNING_IMPORTANCE, PRUNING_LAYERS_IMPL, \
     PRUNER_REQUIRED_REG, PRUNER_REQUIRED_GRADS, PRUNER_WITHOUT_REQUIREMENTS
 
-
 class BasePruner(BaseCompressionModel):
     """Class responsible for Pruning model implementation.
     Example:
@@ -72,9 +71,11 @@ class BasePruner(BaseCompressionModel):
                 model.backbone.fpn,
                 model.roi_heads
             ])
+        if model_name.__contains__('chronos'):
+            ignored_layers.extend([model.model.model.encoder, model.model.model.decoder])
         if model_name.__contains__('fcos_resnet50_fpn'):
-            ignored_layers.extend([model.head.classification_head.cls_logits, model.head.regression_head.bbox_reg,
-                                   model.head.regression_head.bbox_ctrness])
+                ignored_layers.extend([model.head.classification_head.cls_logits, model.head.regression_head.bbox_reg,
+                                       model.head.regression_head.bbox_ctrness])
         if model_name.__contains__('keypointrcnn_resnet50_fpn'):
             ignored_layers.extend([model.rpn.head.cls_logits,
                                    model.backbone.fpn.layer_blocks,

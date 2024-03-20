@@ -12,7 +12,7 @@ from torch import nn
 
 from fedcore.architecture.dataset.object_detection_datasets import COCODataset, YOLODataset
 from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
-from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset
+from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset, SegmentationDataset
 
 
 class FedotOperationConstant(Enum):
@@ -24,7 +24,8 @@ class FedotOperationConstant(Enum):
     FEDCORE_TASK = ['pruning', 'quantisation', 'distilation', 'low_rank', 'evo_composed']
     CV_TASK = ['classification', 'segmentation', 'object_detection']
     FEDCORE_CV_DATASET = {'classification': CustomDatasetForImages,
-                          'segmentation': SemanticSegmentationDataset,
+                          'segmentation': SegmentationDataset,
+                          'semantic_segmentation': SemanticSegmentationDataset,
                           'object_detection': CustomDatasetForImages,
                           'object_detection_YOLO': YOLODataset}
 
@@ -79,6 +80,7 @@ class FedotOperationConstant(Enum):
     FEDOT_ASSUMPTIONS = {
         'pruning': PipelineBuilder().add_node('pruning_model'),
         'quantisation': PipelineBuilder().add_node('post_training_quant'),
+        'distilation': PipelineBuilder().add_node('distilation_model'),
     }
 
     FEDOT_ENSEMBLE_ASSUMPTIONS = {}

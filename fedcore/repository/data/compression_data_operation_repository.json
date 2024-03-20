@@ -45,12 +45,34 @@
       ],
       "tags": [
       ],
-      "description": "Implementations of industrial preprocessing operations"
+      "description": "Implementations of fedcore quantisation operations"
+    },
+    "fedcore_distilation": {
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
+      "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreDistilationStrategy"
+      ],
+      "tags": [
+      ],
+      "description": "Implementations of fedcore distilation operations"
     }
   },
   "operations": {
-    "pruner_model": {
+    "pruning_model": {
       "meta": "fedcore_pruning",
+      "presets": [
+      ],
+      "tags": ["non-default"]
+    },
+    "distilation_model": {
+      "meta": "fedcore_distilation",
       "presets": [
       ],
       "tags": ["non-default"]

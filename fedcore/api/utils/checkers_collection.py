@@ -5,9 +5,14 @@ import numpy as np
 import torch
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
-
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.repository.constanst_repository import FEDOT_TASK
+from keras.models import load_model
+import onnx
+#import keras2onnx
+import tensorflow as tf
+
+from fedcore.repository.model_repository import BACKBONE_MODELS
 
 
 class DataCheck:
@@ -50,8 +55,13 @@ class DataCheck:
             compression_dataset, torch_model = self.input_data[0], self.input_data[1]
         elif isinstance(self.input_data[0], str):
             path_to_files, path_to_labels, path_to_model = self.input_data[0], self.input_data[1], self.input_data[2]
-            torch_dataloader, torch_model = self.cv_dataset(path_to_files, path_to_labels), \
-                                            torch.load(path_to_model, map_location=torch.device('cpu'))
+            torch_dataloader = self.cv_dataset(path_to_files, path_to_labels)
+            if not path_to_model.__contains__('pt'):
+                torch_model = BACKBONE_MODELS[path_to_model]
+
+            else:
+                torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
+
             compression_dataset = CompressionInputData(features=np.zeros((2, 2)),
                                                        num_classes=torch_dataloader.num_classes,
                                                        calib_dataloader=torch_dataloader,
