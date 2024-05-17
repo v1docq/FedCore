@@ -5,10 +5,16 @@ from fedcore.algorithm.pruning.pruners import BasePruner
 from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
 from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
 #from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
+from fedcore.models.network_impl.nbeats import NBeatsModel
 from fedcore.models.backbone.resnet import *
 
 
 class AtomizedModel(Enum):
+    TEMPORARY_EXCLUDED = {
+        'NEURAL_MODELS': {"nbeats_model": NBeatsModel,
+                          }
+    }
+
     PRUNER_MODELS = {'pruner_model': BasePruner}
 
     QUANTISATION_MODELS = {'post_training_quant': QuantPostModel,

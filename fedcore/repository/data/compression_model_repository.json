@@ -49,6 +49,9 @@
       "tags": [
         "non-default"
       ]
+    },
+    "nbeats_model": {
+      "meta": "ts_model"
     }
   }
 }
