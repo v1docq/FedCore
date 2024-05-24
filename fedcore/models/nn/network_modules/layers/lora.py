@@ -7,6 +7,69 @@ import torch.nn.functional as F
 
 
 class LoRALayer(nn.Module):
+    """
+    Implements a Layer-wise Representation Adaptation (LoRA) which allows adapting pre-trained models
+    to new tasks efficiently with minimal trainable parameters. By injecting trainable weights into
+    the existing architecture at inference, LoRA aims to preserve the original model's knowledge while
+    enabling specificity to the new task.
+
+    LoRALayer can be applied to various base layers like Linear, Conv2D, and Embedding. This flexibility
+    makes it relevant for tasks including but not limited to natural language processing, image
+    recognition, and recommendation systems where efficient adaptation of large pre-trained models is desired.
+
+    Adapter weights are trained to minimally perturb the original pre-trained weights, aiming to achieve
+    efficient fine-tuning. This is particularly useful in scenarios where computational resources for training
+    are limited, or when the new task data is scarce.
+
+    Parameters:
+        base_layer (nn.Module): The base layer to which LoRA adaptation is to be applied. It can be of type nn.Linear,
+                                nn.Conv2d, or nn.Embedding.
+
+        **kwargs: Arbitrary keyword arguments. This can include parameters for initializing the LoRA weights
+                  and configuring the behavior of the LoRA layer.
+
+    Args:
+        adapter_layer_names: Names of the layers that may contain trainable adapter weights.
+        other_param_names: Names of other parameters involved in LoRA configuration.
+        r: Dictionary mapping adapter names to their corresponding ranks (dimensions of the trainable weights).
+        lora_alpha: Dictionary mapping adapter names to their LoRA alpha values, influencing the learning amplitude.
+        scaling: Dictionary mapping adapter names to scaling factors applied to the LoRA weights.
+        lora_dropout: Contains dropout layers to be applied to LoRA augmentations, keyed by adapter names.
+        lora_A: ModuleDict containing the `A` LoRA weights for input transformation.
+        lora_B: ModuleDict containing the `B` LoRA weights for output transformation.
+        lora_embedding_A: ParameterDict containing embedding-specific `A` weights.
+        lora_embedding_B: ParameterDict containing embedding-specific `B` weights.
+        _disable_adapters: Flag to disable LoRA adaptation.
+        merged_adapters: Tracks adapters that have been merged for optimization.
+        _caches: Used internally for caching computations across LoRA layers.
+        kwargs: Stores all keyword arguments passed during initialization.
+
+    Methods:
+        update_layer(...): Updates or adds adapter weights to the layer.
+        reset_lora_parameters(...): Resets LoRA parameters based on specified initialization strategies.
+        set_scale(adapter, scale): Sets the scaling factor for a given LoRA adapter.
+        scale_layer(scale): Scales the entire LoRA layer by a given factor.
+        unscale_layer(scale=None): Reverses the effect of scale_layer by the given scale factor, or resets scaling.
+        _check_forward_args(x, *args, **kwargs): Validates forward pass arguments for compatibility with LoRA configuration.
+        _mixed_batch_forward(x, *args, adapter_names, **kwargs): Handles forward pass across mixed batches with specified adapters.
+
+    Example:
+        # Define a base layer (e.g., nn.Linear)
+        base_linear_layer = nn.Linear(in_features=768, out_features=768)
+
+        # Initialize LoRALayer with the base layer
+        lora_layer = LoRALayer(base_layer=base_linear_layer, r=4)
+
+        # Assuming x is the input tensor to the model
+        adapted_output = lora_layer(x)
+
+    Note:
+        LoRALayer is part of a broader effort to make large model adaptation more efficient and accessible. It requires
+        careful selection of hyperparameters like `r` (rank) and `lora_alpha` to balance between efficiency and task
+        performance. While it can provide significant improvements in adaptation scenarios, the choice to use LoRA
+        should be informed by the specific task's requirements and available computational resources.
+    """
+
     # All names of layers that may contain (trainable) adapter weights
     adapter_layer_names = ("lora_A", "lora_B", "lora_embedding_A", "lora_embedding_B")
     # All names of other parameters that may contain adapter-related parameters
@@ -190,7 +253,60 @@ class LoRALayer(nn.Module):
 
 
 class Linear(nn.Module):
-    # Lora implemented in a dense layer
+    """
+    Represents a Linear LoRA (Layer-wise Representation Adaptation) layer that facilitates an efficient adaptation
+    mechanism to the dense layers in the neural network models. Linear LoRA is a method to fine-tune only a small
+    fraction of the model parameters, specifically designed to provide an efficient alternative to full fine-tuning.
+
+    Linear LoRA adapts a dense layer by adding low-rank perturbations, which allows the base model to quickly
+    adapt to new tasks. It introduces additional parameters known as A and B that are used to create the rank-r
+    update to the original weight matrix.
+
+    This technique is especially valuable in scenarios where computational resources are limited, and
+    during transfer learning where the adapted model needs to maintain most of the base model's knowledge
+    while gaining new capabilities for the task at hand.
+
+    Args:
+        base_layer: The original dense layer to which LoRA will be applied.
+        adapter_name: A unique name assigned to this LoRA adapter for identification.
+        r: The rank of the update matrix, which determines the number of trainable parameters to add.
+        lora_alpha: A scaling factor that adjusts the strength of the LoRA update.
+        lora_dropout: Dropout rate applied to the random feature mapping in LoRA.
+        fan_in_fan_out: Set True if the layer stores weights in (fan_in, fan_out) order.
+        is_target_conv_1d_layer: Set True if the target layer is a 1-dimensional convolutional layer.
+        init_lora_weights: Strategy to initialize the LoRA weights. Can be a boolean
+                                                         indicating whether to use default initialization or a string
+                                                         specifying a particular initialization method.
+        **kwargs: Arbitrary keyword arguments that are passed to the underlying LoRALayer.
+
+    Attributes:
+        fan_in_fan_out: Indicates if the weights order is fan-in fan-out, affecting how the delta weight is computed.
+        _active_adapter: The name of the currently active adapter layer.
+        is_target_conv_1d_layer: Indicates whether the target layer to replace is a 1-dimensional convolution layer.
+
+    Methods:
+        merge(safe_merge=False, adapter_names=None): Integrates the changes from the adaptable weights (LoRA layers) into
+                                                     the base layer weights. Optionally can perform a safe merge to check
+                                                     for NaNs.
+        unmerge(): Reverts the base weights back to their state before any LoRA merge operations were performed.
+        get_delta_weight(adapter): Computes the change needed to the base weights for the specified adapter.
+        forward(x, *args, **kwargs): Performs a forward pass on the input tensor `x` using the adapted dense layer.
+
+    Example:
+        # Define a base dense layer
+        base_layer = nn.Linear(in_features=512, out_features=512)
+
+        # Wrap the base layer with Linear LoRA
+        lora_linear = Linear(base_layer, adapter_name='example', r=4)
+
+        # Forward pass through the LoRA layer
+        adapted_output = lora_linear(input_tensor)
+
+    Note:
+        Linear LoRA provides an effective approach to adapt large-scale models like BERT for specific tasks without
+        the need for extensive retraining. It's crucial to choose appropriate LoRA parameters based on the specific
+        requirements of the task and the computational efficiency desired.
+    """
     def __init__(
             self,
             base_layer,
@@ -349,7 +465,54 @@ class Linear(nn.Module):
 
 
 class Embedding(nn.Module, LoRALayer):
-    # LoRA implemented in an Embedding layer
+    """
+    Enhances an existing Embedding layer with Layer-wise Representation Adaptation (LoRA), enabling
+    efficient adaptation for large-scale models. This class applies the LoRA mechanism specifically to
+    embedding matrices, facilitating the adjustment of embeddings with minimal additional trainable parameters.
+
+    LoRA in an embedding context introduces low-rank matrices that perturb the original embedding weights.
+    The adaptation occurs through learned parameters that are optimized to capture task-relevant nuances without
+    substantial modification to the original pre-trained embeddings.
+
+    It is designed to work with pre-trained embeddings and is especially beneficial in scenarios where
+    embeddings form a significant part of the model's parameters, such as large language models. LoRA
+    allows these models to be fine-tuned for new tasks with a reduced risk of catastrophic forgetting.
+
+    Args:
+        base_layer: The original embedding layer to which LoRA will be applied.
+        adapter_name: A unique identifier for the adapter layer.
+        r: The rank of the update matrices which is a key factor determining the number of LoRA parameters.
+        lora_alpha: A hyperparameter controlling the learning rate specific to the LoRA adapter.
+        lora_dropout: Dropout rate to apply to the LoRA weight matrices during training.
+        init_lora_weights: Initialization scheme for LoRA weights. It could be a boolean
+                                                        to use the default scheme or a string to specify a method.
+        **kwargs: Arbitrary keyword arguments to further customize the LoRA layer.
+
+    Methods:
+        update_layer(...): Initializes or updates the LoRA adapter parameters within the embedding layer.
+        merge(safe_merge=False, adapter_names=None): Integrates LoRA parameters into the base embeddings, with an option to
+                                                     perform a safe merge that validates the output for NaN values.
+        unmerge(): Reverts the base embeddings to their original state by removing any merged LoRA adaptations.
+        get_delta_weight(adapter): Computes the weight perturbation introduced by a specified adapter.
+        forward(x, *args, **kwargs): Performs a forward pass, applying both the original embeddings and the
+                                     LoRA adaptations to the input tensor `x`.
+
+    Example:
+        # Instantiate an Embedding layer
+        base_embedding_layer = nn.Embedding(num_embeddings=10000, embedding_dim=768)
+
+        # Wrap the Embedding layer with LoRALayer
+        lora_embedding = Embedding(base_layer=base_embedding_layer, adapter_name='my_adapter', r=4)
+
+        # Forward pass with the enhanced Embedding layer
+        output = lora_embedding(input_indices)
+
+    Note:
+        When utilizing Embedding with LoRA, it's important to carefully consider the rank `r` as it directly impacts
+        the number of adaptable parameters. Setting `r` too high may lead to over-parameterization, while setting it
+        too low may not capture sufficient task-specific information. LoRA enables the model to adapt quickly to new
+        tasks with minimal changes to the overall parameter landscape of the model.
+    """
     def __init__(
             self,
             base_layer: nn.Module,
@@ -556,7 +719,55 @@ class Embedding(nn.Module, LoRALayer):
 
 
 class Conv2d(nn.Module, LoRALayer):
-    # Lora implemented in a conv2d layer
+    """
+    A specialized module that extends a standard 2D convolutional layer with LoRA (Layer-wise Representation Adaptation),
+    allowing for efficient incremental learning and adaptation of pre-trained convolutional networks.
+
+    By incorporating trainable low-rank matrices, Conv2d LoRA is capable of fine-tuning convolutional weights with a
+    limited set of parameters, thus enabling quick adaptation to new tasks with minimal disruption to the existing
+    learned representations in larger models.
+
+    Conv2d LoRA is well-suited for applications involving image processing, computer vision, or any tasks that require
+    convolutional neural network adaptations, allowing these networks to remain nimble and adaptable without extensive
+    retraining or compromising the integrity of their pre-trained knowledge.
+
+    Args:
+        base_layer: The original convolutional layer to be adapted with LoRA.
+        adapter_name: A name identifier for the LoRA adapter being applied.
+        r: The rank for the adaptation, which influences the size of the LoRA matrices.
+        lora_alpha: A scaling hyperparameter specific to the LoRA modulation.
+        lora_dropout: The dropout rate applied to the LoRA matrices, aiding generalization.
+        init_lora_weights: An initialization option for LoRA weights. If set to a boolean
+                                                        value, it chooses between default and no initialization. A string
+                                                        value specifies a particular method or scheme.
+        **kwargs: Additional keyword arguments potentially influencing the behavior of the LoRA layer.
+
+    Methods:
+        update_layer(...): Sets up or updates the internal LoRA adapter configuration within the Conv2d layer.
+        merge(safe_merge=False, adapter_names=None): Combines the LoRA weights with the base layer, offering an
+                                                     optional "safe merge" mode to preclude numerical inconsistencies.
+        unmerge(): Dissociates any previously merged LoRA weights from the base layer, effectively reverting to the
+                   original layer weights.
+        get_delta_weight(adapter): Calculates the weight modification for a specified adapter's LoRA matrices.
+        forward(x, *args, **kwargs): Executes a forward pass, combining LoRA adaptations with base layer computations
+                                     when processing input tensor `x`.
+
+    Example:
+        # Instantiate a Conv2d layer
+        base_conv_layer = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1)
+
+        # Wrap the Conv2d layer with LoRA
+        lora_conv2d = Conv2d(base_layer=base_conv_layer, adapter_name='conv_adapter', r=16)
+
+        # Pass input through the enhanced Conv2d layer
+        output = lora_conv2d(input_tensor)
+
+    Note:
+        Conv2d LoRA takes inspiration from practices in NLP such as adapting large Transformer models, applying these
+        learnings to the domain of CNNs. The rank `r` should be chosen judiciously as it controls the trade-off between
+        adaptability and parameter efficiency, which is critical in maintaining the balance between learning new
+        information and preserving existing knowledge.
+    """
     def __init__(
             self,
             base_layer: nn.Module,
@@ -672,7 +883,7 @@ class Conv2d(nn.Module, LoRALayer):
 
                 weight.data -= delta_weight
 
-    def get_delta_weight(self, adapter) -> torch.Tensor:
+    def get_delta_weight(self, adapter: str) -> torch.Tensor:
         """
         Compute the delta weight for the given adapter.
 
@@ -795,7 +1006,7 @@ class Conv2d(nn.Module, LoRALayer):
         return "lora." + rep
 
 
-def transpose(weight, fan_in_fan_out):
+def transpose(weight, fan_in_fan_out: bool):
     if not fan_in_fan_out:
         return weight
 
@@ -836,14 +1047,15 @@ class LoRAParametrization(nn.Module):
         self.scale = alpha / rank
         self.enabled = True
 
-    def forward(self, original_weights):
+    def forward(self, original_weights) -> torch.Tensor:
         if self.enabled:
             # Return W + (B * A) * scale if lora is enabled instead of W * x + ∆W * x
             return original_weights + torch.matmul(self.lora_B, self.lora_A).view(original_weights.shape) * self.scale
 
         return original_weights
 
-def linear_layer_parameterization(layer, device, rank=1, lora_alpha=1):
+
+def linear_layer_parameterization(layer: torch.Tensor, device: str, rank=1, lora_alpha=1) -> LoRAParametrization:
     # Only add the parameterization to the weight matrix, ignore the Bias
 
     # From section 4.2 of the paper:
