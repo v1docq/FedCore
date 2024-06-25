@@ -11,7 +11,6 @@ from PIL import Image
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp',
                   '.pgm', '.tif', '.tiff', '.webp')
 

@@ -2,16 +2,12 @@ import glob
 import os
 
 import cv2
-import torch
-from transformers import SegformerFeatureExtractor
-
-from PIL import Image
-from torch.utils.data import Dataset
-from torchvision.io import read_image
 import numpy as np
-
-from torch.utils.data import DataLoader
 import torch.utils.data as data
+from PIL import Image
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+from transformers import SegformerFeatureExtractor
 
 
 class SegmentationDataset(data.Dataset):

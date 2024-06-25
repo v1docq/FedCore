@@ -13,9 +13,7 @@
 # limitations under the License.
 
 
-from typing import Callable, Dict
-
-import tensorflow as tf
+from typing import Callable
 
 from fedcore.neural_compressor.common.utils import SMOOTH_QUANT, STATIC_QUANT
 from fedcore.neural_compressor.tensorflow.algorithms import KerasAdaptor

@@ -1,33 +1,32 @@
+import logging
 import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
 from typing import Union
-import logging
 
 import numpy as np
 import pandas as pd
-
 import torch
+import torch.nn
 import torchvision.datasets
+from fedot.api.main import Fedot
+from fedot.core.pipelines.pipeline import Pipeline
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
-import torch.nn
 
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
-from fedot.api.main import Fedot
-from fedot.core.pipelines.pipeline import Pipeline
+from fedcore.architecture.utils.paths import data_path
+from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.neural_compressor.config import Torch2ONNXConfig
-from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDOT_TASK, FEDCORE_CV_DATASET
-from fedcore.repository.model_repository import default_fedcore_availiable_operation, BACKBONE_MODELS
-from fedcore.architecture.utils.paths import data_path
-from fedcore.data.data import CompressionInputData
+from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDCORE_CV_DATASET
 from fedcore.repository.initializer_industrial_models import FedcoreModels
+from fedcore.repository.model_repository import default_fedcore_availiable_operation, BACKBONE_MODELS
 
 warnings.filterwarnings("ignore")
 
@@ -42,26 +41,9 @@ class FedCore(Fedot):
     Example:
         First, configure experiment and instantiate FedotIndustrial class::
 
-            from fedot_ind.api.main import FedotIndustrial
-            from fedot_ind.tools.loader import DataLoader
+            from fedcore.api.main import FedCore
 
-
-            industrial = FedotIndustrial(problem='ts_classification',
-                                         use_cache=False,
-                                         timeout=15,
-                                         n_jobs=2,
-                                         logging_level=20)
-
-        Next, download data from UCR archive::
-
-            train_data, test_data = DataLoader(dataset_name='ItalyPowerDemand').load_data()
-
-        Finally, fit the model and get predictions::
-
-            model = industrial.fit(train_features=train_data[0], train_target=train_data[1])
-            labels = industrial.predict(test_features=test_data[0])
-            probs = industrial.predict_proba(test_features=test_data[0])
-            metric = industrial.get_metrics(target=test_data[1], metric_names=['f1', 'roc_auc'])
+            model = FedCore()
 
     """
 

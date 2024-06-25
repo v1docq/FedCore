@@ -7,6 +7,7 @@ from torch.nn.functional import softmax
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 import torch
 
+
 class MetricCounter(ABC):
     """Generalized class for calculating metrics"""
 
@@ -138,9 +139,9 @@ class ObjectDetectionMetricCounter(MetricCounter):
         scores = self.map.compute()
         if self.class_metrics:
             scores.update({f'map_for_class_{i}': s for i,
-                                                       s in enumerate(scores['map_per_class'])})
+            s in enumerate(scores['map_per_class'])})
             scores.update({f'mar_100_for_class_{i}': s for i,
-                                                           s in enumerate(scores['mar_100_per_class'])})
+            s in enumerate(scores['mar_100_per_class'])})
         del scores['map_per_class']
         del scores['mar_100_per_class']
         return scores
@@ -170,6 +171,7 @@ class LossesAverager(MetricCounter):
             Dictionary: `{metric: score}`.
         """
         return {k: v / self.counter for k, v in self.losses.items()}
+
 
 def iou_score(
         outputs: torch.Tensor,
@@ -219,6 +221,8 @@ def dice_score(
     dice = (2 * intersection + smooth) / (total + smooth)
     dice[total == 0] = -1
     return dice
+
+
 def calc_last_layer_loss(student_logits, teacher_logits, weight):
     return weight * MSE()(student_logits, teacher_logits)
 
