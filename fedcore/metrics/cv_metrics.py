@@ -1,9 +1,5 @@
-"""This module contains functions and classes for computing metrics
- in computer vision tasks.
- """
 from abc import abstractmethod
 from typing import Optional
-
 
 from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
@@ -18,6 +14,7 @@ from fedcore.tools.ruler import PerformanceEvaluator
 class CompressionMetric(Metric):
     default_value = 0
     need_to_minimize = False
+
     @staticmethod
     @abstractmethod
     def metric(**kwargs) -> float:
@@ -26,6 +23,7 @@ class CompressionMetric(Metric):
     def simple_prediction(self, pipeline, reference_data):
         predict = pipeline.predict(reference_data)
         return predict, reference_data
+
     @classmethod
     def get_value(cls, pipeline: Pipeline, reference_data: InputData,
                   validation_blocks: Optional[int] = None) -> float:
@@ -78,6 +76,7 @@ class LastLayer(CompressionMetric):
 
 class Throughput(CompressionMetric):
     need_to_minimize = True
+
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
@@ -86,6 +85,7 @@ class Throughput(CompressionMetric):
 
 class Latency(CompressionMetric):
     need_to_minimize = False
+
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
@@ -95,8 +95,10 @@ class Latency(CompressionMetric):
 class CV_quality_metric(CompressionMetric):
     default_clf_metric = 'accuracy'
     need_to_minimize = True
+
     def __repr__(self):
         ''
+
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)

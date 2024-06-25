@@ -1,20 +1,19 @@
+import os
+from typing import Any, List, Sequence, Tuple, Optional
 from typing import Optional
+
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-from golem.core.tuning.optuna_tuner import OptunaTuner
-from golem.visualisation.opt_viz_extra import OptHistoryExtraVisualizer
-
 from fedot.core.pipelines.tuning.tuner_builder import TunerBuilder
 from fedot.core.repository.tasks import Task, TaskTypesEnum
+from golem.core.optimisers.opt_history_objects.individual import Individual
+from golem.core.tuning.optuna_tuner import OptunaTuner
+from golem.visualisation.opt_viz_extra import OptHistoryExtraVisualizer
+from matplotlib import pyplot as plt
 
 from fedcore.repository.constanst_repository import FEDOT_GENETIC_MULTI_STRATEGY, FEDOT_EVO_MULTI_STRATEGY, \
     InferenceMetricsEnum, CVMetricsEnum
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
-
-import os
-from typing import Any, List, Sequence, Tuple, Optional
-from matplotlib import pyplot as plt
-from golem.core.optimisers.opt_history_objects.individual import Individual
 
 
 def visualise_pareto(front: Sequence[Individual],

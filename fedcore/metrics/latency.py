@@ -1,11 +1,12 @@
-import os, sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
+import os
+import sys
 import torch
 import torch.nn.functional as F
 import torch_pruning as tp
 import timm
 import argparse
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 
 def parse_args():
@@ -120,26 +121,5 @@ def main():
                                                                                                           pruned_params / 1e6))
 
 
-# Iter 0, Pruned Latency: 248.28 ms, Pruned MACs: 14.35 G, Pruned Params: 70.29 M
-# Iter 1, Pruned Latency: 189.74 ms, Pruned MACs: 11.47 G, Pruned Params: 55.89 M
-# Iter 2, Pruned Latency: 147.47 ms, Pruned MACs: 8.71 G, Pruned Params: 42.38 M
-# Iter 3, Pruned Latency: 123.83 ms, Pruned MACs: 6.50 G, Pruned Params: 31.38 M
-# Iter 4, Pruned Latency: 77.39 ms, Pruned MACs: 4.62 G, Pruned Params: 22.05 M
-# Iter 5, Pruned Latency: 76.71 ms, Pruned MACs: 3.04 G, Pruned Params: 14.25 M
-# Iter 6, Pruned Latency: 44.16 ms, Pruned MACs: 1.80 G, Pruned Params: 8.22 M
-# Iter 7, Pruned Latency: 27.29 ms, Pruned MACs: 0.81 G, Pruned Params: 3.61 M
-# Iter 8, Pruned Latency: 23.87 ms, Pruned MACs: 0.25 G, Pruned Params: 0.98 M
-# Iter 9, Pruned Latency: 23.82 ms, Pruned MACs: 0.25 G, Pruned Params: 0.98 M
-
-# Iter 0, Pruned Latency: 260.67 ms, Pruned MACs: 14.35 G, Pruned Params: 70.29 M
-# Iter 1, Pruned Latency: 193.27 ms, Pruned MACs: 11.47 G, Pruned Params: 55.89 M
-# Iter 2, Pruned Latency: 152.21 ms, Pruned MACs: 8.71 G, Pruned Params: 42.38 M
-# Iter 3, Pruned Latency: 127.89 ms, Pruned MACs: 6.50 G, Pruned Params: 31.38 M
-# Iter 4, Pruned Latency: 80.10 ms, Pruned MACs: 4.62 G, Pruned Params: 22.05 M
-# Iter 5, Pruned Latency: 79.03 ms, Pruned MACs: 3.04 G, Pruned Params: 14.25 M
-# Iter 6, Pruned Latency: 45.70 ms, Pruned MACs: 1.80 G, Pruned Params: 8.22 M
-# Iter 7, Pruned Latency: 28.08 ms, Pruned MACs: 0.81 G, Pruned Params: 3.61 M
-# Iter 8, Pruned Latency: 24.29 ms, Pruned MACs: 0.25 G, Pruned Params: 0.98 M
-# Iter 9, Pruned Latency: 24.38 ms, Pruned MACs: 0.25 G, Pruned Params: 0.98 M
 if __name__ == '__main__':
     main()
