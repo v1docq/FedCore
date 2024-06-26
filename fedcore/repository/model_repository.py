@@ -20,19 +20,19 @@ class AtomizedModel(Enum):
         'ResNet50': resnet50,
         'ResNet101': resnet101,
         'ResNet152': resnet152,
-        'ResNet18one': resnet18_one_channel,
-        'ResNet34one': resnet34_one_channel,
-        'ResNet50one': resnet50_one_channel,
-        'ResNet101one': resnet101_one_channel,
-        'ResNet152one': resnet152_one_channel,
+        # 'ResNet18one': resnet18_one_channel,
+        # 'ResNet34one': resnet34_one_channel,
+        # 'ResNet50one': resnet50_one_channel,
+        # 'ResNet101one': resnet101_one_channel,
+        # 'ResNet152one': resnet152_one_channel,
     }
 
     CLF_MODELS_ONE_CHANNEL = {
-        'ResNet18one': resnet18_one_channel,
-        'ResNet34one': resnet34_one_channel,
-        'ResNet50one': resnet50_one_channel,
-        'ResNet101one': resnet101_one_channel,
-        'ResNet152one': resnet152_one_channel,
+        # 'ResNet18one': resnet18_one_channel,
+        # 'ResNet34one': resnet34_one_channel,
+        # 'ResNet50one': resnet50_one_channel,
+        # 'ResNet101one': resnet101_one_channel,
+        # 'ResNet152one': resnet152_one_channel,
     }
 
     PRUNED_MODELS = {

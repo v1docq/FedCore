@@ -10,6 +10,7 @@ https://github.com/xiaolai-sqlai/mobilenetv3/blob/master/mobilenetv3.py
 import torch
 import torch.nn as nn
 from torch.nn import init
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 
 from fedcore.architecture.comptutaional.devices import default_device
 
@@ -209,7 +210,7 @@ class MobileNetV3Large(nn.Module):
         return self.linear4(out)
 
 
-class MobileNet:
+class MobileNet(BaseNeuralModel):
     def __init__(
             self,
             input_dim: int = 3,

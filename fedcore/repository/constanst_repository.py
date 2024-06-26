@@ -10,7 +10,8 @@ from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
 from golem.core.tuning.simultaneous import SimultaneousTuner
 from golem.core.tuning.sequential import SequentialTuner
-
+from multiprocessing import cpu_count
+import math
 
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {'classification': Task(TaskTypesEnum.classification),
@@ -164,6 +165,23 @@ class TorchLossesConstant(Enum):
     MULTI_CLASS_CROSS_ENTROPY = nn.BCEWithLogitsLoss
     MSE = nn.MSELoss
 
+class DataTypeConstant(Enum):
+    MULTI_ARRAY = DataTypesEnum.image
+    MATRIX = DataTypesEnum.table
+
+class ComputationalConstant(Enum):
+    CPU_NUMBERS = math.ceil(cpu_count() * 0.7) if cpu_count() > 1 else 1
+    GLOBAL_IMPORTS = {
+        'numpy': 'np',
+        'cupy': 'np',
+        'torch': 'torch',
+        'torch.nn': 'nn',
+        'torch.nn.functional': 'F'
+    }
+    BATCH_SIZE_FOR_FEDOT_WORKER = 1000
+    FEDOT_WORKER_NUM = 5
+    FEDOT_WORKER_TIMEOUT_PARTITION = 4
+    PATIENCE_FOR_EARLY_STOP = 15
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
@@ -192,3 +210,12 @@ PRUNING_NORMALIZE = ModelCompressionConstant.PRUNING_NORMALIZE.value
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
+
+MULTI_ARRAY = DataTypeConstant.MULTI_ARRAY.value
+MATRIX = DataTypeConstant.MATRIX.value
+
+CPU_NUMBERS = ComputationalConstant.CPU_NUMBERS.value
+BATCH_SIZE_FOR_FEDOT_WORKER = ComputationalConstant.BATCH_SIZE_FOR_FEDOT_WORKER.value
+FEDOT_WORKER_NUM = ComputationalConstant.FEDOT_WORKER_NUM.value
+FEDOT_WORKER_TIMEOUT_PARTITION = ComputationalConstant.FEDOT_WORKER_TIMEOUT_PARTITION.value
+PATIENCE_FOR_EARLY_STOP = ComputationalConstant.PATIENCE_FOR_EARLY_STOP.value
