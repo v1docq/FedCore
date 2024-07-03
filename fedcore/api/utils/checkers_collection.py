@@ -41,16 +41,15 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
-        # if isinstance(self.input_data, tuple):
-        #     example_inputs, nn_model = self.input_data[0], self.input_data[1]
+        if isinstance(self.input_data, tuple):
+            example_inputs, nn_model = self.input_data[0], self.input_data[1]
 
-        # TODO: fix input data
-        self.input_data = InputData(features=self.input_data.data,
+        self.input_data = InputData(features=example_inputs,
                                     idx=None,
-                                    features_names = self.input_data.classes,
+                                    features_names = example_inputs.num_classes,
                                     task=FEDOT_TASK['classification'],
                                     data_type=DataTypesEnum.image,
-                                    target=self.input_data.targets
+                                    target=nn_model
                                     )
         self.input_data.supplementary_data.is_auto_preprocessed = True
 

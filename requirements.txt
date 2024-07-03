@@ -3,7 +3,7 @@ accelerate==0.31.0
 deprecated==1.2.14
 fastai==2.7.14
 fastcore==1.5.29
-fedot==0.7.3
+fedot==0.7.3.1
 # golem==1.01
 # horovod==0.28.1
 huggingface_hub==0.23.4

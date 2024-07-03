@@ -46,27 +46,27 @@ class BaseNeuralModel:
         self.epochs = params.get('epochs', 100)
         self.batch_size = params.get('batch_size', 16)
         self.activation = params.get('activation', 'ReLU')
+        self.task_type = params.get('activation', 'classification')
         self.learning_rate = 0.001
 
         self.label_encoder = None
         self.model = None
         self.model_for_inference = None
         self.target = None
-        self.task_type = None
 
     def fit(self, input_data: InputData):
-        self.num_classes = input_data.num_classes
-        self.target = input_data.target
-        self.task_type = input_data.task
+        self.num_classes = input_data.shape[0]
+        self.target = input_data[1]
+        self.task_type = self.task_type
 
         self._fit_model(input_data)
         self._save_and_clear_cache()
 
     @convert_to_4d_torch_array
-    def _fit_model(self, ts: InputData):
+    def _fit_model(self, input_data: InputData):
 
-        loss_fn, optimizer = self._init_model(ts)
-        train_loader, val_loader = self._prepare_data(ts, split_data=True)
+        loss_fn, optimizer = self._init_model(input_data)
+        train_loader, val_loader = self._prepare_data(input_data, split_data=True)
 
         self._train_loop(
             train_loader=train_loader,
@@ -75,18 +75,18 @@ class BaseNeuralModel:
             optimizer=optimizer
         )
 
-    def _init_model(self, ts) -> tuple:
+    def _init_model(self, input_data) -> tuple:
         NotImplementedError()
 
-    def _prepare_data(self, ts, split_data: bool = True):
+    def _prepare_data(self, input_data, split_data: bool = True):
 
         if split_data:
             train_data, val_data = train_test_data_setup(
-                ts, stratify=True, shuffle_flag=True, split_ratio=0.7)
+                input_data, stratify=True, shuffle_flag=True, split_ratio=0.7)
             train_dataset = self._create_dataset(train_data)
             val_dataset = self._create_dataset(val_data)
         else:
-            train_dataset = self._create_dataset(ts)
+            train_dataset = self._create_dataset(input_data)
             val_dataset = None
 
         train_loader = torch.utils.data.DataLoader(

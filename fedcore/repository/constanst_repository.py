@@ -13,6 +13,10 @@ from golem.core.tuning.sequential import SequentialTuner
 from multiprocessing import cpu_count
 import math
 
+from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
+    HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
+
+
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {'classification': Task(TaskTypesEnum.classification),
                   'regression': Task(TaskTypesEnum.regression),
@@ -164,6 +168,16 @@ class TorchLossesConstant(Enum):
     CROSS_ENTROPY = nn.CrossEntropyLoss
     MULTI_CLASS_CROSS_ENTROPY = nn.BCEWithLogitsLoss
     MSE = nn.MSELoss
+    RMSE = RMSELoss
+    SMAPE = SMAPELoss
+    TWEEDIE_LOSS = TweedieLoss
+    FOCAL_LOSS = FocalLoss
+    CENTER_PLUS_LOSS = CenterPlusLoss
+    CENTER_LOSS = CenterLoss
+    MASK_LOSS = MaskedLossWrapper
+    LOG_COSH_LOSS = LogCoshLoss
+    HUBER_LOSS = HuberLoss
+    EXPONENTIAL_WEIGHTED_LOSS = ExpWeightedLoss
 
 class DataTypeConstant(Enum):
     MULTI_ARRAY = DataTypesEnum.image
@@ -210,6 +224,16 @@ PRUNING_NORMALIZE = ModelCompressionConstant.PRUNING_NORMALIZE.value
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
+RMSE = TorchLossesConstant.RMSE.value
+SMAPE = TorchLossesConstant.SMAPE.value
+TWEEDIE_LOSS = TorchLossesConstant.TWEEDIE_LOSS.value
+FOCAL_LOSS = TorchLossesConstant.FOCAL_LOSS.value
+CENTER_PLUS_LOSS = TorchLossesConstant.CENTER_PLUS_LOSS.value
+CENTER_LOSS = TorchLossesConstant.CENTER_LOSS.value
+MASK_LOSS = TorchLossesConstant.MASK_LOSS.value
+LOG_COSH_LOSS = TorchLossesConstant.LOG_COSH_LOSS.value
+HUBER_LOSS = TorchLossesConstant.HUBER_LOSS.value
+EXPONENTIAL_WEIGHTED_LOSS = TorchLossesConstant.EXPONENTIAL_WEIGHTED_LOSS.value
 
 MULTI_ARRAY = DataTypeConstant.MULTI_ARRAY.value
 MATRIX = DataTypeConstant.MATRIX.value
