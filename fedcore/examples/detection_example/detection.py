@@ -95,7 +95,7 @@ if __name__ == '__main__':
                     (epoch + 1, target_metric["map"]))
         scheduler.step(float(target_metric["map"]))
         val_loss.append(float(target_metric["map"]))
-        if len(val_loss) > 4 and val_loss[-1] == val_loss[-6]:
+        if len(val_loss) > 4 and val_loss[-1] == val_loss[-5]:
             print("Early stopping")
             break
     performance = evaluator.eval()
