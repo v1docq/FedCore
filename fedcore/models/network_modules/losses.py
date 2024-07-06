@@ -12,7 +12,6 @@ from torch import nn, Tensor
 from torch.autograd import Variable
 from fastai.torch_core import Module
 
-from fedcore.architecture.utils.objectDetection import timeit
 from fedcore.architecture.settings.computational import default_device
 
 

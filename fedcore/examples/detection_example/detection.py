@@ -3,6 +3,7 @@ sys.path.append(".")
 
 import torch
 import random
+import numpy as np
 
 from torch import optim
 from torch.utils.data import DataLoader
@@ -16,6 +17,12 @@ from fedcore.architecture.utils.loader import collate
 from fedcore.architecture.visualisation.visualization import show_image
 
 DATASET_NAME = 'african-wildlife'
+EPOCHS = 5
+
+if torch.cuda.is_available():
+    print(torch.cuda.get_device_name(0))
+else:
+    print("CPU")
 
 if __name__ == '__main__':
     transform = v2.Compose([
@@ -58,15 +65,15 @@ if __name__ == '__main__':
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, patience=3, verbose=True)
     evaluator = PerformanceEvaluatorOD(model, test_loader, batch_size=1)
     
-    train_loss = []
-    val_loss = []
+    train_loss = list()
+    val_loss = list()
     
     model.train()   
     # Train the model
-    for epoch in range(26):
+    for epoch in range(EPOCHS):
         model.train()
         running_loss = 0.0
-        epoch_loss = []
+        epoch_loss = np.zeros(len(train_loader))
         for i, (images, targets) in enumerate(train_loader):
             loss_dict = model(images, targets)
             loss = sum(loss for loss in loss_dict.values())
@@ -78,7 +85,7 @@ if __name__ == '__main__':
                 print('[%d, %5d] loss: %.3f' %
                         (epoch + 1, i + 1, running_loss / 50))
                 running_loss = 0.0
-            epoch_loss.append(loss)
+            epoch_loss[i] = loss
         if device == 'cuda':
             torch.cuda.empty_cache()
         train_loss.append(epoch_loss.mean())
@@ -86,9 +93,9 @@ if __name__ == '__main__':
         target_metric = evaluator.measure_target_metric()
         print('[%d] MAP: %.3f' %
                     (epoch + 1, target_metric["map"]))
-        scheduler.step(target_metric["map"])
-        val_loss.append(target_metric["map"])
-        if val_loss[-1] == val_loss[-6]:
+        scheduler.step(float(target_metric["map"]))
+        val_loss.append(float(target_metric["map"]))
+        if len(val_loss) > 4 and val_loss[-1] == val_loss[-6]:
             print("Early stopping")
             break
     performance = evaluator.eval()
