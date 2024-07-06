@@ -123,11 +123,12 @@ class PerformanceEvaluator:
         print(f"Model size: {self.model_size} MB")
 
 class PerformanceEvaluatorOD:
-    def __init__(self, model, dataset, device=None, batch_size=32):
+    def __init__(self, model, data_loader, device=None, batch_size=32):
         self.model = model.model if hasattr(model, 'model') else model
-        self.dataset = dataset
+        self.data_loader = data_loader
+        # self.dataset = dataset
         self.batch_size = batch_size
-        self.data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        # self.data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
         self.device = default_device() if not device else device
         self.model.to(self.device)
@@ -154,14 +155,14 @@ class PerformanceEvaluatorOD:
         with torch.no_grad():
             with tqdm(total=reps, desc='Measuring latency', unit='rep') as pbar:
                 for rep in range(reps):
-                    for inputs, _, _, _ in self.data_loader:
+                    for inputs, _ in self.data_loader:
                         start_time = time.time()
-                        _ = self.model(inputs.to(self.device))
+                        _ = self.model(list(input.to(self.device) for input in inputs))
                         end_time = time.time()
                         if torch.cuda.is_available():
                             torch.cuda.synchronize()
                         curr_time = (end_time - start_time) * 1000
-                        timings[rep] = curr_time / inputs.size(0)
+                        timings[rep] = curr_time / inputs[0].size(0)
                         break
                     pbar.update(1)
         self.latency = round(np.mean(timings) / reps, 5)
@@ -173,11 +174,11 @@ class PerformanceEvaluatorOD:
         # measure for n batches
         with torch.no_grad():
             with tqdm(total=batches, desc='Measuring throughput', unit='batch') as pbar:
-                for inputs, _, _, _ in self.data_loader:
-                    inputs = inputs.to(self.device)
+                for inputs, _ in self.data_loader:
+                    inputs = list(input.to(self.device) for input in inputs)
                     if batches == 0:
                         break
-                    total_data_size += inputs.size(0)
+                    total_data_size += inputs[0].size(0)
                     _ = self.model(inputs)
                     batches -= 1
                     pbar.update(1)
@@ -191,11 +192,12 @@ class PerformanceEvaluatorOD:
         if not metric_counter:
             metric_counter = ObjectDetectionMetricCounter()
         with torch.no_grad():
-            with tqdm(desc='Measuring throughput', unit='batch') as pbar:
-                for inputs, labels, bboxes, _ in self.data_loader:
-                    inputs = inputs.to(self.device)
+            with tqdm(desc='Measuring target metric', unit='batch') as pbar:
+                for batch in self.data_loader:
+                    inputs, targets = batch
+                    inputs = list(input.to(self.device) for input in inputs)
                     prediction = self.model(inputs)
-                    metric_counter.update(prediction[0].cpu(), bboxes.cpu())
+                    metric_counter.update(prediction, targets)
                     pbar.update(1)
         if self.device == 'cuda':
             torch.cuda.synchronize()
@@ -222,7 +224,7 @@ class PerformanceEvaluatorOD:
         if torch.cuda.is_available():
             for _ in range(num_iterations):
                 inputs, _ = next(iter(self.data_loader))
-                inputs = inputs.to(self.device)
+                inputs = list(input.to(self.device) for input in inputs)
                 _ = self.model(inputs)
 
     def report(self):
