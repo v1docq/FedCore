@@ -100,8 +100,8 @@ class COCODataset(Dataset):
         image = self.transform(image)
         if len(sample['boxes']) != 0:
             targets = {
-                'boxes': torch.tensor(np.stack(sample['boxes']), dtype=torch.float32),
                 'labels': torch.tensor(sample['labels'], dtype=torch.int64),
+                'boxes': torch.tensor(np.stack(sample['boxes']), dtype=torch.float32),
                 'image_id': torch.tensor([idx]),
                 'area': torch.tensor(sample['area'], dtype=torch.float32),
                 'iscrowd': torch.tensor(sample['iscrowd'], dtype=torch.int64),

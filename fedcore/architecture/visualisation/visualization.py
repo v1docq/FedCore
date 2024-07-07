@@ -184,10 +184,10 @@ def get_image(img, preds, classes, targets = None):
 
     # Prediction boxes
     for i in range(len(preds["boxes"])):
-        x1, y1, x2, y2 = preds["boxes"].detach().numpy()[i]
+        x1, y1, x2, y2 = preds["boxes"].cpu().detach().numpy()[i]
         draw.rectangle([x1, y1, x2, y2], fill=None, outline="blue", width=2)
-        label = classes[preds["labels"].numpy()[i]]
-        score = preds["scores"].detach().numpy()[i]
+        label = classes[preds["labels"].cpu().numpy()[i]]
+        score = preds["scores"].cpu().detach().numpy()[i]
         text = f'{label}: {score:.2f}'
         draw.text([x1+5, y2-15], text=text, fill="blue")
         

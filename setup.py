@@ -14,7 +14,7 @@ NAME = 'fedcore'
 # SHORT_DESCRIPTION = 'Automated machine learning framework for time series analysis'
 # LONG_DESC_TYPE = 'text/x-rst'
 # README = Path(HERE, 'README_en.rst').read_text(encoding='utf-8')
-EXCLUDED_PACKAGES = ['test*', 'examples', 'benchmark']
+EXCLUDED_PACKAGES = ['test*', 'examples', 'benchmark', 'datasets']
 # URL = 'https://github.com/aimclub/Fedot.Industrial'
 REQUIRES_PYTHON = '>=3.8'
 # LICENSE = 'BSD 3-Clause'
