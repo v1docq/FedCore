@@ -9,6 +9,7 @@ import torch
 import random
 import numpy as np
 
+from tqdm import tqdm
 from torch import optim
 from torchvision.transforms import v2
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, fasterrcnn_mobilenet_v3_large_fpn
@@ -19,14 +20,14 @@ from fedcore.tools.ruler import PerformanceEvaluatorOD
 from fedcore.architecture.utils.loader import get_loader
 from fedcore.architecture.visualisation.visualization import get_image, plot_train_test_loss_metric, apply_nms, filter_boxes
 
-DATASET_NAME = 'african-wildlife'
-EPS = 50
-BATCH_SIZE = 4
+DATASET_NAME = 'dataset-5000' # african-wildlife
+EPS = 1
+BATCH_SIZE = 2
 INIT_LR = 5e-4
-UNLABELED_DATASET_PATH = f'datasets/{DATASET_NAME}/valid/images/'
+UNLABELED_DATASET_PATH = f'datasets/{DATASET_NAME}/val/images/'
 OUTPUT_PATH = f'datasets/{DATASET_NAME}/output/images/'
-NMS_THRESH = 0.6
-THRESH = 0.5
+NMS_THRESH = 0.6 # Intersection-over-Union (IoU) threshold for boxes e.g. intersection
+THRESH = 0.5 # Score threshold for boxes
 
 if torch.cuda.is_available():
     print("Device:    ", torch.cuda.get_device_name(0))
@@ -38,8 +39,8 @@ if __name__ == '__main__':
     # If dataset doesn't exist, it will be downloaded from 
     # https://docs.ultralytics.com/datasets/detect/#supported-datasets
     # (large datasets like COCO can't be downloaded directly)
-    tr_dataset = YOLODataset(dataset_name=DATASET_NAME, train=True, log=True)
-    test_dataset = YOLODataset(dataset_name=DATASET_NAME, train=False)
+    tr_dataset = YOLODataset(path=f'datasets/{DATASET_NAME}', dataset_name=DATASET_NAME, train=True, log=True)
+    test_dataset = YOLODataset(path=f'datasets/{DATASET_NAME}', dataset_name=DATASET_NAME, train=False)
     
     # Dataset for inference
     val_dataset = UnlabeledDataset(images_path=UNLABELED_DATASET_PATH)
@@ -75,7 +76,8 @@ if __name__ == '__main__':
         # Train the model
         model.train()
         loss_arr = np.zeros(len(tr_loader))
-        for i, (images, targets) in enumerate(tr_loader):
+        desc='Training'
+        for i, (images, targets) in enumerate(tqdm(tr_loader, desc=desc)):
             # forward
             loss_dict = model(images, targets)
             loss = sum(loss for loss in loss_dict.values())
@@ -95,7 +97,8 @@ if __name__ == '__main__':
         # Evaluate the model
         model.train()
         loss_arr = np.zeros(len(test_loader)) 
-        for i, (images, targets) in enumerate(test_loader):
+        desc='Evaluating'
+        for i, (images, targets) in enumerate(tqdm(test_loader, desc=desc)):
             loss_dict = model(images, targets)
             loss = sum(loss for loss in loss_dict.values())
             loss_arr[i] = loss
@@ -159,7 +162,7 @@ if __name__ == '__main__':
     
     # Inference
     model.cpu()
-    id = random.randint(0, len(val_dataset) - 1) # random or int
+    id = random.randint(0, len(test_dataset) - 1) # random or int
     test_data = test_loader.dataset[id]
     img, target = test_data
     input = torch.unsqueeze(img, dim=0)
@@ -174,7 +177,8 @@ if __name__ == '__main__':
     inference_img.show()
     
     # Predicting all inference images
-    for data in val_loader:
+    desc = 'Predicting'
+    for data in tqdm(val_loader, desc=desc):
         image = data[0][0].cpu()
         name = data[1][0]['name']
         input = torch.unsqueeze(image, dim=0)

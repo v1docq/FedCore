@@ -173,23 +173,24 @@ def plot_train_test_loss_metric(train_losses, test_losses, train_metric, test_me
     
 def get_image(img, preds, classes, targets = None):
     draw = ImageDraw.Draw(img)
+    
+    # Target boxes
     if targets is not None:
-        b_count = targets['boxes'].size(0)
-        for i in range(b_count):
+        for i in range(len(targets['boxes'])):
             x1, y1, x2, y2 = targets["boxes"].detach().numpy()[i]
             draw.rectangle([x1, y1, x2, y2], fill=None, outline="red", width=2)
             label = str(classes[targets["labels"].numpy()[i]])
             draw.text([x1, y1], text=label, fill="red")
-    else:
-        b_count = len(preds["boxes"])
-    
-    for i in range(b_count):
+
+    # Prediction boxes
+    for i in range(len(preds["boxes"])):
         x1, y1, x2, y2 = preds["boxes"].detach().numpy()[i]
         draw.rectangle([x1, y1, x2, y2], fill=None, outline="blue", width=2)
         label = classes[preds["labels"].numpy()[i]]
         score = preds["scores"].detach().numpy()[i]
         text = f'{label}: {score:.2f}'
         draw.text([x1+5, y2-15], text=text, fill="blue")
+        
     return img
 
 def apply_nms(orig_prediction, iou_thresh):

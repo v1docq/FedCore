@@ -144,7 +144,7 @@ class PerformanceEvaluatorOD:
         result = dict(latency=self.measure_latency(),
                       throughput=self.measure_throughput(),
                       model_size=self.measure_model_size(),
-                      target_metrics=self.measure_target_metric(log=True))
+                      target_metrics=self.measure_target_metric())
         self.report()
         return result
 
@@ -188,24 +188,17 @@ class PerformanceEvaluatorOD:
         self.throughput = round(total_data_size / total_time, 0)
         return self.throughput
 
-    def measure_target_metric(self, metric_counter: MetricCounter = None, log: bool = False):
+    def measure_target_metric(self, metric_counter: MetricCounter = None):
         if not metric_counter:
             metric_counter = ObjectDetectionMetricCounter()
         with torch.no_grad():
-            if log:
-                with tqdm(desc='Measuring target metric', unit='batch') as pbar:
-                    for batch in self.data_loader:
-                        inputs, targets = batch
-                        inputs = list(input.to(self.device) for input in inputs)
-                        prediction = self.model(inputs)
-                        metric_counter.update(prediction, targets)
-                        pbar.update(1)
-            else:
-                    for batch in self.data_loader:
-                        inputs, targets = batch
-                        inputs = list(input.to(self.device) for input in inputs)
-                        prediction = self.model(inputs)
-                        metric_counter.update(prediction, targets)
+            with tqdm(desc='Measuring target metric', unit='batch') as pbar:
+                for batch in self.data_loader:
+                    inputs, targets = batch
+                    inputs = list(input.to(self.device) for input in inputs)
+                    prediction = self.model(inputs)
+                    metric_counter.update(prediction, targets)
+                    pbar.update(1)
         if self.device == 'cuda':
             torch.cuda.synchronize()
         self.target_metrics = metric_counter.compute()

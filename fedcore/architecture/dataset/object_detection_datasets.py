@@ -96,16 +96,25 @@ class COCODataset(Dataset):
 
         """
         sample = self.samples[idx]
-        image = Image.open(sample['image'])
+        image = Image.open(sample['image']).convert('RGB')
         image = self.transform(image)
-        target = {
-            'boxes': torch.tensor(np.stack(sample['boxes']), dtype=torch.float32),
-            'labels': torch.tensor(sample['labels'], dtype=torch.int64),
-            'image_id': torch.tensor([idx]),
-            'area': torch.tensor(sample['area'], dtype=torch.float32),
-            'iscrowd': torch.tensor(sample['iscrowd'], dtype=torch.int64),
-        }
-        return image, target
+        if len(sample['boxes']) != 0:
+            targets = {
+                'boxes': torch.tensor(np.stack(sample['boxes']), dtype=torch.float32),
+                'labels': torch.tensor(sample['labels'], dtype=torch.int64),
+                'image_id': torch.tensor([idx]),
+                'area': torch.tensor(sample['area'], dtype=torch.float32),
+                'iscrowd': torch.tensor(sample['iscrowd'], dtype=torch.int64),
+            }
+        else:
+            targets = {
+                'labels': torch.zeros(0, dtype=torch.int64),
+                'boxes': torch.zeros((0, 4), dtype=torch.float32),
+                'image_id': torch.tensor([idx]),
+                'area': torch.zeros(0, dtype=torch.float32),
+                'iscrowd': torch.zeros((0,), dtype=torch.int64)
+                }
+        return image, targets
 
     def __len__(self) -> int:
         """Return length of dataset"""
@@ -159,7 +168,7 @@ class YOLODataset(Dataset):
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
         self.root = os.path.abspath(os.path.join(os.path.dirname(
-            path), (data['train'] if train else data['val'])))
+            path), (data['train'] if train else data['test'])))
         self.classes = {0: 'background'}
         
         for k in data['names']:
@@ -197,20 +206,29 @@ class YOLODataset(Dataset):
         labels = annotation[:, 0] + 1
         labels = np.ones_like(labels) if self.binary else labels
         boxes = annotation[:, 1:]
-        c, h, w = image.shape
-        boxes *= [w, h, w, h]
-        area = boxes[:, 2] * boxes[:, 3]
-        # x centre, y centre, w, h -> x1, y1, w, h
-        boxes[:, :2] -= boxes[:, 2:] / 2
-        boxes[:, 2:] += boxes[:, :2]  # x1, y1, w, h -> x1, y1, x2, y2
-        
-        targets = {
-            'labels': torch.tensor(labels, dtype=torch.int64),
-            'boxes': torch.tensor(boxes, dtype=torch.float32),
-            # 'image_id': torch.tensor([idx]),
-            # 'area': torch.tensor(area, dtype=torch.float32),
-            # 'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64)
-        }
+        if len(boxes) != 0:
+            c, h, w = image.shape
+            boxes *= [w, h, w, h]
+            area = boxes[:, 2] * boxes[:, 3]
+            # x centre, y centre, w, h -> x1, y1, w, h
+            boxes[:, :2] -= boxes[:, 2:] / 2
+            boxes[:, 2:] += boxes[:, :2]  # x1, y1, w, h -> x1, y1, x2, y2
+            
+            targets = {
+                'labels': torch.tensor(labels, dtype=torch.int64),
+                'boxes': torch.tensor(boxes, dtype=torch.float32),
+                'image_id': torch.tensor([idx]),
+                'area': torch.tensor(area, dtype=torch.float32),
+                'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64)
+            }
+        else:
+            targets = {
+                'labels': torch.zeros(0, dtype=torch.int64),
+                'boxes': torch.zeros((0, 4), dtype=torch.float32),
+                'image_id': torch.tensor([idx]),
+                'area': torch.zeros(0, dtype=torch.float32),
+                'iscrowd': torch.zeros((0,), dtype=torch.int64)
+                }
 
         return image, targets
 
@@ -252,16 +270,23 @@ class UnlabeledDataset(Dataset):
             idx: Index of sample.
 
         Returns:
-            A ``(image)``, where image is image tensor
+            A tuple ``(image, targets)``, where image is image tensor,
+                and targets is dict with keys: ``'name'``, ``'boxes'``, ``'labels'``,
+                ``'image_id'``, ``'area'``, ``'iscrowd'``.
+
         """
         sample = self.samples[idx]
         image = Image.open(sample['image'])
         image = self.transform(image)
-        target = {
+        targets = {
             'name': sample['name'],
-            'image_id': torch.tensor([idx])
+            'labels': torch.zeros(0, dtype=torch.int64),
+            'boxes': torch.zeros((0, 4), dtype=torch.float32),
+            'image_id': torch.tensor([idx]),
+            'area': torch.zeros(0, dtype=torch.float32),
+            'iscrowd': torch.zeros((0,), dtype=torch.int64)
         }
-        return image, target
+        return image, targets
 
     def __len__(self) -> int:
         """Return length of dataset"""
