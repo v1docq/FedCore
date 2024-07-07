@@ -16,6 +16,7 @@ import opendatasets as od
 from opendatasets.utils.archive import extract_archive
 
 from fedcore.architecture.utils.paths import data_path, yolo_data_path, yolo_yaml_path, YOLO_DATA_URL, YOLO_YAML_URL
+from fedcore.architecture.utils.loader import transform
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp',
                   '.pgm', '.tif', '.tiff', '.webp')
@@ -131,25 +132,29 @@ class YOLODataset(Dataset):
 
     def __init__(
         self,
-        # path: str,
-        dataset_name: str,
-        transform: Callable,
+        path: str = None,
+        dataset_name: str = None ,
+        transform: Callable = transform(),
         train: bool = True,
         replace_to_binary: bool = False,
-        download: bool = False
+        download: bool = False,
+        log: bool = False
     ) -> None:
         
-        if os.path.isdir(data_path(dataset_name)) is False or download is True:            
-                dataset_url = YOLO_DATA_URL + dataset_name + '.zip'
-                yaml_url = YOLO_YAML_URL + dataset_name + '.yaml'
+        if dataset_name is not None:
+            path_flag = os.path.isdir(data_path(dataset_name, log=log))
+            if path_flag is False or download is True:            
+                    dataset_url = f'{YOLO_DATA_URL}{dataset_name}.zip'
+                    yaml_url = f'{YOLO_YAML_URL}{dataset_name}.yaml'
 
-                od.download(dataset_url, data_dir=data_path(dataset_name))
-                od.download(yaml_url, data_dir=data_path(dataset_name))
-                extract_archive(from_path=str(yolo_data_path(dataset_name)), 
-                                to_path=str(data_path(dataset_name)), 
-                                remove_finished=True)
-                
-        path = yolo_yaml_path(dataset_name)          
+                    od.download(dataset_url, data_dir=data_path(dataset_name))
+                    od.download(yaml_url, data_dir=data_path(dataset_name))
+                    extract_archive(from_path=str(yolo_data_path(dataset_name)), 
+                                    to_path=str(data_path(dataset_name)), 
+                                    remove_finished=True)
+                    
+            path = yolo_yaml_path(dataset_name)
+    
         self.transform = transform
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
