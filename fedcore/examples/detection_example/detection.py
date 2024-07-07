@@ -17,7 +17,7 @@ from fedcore.architecture.dataset.object_detection_datasets import YOLODataset, 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.tools.ruler import PerformanceEvaluatorOD
 from fedcore.architecture.utils.loader import get_loader
-from fedcore.architecture.visualisation.visualization import get_image, plot_train_test_loss_metric, apply_nms
+from fedcore.architecture.visualisation.visualization import get_image, plot_train_test_loss_metric, apply_nms, filter_boxes
 
 DATASET_NAME = 'african-wildlife'
 EPS = 50
@@ -25,7 +25,8 @@ BATCH_SIZE = 4
 INIT_LR = 5e-4
 UNLABELED_DATASET_PATH = f'datasets/{DATASET_NAME}/valid/images/'
 OUTPUT_PATH = f'datasets/{DATASET_NAME}/output/images/'
-NMS_THRESH = 0.8
+NMS_THRESH = 0.6
+THRESH = 0.5
 
 if torch.cuda.is_available():
     print("Device:    ", torch.cuda.get_device_name(0))
@@ -164,6 +165,7 @@ if __name__ == '__main__':
     input = torch.unsqueeze(img, dim=0)
     pred = model(input)
     pred = apply_nms(pred[0], NMS_THRESH)
+    pred = filter_boxes(pred, THRESH)
 
     # Show inference image
     transform = v2.ToPILImage()
@@ -177,7 +179,8 @@ if __name__ == '__main__':
         name = data[1][0]['name']
         input = torch.unsqueeze(image, dim=0)
         pred = model(input)
-        pred = apply_nms(pred[0], 0.8)
+        pred = apply_nms(pred[0], NMS_THRESH)
+        pred = filter_boxes(pred, THRESH)
         transform = v2.ToPILImage()
         img = transform(image)
         inference_img = get_image(img, pred, tr_dataset.classes)

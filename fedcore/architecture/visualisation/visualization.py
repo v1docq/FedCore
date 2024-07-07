@@ -203,3 +203,14 @@ def apply_nms(orig_prediction, iou_thresh):
     final_prediction['labels'] = final_prediction['labels'][keep]
 
     return final_prediction
+
+def filter_boxes(orig_prediction, thresh):
+
+    keep = orig_prediction['scores'] > thresh
+
+    final_prediction = orig_prediction
+    final_prediction['boxes'] = final_prediction['boxes'][keep]
+    final_prediction['scores'] = final_prediction['scores'][keep]
+    final_prediction['labels'] = final_prediction['labels'][keep]
+
+    return final_prediction
