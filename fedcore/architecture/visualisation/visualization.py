@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import cv2
 import matplotlib.pyplot as plt
 import torch
+from torchvision.ops import nms
 from PIL import ImageDraw
 
 #
@@ -170,20 +171,35 @@ def plot_train_test_loss_metric(train_losses, test_losses, train_metric, test_me
     plt.tight_layout()
     plt.show()
     
-def show_image(img, targets, preds, classes):
+def get_image(img, preds, classes, targets = None):
     draw = ImageDraw.Draw(img)
-    i = targets['boxes'].size(0)
-    for i in range(i):
-        x1, y1, x2, y2 = targets["boxes"].detach().numpy()[i]
-        draw.rectangle([x1, y1, x2, y2], fill=None, outline="red", width=2)
-        label = str(classes[targets["labels"].numpy()[i]])
-        draw.text([x1, y1], text=label, fill="red")
-        
-        x1, y1, x2, y2 = preds[0]["boxes"].detach().numpy()[i]
+    if targets is not None:
+        b_count = targets['boxes'].size(0)
+        for i in range(b_count):
+            x1, y1, x2, y2 = targets["boxes"].detach().numpy()[i]
+            draw.rectangle([x1, y1, x2, y2], fill=None, outline="red", width=2)
+            label = str(classes[targets["labels"].numpy()[i]])
+            draw.text([x1, y1], text=label, fill="red")
+    else:
+        b_count = len(preds["boxes"])
+    
+    for i in range(b_count):
+        x1, y1, x2, y2 = preds["boxes"].detach().numpy()[i]
         draw.rectangle([x1, y1, x2, y2], fill=None, outline="blue", width=2)
-        label = classes[preds[0]["labels"].numpy()[i]]
-        score = preds[0]["scores"].detach().numpy()[i]
+        label = classes[preds["labels"].numpy()[i]]
+        score = preds["scores"].detach().numpy()[i]
         text = f'{label}: {score:.2f}'
         draw.text([x1+5, y2-15], text=text, fill="blue")
-        
-    img.show()
+    return img
+
+def apply_nms(orig_prediction, iou_thresh):
+
+    keep = nms(orig_prediction['boxes'], orig_prediction['scores'], iou_thresh)
+
+    # Keep indices from nms
+    final_prediction = orig_prediction
+    final_prediction['boxes'] = final_prediction['boxes'][keep]
+    final_prediction['scores'] = final_prediction['scores'][keep]
+    final_prediction['labels'] = final_prediction['labels'][keep]
+
+    return final_prediction

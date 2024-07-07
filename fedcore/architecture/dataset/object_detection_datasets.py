@@ -217,3 +217,52 @@ class YOLODataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
+    
+class UnlabeledDataset(Dataset):
+    """Class-loader for custom dataset.
+
+    Args:
+        images_path: Image folder path.
+        transform: A function/transform that takes in an PIL image and returns a
+            transformed version.
+    """
+
+    def __init__(
+        self,
+        images_path: str,
+        transform: Callable = transform()
+    ) -> None:
+        self.transform = transform
+        self.images_path = images_path
+        
+        self.samples = []
+        for file in os.listdir(self.images_path):
+                    if file.lower().endswith(IMG_EXTENSIONS):
+                        self.samples.append(
+                            {   
+                                'image': os.path.join(self.images_path, file),
+                                'name': file
+                            }
+                        )
+
+    def __getitem__(self, idx) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        """Returns a sample from a dataset.
+
+        Args:
+            idx: Index of sample.
+
+        Returns:
+            A ``(image)``, where image is image tensor
+        """
+        sample = self.samples[idx]
+        image = Image.open(sample['image'])
+        image = self.transform(image)
+        target = {
+            'name': sample['name'],
+            'image_id': torch.tensor([idx])
+        }
+        return image, target
+
+    def __len__(self) -> int:
+        """Return length of dataset"""
+        return len(self.samples)

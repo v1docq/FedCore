@@ -1,6 +1,9 @@
 import sys
 sys.path.append(".")
 
+import os
+import math
+import time
 import datetime
 import torch
 import random
@@ -10,15 +13,19 @@ from torch import optim
 from torchvision.transforms import v2
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, fasterrcnn_mobilenet_v3_large_fpn
     
-from fedcore.architecture.dataset.object_detection_datasets import YOLODataset
+from fedcore.architecture.dataset.object_detection_datasets import YOLODataset, UnlabeledDataset
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.tools.ruler import PerformanceEvaluatorOD
 from fedcore.architecture.utils.loader import get_loader
-from fedcore.architecture.visualisation.visualization import show_image, plot_train_test_loss_metric
+from fedcore.architecture.visualisation.visualization import get_image, plot_train_test_loss_metric, apply_nms
 
 DATASET_NAME = 'african-wildlife'
-EPOCHS = 35
+EPS = 50
 BATCH_SIZE = 4
+INIT_LR = 5e-4
+UNLABELED_DATASET_PATH = f'datasets/{DATASET_NAME}/valid/images/'
+OUTPUT_PATH = f'datasets/{DATASET_NAME}/output/images/'
+NMS_THRESH = 0.8
 
 if torch.cuda.is_available():
     print("Device:    ", torch.cuda.get_device_name(0))
@@ -30,42 +37,44 @@ if __name__ == '__main__':
     # If dataset doesn't exist, it will be downloaded from 
     # https://docs.ultralytics.com/datasets/detect/#supported-datasets
     # (large datasets like COCO can't be downloaded directly)
-    train_dataset = YOLODataset(dataset_name=DATASET_NAME, train=True, log=True)
-    val_dataset = YOLODataset(dataset_name=DATASET_NAME, train=False)
-    val_dataset, test_dataset = torch.utils.data.random_split(val_dataset, [0.1, 0.9])
+    tr_dataset = YOLODataset(dataset_name=DATASET_NAME, train=True, log=True)
+    test_dataset = YOLODataset(dataset_name=DATASET_NAME, train=False)
+    
+    # Dataset for inference
+    val_dataset = UnlabeledDataset(images_path=UNLABELED_DATASET_PATH)
     
     # Define loaders
-    train_loader = get_loader(train_dataset, batch_size=BATCH_SIZE, train=True)
+    tr_loader = get_loader(tr_dataset, batch_size=BATCH_SIZE, train=True)
     test_loader = get_loader(test_dataset)
     val_loader = get_loader(val_dataset)
 
     # Define model and number of classes
     model = fasterrcnn_mobilenet_v3_large_fpn(pretrained=True)
-    num_classes = len(train_dataset.classes)
+    num_classes = len(tr_dataset.classes)
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     model.to(device)
     
     # Load model
-    # model = torch.load('FasterRCNN_african-wildlife.pt')
+    # model = torch.load('FasterRCNN_african-wildlife_24-07-07.pt')
     
-    # Define the optimizer, scheduler and evaluator
-    opt = optim.SGD(model.parameters(), lr=4e-5)
+    # Define the optimizer and scheduler
+    opt = optim.SGD(model.parameters(), lr=INIT_LR, momentum=0.9, weight_decay=INIT_LR/2)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, mode='max', patience=3, verbose=True)
-    tr_evaluator = PerformanceEvaluatorOD(model, train_loader, batch_size=BATCH_SIZE)
-    val_evaluator = PerformanceEvaluatorOD(model, test_loader, batch_size=1)
     
-    tr_loss = list()
-    val_loss = list() 
-    tr_map = list()
-    val_map = list()
+    tr_loss = np.zeros(EPS)
+    test_loss = np.zeros(EPS)
+    tr_map = np.zeros(EPS)
+    test_map = np.zeros(EPS)
+    tr_time = np.zeros(EPS)
     
-    for epoch in range(EPOCHS):
+    for ep in range(EPS):       
+        tStart = time.time()
+        
         # Train the model
         model.train()
-        
-        loss_arr = np.zeros(len(train_loader))
-        for i, (images, targets) in enumerate(train_loader):
+        loss_arr = np.zeros(len(tr_loader))
+        for i, (images, targets) in enumerate(tr_loader):
             # forward
             loss_dict = model(images, targets)
             loss = sum(loss for loss in loss_dict.values())
@@ -74,12 +83,13 @@ if __name__ == '__main__':
             opt.zero_grad()
             loss.backward()
             opt.step()           
-        tr_loss.append(loss_arr.mean())
+        tr_loss[ep] = loss_arr.mean()
         
         # Calculate train mAP
         model.eval()
-        target_metric = tr_evaluator.measure_target_metric()
-        tr_map.append(float(target_metric["map"]))
+        evaluator = PerformanceEvaluatorOD(model, tr_loader, batch_size=BATCH_SIZE)
+        target_metric = evaluator.measure_target_metric()
+        tr_map[ep] = float(target_metric["map"])
              
         # Evaluate the model
         model.train()
@@ -88,52 +98,89 @@ if __name__ == '__main__':
             loss_dict = model(images, targets)
             loss = sum(loss for loss in loss_dict.values())
             loss_arr[i] = loss
-        val_loss.append(loss_arr.mean())
+        test_loss[ep] = loss_arr.mean()
         
         # Calculate test mAP
         model.eval()
-        target_metric = val_evaluator.measure_target_metric()
-        val_map.append(float(target_metric["map"]))
+        evaluator = PerformanceEvaluatorOD(model, test_loader, batch_size=1)
+        target_metric = evaluator.measure_target_metric()
+        test_map[ep] = float(target_metric["map"])
         
         # Optimize learning rate
-        scheduler.step(float(target_metric["map"]))
+        scheduler.step(test_map[ep])
+        
+        tEnd = time.time()
+        tr_time[ep] = float(tEnd - tStart)
         
         # Print metrics
-        print('-----------------------------------')
-        print('[%d] [TRAIN] Loss: %.3f | mAP: %.3f' %
-                (epoch + 1, tr_loss[-1], tr_map[-1]))
-        print('[%d] [VAL]   Loss: %.3f | mAP: %.3f' %
-                (epoch + 1, val_loss[-1], val_map[-1]))
+        p = int(math.log(ep + 1, 10))
+        print('-' * (40 + p))
+        print('| %d | TRAIN | Loss: %.3f | mAP: %.3f |' %
+                (ep + 1, tr_loss[ep], tr_map[ep]))
+        print('| %d | TEST  | Loss: %.3f | mAP: %.3f |' %
+                (ep + 1, test_loss[ep], test_map[ep]))
+        print('-' * (13 + p), 
+              'Time: %.2f' % tr_time[ep], 
+              '-' * 14)
+        
+        # Saving best model
+        if test_map[ep].max():
+            best_model = model
         
         # Most crucial step
         if device == 'cuda':
             torch.cuda.empty_cache()
-            
-        if len(val_map) > 5 and val_map[-1] <= val_map[-5]:
-            print("Early stopping")
+        
+        # Early stop
+        if ep > 4 and test_map[ep] <= test_map[ep - 4]:
+            tr_loss = tr_loss[:ep + 1]
+            test_loss = test_loss[:ep + 1]
+            tr_map = tr_map[:ep + 1]
+            test_map = test_map[:ep + 1]
+            train_time = tr_time[:ep + 1]
+            print('Early stopping')
             break
     
     # Final evaluating
-    performance = val_evaluator.eval()
+    model = best_model
+    evaluator = PerformanceEvaluatorOD(model, test_loader, batch_size=1)
+    performance = evaluator.eval()
     print('Before quantization')
     print(performance)
     
     # Save model
     now = str(datetime.datetime.now())[2:-16]
-    torch.save(model, f'{model._get_name()}_{DATASET_NAME}_{now}.pt')
+    model_name = model._get_name()
+    torch.save(model, f'{model_name}_{DATASET_NAME}_{now}.pt')
+    
+    # Show metrics graph
+    plot_train_test_loss_metric(tr_loss, test_loss, tr_map, test_map)
     
     # Inference
     model.cpu()
     id = random.randint(0, len(val_dataset) - 1) # random or int
-    val_data = val_loader.dataset[id]
-    img, targets = val_data
+    test_data = test_loader.dataset[id]
+    img, target = test_data
     input = torch.unsqueeze(img, dim=0)
-    preds = model(input)
+    pred = model(input)
+    pred = apply_nms(pred[0], NMS_THRESH)
 
     # Show inference image
     transform = v2.ToPILImage()
     img = transform(img)
-    show_image(img, targets, preds, train_dataset.classes)
+    inference_img = get_image(img, pred, tr_dataset.classes, target)
+    inference_img.show()
     
-    # Show metrics graph
-    plot_train_test_loss_metric(tr_loss, val_loss, tr_map, val_map)
+    # Predicting all inference images
+    for data in val_loader:
+        image = data[0][0].cpu()
+        name = data[1][0]['name']
+        input = torch.unsqueeze(image, dim=0)
+        pred = model(input)
+        pred = apply_nms(pred[0], 0.8)
+        transform = v2.ToPILImage()
+        img = transform(image)
+        inference_img = get_image(img, pred, tr_dataset.classes)
+        if not os.path.exists(OUTPUT_PATH):
+            os.makedirs(OUTPUT_PATH)
+        inference_img.save(OUTPUT_PATH + name)
