@@ -4,12 +4,14 @@ import warnings
 from copy import deepcopy
 from pathlib import Path
 from typing import Union
+from tqdm import tqdm
 import torch
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
 from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
 import numpy as np
 import pandas as pd
+from torch.utils.data import DataLoader
 from fedot.api.main import Fedot
 from fedot.core.pipelines.pipeline import Pipeline
 
@@ -17,6 +19,7 @@ from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
+from fedcore.architecture.utils.loader import collate
 
 warnings.filterwarnings("ignore")
 
@@ -120,13 +123,38 @@ class FedCore(Fedot):
             **kwargs: additional parameters
 
         """
-        self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
-        input_preproc = DataCheck(input_data=self.train_data,
-                                  task=self.config_dict['problem'],
-                                  task_params=self.task_params)
-        self.train_data = input_preproc.check_input_data()
-        self.solver = self.__init_solver()
-        self.solver.fit(self.train_data)
+        if self.config_dict['problem'] == 'detection':
+            classes = list(input_data.classes.keys())
+            loader = DataLoader(
+                input_data, 
+                batch_size=1,
+                shuffle=False,
+                collate_fn=collate
+            )
+            desc='Fitting'
+            for i, (images, targets) in enumerate(tqdm(loader, desc=desc)):
+                target = [
+                    targets[0]['boxes'],
+                    targets[0]['labels']
+                ]
+                self.train_data = deepcopy([images, target])
+                input_preproc = DataCheck(input_data=self.train_data,
+                                        task=self.config_dict['problem'],
+                                        task_params=self.task_params,
+                                        classes=classes,
+                                        idx=i)
+                self.train_data = input_preproc.check_input_data()
+                self.solver = self.__init_solver()
+                self.solver.fit(self.train_data)
+            
+        else:
+            self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
+            input_preproc = DataCheck(input_data=self.train_data,
+                                    task=self.config_dict['problem'],
+                                    task_params=self.task_params)
+            self.train_data = input_preproc.check_input_data()
+            self.solver = self.__init_solver()
+            self.solver.fit(self.train_data)
 
     def predict(self,
                 predict_data: tuple,

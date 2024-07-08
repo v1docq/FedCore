@@ -24,11 +24,15 @@ class DataCheck:
     def __init__(self,
                  input_data: Union[tuple, InputData] = None,
                  task: str = None,
-                 task_params=None):
+                 task_params = None,
+                 classes: list = None,
+                 idx: int = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.input_data = input_data
         self.task = task
         self.task_params = task_params
+        self.classes = classes
+        self.idx = idx
 
     def _init_input_data(self) -> None:
         """Initializes the `input_data` attribute based on its type.
@@ -41,17 +45,27 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
-        if isinstance(self.input_data, tuple):
-            example_inputs, nn_model = self.input_data[0], self.input_data[1]
+        if self.task == 'detection':
+            self.input_data = InputData(features=self.input_data[0][0],
+                                        idx=self.idx,
+                                        features_names = self.classes,
+                                        task=FEDOT_TASK['classification'],
+                                        data_type=DataTypesEnum.image,
+                                        target=self.input_data[1]
+                                        )
+            self.input_data.supplementary_data.is_auto_preprocessed = True
+        else:
+            if isinstance(self.input_data, tuple):
+                example_inputs, nn_model = self.input_data[0], self.input_data[1]
 
-        self.input_data = InputData(features=example_inputs,
-                                    idx=None,
-                                    features_names = example_inputs.num_classes,
-                                    task=FEDOT_TASK['classification'],
-                                    data_type=DataTypesEnum.image,
-                                    target=nn_model
-                                    )
-        self.input_data.supplementary_data.is_auto_preprocessed = True
+            self.input_data = InputData(features=example_inputs,
+                                        idx=None,
+                                        features_names = example_inputs.num_classes,
+                                        task=FEDOT_TASK['classification'],
+                                        data_type=DataTypesEnum.image,
+                                        target=nn_model
+                                        )
+            self.input_data.supplementary_data.is_auto_preprocessed = True
 
     def _check_input_data_features(self):
         """Checks and preprocesses the features in the input data.

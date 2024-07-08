@@ -1,4 +1,6 @@
+import torch
 from typing import Optional
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 from fedot.core.data.data import InputData, OutputData
 from fedot.core.operations.evaluation.evaluation_interfaces import EvaluationStrategy
@@ -6,8 +8,8 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 
 from fedcore.data.data import CompressionOutputData, CompressionInputData
-from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS
-
+from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DETECTION_MODELS
+from fedcore.architecture.comptutaional.devices import default_device
 
 class FedcorePruningStrategy(EvaluationStrategy):
     __operations_by_types = PRUNER_MODELS
@@ -81,6 +83,64 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
                                             features=predict_data.features,
                                             train_dataloader=predict_data.train_dataloader,
                                             calib_dataloader=predict_data.calib_dataloader,
+                                            predict=prediction,
+                                            task=predict_data.task,
+                                            target=predict_data.target,
+                                            data_type=output_data_type,
+                                            supplementary_data=predict_data.supplementary_data)
+        return output_data
+
+class FedcoreDetectionStrategy(EvaluationStrategy):
+    __operations_by_types = DETECTION_MODELS
+
+    def _convert_to_operation(self, operation_type: str):
+        if operation_type in self.__operations_by_types.keys():
+            return self.__operations_by_types[operation_type]
+        else:
+            raise ValueError(
+                f'Impossible to obtain custom preprocessing strategy for {operation_type}')
+    def __init__(self, operation_type: str, params: Optional[OperationParameters] = None):
+        super().__init__(operation_type, params)
+        self.operation_impl = self._convert_to_operation(operation_type)(self.params_for_fit)
+
+    def fit(self, train_data: InputData):
+        if train_data.idx == 0:
+            num_classes = len(train_data.features_names)
+            in_features = self.operation_impl.roi_heads.box_predictor.cls_score.in_features
+            self.operation_impl.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+        self.operation_impl.to(default_device())
+        self.operation_impl.train()
+        target = [{
+            'boxes': train_data.target[0],
+            'labels': train_data.target[1]
+        }]
+        print(target)
+        self.operation_impl(torch.unsqueeze(train_data.features, dim=0), target)
+        return self.operation_impl
+
+    def predict(self, trained_operation, predict_data: CompressionInputData, output_mode: str = 'default') -> OutputData:
+        trained_operation.eval()
+        pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
+        prediction = [
+            pred[0]['boxes'].cpu().detach().numpy(), 
+            pred[0]['labels'].cpu().detach().numpy(), 
+            pred[0]['scores'].cpu().detach().numpy()
+        ]
+        converted = self._convert_to_output(prediction, predict_data)
+        return converted
+
+    def predict_for_fit(self, trained_operation, predict_data: CompressionInputData, output_mode: str = 'default') -> OutputData:
+        trained_operation.eval()
+        pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
+        converted = self._convert_to_output(pred, predict_data)
+        return converted
+    
+    def _convert_to_output(self, prediction, predict_data: CompressionInputData,
+                           output_data_type: DataTypesEnum = DataTypesEnum.dict) -> OutputData:
+        output_data = CompressionOutputData(idx=predict_data.idx,
+                                            features=predict_data.features,
+                                            # train_dataloader=predict_data.train_dataloader,
+                                            # calib_dataloader=predict_data.calib_dataloader,
                                             predict=prediction,
                                             task=predict_data.task,
                                             target=predict_data.target,

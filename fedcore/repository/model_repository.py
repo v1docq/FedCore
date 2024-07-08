@@ -1,5 +1,6 @@
 from enum import Enum
 
+from torchvision.models.detection.faster_rcnn import fasterrcnn_resnet50_fpn_v2, fasterrcnn_mobilenet_v3_large_fpn
 
 from fedcore.algorithm.pruning.pruners import BasePruner
 from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
@@ -42,16 +43,22 @@ class AtomizedModel(Enum):
         "ResNet101": pruned_resnet101,
         "ResNet152": pruned_resnet152,
     }
+    
+    DETECTION_MODELS = {
+        "detection_model": fasterrcnn_mobilenet_v3_large_fpn
+    }
 
 
 PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
 QUANTISATION_MODELS = AtomizedModel.QUANTISATION_MODELS.value
 RESNET_MODELS = AtomizedModel.CLF_MODELS.value
 RESNET_MODELS_ONE_CHANNEL = AtomizedModel.CLF_MODELS_ONE_CHANNEL.value
+DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 
 def default_fedcore_availiable_operation(problem: str = 'pruning'):
     operation_dict = {'pruning': PRUNER_MODELS.keys(),
-                      'quantisation': QUANTISATION_MODELS.keys()}
+                      'quantisation': QUANTISATION_MODELS.keys(),
+                      'detection': DETECTION_MODELS.keys()}
 
     return operation_dict[problem]

@@ -4,7 +4,7 @@ from functools import partial
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from fedot.core.repository.dataset_types import DataTypesEnum
 from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, RegressionMetricsEnum
-from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
+from fedot.core.repository.tasks import Task, TaskTypesEnum
 from golem.core.tuning.iopt_tuner import IOptTuner
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
@@ -19,31 +19,21 @@ from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, Ex
 
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {'classification': Task(TaskTypesEnum.classification),
-                  'regression': Task(TaskTypesEnum.regression),
-                  'ts_forecasting': Task(TaskTypesEnum.ts_forecasting,
-                                         TsForecastingParams(forecast_length=1))}
+                  'regression': Task(TaskTypesEnum.regression)
+    }
     EXCLUDED_OPERATION_MUTATION = {
-        'regression': ['one_hot_encoding',
-                       'label_encoding',
-                       'isolation_forest_class',
-                       'tst_model',
-                       'omniscale_model',
-                       'isolation_forest_reg',
-                       'inception_model',
-                       'xcm_model',
-                       'resnet_model',
-                       'signal_extractor',
-                       'recurrence_extractor'
-                       ],
-        'ts_forecasting': [
+        'regression': [
             'one_hot_encoding',
             'label_encoding',
-            'isolation_forest_class'
-            'xgbreg',
-            'sgdr',
-            'treg',
-            'knnreg',
-            'dtreg'
+            'isolation_forest_class',
+            'tst_model',
+            'omniscale_model',
+            'isolation_forest_reg',
+            'inception_model',
+            'xcm_model',
+            'resnet_model',
+            'signal_extractor',
+            'recurrence_extractor'
         ],
         'classification': [
             'isolation_forest_reg',
@@ -56,7 +46,8 @@ class FedotOperationConstant(Enum):
             'signal_extractor',
             'knnreg',
             'recurrence_extractor'
-        ]}
+        ]
+    }
     FEDOT_API_PARAMS = default_param_values_dict = dict(problem=None,
                                                         task_params=None,
                                                         timeout=None,
@@ -126,6 +117,7 @@ class FedotOperationConstant(Enum):
                                                                       'epochs': 50}),
         'quantisation': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
                                                                            'epochs': 50}),
+        'detection': PipelineBuilder().add_node('detection_model', params={'pretrained': True})
     }
 
     FEDOT_ENSEMBLE_ASSUMPTIONS = {

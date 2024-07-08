@@ -33,6 +33,23 @@
         "non-default"
       ],
       "description": "Implementations of FedCore Quantisation strategy"
+    },
+    "fedcore_detection": {
+      "tasks": "[TaskTypesEnum.classification]",
+      "input_type": "[DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreDetectionStrategy"
+      ],
+      "tags": [
+        "non-default"
+      ],
+      "description": "Implementations of FedCore Detection strategy"
     }
   },
   "operations": {
@@ -45,6 +62,13 @@
     },
     "quantisation_model": {
       "meta": "fedcore_quantisation",
+      "presets": [],
+      "tags": [
+        "non-default"
+      ]
+    },
+    "detection_model": {
+      "meta": "fedcore_detection",
       "presets": [],
       "tags": [
         "non-default"
