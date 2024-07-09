@@ -6,6 +6,27 @@ import torch
 from torchvision.ops import nms
 from PIL import ImageDraw
 
+
+colors = [
+    '#A5E473',
+    "#FF5733",
+    "#33A5FF",
+    "#FCFF33",
+    "#33C4FF",
+    "#E033FF",
+    "#86FF33",
+    "#33FF83",
+    '#A5E473',
+    "#FF5733",
+    "#33A5FF",
+    "#FCFF33",
+    "#33C4FF",
+    "#E033FF",
+    "#86FF33",
+    '#A5E473',
+    "#FF5733"
+    ]
+
 #
 # _PALETTE = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (128, 0, 0),
 #             (0, 128, 0), (128, 0, 128), (0, 128, 128), (0, 0,
@@ -185,7 +206,7 @@ def get_image(img, preds, classes, targets = None):
     # Prediction boxes
     for i in range(len(preds["boxes"])):
         x1, y1, x2, y2 = preds["boxes"].cpu().detach().numpy()[i]
-        draw.rectangle([x1, y1, x2, y2], fill=None, outline="blue", width=2)
+        draw.rectangle([x1, y1, x2, y2], fill=None, outline=colors[preds["labels"].cpu().detach().numpy()[i]], width=2)
         label = classes[preds["labels"].cpu().numpy()[i]]
         score = preds["scores"].cpu().detach().numpy()[i]
         text = f'{label}: {score:.2f}'

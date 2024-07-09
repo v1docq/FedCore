@@ -14,14 +14,14 @@ from fedcore.architecture.utils.loader import get_loader
 from fedcore.architecture.visualisation.visualization import get_image, apply_nms, filter_boxes
 
 
-DATASET_NAME = 'dataset-5000' # african-wildlife
+DATASET_NAME = 'chips' # african-wildlife
 UNLABELED_DATASET_PATH = f'datasets/{DATASET_NAME}/val/images/'
 OUTPUT_PATH = f'datasets/{DATASET_NAME}/output/'
 
-MODEL_NAME = f'FasterRCNN_{DATASET_NAME}_24-07-07.pt'
+MODEL_NAME = f'FasterRCNN_{DATASET_NAME}_24-07-08.pt'
 
-NMS_THRESH = 0.5 # Intersection-over-Union (IoU) threshold for boxes
-THRESH = 0.3 # Score threshold for boxes
+NMS_THRESH = 0.7 # Intersection-over-Union (IoU) threshold for boxes
+THRESH = 0.1 # Score threshold for boxes
 
 
 if torch.cuda.is_available():

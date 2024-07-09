@@ -21,10 +21,10 @@ from fedcore.architecture.utils.loader import get_loader
 from fedcore.architecture.visualisation.visualization import get_image, plot_train_test_loss_metric, apply_nms, filter_boxes
 
 
-DATASET_NAME = 'dataset-5000' # african-wildlife
+DATASET_NAME = 'chips' # african-wildlife
 OUTPUT_PATH = f'datasets/{DATASET_NAME}/output/'
 
-EPS = 50
+EPS = 5
 BATCH_SIZE = 4
 INIT_LR = 5e-4
 SKIP_COUNT = 4 # max number of epochs w/o mAP improving
