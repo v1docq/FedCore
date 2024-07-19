@@ -8,7 +8,7 @@ names:
   6: other
 nc: 7
 train: ./train/images/
-path: ../datasets/temp # dataset root dir
+path: ../datasets/Small # dataset root dir
 test: ./test/images/ # test images (relative to 'path') 227 images
 
 val: ./test/images/
