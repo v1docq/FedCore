@@ -31,6 +31,22 @@
       ],
       "description": "Implementations of industrial preprocessing operations"
     },
+    "fedcore_low_rank": {
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
+      "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreLowRankStrategy"
+      ],
+      "tags": [
+      ],
+      "description": "Implementations of industrial preprocessing operations"
+    },
     "fedcore_quantisation": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
@@ -67,6 +83,12 @@
   "operations": {
     "pruning_model": {
       "meta": "fedcore_pruning",
+      "presets": [
+      ],
+      "tags": ["non-default"]
+    },
+    "low_rank_model": {
+      "meta": "fedcore_low_rank",
       "presets": [
       ],
       "tags": ["non-default"]

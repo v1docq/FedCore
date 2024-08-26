@@ -20,6 +20,7 @@ from torchvision import transforms
 
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.dataset.prediction_datasets import TorchVisionDataset
 from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
 from fedcore.architecture.utils.paths import data_path
 from fedcore.data.data import CompressionInputData
@@ -276,7 +277,10 @@ class FedCore(Fedot):
         pass
 
     def load_data(self, path: str = None, supplementary_data: dict = None):
-        if path is None and supplementary_data is not None:
+        pretrained_scenario = all([path is None, supplementary_data is not None])
+        torchvision_scenario = all([supplementary_data is not None,
+                                    'torchvision_dataset' in supplementary_data.keys()])
+        if pretrained_scenario:
             train_dataloader, val_dataloader = self._init_pretrain_dataset(dataset=supplementary_data['dataset_name'])
             model = self._init_pretrain_model(supplementary_data['model_name'])
             supplementary_data = {'torch_model': model.cpu(),
@@ -291,6 +295,18 @@ class FedCore(Fedot):
                                                  target=torch_model
                                                  )
             torch_dataset.supplementary_data.is_auto_preprocessed = True
+            self.train_data = (torch_dataset, torch_model)
+        elif torchvision_scenario:
+            torch_model = supplementary_data['torch_model']
+            is_backbone_torch = isinstance(torch_model, str)
+            train_loader, val_loader = TorchVisionDataset(path).get_dataloader()
+            torch_model = BACKBONE_MODELS[torch_model]() \
+                if is_backbone_torch else torch_model
+            torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
+                                                 num_classes=len(train_loader.dataset.classes),
+                                                 calib_dataloader=train_loader,
+                                                 train_dataloader=val_loader
+                                                 )
             self.train_data = (torch_dataset, torch_model)
         else:
             # load data from directory

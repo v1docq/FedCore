@@ -13,5 +13,8 @@
   },
    "distilation_model": {
     "epochs":5
+  },
+   "low_rank_model": {
+    "epochs":5
   }
 }

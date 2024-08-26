@@ -79,7 +79,6 @@ class DataCheck:
             torch_dataloader = self.cv_dataset(path_to_files, path_to_labels)
             if not path_to_model.__contains__('pt'):
                 torch_model = BACKBONE_MODELS[path_to_model]
-
             else:
                 torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
 

@@ -17,6 +17,23 @@
       ],
       "description": "Implementations of FedCore Pruning strategy"
     },
+        "fedcore_low_rank": {
+      "tasks": "[TaskTypesEnum.classification]",
+      "input_type": "[DataTypesEnum.ts]",
+      "output_type": "[DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreLowRankStrategy"
+      ],
+      "tags": [
+        "non-default"
+      ],
+      "description": "Implementations of FedCore Low Rank strategy"
+    },
     "fedcore_quantisation": {
       "tasks": "[TaskTypesEnum.classification]",
       "input_type": "[DataTypesEnum.table]",

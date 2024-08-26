@@ -25,7 +25,31 @@ import math
 from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
     HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
 
+def default_device(device_type: str = 'CPU'):
+    """Return or set default device. Modified from fastai.
 
+    Args:
+        device_type: 'CUDA' or 'CPU' or None (default: 'CUDA'). If None, use CUDA if available, else CPU.
+
+    Returns:
+        torch.device: The default device: CUDA if available, else CPU.
+
+    """
+    if device_type == 'CUDA':
+        defaults.use_cuda = True
+        return torch.device("cuda")
+    elif device_type == 'cpu':
+        defaults.use_cuda = False
+        return torch.device("cpu")
+
+    if device_type is None:
+        if torch.cuda.is_available() or _has_mps():
+            device_type = True
+    if device_type:
+        if torch.cuda.is_available():
+            return torch.device(torch.cuda.current_device())
+        if _has_mps():
+            return torch.device("mps")
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {'classification': Task(TaskTypesEnum.classification),
                   'regression': Task(TaskTypesEnum.regression),
@@ -118,6 +142,7 @@ class FedotOperationConstant(Enum):
 
     FEDOT_ASSUMPTIONS = {
         'pruning': PipelineBuilder().add_node('pruning_model'),
+        'low_rank': PipelineBuilder().add_node('low_rank_model'),
         'quantisation': PipelineBuilder().add_node('post_training_quant'),
         'distilation': PipelineBuilder().add_node('distilation_model'),
         'pruning': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],

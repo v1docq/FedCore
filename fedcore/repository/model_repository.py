@@ -1,8 +1,7 @@
 from enum import Enum
 
-import pandas as pd
-
 from fedcore.algorithm.distillation.distilator import BaseDistilator
+from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
 from torchvision.models.detection.faster_rcnn import fasterrcnn_resnet50_fpn_v2, fasterrcnn_mobilenet_v3_large_fpn
 
 from fedcore.algorithm.pruning.pruners import BasePruner
@@ -21,6 +20,8 @@ from fedcore.models.backbone.segformer import segformer_pretrain
 
 class AtomizedModel(Enum):
     PRUNER_MODELS = {'pruning_model': BasePruner}
+
+    LOW_RANK_MODELS = {'low_rank_model': LowRankModel}
 
     QUANTISATION_MODELS = {'post_training_quant': QuantPostModel,
                            'training_aware_quant': QuantAwareModel}
@@ -80,6 +81,7 @@ class AtomizedModel(Enum):
 PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
 QUANTISATION_MODELS = AtomizedModel.QUANTISATION_MODELS.value
 DISTILATION_MODELS = AtomizedModel.DISTILATION_MODELS.value
+LOW_RANK_MODELS = AtomizedModel.LOW_RANK_MODELS.value
 
 RESNET_MODELS = AtomizedModel.RESNET_MODELS.value
 DENSENET_MODELS = AtomizedModel.DENSENET_MODELS.value
@@ -103,6 +105,8 @@ DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 def default_fedcore_availiable_operation(problem: str = 'pruning'):
     operation_dict = {'pruning': PRUNER_MODELS.keys(),
                       'quantisation': QUANTISATION_MODELS.keys(),
+                      'distilation': DISTILATION_MODELS.keys(),
+                      'low_rank': LOW_RANK_MODELS.keys()}
                       'distilation': DISTILATION_MODELS.keys()}
                       'quantisation': QUANTISATION_MODELS.keys(),
                       'detection': DETECTION_MODELS.keys()}
