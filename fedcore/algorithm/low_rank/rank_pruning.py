@@ -3,7 +3,8 @@ import numpy as np
 from fedcore.models.network_impl.layers import DecomposedConv2d
 
 
-def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95, strategy: str = 'constant') -> None:
+def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
+                           strategy: str = 'constant', module_name: str ='conv') -> None:
     """Prune the weight matrices to the threshold (in-place).
     Args:
         conv: The optimizable layer.
@@ -21,6 +22,8 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95, stra
         for i, s in enumerate(S):
             sum -= s ** 2
             if sum < threshold:
+                print('After rank pruning left only {} % of {} layer params'.format(
+                    100 * i / len(indices), module_name))
                 conv.set_U_S_Vh(U[:, i:].clone(), S[i:].clone(), Vh[i:, :].clone())
                 break
     elif strategy.__contains__('explained_dispersion'):
