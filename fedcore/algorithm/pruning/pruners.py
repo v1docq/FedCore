@@ -151,9 +151,9 @@ class BasePruner(BaseCompressionModel):
         # Pruner initialization
         self.pruner = PRUNERS[self.pruner_name]
         # list of tensors with dim size n_samples x n_channel x height x width
-        all_batches = [b[0] for b in input_data.features.calib_dataloader]
+        all_batches = (b[0] for b in input_data.features.calib_dataloader)
         # take first batch
-        first_batch = all_batches[0]
+        first_batch = next(all_batches)[0]
 
         channel_groups = {}
         if isinstance(self.model, VisionTransformer):
