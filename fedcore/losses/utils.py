@@ -4,7 +4,7 @@ from fedcore.repository.constanst_repository import CROSS_ENTROPY, MULTI_CLASS_C
 
 def _get_loss_metric(input_data: InputData):
     if input_data.task.task_type.value == 'classification':
-        loss_fn = CROSS_ENTROPY() if input_data.num_classes == 2 else MULTI_CLASS_CROSS_ENTROPY()
+        loss_fn = CROSS_ENTROPY() if input_data.num_classes == 2 else CROSS_ENTROPY()
     elif input_data.task.task_type.value == 'regression':
         loss_fn = MSE()
     else:
