@@ -2,7 +2,7 @@ from enum import Enum
 
 from fedcore.algorithm.distillation.distilator import BaseDistilator
 from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
-from torchvision.models.detection.faster_rcnn import fasterrcnn_resnet50_fpn_v2, fasterrcnn_mobilenet_v3_large_fpn
+from torchvision.models.detection.faster_rcnn import fasterrcnn_mobilenet_v3_large_fpn
 
 from fedcore.algorithm.pruning.pruners import BasePruner
 from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
@@ -96,9 +96,6 @@ BACKBONE_MODELS = {**MOBILENET_MODELS,
                    **RESNET_MODELS,
                    **CHRONOS_MODELS,
                    **SEGFORMER_MODELS}
-BACKBONE_MODELS = {**MOBILENET_MODELS, **EFFICIENTNET_MODELS, **DENSENET_MODELS, **RESNET_MODELS}
-RESNET_MODELS = AtomizedModel.CLF_MODELS.value
-RESNET_MODELS_ONE_CHANNEL = AtomizedModel.CLF_MODELS_ONE_CHANNEL.value
 DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 
@@ -106,9 +103,7 @@ def default_fedcore_availiable_operation(problem: str = 'pruning'):
     operation_dict = {'pruning': PRUNER_MODELS.keys(),
                       'quantisation': QUANTISATION_MODELS.keys(),
                       'distilation': DISTILATION_MODELS.keys(),
-                      'low_rank': LOW_RANK_MODELS.keys()}
-                      'distilation': DISTILATION_MODELS.keys()}
-                      'quantisation': QUANTISATION_MODELS.keys(),
+                      'low_rank': LOW_RANK_MODELS.keys(),
                       'detection': DETECTION_MODELS.keys()}
 
     return operation_dict[problem]

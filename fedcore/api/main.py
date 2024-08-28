@@ -5,15 +5,10 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
-import numpy as np
-import pandas as pd
-
 from tqdm import tqdm
 import torch
 import torch.nn
 import torchvision.datasets
-from fedot.api.main import Fedot
-from fedot.core.pipelines.pipeline import Pipeline
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -22,8 +17,6 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.dataset.prediction_datasets import TorchVisionDataset
 from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
-from fedcore.architecture.utils.paths import data_path
-from fedcore.data.data import CompressionInputData
 import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
@@ -33,8 +26,7 @@ from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDCORE_CV_DATASET
-from fedcore.repository.initializer_industrial_models import FedcoreModels
-from fedcore.repository.model_repository import default_fedcore_availiable_operation, BACKBONE_MODELS
+from fedcore.repository.model_repository import BACKBONE_MODELS
 from fedcore.architecture.utils.paths import data_path
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.initializer_industrial_models import FedcoreModels
@@ -147,7 +139,7 @@ class FedCore(Fedot):
         self.logger.info('Initialising solver')
         self.__init_experiment_setup()
         self.config_dict['problem'] = 'classification'
-        solver = Fedot(**self.config_dict)
+        # solver = Fedot(**self.config_dict)
         solver = self.config_dict['initial_assumption']
         return solver
 
@@ -170,7 +162,7 @@ class FedCore(Fedot):
                 shuffle=False,
                 collate_fn=collate
             )
-            desc='Fitting'
+            desc = 'Fitting'
             for i, (images, targets) in enumerate(tqdm(loader, desc=desc)):
                 target = [
                     targets[0]['boxes'],
@@ -178,10 +170,8 @@ class FedCore(Fedot):
                 ]
                 self.train_data = deepcopy([images, target])
                 input_preproc = DataCheck(input_data=self.train_data,
-                                        task=self.config_dict['problem'],
-                                        task_params=self.task_params,
-                                        classes=classes,
-                                        idx=i)
+                                          task=self.config_dict['problem'],
+                                          task_params=self.task_params)
                 self.train_data = input_preproc.check_input_data()
                 self.solver = self.__init_solver()
                 self.solver.fit(self.train_data)
@@ -189,8 +179,8 @@ class FedCore(Fedot):
         else:
             self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
             input_preproc = DataCheck(input_data=self.train_data,
-                                    task=self.config_dict['problem'],
-                                    task_params=self.task_params)
+                                      task=self.config_dict['problem'],
+                                      task_params=self.task_params)
             self.train_data = input_preproc.check_input_data()
             self.solver = self.__init_solver()
             self.solver.fit(self.train_data)

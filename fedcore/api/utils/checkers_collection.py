@@ -32,19 +32,12 @@ class DataCheck:
 
     def __init__(self,
                  input_data: Union[InputData, tuple] = None,
-                 cv_dataset: callable = None):
-                 input_data: Union[tuple, InputData] = None,
-                 task: str = None,
-                 task_params = None,
-                 classes: list = None,
-                 idx: int = None):
+                 task = None,
+                 task_params = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.input_data = input_data
-        self.cv_dataset = cv_dataset
         self.task = task
         self.task_params = task_params
-        self.classes = classes
-        self.idx = idx
 
     def _init_input_data(self) -> None:
         """Initializes the `input_data` attribute based on its type.
@@ -67,20 +60,17 @@ class DataCheck:
                                         )
             self.input_data.supplementary_data.is_auto_preprocessed = True
         else:
-            if isinstance(self.input_data, tuple):
-                example_inputs, nn_model = self.input_data[0], self.input_data[1]
-        compression_dataset, torch_model = None, None
-        if isinstance(self.input_data, InputData):
-            return
-        elif isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData)):
-            compression_dataset, torch_model = self.input_data[0], self.input_data[1]
-        elif isinstance(self.input_data[0], str):
-            path_to_files, path_to_labels, path_to_model = self.input_data[0], self.input_data[1], self.input_data[2]
-            torch_dataloader = self.cv_dataset(path_to_files, path_to_labels)
-            if not path_to_model.__contains__('pt'):
-                torch_model = BACKBONE_MODELS[path_to_model]
-            else:
-                torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
+            if isinstance(self.input_data, InputData):
+                return
+            elif isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData)):
+                compression_dataset, torch_model = self.input_data[0], self.input_data[1]
+            elif isinstance(self.input_data[0], str):
+                path_to_files, path_to_labels, path_to_model = self.input_data[0], self.input_data[1], self.input_data[2]
+                torch_dataloader = self.cv_dataset(path_to_files, path_to_labels)
+                if not path_to_model.__contains__('pt'):
+                    torch_model = BACKBONE_MODELS[path_to_model]
+                else:
+                    torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
 
             compression_dataset = CompressionInputData(features=np.zeros((2, 2)),
                                                        num_classes=torch_dataloader.num_classes,
@@ -96,14 +86,6 @@ class DataCheck:
                                     target=torch_model  # model for compression
                                     )
         self.input_data.supplementary_data.is_auto_preprocessed = True
-            self.input_data = InputData(features=example_inputs,
-                                        idx=None,
-                                        features_names = example_inputs.num_classes,
-                                        task=FEDOT_TASK['classification'],
-                                        data_type=DataTypesEnum.image,
-                                        target=nn_model
-                                        )
-            self.input_data.supplementary_data.is_auto_preprocessed = True
 
     def _check_input_data_features(self):
         """Checks and preprocesses the features in the input data.

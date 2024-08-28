@@ -1,26 +1,23 @@
 import torch
 import torch_pruning as tp
 from enum import Enum
+
+from fastai.torch_core import _has_mps
+from fastcore.basics import defaults
 from golem.core.optimisers.genetic.operators.inheritance import GeneticSchemeTypesEnum
 from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
 import torchvision
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from fedot.core.repository.metrics_repository import QualityMetricsEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
-from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, RegressionMetricsEnum
-from fedot.core.repository.tasks import Task, TaskTypesEnum
-from golem.core.tuning.iopt_tuner import IOptTuner
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
 
-from fedcore.architecture.dataset.object_detection_datasets import COCODataset, YOLODataset
+from fedcore.architecture.dataset.object_detection_datasets import YOLODataset
 from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
-from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset, SegmentationDataset
+from fedcore.architecture.dataset.segmentation_dataset import  SegmentationDataset
 from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset
-from golem.core.tuning.simultaneous import SimultaneousTuner
-from golem.core.tuning.sequential import SequentialTuner
-from multiprocessing import cpu_count
-import math
+
 
 from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
     HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
@@ -64,8 +61,6 @@ class FedotOperationConstant(Enum):
                           'object_detection': CustomDatasetForImages,
                           'object_detection_YOLO': YOLODataset}
 
-                  'regression': Task(TaskTypesEnum.regression)
-    }
     EXCLUDED_OPERATION_MUTATION = {
         'regression': [
             'one_hot_encoding',
@@ -145,10 +140,6 @@ class FedotOperationConstant(Enum):
         'low_rank': PipelineBuilder().add_node('low_rank_model'),
         'quantisation': PipelineBuilder().add_node('post_training_quant'),
         'distilation': PipelineBuilder().add_node('distilation_model'),
-        'pruning': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
-                                                                      'epochs': 50}),
-        'quantisation': PipelineBuilder().add_node('pruner_model', params={'channels_to_prune': [2, 6, 9],
-                                                                           'epochs': 50}),
         'detection': PipelineBuilder().add_node('detection_model', params={'pretrained': True})
     }
 
@@ -307,25 +298,14 @@ PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMEN
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
-RMSE = TorchLossesConstant.RMSE.value
-SMAPE = TorchLossesConstant.SMAPE.value
-TWEEDIE_LOSS = TorchLossesConstant.TWEEDIE_LOSS.value
-FOCAL_LOSS = TorchLossesConstant.FOCAL_LOSS.value
-CENTER_PLUS_LOSS = TorchLossesConstant.CENTER_PLUS_LOSS.value
-CENTER_LOSS = TorchLossesConstant.CENTER_LOSS.value
-MASK_LOSS = TorchLossesConstant.MASK_LOSS.value
-LOG_COSH_LOSS = TorchLossesConstant.LOG_COSH_LOSS.value
-HUBER_LOSS = TorchLossesConstant.HUBER_LOSS.value
-EXPONENTIAL_WEIGHTED_LOSS = TorchLossesConstant.EXPONENTIAL_WEIGHTED_LOSS.value
-
-MULTI_ARRAY = DataTypeConstant.MULTI_ARRAY.value
-MATRIX = DataTypeConstant.MATRIX.value
-
-CPU_NUMBERS = ComputationalConstant.CPU_NUMBERS.value
-BATCH_SIZE_FOR_FEDOT_WORKER = ComputationalConstant.BATCH_SIZE_FOR_FEDOT_WORKER.value
-FEDOT_WORKER_NUM = ComputationalConstant.FEDOT_WORKER_NUM.value
-FEDOT_WORKER_TIMEOUT_PARTITION = ComputationalConstant.FEDOT_WORKER_TIMEOUT_PARTITION.value
-PATIENCE_FOR_EARLY_STOP = ComputationalConstant.PATIENCE_FOR_EARLY_STOP.value
-KL_LOSS = TorchLossesConstant.KL_LOSS.value
-
+# RMSE = TorchLossesConstant.RMSE.value
+# SMAPE = TorchLossesConstant.SMAPE.value
+# TWEEDIE_LOSS = TorchLossesConstant.TWEEDIE_LOSS.value
+# FOCAL_LOSS = TorchLossesConstant.FOCAL_LOSS.value
+# CENTER_PLUS_LOSS = TorchLossesConstant.CENTER_PLUS_LOSS.value
+# CENTER_LOSS = TorchLossesConstant.CENTER_LOSS.value
+# MASK_LOSS = TorchLossesConstant.MASK_LOSS.value
+# LOG_COSH_LOSS = TorchLossesConstant.LOG_COSH_LOSS.value
+# HUBER_LOSS = TorchLossesConstant.HUBER_LOSS.value
+# EXPONENTIAL_WEIGHTED_LOSS = TorchLossesConstant.EXPONENTIAL_WEIGHTED_LOSS.value
 ONNX_INT8_CONFIG = ONNX_CONFIG.INT8_CONFIG.value
