@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from typing import Optional
 
 import numpy as np
@@ -69,10 +70,9 @@ class BaseNeuralModel:
                     model,
                     total_iterations_limit=None,
                     custom_loss: dict = None):
-
-        total_iterations = 0
         for epoch in range(1, self.epochs + 1):
             loss_sum = 0
+            total_iterations = 0
             self.model.train()
             for batch in tqdm(train_loader):
                 self.optimizer.zero_grad()
@@ -83,21 +83,18 @@ class BaseNeuralModel:
                     model_loss = {key: val(model) for key, val in custom_loss.items()}
                     model_loss['metric_loss'] = self.loss_fn(torch.argmax(output, dim=1).float(),
                                                              targets.to(self.device).float())
-                    losses = reduce(iadd, list(model_loss.items()))
-                    losses = [x.item() if not isinstance(x, str) else x for x in losses]
-                    print('Epoch: {}, {} Loss: {:.2f}, {} Loss: {:.2f}, {} Loss: {:.2f}'.format(
-                        epoch, *losses))
-                    loss_sum += sum([loss.item() for loss in model_loss.values()])
                     quality_loss = reduce(iadd, [loss for loss in model_loss.values()])
+                    loss_sum += quality_loss.item()
                 else:
                     quality_loss = self.loss_fn(output, targets)
                     loss_sum += quality_loss.item()
-                avg_loss = loss_sum / total_iterations
                 quality_loss.backward()
                 self.optimizer.step()
-
-            print('Epoch: {}, {}, Training Loss: {:.2f}'.format(
-                epoch, 'low_rank_loss', avg_loss))
+            avg_loss = loss_sum / total_iterations
+            losses = reduce(iadd, list(model_loss.items()))
+            losses = [x.item() / total_iterations if not isinstance(x, str) else x for x in losses]
+            print('Epoch: {}, Average loss {}, {} Loss: {:.2f}, {} Loss: {:.2f}, {} Loss: {:.2f}'.format(
+                epoch, avg_loss, *losses))
 
             if total_iterations_limit is not None and total_iterations >= total_iterations_limit:
                 return
