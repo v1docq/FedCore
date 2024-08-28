@@ -116,7 +116,7 @@ class ModelCompressionConstant(Enum):
     DECOMPOSE_MODE = 'channel'
     FORWARD_MODE = 'one_layer'
     HOER_LOSS = 1
-    ORTOGONAL_LOSS = 1
+    ORTOGONAL_LOSS = 5
     MODELS_FROM_LENGTH = {
         122: 'ResNet18',
         218: 'ResNet34',
