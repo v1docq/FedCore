@@ -1,17 +1,17 @@
 import logging
-from typing import Union, Optional
+from typing import Union
 
 import numpy as np
 import torch
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
+from pymonad.either import Either
+
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.repository.constanst_repository import FEDOT_TASK
-from keras.models import load_model
-import onnx
-#import keras2onnx
-import tensorflow as tf
-
+from fedcore.architecture.utils.loader import collate
+from tqdm import tqdm
+from torch.utils.data import DataLoader
 from fedcore.repository.model_repository import BACKBONE_MODELS
 
 
@@ -26,18 +26,42 @@ class DataCheck:
         logger (logging.Logger): Logger instance for logging messages.
         input_data (InputData): Preprocessed and initialized Fedot InputData object.
         task (str): Machine learning task for the dataset.
-        task_dict (dict): Mapping of string task names to Fedot Task objects.
 
     """
 
     def __init__(self,
                  input_data: Union[InputData, tuple] = None,
-                 task = None,
-                 task_params = None):
+                 task=None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.input_data = input_data
         self.task = task
-        self.task_params = task_params
+
+    def _check_od_dataset(self, dataset_type):
+        classes = list(self.input_data.classes.keys())
+        target = []
+        loader = DataLoader(self.input_data, batch_size=1, shuffle=False, collate_fn=collate)
+        gen = (target.append((targets[0]['boxes'],
+                              targets[0]['labels'])) for i, (images, targets) in
+               enumerate(tqdm(loader, desc='Fitting')))
+        return gen
+
+    def _check_directory_dataset(self, dataset_type):
+        if dataset_type == 'fedcore':
+            return self.input_data[0], self.input_data[1]
+        else:
+            path_to_files, path_to_labels, path_to_model = self.input_data[0], self.input_data[1], self.input_data[2]
+            torch_dataloader = self.cv_dataset(path_to_files, path_to_labels)
+            if not path_to_model.__contains__('pt'):
+                torch_model = BACKBONE_MODELS[path_to_model]
+            else:
+                torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
+
+            compression_dataset = CompressionInputData(features=np.zeros((2, 2)),
+                                                       num_classes=torch_dataloader.num_classes,
+                                                       calib_dataloader=torch_dataloader,
+                                                       target=torch_model
+                                                       )
+        return compression_dataset, torch_model
 
     def _init_input_data(self) -> None:
         """Initializes the `input_data` attribute based on its type.
@@ -50,33 +74,15 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
-        if self.task == 'detection':
-            self.input_data = InputData(features=self.input_data[0][0],
-                                        idx=self.idx,
-                                        features_names = self.classes,
-                                        task=FEDOT_TASK['classification'],
-                                        data_type=DataTypesEnum.image,
-                                        target=self.input_data[1]
-                                        )
-            self.input_data.supplementary_data.is_auto_preprocessed = True
-        else:
-            if isinstance(self.input_data, InputData):
-                return
-            elif isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData)):
-                compression_dataset, torch_model = self.input_data[0], self.input_data[1]
-            elif isinstance(self.input_data[0], str):
-                path_to_files, path_to_labels, path_to_model = self.input_data[0], self.input_data[1], self.input_data[2]
-                torch_dataloader = self.cv_dataset(path_to_files, path_to_labels)
-                if not path_to_model.__contains__('pt'):
-                    torch_model = BACKBONE_MODELS[path_to_model]
-                else:
-                    torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
 
-            compression_dataset = CompressionInputData(features=np.zeros((2, 2)),
-                                                       num_classes=torch_dataloader.num_classes,
-                                                       calib_dataloader=torch_dataloader,
-                                                       target=torch_model
-                                                       )
+        object_detection_scenario = self.task == 'detection'
+        fedcore_scenario = isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData))
+        custom_scenario = 'fedcore' if fedcore_scenario else 'directory'
+
+        compression_dataset, torch_model = Either(value='detection',
+                                                  monoid=[custom_scenario, object_detection_scenario]).either(
+            left_function=lambda dataset_type: self._check_directory_dataset(dataset_type),
+            right_function=lambda dataset_type: self._check_od_dataset(dataset_type))
 
         self.input_data = InputData(features=compression_dataset,  # CompressionInputData object
                                     idx=np.arange(1),  # dummy value
@@ -103,9 +109,6 @@ class DataCheck:
         - Converts features to torch format using NumpyConverter.
 
         """
-        pass
-
-    def check_available_operations(self, available_operations):
         pass
 
     def check_input_data(self) -> InputData:

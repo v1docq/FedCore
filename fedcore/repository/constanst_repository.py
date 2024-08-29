@@ -298,6 +298,7 @@ PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMEN
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
+KL_LOSS = TorchLossesConstant.KL_LOSS.value
 # RMSE = TorchLossesConstant.RMSE.value
 # SMAPE = TorchLossesConstant.SMAPE.value
 # TWEEDIE_LOSS = TorchLossesConstant.TWEEDIE_LOSS.value

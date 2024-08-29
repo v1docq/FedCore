@@ -1,37 +1,27 @@
 import logging
-import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
-from tqdm import tqdm
 import torch
 import torch.nn
-import torchvision.datasets
-from torch import nn
-from torch.utils.data import DataLoader
-from torchvision import transforms
+from pymonad.either import Either
 
 from fedcore.api.utils.checkers_collection import DataCheck
-from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.architecture.dataset.prediction_datasets import TorchVisionDataset
-from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results, PROJECT_PATH
+from fedcore.architecture.dataset.api_loader import ApiLoader
+from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results
 import numpy as np
 import pandas as pd
-from torch.utils.data import DataLoader
 from fedot.api.main import Fedot
 from fedot.core.pipelines.pipeline import Pipeline
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDCORE_CV_DATASET
-from fedcore.repository.model_repository import BACKBONE_MODELS
-from fedcore.architecture.utils.paths import data_path
-from fedcore.data.data import CompressionInputData
+
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
-from fedcore.architecture.utils.loader import collate
 
 warnings.filterwarnings("ignore")
 
@@ -101,32 +91,6 @@ class FedCore(Fedot):
                                                             FEDOT_ASSUMPTIONS[self.compression_task])
         self.__init_experiment_setup()
 
-    def _init_pretrain_dataset(self, dataset: str = 'CIFAR10'):
-        transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        default_dataset = {'CIFAR10': torchvision.datasets.CIFAR10}
-        train_dataset = default_dataset[dataset](data_path(dataset), train=True, download=True,
-                                                 transform=transform)
-        val_dataset = default_dataset[dataset](data_path(dataset), train=False, download=True,
-                                               transform=transform)
-        val_dataset, test_dataset = torch.utils.data.random_split(val_dataset, [0.1, 0.9])
-        train_dataloader = DataLoader(
-            train_dataset,
-            batch_size=64,
-            shuffle=True,
-            num_workers=1
-        )
-
-        val_dataloader = DataLoader(val_dataset, batch_size=100, shuffle=False, num_workers=1)
-        return train_dataloader, val_dataloader
-
-    def _init_pretrain_model(self, model_name):
-        model = BACKBONE_MODELS[model_name](pretrained=True).to(default_device())
-        model.fc = nn.Linear(512, 10).to(default_device())
-        model.train()
-        return model
-
     def __init_experiment_setup(self):
         self.logger.info('Initialising experiment setup')
         fedcore_params = [param for param in self.config_dict.keys() if param not in list(FEDOT_API_PARAMS.keys())]
@@ -154,36 +118,13 @@ class FedCore(Fedot):
             **kwargs: additional parameters
 
         """
-        if self.config_dict['problem'] == 'detection':
-            classes = list(input_data.classes.keys())
-            loader = DataLoader(
-                input_data,
-                batch_size=1,
-                shuffle=False,
-                collate_fn=collate
-            )
-            desc = 'Fitting'
-            for i, (images, targets) in enumerate(tqdm(loader, desc=desc)):
-                target = [
-                    targets[0]['boxes'],
-                    targets[0]['labels']
-                ]
-                self.train_data = deepcopy([images, target])
-                input_preproc = DataCheck(input_data=self.train_data,
-                                          task=self.config_dict['problem'],
-                                          task_params=self.task_params)
-                self.train_data = input_preproc.check_input_data()
-                self.solver = self.__init_solver()
-                self.solver.fit(self.train_data)
 
-        else:
-            self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
-            input_preproc = DataCheck(input_data=self.train_data,
-                                      task=self.config_dict['problem'],
-                                      task_params=self.task_params)
-            self.train_data = input_preproc.check_input_data()
-            self.solver = self.__init_solver()
-            self.solver.fit(self.train_data)
+        self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
+        input_preproc = DataCheck(input_data=self.train_data,
+                                  task=self.cv_task)
+        self.train_data = input_preproc.check_input_data()
+        self.solver = self.__init_solver()
+        self.solver.fit(self.train_data)
 
     def predict(self,
                 predict_data: tuple,
@@ -218,19 +159,6 @@ class FedCore(Fedot):
 
             """
 
-        # train_data = DataCheck(input_data=train_data, task=self.config_dict['problem']).check_input_data()
-        # tuning_params = {} if tuning_params is None else tuning_params
-        # tuned_metric = 0
-        # tuning_params['metric'] = FEDOT_TUNING_METRICS[self.config_dict['problem']]
-        # for tuner_name, tuner_type in FEDOT_TUNER_STRATEGY.items():
-        #     model_to_tune = deepcopy(self.solver.current_pipeline) if isinstance(self.solver, Fedot) \
-        #         else deepcopy(self.solver)
-        #     tuning_params['tuner'] = tuner_type
-        #     pipeline_tuner, model_to_tune = build_tuner(
-        #         self, model_to_tune, tuning_params, train_data, mode)
-        #     if abs(pipeline_tuner.obtained_metric) > tuned_metric:
-        #         tuned_metric = abs(pipeline_tuner.obtained_metric)
-        #         self.solver = model_to_tune
         pass
 
     def get_metrics(self,
@@ -270,52 +198,13 @@ class FedCore(Fedot):
         pretrained_scenario = all([path is None, supplementary_data is not None])
         torchvision_scenario = all([supplementary_data is not None,
                                     'torchvision_dataset' in supplementary_data.keys()])
-        if pretrained_scenario:
-            train_dataloader, val_dataloader = self._init_pretrain_dataset(dataset=supplementary_data['dataset_name'])
-            model = self._init_pretrain_model(supplementary_data['model_name'])
-            supplementary_data = {'torch_model': model.cpu(),
-                                  'test_dataset': val_dataloader,
-                                  'train_dataset': train_dataloader}
-            # load data dynamically
-            torch_model = supplementary_data['torch_model']
-            torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
-                                                 num_classes=10,
-                                                 calib_dataloader=supplementary_data['test_dataset'],
-                                                 train_dataloader=supplementary_data['train_dataset'],
-                                                 target=torch_model
-                                                 )
-            torch_dataset.supplementary_data.is_auto_preprocessed = True
-            self.train_data = (torch_dataset, torch_model)
-        elif torchvision_scenario:
-            torch_model = supplementary_data['torch_model']
-            is_backbone_torch = isinstance(torch_model, str)
-            train_loader, val_loader = TorchVisionDataset(path).get_dataloader()
-            torch_model = BACKBONE_MODELS[torch_model]() \
-                if is_backbone_torch else torch_model
-            torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
-                                                 num_classes=len(train_loader.dataset.classes),
-                                                 calib_dataloader=train_loader,
-                                                 train_dataloader=val_loader
-                                                 )
-            self.train_data = (torch_dataset, torch_model)
-        else:
-            # load data from directory
-            annotations, path_to_model = None, None
-            path_to_data = os.path.join(PROJECT_PATH, path)
-            dir_list = os.listdir(path_to_data)
-            for x in dir_list:
-                if x.__contains__('dataset'):
-                    directory = os.path.join(path_to_data, x)
-                elif x.__contains__('model'):
-                    model_dir = os.path.join(path_to_data, x)
-                    _ = [y for y in os.listdir(model_dir) if y.__contains__('.pt') or y.__contains__('.h5')][0]
-                    path_to_model = os.path.join(model_dir, _)
-                elif x.__contains__('txt'):
-                    annotations = os.path.join(path_to_data, x)
-            if path_to_model is None and supplementary_data is not None:
-                path_to_model = supplementary_data['model_name']
-            self.train_data = DataCheck(input_data=(directory, annotations, path_to_model),
-                                        cv_dataset=self.cv_dataset).check_input_data()
+        custom_scenario = 'pretrain' if pretrained_scenario else 'directory'
+        data_loader = ApiLoader()
+        self.train_data = Either(value='torchvision',
+                                 monoid=[custom_scenario, torchvision_scenario]).either(
+            left_function=lambda loader_type: data_loader.load_data(loader_type, supplementary_data, path),
+            right_function=lambda loader_type: data_loader.load_data(loader_type, supplementary_data, path))
+
         return self.train_data
 
     def save_best_model(self):

@@ -6,9 +6,8 @@ from torchvision.models import resnet101, resnet152, resnet18, resnet34, resnet5
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.layers import PrunedResNet, Bottleneck, BasicBlock
-from fedcore.architecture.abstraction.decorators import convert_to_4d_torch_array
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.repository.constanst_repository import CROSS_ENTROPY, MULTI_CLASS_CROSS_ENTROPY, RMSE
+from fedcore.repository.constanst_repository import CROSS_ENTROPY, MULTI_CLASS_CROSS_ENTROPY, MSE
 
 from torch.nn import Dropout
 from torch.nn import Identity
@@ -77,19 +76,18 @@ class ResNet:
                                          padding=3,
                                          bias=False)
 
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Implements the forward method of the model and returns predictions."""
         x = x.to(default_device())
         return self.model(x)
-    
+
 
 class ObjectDetector(Module):
     def __init__(self, baseModel, numClasses) -> None:
         super(ObjectDetector, self).__init__()
 
         # intialize base model and number of classes
-        self.baseModel  = baseModel
+        self.baseModel = baseModel
         self.numClasses = numClasses
 
         # build regressor head for outputting the bounding
@@ -125,8 +123,8 @@ class ObjectDetector(Module):
     def forward(self, x):
         # pass the inputs through the base model and then obtain
         # predictions from two different branches of the network
-        features    = self.baseModel(x)
-        bboxes      = self.regressor(features)
+        features = self.baseModel(x)
+        bboxes = self.regressor(features)
         classLogits = self.classifier(features)
 
         # return outputs as tuple
@@ -141,8 +139,7 @@ class ResNetModel(BaseNeuralModel):
         self.model_name = params.get('model_name', 'ResNet18')
         self.input_dim = params.get('input_dim', 1)
         self.output_dim = params.get('output_dim', 10)
-        
-    
+
     def _init_model(self, input_data):
         self.model = ResNet(input_dim=self.input_dim,
                             output_dim=self.output_dim,
@@ -158,11 +155,9 @@ class ResNetModel(BaseNeuralModel):
             else:
                 loss_fn = MULTI_CLASS_CROSS_ENTROPY()
         else:
-            loss_fn = RMSE()
+            loss_fn = MSE()
         return loss_fn, optimizer
 
-
-    @convert_to_4d_torch_array
     def _predict_model(self, x_test):
         self.model.eval()
         x_test = Tensor(x_test).to(default_device())

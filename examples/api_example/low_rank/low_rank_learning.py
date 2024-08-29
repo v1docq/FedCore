@@ -6,7 +6,7 @@ experiment_setup = {'compression_task': 'low_rank',
 
 if __name__ == "__main__":
     fedcore_compressor = FedCore(**experiment_setup)
-    input_data = fedcore_compressor.load_data(path='fedcore/examples/data/low_rank/dataset',
+    input_data = fedcore_compressor.load_data(path='fedcore/data/datasets/low_rank/dataset',
                                               supplementary_data={'torchvision_dataset': True,
                                                                   'torch_model': 'ResNet18'})
     fedcore_compressor.fit(input_data)

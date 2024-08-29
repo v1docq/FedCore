@@ -9,8 +9,7 @@ from tqdm import tqdm
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.dataset.dummy_clf import DummyDatasetCLF
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.metrics.metric_impl import MetricCounter, ClassificationMetricCounter
-from fedcore.metrics.cv_metrics import MetricCounter, ClassificationMetricCounter, ObjectDetectionMetricCounter
+from fedcore.metrics.metric_impl import MetricCounter, ClassificationMetricCounter, ObjectDetectionMetricCounter
 from fedcore.models.backbone.resnet import ResNet
 
 

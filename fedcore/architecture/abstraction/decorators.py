@@ -1,9 +1,6 @@
 from weakref import WeakValueDictionary
-
-from distributed import Client, LocalCluster
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
-
 from fedcore.architecture.preprocessing.data_convertor import CustomDatasetCLF, CustomDatasetTS, DataConverter, \
     TensorConverter
 from fedcore.architecture.settings.computational import backend_methods as np
@@ -111,13 +108,13 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class DaskServer(metaclass=Singleton):
-    def __init__(self):
-        print('Creating Dask Server')
-        cluster = LocalCluster(processes=False,
-                               # n_workers=4,
-                               # threads_per_worker=4,
-                               # memory_limit='3GB'
-                               )
-        # connect client to your cluster
-        self.client = Client(cluster)
+# class DaskServer(metaclass=Singleton):
+#     def __init__(self):
+#         print('Creating Dask Server')
+#         cluster = LocalCluster(processes=False,
+#                                # n_workers=4,
+#                                # threads_per_worker=4,
+#                                # memory_limit='3GB'
+#                                )
+#         # connect client to your cluster
+#         self.client = Client(cluster)

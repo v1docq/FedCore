@@ -8,7 +8,9 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 
 from fedcore.data.data import CompressionOutputData, CompressionInputData
-from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DISTILATION_MODELS, LOW_RANK_MODELS
+from fedcore.repository.constanst_repository import default_device
+from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DISTILATION_MODELS, LOW_RANK_MODELS, \
+    DETECTION_MODELS
 
 
 class FedcoreLowRankStrategy(EvaluationStrategy):
@@ -51,9 +53,6 @@ class FedcoreLowRankStrategy(EvaluationStrategy):
         pruned_model = trained_operation.predict_for_fit(predict_data)
         converted = self._convert_to_output(pruned_model, predict_data)
         return converted
-from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DETECTION_MODELS
-from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DISTILATION_MODELS
 
 
 class FedcorePruningStrategy(EvaluationStrategy):
@@ -155,6 +154,7 @@ class FedcoreDistilationStrategy(FedcoreQuantisationStrategy):
             raise ValueError(
                 f'Impossible to obtain custom preprocessing strategy for {operation_type}')
 
+
 class FedcoreDetectionStrategy(EvaluationStrategy):
     __operations_by_types = DETECTION_MODELS
 
@@ -164,6 +164,7 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         else:
             raise ValueError(
                 f'Impossible to obtain custom preprocessing strategy for {operation_type}')
+
     def __init__(self, operation_type: str, params: Optional[OperationParameters] = None):
         super().__init__(operation_type, params)
         self.operation_impl = self._convert_to_operation(operation_type)(self.params_for_fit)
@@ -183,7 +184,8 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         self.operation_impl(torch.unsqueeze(train_data.features, dim=0), target)
         return self.operation_impl
 
-    def predict(self, trained_operation, predict_data: CompressionInputData, output_mode: str = 'default') -> OutputData:
+    def predict(self, trained_operation, predict_data: CompressionInputData,
+                output_mode: str = 'default') -> OutputData:
         trained_operation.eval()
         pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
         prediction = [
@@ -194,14 +196,17 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         converted = self._convert_to_output(prediction, predict_data)
         return converted
 
-    def predict_for_fit(self, trained_operation, predict_data: CompressionInputData, output_mode: str = 'default') -> OutputData:
+    def predict_for_fit(self, trained_operation,
+                        predict_data: CompressionInputData, output_mode: str = 'default') -> OutputData:
         trained_operation.eval()
         pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
         converted = self._convert_to_output(pred, predict_data)
         return converted
 
-    def _convert_to_output(self, prediction, predict_data: CompressionInputData,
-                           output_data_type: DataTypesEnum = DataTypesEnum.dict) -> OutputData:
+    def _convert_to_output(self,
+                           prediction,
+                           predict_data: CompressionInputData,
+                           output_data_type: DataTypesEnum) -> OutputData:
         output_data = CompressionOutputData(idx=predict_data.idx,
                                             features=predict_data.features,
                                             # train_dataloader=predict_data.train_dataloader,
