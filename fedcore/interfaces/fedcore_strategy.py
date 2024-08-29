@@ -45,12 +45,12 @@ class FedcoreLowRankStrategy(EvaluationStrategy):
         return self.operation_impl
 
     def predict(self, trained_operation, predict_data: InputData, output_mode: str = 'default') -> OutputData:
-        pruned_model = trained_operation.predict(predict_data)
+        pruned_model = trained_operation.predict(predict_data, output_mode)
         converted = self._convert_to_output(pruned_model, predict_data)
         return converted
 
     def predict_for_fit(self, trained_operation, predict_data: InputData, output_mode: str = 'default') -> OutputData:
-        pruned_model = trained_operation.predict_for_fit(predict_data)
+        pruned_model = trained_operation.predict_for_fit(predict_data, output_mode)
         converted = self._convert_to_output(pruned_model, predict_data)
         return converted
 

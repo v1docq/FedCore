@@ -5,9 +5,9 @@ from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.utilities.custom_errors import AbstractMethodNotImplementError
+from torch import nn
 
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.repository.constanst_repository import MSE, KL_LOSS
 from fedcore.tools.ruler import PerformanceEvaluator
 
 
@@ -50,9 +50,9 @@ class IntermediateAttention(CompressionMetric):
                student_teacher_attention_mapping):
         loss = 0
         for i in range(len(student_attentions)):
-            loss += weights[i] * KL_LOSS(reduction='batchmean')(student_attentions[i],
-                                                                teacher_attentions[
-                                                                    student_teacher_attention_mapping[i]])
+            loss += weights[i] * nn.KLDivLoss(reduction='batchmean')(student_attentions[i],
+                                                                     teacher_attentions[
+                                                                         student_teacher_attention_mapping[i]])
         return loss
 
 
@@ -64,14 +64,14 @@ class IntermediateFeatures(CompressionMetric):
                weights):
         loss = 0
         for i in range(len(student_feats)):
-            loss += weights[i] * MSE()(student_feats[i], teacher_feats[i])
+            loss += weights[i] * nn.MSELoss()(student_feats[i], teacher_feats[i])
         return loss
 
 
 class LastLayer(CompressionMetric):
     @classmethod
     def metric(cls, student_logits, teacher_logits, weight):
-        return weight * MSE()(student_logits, teacher_logits)
+        return weight * nn.MSELoss()(student_logits, teacher_logits)
 
 
 class Throughput(CompressionMetric):

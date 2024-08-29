@@ -18,7 +18,7 @@ from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForIma
 from fedcore.architecture.dataset.segmentation_dataset import SegmentationDataset
 from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset
 from fedcore.metrics.api_metric import calculate_regression_metric, calculate_forecasting_metric, \
-    calculate_classification_metric
+    calculate_classification_metric, calculate_computational_metric
 
 from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
     HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
@@ -67,7 +67,8 @@ class FedotOperationConstant(Enum):
 
     FEDOT_GET_METRICS = {'regression': calculate_regression_metric,
                          'ts_forecasting': calculate_forecasting_metric,
-                         'classification': calculate_classification_metric
+                         'classification': calculate_classification_metric,
+                         'computational': calculate_computational_metric
                          }
 
     EXCLUDED_OPERATION_MUTATION = {

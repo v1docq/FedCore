@@ -170,24 +170,16 @@ class FedCore(Fedot):
                                 target,
                                 predicted_labels,
                                 predicted_probs,
-                                problem,
-                                metric_names,
-                                rounding_order):
-
+                                problem):
         prediction_dataframe = FEDOT_GET_METRICS[problem](target=target,
-                                                          metric_names=metric_names,
-                                                          rounding_order=rounding_order,
                                                           labels=predicted_labels,
                                                           probs=predicted_probs)
 
         return prediction_dataframe
 
-    def get_metrics(self,
-                    labels: Union[Tensor, np.array] = None,
-                    target: Union[list, np.array] = None,
-                    metric_names: tuple = ('f1', 'roc_auc', 'accuracy'),
-                    rounding_order: int = 3,
-                    **kwargs) -> pd.DataFrame:
+    def evaluate_metric(self,
+                        predicton: Union[Tensor, np.array],
+                        target: Union[list, np.array]) -> pd.DataFrame:
         """
         Method to calculate metrics for Industrial model.
 
@@ -205,13 +197,22 @@ class FedCore(Fedot):
             pandas DataFrame with calculated metrics
 
         """
+        model_output = predicton.cpu().detach().numpy() \
+            if isinstance(predicton, Tensor) else predicton
+        model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
+        if model_output_is_probs:
+            labels = np.argmax(model_output, axis=1)
+            predicted_probs = model_output
+        else:
+            from sklearn.preprocessing import OneHotEncoder
+            labels = model_output
+            predicted_probs = OneHotEncoder().fit_transform(model_output)
+
         metric_dict = self._metric_evaluation_loop(
             target=target,
             problem=self.cv_task,
             predicted_labels=labels,
-            predicted_probs=self.predicted_probs,
-            rounding_order=rounding_order,
-            metric_names=metric_names)
+            predicted_probs=predicted_probs)
         return metric_dict
 
     def load(self, path):

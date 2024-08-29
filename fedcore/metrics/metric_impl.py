@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List
 from sklearn.metrics import precision_recall_fscore_support
-from torch import nn
 from torch.nn.functional import softmax
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 import torch
@@ -233,30 +232,6 @@ def dice_score(
     dice[total == 0] = -1
     return dice
 
-
-def calc_last_layer_loss(student_logits, teacher_logits, weight):
-    return weight * nn.MSELoss()(student_logits, teacher_logits)
-
-
-def calc_intermediate_layers_attn_loss(student_attentions,
-                                       teacher_attentions,
-                                       weights,
-                                       student_teacher_attention_mapping):
-    loss = 0
-    for i in range(len(student_attentions)):
-        loss += weights[i] * nn.KLDivLoss(reduction='batchmean')(student_attentions[i],
-                                                                 teacher_attentions[
-                                                                     student_teacher_attention_mapping[i]])
-    return loss
-
-
-def calc_intermediate_layers_feat_loss(student_feats,
-                                       teacher_feats,
-                                       weights):
-    loss = 0
-    for i in range(len(student_feats)):
-        loss += weights[i] * MSE()(student_feats[i], teacher_feats[i])
-    return loss
 
 
 class ParetoMetrics:

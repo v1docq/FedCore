@@ -4,17 +4,14 @@ import numpy as np
 from fedot.core.data.data import InputData
 from torch import nn, optim
 from tqdm import tqdm
-
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-import torch_pruning as tp
 from typing import Optional
 import torch
 from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import TrainParams
-from fedcore.metrics.metric_impl import calc_last_layer_loss, calc_intermediate_layers_attn_loss, \
-    calc_intermediate_layers_feat_loss
+from fedcore.metrics.cv_metrics import LastLayer, IntermediateAttention, IntermediateFeatures
 
 
 class BaseDistilator(BaseCompressionModel):
@@ -44,19 +41,19 @@ class BaseDistilator(BaseCompressionModel):
                      train_params,
                      output_dict
                      ):
-        last_layer_loss = calc_last_layer_loss(
+        last_layer_loss = LastLayer(
             output_dict['student_logits'],
             output_dict['teacher_logits'],
             train_params.last_layer_loss_weight,
         )
-        intermediate_layer_att_loss = calc_intermediate_layers_attn_loss(
+        intermediate_layer_att_loss = IntermediateAttention(
             output_dict['student_attentions'],
             output_dict['teacher_attentions'],
             train_params.intermediate_attn_layers_weights,
             train_params.student_teacher_attention_mapping,
         )
 
-        intermediate_layer_feat_loss = calc_intermediate_layers_feat_loss(
+        intermediate_layer_feat_loss = IntermediateFeatures(
             output_dict['student_hidden_states'],
             output_dict['teacher_hidden_states'],
             train_params.intermediate_feat_layers_weights,

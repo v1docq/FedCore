@@ -14,7 +14,7 @@ experiment_setup = {'compression_task': 'low_rank',
 
 if __name__ == "__main__":
     dataset = 'CIFAR10'
-    #dataset = 'fedcore/data/datasets/low_rank/dataset'
+    # dataset = 'fedcore/data/datasets/low_rank/dataset'
     torchvision_dataset = False if dataset == 'CIFAR10' else True
     fedcore_compressor = FedCore(**experiment_setup)
     input_data = fedcore_compressor.load_data(path=dataset,
@@ -23,16 +23,16 @@ if __name__ == "__main__":
     fedcore_compressor.fit(input_data)
 
     low_rank_prediction = fedcore_compressor.predict(input_data, output_mode='compress')
-    low_rank_labels = low_rank_prediction.predict.predict
+    low_rank_output = low_rank_prediction.predict.predict
     low_rank_model = fedcore_compressor.solver.root_node.fitted_operation.optimized_model
-    low_rank_metrics = fedcore_compressor.get_metrics(labels=low_rank_labels,
-                                                      target=fedcore_compressor.target)
+    low_rank_metrics = fedcore_compressor.evaluate_metric(predicton=low_rank_output,
+                                                          target=fedcore_compressor.target)
 
     original_prediction = fedcore_compressor.predict(input_data, output_mode='default')
-    original_labels = low_rank_prediction.predict.predict
+    original_output = low_rank_prediction.predict.predict
     original_model = fedcore_compressor.solver.root_node.fitted_operation.optimized_model
-    original_metrics = fedcore_compressor.get_metrics(labels=original_labels,
-                                                      target=fedcore_compressor.target)
+    original_metrics = fedcore_compressor.evaluate_metric(predicton=original_output,
+                                                          target=fedcore_compressor.target)
 
     convertation_supplementary_data = {'model_to_export': low_rank_model}
     onnx_model = fedcore_compressor.convert_model(supplementary_data=convertation_supplementary_data)

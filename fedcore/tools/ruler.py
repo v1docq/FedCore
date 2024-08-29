@@ -10,7 +10,7 @@ from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.dataset.dummy_clf import DummyDatasetCLF
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.metrics.metric_impl import MetricCounter, ClassificationMetricCounter, ObjectDetectionMetricCounter
-from fedcore.models.backbone.resnet import ResNet
+
 
 
 class PerformanceEvaluator:
@@ -240,28 +240,3 @@ class PerformanceEvaluatorOD:
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
         print(f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}")
         print(f"Model size: {self.model_size} MB")
-
-
-if __name__ == "__main__":
-    # Example usage:
-    # load MNIST dataset
-
-    # data_set = MNIST(
-    #     root='data',
-    #     train=True,
-    #     download=True,
-    #     transform=ToTensor()
-    # )
-    data_set = DummyDatasetCLF(num_samples=1000)
-    # define model from dataset configuration
-    resnet = ResNet(input_dim=1,
-                    output_dim=len(data_set.classes),
-                    model_name='ResNet18one')
-    evaluator = PerformanceEvaluator(resnet, data_set)
-    evaluator.measure_model_size()
-    evaluator.measure_latency()
-    evaluator.measure_throughput()
-
-    # or
-    # performance = evaluator.eval()
-    # print(performance)
