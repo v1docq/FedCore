@@ -13,6 +13,7 @@ from tqdm import tqdm
 from functools import reduce
 from operator import iadd
 
+from fedcore.data.data import CompressionInputData
 from fedcore.losses.utils import _get_loss_metric
 from fedcore.repository.constanst_repository import default_device
 
@@ -46,7 +47,7 @@ class BaseNeuralModel:
         self.learning_rate = self.params.get('learning_rate', 0.001)
         self.custom_loss = self.params.get('custom_loss', None)
         self.device = default_device()
-
+        self.is_regression_task = False
         self.label_encoder = None
         self.model = None
         self.model_for_inference = None
@@ -62,7 +63,7 @@ class BaseNeuralModel:
                          model=self.model,
                          custom_loss=self.custom_loss
                          )
-        # self._save_and_clear_cache()
+        self._clear_cache()
         return self.model
 
     def _train_loop(self,
@@ -81,10 +82,9 @@ class BaseNeuralModel:
                 output = self.model(inputs.to(self.device))
                 if custom_loss:
                     model_loss = {key: val(model) for key, val in custom_loss.items()}
-                    model_loss['metric_loss'] = self.loss_fn(torch.argmax(output, dim=1).float(),
-                                                             targets.to(self.device).float())
+                    model_loss['metric_loss'] = self.loss_fn(output, targets.to(self.device))
                     quality_loss = reduce(iadd, [loss for loss in model_loss.values()])
-                    loss_sum += quality_loss.item()
+                    loss_sum += model_loss['metric_loss'].item()
                 else:
                     quality_loss = self.loss_fn(output, targets)
                     loss_sum += quality_loss.item()
@@ -117,13 +117,16 @@ class BaseNeuralModel:
         """
         return self._predict_model(input_data.features, output_mode)
 
-    def _predict_model(self, x_test, output_mode: str = 'default'):
+    def _predict_model(self, x_test: CompressionInputData, output_mode: str = 'default'):
         self.model.eval()
-        x_test = Tensor(x_test).to(self._device)
-        pred = self.model(x_test)
-        return self._convert_predict(pred, output_mode)
+        prediction = []
+        for batch in tqdm(x_test.calib_dataloader):
+            inputs, targets = batch
+            x_test = inputs.to(self.device)
+            prediction.append(self.model(x_test))
+        return self._convert_predict(torch.concat(prediction), output_mode)
 
-    def _convert_predict(self, pred, output_mode: str = 'labels'):
+    def _convert_predict(self, pred: Tensor, output_mode: str = 'labels'):
         have_encoder = all([self.label_encoder is not None, output_mode == 'labels'])
         output_is_clf_labels = all([not self.is_regression_task, output_mode == 'labels'])
 
@@ -139,16 +142,10 @@ class BaseNeuralModel:
             data_type=DataTypesEnum.table)
         return predict
 
-    def _save_and_clear_cache(self):
-        prefix = f'model_{self.__repr__()}_activation_{self.activation}_epochs_{self.epochs}_bs_{self.batch_size}.pth'
-        torch.save(self.model.state_dict(), prefix)
-        del self.model
+    def _clear_cache(self):
         with torch.no_grad():
             torch.cuda.empty_cache()
-        self.model = self.model_for_inference.to(torch.device('cpu'))
-        self.model.load_state_dict(torch.load(
-            prefix, map_location=torch.device('cpu')))
-        os.remove(prefix)
+
 
     @staticmethod
     def get_validation_frequency(epoch, lr):

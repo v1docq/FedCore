@@ -1,9 +1,6 @@
 import os
 
 import numpy as np
-import torch
-import torch.nn
-import torchvision.datasets
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -12,38 +9,28 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.prediction_datasets import TorchVisionDataset
 from fedcore.architecture.utils.paths import data_path, PROJECT_PATH
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import default_device
+from fedcore.repository.constanst_repository import default_device, DEFAULT_TORCH_DATASET
 from fedcore.repository.model_repository import BACKBONE_MODELS
 
 
 class ApiLoader:
     def __init__(self):
-        pass
-
-    def _init_pretrain_dataset(self, dataset: str = 'CIFAR10'):
-        transform = transforms.Compose(
+        self.transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        default_dataset = {'CIFAR10': torchvision.datasets.CIFAR10}
-        train_dataset = default_dataset[dataset](data_path(dataset), train=True, download=True,
-                                                 transform=transform)
-        val_dataset = default_dataset[dataset](data_path(dataset), train=False, download=True,
-                                               transform=transform)
-        val_dataset, test_dataset = torch.utils.data.random_split(val_dataset, [0.1, 0.9])
-        train_dataloader = DataLoader(
-            train_dataset,
-            batch_size=64,
-            shuffle=True,
-            num_workers=1
-        )
 
+    def _init_pretrain_dataset(self, dataset: str = 'CIFAR10'):
+        train_dataset = DEFAULT_TORCH_DATASET[dataset](data_path(dataset), train=True, download=True,
+                                                       transform=self.transform)
+        val_dataset = DEFAULT_TORCH_DATASET[dataset](data_path(dataset), train=False, download=True,
+                                                     transform=self.transform)
+        train_dataloader = DataLoader(train_dataset ,batch_size=64, shuffle=True, num_workers=1)
         val_dataloader = DataLoader(val_dataset, batch_size=100, shuffle=False, num_workers=1)
         return train_dataloader, val_dataloader
 
     def _init_pretrain_model(self, model_name):
         model = BACKBONE_MODELS[model_name](pretrained=True).to(default_device())
         model.fc = nn.Linear(512, 10).to(default_device())
-        model.train()
         return model
 
     def _get_loader(self, loader_type: str):
@@ -53,17 +40,12 @@ class ApiLoader:
         return loader_dict[loader_type]
 
     def _pretrain_loader(self, supplementary_data, path):
-        train_dataloader, val_dataloader = self._init_pretrain_dataset(dataset=supplementary_data['dataset_name'])
-        model = self._init_pretrain_model(supplementary_data['model_name'])
-        supplementary_data = {'torch_model': model.cpu(),
-                              'test_dataset': val_dataloader,
-                              'train_dataset': train_dataloader}
-        # load data dynamically
-        torch_model = supplementary_data['torch_model']
+        train_dataloader, val_dataloader = self._init_pretrain_dataset(dataset=path)
+        torch_model = self._init_pretrain_model(supplementary_data['torch_model'])
         torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
                                              num_classes=10,
-                                             calib_dataloader=supplementary_data['test_dataset'],
-                                             train_dataloader=supplementary_data['train_dataset'],
+                                             calib_dataloader=val_dataloader,
+                                             train_dataloader=train_dataloader,
                                              target=torch_model
                                              )
         torch_dataset.supplementary_data.is_auto_preprocessed = True

@@ -7,6 +7,7 @@ from typing import Union
 import torch
 import torch.nn
 from pymonad.either import Either
+from torch import Tensor
 
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.api_loader import ApiLoader
@@ -18,7 +19,8 @@ from fedot.core.pipelines.pipeline import Pipeline
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.neural_compressor.config import Torch2ONNXConfig
-from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDCORE_CV_DATASET
+from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDCORE_CV_DATASET, \
+    FEDOT_GET_METRICS
 
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
@@ -47,6 +49,7 @@ class FedCore(Fedot):
         # init FedCore hyperparams
         self.compression_task = kwargs.get('compression_task', 'pruning')
         self.cv_task = kwargs.get('cv_task', 'classification')
+        self.model_params = kwargs.get('model_params', {})
         self.cv_dataset = FEDCORE_CV_DATASET[self.cv_task]
 
         # init backend and convertation params
@@ -79,6 +82,7 @@ class FedCore(Fedot):
         # init hidden state variables
         self.logger = logging.getLogger('FedCoreAPI')
         self.solver = None
+        self.predicted_probs = None
         # map Fedot params to FedCore params
         self.config_dict = kwargs
         self.config_dict['history_dir'] = prefix
@@ -89,6 +93,7 @@ class FedCore(Fedot):
         self.config_dict['optimizer'] = kwargs.get('optimizer', FedcoreEvoOptimizer)
         self.config_dict['initial_assumption'] = kwargs.get('initial_assumption',
                                                             FEDOT_ASSUMPTIONS[self.compression_task])
+        self.config_dict['initial_assumption'].heads[0].parameters = self.model_params
         self.__init_experiment_setup()
 
     def __init_experiment_setup(self):
@@ -141,8 +146,8 @@ class FedCore(Fedot):
         """
         self.predict_data = deepcopy(predict_data)  # we do not want to make inplace changes
         self.predict_data = DataCheck(input_data=self.predict_data,
-                                      cv_dataset=self.cv_dataset).check_input_data()
-        predict = self.solver.predict(self.predict_data)
+                                      task=self.cv_task).check_input_data()
+        predict = self.solver.predict(self.predict_data, **kwargs)
         return predict
 
     def finetune(self,
@@ -161,7 +166,24 @@ class FedCore(Fedot):
 
         pass
 
+    def _metric_evaluation_loop(self,
+                                target,
+                                predicted_labels,
+                                predicted_probs,
+                                problem,
+                                metric_names,
+                                rounding_order):
+
+        prediction_dataframe = FEDOT_GET_METRICS[problem](target=target,
+                                                          metric_names=metric_names,
+                                                          rounding_order=rounding_order,
+                                                          labels=predicted_labels,
+                                                          probs=predicted_probs)
+
+        return prediction_dataframe
+
     def get_metrics(self,
+                    labels: Union[Tensor, np.array] = None,
                     target: Union[list, np.array] = None,
                     metric_names: tuple = ('f1', 'roc_auc', 'accuracy'),
                     rounding_order: int = 3,
@@ -183,7 +205,14 @@ class FedCore(Fedot):
             pandas DataFrame with calculated metrics
 
         """
-        pass
+        metric_dict = self._metric_evaluation_loop(
+            target=target,
+            problem=self.cv_task,
+            predicted_labels=labels,
+            predicted_probs=self.predicted_probs,
+            rounding_order=rounding_order,
+            metric_names=metric_names)
+        return metric_dict
 
     def load(self, path):
         """Loads saved Industrial model from disk
@@ -195,16 +224,19 @@ class FedCore(Fedot):
         pass
 
     def load_data(self, path: str = None, supplementary_data: dict = None):
-        pretrained_scenario = all([path is None, supplementary_data is not None])
+        pretrained_scenario = all([any([path.__contains__('CIFAR'),
+                                        path.__contains__('MNIST')]),
+                                   supplementary_data is not None])
         torchvision_scenario = all([supplementary_data is not None,
-                                    'torchvision_dataset' in supplementary_data.keys()])
+                                    'torchvision_dataset' in supplementary_data.keys(),
+                                    'torchvision_dataset' is True])
         custom_scenario = 'pretrain' if pretrained_scenario else 'directory'
         data_loader = ApiLoader()
         self.train_data = Either(value='torchvision',
                                  monoid=[custom_scenario, torchvision_scenario]).either(
             left_function=lambda loader_type: data_loader.load_data(loader_type, supplementary_data, path),
             right_function=lambda loader_type: data_loader.load_data(loader_type, supplementary_data, path))
-
+        self.target = np.array(self.train_data[0].calib_dataloader.dataset.targets)
         return self.train_data
 
     def save_best_model(self):

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict, List, Optional
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
@@ -69,14 +70,17 @@ class LowRankModel:
         self._init_model(input_data)
         self.trainer.model = self.model
         self.model = self.trainer.fit(input_data)
-        return self.optimize(model=self.model, params=input_data.features, ft_params=None)
+        self.compress(model=self.model, params=input_data.features, ft_params=None)
+        return self.optimized_model
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = 'default'):
-        return self.model
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'compress'):
+        self.trainer.model = self.optimized_model if output_mode == 'compress' else self.model
+        return self.trainer.predict(input_data, output_mode)
 
     def predict(self,
-                input_data: InputData, output_mode: str = 'default'):
-        return self.predict_for_fit(input_data, output_mode)
+                input_data: InputData, output_mode: str = 'compress'):
+        self.trainer.model = self.optimized_model if output_mode == 'compress' else self.model
+        return self.trainer.predict(input_data, output_mode)
 
     def _prune_weight_rank(self, model, thr):
         for name, module in model.named_children():
@@ -88,7 +92,7 @@ class LowRankModel:
                                        strategy=self.strategy,
                                        module_name=name)
 
-    def optimize(
+    def compress(
             self,
             model,
             params,
@@ -105,21 +109,21 @@ class LowRankModel:
         batch_iter = (b[0] for b in params.train_dataloader)
         first_batch = next(batch_iter).to(self.device)
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
+        self.optimized_model = deepcopy(model)
         # acc_before_pruning = self._evaluate_model_acc(params.train_dataloader)
         for thr in self.energy_thresholds:
-            self._prune_weight_rank(model,thr)
+            self._prune_weight_rank(self.optimized_model,thr)
             if self.strategy.__contains__('median'):
                 break
             if ft_params is not None:
                 self._fit_loop(train_loader=params.train_dataloader,
-                               model=self.model,
+                               model=self.optimized_model,
                                custom_loss=self.__loss())
         print("==============After pruning=================")
-        macs, nparams = tp.utils.count_ops_and_params(self.model, first_batch)
+        macs, nparams = tp.utils.count_ops_and_params(self.optimized_model, first_batch)
         # acc_after_pruning = self._evaluate_model_acc(params.train_dataloader)
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
-        return self.model
 
     def __loss(self) -> Dict[str, torch.Tensor]:
         """

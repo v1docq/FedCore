@@ -15,12 +15,14 @@ from torch import nn
 
 from fedcore.architecture.dataset.object_detection_datasets import YOLODataset
 from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
-from fedcore.architecture.dataset.segmentation_dataset import  SegmentationDataset
+from fedcore.architecture.dataset.segmentation_dataset import SegmentationDataset
 from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset
-
+from fedcore.metrics.api_metric import calculate_regression_metric, calculate_forecasting_metric, \
+    calculate_classification_metric
 
 from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
     HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
+
 
 def default_device(device_type: str = 'CPU'):
     """Return or set default device. Modified from fastai.
@@ -47,6 +49,8 @@ def default_device(device_type: str = 'CPU'):
             return torch.device(torch.cuda.current_device())
         if _has_mps():
             return torch.device("mps")
+
+
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {'classification': Task(TaskTypesEnum.classification),
                   'regression': Task(TaskTypesEnum.regression),
@@ -60,6 +64,11 @@ class FedotOperationConstant(Enum):
                           'semantic_segmentation': SemanticSegmentationDataset,
                           'object_detection': CustomDatasetForImages,
                           'object_detection_YOLO': YOLODataset}
+
+    FEDOT_GET_METRICS = {'regression': calculate_regression_metric,
+                         'ts_forecasting': calculate_forecasting_metric,
+                         'classification': calculate_classification_metric
+                         }
 
     EXCLUDED_OPERATION_MUTATION = {
         'regression': [
@@ -274,6 +283,7 @@ FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.v
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
 FEDOT_EVO_MULTI_STRATEGY = FedotOperationConstant.FEDOT_EVO_MULTI_STRATEGY.value
 FEDOT_GENETIC_MULTI_STRATEGY = FedotOperationConstant.FEDOT_GENETIC_MULTI_STRATEGY.value
+FEDOT_GET_METRICS = FedotOperationConstant.FEDOT_GET_METRICS.value
 FEDCORE_TASK = FedotOperationConstant.FEDCORE_TASK.value
 CV_TASK = FedotOperationConstant.CV_TASK.value
 FEDCORE_CV_DATASET = FedotOperationConstant.FEDCORE_CV_DATASET.value
@@ -310,3 +320,5 @@ KL_LOSS = TorchLossesConstant.KL_LOSS.value
 # HUBER_LOSS = TorchLossesConstant.HUBER_LOSS.value
 # EXPONENTIAL_WEIGHTED_LOSS = TorchLossesConstant.EXPONENTIAL_WEIGHTED_LOSS.value
 ONNX_INT8_CONFIG = ONNX_CONFIG.INT8_CONFIG.value
+DEFAULT_TORCH_DATASET = {'CIFAR10': torchvision.datasets.CIFAR10,
+                         'MNIST': torchvision.datasets.MNIST}
