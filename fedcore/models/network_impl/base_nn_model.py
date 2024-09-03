@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, Callable
 
 import numpy as np
 import torch
@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from fedot.core.data.data import InputData, OutputData
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
+from pymonad.either import Either
 from torch import Tensor
 from tqdm import tqdm
 from functools import reduce
@@ -47,57 +48,85 @@ class BaseNeuralModel:
         self.learning_rate = self.params.get('learning_rate', 0.001)
         self.custom_loss = self.params.get('custom_loss', None)
         self.device = default_device()
-        self.is_regression_task = False
+
         self.label_encoder = None
+        self.is_regression_task = False
         self.model = None
-        self.model_for_inference = None
         self.target = None
         self.task_type = None
 
-    def fit(self, input_data: InputData):
+    def fit(self, input_data: InputData,
+            supplementary_data: dict = None):
+        custom_fit_process = supplementary_data is not None
+        loader = input_data.features.train_dataloader
+
         self.loss_fn = _get_loss_metric(input_data)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-
         self.model.to(self.device)
-        self._train_loop(train_loader=input_data.features.train_dataloader,
-                         model=self.model,
-                         custom_loss=self.custom_loss
-                         )
+
+        fit_output = Either(value=supplementary_data,
+                            monoid=[self.custom_loss, custom_fit_process]).either(
+            left_function=lambda custom_loss: self._default_train(loader, self.model, custom_loss),
+            right_function=lambda sup_data: self._custom_train(loader, self.model, sup_data['callback']))
         self._clear_cache()
         return self.model
 
     def _train_loop(self,
                     train_loader,
                     model,
-                    total_iterations_limit=None,
                     custom_loss: dict = None):
-        for epoch in range(1, self.epochs + 1):
-            loss_sum = 0
-            total_iterations = 0
-            self.model.train()
-            for batch in tqdm(train_loader):
-                self.optimizer.zero_grad()
-                total_iterations += 1
-                inputs, targets = batch
-                output = self.model(inputs.to(self.device))
-                if custom_loss:
-                    model_loss = {key: val(model) for key, val in custom_loss.items()}
-                    model_loss['metric_loss'] = self.loss_fn(output, targets.to(self.device))
-                    quality_loss = reduce(iadd, [loss for loss in model_loss.values()])
-                    loss_sum += model_loss['metric_loss'].item()
-                else:
-                    quality_loss = self.loss_fn(output, targets)
-                    loss_sum += quality_loss.item()
-                quality_loss.backward()
-                self.optimizer.step()
-            avg_loss = loss_sum / total_iterations
+        loss_sum = 0
+        total_iterations = 0
+        losses = None
+        for batch in tqdm(train_loader):
+            self.optimizer.zero_grad()
+            total_iterations += 1
+            inputs, targets = batch
+            output = self.model(inputs.to(self.device))
+            if custom_loss:
+                model_loss = {key: val(model) for key, val in custom_loss.items()}
+                model_loss['metric_loss'] = self.loss_fn(output, targets.to(self.device))
+                quality_loss = reduce(iadd, [loss for loss in model_loss.values()])
+                loss_sum += model_loss['metric_loss'].item()
+            else:
+                quality_loss = self.loss_fn(output, targets.to(self.device))
+                loss_sum += quality_loss.item()
+                model_loss = quality_loss
+            quality_loss.backward()
+            self.optimizer.step()
+        avg_loss = loss_sum / total_iterations
+        if custom_loss:
             losses = reduce(iadd, list(model_loss.items()))
             losses = [x.item() / total_iterations if not isinstance(x, str) else x for x in losses]
-            print('Epoch: {}, Average loss {}, {} Loss: {:.2f}, {} Loss: {:.2f}, {} Loss: {:.2f}'.format(
-                epoch, avg_loss, *losses))
+        return losses, avg_loss
 
-            if total_iterations_limit is not None and total_iterations >= total_iterations_limit:
-                return
+    def _custom_train(self,
+                      train_loader,
+                      model,
+                      callback: Callable):
+        # callback.callbacks.on_train_end()
+        for epoch in range(1, self.epochs + 1):
+            self.model.train()
+            model_loss, avg_loss = self._train_loop(train_loader, model)
+            print('Epoch: {}, Average loss {}'.format(epoch, avg_loss))
+            if epoch > 3:
+                # Freeze quantizer parameters
+                self.model.apply(torch.quantization.disable_observer)
+            if epoch > 2:
+                # Freeze batch norm mean and variance estimates
+                self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
+        # callback.callbacks.on_train_end()
+
+    def _default_train(self,
+                       train_loader,
+                       model,
+                       total_iterations_limit=None,
+                       custom_loss: dict = None):
+        for epoch in range(1, self.epochs + 1):
+            self.model.train()
+            model_loss, avg_loss = self._train_loop(train_loader, model, custom_loss)
+            print('Epoch: {}, Average loss {}, {} Loss: {:.2f}, {} Loss: {:.2f}, {} Loss: {:.2f}'.format(
+                epoch, avg_loss, *model_loss))
 
     def predict(
             self,
@@ -145,7 +174,6 @@ class BaseNeuralModel:
     def _clear_cache(self):
         with torch.no_grad():
             torch.cuda.empty_cache()
-
 
     @staticmethod
     def get_validation_frequency(epoch, lr):

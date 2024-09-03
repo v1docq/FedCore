@@ -49,15 +49,6 @@ class LowRankModel:
         decompose_module(self.model, self.decomposing_mode,
                          forward_mode=self.forward_mode)
 
-    def _evaluate_model_acc(self, train_loader):
-        correct = 0
-        for batch in tqdm(train_loader):
-            inputs, targets = batch
-            output = self.model(inputs.to(self.device))
-            correct += (torch.argmax(output, 1) == targets.to(self.device)).sum().item()
-        acc = round(100 * correct / len(train_loader.dataset))
-        return acc
-
     def fit(
             self,
             input_data
@@ -70,16 +61,17 @@ class LowRankModel:
         self._init_model(input_data)
         self.trainer.model = self.model
         self.model = self.trainer.fit(input_data)
-        self.compress(model=self.model, params=input_data.features, ft_params=None)
-        return self.optimized_model
+        self.optimised_model = deepcopy(self.model)
+        self.compress(params=input_data.features, ft_params=None)
+        return self.optimised_model
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = 'compress'):
-        self.trainer.model = self.optimized_model if output_mode == 'compress' else self.model
+        self.trainer.model = self.optimised_model if output_mode == 'compress' else self.model
         return self.trainer.predict(input_data, output_mode)
 
     def predict(self,
                 input_data: InputData, output_mode: str = 'compress'):
-        self.trainer.model = self.optimized_model if output_mode == 'compress' else self.model
+        self.trainer.model = self.optimised_model if output_mode == 'compress' else self.model
         return self.trainer.predict(input_data, output_mode)
 
     def _prune_weight_rank(self, model, thr):
@@ -94,7 +86,6 @@ class LowRankModel:
 
     def compress(
             self,
-            model,
             params,
             ft_params
     ) -> None:
@@ -109,19 +100,17 @@ class LowRankModel:
         batch_iter = (b[0] for b in params.train_dataloader)
         first_batch = next(batch_iter).to(self.device)
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
-        self.optimized_model = deepcopy(model)
         # acc_before_pruning = self._evaluate_model_acc(params.train_dataloader)
         for thr in self.energy_thresholds:
-            self._prune_weight_rank(self.optimized_model,thr)
+            self._prune_weight_rank(self.optimised_model, thr)
             if self.strategy.__contains__('median'):
                 break
             if ft_params is not None:
                 self._fit_loop(train_loader=params.train_dataloader,
-                               model=self.optimized_model,
+                               model=self.optimised_model,
                                custom_loss=self.__loss())
         print("==============After pruning=================")
-        macs, nparams = tp.utils.count_ops_and_params(self.optimized_model, first_batch)
-        # acc_after_pruning = self._evaluate_model_acc(params.train_dataloader)
+        macs, nparams = tp.utils.count_ops_and_params(self.optimised_model, first_batch)
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
 

@@ -148,7 +148,8 @@ class FedotOperationConstant(Enum):
     FEDOT_ASSUMPTIONS = {
         'pruning': PipelineBuilder().add_node('pruning_model'),
         'low_rank': PipelineBuilder().add_node('low_rank_model'),
-        'quantisation': PipelineBuilder().add_node('post_training_quant'),
+        'post_quantisation': PipelineBuilder().add_node('post_training_quant'),
+        'quantisation_aware': PipelineBuilder().add_node('training_aware_quant'),
         'distilation': PipelineBuilder().add_node('distilation_model'),
         'detection': PipelineBuilder().add_node('detection_model', params={'pretrained': True})
     }

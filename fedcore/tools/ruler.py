@@ -7,29 +7,23 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.architecture.dataset.dummy_clf import DummyDatasetCLF
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.metrics.metric_impl import MetricCounter, ClassificationMetricCounter, ObjectDetectionMetricCounter
 
 
-
 class PerformanceEvaluator:
-    def __init__(self, model, dataset, device=None, batch_size=32):
-        if hasattr(model, 'model'):
-            self.model = model.model
-        elif type(model) is Pipeline:
-            self.model = model.operator.root_node.fitted_operation.model
-        else:
-            self.model = model
+    def __init__(self, model, dataset, device=default_device(), batch_size=32):
+        is_class_container = hasattr(model, 'model')
+        is_pipeline_class = isinstance(model, Pipeline)
+        dataset_from_directory = isinstance(dataset, str)
+        self.model = model.model if is_class_container else model
+        self.model = model.operator.root_node.fitted_operation.model if is_pipeline_class else model
         self.dataset = dataset
         self.batch_size = batch_size
-        if type(dataset) is str:
-            self.data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-        else:
-            self.data_loader = dataset
-
-        self.device = default_device() if device is None else device
-        self.model.to(self.device)
+        self.data_loader = DataLoader(dataset,
+                                      batch_size=batch_size, shuffle=False) if dataset_from_directory else dataset
+        self.device = device
+        self.model.to(device)
 
         # Measured performance metrics
         self.latency = None
@@ -48,12 +42,13 @@ class PerformanceEvaluator:
 
     def measure_latency(self, reps: int = 3):
         timings = np.zeros((reps, 1))
+        data_batches = [next(self.data_loader)[0] for i in self.data_loader]
         if torch.cuda.is_available():
             self.warm_up_cuda()
         with torch.no_grad():
             with tqdm(total=reps, desc='Measuring latency', unit='rep') as pbar:
                 for rep in range(reps):
-                    for inputs, _ in self.data_loader:
+                    for inputs in data_batches:
                         start_time = time.time()
                         _ = self.model(inputs.to(self.device))
                         end_time = time.time()
@@ -63,22 +58,21 @@ class PerformanceEvaluator:
                         timings[rep] = curr_time / inputs.size(0)
                         break
                     pbar.update(1)
+
         self.latency = round(np.mean(timings) / reps, 5)
         return self.latency
 
-    def measure_throughput(self, batches: int = 5):
+    def measure_throughput(self, batches: int = 10):
         total_data_size = 0
+        data_batches = [next(self.data_loader)[0] for i in range(batches)]
         start_time = time.time()
         # measure for n batches
         with torch.no_grad():
             with tqdm(total=batches, desc='Measuring throughput', unit='batch') as pbar:
-                for inputs, _ in self.data_loader:
+                for inputs in data_batches:
                     inputs = inputs.to(self.device)
-                    if batches == 0:
-                        break
-                    total_data_size += inputs.size(0)
                     _ = self.model(inputs)
-                    batches -= 1
+                    total_data_size += inputs.size(0)
                     pbar.update(1)
         if self.device == 'cuda':
             torch.cuda.synchronize()
@@ -118,7 +112,7 @@ class PerformanceEvaluator:
         self.model_size = round(size_all_mb, 3)
         return self.model_size
 
-    def warm_up_cuda(self, num_iterations=10):
+    def warm_up_cuda(self, num_iterations=3):
         """Warm up CUDA by performing some dummy computations"""
         if torch.cuda.is_available():
             for _ in range(num_iterations):
@@ -130,6 +124,7 @@ class PerformanceEvaluator:
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
         print(f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}")
         print(f"Model size: {self.model_size} MB")
+
 
 class PerformanceEvaluatorOD:
     def __init__(self, model, data_loader, device=None, batch_size=32):

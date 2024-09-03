@@ -117,14 +117,14 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
 
     def predict(self, trained_operation, predict_data: CompressionInputData,
                 output_mode: str = 'default') -> OutputData:
-        pruned_model = trained_operation.predict(predict_data)
-        converted = self._convert_to_output(pruned_model, predict_data)
+        quantised_model = trained_operation.predict(predict_data)
+        converted = self._convert_to_output(quantised_model, predict_data)
         return converted
 
     def predict_for_fit(self, trained_operation, predict_data: CompressionInputData,
                         output_mode: str = 'default') -> OutputData:
-        pruned_model = trained_operation.predict_for_fit(predict_data)
-        converted = self._convert_to_output(pruned_model, predict_data)
+        quantised_model = trained_operation.predict_for_fit(predict_data)
+        converted = self._convert_to_output(quantised_model, predict_data)
         return converted
 
     def _convert_to_output(self, prediction, predict_data: InputData,

@@ -1,6 +1,9 @@
 from enum import Enum
+from typing import Optional
+
 from fedot.core.data.data import InputData
 from fedot.core.data.multi_modal import MultiModalData
+from fedot.core.operations.operation_parameters import OperationParameters
 from golem.utilities.memory import MemoryAnalytics
 
 
@@ -99,3 +102,33 @@ def _train_test_data_setup(data):
                           ' InputData, MultiModalData'))
 
     return train_data, test_data
+def predict_operation_fedcore(
+        self,
+        fitted_operation,
+        data: InputData,
+        params: Optional[OperationParameters] = None,
+        output_mode: str = 'default',
+        is_fit_stage: bool = False):
+    is_main_target = data.supplementary_data.is_main_target
+    data_flow_length = data.supplementary_data.data_flow_length
+    self._init(data.task, output_mode=output_mode, params=params,
+               n_samples_data=data.features.shape[0])
+
+    if is_fit_stage:
+        prediction = self._eval_strategy.predict_for_fit(
+            trained_operation=fitted_operation,
+            predict_data=data,
+            output_mode=output_mode)
+    else:
+        prediction = self._eval_strategy.predict(
+            trained_operation=fitted_operation,
+            predict_data=data,
+            output_mode=output_mode)
+    prediction = self.assign_tabular_column_types(prediction, output_mode)
+
+    # any inplace operations here are dangerous!
+    if is_main_target is False:
+        prediction.supplementary_data.is_main_target = is_main_target
+
+    prediction.supplementary_data.data_flow_length = data_flow_length
+    return prediction

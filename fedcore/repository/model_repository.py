@@ -101,7 +101,8 @@ DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 def default_fedcore_availiable_operation(problem: str = 'pruning'):
     operation_dict = {'pruning': PRUNER_MODELS.keys(),
-                      'quantisation': QUANTISATION_MODELS.keys(),
+                      'quantisation_aware': 'training_aware_quant',
+                      'post_quantisation': 'post_training_quant',
                       'distilation': DISTILATION_MODELS.keys(),
                       'low_rank': LOW_RANK_MODELS.keys(),
                       'detection': DETECTION_MODELS.keys()}

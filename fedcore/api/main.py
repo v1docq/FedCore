@@ -18,6 +18,7 @@ from fedot.api.main import Fedot
 from fedot.core.pipelines.pipeline import Pipeline
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
+from fedcore.metrics.cv_metrics import CV_quality_metric
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS, FEDOT_API_PARAMS, FEDCORE_CV_DATASET, \
     FEDOT_GET_METRICS
@@ -83,6 +84,8 @@ class FedCore(Fedot):
         self.logger = logging.getLogger('FedCoreAPI')
         self.solver = None
         self.predicted_probs = None
+        self.original_model = None
+
         # map Fedot params to FedCore params
         self.config_dict = kwargs
         self.config_dict['history_dir'] = prefix
@@ -130,6 +133,8 @@ class FedCore(Fedot):
         self.train_data = input_preproc.check_input_data()
         self.solver = self.__init_solver()
         self.solver.fit(self.train_data)
+        self.optimised_model = self.solver.root_node.fitted_operation.optimised_model
+        self.original_model = self.solver.root_node.fitted_operation.model
 
     def predict(self,
                 predict_data: tuple,
@@ -147,8 +152,8 @@ class FedCore(Fedot):
         self.predict_data = deepcopy(predict_data)  # we do not want to make inplace changes
         self.predict_data = DataCheck(input_data=self.predict_data,
                                       task=self.cv_task).check_input_data()
-        predict = self.solver.predict(self.predict_data, **kwargs)
-        return predict
+        output = self.solver.predict(self.predict_data, **kwargs)
+        return output.predict
 
     def finetune(self,
                  train_data,
@@ -170,16 +175,27 @@ class FedCore(Fedot):
                                 target,
                                 predicted_labels,
                                 predicted_probs,
-                                problem):
-        prediction_dataframe = FEDOT_GET_METRICS[problem](target=target,
-                                                          labels=predicted_labels,
-                                                          probs=predicted_probs)
+                                problem,
+                                metric_type):
+        prediction_dict = dict(target=target,
+                               labels=predicted_labels,
+                               probs=predicted_probs)
+        inference_metric = metric_type.__contains__('computational')
+        inference_model = self.optimized_model if metric_type.__contains__('optimised') else self.original_model
+        inference_eval = CV_quality_metric()
+
+        prediction_dataframe = Either(value=inference_model,
+                                      monoid=[prediction_dict, inference_metric]).either(
+            left_function=lambda pred: FEDOT_GET_METRICS[problem](**pred),
+            right_function=lambda model: inference_eval.metric(model=model,
+                                                               dataset=self.predict_data.features.calib_dataloader))
 
         return prediction_dataframe
 
     def evaluate_metric(self,
                         predicton: Union[Tensor, np.array],
-                        target: Union[list, np.array]) -> pd.DataFrame:
+                        target: Union[list, np.array],
+                        metric_type: str = 'quality') -> pd.DataFrame:
         """
         Method to calculate metrics for Industrial model.
 
@@ -189,30 +205,27 @@ class FedCore(Fedot):
         'explained_variance_score', 'max_error', 'd2_absolute_error_score', 'msle', 'mape'.
 
         Args:
+            metric_type:
+            predicton:
             target: target values
-            metric_names: list of metric names
-            rounding_order: rounding order for metrics
 
         Returns:
             pandas DataFrame with calculated metrics
 
         """
-        model_output = predicton.cpu().detach().numpy() \
-            if isinstance(predicton, Tensor) else predicton
+        from sklearn.preprocessing import OneHotEncoder
+        model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
         model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
-        if model_output_is_probs:
-            labels = np.argmax(model_output, axis=1)
-            predicted_probs = model_output
-        else:
-            from sklearn.preprocessing import OneHotEncoder
-            labels = model_output
-            predicted_probs = OneHotEncoder().fit_transform(model_output)
-
+        labels, predicted_probs = Either(value=model_output,
+                                         monoid=[model_output, model_output_is_probs]).either(
+            left_function=lambda output: (output, OneHotEncoder().fit_transform(output)),
+            right_function=lambda output: (np.argmax(output, axis=1), output))
         metric_dict = self._metric_evaluation_loop(
             target=target,
             problem=self.cv_task,
             predicted_labels=labels,
-            predicted_probs=predicted_probs)
+            predicted_probs=predicted_probs,
+            metric_type=metric_type)
         return metric_dict
 
     def load(self, path):
@@ -230,7 +243,7 @@ class FedCore(Fedot):
                                    supplementary_data is not None])
         torchvision_scenario = all([supplementary_data is not None,
                                     'torchvision_dataset' in supplementary_data.keys(),
-                                    'torchvision_dataset' is True])
+                                    'torchvision_dataset' == True])
         custom_scenario = 'pretrain' if pretrained_scenario else 'directory'
         data_loader = ApiLoader()
         self.train_data = Either(value='torchvision',

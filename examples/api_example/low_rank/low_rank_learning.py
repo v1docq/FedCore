@@ -1,8 +1,9 @@
 from fedcore.api.main import FedCore
+from fedcore.api.utils.evaluation import evaluate_optimised_model, evaluate_original_model
 
 experiment_setup = {'compression_task': 'low_rank',
                     'cv_task': 'classification',
-                    'model_params': dict(epochs=3,
+                    'model_params': dict(epochs=10,
                                          learning_rate=0.001,
                                          hoyer_loss=0.2,
                                          energy_thresholds=[0.9],
@@ -21,18 +22,8 @@ if __name__ == "__main__":
                                               supplementary_data={'torchvision_dataset': torchvision_dataset,
                                                                   'torch_model': 'ResNet18'})
     fedcore_compressor.fit(input_data)
+    low_rank_result = evaluate_optimised_model(fedcore_compressor, input_data)
+    original_result = evaluate_original_model(fedcore_compressor, input_data)
 
-    low_rank_prediction = fedcore_compressor.predict(input_data, output_mode='compress')
-    low_rank_output = low_rank_prediction.predict.predict
-    low_rank_model = fedcore_compressor.solver.root_node.fitted_operation.optimized_model
-    low_rank_metrics = fedcore_compressor.evaluate_metric(predicton=low_rank_output,
-                                                          target=fedcore_compressor.target)
-
-    original_prediction = fedcore_compressor.predict(input_data, output_mode='default')
-    original_output = low_rank_prediction.predict.predict
-    original_model = fedcore_compressor.solver.root_node.fitted_operation.optimized_model
-    original_metrics = fedcore_compressor.evaluate_metric(predicton=original_output,
-                                                          target=fedcore_compressor.target)
-
-    convertation_supplementary_data = {'model_to_export': low_rank_model}
+    convertation_supplementary_data = {'model_to_export': low_rank_result['low_rank_model']}
     onnx_model = fedcore_compressor.convert_model(supplementary_data=convertation_supplementary_data)

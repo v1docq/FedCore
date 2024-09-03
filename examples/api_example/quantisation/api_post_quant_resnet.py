@@ -1,7 +1,7 @@
 from fedcore.api.main import FedCore
 from fedcore.repository.constanst_repository import ONNX_INT8_CONFIG
 
-experiment_setup = {'problem': 'quantisation',
+experiment_setup = {'problem': 'post_quantisation',
                     'cv_task': 'classification',
                     'framework_config': ONNX_INT8_CONFIG
                     }

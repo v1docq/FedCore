@@ -7,6 +7,7 @@ from sklearn.metrics import d2_absolute_error_score, explained_variance_score, m
 
 from fedcore.metrics.cv_metrics import CV_quality_metric
 from fedcore.metrics.metric_impl import Accuracy,F1, Precision, Logloss, smape, mase, mape
+from fedcore.tools.ruler import PerformanceEvaluator
 
 
 def calculate_regression_metric(target,
