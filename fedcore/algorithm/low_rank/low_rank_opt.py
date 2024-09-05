@@ -62,7 +62,7 @@ class LowRankModel:
         self.trainer.model = self.model
         self.model = self.trainer.fit(input_data)
         self.optimised_model = deepcopy(self.model)
-        self.compress(params=input_data.features, ft_params=None)
+        self.compress(input_data=input_data)
         return self.optimised_model
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = 'compress'):
@@ -94,8 +94,8 @@ class LowRankModel:
 
     def compress(
             self,
-            params,
-            ft_params
+            input_data,
+            ft_params=dict(epochs=5, custom_loss=None)
     ) -> None:
         """Prunes the trained model at the given thresholds.
 
@@ -104,21 +104,24 @@ class LowRankModel:
             params: An object containing training parameters.
             ft_params: An object containing fine-tuning parameters for optimized model.
         """
-        self.finetuning = True
-        batch_iter = (b[0] for b in params.train_dataloader)
+        batch_iter = (b[0] for b in input_data.features.train_dataloader)
         first_batch = next(batch_iter).to(self.device)
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
 
+        print("==============Truncate rank for each weight matrix=================")
         for thr in self.energy_thresholds:
             self._prune_weight_rank(self.optimised_model, thr)
             if self.strategy.__contains__('median'):
                 break
-            if ft_params is not None:
-                self._fit_loop(train_loader=params.train_dataloader,
-                               model=self.optimised_model,
-                               custom_loss=self.__loss())
         self._prepare_model_for_inference(self.optimised_model)
-        print("==============After low rank pruning=================")
+
+        print("==============Finetune truncated model=================")
+        self.trainer.model = self.optimised_model
+        self.trainer.custom_loss = ft_params['custom_loss']
+        self.epochs = 5
+        self.optimised_model = self.trainer.fit(input_data)
+
+        print("==============After low rank truncation=================")
         macs, nparams = tp.utils.count_ops_and_params(self.optimised_model, first_batch)
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))

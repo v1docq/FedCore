@@ -37,11 +37,12 @@ class PerformanceEvaluator:
         result = dict(latency=self.measure_latency(),
                       throughput=self.measure_throughput(),
                       model_size=self.measure_model_size(),
-                      target_metrics=self.measure_target_metric())
+                      #target_metrics=self.measure_target_metric()
+                      )
         self.report()
         return result
 
-    def measure_latency(self, reps: int = 3):
+    def measure_latency(self, reps: int = 5):
         timings = np.zeros((reps, 1))
         if torch.cuda.is_available():
             self.warm_up_cuda()

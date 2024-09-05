@@ -124,8 +124,11 @@ class BaseNeuralModel:
         for epoch in range(1, self.epochs + 1):
             self.model.train()
             model_loss, avg_loss = self._train_loop(train_loader, model, custom_loss)
-            print('Epoch: {}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}'.format(
-                epoch, avg_loss, *model_loss))
+            if model_loss is not None:
+                print('Epoch: {}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}'.format(
+                    epoch, avg_loss, *model_loss))
+            else:
+                print('Epoch: {}, Average loss {}'.format(epoch, avg_loss))
 
     def predict(
             self,

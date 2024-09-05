@@ -1,6 +1,7 @@
 import torch
 from fedcore.models.network_impl.layers import DecomposedConv2d
 from joblib import cpu_count
+from math import floor
 
 def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
                            strategy: str = 'constant', module_name: str ='conv') -> None:
@@ -16,7 +17,7 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
     S, indices = conv.S.sort()
     U = conv.U[:, indices]
     Vh = conv.Vh[indices, :]
-    if strategy.__contains__('constant'):
+    if strategy.__contains__('energy'):
         sum = (S ** 2).sum()
         threshold = threshold * sum
         for i, s in enumerate(S):
@@ -39,7 +40,7 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
         sv_threshold = 2.31 * median_sv
         n_components = max(torch.sum(S >= sv_threshold).cpu().detach().numpy().min(), 1)
         n_components = indices.cpu().detach().numpy().max() - n_components
-    channels_per_device = round(n_components/n_cpu)
+    channels_per_device = floor(n_components/n_cpu)
     n_components = channels_per_device * n_cpu
     conv.set_U_S_Vh(U[:, n_components:].clone(),
                     S[n_components:].clone(),
