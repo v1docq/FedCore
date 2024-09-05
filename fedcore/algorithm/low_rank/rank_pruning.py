@@ -1,6 +1,6 @@
 import torch
 from fedcore.models.network_impl.layers import DecomposedConv2d
-
+from joblib import cpu_count
 
 def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
                            strategy: str = 'constant', module_name: str ='conv') -> None:
@@ -12,6 +12,7 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
         Assertion Error: If ``energy_threshold`` is not in (0, 1].
     """
     assert 0 < threshold <= 1, "energy_threshold must be in the range (0, 1]"
+    n_cpu = cpu_count()
     S, indices = conv.S.sort()
     U = conv.U[:, indices]
     Vh = conv.Vh[indices, :]
@@ -38,6 +39,9 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
         sv_threshold = 2.31 * median_sv
         n_components = max(torch.sum(S >= sv_threshold).cpu().detach().numpy().min(), 1)
         n_components = indices.cpu().detach().numpy().max() - n_components
-    conv.set_U_S_Vh(U[:, n_components:].clone(), S[n_components:].clone(), Vh[n_components:, :].clone())
-    print('After rank pruning left only {} % of {} layer params'.format(
-        100 * n_components / len(indices), module_name))
+    channels_per_device = round(n_components/n_cpu)
+    n_components = channels_per_device * n_cpu
+    conv.set_U_S_Vh(U[:, n_components:].clone(),
+                    S[n_components:].clone(),
+                    Vh[n_components:, :].clone())
+    print('After rank pruning left only {} % of {} layer params'.format(100 * n_components / len(indices), module_name))

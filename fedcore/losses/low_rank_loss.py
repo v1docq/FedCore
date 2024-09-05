@@ -38,14 +38,24 @@ class OrthogonalLoss(SVDLoss):
         n = 0
         for name, parameter in model.named_parameters():
             if name.split('.')[-1] == 'U':
+                if len(parameter.size()) < 3:
+                    U = parameter
+                else:
+                    n, c, w, h = parameter.size()
+                    decompose_shape = (n, c * w * h)
+                    U = parameter.reshape(decompose_shape)
                 n += 1
-                U = parameter
                 r = U.size()[1]
                 E = torch.eye(r, device=U.device)
                 loss += matrix_norm(U.transpose(0, 1) @ U - E) ** 2 / r
 
             elif name.split('.')[-1] == 'Vh':
-                Vh = parameter
+                if len(parameter.size()) < 3:
+                    Vh = parameter
+                else:
+                    n, c, w, h = parameter.size()
+                    decompose_shape = (n, c * w * h)
+                    Vh = parameter.reshape(decompose_shape)
                 r = Vh.size()[0]
                 E = torch.eye(r, device=Vh.device)
                 loss += matrix_norm(Vh @ Vh.transpose(0, 1) - E) ** 2 / r

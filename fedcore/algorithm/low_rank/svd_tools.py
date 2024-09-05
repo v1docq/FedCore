@@ -7,8 +7,9 @@ from typing import Optional, Callable
 import torch
 from torch.nn.modules import Module
 from torch.nn.modules.conv import Conv2d
+from torch.nn.modules.linear import Linear
 
-from fedcore.models.network_impl.layers import DecomposedConv2d
+from fedcore.models.network_impl.layers import DecomposedConv2d, DecomposedLinear
 from fedcore.repository.constanst_repository import FORWARD_MODE
 
 
@@ -18,7 +19,7 @@ def decompose_module(
         decomposing_mode: Optional[str] = None,
         forward_mode: str = FORWARD_MODE,
 ) -> None:
-    """Replace Conv2d layers with DecomposedConv2d layers in module (in-place).
+    """Replace Conv2d, Linear layers with DecomposedConv2d, layers in module (in-place).
 
     Args:
         model: Decomposable module.
@@ -35,6 +36,13 @@ def decompose_module(
             new_module = DecomposedConv2d(
                 base_conv=module,
                 decomposing_mode=decomposing_mode,
+                forward_mode=forward_mode
+            )
+            setattr(model, name, new_module)
+
+        if isinstance(module, Linear):
+            new_module = DecomposedLinear(
+                base_lin=module,
                 forward_mode=forward_mode
             )
             setattr(model, name, new_module)

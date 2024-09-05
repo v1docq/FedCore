@@ -22,6 +22,7 @@ class PerformanceEvaluator:
         self.batch_size = batch_size
         self.data_loader = DataLoader(dataset,
                                       batch_size=batch_size, shuffle=False) if dataset_from_directory else dataset
+        self.preload_batches = [i[0] for i in self.data_loader]
         self.device = device
         self.model.to(device)
 
@@ -42,13 +43,12 @@ class PerformanceEvaluator:
 
     def measure_latency(self, reps: int = 3):
         timings = np.zeros((reps, 1))
-        data_batches = [next(self.data_loader)[0] for i in self.data_loader]
         if torch.cuda.is_available():
             self.warm_up_cuda()
         with torch.no_grad():
             with tqdm(total=reps, desc='Measuring latency', unit='rep') as pbar:
                 for rep in range(reps):
-                    for inputs in data_batches:
+                    for inputs in self.preload_batches:
                         start_time = time.time()
                         _ = self.model(inputs.to(self.device))
                         end_time = time.time()
@@ -64,7 +64,7 @@ class PerformanceEvaluator:
 
     def measure_throughput(self, batches: int = 10):
         total_data_size = 0
-        data_batches = [next(self.data_loader)[0] for i in range(batches)]
+        data_batches = self.preload_batches[:batches]
         start_time = time.time()
         # measure for n batches
         with torch.no_grad():
@@ -98,8 +98,9 @@ class PerformanceEvaluator:
         return self.target_metrics
 
     def measure_model_size(self):
+        size_constant = 1024 ** 2
         if isinstance(self.model, ONNXInferenceModel):
-            size_all_mb = round(self.model.size(), 3) / 1024 ** 2
+            size_all_mb = round(self.model.size(), 3) / size_constant
         else:
             param_size = 0
             for param in self.model.parameters():
@@ -108,17 +109,16 @@ class PerformanceEvaluator:
             for buffer in self.model.buffers():
                 buffer_size += buffer.nelement() * buffer.element_size()
 
-            size_all_mb = (param_size + buffer_size) / 1024 ** 2
+            size_all_mb = (param_size + buffer_size) / size_constant
         self.model_size = round(size_all_mb, 3)
         return self.model_size
 
     def warm_up_cuda(self, num_iterations=3):
         """Warm up CUDA by performing some dummy computations"""
+        batch_sample = self.preload_batches[:num_iterations]
         if torch.cuda.is_available():
-            for _ in range(num_iterations):
-                inputs, _ = next(iter(self.data_loader))
-                inputs = inputs.to(self.device)
-                _ = self.model(inputs)
+            for inputs in batch_sample:
+                _ = self.model(inputs.to(self.device))
 
     def report(self):
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")

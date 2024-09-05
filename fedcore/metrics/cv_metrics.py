@@ -97,7 +97,7 @@ class CV_quality_metric(CompressionMetric):
     need_to_minimize = True
 
     def __repr__(self):
-        'Fedcore_compression_quality_metric'
+        """Fedcore_compression_quality_metric"""
 
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):

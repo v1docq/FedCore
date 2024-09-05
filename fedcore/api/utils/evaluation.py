@@ -15,7 +15,7 @@ def evaluate_original_model(fedcore_compressor, input_data):
 def evaluate_optimised_model(fedcore_compressor, input_data):
     low_rank_prediction = fedcore_compressor.predict(input_data, output_mode='compress')
     low_rank_output = low_rank_prediction.predict
-    low_rank_model = fedcore_compressor.optimized_model
+    low_rank_model = fedcore_compressor.optimised_model
     low_rank_quality_metrics = fedcore_compressor.evaluate_metric(predicton=low_rank_output,
                                                                   target=fedcore_compressor.target)
     low_rank_inference_metrics = fedcore_compressor.evaluate_metric(predicton=low_rank_output,

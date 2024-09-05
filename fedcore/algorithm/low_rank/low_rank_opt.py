@@ -8,7 +8,7 @@ from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.models.network_impl.layers import DecomposedConv2d
+from fedcore.models.network_impl.layers import DecomposedConv2d, DecomposedLinear
 from fedcore.neural_compressor.compression.pruner.utils import nn
 from fedcore.repository.constanst_repository import ENERGY_THR, DECOMPOSE_MODE, FORWARD_MODE, HOER_LOSS, ORTOGONAL_LOSS
 import torch
@@ -84,6 +84,14 @@ class LowRankModel:
                                        strategy=self.strategy,
                                        module_name=name)
 
+    def _prepare_model_for_inference(self, model):
+        for name, module in model.named_children():
+            if len(list(module.children())) > 0:
+                self._prepare_model_for_inference(module)
+            if isinstance(module, (DecomposedConv2d, DecomposedLinear)):
+                module.inference_mode = True
+                module.compose_weight_for_inference()
+
     def compress(
             self,
             params,
@@ -100,7 +108,7 @@ class LowRankModel:
         batch_iter = (b[0] for b in params.train_dataloader)
         first_batch = next(batch_iter).to(self.device)
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
-        # acc_before_pruning = self._evaluate_model_acc(params.train_dataloader)
+
         for thr in self.energy_thresholds:
             self._prune_weight_rank(self.optimised_model, thr)
             if self.strategy.__contains__('median'):
@@ -109,7 +117,8 @@ class LowRankModel:
                 self._fit_loop(train_loader=params.train_dataloader,
                                model=self.optimised_model,
                                custom_loss=self.__loss())
-        print("==============After pruning=================")
+        self._prepare_model_for_inference(self.optimised_model)
+        print("==============After low rank pruning=================")
         macs, nparams = tp.utils.count_ops_and_params(self.optimised_model, first_batch)
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))

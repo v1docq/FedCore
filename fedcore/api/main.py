@@ -181,7 +181,7 @@ class FedCore(Fedot):
                                labels=predicted_labels,
                                probs=predicted_probs)
         inference_metric = metric_type.__contains__('computational')
-        inference_model = self.optimized_model if metric_type.__contains__('optimised') else self.original_model
+        inference_model = self.optimised_model if metric_type.__contains__('optimised') else self.original_model
         inference_eval = CV_quality_metric()
 
         prediction_dataframe = Either(value=inference_model,

@@ -97,7 +97,7 @@ class BaseNeuralModel:
         avg_loss = loss_sum / total_iterations
         if custom_loss:
             losses = reduce(iadd, list(model_loss.items()))
-            losses = [x.item() / total_iterations if not isinstance(x, str) else x for x in losses]
+            losses = [x.item() if not isinstance(x, str) else x for x in losses]
         return losses, avg_loss
 
     def _custom_train(self,
@@ -120,12 +120,11 @@ class BaseNeuralModel:
     def _default_train(self,
                        train_loader,
                        model,
-                       total_iterations_limit=None,
                        custom_loss: dict = None):
         for epoch in range(1, self.epochs + 1):
             self.model.train()
             model_loss, avg_loss = self._train_loop(train_loader, model, custom_loss)
-            print('Epoch: {}, Average loss {}, {} Loss: {:.2f}, {} Loss: {:.2f}, {} Loss: {:.2f}'.format(
+            print('Epoch: {}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}'.format(
                 epoch, avg_loss, *model_loss))
 
     def predict(

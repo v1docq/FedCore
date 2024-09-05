@@ -160,7 +160,7 @@ class FedotOperationConstant(Enum):
 class ModelCompressionConstant(Enum):
     ENERGY_THR = [0.9, 0.95, 0.99, 0.999]
     DECOMPOSE_MODE = 'channel'
-    FORWARD_MODE = 'one_layer'
+    FORWARD_MODE = 'two_layers'
     HOER_LOSS = 1
     ORTOGONAL_LOSS = 5
     MODELS_FROM_LENGTH = {
