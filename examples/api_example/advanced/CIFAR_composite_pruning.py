@@ -3,8 +3,8 @@ from fedcore.api.utils.evaluation import evaluate_optimised_model, evaluate_orig
 
 experiment_setup = {'compression_task': 'composite_compression',
                     'cv_task': 'classification',
-                    'model_params': dict(pruning_model=dict(epochs=15,
-                                                            pruning_iterations=1,
+                    'model_params': dict(pruning_model=dict(epochs=1,
+                                                            pruning_iterations=15,
                                                             learning_rate=0.001,
                                                             importance='MagnitudeImportance',
                                                             pruner_name='magnitude_pruner',

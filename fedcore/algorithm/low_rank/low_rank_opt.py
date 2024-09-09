@@ -49,8 +49,13 @@ class LowRankModel:
         self.trainer.custom_loss = self.__loss()
 
     def _init_model(self, input_data):
-        self.model = input_data.target
-        self.model.fc = nn.Sequential(nn.Linear(self.model.fc.in_features, input_data.features.num_classes))
+        have_predict = 'predict' in vars(input_data)
+        self.model = input_data.predict if have_predict else input_data.target
+        is_linear_fc = isinstance(self.model.fc, nn.Linear)
+        valid_fc_layer = self.model.fc[0].out_features == input_data.num_classes if not is_linear_fc else \
+            self.model.fc.out_features == input_data.num_classes
+        if not valid_fc_layer:
+            self.model.fc = nn.Sequential(nn.Linear(self.model.fc.in_features, input_data.num_classes))
         decompose_module(self.model, self.decomposing_mode,
                          forward_mode=self.forward_mode)
 
@@ -71,8 +76,7 @@ class LowRankModel:
         return self.optimised_model
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = 'compress'):
-        self.trainer.model = self.optimised_model if output_mode == 'compress' else self.model
-        return self.trainer.predict(input_data, output_mode)
+        return self.optimised_model if output_mode == 'compress' else self.model
 
     def predict(self,
                 input_data: InputData, output_mode: str = 'compress'):

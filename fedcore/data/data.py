@@ -28,6 +28,7 @@ class CompressionInputData:
 @dataclass
 class CompressionOutputData:
     features: np.ndarray = None
+    idx: list = None
     target: tp.Optional[np.ndarray] = None
     num_classes: int = None
     train_dataloader: torch.utils.data.DataLoader = None

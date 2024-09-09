@@ -3,17 +3,16 @@ import fedot.core.repository.tasks as fedot_task
 import fedot.core.repository.metrics_repository as fedot_metric_repo
 
 from fedot.api.api_utils.assumptions.assumptions_handler import AssumptionsHandler
-from fedot.core.data.merge.data_merger import DataMerger
+from fedot.core.data.merge.data_merger import DataMerger, ImageDataMerger
 from fedot.core.operations.operation import Operation
 from fedot.core.optimisers.objective.data_source_splitter import DataSourceSplitter
 from fedot.core.pipelines.tuning.search_space import PipelineSearchSpace
 from fedot.core.repository.operation_types_repository import OperationTypesRepository
-from torch_pruning import DependencyGraph
 
 from fedcore.architecture.utils.paths import PROJECT_PATH
 from fedcore.interfaces.search_space import get_fedcore_search_space
 from fedcore.repository.fedcore_impl.abstract import _fit_assumption_and_check_correctness, TaskCompression, _merge, \
-    _fit, predict_operation_fedcore, get_all_pruning_groups
+    _fit, predict_operation_fedcore,  fedcore_preprocess_predicts, merge_fedcore_predicts
 from fedcore.repository.fedcore_impl.data import build_holdout_producer
 from fedcore.repository.fedcore_impl.metrics import MetricsRepository
 
@@ -25,7 +24,8 @@ FEDOT_METHOD_TO_REPLACE = [(fedot_task, "TaskTypesEnum"),
                            (DataMerger, 'merge'),
                            (Operation, 'fit'),
                            (Operation, "_predict"),
-                           #(DependencyGraph, 'get_all_groups')
+                           (ImageDataMerger, 'preprocess_predicts'),
+                           (ImageDataMerger, "merge_predicts")
                            ]
 
 FEDCORE_REPLACE_METHODS = [TaskCompression,
@@ -36,7 +36,8 @@ FEDCORE_REPLACE_METHODS = [TaskCompression,
                            _merge,
                            _fit,
                            predict_operation_fedcore,
-                           #get_all_pruning_groups
+                           fedcore_preprocess_predicts,
+                           merge_fedcore_predicts
                            ]
 DEFAULT_METHODS = [getattr(class_impl[0], class_impl[1])
                    for class_impl in FEDOT_METHOD_TO_REPLACE]

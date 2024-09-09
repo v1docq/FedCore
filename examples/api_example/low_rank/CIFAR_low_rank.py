@@ -3,7 +3,7 @@ from fedcore.api.utils.evaluation import evaluate_optimised_model, evaluate_orig
 
 experiment_setup = {'compression_task': 'low_rank',
                     'cv_task': 'classification',
-                    'model_params': dict(epochs=30,
+                    'model_params': dict(epochs=1,
                                          learning_rate=0.001,
                                          hoyer_loss=0.2,
                                          energy_thresholds=[0.99],

@@ -206,8 +206,7 @@ class BasePruner(BaseCompressionModel):
         return self.model
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = 'compress'):
-        self.trainer.model = self.optimised_model if output_mode == 'compress' else self.model
-        return self.trainer.predict(input_data, output_mode)
+        return self.optimised_model if output_mode == 'compress' else self.model
 
     def predict(self,
                 input_data: InputData, output_mode: str = 'compress'):

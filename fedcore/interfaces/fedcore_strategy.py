@@ -25,12 +25,12 @@ class FedcoreLowRankStrategy(EvaluationStrategy):
 
     def _convert_to_output(self, prediction, predict_data: InputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
-        predict_data = predict_data.features if type(predict_data) is InputData else predict_data
         output_data = CompressionOutputData(features=predict_data.features,
-                                            calib_dataloader=predict_data.calib_dataloader,
+                                            idx=[1, 2],
+                                            calib_dataloader=predict_data.features.calib_dataloader,
                                             task=predict_data.task,
-                                            num_classes=predict_data.num_classes,
-                                            target=predict_data.target,
+                                            num_classes=predict_data.features.num_classes,
+                                            target=predict_data.features.target,
                                             data_type=DataTypesEnum.image,
                                             supplementary_data=predict_data.supplementary_data)
         output_data.predict = prediction
@@ -67,12 +67,12 @@ class FedcorePruningStrategy(EvaluationStrategy):
 
     def _convert_to_output(self, prediction, predict_data: InputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
-        predict_data = predict_data.features if type(predict_data) is InputData else predict_data
         output_data = CompressionOutputData(features=predict_data.features,
-                                            calib_dataloader=predict_data.calib_dataloader,
+                                            idx=[1, 2],
+                                            calib_dataloader=predict_data.features.calib_dataloader,
                                             task=predict_data.task,
-                                            num_classes=predict_data.num_classes,
-                                            target=predict_data.target,
+                                            num_classes=predict_data.features.num_classes,
+                                            target=predict_data.features.target,
                                             data_type=DataTypesEnum.image,
                                             supplementary_data=predict_data.supplementary_data)
         output_data.predict = prediction
@@ -130,6 +130,7 @@ class FedcoreQuantisationStrategy(EvaluationStrategy):
     def _convert_to_output(self, prediction, predict_data: InputData,
                            output_data_type: DataTypesEnum = DataTypesEnum.table) -> OutputData:
         output_data = CompressionOutputData(features=predict_data.features,
+                                            idx=[1, 2],
                                             train_dataloader=predict_data.features.train_dataloader,
                                             calib_dataloader=predict_data.features.calib_dataloader,
                                             predict=prediction,
@@ -207,7 +208,7 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
                            prediction,
                            predict_data: CompressionInputData,
                            output_data_type: DataTypesEnum) -> OutputData:
-        output_data = CompressionOutputData(idx=predict_data.idx,
+        output_data = CompressionOutputData(idx=[1, 2],
                                             features=predict_data.features,
                                             # train_dataloader=predict_data.train_dataloader,
                                             # calib_dataloader=predict_data.calib_dataloader,
