@@ -6,6 +6,7 @@ from typing import Union
 
 import torch
 import torch.nn
+from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from torch import Tensor
 
@@ -94,9 +95,17 @@ class FedCore(Fedot):
                                                                   self.compression_task))
 
         self.config_dict['optimizer'] = kwargs.get('optimizer', FedcoreEvoOptimizer)
-        self.config_dict['initial_assumption'] = kwargs.get('initial_assumption',
-                                                            FEDOT_ASSUMPTIONS[self.compression_task])
-        self.config_dict['initial_assumption'].heads[0].parameters = self.model_params
+
+        if self.compression_task.__contains__('composite'):
+            composite_pipeline = PipelineBuilder()
+            for node in self.config_dict['initial_assumption']:
+                node_params = self.model_params[node]
+                composite_pipeline.add_node(operation_type=node,params=node_params)
+            self.config_dict['initial_assumption'] = composite_pipeline
+        else:
+            self.config_dict['initial_assumption'] = kwargs.get('initial_assumption',
+                                                                FEDOT_ASSUMPTIONS[self.compression_task])
+            self.config_dict['initial_assumption'].heads[0].parameters = self.model_params
         self.__init_experiment_setup()
 
     def __init_experiment_setup(self):

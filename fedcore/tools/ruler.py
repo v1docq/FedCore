@@ -36,8 +36,7 @@ class PerformanceEvaluator:
 
         result = dict(latency=self.measure_latency(),
                       throughput=self.measure_throughput(),
-                      model_size=self.measure_model_size(),
-                      #target_metrics=self.measure_target_metric()
+                      model_size=self.measure_model_size()
                       )
         self.report()
         return result
@@ -65,38 +64,25 @@ class PerformanceEvaluator:
 
     def measure_throughput(self, batches: int = 10):
         total_data_size = 0
+        timings = np.zeros((batches, 1))
         data_batches = self.preload_batches[:batches]
-        start_time = time.time()
         # measure for n batches
         with torch.no_grad():
             with tqdm(total=batches, desc='Measuring throughput', unit='batch') as pbar:
-                for inputs in data_batches:
+                for idx, inputs in enumerate(data_batches):
+                    total_data_size += inputs.size(0)
+                    start_time = time.time()
                     inputs = inputs.to(self.device)
                     _ = self.model(inputs)
-                    total_data_size += inputs.size(0)
+                    end_time = time.time()
+                    curr_time = (end_time - start_time) * 1000
+                    timings[idx] = curr_time / inputs.size(0)
                     pbar.update(1)
-        if self.device == 'cuda':
-            torch.cuda.synchronize()
-        total_time = (time.time() - start_time) / 1000
+                if self.device == 'cuda':
+                    torch.cuda.synchronize()
+        total_time = round(np.mean(timings) / batches, 5)
         self.throughput = round(total_data_size / total_time, 0)
         return self.throughput
-
-    def measure_target_metric(self, metric_counter: MetricCounter = None):
-        if not metric_counter:
-            metric_counter = ClassificationMetricCounter()
-        with torch.no_grad():
-            with tqdm(desc='Measuring throughput', unit='batch') as pbar:
-                for inputs, labels in self.data_loader:
-                    inputs = inputs.to(self.device)
-                    prediction = self.model(inputs)
-                    if len(prediction.size()) > 2:
-                        prediction = prediction[0]
-                    metric_counter.update(prediction.cpu(), labels.cpu())
-                    pbar.update(1)
-        if self.device == 'cuda':
-            torch.cuda.synchronize()
-        self.target_metrics = metric_counter.compute()
-        return self.target_metrics
 
     def measure_model_size(self):
         size_constant = 1024 ** 2

@@ -174,7 +174,8 @@ class ModelCompressionConstant(Enum):
                'group_norm_pruner': tp.pruner.GroupNormPruner,
                'batch_norm_pruner': tp.pruner.BNScalePruner,
                'growing_reg_pruner': tp.pruner.GrowingRegPruner,
-               'meta_pruner': tp.pruner.MetaPruner}
+               'meta_pruner': tp.pruner.MetaPruner,
+               'manual_conv': tp.pruner.MetaPruner}
 
     PRUNER_REQUIRED_GRADS = {
         "TaylorImportance": tp.importance.TaylorImportance,
@@ -208,6 +209,27 @@ class ModelCompressionConstant(Enum):
                                 "GroupTaylorImportance": tp.importance.GroupTaylorImportance,
                                 "GroupHessianImportance": tp.importance.GroupHessianImportance
                                 }
+
+    PRUNING_FUNC = {"conv_out": tp.prune_conv_out_channels,
+                    "conv_in": tp.prune_conv_in_channels,
+                    "batchnorm_out": tp.prune_batchnorm_out_channels,
+                    "batchnorm_in": tp.prune_batchnorm_in_channels,
+                    "linear_out": tp.prune_linear_out_channels,
+                    "linear_in": tp.prune_linear_in_channels,
+                    'embedding_out': tp.prune_embedding_out_channels,
+                    'embedding_in': tp.prune_embedding_in_channels,
+                    'parameter_out': tp.prune_parameter_in_channels,
+                    'parameter_in': tp.prune_parameter_out_channels,
+                    'mha_out': tp.prune_multihead_attention_out_channels,
+                    'mha_in': tp.prune_multihead_attention_in_channels
+                    }
+    MANUAL_PRUNING_STRATEGY = {'manual_conv': ["conv_out", 'conv_in'],
+                               'manual_linear': ["linear_out", 'linear_in'],
+                               'manual_attention': ["mha_out", 'mha_in'],
+                               'manual_parameter': ["conv_out", 'conv_in'],
+                               'manual_embedding': ['embedding_out', 'embedding_in']
+                               }
+
     PRUNING_NORMS = [0, 1, 2]
     PRUNING_REDUCTION = ["sum", "mean", "max", 'prod', 'first']
     PRUNING_NORMALIZE = ["sum", "mean", "max", 'gaussian']
@@ -306,6 +328,8 @@ GROUP_PRUNING_IMPORTANCE = ModelCompressionConstant.GROUP_PRUNING_IMPORTANCE.val
 PRUNER_REQUIRED_REG = ModelCompressionConstant.PRUNER_REQUIRED_REG.value
 PRUNER_REQUIRED_GRADS = ModelCompressionConstant.PRUNER_REQUIRED_GRADS.value
 PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMENTS.value
+MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
+PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
 
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value

@@ -31,6 +31,11 @@ class LowRankModel:
     def __init__(
             self, params: Optional[OperationParameters] = {}):
         self.epochs = params.get('epochs', 30)
+        self.ft_params = params.get('finetune_params', None)
+        if self.ft_params is None:
+            self.ft_params = {}
+            self.ft_params['custom_loss'] = None
+            self.ft_params['epochs'] = round(self.epochs / 2)
         self.energy_thresholds = params.get('energy_thresholds', ENERGY_THR)
         self.decomposing_mode = params.get('decomposing_mode', DECOMPOSE_MODE)
         self.forward_mode = params.get('forward_mode', FORWARD_MODE)
@@ -94,8 +99,7 @@ class LowRankModel:
 
     def compress(
             self,
-            input_data,
-            ft_params=dict(epochs=5, custom_loss=None)
+            input_data
     ) -> None:
         """Prunes the trained model at the given thresholds.
 
@@ -117,8 +121,8 @@ class LowRankModel:
 
         print("==============Finetune truncated model=================")
         self.trainer.model = self.optimised_model
-        self.trainer.custom_loss = ft_params['custom_loss']
-        self.epochs = 5
+        self.trainer.custom_loss = self.ft_params['custom_loss']
+        self.trainer.epochs = self.ft_params['epochs']
         self.optimised_model = self.trainer.fit(input_data)
 
         print("==============After low rank truncation=================")

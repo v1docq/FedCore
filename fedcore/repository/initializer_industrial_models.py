@@ -8,11 +8,12 @@ from fedot.core.operations.operation import Operation
 from fedot.core.optimisers.objective.data_source_splitter import DataSourceSplitter
 from fedot.core.pipelines.tuning.search_space import PipelineSearchSpace
 from fedot.core.repository.operation_types_repository import OperationTypesRepository
+from torch_pruning import DependencyGraph
 
 from fedcore.architecture.utils.paths import PROJECT_PATH
 from fedcore.interfaces.search_space import get_fedcore_search_space
 from fedcore.repository.fedcore_impl.abstract import _fit_assumption_and_check_correctness, TaskCompression, _merge, \
-    _fit, predict_operation_fedcore
+    _fit, predict_operation_fedcore, get_all_pruning_groups
 from fedcore.repository.fedcore_impl.data import build_holdout_producer
 from fedcore.repository.fedcore_impl.metrics import MetricsRepository
 
@@ -23,7 +24,9 @@ FEDOT_METHOD_TO_REPLACE = [(fedot_task, "TaskTypesEnum"),
                            (DataSourceSplitter, "_build_holdout_producer"),
                            (DataMerger, 'merge'),
                            (Operation, 'fit'),
-                           (Operation, "_predict")]
+                           (Operation, "_predict"),
+                           #(DependencyGraph, 'get_all_groups')
+                           ]
 
 FEDCORE_REPLACE_METHODS = [TaskCompression,
                            MetricsRepository,
@@ -32,7 +35,9 @@ FEDCORE_REPLACE_METHODS = [TaskCompression,
                            build_holdout_producer,
                            _merge,
                            _fit,
-                           predict_operation_fedcore]
+                           predict_operation_fedcore,
+                           #get_all_pruning_groups
+                           ]
 DEFAULT_METHODS = [getattr(class_impl[0], class_impl[1])
                    for class_impl in FEDOT_METHOD_TO_REPLACE]
 

@@ -51,7 +51,6 @@ class AtomizedModel(Enum):
         'ResNet152': resnet152
     }
 
-
     SEGFORMER_MODELS = {
         'segformer': segformer_pretrain
     }
@@ -100,7 +99,9 @@ DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 
 def default_fedcore_availiable_operation(problem: str = 'pruning'):
+    all_operations = ['training_aware_quant', 'post_training_quant', 'low_rank_model', 'pruning_model']
     operation_dict = {'pruning': PRUNER_MODELS.keys(),
+                      'composite_compression': all_operations,
                       'quantisation_aware': 'training_aware_quant',
                       'post_quantisation': 'post_training_quant',
                       'distilation': DISTILATION_MODELS.keys(),

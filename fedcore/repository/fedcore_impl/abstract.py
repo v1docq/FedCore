@@ -1,10 +1,12 @@
 from enum import Enum
 from typing import Optional
 
+import torch
 from fedot.core.data.data import InputData
 from fedot.core.data.multi_modal import MultiModalData
 from fedot.core.operations.operation_parameters import OperationParameters
 from golem.utilities.memory import MemoryAnalytics
+from torch_pruning.ops import TORCH_CONV, TORCH_LINEAR
 
 
 class TaskCompression(Enum):
@@ -132,3 +134,57 @@ def predict_operation_fedcore(
 
     prediction.supplementary_data.data_flow_length = data_flow_length
     return prediction
+
+
+def get_all_pruning_groups(self, ignored_layers=[], root_module_types=(TORCH_CONV, TORCH_LINEAR)):
+    """
+        Get all pruning groups for the given module. Groups are generated based on root module types.
+        All groups will contain a full indices of the prunable elements or channels.
+
+        Args:
+            ignored_layers (list): List of layers to be ignored during pruning.
+            root_module_types (tuple): Tuple of root module types to consider for pruning.
+
+        Yields:
+            list: A pruning group containing dependencies and their corresponding pruning handlers.
+
+        Example:
+        ```python
+        for group in DG.get_all_groups(ignored_layers=[layer1, layer2], root_module_types=[nn.Conv2d]):
+            print(group)
+        ```
+    """
+    visited_layers = []
+    ignored_layers = ignored_layers + self.IGNORED_LAYERS_IN_TRACING
+
+    for m in list(self.module2node.keys()):
+
+        if m in ignored_layers:
+            continue
+
+        if not isinstance(m, tuple(root_module_types)):
+            continue
+
+        pruner = self.get_pruner_of_module(m)
+        if pruner is None or pruner.get_out_channels(m) is None:
+            continue
+
+        if m in visited_layers:
+            continue
+
+        # use output pruning as the root
+        layer_channels = pruner.get_out_channels(m)
+        group = self.get_pruning_group(
+            m, pruner.prune_out_channels, list(range(layer_channels)))
+
+        prunable_group = True
+        for dep, _ in group:
+            module = dep.target.module
+            pruning_fn = dep.handler
+            if self.is_out_channel_pruning_fn(pruning_fn):
+                visited_layers.append(module)
+                for layer in ignored_layers:
+                    if isinstance(module, type(layer)) and torch.equal(module.weight, layer.weight):
+                        prunable_group = False
+        if prunable_group:
+            yield group
