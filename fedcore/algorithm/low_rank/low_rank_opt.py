@@ -2,14 +2,13 @@ from copy import deepcopy
 from typing import Dict, List, Optional
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
-from tqdm import tqdm
 import torch_pruning as tp
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.layers import DecomposedConv2d, DecomposedLinear
-from fedcore.neural_compressor.compression.pruner.utils import nn
+from torch import nn
 from fedcore.repository.constanst_repository import ENERGY_THR, DECOMPOSE_MODE, FORWARD_MODE, HOER_LOSS, ORTOGONAL_LOSS
 import torch
 from fedcore.repository.constanst_repository import default_device

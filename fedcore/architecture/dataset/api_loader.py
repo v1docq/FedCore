@@ -30,7 +30,6 @@ class ApiLoader:
 
     def _init_pretrain_model(self, model_name):
         model = BACKBONE_MODELS[model_name](pretrained=True).to(default_device())
-        model.fc = nn.Linear(512, 10).to(default_device())
         return model
 
     def _get_loader(self, loader_type: str):

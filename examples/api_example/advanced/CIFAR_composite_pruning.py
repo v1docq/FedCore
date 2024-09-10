@@ -3,24 +3,24 @@ from fedcore.api.utils.evaluation import evaluate_optimised_model, evaluate_orig
 
 experiment_setup = {'compression_task': 'composite_compression',
                     'cv_task': 'classification',
-                    'model_params': dict(pruning_model=dict(epochs=1,
-                                                            pruning_iterations=15,
+                    'model_params': dict(pruning_model=dict(epochs=15,
+                                                            pruning_iterations=3,
                                                             learning_rate=0.001,
                                                             importance='MagnitudeImportance',
                                                             pruner_name='magnitude_pruner',
                                                             importance_norm=1,
-                                                            pruning_ratio=0.5,
+                                                            pruning_ratio=0.75,
                                                             finetune_params={'epochs': 5,
                                                                              'custom_loss': None}
                                                             ),
-                                         low_rank_model=dict(epochs=15,
+                                         low_rank_model=dict(epochs=5,
                                                              learning_rate=0.001,
                                                              hoyer_loss=0.2,
-                                                             energy_thresholds=[0.99],
+                                                             energy_thresholds=[0.9],
                                                              orthogonal_loss=5,
                                                              decomposing_mode='channel',
                                                              spectrum_pruning_strategy='energy',
-                                                             finetune_params={'epochs': 5,
+                                                             finetune_params={'epochs': 10,
                                                                               'custom_loss': None}
                                                              )
                                          ),
@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     input_data = fedcore_compressor.load_data(path=dataset,
                                               supplementary_data={'torchvision_dataset': torchvision_dataset,
-                                                                  'torch_model': 'ResNet18'})
+                                                                  'torch_model': 'ResNet50'})
 
     fedcore_compressor.fit(input_data)
     pruning_result = evaluate_optimised_model(fedcore_compressor, input_data)

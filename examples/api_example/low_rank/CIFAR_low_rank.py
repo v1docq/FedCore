@@ -3,13 +3,15 @@ from fedcore.api.utils.evaluation import evaluate_optimised_model, evaluate_orig
 
 experiment_setup = {'compression_task': 'low_rank',
                     'cv_task': 'classification',
-                    'model_params': dict(epochs=1,
+                    'model_params': dict(epochs=15,
                                          learning_rate=0.001,
                                          hoyer_loss=0.2,
                                          energy_thresholds=[0.99],
                                          orthogonal_loss=5,
                                          decomposing_mode='channel',
-                                         spectrum_pruning_strategy='energy'
+                                         spectrum_pruning_strategy='energy',
+                                         finetune_params={'epochs': 3,
+                                                          'custom_loss': None}
                                          )
                     }
 
