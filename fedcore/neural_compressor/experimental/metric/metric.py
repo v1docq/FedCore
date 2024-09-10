@@ -1117,18 +1117,16 @@ class COCOmAPv2(BaseMetric):
         detections = []
         if "num_detections" in self.output_index_mapping and self.output_index_mapping["num_detections"] > -1:
             for item in zip(*predicts):
-                detection = {}
                 num = int(item[self.output_index_mapping["num_detections"]])
-                detection["boxes"] = np.asarray(item[self.output_index_mapping["boxes"]])[0:num]
-                detection["scores"] = np.asarray(item[self.output_index_mapping["scores"]])[0:num]
-                detection["classes"] = np.asarray(item[self.output_index_mapping["classes"]])[0:num]
+                detection = {"boxes": np.asarray(item[self.output_index_mapping["boxes"]])[0:num],
+                             "scores": np.asarray(item[self.output_index_mapping["scores"]])[0:num],
+                             "classes": np.asarray(item[self.output_index_mapping["classes"]])[0:num]}
                 detections.append(detection)
         else:
             for item in zip(*predicts):
-                detection = {}
-                detection["boxes"] = np.asarray(item[self.output_index_mapping["boxes"]])
-                detection["scores"] = np.asarray(item[self.output_index_mapping["scores"]])
-                detection["classes"] = np.asarray(item[self.output_index_mapping["classes"]])
+                detection = {"boxes": np.asarray(item[self.output_index_mapping["boxes"]]),
+                             "scores": np.asarray(item[self.output_index_mapping["scores"]]),
+                             "classes": np.asarray(item[self.output_index_mapping["classes"]])}
                 detections.append(detection)
 
         bboxes, str_labels, int_labels, image_ids = labels
@@ -1147,9 +1145,7 @@ class COCOmAPv2(BaseMetric):
                 continue
             self.image_ids.append(image_id)
 
-            ground_truth = {}
-            ground_truth["boxes"] = np.asarray(bboxes[idx])
-            ground_truth["classes"] = np.asarray(labels[idx])
+            ground_truth = {"boxes": np.asarray(bboxes[idx]), "classes": np.asarray(labels[idx])}
 
             self.ground_truth_list.extend(
                 ExportSingleImageGroundtruthToCoco(

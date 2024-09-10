@@ -3,6 +3,29 @@ from typing import Dict, List, Optional, Tuple, Union
 import cv2
 import matplotlib.pyplot as plt
 import torch
+from torchvision.ops import nms
+from PIL import ImageDraw
+
+
+colors = [
+    '#A5E473',
+    "#FF5733",
+    "#33A5FF",
+    "#FCFF33",
+    "#33C4FF",
+    "#E033FF",
+    "#86FF33",
+    "#33FF83",
+    '#A5E473',
+    "#FF5733",
+    "#33A5FF",
+    "#FCFF33",
+    "#33C4FF",
+    "#E033FF",
+    "#86FF33",
+    '#A5E473',
+    "#FF5733"
+    ]
 
 #
 # _PALETTE = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (128, 0, 0),
@@ -168,3 +191,48 @@ def plot_train_test_loss_metric(train_losses, test_losses, train_metric, test_me
     # Show the plot
     plt.tight_layout()
     plt.show()
+    
+def get_image(img, preds, classes, targets = None):
+    draw = ImageDraw.Draw(img)
+    
+    # Target boxes
+    if targets is not None:
+        for i in range(len(targets['boxes'])):
+            x1, y1, x2, y2 = targets["boxes"].detach().numpy()[i]
+            draw.rectangle([x1, y1, x2, y2], fill=None, outline="red", width=2)
+            label = str(classes[targets["labels"].numpy()[i]])
+            draw.text([x1, y1], text=label, fill="red")
+
+    # Prediction boxes
+    for i in range(len(preds["boxes"])):
+        x1, y1, x2, y2 = preds["boxes"].cpu().detach().numpy()[i]
+        draw.rectangle([x1, y1, x2, y2], fill=None, outline=colors[preds["labels"].cpu().detach().numpy()[i]], width=2)
+        label = classes[preds["labels"].cpu().numpy()[i]]
+        score = preds["scores"].cpu().detach().numpy()[i]
+        text = f'{label}: {score:.2f}'
+        draw.text([x1+5, y2-15], text=text, fill="blue")
+        
+    return img
+
+def apply_nms(orig_prediction, iou_thresh):
+
+    keep = nms(orig_prediction['boxes'], orig_prediction['scores'], iou_thresh)
+
+    # Keep indices from nms
+    final_prediction = orig_prediction
+    final_prediction['boxes'] = final_prediction['boxes'][keep]
+    final_prediction['scores'] = final_prediction['scores'][keep]
+    final_prediction['labels'] = final_prediction['labels'][keep]
+
+    return final_prediction
+
+def filter_boxes(orig_prediction, thresh):
+
+    keep = orig_prediction['scores'] > thresh
+
+    final_prediction = orig_prediction
+    final_prediction['boxes'] = final_prediction['boxes'][keep]
+    final_prediction['scores'] = final_prediction['scores'][keep]
+    final_prediction['labels'] = final_prediction['labels'][keep]
+
+    return final_prediction

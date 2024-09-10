@@ -7,10 +7,16 @@ from typing import Callable, Dict, Tuple
 import numpy as np
 import torch
 import yaml
+import imageio
 from PIL import Image
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
+import opendatasets as od
+from opendatasets.utils.archive import extract_archive
+
+from fedcore.architecture.utils.paths import data_path, yolo_data_path, yolo_yaml_path, YOLO_DATA_URL, YOLO_YAML_URL
+from fedcore.architecture.utils.loader import transform
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp',
                   '.pgm', '.tif', '.tiff', '.webp')
@@ -92,14 +98,23 @@ class COCODataset(Dataset):
         sample = self.samples[idx]
         image = Image.open(sample['image']).convert('RGB')
         image = self.transform(image)
-        target = {
-            'boxes': torch.tensor(np.stack(sample['boxes']), dtype=torch.float32),
-            'labels': torch.tensor(sample['labels'], dtype=torch.int64),
-            'image_id': torch.tensor([idx]),
-            'area': torch.tensor(sample['area'], dtype=torch.float32),
-            'iscrowd': torch.tensor(sample['iscrowd'], dtype=torch.int64),
-        }
-        return image, target
+        if len(sample['boxes']) != 0:
+            targets = {
+                'labels': torch.tensor(sample['labels'], dtype=torch.int64),
+                'boxes': torch.tensor(np.stack(sample['boxes']), dtype=torch.float32),
+                'image_id': torch.tensor([idx]),
+                'area': torch.tensor(sample['area'], dtype=torch.float32),
+                'iscrowd': torch.tensor(sample['iscrowd'], dtype=torch.int64),
+            }
+        else:
+            targets = {
+                'labels': torch.zeros(0, dtype=torch.int64),
+                'boxes': torch.zeros((0, 4), dtype=torch.float32),
+                'image_id': torch.tensor([idx]),
+                'area': torch.zeros(0, dtype=torch.float32),
+                'iscrowd': torch.zeros((0,), dtype=torch.int64)
+                }
+        return image, targets
 
     def __len__(self) -> int:
         """Return length of dataset"""
@@ -126,19 +141,40 @@ class YOLODataset(Dataset):
 
     def __init__(
         self,
-        path: str,
-        transform: Callable,
+        path: str = None,
+        dataset_name: str = None ,
+        transform: Callable = transform(),
         train: bool = True,
         replace_to_binary: bool = False,
+        download: bool = False,
+        log: bool = False
     ) -> None:
+        
+        if dataset_name is not None:
+            path_flag = os.path.isdir(data_path(dataset_name, log=log))
+            if path_flag is False or download is True:            
+                    dataset_url = f'{YOLO_DATA_URL}{dataset_name}.zip'
+                    yaml_url = f'{YOLO_YAML_URL}{dataset_name}.yaml'
 
+                    od.download(dataset_url, data_dir=data_path(dataset_name))
+                    od.download(yaml_url, data_dir=data_path(dataset_name))
+                    extract_archive(from_path=str(yolo_data_path(dataset_name)), 
+                                    to_path=str(data_path(dataset_name)), 
+                                    remove_finished=True)
+                    
+            path = yolo_yaml_path(dataset_name)
+    
         self.transform = transform
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
         self.root = os.path.abspath(os.path.join(os.path.dirname(
-            path), (data['train'] if train else data['val'])))
-        self.classes = ['background']
-        self.classes.extend(['object'] if replace_to_binary else data['names'])
+            path), (data['train'] if train else data['test'])))
+        self.classes = {0: 'background'}
+        
+        for k in data['names']:
+            id = k + 1
+            self.classes[id] = data['names'][k]
+            
         self.binary = replace_to_binary
         self.samples = []
 
@@ -170,21 +206,87 @@ class YOLODataset(Dataset):
         labels = annotation[:, 0] + 1
         labels = np.ones_like(labels) if self.binary else labels
         boxes = annotation[:, 1:]
-        c, h, w = image.shape
-        boxes *= [w, h, w, h]
-        area = boxes[:, 2] * boxes[:, 3]
-        # x centre, y centre, w, h -> x1, y1, w, h
-        boxes[:, :2] -= boxes[:, 2:] / 2
-        boxes[:, 2:] += boxes[:, :2]  # x1, y1, w, h -> x1, y1, x2, y2
+        if len(boxes) != 0:
+            c, h, w = image.shape
+            boxes *= [w, h, w, h]
+            area = boxes[:, 2] * boxes[:, 3]
+            # x centre, y centre, w, h -> x1, y1, w, h
+            boxes[:, :2] -= boxes[:, 2:] / 2
+            boxes[:, 2:] += boxes[:, :2]  # x1, y1, w, h -> x1, y1, x2, y2
+            
+            targets = {
+                'labels': torch.tensor(labels, dtype=torch.int64),
+                'boxes': torch.tensor(boxes, dtype=torch.float32),
+                'image_id': torch.tensor([idx]),
+                'area': torch.tensor(area, dtype=torch.float32),
+                'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64)
+            }
+        else:
+            targets = {
+                'labels': torch.zeros(0, dtype=torch.int64),
+                'boxes': torch.zeros((0, 4), dtype=torch.float32),
+                'image_id': torch.tensor([idx]),
+                'area': torch.zeros(0, dtype=torch.float32),
+                'iscrowd': torch.zeros((0,), dtype=torch.int64)
+                }
 
-        target = {
-            'boxes': torch.tensor(boxes, dtype=torch.float32),
-            'labels': torch.tensor(labels, dtype=torch.int64),
+        return image, targets
+
+    def __len__(self) -> int:
+        """Return length of dataset"""
+        return len(self.samples)
+    
+class UnlabeledDataset(Dataset):
+    """Class-loader for custom dataset.
+
+    Args:
+        images_path: Image folder path.
+        transform: A function/transform that takes in an PIL image and returns a
+            transformed version.
+    """
+
+    def __init__(
+        self,
+        images_path: str,
+        transform: Callable = transform()
+    ) -> None:
+        self.transform = transform
+        self.images_path = images_path
+        
+        self.samples = []
+        for file in os.listdir(self.images_path):
+                    if file.lower().endswith(IMG_EXTENSIONS):
+                        self.samples.append(
+                            {   
+                                'image': os.path.join(self.images_path, file),
+                                'name': file
+                            }
+                        )
+
+    def __getitem__(self, idx) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        """Returns a sample from a dataset.
+
+        Args:
+            idx: Index of sample.
+
+        Returns:
+            A tuple ``(image, targets)``, where image is image tensor,
+                and targets is dict with keys: ``'name'``, ``'boxes'``, ``'labels'``,
+                ``'image_id'``, ``'area'``, ``'iscrowd'``.
+
+        """
+        sample = self.samples[idx]
+        image = Image.open(sample['image'])
+        image = self.transform(image)
+        targets = {
+            'name': sample['name'],
+            'labels': torch.zeros(0, dtype=torch.int64),
+            'boxes': torch.zeros((0, 4), dtype=torch.float32),
             'image_id': torch.tensor([idx]),
-            'area': torch.tensor(area, dtype=torch.float32),
-            'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64),
+            'area': torch.zeros(0, dtype=torch.float32),
+            'iscrowd': torch.zeros((0,), dtype=torch.int64)
         }
-        return image, target
+        return image, targets
 
     def __len__(self) -> int:
         """Return length of dataset"""

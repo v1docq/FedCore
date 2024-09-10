@@ -1,226 +1,106 @@
-"""This module contains functions and classes for computing metrics
- in computer vision tasks.
- """
-from abc import ABC, abstractmethod
-from typing import Dict, List
+from abc import abstractmethod
+from typing import Optional
 
-import torch
-from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.metrics import precision_recall_fscore_support, f1_score
-from torch.nn.functional import softmax
-from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from fedot.core.composer.metrics import Metric
+from fedot.core.data.data import InputData
+from fedot.core.pipelines.pipeline import Pipeline
+from fedot.utilities.custom_errors import AbstractMethodNotImplementError
+from torch import nn
 
-
-def iou_score(
-        outputs: torch.Tensor,
-        masks: torch.Tensor,
-        threshold: float = 0.5,
-        smooth: float = 1e-10
-) -> torch.Tensor:
-    """Computes intersection over union (masks) on batch.
-
-    Args:
-        outputs: Output from semantic segmentation model.
-        masks: True masks.
-        threshold: Binarization threshold for output.
-        smooth: Additional constant to avoid division by zero.
-
-    Returns:
-        Intersection over union for batch.
-    """
-    outputs = (outputs > threshold).float()
-    intersection = torch.logical_and(outputs, masks).float().sum((2, 3))
-    union = torch.logical_or(outputs, masks).float().sum((2, 3))
-    iou = (intersection + smooth) / (union + smooth)
-    iou[union == 0] = -1
-    return iou
+from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.tools.ruler import PerformanceEvaluator
 
 
-def dice_score(
-        outputs: torch.Tensor,
-        masks: torch.Tensor,
-        threshold: float = 0.5,
-        smooth: float = 1e-10
-) -> torch.Tensor:
-    """Computes dice coefficient (masks) on batch.
+class CompressionMetric(Metric):
+    default_value = 0
+    need_to_minimize = False
 
-    Args:
-        outputs: Output from semantic segmentation model.
-        masks: True masks.
-        threshold: Binarization threshold for output.
-        smooth: Additional constant to avoid division by zero.
-
-    Returns:
-        Dice for batch.
-    """
-    outputs = (outputs > threshold).float()
-    intersection = torch.logical_and(outputs, masks).float().sum((2, 3))
-    total = (outputs + masks).sum((2, 3))
-    dice = (2 * intersection + smooth) / (total + smooth)
-    dice[total == 0] = -1
-    return dice
-
-
-class MetricCounter(ABC):
-    """Generalized class for calculating metrics"""
-
-    def __init__(self, **kwargs) -> None:
-        pass
-
+    @staticmethod
     @abstractmethod
-    def update(self, **kwargs) -> None:
-        """Have to implement updating, taking model outputs as input."""
-        raise NotImplementedError
+    def metric(**kwargs) -> float:
+        raise AbstractMethodNotImplementError
 
-    @abstractmethod
-    def compute(self) -> Dict[str, float]:
-        """Have to implement metrics computing."""
-        raise NotImplementedError
+    def simple_prediction(self, pipeline, reference_data):
+        predict = pipeline.predict(reference_data)
+        return predict, reference_data
 
-
-class ClassificationMetricCounter(MetricCounter):
-    """Calculates metrics for classification task.
-
-    Args:
-        class_metrics:  If ``True``, calculates metrics for each class.
-    """
-
-    def __init__(self, class_metrics: bool = False) -> None:
-        super().__init__()
-        self.y_true = []
-        self.y_pred = []
-        self.y_score = []
-        self.class_metrics = class_metrics
-
-    def update(self, predictions: torch.Tensor, targets: torch.Tensor) -> None:
-        """Accumulates predictions and targets."""
-        self.y_true.extend(targets.tolist())
-        self.y_score.extend(softmax(predictions, dim=1).tolist())
-        self.y_pred.extend(predictions.argmax(1).tolist())
-
-    def compute(self) -> Dict[str, float]:
-        """Compute accuracy, precision, recall, f1, roc auc metrics.
-
-         Returns:
-              Dictionary: `{metric: score}`.
+    @classmethod
+    def get_value(cls, pipeline: Pipeline, reference_data: InputData,
+                  validation_blocks: Optional[int] = None) -> float:
+        """ Get metric value based on pipeline, reference data, and number of validation blocks.
+        Args:
+            pipeline: a :class:`Pipeline` instance for evaluation.
+            reference_data: :class:`InputData` for evaluation.
+            validation_blocks: number of validation blocks. Used only for time series forecasting.
+                If ``None``, data separation is not performed.
         """
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            self.y_true, self.y_pred, average='macro'
-        )
-        scores = {
-            'accuracy': accuracy_score(self.y_true, self.y_pred),
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
-            'roc_auc': roc_auc_score(self.y_true, self.y_score, multi_class='ovo'),
-        }
-        if self.class_metrics:
-            f1s = f1_score(self.y_true, self.y_pred, average=None)
-            scores.update({f'f1_for_class_{i}': s for i, s in enumerate(f1s)})
-        return scores
+        metric = cls.default_value
+        metric = cls.metric(pipeline, reference_data.features.calib_dataloader)
+        if cls.need_to_minimize:
+            metric = - metric
+        return metric
 
 
-class SegmentationMetricCounter(MetricCounter):
-    """Calculates metrics for semantic segmentation task.
-
-    Args:
-        class_metrics:  If ``True``, calculates metrics for each class.
-    """
-
-    def __init__(self, class_metrics: bool = False) -> None:
-        super().__init__()
-        self.iou = []
-        self.dice = []
-        self.class_metrics = class_metrics
-
-    def update(self, predictions: torch.Tensor, targets: torch.Tensor) -> None:
-        """Accumulates iou and dice."""
-        masks = torch.zeros_like(predictions)
-        for i in range(predictions.shape[1]):
-            masks[:, i, :, :] = torch.squeeze(targets == i)
-        self.iou.append(iou_score(predictions, masks))
-        self.dice.append(dice_score(predictions, masks))
-
-    def compute(self) -> Dict[str, float]:
-        """Compute average metrics.
-
-         Returns:
-              Dictionary: `{metric: score}`.
-        """
-        iou = torch.cat(self.iou).T
-        dice = torch.cat(self.dice).T
-
-        scores = {
-            'iou': iou[1:][iou[1:] >= 0].mean().item(),
-            'dice': dice[1:][dice[1:] >= 0].mean().item()
-        }
-        if self.class_metrics:
-            scores.update(
-                {f'iou_for_class_{i}': s[s >= 0].mean().item() for i, s in enumerate(iou)})
-            scores.update(
-                {f'dice_for_class_{i}': s[s >= 0].mean().item() for i, s in enumerate(dice)})
-        return scores
+class IntermediateAttention(CompressionMetric):
+    @classmethod
+    def metric(cls,
+               student_attentions,
+               teacher_attentions,
+               weights,
+               student_teacher_attention_mapping):
+        loss = 0
+        for i in range(len(student_attentions)):
+            loss += weights[i] * nn.KLDivLoss(reduction='batchmean')(student_attentions[i],
+                                                                     teacher_attentions[
+                                                                         student_teacher_attention_mapping[i]])
+        return loss
 
 
-class ObjectDetectionMetricCounter(MetricCounter):
-    """Calculates metrics for object detection task.
-
-    Args:
-        class_metrics:  If ``True``, calculates metrics for each class.
-    """
-
-    def __init__(self, class_metrics: bool = False) -> None:
-        super().__init__()
-        self.map = MeanAveragePrecision(class_metrics=class_metrics)
-        self.class_metrics = class_metrics
-
-    def update(
-            self,
-            predictions: List[Dict[str, torch.Tensor]],
-            targets: List[Dict[str, torch.Tensor]]
-    ) -> None:
-        """Accumulates predictions and targets."""
-        self.map.update(preds=predictions, target=targets)
-
-    def compute(self) -> Dict[str, float]:
-        """Compute MAP, MAR metrics.
-
-         Returns:
-              Dictionary: `{metric: score}`.
-        """
-
-        scores = self.map.compute()
-        if self.class_metrics:
-            scores.update({f'map_for_class_{i}': s for i,
-                          s in enumerate(scores['map_per_class'])})
-            scores.update({f'mar_100_for_class_{i}': s for i,
-                          s in enumerate(scores['mar_100_per_class'])})
-        del scores['map_per_class']
-        del scores['mar_100_per_class']
-        return scores
+class IntermediateFeatures(CompressionMetric):
+    @classmethod
+    def metric(cls,
+               student_feats,
+               teacher_feats,
+               weights):
+        loss = 0
+        for i in range(len(student_feats)):
+            loss += weights[i] * nn.MSELoss()(student_feats[i], teacher_feats[i])
+        return loss
 
 
-class LossesAverager(MetricCounter):
-    """Calculates the average loss."""
+class LastLayer(CompressionMetric):
+    @classmethod
+    def metric(cls, student_logits, teacher_logits, weight):
+        return weight * nn.MSELoss()(student_logits, teacher_logits)
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.losses = None
-        self.counter = 0
 
-    def update(self, losses: Dict[str, torch.Tensor]) -> None:
-        """Accumulates losses"""
-        self.counter += 1
-        if self.losses is None:
-            self.losses = {k: v.item() for k, v in losses.items()}
-        else:
-            for key, value in losses.items():
-                self.losses[key] += value.item()
+class Throughput(CompressionMetric):
+    need_to_minimize = True
 
-    def compute(self) -> Dict[str, float]:
-        """Compute average losses.
+    @classmethod
+    def metric(cls, model, dataset, device=default_device(), batch_size=32):
+        evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
+        return evaluator.measure_throughput()
 
-        Returns:
-            Dictionary: `{metric: score}`.
-        """
-        return {k: v / self.counter for k, v in self.losses.items()}
+
+class Latency(CompressionMetric):
+    need_to_minimize = False
+
+    @classmethod
+    def metric(cls, model, dataset, device=default_device(), batch_size=32):
+        evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
+        return evaluator.measure_latency()
+
+
+class CV_quality_metric(CompressionMetric):
+    default_clf_metric = 'accuracy'
+    need_to_minimize = True
+
+    def __repr__(self):
+        """Fedcore_compression_quality_metric"""
+
+    @classmethod
+    def metric(cls, model, dataset, device=default_device(), batch_size=32):
+        evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
+        metric_dict = evaluator.eval()
+        return metric_dict

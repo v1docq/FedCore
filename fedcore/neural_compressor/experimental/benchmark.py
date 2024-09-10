@@ -64,9 +64,10 @@ def set_all_env_var(conf, overwrite_existing=False):
     """
     cpu_counts = psutil.cpu_count(logical=False)
     if not conf:
-        conf = {}
-        conf["num_of_instance"] = 1
-        conf["cores_per_instance"] = cpu_counts
+        conf = {
+            "num_of_instance": 1,
+            "cores_per_instance": cpu_counts
+        }
     if "cores_per_instance" in conf:
         assert (
             conf["cores_per_instance"] * conf["num_of_instance"] <= cpu_counts

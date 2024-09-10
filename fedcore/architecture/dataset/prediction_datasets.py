@@ -5,20 +5,49 @@ for passing it to the prediction method of computer vision models.
 import os
 from typing import Callable, Tuple
 
-import numpy as np
 import pandas as pd
-import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.io import read_image
+import torch
+import numpy as np
+import torch.utils.data as data
+import torchvision
+from torchvision import transforms
+
+from fedcore.architecture.utils.paths import PROJECT_PATH
 
 IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp",
                   ".pgm", ".tif", ".tiff", ".webp")
+TRANSFORM_IMG = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(256),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225])
+])
+BATCH_SIZE = 32
+
+
+class TorchVisionDataset(Dataset):
+    def __init__(self, path, transform=TRANSFORM_IMG):
+        # directory containing the images
+        self.train_dir, self.val_dir = os.path.join(PROJECT_PATH, path, 'train'), os.path.join(PROJECT_PATH,
+                                                                                               path, 'validation')
+        # transform to be applied on images
+        self.transform = transform
+
+    def get_dataloader(self):
+        train_data = torchvision.datasets.ImageFolder(root=self.train_dir, transform=TRANSFORM_IMG)
+        train_data_loader = data.DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+        test_data = torchvision.datasets.ImageFolder(root=self.val_dir, transform=TRANSFORM_IMG)
+        test_data_loader = data.DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+        return train_data_loader, test_data_loader
 
 
 class CustomDatasetForImages(Dataset):
     # defining constructor
-    def __init__(self, annotations, directory, transform=None):
+    def __init__(self, directory, annotations, transform=None):
         # directory containing the images
         self.directory = directory
         annotations_file_dir = os.path.join(self.directory, annotations)
@@ -33,6 +62,15 @@ class CustomDatasetForImages(Dataset):
     # getting the length
     def __len__(self):
         return len(self.labels)
+
+    def bbox_converter(self, center_X, center_y, width, height, image_width, image_height):
+        x1 = int((center_X - width / 2) * image_width)
+        x2 = int((center_X + width / 2) * image_width)
+        x2 = x2 - x1
+        y1 = int((center_y - height / 2) * image_height)
+        y2 = int((center_y + height / 2) * image_height)
+        y2 = y2 - y1
+        return [x1, y1, x2, y2]
 
     # getting the data items
     def __getitem__(self, idx):
@@ -64,14 +102,16 @@ class CustomDatasetForImages(Dataset):
             'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64),
         }
         # returning the image and label
-        return image, target
+        return image[np.newaxis, :, :, :], target
+
     @property
     def shape(self):
-        return (len(self.labels),1)
+        return (len(self.labels), 1)
 
     @property
     def num_classes(self):
         return self.labels_mask.shape[0]
+
 
 class PredictionNumpyDataset(Dataset):
     """Class for prediction on numpy arrays.
