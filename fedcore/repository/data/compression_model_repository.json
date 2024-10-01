@@ -1,5 +1,19 @@
 {
   "metadata": {
+    "fedcore_training": {
+      "input_type": "[DataTypesEnum.ts]",
+      "output_type": "[DataTypesEnum.table]",
+      "tasks": "[TaskTypesEnum.classification]", 
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreTrainingStrategy"
+      ],
+      "accepted_node_types": [
+        "any"
+      ],
+      "description": "Training node for composite pipelines"
+    },
     "fedcore_pruning": {
       "tasks": "[TaskTypesEnum.classification]",
       "input_type": "[DataTypesEnum.ts]",

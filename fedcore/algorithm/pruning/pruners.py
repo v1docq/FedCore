@@ -63,7 +63,6 @@ class BasePruner(BaseCompressionModel):
     def _init_model(self, input_data):
         print("==============Prepare original model for pruning=================")
         self.model = input_data.target
-        self.model.fc = nn.Sequential(nn.Linear(self.model.fc.in_features, input_data.features.num_classes))
         self.trainer.model = self.model
 
         print("==============Initialisation of pruning agent=================")

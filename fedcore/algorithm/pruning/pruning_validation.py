@@ -10,7 +10,6 @@ class PruningValidator:
     def __init__(self, model, n_classes):
         self.model = model
         self.num_classes = n_classes
-        self.fc_layer = model.fc
 
     def validate_pruned_layers(self, layer, pruning_fn):
         is_linear_layer = isinstance(layer, torch.nn.Linear)
