@@ -18,6 +18,11 @@ from fedcore.data.data import CompressionInputData
 from fedcore.losses.utils import _get_loss_metric
 from fedcore.repository.constanst_repository import default_device
 
+from pathlib import Path
+from datetime import datetime
+
+def now_for_file():
+    return datetime.now().strftime('%m-%d-%Y_%H-%M-%S')
 
 class BaseNeuralModel:
     """Class responsible for NN model implementation.
@@ -46,8 +51,13 @@ class BaseNeuralModel:
         self.epochs = self.params.get('epochs', 30)
         self.batch_size = self.params.get('batch_size', 16)
         self.learning_rate = self.params.get('learning_rate', 0.001)
-        self.custom_loss = self.params.get('custom_loss', None)
+        self.custom_loss = self.params.get('custom_loss', None) # loss which evaluates model structure
+        self.enforced_training_loss = self.params.get('enforced_training_loss', None)
         self.device = default_device()
+        self.is_operation = self.params.get('is_operation', False) ###
+        self.save_each = self.params.get('save_each', None)
+        self.checkpoint_folder = self.params.get('checkpoint_folder', None) ###
+        self._batch_handler = self.params.get('batch_hadler', lambda x: x)
 
         self.label_encoder = None
         self.is_regression_task = False
@@ -55,12 +65,24 @@ class BaseNeuralModel:
         self.target = None
         self.task_type = None
 
+
+    def __check_and_substitute_loss(self, train_data: InputData):
+        if (train_data.supplementary_data.col_type_ids is not None and 
+            'loss' in train_data.supplementary_data.col_type_ids):
+            self.loss_fn = train_data.supplementary_data.col_type_ids['loss']()
+            print('Forcely substituted loss to', self.loss_fn)
+
+
     def fit(self, input_data: InputData,
             supplementary_data: dict = None):
         custom_fit_process = supplementary_data is not None
         loader = input_data.features.train_dataloader
 
         self.loss_fn = _get_loss_metric(input_data)
+        self.__check_and_substitute_loss(input_data)
+        if self.model is None:
+            self.model = input_data.target
+        self.optimised_model = self.model
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.model.to(self.device)
 
@@ -81,7 +103,7 @@ class BaseNeuralModel:
         for batch in tqdm(train_loader):
             self.optimizer.zero_grad()
             total_iterations += 1
-            inputs, targets = batch
+            inputs, targets = self._batch_handler(batch)
             output = self.model(inputs.to(self.device))
             if custom_loss:
                 model_loss = {key: val(model) for key, val in custom_loss.items()}
@@ -98,6 +120,7 @@ class BaseNeuralModel:
         if custom_loss:
             losses = reduce(iadd, list(model_loss.items()))
             losses = [x.item() if not isinstance(x, str) else x for x in losses]
+
         return losses, avg_loss
 
     def _custom_train(self,
@@ -115,7 +138,18 @@ class BaseNeuralModel:
             if epoch > 2:
                 # Freeze batch norm mean and variance estimates
                 self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
+            if self._check_saving(epoch):
+                torch.save(self.model, Path(self.checkpoint_folder, f'model_train{now_for_file()}_{epoch}.pth'))
+            
         # callback.callbacks.on_train_end()
+    def _check_saving(self, epoch) -> bool:
+        if not self.save_each:
+            return False
+        if self.save_each != -1:
+            return not epoch % self.save_each
+        else:
+            return epoch == self.epochs
+
 
     def _default_train(self,
                        train_loader,
@@ -129,6 +163,8 @@ class BaseNeuralModel:
                     epoch, avg_loss, *model_loss))
             else:
                 print('Epoch: {}, Average loss {}'.format(epoch, avg_loss))
+            if self._check_saving(epoch):
+                torch.save(self.model, Path(self.checkpoint_folder, f'model_train{now_for_file()}_{epoch}.pth'))
 
     def predict(
             self,

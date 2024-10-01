@@ -7,7 +7,7 @@ from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.models.network_impl.layers import DecomposedConv2d, DecomposedLinear
+from fedcore.models.network_impl.layers import DecomposedConv2d, DecomposedLinear, DecomposedEmbedding
 from torch import nn
 from fedcore.repository.constanst_repository import ENERGY_THR, DECOMPOSE_MODE, FORWARD_MODE, HOER_LOSS, ORTOGONAL_LOSS
 import torch
@@ -48,13 +48,7 @@ class LowRankModel:
         self.trainer.custom_loss = self.__loss()
 
     def _init_model(self, input_data):
-        have_predict = 'predict' in vars(input_data)
-        self.model = input_data.predict if have_predict else input_data.target
-        is_linear_fc = isinstance(self.model.fc, nn.Linear)
-        valid_fc_layer = self.model.fc[0].out_features == input_data.num_classes if not is_linear_fc else \
-            self.model.fc.out_features == input_data.num_classes
-        if not valid_fc_layer:
-            self.model.fc = nn.Sequential(nn.Linear(self.model.fc.in_features, input_data.num_classes))
+        self.model = input_data.features.target if hasattr(input_data.features, 'features') else input_data.predict.target
         decompose_module(self.model, self.decomposing_mode,
                          forward_mode=self.forward_mode)
 
@@ -70,33 +64,33 @@ class LowRankModel:
         self._init_model(input_data)
         self.trainer.model = self.model
         self.model = self.trainer.fit(input_data)
-        self.optimised_model = deepcopy(self.model)
+        self.optimised_model = deepcopy(self.model) ### do actually need deepcopy???
         self.compress(input_data=input_data)
         return self.optimised_model
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = 'compress'):
-        return self.optimised_model if output_mode == 'compress' else self.model
+        return self.optimised_model if output_mode == 'compress' else self.model ### any case same model
 
     def predict(self,
                 input_data: InputData, output_mode: str = 'compress'):
-        self.trainer.model = self.optimised_model if output_mode == 'compress' else self.model
+        self.trainer.model = self.optimised_model if output_mode == 'compress' else self.model ### any case same model
         return self.trainer.predict(input_data, output_mode)
 
     def _prune_weight_rank(self, model, thr):
         for name, module in model.named_children():
             if len(list(module.children())) > 0:
                 self._prune_weight_rank(module, thr)
-            if isinstance(module, DecomposedConv2d):
+            if isinstance(module, (DecomposedConv2d, DecomposedLinear, DecomposedEmbedding)): ### maybe some IDecomposable?
                 rank_threshold_pruning(conv=module,
                                        threshold=thr,
                                        strategy=self.strategy,
                                        module_name=name)
-
+            
     def _prepare_model_for_inference(self, model):
         for name, module in model.named_children():
             if len(list(module.children())) > 0:
                 self._prepare_model_for_inference(module)
-            if isinstance(module, (DecomposedConv2d, DecomposedLinear)):
+            if isinstance(module, (DecomposedConv2d, DecomposedLinear, DecomposedEmbedding)):
                 module.inference_mode = True
                 module.compose_weight_for_inference()
 

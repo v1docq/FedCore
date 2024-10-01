@@ -300,6 +300,7 @@ class OutConv(nn.Module):
 #             dtype=None,
 #             ) -> None:
 #     pass
+    
 
 class DecomposedConv2d(Conv2d):
     """Extends the Conv2d layer by implementing the singular value decomposition of
@@ -528,17 +529,18 @@ class DecomposedLinear(nn.Linear):
             ValueError: If ``decomposing_mode`` not in valid values.
         """
         W = self.weight
-        U, S, V = torch.linalg.svd(W, full_matrices=False)
+        U, S, Vh = torch.linalg.svd(W, full_matrices=False) ### here the transposed version is returned, not Vh
         self.U = Parameter(U)
         self.S = Parameter(S)
-        self.Vh = Parameter(V.T)
+        self.Vh = Parameter(Vh)
         self.register_parameter('weight', None)
+        # assert ((self.U * self.S) @ self.Vh - W).abs().max() < 1e-5, 'transpose Vh!'
 
     def compose(self) -> None:
         """Compose the weight matrix from singular value decomposition.
         Replaces U, S, Vh matrices with weights such that weights = U * S * Vh.
         """
-        W = self.U @ torch.diag(self.S) @ self.Vh
+        W = self.U @ torch.diag(self.S) @ self.Vh ### deleted extra .T
         self.weight = W
         self.register_parameter('U', None)
         self.register_parameter('S', None)
@@ -562,13 +564,115 @@ class DecomposedLinear(nn.Linear):
         return x
 
     def _one_layer_forward(self):
-        self.W = Parameter(self.U @ torch.diag(self.S) @ self.Vh.T)
+        self.W = Parameter((self.U * self.S) @ self.Vh) ### shouldn't it be transposed?
 
     def _two_layers_forward(self):
         singular_diag = torch.diag(self.S)
-        if singular_diag.shape[1] != self.Vh.T.shape[0]:
-            self.Vh = Parameter(self.Vh.T)
-        self.Vh = Parameter(singular_diag @ self.Vh.T)
+        if singular_diag.shape[1] != self.Vh.shape[0]:
+            self.Vh = Parameter(self.Vh)
+        self.Vh = Parameter(singular_diag @ self.Vh)
+
+    def set_U_S_Vh(self, u: torch.Tensor, s: torch.Tensor, vh: torch.Tensor) -> None:
+        """Update U, S, Vh matrices.
+        Raises:
+            Assertion Error: If ``self.decomposing`` is False.
+        """
+        assert self.decomposing is not None, "for setting U, S and Vh, the model must be decomposed"
+        self.U = Parameter(u)
+        self.S = Parameter(s)
+        self.Vh = Parameter(vh)
+
+
+class DecomposedEmbedding(nn.Embedding):
+    """Extends the Linear layer by implementing the singular value decomposition of
+    the weight matrix.
+
+    Args:
+        base_lin:  The linear layer whose parameters will be copied
+        decomposing: ``True`` or ``False``
+            If ``False`` create layers without decomposition.
+        forward_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
+    """
+
+    def __init__(
+            self,
+            base_emb: nn.Embedding,
+            decomposing: bool = True,
+            forward_mode: str = FORWARD_MODE,
+            device=None,
+            dtype=None,
+    ) -> None:
+
+        super().__init__(
+            num_embeddings=base_emb.num_embeddings,
+            embedding_dim=base_emb.embedding_dim,
+            device=device,
+            dtype=dtype,
+        )
+        self.load_state_dict(base_emb.state_dict())
+        self.forward_mode = forward_mode
+        self.decomposing = decomposing
+        self.inference_mode = False
+        self.inference_dict = {'one_layer': self._one_layer_forward,
+                               'two_layers': self._two_layers_forward}
+        if decomposing:
+            self.decompose()
+        else:
+            self.U = None
+            self.S = None
+            self.Vh = None
+            self.decomposing = None
+
+    def decompose(self) -> None:
+        """Decomposes the weight matrix in singular value decomposition.
+        Replaces the weights with U, S, Vh matrices such that weights = U * S * Vh.
+        Args:
+        Raises:
+            ValueError: If ``decomposing_mode`` not in valid values.
+        """
+        W = self.weight
+        U, S, Vh = torch.linalg.svd(W, full_matrices=False)
+        
+        self.U = Parameter(U)
+        self.S = Parameter(S)
+        self.Vh = Parameter(Vh)
+        assert ((self.U * self.S) @ self.Vh - W).abs().max() < 1e-5, 'transpose Vh!'
+        self.register_parameter('weight', None)
+
+    def compose(self) -> None:
+        """Compose the weight matrix from singular value decomposition.
+        Replaces U, S, Vh matrices with weights such that weights = U * S * Vh.
+        """
+        W = (self.U * self.S) @ self.Vh
+        self.weight = Parameter(W)
+        self.register_parameter('U', None)
+        self.register_parameter('S', None)
+        self.register_parameter('Vh', None)
+        self.decomposing = None
+
+    def compose_weight_for_inference(self):
+        self.inference_dict[self.forward_mode]()
+        self.inference_mode = True
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        if not self.inference_mode:
+            self.compose_weight_for_inference()
+        if self.forward_mode == 'one_layer':
+            x = self.W[input]
+        if self.forward_mode == 'two_layers':
+            x = self.U[input]
+            x = x @ self.Vh
+        return x
+
+    def _one_layer_forward(self):
+        self.W = Parameter((self.U * self.S) @ self.Vh)
+
+    def _two_layers_forward(self):
+        singular_diag = torch.diag(self.S)
+        if singular_diag.shape[1] != self.Vh.shape[0]:
+            # print('TODEL branch! _two_layers_forward') ###
+            self.Vh = Parameter(self.Vh)
+        self.Vh = Parameter(singular_diag @ self.Vh)
 
     def set_U_S_Vh(self, u: torch.Tensor, s: torch.Tensor, vh: torch.Tensor) -> None:
         """Update U, S, Vh matrices.

@@ -1,6 +1,7 @@
 import torch
 import torch_pruning as tp
 from enum import Enum
+from functools import partial
 
 from fastai.torch_core import _has_mps
 from fastcore.basics import defaults
@@ -22,6 +23,8 @@ from fedcore.metrics.api_metric import calculate_regression_metric, calculate_fo
 
 from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
     HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
+
+from fedot.core.repository.tasks import Task, TaskTypesEnum, TaskParams
 
 
 def default_device(device_type: str = 'CPU'):
@@ -55,7 +58,8 @@ class FedotOperationConstant(Enum):
     FEDOT_TASK = {'classification': Task(TaskTypesEnum.classification),
                   'regression': Task(TaskTypesEnum.regression),
                   'ts_forecasting': Task(TaskTypesEnum.ts_forecasting,
-                                         TsForecastingParams(forecast_length=1))}
+                                         TsForecastingParams(forecast_length=1)),
+    }
 
     FEDCORE_TASK = ['pruning', 'quantisation', 'distilation', 'low_rank', 'evo_composed']
     CV_TASK = ['classification', 'segmentation', 'object_detection']
@@ -151,7 +155,8 @@ class FedotOperationConstant(Enum):
         'post_quantisation': PipelineBuilder().add_node('post_training_quant'),
         'quantisation_aware': PipelineBuilder().add_node('training_aware_quant'),
         'distilation': PipelineBuilder().add_node('distilation_model'),
-        'detection': PipelineBuilder().add_node('detection_model', params={'pretrained': True})
+        'detection': PipelineBuilder().add_node('detection_model', params={'pretrained': True}),
+        'training': PipelineBuilder().add_node('training_model')
     }
 
     FEDOT_ENSEMBLE_ASSUMPTIONS = {}
@@ -296,12 +301,16 @@ class ONNX_CONFIG(Enum):
         'dynamic_axes': {'input': [0], 'output': [0]}
     }
 
+# class ContrastiveLossesEnum(Enum):
+#     CONTRASTIVE_LOSS = partial(ContrastiveLoss, margin=0.5, sampling_strategy=HardNegativePairSelector(neg_count=5))
+#     VICREG_LOSS = partial(VicregLoss, sim_coeff=.33, std_coeff=.33, cov_coeff=.33)
+    
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
 FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
-FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value
+FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value ###
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
@@ -335,6 +344,9 @@ CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
 KL_LOSS = TorchLossesConstant.KL_LOSS.value
+# CONTRASTIVE_LOSS = ContrastiveLossesEnum.CONTRASTIVE_LOSS.value
+# VICREG_LOSS = ContrastiveLossesEnum.VICREG_LOSS.value
+
 # RMSE = TorchLossesConstant.RMSE.value
 # SMAPE = TorchLossesConstant.SMAPE.value
 # TWEEDIE_LOSS = TorchLossesConstant.TWEEDIE_LOSS.value

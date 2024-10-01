@@ -54,6 +54,9 @@ class FedCore(Fedot):
         self.model_params = kwargs.get('model_params', {})
         self.cv_dataset = FEDCORE_CV_DATASET[self.cv_task]
 
+        # # enforced params for adapation
+        # self.enforced = kwargs.get('enforced', None)
+
         # init backend and convertation params
         self.framework_config = kwargs.get('framework_config', None)
         self.backend_method = kwargs.get('backend', 'cpu')
@@ -74,6 +77,9 @@ class FedCore(Fedot):
         else:
             Path(self.output_folder).mkdir(parents=True, exist_ok=True)
             del kwargs['output_folder']
+        ckpt = Path(self.output_folder, 'checkpoints')
+        ckpt.mkdir(parents=True, exist_ok=True)
+        kwargs['common'] = {**kwargs.get('common', {}), 'checkpoint_folder': ckpt}
 
         # init logger
         logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(name)s - %(message)s',
@@ -106,26 +112,32 @@ class FedCore(Fedot):
             self.config_dict['initial_assumption'] = kwargs.get('initial_assumption',
                                                                 FEDOT_ASSUMPTIONS[self.compression_task])
             self.config_dict['initial_assumption'].heads[0].parameters = self.model_params
-        self.__init_experiment_setup()
+        # self.__init_experiment_setup()
 
     def __init_experiment_setup(self):
         self.logger.info('Initialising experiment setup')
         fedcore_params = [param for param in self.config_dict.keys() if param not in list(FEDOT_API_PARAMS.keys())]
         [self.config_dict.pop(x, None) for x in fedcore_params]
 
+    def __add_common_model_params(self):
+        for module in self.config_dict['model_params']:
+            self.config_dict['model_params'][module].update(self.config_dict['common'])
+
     def __init_solver(self):
         self.logger.info('Initialising Industrial Repository')
         self.repo = FedcoreModels().setup_repository()
+        self.__add_common_model_params()
         self.config_dict['initial_assumption'] = self.config_dict['initial_assumption'].build()
         self.logger.info('Initialising solver')
         self.__init_experiment_setup()
-        self.config_dict['problem'] = 'classification'
+        self.config_dict['problem'] = 'classification' # TODO: why reassigning?
         # solver = Fedot(**self.config_dict)
         solver = self.config_dict['initial_assumption']
         return solver
 
     def fit(self,
             input_data: tuple,
+            manually_done: bool = False,
             **kwargs):
         """
         Method for training Industrial model.
@@ -137,13 +149,14 @@ class FedCore(Fedot):
         """
 
         self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
+        self.original_model = input_data[1]
         input_preproc = DataCheck(input_data=self.train_data,
                                   task=self.cv_task)
-        self.train_data = input_preproc.check_input_data()
+        self.train_data = input_preproc.check_input_data(manually_done)
         self.solver = self.__init_solver()
         self.solver.fit(self.train_data)
         self.optimised_model = self.solver.root_node.fitted_operation.optimised_model
-        self.original_model = self.solver.root_node.fitted_operation.model
+        # self.original_model = self.solver.root_node.fitted_operation.model
 
     def predict(self,
                 predict_data: tuple,
@@ -177,7 +190,6 @@ class FedCore(Fedot):
                 mode: str, ``default='full'``. Defines the mode of fine-tuning. Could be 'full' or 'head'.
 
             """
-
         pass
 
     def _metric_evaluation_loop(self,

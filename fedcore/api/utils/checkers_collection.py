@@ -62,8 +62,9 @@ class DataCheck:
                                                        target=torch_model
                                                        )
         return compression_dataset, torch_model
+  
 
-    def _init_input_data(self) -> None:
+    def _init_input_data(self, manually_done=False) -> None:
         """Initializes the `input_data` attribute based on its type.
 
         If a tuple (X, y) is provided, it converts it to a Fedot InputData object
@@ -74,22 +75,25 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
+        if not manually_done:
+            object_detection_scenario = self.task == 'detection'
+            fedcore_scenario = isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData))
+            custom_scenario = 'fedcore' if fedcore_scenario else 'directory'
 
-        object_detection_scenario = self.task == 'detection'
-        fedcore_scenario = isinstance(self.input_data[0], (CompressionInputData, CompressionOutputData))
-        custom_scenario = 'fedcore' if fedcore_scenario else 'directory'
-
-        compression_dataset, torch_model = Either(value='detection',
+            compression_dataset, torch_model = Either(value='detection',
                                                   monoid=[custom_scenario, object_detection_scenario]).either(
             left_function=lambda dataset_type: self._check_directory_dataset(dataset_type),
             right_function=lambda dataset_type: self._check_od_dataset(dataset_type))
+        else:
+            compression_dataset, torch_model = self.input_data
 
         self.input_data = InputData(features=compression_dataset,  # CompressionInputData object
                                     idx=np.arange(1),  # dummy value
                                     features_names=compression_dataset.num_classes,  # CompressionInputData attribute
                                     task=FEDOT_TASK['classification'],  # dummy value
                                     data_type=DataTypesEnum.image,  # dummy value
-                                    target=torch_model  # model for compression
+                                    target=torch_model,  # model for compression
+                                    supplementary_data=compression_dataset.supplementary_data
                                     )
         self.input_data.supplementary_data.is_auto_preprocessed = True
 
@@ -111,7 +115,7 @@ class DataCheck:
         """
         pass
 
-    def check_input_data(self) -> InputData:
+    def check_input_data(self, manually_done=False) -> InputData:
         """Checks and preprocesses the input data for Fedot AutoML.
 
         Performs the following steps:
@@ -123,8 +127,7 @@ class DataCheck:
             InputData: The preprocessed and initialized Fedot InputData object.
 
         """
-
-        self._init_input_data()
+        self._init_input_data(manually_done)
         self._check_input_data_features()
         self._check_input_data_target()
         return self.input_data

@@ -22,7 +22,6 @@ class LoraTrainer:
 
     def _init_model(self, input_data):
         self.model = input_data.target
-        self.model.fc = nn.Sequential(nn.Linear(self.model.fc.in_features, input_data.features.num_classes))
         lora.mark_only_lora_as_trainable(model=self.model, bias=self.lora_strategy)
 
     def fit(self, input_data):

@@ -7,7 +7,7 @@ from torchvision.models.detection.faster_rcnn import fasterrcnn_mobilenet_v3_lar
 from fedcore.algorithm.pruning.pruners import BasePruner
 from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
 from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
-from fedcore.models.backbone.chronos import chronos_small
+# from fedcore.models.backbone.chronos import chronos_small
 from fedcore.models.backbone.mobilenet import MobileNetV3Small, MobileNetV3Large
 from fedcore.models.backbone.resnet import *
 from torchvision.models.efficientnet import efficientnet_b0, efficientnet_b1, efficientnet_b2, \
@@ -19,6 +19,8 @@ from fedcore.models.backbone.segformer import segformer_pretrain
 
 
 class AtomizedModel(Enum):
+    TRAINING_MODELS = {'training_model': BaseNeuralModel}
+
     PRUNER_MODELS = {'pruning_model': BasePruner}
 
     LOW_RANK_MODELS = {'low_rank_model': LowRankModel}
@@ -62,7 +64,7 @@ class AtomizedModel(Enum):
         'densenet161': densenet161,
     }
 
-    CHRONOS_MODELS = {'chronos-t5-small': chronos_small}
+    # CHRONOS_MODELS = {'chronos-t5-small': chronos_small}
 
     PRUNED_RESNET_MODELS = {
         "ResNet18": pruned_resnet18,
@@ -81,19 +83,20 @@ PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
 QUANTISATION_MODELS = AtomizedModel.QUANTISATION_MODELS.value
 DISTILATION_MODELS = AtomizedModel.DISTILATION_MODELS.value
 LOW_RANK_MODELS = AtomizedModel.LOW_RANK_MODELS.value
+TRAINING_MODELS = AtomizedModel.TRAINING_MODELS.value
 
 RESNET_MODELS = AtomizedModel.RESNET_MODELS.value
 DENSENET_MODELS = AtomizedModel.DENSENET_MODELS.value
 EFFICIENTNET_MODELS = AtomizedModel.EFFICIENTNET_MODELS.value
 MOBILENET_MODELS = AtomizedModel.MOBILENET_MODELS.value
-CHRONOS_MODELS = AtomizedModel.CHRONOS_MODELS.value
+# CHRONOS_MODELS = AtomizedModel.CHRONOS_MODELS.value
 SEGFORMER_MODELS = AtomizedModel.SEGFORMER_MODELS.value
 
 BACKBONE_MODELS = {**MOBILENET_MODELS,
                    **EFFICIENTNET_MODELS,
                    **DENSENET_MODELS,
                    **RESNET_MODELS,
-                   **CHRONOS_MODELS,
+                #    **CHRONOS_MODELS,
                    **SEGFORMER_MODELS}
 DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
@@ -106,6 +109,7 @@ def default_fedcore_availiable_operation(problem: str = 'pruning'):
                       'post_quantisation': 'post_training_quant',
                       'distilation': DISTILATION_MODELS.keys(),
                       'low_rank': LOW_RANK_MODELS.keys(),
-                      'detection': DETECTION_MODELS.keys()}
+                      'detection': DETECTION_MODELS.keys(),
+                      'training': TRAINING_MODELS.keys()}
 
     return operation_dict[problem]

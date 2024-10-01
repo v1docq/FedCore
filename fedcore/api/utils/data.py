@@ -7,6 +7,19 @@ from fedot.core.repository.dataset_types import DataTypesEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum
 from sklearn.preprocessing import LabelEncoder
 
+def get_compression_input(model, train_dataloader, calib_dataloader, task='classification', num_classes=None, train_loss=None):
+    input_data = CompressionInputData(
+                features=np.zeros((2, 2)),
+                train_dataloader=train_dataloader,
+                calib_dataloader=calib_dataloader,
+                task=FEDOT_TASK[task],
+                num_classes=num_classes or len(train_dataloader.dataset.classes),
+                target=model
+    )
+    input_data.supplementary_data.is_auto_preprocessed = True
+    input_data.supplementary_data.col_type_ids = {'loss': train_loss}
+    return input_data
+
 
 def check_multivariate_data(data: pd.DataFrame) -> tuple:
     """
