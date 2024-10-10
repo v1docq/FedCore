@@ -1,3 +1,4 @@
+import time
 from typing import List, Type, Union, Dict
 from typing import Dict, List, Optional, Type, Union
 
@@ -438,10 +439,18 @@ class DecomposedConv2d(Conv2d):
         if not self.inference_mode:
             self.compose_weight_for_inference()
         if self.forward_mode == 'one_layer':
-            return self._conv_forward(input, self.weight, self.bias)
+            # tic1 = time.time()
+            x = self._conv_forward(input, self.weight, self.bias)
+            # tic2 = time.time()
+            # tickrate = tic2 - tic1
+            return x
         if self.forward_mode == 'two_layers':
+            #tic1 = time.time()
             x = conv2d(input=input, weight=self.Vh, groups=self.groups, **self.decomposing['Vh'])
-            return conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+            x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+            # tic2 = time.time()
+            # tickrate = tic2 - tic1
+            return x
         if self.forward_mode == 'three_layers':
             x = conv2d(input=input, weight=self.Vh, groups=self.groups, **self.decomposing['Vh'])
             x = conv2d(input=x, weight=self.S, padding=0)

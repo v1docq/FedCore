@@ -9,8 +9,8 @@ import torch.nn
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from torch import Tensor
-
 from fedcore.api.utils.checkers_collection import DataCheck
+from fedcore.architecture.abstraction.decorators import DaskServer
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.architecture.utils.paths import DEFAULT_PATH_RESULTS as default_path_to_save_results
 import numpy as np
@@ -97,16 +97,18 @@ class FedCore(Fedot):
         self.config_dict = kwargs
         self.config_dict['history_dir'] = prefix
         self.config_dict['available_operations'] = kwargs.get('available_operations',
-                                                              default_fedcore_availiable_operation(
-                                                                  self.compression_task))
+                                                              list(default_fedcore_availiable_operation(
+                                                                  self.compression_task)))
 
         self.config_dict['optimizer'] = kwargs.get('optimizer', FedcoreEvoOptimizer)
-
+        self.config_dict['use_input_preprocessing'] = False
+        self.config_dict['use_auto_preprocessing'] = False
+        self.config_dict['use_pipelines_cache'] = False
         if self.compression_task.__contains__('composite'):
             composite_pipeline = PipelineBuilder()
             for node in self.config_dict['initial_assumption']:
                 node_params = self.model_params[node]
-                composite_pipeline.add_node(operation_type=node,params=node_params)
+                composite_pipeline.add_node(operation_type=node, params=node_params)
             self.config_dict['initial_assumption'] = composite_pipeline
         else:
             self.config_dict['initial_assumption'] = kwargs.get('initial_assumption',
@@ -120,19 +122,23 @@ class FedCore(Fedot):
         [self.config_dict.pop(x, None) for x in fedcore_params]
 
     def __add_common_model_params(self):
-        for module in self.config_dict['model_params']:
-            self.config_dict['model_params'][module].update(self.config_dict['common'])
+        if len(self.config_dict['common']) != 1:
+            for module in self.config_dict['model_params']:
+                self.config_dict['model_params'][module].update(self.config_dict['common'])
 
     def __init_solver(self):
-        self.logger.info('Initialising Industrial Repository')
+        self.logger.info('Initialising FedCore Repository')
         self.repo = FedcoreModels().setup_repository()
         self.__add_common_model_params()
         self.config_dict['initial_assumption'] = self.config_dict['initial_assumption'].build()
         self.logger.info('Initialising solver')
         self.__init_experiment_setup()
-        self.config_dict['problem'] = 'classification' # TODO: why reassigning?
-        # solver = Fedot(**self.config_dict)
-        solver = self.config_dict['initial_assumption']
+        self.config_dict['problem'] = 'classification'
+        self.dask_client = DaskServer().client
+        self.logger.info(f'LinK Dask Server - {self.dask_client.dashboard_link}')
+        self.logger.info(f'-------------------------------------------------')
+        # TODO: why reassigning?
+        solver = Fedot(**self.config_dict)
         return solver
 
     def fit(self,
@@ -154,6 +160,9 @@ class FedCore(Fedot):
                                   task=self.cv_task)
         self.train_data = input_preproc.check_input_data(manually_done)
         self.solver = self.__init_solver()
+        fedcore_training = FEDOT_ASSUMPTIONS['training'].build()
+        pretrained_model = fedcore_training.fit(self.train_data)
+        self.train_data.target = pretrained_model.predict
         self.solver.fit(self.train_data)
         self.optimised_model = self.solver.root_node.fitted_operation.optimised_model
         # self.original_model = self.solver.root_node.fitted_operation.model

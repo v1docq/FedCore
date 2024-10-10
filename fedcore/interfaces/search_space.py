@@ -6,13 +6,13 @@ from fedcore.repository.constanst_repository import PRUNING_IMPORTANCE, \
 fedcore_search_space = {
     'pruning_model':
         {
-            # 'window_size_method': {'hyperopt-dist': hp.choice,
-            #                     'sampling-scope': [list(PRUNING_IMPORTANCE.keys())]},
             'importance': {'hyperopt-dist': hp.choice,
                            'sampling-scope': [['MagnitudeImportance',
                                                'BNScaleImportance',
                                                'GroupNormImportance',
                                                'GroupTaylorImportance',
+                                               "TaylorImportance",
+                                               "HessianImportance"
                                                ]],
                            'type': 'categorical'},
             'importance_norm': {'hyperopt-dist': hp.choice,
@@ -30,7 +30,7 @@ fedcore_search_space = {
                 'type': 'continuous'},
             'pruning_iterations': {
                 'hyperopt-dist': hp.choice,
-                'sampling-scope': [[x for x in range(5, 20, 5)]],
+                'sampling-scope': [[x for x in range(1, 5, 1)]],
                 'type': 'categorical'}}
 }
 

@@ -1,3 +1,10 @@
+import ssl
+from enum import Enum
+
+import dask
+import distributed.dashboard.components.scheduler as dashboard
+from distributed import Client, LocalCluster
+from distributed.security import Security
 from weakref import WeakValueDictionary
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
@@ -5,6 +12,8 @@ from fedcore.architecture.preprocessing.data_convertor import CustomDatasetCLF, 
     TensorConverter
 from fedcore.architecture.settings.computational import backend_methods as np
 
+
+# from dask.distributed import LocalCluster, Client
 
 def fedot_data_type(func):
     def decorated_func(self, *args):
@@ -108,13 +117,32 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-# class DaskServer(metaclass=Singleton):
-#     def __init__(self):
-#         print('Creating Dask Server')
-#         cluster = LocalCluster(processes=False,
-#                                # n_workers=4,
-#                                # threads_per_worker=4,
-#                                # memory_limit='3GB'
-#                                )
-#         # connect client to your cluster
-#         self.client = Client(cluster)
+class DaskServer(metaclass=Singleton):
+    def __init__(self):
+        self._overload_dask_config()
+        print('Creating Dask Server')
+        cluster = LocalCluster(processes=False,
+                               security=self.sec
+                               )
+        # connect client to your cluster
+        self.client = Client(cluster)
+
+    def _overload_dask_config(self):
+        self.sec = Security(tls_max_version=ssl.TLSVersion.TLSv1_3,
+                            tls_min_version=ssl.TLSVersion.TLSv1_2)
+        dask.config.set({"distributed.scheduler.idle-timeout": '5 minutes'})
+        # Shut down the scheduler after this duration if no activity has occurred
+        dask.config.set({"distributed.scheduler.no-workers-timeout": '5 minutes'})
+        # Timeout for tasks in an unrunnable state. If task remains unrunnable for longer than this, it fails.
+        # A task is considered unrunnable IFF it has no pending dependencies,
+        # and the task has restrictions that are not satisfied by any available worker
+        # or no workers are running at all. In adaptive clusters,
+        # this timeout must be set to be safely higher than the time it takes for workers to spin up.
+        dask.config.set({"distributed.worker.lifetime.duration": '1 hour'})
+        # The time after creation to close the worker, like "1 hour"
+        setattr(dashboard, 'BOKEH_THEME', 'night_sky')
+        # 'caliber'
+        # 'light_minimal'
+        # 'dark_minimal'
+        # 'night_sky'
+        # 'contrast'

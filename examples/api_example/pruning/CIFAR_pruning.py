@@ -3,19 +3,19 @@ from fedcore.api.utils.evaluation import evaluate_original_model, evaluate_optim
 
 experiment_setup = {'compression_task': 'pruning',
                     'cv_task': 'classification',
-                    'model_params': dict(epochs=10,
+                    'metric': ['accuracy', 'latency', 'throughput'],
+                    'timeout': 200,
+                    'model_params': dict(epochs=1,
                                          pruning_iterations=1,
                                          learning_rate=0.001,
                                          importance='MagnitudeImportance',
                                          pruner_name='magnitude_pruner',
                                          importance_norm=1,
-                                         pruning_ratio=0.5,
-                                         finetune_params={'epochs': 3,
+                                         pruning_ratio=0.7,
+                                         finetune_params={'epochs': 1,
                                                           'custom_loss': None}
                                          )
                     }
-
-
 
 if __name__ == "__main__":
     dataset = 'CIFAR10'

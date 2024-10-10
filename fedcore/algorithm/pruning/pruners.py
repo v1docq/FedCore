@@ -32,7 +32,7 @@ class BasePruner(BaseCompressionModel):
         if self.ft_params is None:
             self.ft_params = {}
             self.ft_params['custom_loss'] = None
-            self.ft_params['epochs'] = round(self.epochs / 2)
+            self.ft_params['epochs'] = round(self.epochs / 3)
         self.criterion = params.get('loss', nn.CrossEntropyLoss())
         self.optimizer = params.get('optimizer', optim.Adam)
         self.learning_rate = params.get('lr', 0.001)
@@ -43,7 +43,7 @@ class BasePruner(BaseCompressionModel):
 
         # pruning params
         self.pruner_name = params.get('pruner_name', 'meta_pruner')
-        self.importance = params.get('importance', 'MagnitudeImportance')
+        self.importance_name = params.get('importance', 'MagnitudeImportance')
 
         # pruning hyperparams
         self.pruning_ratio = params.get('pruning_ratio', 0.5)
@@ -53,7 +53,7 @@ class BasePruner(BaseCompressionModel):
         self.importance_normalize = params.get('importance_normalize', 'mean')
 
         # importance criterion for parameter selections
-        self.importance = PRUNING_IMPORTANCE[self.importance](group_reduction=self.importance_reduction,
+        self.importance = PRUNING_IMPORTANCE[self.importance_name](group_reduction=self.importance_reduction,
                                                               normalizer=self.importance_normalize)
         self.trainer = BaseNeuralModel(params)
 
@@ -64,8 +64,10 @@ class BasePruner(BaseCompressionModel):
         print("==============Prepare original model for pruning=================")
         self.model = input_data.target
         self.trainer.model = self.model
-
-        print("==============Initialisation of pruning agent=================")
+        print(f"==============Initialisation of {self.pruner_name} pruning agent=================")
+        print(f"==============Pruning importance - {self.importance_name} =================")
+        print(f"==============Pruning ratio -  {self.pruning_ratio} =================")
+        print(f"==============Pruning importance norm -  {self.importance_norm} =================")
         # Pruner initialization
         self.pruner = PRUNERS[self.pruner_name]
         # list of tensors with dim size n_samples x n_channel x height x width
@@ -142,7 +144,10 @@ class BasePruner(BaseCompressionModel):
     def fit(self,
             input_data: InputData):
         self._init_model(input_data)
-        self.model = self.trainer.fit(input_data)
+        if input_data.target.training:
+            self.model = input_data.target
+        else:
+            self.model = self.trainer.fit(input_data)
         self.optimised_model = deepcopy(self.model)
         self.compress(input_data=input_data)
         return self.optimised_model

@@ -21,8 +21,10 @@ from fedcore.repository.constanst_repository import default_device
 from pathlib import Path
 from datetime import datetime
 
+
 def now_for_file():
     return datetime.now().strftime('%m-%d-%Y_%H-%M-%S')
+
 
 class BaseNeuralModel:
     """Class responsible for NN model implementation.
@@ -48,30 +50,27 @@ class BaseNeuralModel:
 
     def __init__(self, params: Optional[OperationParameters] = None):
         self.params = params or {}
-        self.epochs = self.params.get('epochs', 30)
+        self.epochs = self.params.get('epochs', 1)
         self.batch_size = self.params.get('batch_size', 16)
         self.learning_rate = self.params.get('learning_rate', 0.001)
-        self.custom_loss = self.params.get('custom_loss', None) # loss which evaluates model structure
+        self.custom_loss = self.params.get('custom_loss', None)  # loss which evaluates model structure
         self.enforced_training_loss = self.params.get('enforced_training_loss', None)
         self.device = default_device()
-        self.is_operation = self.params.get('is_operation', False) ###
+        self.is_operation = self.params.get('is_operation', False)  ###
         self.save_each = self.params.get('save_each', None)
-        self.checkpoint_folder = self.params.get('checkpoint_folder', None) ###
+        self.checkpoint_folder = self.params.get('checkpoint_folder', None)  ###
         self._batch_handler = self.params.get('batch_hadler', lambda x: x)
-
         self.label_encoder = None
         self.is_regression_task = False
         self.model = None
         self.target = None
         self.task_type = None
 
-
     def __check_and_substitute_loss(self, train_data: InputData):
-        if (train_data.supplementary_data.col_type_ids is not None and 
-            'loss' in train_data.supplementary_data.col_type_ids):
+        if (train_data.supplementary_data.col_type_ids is not None and
+                'loss' in train_data.supplementary_data.col_type_ids):
             self.loss_fn = train_data.supplementary_data.col_type_ids['loss']()
             print('Forcely substituted loss to', self.loss_fn)
-
 
     def fit(self, input_data: InputData,
             supplementary_data: dict = None):
@@ -140,8 +139,9 @@ class BaseNeuralModel:
                 self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
             if self._check_saving(epoch):
                 torch.save(self.model, Path(self.checkpoint_folder, f'model_train{now_for_file()}_{epoch}.pth'))
-            
+
         # callback.callbacks.on_train_end()
+
     def _check_saving(self, epoch) -> bool:
         if not self.save_each:
             return False
@@ -149,7 +149,6 @@ class BaseNeuralModel:
             return not epoch % self.save_each
         else:
             return epoch == self.epochs
-
 
     def _default_train(self,
                        train_loader,

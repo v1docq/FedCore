@@ -4,6 +4,7 @@ from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, 
 from fedot.core.composer.metrics import (Accuracy, ComplexityMetric, F1, Logloss, MAE, MAPE, MSE,
                                          MSLE, Precision, QualityMetric, R2, RMSE, ROCAUC, SMAPE)
 from typing import Union
+
 from fedcore.metrics.cv_metrics import LastLayer, IntermediateFeatures, IntermediateAttention, Latency, Throughput, \
     CV_quality_metric
 from fedcore.repository.constanst_repository import DistilationMetricsEnum, InferenceMetricsEnum, CVMetricsEnum
@@ -51,3 +52,4 @@ class MetricsRepository:
     @staticmethod
     def get_metric_class(metric_name: MetricsEnum) -> Union[QualityMetric, ComplexityMetric]:
         return MetricsRepository._metrics_classes[metric_name]
+

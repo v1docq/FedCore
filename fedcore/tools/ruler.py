@@ -25,7 +25,7 @@ class PerformanceEvaluator:
         self.preload_batches = [i[0] for i in self.data_loader]
         self.device = device
         self.model.to(device)
-
+        self.batch_to_eval = batch_size
         # Measured performance metrics
         self.latency = None
         self.throughput = None
@@ -41,32 +41,53 @@ class PerformanceEvaluator:
         self.report()
         return result
 
-    def measure_latency_throughput(self, reps: int = 5, batches: int = 10):
-        timings_lat = np.zeros((reps, 1))
-        timings_thr = np.zeros((batches, 1))
-        total_data_size = 0
-        data_batches = self.preload_batches[:batches]
-        if torch.cuda.is_available():
-            self.warm_up_cuda()
-        with torch.no_grad():
-            with tqdm(total=reps, desc='Measuring latency and throughput', unit='rep') as pbar:
-                for rep in range(reps):
-                    for idx, inputs in enumerate(data_batches):
-                        start_time = time.time()
-                        _ = self.model(inputs.to(self.device))
-                        end_time = time.time()
-                        total_data_size += inputs.size(0)
-                        if torch.cuda.is_available():
-                            torch.cuda.synchronize()
-                        eval_time = 1000*(end_time - start_time) / inputs.size(0)
-                        timings_lat[rep] = eval_time
-                        timings_thr[idx] = eval_time
-                        break
-                    pbar.update(1)
-        total_time = round(np.mean(timings_thr) / batches, 5)
+    @torch.no_grad()
+    def throughput_eval(self, num_iterations=30):
+        self.model.eval()
+        thr_list = []
+        for batch in tqdm(self.preload_batches[:self.batch_to_eval]):
+            images = batch.cuda(non_blocking=True)
+            batch_size = images.shape[0]
+            for i in range(50):
+                self.model(images)
+            torch.cuda.synchronize()
+            tic1 = time.time()
+            for i in range(num_iterations):
+                self.model(images)
+            torch.cuda.synchronize()
+            tic2 = time.time()
+            thr_list.append(num_iterations * batch_size / (tic2 - tic1))
+        return thr_list
 
-        self.latency = round(np.mean(timings_lat) / reps, 5)
-        self.throughput = round(total_data_size / total_time, 0)
+    @torch.no_grad()
+    def latency_eval(self):
+        self.model.eval()
+        lat_list = []
+        dataset = self.data_loader.dataset
+        dataset.data = dataset.data[:self.batch_to_eval, :, :, :]
+        data_loader = DataLoader(dataset, batch_size=1, shuffle=False)
+        for idx, (images, _) in tqdm(enumerate(data_loader)):
+            images = images.cuda(non_blocking=True)
+            tic1 = time.time()
+            self.model(images)
+            torch.cuda.synchronize()
+            tic2 = time.time()
+            lat_list.append((tic2 - tic1))
+        return lat_list
+
+    def measure_latency_throughput(self, reps: int = 3, batches: int = 10):
+        timings_lat = []
+        timings_thr = []
+
+        with tqdm(total=reps, desc='Measuring latency and throughput', unit='rep') as pbar:
+            for rep in range(reps):
+                timings_thr.append(self.throughput_eval())
+                timings_lat.append(self.latency_eval())
+                pbar.update(1)
+
+        latency = np.array([[np.mean(x),np.std(x)] for x in timings_lat])
+        throughput = np.array([[np.mean(x),np.std(x)] for x in timings_thr])
+        self.latency, self.throughput = np.mean(latency,axis=0), np.mean(throughput,axis=0)
         return self.latency, self.throughput
 
     def measure_model_size(self):

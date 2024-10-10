@@ -12,7 +12,6 @@ from fedcore.repository.constanst_repository import default_device
 from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DISTILATION_MODELS, LOW_RANK_MODELS, \
     DETECTION_MODELS, TRAINING_MODELS
 
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 
 class FedCoreStrategy(EvaluationStrategy):
     def _convert_to_output(self, prediction, predict_data: InputData,
@@ -50,10 +49,17 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
     _operations_by_types = TRAINING_MODELS
 
     def fit(self, train_data: InputData):
-        self.model = train_data.features.target
-        self.operation_impl.fit(train_data)
+        self.original_model = train_data.features.target
+        self.trained_model = self.operation_impl.fit(train_data)
         return self.operation_impl
 
+    def predict(self, trained_operation, predict_data: InputData, output_mode: str = 'default') -> OutputData:
+        converted = self._convert_to_output(trained_operation.model, predict_data)
+        return converted
+
+    def predict_for_fit(self, trained_operation, predict_data: InputData, output_mode: str = 'default') -> OutputData:
+        converted = self._convert_to_output(trained_operation.model, predict_data)
+        return converted
 
 class FedcoreLowRankStrategy(FedCoreStrategy):
     _operations_by_types = LOW_RANK_MODELS

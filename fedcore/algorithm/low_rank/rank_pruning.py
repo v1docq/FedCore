@@ -3,8 +3,9 @@ from fedcore.models.network_impl.layers import DecomposedConv2d
 from joblib import cpu_count
 from math import floor
 
-def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
-                           strategy: str = 'constant', module_name: str ='conv') -> None:
+
+def rank_threshold_pruning(decomposed_module: DecomposedConv2d, threshold: float = 0.95,
+                           strategy: str = 'constant', module_name: str = 'conv') -> None:
     """Prune the weight matrices to the threshold (in-place).
     Args:
         conv: The optimizable layer.
@@ -14,9 +15,9 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
     """
     assert 0 < threshold <= 1, "energy_threshold must be in the range (0, 1]"
     n_cpu = cpu_count()
-    S, indices = conv.S.sort()
-    U = conv.U[:, indices]
-    Vh = conv.Vh[indices, :]
+    S, indices = decomposed_module.S.sort()
+    U = decomposed_module.U[:, indices]
+    Vh = decomposed_module.Vh[indices, :]
     if strategy.__contains__('energy'):
         sum = (S ** 2).sum()
         threshold = threshold * sum
@@ -32,7 +33,7 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
         explained_dispersion = 0
         for index, comp in enumerate(n_components):
             explained_dispersion += comp
-            if explained_dispersion > threshold*100:
+            if explained_dispersion > threshold * 100:
                 n_components = index
                 break
     elif strategy.__contains__('median'):
@@ -40,9 +41,10 @@ def rank_threshold_pruning(conv: DecomposedConv2d, threshold: float = 0.95,
         sv_threshold = 2.31 * median_sv
         n_components = max(torch.sum(S >= sv_threshold).cpu().detach().numpy().min(), 1)
         n_components = indices.cpu().detach().numpy().max() - n_components
-    channels_per_device = floor(n_components/n_cpu)
+    channels_per_device = floor(n_components / n_cpu)
     n_components = channels_per_device * n_cpu
-    conv.set_U_S_Vh(U[:, n_components:].clone(),
+    decomposed_module.set_U_S_Vh(U[:, n_components:].clone(),
                     S[n_components:].clone(),
                     Vh[n_components:, :].clone())
-    print('After rank pruning left only {} % of {} layer params'.format(100 * n_components / len(indices), module_name))
+    print('After rank pruning left only {} % of {} layer params'.format(
+        100 * (1 - n_components / len(indices)), module_name))

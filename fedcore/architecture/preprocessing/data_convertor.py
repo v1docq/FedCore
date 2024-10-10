@@ -16,7 +16,7 @@ from sklearn.preprocessing import LabelEncoder
 from fedcore.api.utils.data import check_multivariate_data
 from fedcore.architecture.settings.computational import backend_methods as np
 from fedcore.architecture.settings.computational import default_device
-from fedcore.repository.constanst_repository import MATRIX, MULTI_ARRAY
+
 
 
 class CustomDatasetTS:
@@ -112,14 +112,12 @@ class FedotConverter:
                                        features.values.tolist()).astype(float),
                                    target=target.astype(
                                        float).reshape(-1, 1),
-                                   task=task_dict[task],
-                                   data_type=MULTI_ARRAY)
+                                   task=task_dict[task])
         else:
             input_data = InputData(idx=np.arange(len(features)),
                                    features=features.values,
                                    target=np.ravel(target).reshape(-1, 1),
-                                   task=task_dict[task],
-                                   data_type=MATRIX)
+                                   task=task_dict[task])
         return input_data
 
     def convert_to_output_data(self,

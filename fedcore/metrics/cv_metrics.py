@@ -80,7 +80,7 @@ class Throughput(CompressionMetric):
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
-        return evaluator.measure_throughput()
+        return evaluator.throughput_eval()
 
 
 class Latency(CompressionMetric):
@@ -89,7 +89,7 @@ class Latency(CompressionMetric):
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
-        return evaluator.measure_latency()
+        return evaluator.latency_eval()
 
 
 class CV_quality_metric(CompressionMetric):

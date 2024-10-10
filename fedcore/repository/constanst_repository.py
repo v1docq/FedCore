@@ -1,8 +1,14 @@
 import torch
 import torch_pruning as tp
 from enum import Enum
-from functools import partial
-
+from golem.core.dag.verification_rules import (
+    has_no_cycle,
+    has_no_isolated_nodes,
+    has_one_root
+)
+from fedot.core.pipelines.verification_rules import has_final_operation_as_model, \
+    has_correct_data_connections, has_primary_nodes, has_no_conflicts_with_data_flow,\
+    has_no_conflicts_during_multitask, has_correct_data_sources
 from fastai.torch_core import _has_mps
 from fastcore.basics import defaults
 from golem.core.optimisers.genetic.operators.inheritance import GeneticSchemeTypesEnum
@@ -59,7 +65,7 @@ class FedotOperationConstant(Enum):
                   'regression': Task(TaskTypesEnum.regression),
                   'ts_forecasting': Task(TaskTypesEnum.ts_forecasting,
                                          TsForecastingParams(forecast_length=1)),
-    }
+                  }
 
     FEDCORE_TASK = ['pruning', 'quantisation', 'distilation', 'low_rank', 'evo_composed']
     CV_TASK = ['classification', 'segmentation', 'object_detection']
@@ -74,7 +80,10 @@ class FedotOperationConstant(Enum):
                          'classification': calculate_classification_metric,
                          'computational': calculate_computational_metric
                          }
-
+    FEDOT_MUTATION_STRATEGY = {
+        'params_mutation_strategy': [0.8, 0.2],
+        'growth_mutation_strategy': [0.3, 0.7]
+    }
     EXCLUDED_OPERATION_MUTATION = {
         'regression': [
             'one_hot_encoding',
@@ -148,6 +157,18 @@ class FedotOperationConstant(Enum):
     AVAILABLE_CLS_OPERATIONS = []
 
     AVAILABLE_REG_OPERATIONS = []
+
+    FEDCORE_GRAPH_VALIDATION = [
+        has_one_root,  # model have root node and it is a GraphNode
+        has_no_cycle,  # model dont contain cycle (lead to infinity eval loop)
+        has_no_isolated_nodes,  # model dont have isolated operation (impossible to get final predict)
+        has_primary_nodes,# model must contain primary node (root of computational tree)
+        #has_final_operation_as_model,
+        #has_no_conflicts_with_data_flow,
+        #has_correct_data_connections,
+        #has_no_conflicts_during_multitask,
+        #has_correct_data_sources
+    ]
 
     FEDOT_ASSUMPTIONS = {
         'pruning': PipelineBuilder().add_node('pruning_model'),
@@ -301,16 +322,17 @@ class ONNX_CONFIG(Enum):
         'dynamic_axes': {'input': [0], 'output': [0]}
     }
 
+
 # class ContrastiveLossesEnum(Enum):
 #     CONTRASTIVE_LOSS = partial(ContrastiveLoss, margin=0.5, sampling_strategy=HardNegativePairSelector(neg_count=5))
 #     VICREG_LOSS = partial(VicregLoss, sim_coeff=.33, std_coeff=.33, cov_coeff=.33)
-    
+
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
 FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
-FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value ###
+FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value  ###
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
@@ -320,6 +342,8 @@ FEDOT_GET_METRICS = FedotOperationConstant.FEDOT_GET_METRICS.value
 FEDCORE_TASK = FedotOperationConstant.FEDCORE_TASK.value
 CV_TASK = FedotOperationConstant.CV_TASK.value
 FEDCORE_CV_DATASET = FedotOperationConstant.FEDCORE_CV_DATASET.value
+FEDCORE_MUTATION_STRATEGY = FedotOperationConstant.FEDOT_MUTATION_STRATEGY.value
+FEDCORE_GRAPH_VALIDATION = FedotOperationConstant.FEDCORE_GRAPH_VALIDATION.value
 
 ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value

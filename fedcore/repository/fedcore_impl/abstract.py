@@ -1,12 +1,16 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, Sequence
 
 import torch
 from fedot.core.data.data import InputData
 from fedot.core.data.multi_modal import MultiModalData
 from fedot.core.operations.operation_parameters import OperationParameters
+from fedot.core.repository.tasks import TaskTypesEnum
+from golem.core.optimisers.genetic.operators.base_mutations import MutationTypesEnum
 from golem.utilities.memory import MemoryAnalytics
 from torch_pruning.ops import TORCH_CONV, TORCH_LINEAR
+
+from fedcore.repository.fedcore_impl.optimisation import FedcoreMutations
 
 
 class TaskCompression(Enum):
@@ -149,3 +153,17 @@ def merge_fedcore_predicts(self, predicts):
     element_match = all(element_wise_concat)
     sample_match = all(sample_wise_concat)
     return sample_match
+
+
+def _get_default_fedcore_mutations(
+        task_type: TaskTypesEnum,
+        params) -> Sequence[MutationTypesEnum]:
+    ind_mutations = FedcoreMutations(task_type=task_type)
+    mutations = [
+        ind_mutations.parameter_change_mutation,
+        ind_mutations.single_change,
+        #ind_mutations.single_drop,
+        #ind_mutations.single_add
+
+    ]
+    return mutations
