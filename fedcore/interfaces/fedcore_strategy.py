@@ -12,6 +12,7 @@ from fedcore.repository.constanst_repository import default_device
 from fedcore.repository.model_repository import PRUNER_MODELS, QUANTISATION_MODELS, DISTILATION_MODELS, LOW_RANK_MODELS, \
     DETECTION_MODELS, TRAINING_MODELS
 
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 
 class FedCoreStrategy(EvaluationStrategy):
     def _convert_to_output(self, prediction, predict_data: InputData,

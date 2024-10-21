@@ -81,7 +81,7 @@ class LowRankModel:
             if len(list(module.children())) > 0:
                 self._prune_weight_rank(module, thr)
             if isinstance(module, (DecomposedConv2d, DecomposedLinear, DecomposedEmbedding)): ### maybe some IDecomposable?
-                rank_threshold_pruning(decomposed_module=module,
+                rank_threshold_pruning(conv=module,
                                        threshold=thr,
                                        strategy=self.strategy,
                                        module_name=name)
@@ -91,6 +91,7 @@ class LowRankModel:
             if len(list(module.children())) > 0:
                 self._prepare_model_for_inference(module)
             if isinstance(module, (DecomposedConv2d, DecomposedLinear, DecomposedEmbedding)):
+                module.inference_mode = True
                 module.compose_weight_for_inference()
 
     def compress(

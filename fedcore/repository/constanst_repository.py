@@ -323,16 +323,11 @@ class ONNX_CONFIG(Enum):
     }
 
 
-# class ContrastiveLossesEnum(Enum):
-#     CONTRASTIVE_LOSS = partial(ContrastiveLoss, margin=0.5, sampling_strategy=HardNegativePairSelector(neg_count=5))
-#     VICREG_LOSS = partial(VicregLoss, sim_coeff=.33, std_coeff=.33, cov_coeff=.33)
-
-
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
 FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
-FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value  ###
+FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value ###
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value

@@ -56,10 +56,11 @@ class BaseNeuralModel:
         self.custom_loss = self.params.get('custom_loss', None)  # loss which evaluates model structure
         self.enforced_training_loss = self.params.get('enforced_training_loss', None)
         self.device = default_device()
-        self.is_operation = self.params.get('is_operation', False)  ###
+        self.is_operation = self.params.get('is_operation', False) ###
         self.save_each = self.params.get('save_each', None)
-        self.checkpoint_folder = self.params.get('checkpoint_folder', None)  ###
+        self.checkpoint_folder = self.params.get('checkpoint_folder', None) ###
         self._batch_handler = self.params.get('batch_hadler', lambda x: x)
+
         self.label_encoder = None
         self.is_regression_task = False
         self.model = None
