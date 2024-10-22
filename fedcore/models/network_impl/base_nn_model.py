@@ -1,7 +1,3 @@
-from datetime import datetime
-from functools import reduce
-from operator import iadd
-from pathlib import Path
 from typing import Optional, Callable
 
 import numpy as np
@@ -13,10 +9,15 @@ from fedot.core.repository.dataset_types import DataTypesEnum
 from pymonad.either import Either
 from torch import Tensor
 from tqdm import tqdm
+from functools import reduce
+from operator import iadd
 
 from fedcore.data.data import CompressionInputData
 from fedcore.losses.utils import _get_loss_metric
 from fedcore.repository.constanst_repository import default_device
+
+from pathlib import Path
+from datetime import datetime
 
 
 def now_for_file():

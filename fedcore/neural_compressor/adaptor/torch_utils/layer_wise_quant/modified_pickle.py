@@ -106,9 +106,11 @@ class PickleError(Exception):
     """A common base class for the other pickling exceptions."""
 
 
+
 class PicklingError(PickleError):
     """This exception is raised when an unpicklable object is passed to the
     dump() method."""
+
 
 
 class UnpicklingError(PickleError):
@@ -119,6 +121,7 @@ class UnpicklingError(PickleError):
     (but not necessarily limited to) AttributeError, EOFError, ImportError,
     and IndexError.
     """
+
 
 
 # An instance of _Stop is raised by Unpickler.load_stop() in response to

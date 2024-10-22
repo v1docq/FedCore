@@ -23,7 +23,10 @@ from tensorflow.python.framework import dtypes
 from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
     QuantizeGraphHelper as helper,
 )
-from fedcore.neural_compressor.adaptor.tf_utils.util import version1_lt_version2
+from fedcore.neural_compressor.adaptor.tf_utils.util import (
+    version1_lt_version2,
+)
+
 from ..quantize_graph_base import QuantizeNodeBase
 
 

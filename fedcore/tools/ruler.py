@@ -8,7 +8,10 @@ from tqdm import tqdm
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.metrics.metric_impl import MetricCounter, ObjectDetectionMetricCounter
+from fedcore.metrics.metric_impl import (
+    MetricCounter,
+    ObjectDetectionMetricCounter,
+)
 
 
 class PerformanceEvaluator:

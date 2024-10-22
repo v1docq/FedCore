@@ -8,7 +8,7 @@ from torch import optim, nn
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.neural_compressor import QuantizationAwareTrainingConfig
+from fedcore.neural_compressor.config import QuantizationAwareTrainingConfig
 from fedcore.neural_compressor.training import prepare_compression
 
 

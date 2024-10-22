@@ -1,26 +1,27 @@
+from typing import Sequence
 import logging
 import pathlib
 import timeit
 from datetime import datetime
 from typing import Optional, Tuple
-from typing import Sequence
 
-from golem.core.log import Log
 from golem.core.optimisers.adaptive.operator_agent import RandomAgent
-from golem.core.optimisers.genetic.evaluation import MultiprocessingDispatcher
 from golem.core.optimisers.genetic.gp_optimizer import EvoGraphOptimizer
 from golem.core.optimisers.genetic.gp_params import GPAlgorithmParameters
+from golem.core.optimisers.graph import OptGraph
+from golem.core.optimisers.objective import Objective
+from golem.core.optimisers.optimization_parameters import GraphRequirements
+from golem.core.optimisers.optimizer import GraphGenerationParams
+from golem.core.optimisers.populational_optimizer import _try_unfit_graph
+from golem.core.optimisers.genetic.evaluation import MultiprocessingDispatcher
+from golem.core.log import Log
 from golem.core.optimisers.genetic.operators.operator import (
     EvaluationOperator,
     PopulationT,
 )
 from golem.core.optimisers.graph import OptGraph
-from golem.core.optimisers.objective import Objective
 from golem.core.optimisers.objective import ObjectiveFunction
 from golem.core.optimisers.opt_history_objects.individual import GraphEvalResult
-from golem.core.optimisers.optimization_parameters import GraphRequirements
-from golem.core.optimisers.optimizer import GraphGenerationParams
-from golem.core.optimisers.populational_optimizer import _try_unfit_graph
 from golem.core.optimisers.timer import Timer
 from golem.utilities.memory import MemoryAnalytics
 from golem.utilities.utilities import determine_n_jobs

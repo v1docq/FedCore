@@ -15,17 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Built-in datasets class for multiple framework backends."""
-import glob
-from os.path import dirname, basename, isfile, join
 
-from fedcore.neural_compressor.data.datasets.coco_dataset import COCORecordDataset
-from fedcore.neural_compressor.data.datasets.dataset import (
+from .coco_dataset import COCORecordDataset
+from .dataset import (
     Datasets,
     Dataset,
     IterableDataset,
     dataset_registry,
     TensorflowImageRecord,
 )
+from os.path import dirname, basename, isfile, join
+import glob
 
 modules = glob.glob(join(dirname(__file__), "*.py"))
 

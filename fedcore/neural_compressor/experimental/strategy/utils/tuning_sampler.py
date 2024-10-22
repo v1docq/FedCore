@@ -25,7 +25,11 @@ from typing import Any, Dict, List
 from deprecated import deprecated
 
 from ....utils import logger
-from .tuning_space import TuningSpace, pattern_to_internal, quant_mode_from_pattern
+from .tuning_space import (
+    TuningSpace,
+    pattern_to_internal,
+    quant_mode_from_pattern,
+)
 from .tuning_structs import OpTuningConfig
 
 TUNING_ITEM_PRIORITY = [

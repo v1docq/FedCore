@@ -86,7 +86,7 @@ class StyleTransferDataset(Dataset):
         style_image = Image.open(style_image)
         width, height = style_image.size
         crop_ratio = self.crop_ratio
-        (
+        crop_box = (
             crop_ratio * height,
             crop_ratio * width,
             (1 - crop_ratio) * height,

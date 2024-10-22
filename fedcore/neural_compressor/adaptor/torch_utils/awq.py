@@ -16,8 +16,6 @@ import copy
 
 import torch
 
-from fedcore.neural_compressor.adaptor.torch_utils.model_wrapper import MulLinear
-from fedcore.neural_compressor.adaptor.torch_utils.smooth_quant import set_module
 from fedcore.neural_compressor.adaptor.torch_utils.util import (
     fetch_module,
     get_absorb_layers,
@@ -26,7 +24,10 @@ from fedcore.neural_compressor.adaptor.torch_utils.util import (
     get_hidden_states,
     get_module_input_output,
 )
-from fedcore.neural_compressor.utils import logger
+
+from ...utils import logger
+from .model_wrapper import MulLinear
+from .smooth_quant import set_module
 
 
 def _get_absorb_per_block(model, example_inputs, folding=False, weight_config={}):

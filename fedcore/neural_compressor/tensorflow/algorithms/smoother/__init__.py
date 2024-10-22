@@ -15,12 +15,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fedcore.neural_compressor.tensorflow.algorithms.smoother.core import SmoothQuant
-from fedcore.neural_compressor.tensorflow.algorithms.smoother.scaler import (
-    SmoothQuantScaler,
-    SmoothQuantScalerLLM,
-)
-from fedcore.neural_compressor.tensorflow.algorithms.smoother.calibration import (
-    SmoothQuantCalibration,
-    SmoothQuantCalibrationLLM,
-)

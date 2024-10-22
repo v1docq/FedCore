@@ -24,6 +24,7 @@ from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
 from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
     GraphRewriterHelper as Helper,
 )
+
 from ..graph_base import GraphRewriterBase
 
 

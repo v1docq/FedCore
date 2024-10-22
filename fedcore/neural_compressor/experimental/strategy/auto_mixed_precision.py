@@ -21,10 +21,10 @@ from collections import OrderedDict
 
 from deprecated import deprecated
 
-from fedcore.neural_compressor.strategy.strategy import TuneStrategy, strategy_registry
-from fedcore.neural_compressor.strategy.utils.tuning_sampler import FallbackTuningSampler
-from fedcore.neural_compressor.strategy.utils.tuning_structs import OpTuningConfig
-from fedcore.neural_compressor.utils import logger
+from ...utils import logger
+from .strategy import TuneStrategy, strategy_registry
+from .utils.tuning_sampler import FallbackTuningSampler
+from .utils.tuning_structs import OpTuningConfig
 
 
 @deprecated(version="2.0")

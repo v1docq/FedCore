@@ -23,6 +23,7 @@ from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
     GraphRewriterHelper as Helper,
 )
+
 from ..graph_base import GraphRewriterBase
 
 

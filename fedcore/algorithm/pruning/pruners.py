@@ -1,14 +1,15 @@
 from copy import deepcopy
-from typing import Optional
 
 import numpy as np
-import torch_pruning as tp
 from fedot.core.data.data import InputData
-from fedot.core.operations.operation_parameters import OperationParameters
 from pymonad.either import Either
 from torch import nn, optim
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
+import torch_pruning as tp
+from typing import Optional
+from fedot.core.operations.operation_parameters import OperationParameters
+
 from fedcore.algorithm.pruning.pruning_validation import PruningValidator
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel

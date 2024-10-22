@@ -17,9 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .model_slim.auto_slim import model_slim
 # model slim related
-from .model_slim.auto_slim import parse_auto_slim_config
 from .pruning import PRUNINGS
 from .utils import process_config, torch, logger
 

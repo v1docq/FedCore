@@ -23,8 +23,7 @@ from deprecated import deprecated
 
 from fedcore.neural_compressor.compression.distillation.criterions import Criterions
 from fedcore.neural_compressor.experimental.common import Optimizers
-from .common import Model
-from .component import Component
+
 from ..adaptor import FRAMEWORKS
 from ..conf.config import DistillationConf
 from ..conf.pythonic_config import Config, DotDict
@@ -35,6 +34,8 @@ from ..utils.create_obj_from_config import (
     create_eval_func,
     create_train_func,
 )
+from .common import Model
+from .component import Component
 
 
 @deprecated(version="2.0")

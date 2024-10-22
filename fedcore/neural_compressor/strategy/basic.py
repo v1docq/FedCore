@@ -19,15 +19,15 @@
 from collections import OrderedDict
 from copy import deepcopy
 
-from fedcore.neural_compressor.strategy.strategy import TuneStrategy, strategy_registry
-from fedcore.neural_compressor.strategy.utils.constant import LOWER_BIT_LIST, PRECISION_LIST
-from fedcore.neural_compressor.strategy.utils.tuning_sampler import (
+from ..utils import logger
+from .strategy import TuneStrategy, strategy_registry
+from .utils.constant import LOWER_BIT_LIST, PRECISION_LIST
+from .utils.tuning_sampler import (
     BlockFallbackTuningSampler,
     FallbackTuningSampler,
     LowerBitsSampler,
     OpTypeWiseTuningSampler,
 )
-from fedcore.neural_compressor.utils import logger
 
 
 @strategy_registry

@@ -29,8 +29,9 @@ from fedcore.neural_compressor.utils.create_obj_from_config import (
     create_eval_func,
     create_train_func,
 )
-from fedcore.neural_compressor.experimental.nas.nas import NASBase
-from fedcore.neural_compressor.experimental.nas.nas_utils import nas_registry
+
+from .nas import NASBase
+from .nas_utils import nas_registry
 
 
 @deprecated(version="2.0")

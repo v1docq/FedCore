@@ -4,22 +4,21 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
-import numpy as np
-import pandas as pd
 import torch
 import torch.nn
-from fedot.api.main import Fedot
-from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from torch import Tensor
-
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.architecture.utils.paths import (
     DEFAULT_PATH_RESULTS as default_path_to_save_results,
 )
+import numpy as np
+import pandas as pd
+from fedot.api.main import Fedot
+from fedot.core.pipelines.pipeline import Pipeline
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.metrics.cv_metrics import CV_quality_metric
@@ -30,6 +29,7 @@ from fedcore.repository.constanst_repository import (
     FEDCORE_CV_DATASET,
     FEDOT_GET_METRICS,
 )
+
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 

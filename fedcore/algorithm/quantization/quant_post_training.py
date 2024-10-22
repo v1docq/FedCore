@@ -5,8 +5,8 @@ from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.neural_compressor import PostTrainingQuantConfig
 from fedcore.neural_compressor import quantization
+from fedcore.neural_compressor.config import PostTrainingQuantConfig
 from fedcore.repository.constanst_repository import default_device
 
 
