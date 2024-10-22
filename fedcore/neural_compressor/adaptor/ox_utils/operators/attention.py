@@ -18,8 +18,17 @@
 
 import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg, find_by_name, ms_domain
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    attribute_to_kwarg,
+    find_by_name,
+    ms_domain,
+)
 
 
 @op_registry(op_types="Attention")
@@ -42,7 +51,9 @@ class AttentionOperator(Operator):
         assert convert_format in [
             "dynamic",
             "static",
-        ], "convert format for {} should be in ['dynamic', 'static']".format(node.op_type)
+        ], "convert format for {} should be in ['dynamic', 'static']".format(
+            node.op_type
+        )
 
         if not node.name.endswith("_quant"):
             return False
@@ -79,7 +90,9 @@ class AttentionOperator(Operator):
         for attribute in node.attribute:  # pragma: no cover
             kwargs.update(attribute_to_kwarg(attribute))
         kwargs["domain"] = ms_domain
-        qattention_node = onnx.helper.make_node("QAttention", inputs, node.output, node.name, **kwargs)
+        qattention_node = onnx.helper.make_node(
+            "QAttention", inputs, node.output, node.name, **kwargs
+        )
         self.quantizer.new_nodes.append(qattention_node)
 
         self.quantizer.remove_nodes.append(node)
@@ -115,7 +128,12 @@ class QAttentionOperator(QOperator):
             [node.name + "_in_dequant2"],
             node.name + "_in_dequant2",
         )
-        inputs = [node.name + "_in_dequant1", node.name + "_in_dequant2", node.input[2], node.input[5]]
+        inputs = [
+            node.name + "_in_dequant1",
+            node.name + "_in_dequant2",
+            node.input[2],
+            node.input[5],
+        ]
 
         add_nodes.extend([in_dq1, in_dq2])
 
@@ -125,6 +143,8 @@ class QAttentionOperator(QOperator):
             kwargs.update(attribute_to_kwarg(attribute))
         kwargs["domain"] = ms_domain
 
-        binary_node = onnx.helper.make_node("Attention", inputs, outputs, node.name + "_convert", **kwargs)
+        binary_node = onnx.helper.make_node(
+            "Attention", inputs, outputs, node.name + "_convert", **kwargs
+        )
         add_nodes.append(binary_node)
         return True, add_nodes, inits

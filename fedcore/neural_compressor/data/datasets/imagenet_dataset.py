@@ -169,24 +169,37 @@ class TensorflowImagenetRaw(ImagenetRaw):  # pragma: no cover
 class TensorflowImagenetDataset(IterableDataset):  # pragma: no cover
     """Configuration for Imagenet dataset."""
 
-    def __new__(cls, root, subset="validation", num_cores=28, transform=None, filter=None):
+    def __new__(
+        cls, root, subset="validation", num_cores=28, transform=None, filter=None
+    ):
         """New a imagenet dataset for tensorflow."""
-        assert subset in ("validation", "train"), "only support subset (validation, train)"
-        logger.warning("This api is going to be deprecated, " "please use ImageRecord instead.")
+        assert subset in (
+            "validation",
+            "train",
+        ), "only support subset (validation, train)"
+        logger.warning(
+            "This api is going to be deprecated, " "please use ImageRecord instead."
+        )
 
         from tensorflow.python.platform import gfile
 
         glob_pattern = os.path.join(root, "%s-*-of-*" % subset)
         file_names = gfile.Glob(glob_pattern)
         if not file_names:
-            raise ValueError("Found no files in --root matching: {}".format(glob_pattern))
+            raise ValueError(
+                "Found no files in --root matching: {}".format(glob_pattern)
+            )
 
         from tensorflow.python.data.experimental import parallel_interleave
 
-        from fedcore.neural_compressor.data.transforms.imagenet_transform import ParseDecodeImagenet
+        from fedcore.neural_compressor.data.transforms.imagenet_transform import (
+            ParseDecodeImagenet,
+        )
 
         ds = tf.data.TFRecordDataset.list_files(file_names, shuffle=False)
-        ds = ds.apply(parallel_interleave(tf.data.TFRecordDataset, cycle_length=num_cores))
+        ds = ds.apply(
+            parallel_interleave(tf.data.TFRecordDataset, cycle_length=num_cores)
+        )
 
         if transform is not None:
             transform.transform_list.insert(0, ParseDecodeImagenet())
@@ -194,7 +207,9 @@ class TensorflowImagenetDataset(IterableDataset):  # pragma: no cover
             transform = ParseDecodeImagenet()
         ds = ds.map(transform, num_parallel_calls=None)
 
-        ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)  # this number can be tuned
+        ds = ds.prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE
+        )  # this number can be tuned
         return ds
 
 
@@ -211,11 +226,14 @@ class ONNXRTImagenetDataset(Dataset):  # pragma: no cover
         """Initialize `ONNXRTImagenetDataset` class."""
         self.val_dir = os.path.join(root, subset)
         assert os.path.exists(self.val_dir), (
-            "find no val dir in {}".format(root) + "please make sure there are train/val subfolders"
+            "find no val dir in {}".format(root)
+            + "please make sure there are train/val subfolders"
         )
         import glob
 
-        logger.warning("This api is going to be deprecated, " "please use ImageRecord instead.")
+        logger.warning(
+            "This api is going to be deprecated, " "please use ImageRecord instead."
+        )
 
         self.transform = transform
         self.image_list = []

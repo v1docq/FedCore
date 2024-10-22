@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable, Dict
+from typing import Callable
 
 import tensorflow as tf
 
@@ -25,10 +25,20 @@ from fedcore.neural_compressor.tensorflow.algorithms.smoother.calibration import
     SmoothQuantCalibration,
     SmoothQuantCalibrationLLM,
 )
-from fedcore.neural_compressor.tensorflow.algorithms.smoother.scaler import SmoothQuantScaler, SmoothQuantScalerLLM
+from fedcore.neural_compressor.tensorflow.algorithms.smoother.scaler import (
+    SmoothQuantScaler,
+    SmoothQuantScalerLLM,
+)
 from fedcore.neural_compressor.tensorflow.quantization.config import SmoothQuantConfig
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.utils import SPR_BASE_VERSIONS, BaseModel, TensorflowLLMModel, framework_specific_info
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.utils import (
+    SPR_BASE_VERSIONS,
+    BaseModel,
+    TensorflowLLMModel,
+    framework_specific_info,
+)
 
 
 class SmoothQuant:
@@ -106,7 +116,9 @@ class SmoothQuant:
                 if len(curr_node.input) >= 2:
                     weight_name = curr_node.input[1]
                     weight_node = graph_info[weight_name].node
-                    weight_tensor = tensor_util.MakeNdarray(weight_node.attr["value"].tensor)
+                    weight_tensor = tensor_util.MakeNdarray(
+                        weight_node.attr["value"].tensor
+                    )
                     curr_weight_tensors[weight_name] = weight_tensor
                     curr_weights_nodes[weight_name] = weight_node
             # {input node -> {xxx_q_proj_matmul: value1, xxx_v_proj_matmul: value2, ...}, ...}
@@ -119,7 +131,9 @@ class SmoothQuant:
         logger.info("Start Smoothing process for Smooth Quantization.")
 
         # Do a pre-optimization before smooth quant
-        from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.generic.pre_optimize import PreOptimization
+        from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.generic.pre_optimize import (
+            PreOptimization,
+        )
 
         pre_optimizer_handle = PreOptimization(model, self.new_api, self.device)
         pre_optimized_model = pre_optimizer_handle.get_optimized_model(self.itex_mode)
@@ -128,17 +142,28 @@ class SmoothQuant:
         # Run calibration to get max values per channel
 
         calibration = SmoothQuantCalibration(
-            model, self.calib_dataloader, self.calib_iteration, self.op_types, self.percentile
+            model,
+            self.calib_dataloader,
+            self.calib_iteration,
+            self.op_types,
+            self.percentile,
         )
         max_vals_per_channel, sq_weight_node_names = calibration()
 
         # Get weight tensors and weight nodes based on the input tensor
-        sq_weight_tensors, sq_weights_nodes = self.get_weight_from_input_tensor(model, max_vals_per_channel.keys())
+        sq_weight_tensors, sq_weights_nodes = self.get_weight_from_input_tensor(
+            model, max_vals_per_channel.keys()
+        )
 
         # Calculate the smooth quant scaler and insert Mul op into the graph
-        scaler = SmoothQuantScaler(model, self.calib_dataloader, self.alpha, self.scales_per_op)
+        scaler = SmoothQuantScaler(
+            model, self.calib_dataloader, self.alpha, self.scales_per_op
+        )
         model, mul_list = scaler.transform(
-            max_vals_per_channel, sq_weight_tensors, sq_weights_nodes, sq_weight_node_names
+            max_vals_per_channel,
+            sq_weight_tensors,
+            sq_weights_nodes,
+            sq_weight_node_names,
         )
 
         return model
@@ -146,7 +171,9 @@ class SmoothQuant:
     def apply_smooth_quant_LLM(self, model: BaseModel):
         """Apply smooth quant to the LLM model."""
         # Do a pre-optimization before smooth quant
-        from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.generic.pre_optimize import PreOptimization
+        from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.generic.pre_optimize import (
+            PreOptimization,
+        )
 
         pre_optimizer_handle = PreOptimization(model, self.new_api, self.device)
         pre_optimized_model = pre_optimizer_handle.get_optimized_model(self.itex_mode)
@@ -163,12 +190,17 @@ class SmoothQuant:
             llm_temp_dir,
             model.weight_name_mapping,
         )
-        max_vals_per_channel, sq_target_node_names, sq_weight_tensor_dict, sq_graph_def = calibration(
-            model.input_node_names, model.output_node_names
-        )
+        (
+            max_vals_per_channel,
+            sq_target_node_names,
+            sq_weight_tensor_dict,
+            sq_graph_def,
+        ) = calibration(model.input_node_names, model.output_node_names)
 
         # Calculate the smooth quant scaler and insert Mul op into the graph
-        scaler = SmoothQuantScalerLLM(sq_graph_def, self.alpha, self.scales_per_op, self.op_types)
+        scaler = SmoothQuantScalerLLM(
+            sq_graph_def, self.alpha, self.scales_per_op, self.op_types
+        )
         sq_graph_def, sq_weight_scale_dict, mul_list = scaler.transform(
             max_vals_per_channel, sq_weight_tensor_dict, sq_target_node_names
         )
@@ -186,6 +218,10 @@ class SmoothQuant:
         Returns:
             model: A smoothed Tensorflow model
         """
-        apply_func = self.apply_smooth_quant_LLM if isinstance(model, TensorflowLLMModel) else self.apply_smooth_quant
+        apply_func = (
+            self.apply_smooth_quant_LLM
+            if isinstance(model, TensorflowLLMModel)
+            else self.apply_smooth_quant
+        )
 
         return apply_func(model)

@@ -16,7 +16,6 @@
 # limitations under the License.
 """Class for Keras model."""
 
-import os
 from abc import abstractmethod
 
 from fedcore.neural_compressor.model.base_model import BaseModel
@@ -100,11 +99,11 @@ class KerasModel(BaseModel):
             df (DataFrame): DataFrame of sparsity of each weight.
             total_sparsity (float): total sparsity of model.
         """
-        import numpy as np
         import pandas as pd
-        import tensorflow as tf
 
-        df = pd.DataFrame(columns=["Name", "Shape", "NNZ (dense)", "NNZ (sparse)", "Sparsity(%)"])
+        df = pd.DataFrame(
+            columns=["Name", "Shape", "NNZ (dense)", "NNZ (sparse)", "Sparsity(%)"]
+        )
         pd.set_option("display.precision", 2)
         param_dims = [2, 4]
         params_size = 0
@@ -116,7 +115,9 @@ class KerasModel(BaseModel):
             # as its "type"
             weights = layer.get_weights()[0]
             if weights.ndim in param_dims:
-                param_size, sparse_param_size, dense_param_size = compute_sparsity(weights)
+                param_size, sparse_param_size, dense_param_size = compute_sparsity(
+                    weights
+                )
                 density = dense_param_size / param_size
                 params_size += param_size
                 sparse_params_size += sparse_param_size

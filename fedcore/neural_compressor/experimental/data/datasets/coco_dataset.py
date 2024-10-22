@@ -56,10 +56,14 @@ class ParseDecodeCoco:
         """
         # Dense features in Example proto.
         feature_map = {
-            "image/encoded": tf.compat.v1.FixedLenFeature([], dtype=tf.string, default_value=""),
+            "image/encoded": tf.compat.v1.FixedLenFeature(
+                [], dtype=tf.string, default_value=""
+            ),
             "image/object/class/text": tf.compat.v1.VarLenFeature(dtype=tf.string),
             "image/object/class/label": tf.compat.v1.VarLenFeature(dtype=tf.int64),
-            "image/source_id": tf.compat.v1.FixedLenFeature([], dtype=tf.string, default_value=""),
+            "image/source_id": tf.compat.v1.FixedLenFeature(
+                [], dtype=tf.string, default_value=""
+            ),
         }
         sparse_float32 = tf.compat.v1.VarLenFeature(dtype=tf.float32)
         # Sparse features in Example proto.
@@ -99,7 +103,11 @@ class ParseDecodeCoco:
         return image_tensor, (bbox[0], str_label, int_label, image_id)
 
 
-@dataset_registry(dataset_type="COCORecord", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="COCORecord",
+    framework="tensorflow, tensorflow_itex",
+    dataset_format="",
+)
 class COCORecordDataset(IterableDataset):
     """Tensorflow COCO dataset in tf record format.
 
@@ -184,10 +192,14 @@ class COCORaw(Dataset):
     """
 
     def __init__(
-        self, root, img_dir="val2017", anno_dir="annotations/instances_val2017.json", transform=None, filter=filter
+        self,
+        root,
+        img_dir="val2017",
+        anno_dir="annotations/instances_val2017.json",
+        transform=None,
+        filter=filter,
     ):
         """Initialize the attributes of class."""
-        import json
         import os
 
         import numpy as np
@@ -201,7 +213,6 @@ class COCORaw(Dataset):
         img_ids = coco.getImgIds()
         cat_ids = coco.getCatIds()
         for idx, img_id in enumerate(img_ids):
-            img_info = {}
             bboxes = []
             labels = []
             ids = []
@@ -286,10 +297,14 @@ class COCONpy(Dataset):
     """
 
     def __init__(
-        self, root, npy_dir="val2017", anno_dir="annotations/instances_val2017.json", transform=None, filter=None
+        self,
+        root,
+        npy_dir="val2017",
+        anno_dir="annotations/instances_val2017.json",
+        transform=None,
+        filter=None,
     ):
         """Initialize the attributes of class."""
-        import json
         import os
 
         import numpy as np
@@ -302,13 +317,12 @@ class COCONpy(Dataset):
         img_ids = coco.getImgIds()
         cat_ids = coco.getCatIds()
         for idx, img_id in enumerate(img_ids):
-            img_info = {}
             labels = []
             ids = []
             img_detail = coco.loadImgs(img_id)[0]
             ids.append(img_detail["file_name"].encode("utf-8"))
-            pic_height = img_detail["height"]
-            pic_width = img_detail["width"]
+            img_detail["height"]
+            img_detail["width"]
 
             ann_ids = coco.getAnnIds(imgIds=img_id, catIds=cat_ids)
             anns = coco.loadAnns(ann_ids)

@@ -19,7 +19,7 @@ import copy
 import json
 import math
 import os
-from collections import OrderedDict, UserDict
+from collections import OrderedDict
 
 import numpy as np
 import yaml
@@ -30,13 +30,8 @@ from ..utils import logger
 from ..utils.utility import (
     GLOBAL_STATE,
     MODE,
-    CpuInfo,
-    Dequantize,
     LazyImport,
-    Statistics,
     dump_elapsed_time,
-    singleton,
-    version1_lt_version2,
 )
 from .adaptor import Adaptor, adaptor_registry
 from .query import QueryBackendCapability
@@ -49,10 +44,21 @@ def _add_supported_quantized_objects(custom_objects):
     """Map all the quantized objects."""
     from fedcore.neural_compressor.adaptor.keras_utils.conv2d import QConv2D
     from fedcore.neural_compressor.adaptor.keras_utils.dense import QDense
-    from fedcore.neural_compressor.adaptor.keras_utils.depthwise_conv2d import QDepthwiseConv2D
-    from fedcore.neural_compressor.adaptor.keras_utils.pool2d import QAvgPool2D, QMaxPool2D
-    from fedcore.neural_compressor.adaptor.keras_utils.quantizer import DeQuantize, FakeQuant, Quantize
-    from fedcore.neural_compressor.adaptor.keras_utils.separable_conv2d import QSeparableConv2D
+    from fedcore.neural_compressor.adaptor.keras_utils.depthwise_conv2d import (
+        QDepthwiseConv2D,
+    )
+    from fedcore.neural_compressor.adaptor.keras_utils.pool2d import (
+        QAvgPool2D,
+        QMaxPool2D,
+    )
+    from fedcore.neural_compressor.adaptor.keras_utils.quantizer import (
+        DeQuantize,
+        FakeQuant,
+        Quantize,
+    )
+    from fedcore.neural_compressor.adaptor.keras_utils.separable_conv2d import (
+        QSeparableConv2D,
+    )
 
     custom_objects["Quantize"] = Quantize
     custom_objects["DeQuantize"] = DeQuantize
@@ -98,7 +104,9 @@ class KerasAdaptor(Adaptor):
         self.pre_optimizer_handle = None
         self.bf16_ops = []
         self.fp32_ops = []
-        self.query_handler = KerasQuery(local_config_file=os.path.join(os.path.dirname(__file__), "keras.yaml"))
+        self.query_handler = KerasQuery(
+            local_config_file=os.path.join(os.path.dirname(__file__), "keras.yaml")
+        )
 
         self.fp32_results = []
         self.fp32_preds_as_label = False
@@ -110,7 +118,7 @@ class KerasAdaptor(Adaptor):
 
     def _check_itex(self):
         try:
-            import intel_extension_for_tensorflow
+            pass
         except:
             raise ImportError(
                 "The Intel® Extension for TensorFlow is not installed. "
@@ -125,7 +133,11 @@ class KerasAdaptor(Adaptor):
         bf16_ops = []
         bf16_type = set(self.query_handler.get_op_types_by_precision(precision="bf16"))
         dispatched_op_names = [j[0] for j in tuning_cfg["op"]]
-        invalid_op_names = [i for i in self.quantize_config["op_wise_config"] if i not in dispatched_op_names]
+        invalid_op_names = [
+            i
+            for i in self.quantize_config["op_wise_config"]
+            if i not in dispatched_op_names
+        ]
 
         for op_name in invalid_op_names:
             self.quantize_config["op_wise_config"].pop(op_name)
@@ -147,14 +159,24 @@ class KerasAdaptor(Adaptor):
             is_perchannel = False
             bit = None
             if "weight" in tuning_cfg["op"][each_op_info]:
-                is_perchannel = tuning_cfg["op"][each_op_info]["weight"]["granularity"] == "per_channel"
+                is_perchannel = (
+                    tuning_cfg["op"][each_op_info]["weight"]["granularity"]
+                    == "per_channel"
+                )
                 # bit = tuning_cfg['op'][each_op_info]['weight']['bit']
             weight_bit = bit if bit else 7.0
             algorithm = tuning_cfg["op"][each_op_info]["activation"]["algorithm"]
             is_asymmetric = False
             if "activation" in tuning_cfg["op"][each_op_info]:
-                is_asymmetric = tuning_cfg["op"][each_op_info]["activation"]["scheme"] == "asym"
-            self.quantize_config["op_wise_config"][op_name] = (is_perchannel, algorithm, is_asymmetric, weight_bit)
+                is_asymmetric = (
+                    tuning_cfg["op"][each_op_info]["activation"]["scheme"] == "asym"
+                )
+            self.quantize_config["op_wise_config"][op_name] = (
+                is_perchannel,
+                algorithm,
+                is_asymmetric,
+                weight_bit,
+            )
         self.bf16_ops = bf16_ops
         self.bf16_ops.pop(-1)
         self.fp32_ops = fp32_ops
@@ -174,13 +196,15 @@ class KerasAdaptor(Adaptor):
             name_op_map[layer["config"]["name"]] = layer
 
         for idx, layer in enumerate(copy.deepcopy(fp32_layers)):
-            layer_config = layer["config"]
+            layer["config"]
             if layer["class_name"] in self.supported_op:
                 if "inbound_nodes" in layer:
                     check_layer = name_op_map[layer["inbound_nodes"][0][0][0]]
                 else:
                     check_layer = fp32_layers[idx - 1]
-                if check_layer["class_name"] in ["Activation"] and check_layer["config"]["activation"] in ["relu"]:
+                if check_layer["class_name"] in ["Activation"] and check_layer[
+                    "config"
+                ]["activation"] in ["relu"]:
                     self.conv_format[layer["config"]["name"]] = "u8"
                 else:
                     self.conv_format[layer["config"]["name"]] = "s8"
@@ -233,7 +257,11 @@ class KerasAdaptor(Adaptor):
             weight = weight * scale_value
             bias = beta + (bias - mean) * scale_value.reshape(-1)
             bias = bias.reshape(-1)
-            return [depth_weight, weight, bias] if conv_type == "SeparableConv2D" else [weight, bias]
+            return (
+                [depth_weight, weight, bias]
+                if conv_type == "SeparableConv2D"
+                else [weight, bias]
+            )
 
         node_map = {}
         for idx, layer in enumerate(copy.deepcopy(fp32_layers)):
@@ -247,13 +275,18 @@ class KerasAdaptor(Adaptor):
             layer_config = layer["config"]
             if "inbound_nodes" in layer:
                 if layer["class_name"] in ["BatchNormalization"]:
-                    bn_inbound_node = node_map[layer_config["name"]]["inbound_nodes"][0][0]
+                    bn_inbound_node = node_map[layer_config["name"]]["inbound_nodes"][
+                        0
+                    ][0]
                     if bn_inbound_node[0] in self.conv_weights.keys():
                         conv_weight = self.conv_weights[bn_inbound_node[0]]
                         conv_layer = node_map[bn_inbound_node[0]]
                         bn_weight = self.bn_weights[layer_config["name"]]
                         self.layer_weights[bn_inbound_node[0]] = fuse_conv_bn(
-                            conv_weight, bn_weight, conv_layer["class_name"], layer["config"]["epsilon"]
+                            conv_weight,
+                            bn_weight,
+                            conv_layer["class_name"],
+                            layer["config"]["epsilon"],
                         )
                         fold_conv.append(bn_inbound_node[0])
                     else:
@@ -266,7 +299,9 @@ class KerasAdaptor(Adaptor):
                     else:
                         for bound_node in layer["inbound_nodes"][0]:
                             if bound_node[0] in self.bn_weights.keys():
-                                bn_inbound_node = node_map[bound_node[0]]["inbound_nodes"][0][0]
+                                bn_inbound_node = node_map[bound_node[0]][
+                                    "inbound_nodes"
+                                ][0][0]
                                 if bn_inbound_node[0] in self.conv_weights.keys():
                                     new_bound_nodes.append(bn_inbound_node)
                                 else:
@@ -336,7 +371,8 @@ class KerasAdaptor(Adaptor):
                     if i != 0:  # pragma: no cover
                         logger.warning(
                             "Reset `calibration.dataloader.batch_size` field "
-                            "to {}".format(calib_batch_size) + " to make sure the sampling_size is "
+                            "to {}".format(calib_batch_size)
+                            + " to make sure the sampling_size is "
                             "divisible exactly by batch size"
                         )
                     break
@@ -345,26 +381,33 @@ class KerasAdaptor(Adaptor):
             self.quantize_config["calib_iteration"] = tmp_iterations
 
         else:  # pragma: no cover
-            if hasattr(dataloader, "batch_size") and calib_sampling_size % dataloader.batch_size != 0:
+            if (
+                hasattr(dataloader, "batch_size")
+                and calib_sampling_size % dataloader.batch_size != 0
+            ):
                 iter = self.quantize_config["calib_iteration"]
                 logger.warning(
                     "Please note that calibration sampling size {} "
                     "isn't divisible exactly by batch size {}. "
                     "So the real sampling size is {}.".format(
-                        calib_sampling_size, dataloader.batch_size, dataloader.batch_size * iter
+                        calib_sampling_size,
+                        dataloader.batch_size,
+                        dataloader.batch_size * iter,
                     )
                 )
 
         q_layers = []
         self.inbound_nodes_map = {}
         for idx, layer in enumerate(copy.deepcopy(self.fp32_layers)):
-            layer_config = layer["config"]
+            layer["config"]
             if (
                 layer["class_name"] in self.supported_op
                 and layer["config"]["name"] in self.quantize_config["op_wise_config"]
             ):
-                op_config = self.quantize_config["op_wise_config"][layer["config"]["name"]]
-                mode = "per_channel" if op_config[0] else "per_tensor"
+                op_config = self.quantize_config["op_wise_config"][
+                    layer["config"]["name"]
+                ]
+                "per_channel" if op_config[0] else "per_tensor"
                 fake_q_name = "fake_quant_" + str(idx)
                 fake_q_layer = {
                     "class_name": "FakeQuant",
@@ -386,7 +429,9 @@ class KerasAdaptor(Adaptor):
         json_model["config"]["layers"] = q_layers
         quantized_model = self._restore_model_from_json(json_model)
 
-        converted_model = self._calibrate(quantized_model, dataloader, self.quantize_config["calib_iteration"])
+        converted_model = self._calibrate(
+            quantized_model, dataloader, self.quantize_config["calib_iteration"]
+        )
 
         from fedcore.neural_compressor.model.keras_model import KerasModel
 
@@ -398,7 +443,7 @@ class KerasAdaptor(Adaptor):
         model.compile(run_eagerly=True)
         results = {}
         for idx, (inputs, labels) in enumerate(dataloader):
-            outputs = model.predict_on_batch(inputs)
+            model.predict_on_batch(inputs)
             json_model = copy.deepcopy(json.loads(model.to_json()))
             config = json_model["config"]
             layers = config["layers"]
@@ -407,7 +452,10 @@ class KerasAdaptor(Adaptor):
                     min_value = layer["config"]["min_value"]
                     max_value = layer["config"]["max_value"]
                     if layer["config"]["name"] not in results:
-                        results[layer["config"]["name"]] = {"min": [min_value], "max": [max_value]}
+                        results[layer["config"]["name"]] = {
+                            "min": [min_value],
+                            "max": [max_value],
+                        }
                     else:
                         results[layer["config"]["name"]]["min"].append(min_value)
                         results[layer["config"]["name"]]["max"].append(max_value)
@@ -448,11 +496,15 @@ class KerasAdaptor(Adaptor):
                 }
                 if "inbound_nodes" in layer:
                     quantize_layer["inbound_nodes"] = layer["inbound_nodes"]
-                    dequantize_layer["inbound_nodes"] = [[["quantize_" + str(idx), 0, 0, {}]]]
+                    dequantize_layer["inbound_nodes"] = [
+                        [["quantize_" + str(idx), 0, 0, {}]]
+                    ]
                     # find the conv/dense layer from fake quant map and
                     # change the conv/dense node inbound to dequantize
                     layer_name = self.inbound_nodes_map[layer["name"]]["name"]
-                    inbound_reverse_map[layer_name] = [[["dequantize_" + str(idx), 0, 0, {}]]]
+                    inbound_reverse_map[layer_name] = [
+                        [["dequantize_" + str(idx), 0, 0, {}]]
+                    ]
 
                 q_layers.append(quantize_layer)
                 q_layers.append(dequantize_layer)
@@ -472,15 +524,23 @@ class KerasAdaptor(Adaptor):
                     t_dim.extend(dim)
                     channel_size = kernel.shape[-1]
                     kernel_channel = kernel.transpose(t_dim).reshape(channel_size, -1)
-                    layer_config["min_value"] = json.dumps(np.min(kernel_channel, axis=1).tolist())
-                    layer_config["max_value"] = json.dumps(np.max(kernel_channel, axis=1).tolist())
+                    layer_config["min_value"] = json.dumps(
+                        np.min(kernel_channel, axis=1).tolist()
+                    )
+                    layer_config["max_value"] = json.dumps(
+                        np.max(kernel_channel, axis=1).tolist()
+                    )
                 else:
                     # default value, but never expected to be used
                     # cause no kernel weights for this layer
                     layer_config["min_value"] = json.dumps([-10000])
                     layer_config["max_value"] = json.dumps([10000])
                 layer_config["name"] = q_name
-                q_layer = {"class_name": q_layer_name, "name": q_name, "config": layer_config}
+                q_layer = {
+                    "class_name": q_layer_name,
+                    "name": q_name,
+                    "config": layer_config,
+                }
                 if "inbound_nodes" in layer:
                     q_layer["inbound_nodes"] = inbound_reverse_map[layer["name"]]
                 q_layers.append(q_layer)
@@ -591,7 +651,11 @@ class KerasAdaptor(Adaptor):
                 predictions = keras_model.predict_on_batch(inputs)
 
             if self.fp32_preds_as_label:
-                self.fp32_results.append(predictions) if fp32_baseline else results.append(predictions)
+                (
+                    self.fp32_results.append(predictions)
+                    if fp32_baseline
+                    else results.append(predictions)
+                )
 
             if postprocess is not None:
                 predictions, labels = postprocess((predictions, labels))
@@ -624,7 +688,7 @@ class KerasAdaptor(Adaptor):
         dense_config = copy.deepcopy(op_capability["int8"]["Dense"])
         maxpool_config = copy.deepcopy(op_capability["int8"]["MaxPooling2D"])
         avgpool_config = copy.deepcopy(op_capability["int8"]["AveragePooling2D"])
-        other_config = copy.deepcopy(op_capability["int8"]["default"])
+        copy.deepcopy(op_capability["int8"]["default"])
 
         # # get fp32 layer weights
         keras_object = model._model_object
@@ -656,15 +720,34 @@ class KerasAdaptor(Adaptor):
             node_op = details["class_name"]
             node_name = details["config"]["name"]
             if node_op == "Conv2D":
-                quantizable_op_details[(node_name, node_op)] = [conv_config, bf16_config, fp32_config]
+                quantizable_op_details[(node_name, node_op)] = [
+                    conv_config,
+                    bf16_config,
+                    fp32_config,
+                ]
             elif node_op == "Dense":
-                quantizable_op_details[(node_name, node_op)] = [dense_config, bf16_config, fp32_config]
+                quantizable_op_details[(node_name, node_op)] = [
+                    dense_config,
+                    bf16_config,
+                    fp32_config,
+                ]
             elif node_op in {"AveragePooling2D", "AvgPool2D"}:
-                quantizable_op_details[(node_name, node_op)] = [avgpool_config, bf16_config, fp32_config]
+                quantizable_op_details[(node_name, node_op)] = [
+                    avgpool_config,
+                    bf16_config,
+                    fp32_config,
+                ]
             elif node_op in {"MaxPooling2D", "MaxPool2D"}:
-                quantizable_op_details[(node_name, node_op)] = [maxpool_config, bf16_config, fp32_config]
+                quantizable_op_details[(node_name, node_op)] = [
+                    maxpool_config,
+                    bf16_config,
+                    fp32_config,
+                ]
             else:
-                quantizable_op_details[(node_name, node_op)] = [bf16_config, fp32_config]
+                quantizable_op_details[(node_name, node_op)] = [
+                    bf16_config,
+                    fp32_config,
+                ]
 
         capability = {
             "opwise": copy.deepcopy(quantizable_op_details),
@@ -691,7 +774,13 @@ class KerasAdaptor(Adaptor):
         return res
 
     def inspect_tensor(
-        self, model, dataloader, op_list=[], iteration_list=[], inspect_type="activation", save_to_disk=False
+        self,
+        model,
+        dataloader,
+        op_list=[],
+        iteration_list=[],
+        inspect_type="activation",
+        save_to_disk=False,
     ):
         """The function is used by tune strategy class for dumping tensor info.
 
@@ -723,33 +812,53 @@ class KerasAdaptor(Adaptor):
               ]
             }
         """
-        assert inspect_type in ["weight", "activation", "all"], "Inspect type only support weight, activation or all"
+        assert inspect_type in [
+            "weight",
+            "activation",
+            "all",
+        ], "Inspect type only support weight, activation or all"
         from keras import backend as K  # pylint: disable=E0401
 
         tensor_out = {}
         inp = model.input
         outputs = [(layer.name, layer.output) for layer in model.layers]
-        outputs = [(name, out) for (name, out) in outputs if name in op_list] if len(op_list) else outputs
+        outputs = (
+            [(name, out) for (name, out) in outputs if name in op_list]
+            if len(op_list)
+            else outputs
+        )
         if inspect_type == "weight" or inspect_type == "all":
-            weights = [(layer.name, layer.get_weights()) for layer in model.layers if layer.get_weights()]
-            weights = [(name, wei) for (name, wei) in weights if name in op_list] if len(op_list) else weights
+            weights = [
+                (layer.name, layer.get_weights())
+                for layer in model.layers
+                if layer.get_weights()
+            ]
+            weights = (
+                [(name, wei) for (name, wei) in weights if name in op_list]
+                if len(op_list)
+                else weights
+            )
             tensor_out["weight"] = weights
 
         functors = [(name, K.function([inp], [out])) for (name, out) in outputs]
         iterations = max(iteration_list) if iteration_list is not None else -1
-        observer_dict = {}
-        ret = {}
         if inspect_type == "activation" or inspect_type == "all":
             activation_list = []
             for idx, (inputs, labels) in enumerate(dataloader):
                 layer_outs = [(name, func([inputs])) for (name, func) in functors]
                 iter_map = {}
                 for name, out_list in layer_outs:
-                    iter_map[name] = dict([(name + ":" + str(i), out) for i, out in enumerate(out_list)])
+                    iter_map[name] = dict(
+                        [(name + ":" + str(i), out) for i, out in enumerate(out_list)]
+                    )
                 activation_list.append(iter_map)
                 if idx == iterations:
                     break
-            tensor_out["activation"] = [acti for idx, acti in enumerate(activation_list) if idx in iteration_list]
+            tensor_out["activation"] = [
+                acti
+                for idx, acti in enumerate(activation_list)
+                if idx in iteration_list
+            ]
 
         return tensor_out
 
@@ -768,7 +877,6 @@ class KerasAdaptor(Adaptor):
                                   ...
                                 }
         """
-        pass
 
     def quantize_input(self, model):
         """Quantize the model to be able to take quantized input.
@@ -792,7 +900,6 @@ class KerasAdaptor(Adaptor):
 
     def _post_eval_hook(self, model, *args, **kwargs):
         """The function is used to do some post process after complete evaluation."""
-        pass
 
     def save(self, model, path):
         """The function is used by tune strategy class for saving model.
@@ -811,7 +918,6 @@ class KerasAdaptor(Adaptor):
             source (string): The source model format.
             destination (string): The destination model format.
         """
-        pass
 
     def _pre_hook_for_hvd(self, dataloader=None):
         """Pre hook for Horovod."""
@@ -821,7 +927,16 @@ class KerasAdaptor(Adaptor):
         self.hvd.init()
 
     @dump_elapsed_time(customized_msg="Model training")
-    def train(self, model, dataloader, optimizer_tuple, criterion_tuple, hooks, postprocess, **kwargs):
+    def train(
+        self,
+        model,
+        dataloader,
+        optimizer_tuple,
+        criterion_tuple,
+        hooks,
+        postprocess,
+        **kwargs,
+    ):
         """Model training API.
 
         Args:
@@ -849,7 +964,7 @@ class KerasAdaptor(Adaptor):
         end_epochs = kwargs["kwargs"].get("end_epoch", None)
         epochs = kwargs["kwargs"].get("epoch", None)
         iters = kwargs["kwargs"].get("iteration", None)
-        callbacks = kwargs["kwargs"].get("callbacks", None)
+        kwargs["kwargs"].get("callbacks", None)
         execution_mode = kwargs["kwargs"].get("execution_mode", None)
         distributed = getattr(dataloader, "distributed", False)
 
@@ -887,15 +1002,21 @@ class KerasAdaptor(Adaptor):
 
             tape = self.hvd.DistributedGradientTape(tape) if distributed else tape
             # Get gradient
-            grads = tape.gradient(loss_value, input_model.trainable_variables)  # pylint: disable=no-member
+            grads = tape.gradient(
+                loss_value, input_model.trainable_variables
+            )  # pylint: disable=no-member
             # Optimize the model
-            optimizer.apply_gradients(zip(grads, input_model.trainable_variables))  # pylint: disable=no-member
+            optimizer.apply_gradients(
+                zip(grads, input_model.trainable_variables)
+            )  # pylint: disable=no-member
             if distributed and first_batch:
                 self.hvd.broadcast_variables(input_model.variables, root_rank=0)
                 self.hvd.broadcast_variables(optimizer.variables(), root_rank=0)
             return loss_value
 
-        training_step = training_step if execution_mode == "eager" else tf.function(training_step)
+        training_step = (
+            training_step if execution_mode == "eager" else tf.function(training_step)
+        )
         if start_epochs is not None and end_epochs is not None:
             epochs = end_epochs - start_epochs
 
@@ -923,7 +1044,9 @@ class KerasAdaptor(Adaptor):
                         epoch + 1, self.hvd.allgather_object(self.hvd.rank())
                     )
                 )
-            logger.info("Epoch {:03d}: Loss: {:.3f}".format(epoch + 1, epoch_loss_avg.result()))
+            logger.info(
+                "Epoch {:03d}: Loss: {:.3f}".format(epoch + 1, epoch_loss_avg.result())
+            )
 
         hooks["on_train_end"]()  # on_train_end hook
         model._sess = None
@@ -936,7 +1059,10 @@ class KerasAdaptor(Adaptor):
                 else:
                     input_model.save(model._model)
             rank_list = self.hvd.allgather_object(self.hvd.rank())
-            logger.info(f"rank 0 has saved the pruned model to '{model._model}'," f"all ranks {rank_list} ready.")
+            logger.info(
+                f"rank 0 has saved the pruned model to '{model._model}',"
+                f"all ranks {rank_list} ready."
+            )
         else:
             if isinstance(model._model, tf.keras.Model):
                 model._model = input_model
@@ -961,7 +1087,9 @@ class KerasQuery(QueryBackendCapability):
                 logger.info("Fail to parse {} due to {}.".format(self.cfg, str(e)))
                 self.cur_config = None
                 raise ValueError(
-                    "Please check if the format of {} follows Neural Compressor yaml schema.".format(self.cfg)
+                    "Please check if the format of {} follows Neural Compressor yaml schema.".format(
+                        self.cfg
+                    )
                 )
 
     def _get_specified_version_cfg(self, data):

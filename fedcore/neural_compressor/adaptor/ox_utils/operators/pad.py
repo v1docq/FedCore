@@ -18,8 +18,16 @@
 
 import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg, quantize_nparray
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    attribute_to_kwarg,
+    quantize_nparray,
+)
 
 
 @op_registry(op_types="Pad")
@@ -48,7 +56,9 @@ class PadOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
 
         children = self.quantizer.model.get_children(node)
         if len(children) == 0 or not node.name.endswith("_quant"):  # pragma: no cover
@@ -72,23 +82,36 @@ class PadOperator(Operator):
                 zp_tensor = self.quantizer.model.get_initializer(parent.input[2])
                 scale_tensor = self.quantizer.model.get_initializer(parent.input[1])
 
-                padding_constant_initializer = self.quantizer.model.get_initializer(node.input[2])
+                padding_constant_initializer = self.quantizer.model.get_initializer(
+                    node.input[2]
+                )
                 if padding_constant_initializer is not None:
                     zp_array = onnx.numpy_helper.to_array(zp_tensor)
                     zp_value = zp_array.item() if zp_array.ndim == 0 else zp_array[0]
                     scale_array = onnx.numpy_helper.to_array(scale_tensor)
-                    scale_value = scale_array.item() if scale_array.ndim == 0 else scale_array[0]
-                    padding_constant_array = onnx.numpy_helper.to_array(padding_constant_initializer)
+                    scale_value = (
+                        scale_array.item() if scale_array.ndim == 0 else scale_array[0]
+                    )
+                    padding_constant_array = onnx.numpy_helper.to_array(
+                        padding_constant_initializer
+                    )
                     quantized_padding_constant_array = quantize_nparray(
                         self.weight_dtype, padding_constant_array, scale_value, zp_value
                     )
                     quantized_padding_constant_name = node.input[2] + "_quantized"
-                    quantized_padding_constant_initializer = onnx.numpy_helper.from_array(
-                        quantized_padding_constant_array, quantized_padding_constant_name
+                    quantized_padding_constant_initializer = (
+                        onnx.numpy_helper.from_array(
+                            quantized_padding_constant_array,
+                            quantized_padding_constant_name,
+                        )
                     )
                     # Suppose this padding constant initializer only used by the node
-                    self.quantizer.model.remove_initializer(padding_constant_initializer)
-                    self.quantizer.model.add_initializer(quantized_padding_constant_initializer)
+                    self.quantizer.model.remove_initializer(
+                        padding_constant_initializer
+                    )
+                    self.quantizer.model.add_initializer(
+                        quantized_padding_constant_initializer
+                    )
                     node.input[2] = quantized_padding_constant_name
                 else:
                     self.quantizer.quantize_inputs(node, [2], False)

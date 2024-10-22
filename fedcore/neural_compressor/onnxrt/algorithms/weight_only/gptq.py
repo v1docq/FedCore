@@ -32,7 +32,9 @@ from fedcore.neural_compressor.onnxrt.algorithms.weight_only.utility import (
     prepare_inputs,
     quant_tensor,
 )
-from fedcore.neural_compressor.onnxrt.quantization.calibrate import CalibrationDataReader
+from fedcore.neural_compressor.onnxrt.quantization.calibrate import (
+    CalibrationDataReader,
+)
 from fedcore.neural_compressor.onnxrt.quantization.config import GPTQConfig
 from fedcore.neural_compressor.onnxrt.utils.onnx_model import ONNXModel
 from fedcore.neural_compressor.onnxrt.utils.utility import (
@@ -77,7 +79,6 @@ def _gptq(
     Returns:
         Q: fake quantized weight
     """
-    Qs = []
     maxq = 2**num_bits - 1
     grid = 100
     maxshrink = 0.8
@@ -131,8 +132,6 @@ def _gptq(
         zero = np.reshape(zero, shape)
         return scale, zero
 
-    scales = []
-    zps = []
     shape = W.shape
     scale, zp = find_params(W)
     dead = np.diag(H) == 0
@@ -169,12 +168,20 @@ def _gptq(
                 if (i1 + i) % group_size == 0:
                     scale, zp = find_params(W[(i1 + i) : (i1 + i + group_size), :])
 
-            q = (scale * (np.clip(np.round(np.expand_dims(w, axis=1) / scale) + zp, 0, maxq) - zp)).flatten()
+            q = (
+                scale
+                * (
+                    np.clip(np.round(np.expand_dims(w, axis=1) / scale) + zp, 0, maxq)
+                    - zp
+                )
+            ).flatten()
             Q1[i, :] = q
             Losses1[i, :] = (w - q) ** 2 / d**2
 
             err1 = (w - q) / d
-            W1[i:, :] -= np.matmul(np.expand_dims(Hinv1[i:, i], axis=1), np.expand_dims(err1, axis=0))
+            W1[i:, :] -= np.matmul(
+                np.expand_dims(Hinv1[i:, i], axis=1), np.expand_dims(err1, axis=0)
+            )
             Err1[i, :] = err1
 
         Q[i1:i2, :] = Q1
@@ -256,7 +263,10 @@ def gptq_quantize(
         if (
             node.op_type in ["MatMul"]
             and model.get_initializer(node.input[1]) is not None
-            and weight_config.get((node.name, node.op_type), {}).get("weight_dtype", "fp32") != "fp32"
+            and weight_config.get((node.name, node.op_type), {}).get(
+                "weight_dtype", "fp32"
+            )
+            != "fp32"
         ):
             output_names.append(node.input[0])
     output_names = list(set(output_names))
@@ -273,7 +283,9 @@ def gptq_quantize(
     session = (
         ort.InferenceSession(model.model.SerializeToString(), so, providers=providers)
         if not model.is_large_model
-        else ort.InferenceSession(model.model_path + "_augment.onnx", so, providers=providers)
+        else ort.InferenceSession(
+            model.model_path + "_augment.onnx", so, providers=providers
+        )
     )
 
     for idx, input_name in enumerate(output_names):
@@ -288,7 +300,10 @@ def gptq_quantize(
             if (
                 node.op_type in ["MatMul"]
                 and model.get_initializer(node.input[1]) is not None
-                and weight_config.get((node.name, node.op_type), {}).get("weight_dtype", "fp32") != "fp32"
+                and weight_config.get((node.name, node.op_type), {}).get(
+                    "weight_dtype", "fp32"
+                )
+                != "fp32"
             ):
                 weight = onnx.numpy_helper.to_array(
                     model.get_initializer(model.get_node(node.name).input[1]), base_dir
@@ -342,11 +357,17 @@ def gptq_quantize(
             weight_tensor = model.get_initializer(node.input[1])
             init_share_num = model.get_initializer_share_num(node.input[1])
 
-            satisfy_MatMulNBits_condition = Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4
-            satisfy_MatMulFpQ4_condition = (
-                Version(ort.__version__) >= ONNXRT116_VERSION and num_bits == 4 and group_size == 32
+            satisfy_MatMulNBits_condition = (
+                Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4
             )
-            if ("CUDAExecutionProvider" in providers and satisfy_MatMulNBits_condition) or (
+            satisfy_MatMulFpQ4_condition = (
+                Version(ort.__version__) >= ONNXRT116_VERSION
+                and num_bits == 4
+                and group_size == 32
+            )
+            if (
+                "CUDAExecutionProvider" in providers and satisfy_MatMulNBits_condition
+            ) or (
                 "CUDAExecutionProvider" not in providers
                 and (satisfy_MatMulFpQ4_condition or satisfy_MatMulNBits_condition)
             ):  # pragma: no cover
@@ -355,7 +376,9 @@ def gptq_quantize(
                 org_shape = weight.shape
                 k_blocks = (org_shape[0] + group_size - 1) // group_size
                 q_weight = pad_tensor(q_weight, group_size, k_blocks)
-                q_weight, scale, zp = quant_tensor(q_weight.T, num_bits, group_size, scheme, "uint")
+                q_weight, scale, zp = quant_tensor(
+                    q_weight.T, num_bits, group_size, scheme, "uint"
+                )
                 q_matmul_node, new_inits = make_matmul_weight_only_node(
                     node=node,
                     weight_shape=org_shape,
@@ -373,7 +396,8 @@ def gptq_quantize(
                 model.add_node(q_matmul_node)
             else:
                 q_weight_tensor = onnx.helper.make_tensor(
-                    name=node.input[1] + "_Q{}G{}".format(str(num_bits), str(group_size)),
+                    name=node.input[1]
+                    + "_Q{}G{}".format(str(num_bits), str(group_size)),
                     data_type=dtype_mapping[str(dtype)],
                     dims=q_weight.shape,
                     vals=q_weight.astype(dtype).tobytes(),
@@ -415,11 +439,17 @@ def apply_gptq_on_model(
     """
     # set model params
     kwargs = {}
-    kwargs = {key: quant_config.pop(key) for key in GPTQConfig.model_params_list if key in quant_config}
+    kwargs = {
+        key: quant_config.pop(key)
+        for key in GPTQConfig.model_params_list
+        if key in quant_config
+    }
 
     # change op config to dict type
     for op_name_type, op_config in quant_config.items():
         if isinstance(op_config, GPTQConfig):
             quant_config[op_name_type] = op_config.to_dict()
 
-    return gptq_quantize(model, dataloader=calibration_data_reader, weight_config=quant_config, **kwargs)
+    return gptq_quantize(
+        model, dataloader=calibration_data_reader, weight_config=quant_config, **kwargs
+    )

@@ -1,15 +1,15 @@
 import torch
 
 
-def alpha_divergence(teacher_logits, student_logits, alpha, reduction='none', clip=1e3):
-    """ alpha divergence loss
-            teacher_logits: output logits of the student network
-            student_logits: output logits of the teacher network
-            alpha: divergence coeff in range[0,1] if alpha close to zero loss goes to KL(teacher|student) loss
-            if alpha close to 1 loss goes to KL(student|teacher) loss.Values close to one cause the network to tighten
-             the distribution of the teacher's model to the distribution of the student's model,
-             which leads to "forgetting" and poor distillation.
-            reduction: method for reduction among batch samples
+def alpha_divergence(teacher_logits, student_logits, alpha, reduction="none", clip=1e3):
+    """alpha divergence loss
+    teacher_logits: output logits of the student network
+    student_logits: output logits of the teacher network
+    alpha: divergence coeff in range[0,1] if alpha close to zero loss goes to KL(teacher|student) loss
+    if alpha close to 1 loss goes to KL(student|teacher) loss.Values close to one cause the network to tighten
+     the distribution of the teacher's model to the distribution of the student's model,
+     which leads to "forgetting" and poor distillation.
+    reduction: method for reduction among batch samples
     """
     assert isinstance(alpha, float)
     q_prob = torch.nn.functional.softmax(teacher_logits, dim=1)
@@ -25,30 +25,37 @@ def alpha_divergence(teacher_logits, student_logits, alpha, reduction='none', cl
     else:
         iw_ratio = torch.pow(p_prob / q_prob, alpha)
         iw_ratio = iw_ratio.clamp(0, clip)
-        loss = 1.0 / (alpha * (alpha - 1.0)) * ((iw_ratio * q_prob).sum(1) - 1.0)  # D_a(p||q)
+        loss = (
+            1.0 / (alpha * (alpha - 1.0)) * ((iw_ratio * q_prob).sum(1) - 1.0)
+        )  # D_a(p||q)
 
-    if reduction == 'mean':
+    if reduction == "mean":
         return loss.mean()
-    elif reduction == 'sum':
+    elif reduction == "sum":
         return loss.sum()
     return loss
 
 
 def f_divergence(teacher_logits, student_logits, alpha, iw_clip=1e3, p_normalize=False):
-    """ alpha divergence loss
-            teacher_logits: output logits of the student network
-            student_logits: output logits of the teacher network
-            alpha: divergence coeff in range[0,1] if alpha close to zero loss goes to KL(teacher|student) loss
-            if alpha close to 1 loss goes to KL(student|teacher) loss.Values close to one cause the network to tighten
-             the distribution of the teacher's model to the distribution of the student's model,
-             which leads to "forgetting" and poor distillation.
-            reduction: method for reduction among batch samples
+    """alpha divergence loss
+    teacher_logits: output logits of the student network
+    student_logits: output logits of the teacher network
+    alpha: divergence coeff in range[0,1] if alpha close to zero loss goes to KL(teacher|student) loss
+    if alpha close to 1 loss goes to KL(student|teacher) loss.Values close to one cause the network to tighten
+     the distribution of the teacher's model to the distribution of the student's model,
+     which leads to "forgetting" and poor distillation.
+    reduction: method for reduction among batch samples
     """
     assert isinstance(alpha, float)
     teacher_prob = torch.nn.functional.softmax(teacher_logits, dim=1).detach()
-    student_prob = student_logits.detach() if p_normalize \
+    student_prob = (
+        student_logits.detach()
+        if p_normalize
         else torch.nn.functional.softmax(student_logits, dim=1).detach()
-    teacher_log_prob = torch.nn.functional.log_softmax(teacher_logits, dim=1)  # gradient is only backpropagated here
+    )
+    teacher_log_prob = torch.nn.functional.log_softmax(
+        teacher_logits, dim=1
+    )  # gradient is only backpropagated here
     importance_ratio = student_prob / teacher_prob
 
     alpha_is_small = abs(alpha) < 1e-3

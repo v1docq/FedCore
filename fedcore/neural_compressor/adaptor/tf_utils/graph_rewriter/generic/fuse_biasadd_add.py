@@ -16,11 +16,12 @@
 # limitations under the License.
 """Fuse BiasAdd and Add Graph Rewriter."""
 
-import tensorflow as tf
 from tensorflow.python.framework import dtypes, tensor_util
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 
 from ..graph_base import GraphRewriterBase
 
@@ -36,7 +37,14 @@ class FuseBiasAddAndAddOptimizer(GraphRewriterBase):
         graph_info = cur_graph.parse_graph()
 
         target_nodes = cur_graph.query_fusion_pattern_nodes(
-            [["Conv2D", "Conv3D"], "BiasAdd", ["Add", "AddV2"], ["Relu", "Relu6", "swish_f32"], ["Mul"], ["Mul"]]
+            [
+                ["Conv2D", "Conv3D"],
+                "BiasAdd",
+                ["Add", "AddV2"],
+                ["Relu", "Relu6", "swish_f32"],
+                ["Mul"],
+                ["Mul"],
+            ]
         )
 
         for i in target_nodes:
@@ -61,7 +69,9 @@ class FuseBiasAddAndAddOptimizer(GraphRewriterBase):
             add_value = tensor_util.MakeNdarray(add_const_node.attr["value"].tensor)
 
             new_bias_tensor = value + add_value
-            fused_const_node = Helper.create_constant_node(i[2] + "_fused", new_bias_tensor, dtypes.float32)
+            fused_const_node = Helper.create_constant_node(
+                i[2] + "_fused", new_bias_tensor, dtypes.float32
+            )
             cur_graph.remove_node(graph_info[i[1]].node.input[1])
 
             graph_info[i[1]].node.input[1] = i[2] + "_fused"

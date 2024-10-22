@@ -18,7 +18,9 @@
 
 import copy
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase
@@ -53,10 +55,16 @@ class MoveSqueezeAfterReluOptimizer(GraphRewriterBase):
                     # biasadd
                     for i, input in enumerate(biasadd_node.input):
                         if input == biasadd_input:
-                            new_input = biasadd_node.input[:i] + [squeeze_node.input[0]] + biasadd_node.input[i + 1 :]
+                            new_input = (
+                                biasadd_node.input[:i]
+                                + [squeeze_node.input[0]]
+                                + biasadd_node.input[i + 1 :]
+                            )
                             graph_info[biasadd_node.name].node.ClearField("input")
                             graph_info[biasadd_node.name].node.input.extend(new_input)
-                            graph_info[squeeze_node.name].outputs.remove(biasadd_node.name)
+                            graph_info[squeeze_node.name].outputs.remove(
+                                biasadd_node.name
+                            )
                     # conv output
                     conv = squeeze_node.input[0]
                     conv_outputs = graph_info[conv].outputs
@@ -98,7 +106,11 @@ class MoveSqueezeAfterReluOptimizer(GraphRewriterBase):
                 # relu---->reshape
                 for i, input in enumerate(reshape_node.input):
                     if input == reshape_input:
-                        new_input = reshape_node.input[:i] + [node.name] + reshape_node.input[i + 1 :]
+                        new_input = (
+                            reshape_node.input[:i]
+                            + [node.name]
+                            + reshape_node.input[i + 1 :]
+                        )
                         graph_info[reshape_node.name].node.ClearField("input")
                         graph_info[reshape_node.name].node.input.extend(new_input)
                         graph_info[x_node.name].outputs.remove(reshape_node.name)

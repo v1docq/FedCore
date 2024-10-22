@@ -43,7 +43,10 @@ def dump_elapsed_time(customized_msg=""):
             end = time.time()
             logger.info(
                 "%s elapsed time: %s ms"
-                % (customized_msg if customized_msg else func.__qualname__, round((end - start) * 1000, 2))
+                % (
+                    customized_msg if customized_msg else func.__qualname__,
+                    round((end - start) * 1000, 2),
+                )
             )
             return res
 

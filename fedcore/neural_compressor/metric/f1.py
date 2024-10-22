@@ -136,7 +136,9 @@ def evaluate(predictions: Dict[str, str], dataset: List[Dict[str, Any]]) -> floa
             for qa in paragraph["qas"]:
                 total += 1
                 if qa["id"] not in predictions:
-                    message = "Unanswered question " + qa["id"] + " will receive score 0."
+                    message = (
+                        "Unanswered question " + qa["id"] + " will receive score 0."
+                    )
                     logger.warning(message)
                     continue
 

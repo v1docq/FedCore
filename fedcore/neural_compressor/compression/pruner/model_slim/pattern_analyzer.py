@@ -116,7 +116,10 @@ class RecipeSearcher(object):
         """Operations called for one single search step."""
         module_type = type(module).__name__
         if module_type in self.targets:
-            sublayers = [get_attributes(module, sublayer_name) for sublayer_name in self.recipe[module_type]]
+            sublayers = [
+                get_attributes(module, sublayer_name)
+                for sublayer_name in self.recipe[module_type]
+            ]
             self.search_results.append(sublayers)
         # recursively search
         for n, m in module.named_children():
@@ -143,7 +146,9 @@ class JitBasicSearcher(object):
         searching_results: The list/dict which store matched patterns.
     """
 
-    def __init__(self, model, dataloader=None, placeholder_shape=None, placeholder_dtype=None):
+    def __init__(
+        self, model, dataloader=None, placeholder_shape=None, placeholder_dtype=None
+    ):
         """Initialize the attributes."""
         assert isinstance(model, torch.nn.Module)
         if "PyTorchFXModel" in type(model).__name__:
@@ -156,7 +161,9 @@ class JitBasicSearcher(object):
         except:
             self.device = next(self.model.parameters()).device
         # use torch.jit to generate static graph
-        self.dataloader = dataloader  # user can set a dataloader to help trace static graph
+        self.dataloader = (
+            dataloader  # user can set a dataloader to help trace static graph
+        )
         self.placeholder_shape = placeholder_shape  # dummy input's shape
         self.placeholder_dtype = placeholder_dtype  # dummy input's data
         self.static_graph = None
@@ -203,46 +210,71 @@ class JitBasicSearcher(object):
         dummy_inputs = self.generate_dummy_inputs()
         dummy_inputs = [] + [dummy_inputs]
         if type(self.model).__name__ == "WhisperForConditionalGeneration":
-            dummy_inputs = [torch.ones([1, 80, 3000]), torch.ones([1, 448], dtype=torch.int64)]
-        logger.info("Generating static graph from original model using auto dummy input: start.")
+            dummy_inputs = [
+                torch.ones([1, 80, 3000]),
+                torch.ones([1, 448], dtype=torch.int64),
+            ]
+        logger.info(
+            "Generating static graph from original model using auto dummy input: start."
+        )
         try:
             self.static_graph = torch.jit.trace(self.model, dummy_inputs, strict=False)
             # re-org from original static codes.
-            self.flatten_static_graph = [l.strip() for l in self.static_graph.inlined_graph.__str__().split("\n")]
-            logger.info("Generating static graph from original model using auto dummy input: success.")
+            self.flatten_static_graph = [
+                l.strip() for l in self.static_graph.inlined_graph.__str__().split("\n")
+            ]
+            logger.info(
+                "Generating static graph from original model using auto dummy input: success."
+            )
         except:
-            logger.info("Generating static graph from original model using auto dummy input: failed.")
+            logger.info(
+                "Generating static graph from original model using auto dummy input: failed."
+            )
 
     def generate_static_graph_with_dataloader(self):
         """Generate static graph from a external dataloader."""
         # dummy_input = self.dataloader[0]
-        logger.info("Generating static graph from original model using external data: start.")
+        logger.info(
+            "Generating static graph from original model using external data: start."
+        )
         for dummy_input in self.dataloader:
             if isinstance(dummy_input, dict):
                 try:
                     dummy_input = dummy_input["input_ids"]
-                    self.static_graph = torch.jit.trace(self.model, dummy_input.to(self.device), strict=False)
+                    self.static_graph = torch.jit.trace(
+                        self.model, dummy_input.to(self.device), strict=False
+                    )
                 except:
                     pass
             else:
                 try:
                     for idx in range(len(dummy_input)):
                         dummy_input[idx] = dummy_input[idx].to(self.device)
-                    self.static_graph = torch.jit.trace(self.model, dummy_input, strict=False)
+                    self.static_graph = torch.jit.trace(
+                        self.model, dummy_input, strict=False
+                    )
                 except:
                     try:
                         dummy_input = dummy_input[0]
-                        self.static_graph = torch.jit.trace(self.model, dummy_input.to(self.device), strict=False)
+                        self.static_graph = torch.jit.trace(
+                            self.model, dummy_input.to(self.device), strict=False
+                        )
                     except:
                         pass
             if self.static_graph is not None:
                 # if jit graph is successfully generated, end iteration
                 break
         try:
-            self.flatten_static_graph = [l.strip() for l in self.static_graph.inlined_graph.__str__().split("\n")]
-            logger.info("Generating static graph from original model using external data: success.")
+            self.flatten_static_graph = [
+                l.strip() for l in self.static_graph.inlined_graph.__str__().split("\n")
+            ]
+            logger.info(
+                "Generating static graph from original model using external data: success."
+            )
         except:
-            logger.warning("Generating static graph from original model using external data: failed.")
+            logger.warning(
+                "Generating static graph from original model using external data: failed."
+            )
 
     def generate_static_graph(self):
         """Generate static graph with two methods: using dataloader or dummy input."""
@@ -261,7 +293,9 @@ class JitBasicSearcher(object):
         Return:
             A torch.Tensor passed into the model to generate static graph.
         """
-        return torch.ones(self.placeholder_shape, dtype=self.placeholder_dtype).to(self.device)
+        return torch.ones(self.placeholder_shape, dtype=self.placeholder_dtype).to(
+            self.device
+        )
 
     def filter_static_code(self, list_in, kw):
         """Obtain sub-list which contains some key words.
@@ -407,15 +441,21 @@ class Linear2LinearSearcher(JitBasicSearcher):
         current_pattern: a searching path to store searching status.
     """
 
-    def __init__(self, model, dataloader=None, placeholder_shape=None, placeholder_dtype=None):
+    def __init__(
+        self, model, dataloader=None, placeholder_shape=None, placeholder_dtype=None
+    ):
         """Initialize."""
         assert isinstance(model, torch.nn.Module)
-        super(Linear2LinearSearcher, self).__init__(model, dataloader, placeholder_shape, placeholder_dtype)
+        super(Linear2LinearSearcher, self).__init__(
+            model, dataloader, placeholder_shape, placeholder_dtype
+        )
         self.target_op_lut = {}
         self.current_pattern = []
         # initialize target_op_lut
         for op in JIT_SUPPORT_OPS:
-            self.target_op_lut[op] = JitBasicSearcher.filter_static_code(self, self.flatten_static_graph, "aten::" + op)
+            self.target_op_lut[op] = JitBasicSearcher.filter_static_code(
+                self, self.flatten_static_graph, "aten::" + op
+            )
 
     def search_frontier_ops_from_node(self, node_name):
         """Search the frontier nodes from a original op's input nodes.
@@ -429,7 +469,9 @@ class Linear2LinearSearcher(JitBasicSearcher):
         target_frontier_ops = []
         for op_type, op_codes in self.target_op_lut.items():
             for op_code in op_codes:
-                output_names = JitBasicSearcher.analyze_jit_code(self, op_code)["output_names"]
+                output_names = JitBasicSearcher.analyze_jit_code(self, op_code)[
+                    "output_names"
+                ]
                 if output_names.__len__() == 1 and node_name == output_names[0]:
                     target_frontier_ops.append(op_code)
                 else:
@@ -456,9 +498,13 @@ class Linear2LinearSearcher(JitBasicSearcher):
                 frontier_ops = self.search_frontier_ops_from_node(op_input)
                 # retrively search the ops
                 for frontier_op in frontier_ops:
-                    frontier_op_info = JitBasicSearcher.analyze_jit_code(self, frontier_op)
+                    frontier_op_info = JitBasicSearcher.analyze_jit_code(
+                        self, frontier_op
+                    )
                     if frontier_op_info["op_type"] == "linear":
-                        results["target_frontier_linears"].append(frontier_op_info["op_trace"])
+                        results["target_frontier_linears"].append(
+                            frontier_op_info["op_trace"]
+                        )
                     else:
                         dfs(frontier_op)
 
@@ -489,7 +535,9 @@ class Linear2LinearSearcher(JitBasicSearcher):
                 all_linear_structure_results.append(search_res)
         # Summary
         print_iterables(all_linear_structure_results)
-        logger.info(f"Found {all_linear_structure_results.__len__()} linear2linear structures")
+        logger.info(
+            f"Found {all_linear_structure_results.__len__()} linear2linear structures"
+        )
         if all_linear_structure_results.__len__() == 0:
             logger.warning("No linear2linear modules are hooked.")
         return all_linear_structure_results
@@ -514,7 +562,8 @@ class Linear2LinearSearcher(JitBasicSearcher):
             }
             layer_obj["root_linear"] = get_attributes(self.model, item["root_linear"])
             layer_obj["target_frontier_linears"] = [
-                get_attributes(self.model, linfo) for linfo in item["target_frontier_linears"]
+                get_attributes(self.model, linfo)
+                for linfo in item["target_frontier_linears"]
             ]
             layer_objs.append(layer_obj)
         return layer_objs
@@ -536,22 +585,30 @@ class SelfMHASearcher(JitBasicSearcher):
         flatten_static_graph: A list of string with the model's static graph inference details.
     """
 
-    def __init__(self, model, dataloader=None, placeholder_shape=None, placeholder_dtype=None):
+    def __init__(
+        self, model, dataloader=None, placeholder_shape=None, placeholder_dtype=None
+    ):
         """Initialize."""
         assert isinstance(model, torch.nn.Module)
-        super(SelfMHASearcher, self).__init__(model, dataloader, placeholder_shape, placeholder_dtype)
+        super(SelfMHASearcher, self).__init__(
+            model, dataloader, placeholder_shape, placeholder_dtype
+        )
 
     def get_head_pattern(self):
         """Obtain head block sizes."""
-        hidden_size = self.model.config.hidden_size
-        head_size = self.model.config.hidden_size // self.model.config.num_attention_heads
+        self.model.config.hidden_size
+        head_size = (
+            self.model.config.hidden_size // self.model.config.num_attention_heads
+        )
         qkv_pattern = str(head_size) + "xchannel"
         ffn_pattern = "channelx" + str(head_size)
         return qkv_pattern, ffn_pattern
 
     def gather_mha_inputs(self):
         """Search the multi-head attention modules' query, key, as well as value layers."""
-        linears = JitBasicSearcher.filter_static_code(self, self.flatten_static_graph, "aten::linear")
+        linears = JitBasicSearcher.filter_static_code(
+            self, self.flatten_static_graph, "aten::linear"
+        )
         linear_infos = [JitBasicSearcher.analyze_jit_code(self, li) for li in linears]
         # generate all nodes' name and their related input node names
         input_counts = {}
@@ -578,7 +635,9 @@ class SelfMHASearcher(JitBasicSearcher):
     def gather_linear_from_input(self, input_names: dict):
         """Gather query, key and value layers of the same self-attention module together."""
         linear_clusters = {}
-        linears = JitBasicSearcher.filter_static_code(self, self.flatten_static_graph, "aten::linear")
+        linears = JitBasicSearcher.filter_static_code(
+            self, self.flatten_static_graph, "aten::linear"
+        )
         for li in linears:
             linfo = JitBasicSearcher.analyze_jit_code(self, li)
             for input_name in linfo["input_names"]:
@@ -602,7 +661,10 @@ class SelfMHASearcher(JitBasicSearcher):
         """
         qkv_clusters = {}
         for input_name, input_linked_linears in linears.items():
-            linfos = [JitBasicSearcher.analyze_jit_code(self, il) for il in input_linked_linears]
+            linfos = [
+                JitBasicSearcher.analyze_jit_code(self, il)
+                for il in input_linked_linears
+            ]
             # step 1: statistics of linears clusters with same shape.
             op_shape_lut = {}
             for linfo in linfos:
@@ -642,7 +704,11 @@ class SelfMHASearcher(JitBasicSearcher):
         for input_name in qkv_clusters:
             self_attn = {"qkv": qkv_clusters[input_name][:], "ffn": []}
             for idx in range(len(linear_lut)):
-                if idx >= 1 and (linear_lut[idx - 1] in self_attn["qkv"]) and (linear_lut[idx] not in self_attn["qkv"]):
+                if (
+                    idx >= 1
+                    and (linear_lut[idx - 1] in self_attn["qkv"])
+                    and (linear_lut[idx] not in self_attn["qkv"])
+                ):
                     # this means we find the first linear layer after qkv
                     self_attn["ffn"].append(linear_lut[idx])
                     break
@@ -718,8 +784,14 @@ class SelfMHASearcher(JitBasicSearcher):
                 "mha_name": mha_search_layer["mha_name"][:],
             }
             # obtain pytorch module
-            layer_obj["qkv_module"] = [get_attributes(self.model, layer_name) for layer_name in mha_search_layer["qkv"]]
-            layer_obj["ffn_module"] = [get_attributes(self.model, layer_name) for layer_name in mha_search_layer["ffn"]]
+            layer_obj["qkv_module"] = [
+                get_attributes(self.model, layer_name)
+                for layer_name in mha_search_layer["qkv"]
+            ]
+            layer_obj["ffn_module"] = [
+                get_attributes(self.model, layer_name)
+                for layer_name in mha_search_layer["ffn"]
+            ]
             # we can directly copy since we have already obtained this module before
             layer_obj["mha_module"] = mha_search_layer["mha_module"][:]
             layer_objs.append(layer_obj)
@@ -751,13 +823,14 @@ class SelfMHASearcher(JitBasicSearcher):
             # get query layer name
             # get attn_output layer name
             qkv_layer_name = self_attention_list[idx]["qkv"]
-            ffn_layer_name = self_attention_list[idx]["ffn"]
+            self_attention_list[idx]["ffn"]
             # problematic implementations
             # mha_module_name = get_common_module(qkv_layer_name, ffn_layer_name)
             mha_module_name = get_common_module(qkv_layer_name[0], qkv_layer_name[-1])
             self_attention_list[idx]["mha_name"] = [mha_module_name]
             self_attention_list[idx]["mha_module"] = [
-                get_attributes(self.model, mha_module_name) for mha_module_name in self_attention_list[idx]["mha_name"]
+                get_attributes(self.model, mha_module_name)
+                for mha_module_name in self_attention_list[idx]["mha_name"]
             ]
         return self_attention_list
 

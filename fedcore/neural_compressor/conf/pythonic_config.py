@@ -23,37 +23,47 @@ from schema import And, Optional, Schema
 from .dotdict import DotDict
 
 logger = logging.getLogger("neural_compressor")
-default_workspace = './nc_workspace/{}/'.format(
-    datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+default_workspace = "./nc_workspace/{}/".format(
+    datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+)
 
 
-ops_schema = Schema({
-    Optional('weight', default=None): {
-        Optional('granularity'): And(
-            list,
-            lambda s: all(i in ['per_channel', 'per_tensor'] for i in s)),
-        Optional('scheme'): And(
-            list,
-            lambda s: all(i in ['asym', 'sym', 'asym_float'] for i in s)),
-        Optional('dtype'): And(
-            list,
-            lambda s: all(i in ['int8', 'uint8', 'fp32', 'bf16', 'fp16'] for i in s)),
-        Optional('algorithm'): And(
-            list,
-            lambda s: all(i in ['minmax'] for i in s))},
-    Optional('activation', default=None): {
-        Optional('granularity'): And(
-            list,
-            lambda s: all(i in ['per_channel', 'per_tensor'] for i in s)),
-        Optional('scheme'): And(
-            list,
-            lambda s: all(i in ['asym', 'sym'] for i in s)),
-        Optional('dtype'): And(
-            list,
-            lambda s: all(i in ['int8', 'uint8', 'fp32', 'bf16', 'fp16', 'None'] for i in s)),
-        Optional('algorithm'): And(
-            list,
-            lambda s: all(i in ['minmax', 'kl', 'placeholder'] for i in s))}})
+ops_schema = Schema(
+    {
+        Optional("weight", default=None): {
+            Optional("granularity"): And(
+                list, lambda s: all(i in ["per_channel", "per_tensor"] for i in s)
+            ),
+            Optional("scheme"): And(
+                list, lambda s: all(i in ["asym", "sym", "asym_float"] for i in s)
+            ),
+            Optional("dtype"): And(
+                list,
+                lambda s: all(
+                    i in ["int8", "uint8", "fp32", "bf16", "fp16"] for i in s
+                ),
+            ),
+            Optional("algorithm"): And(list, lambda s: all(i in ["minmax"] for i in s)),
+        },
+        Optional("activation", default=None): {
+            Optional("granularity"): And(
+                list, lambda s: all(i in ["per_channel", "per_tensor"] for i in s)
+            ),
+            Optional("scheme"): And(
+                list, lambda s: all(i in ["asym", "sym"] for i in s)
+            ),
+            Optional("dtype"): And(
+                list,
+                lambda s: all(
+                    i in ["int8", "uint8", "fp32", "bf16", "fp16", "None"] for i in s
+                ),
+            ),
+            Optional("algorithm"): And(
+                list, lambda s: all(i in ["minmax", "kl", "placeholder"] for i in s)
+            ),
+        },
+    }
+)
 
 
 def _check_value(name, src, supported_type, supported_value=[]):
@@ -68,20 +78,27 @@ def _check_value(name, src, supported_type, supported_value=[]):
                 self._datatype = datatype
     """
     if isinstance(src, list) and any([not isinstance(i, supported_type) for i in src]):
-        assert False, ("Type of {} items should be {} but not {}".format(
-            name, str(supported_type), [type(i) for i in src]))
+        assert False, "Type of {} items should be {} but not {}".format(
+            name, str(supported_type), [type(i) for i in src]
+        )
     elif not isinstance(src, list) and not isinstance(src, supported_type):
-        assert False, ("Type of {} should be {} but not {}".format(
-            name, str(supported_type), type(src)))
+        assert False, "Type of {} should be {} but not {}".format(
+            name, str(supported_type), type(src)
+        )
 
     if len(supported_value) > 0:
         if isinstance(src, str) and src not in supported_value:
-            assert False, ("{} is not in supported {}: {}. Skip setting it.".format(
-                src, name, str(supported_value)))
-        elif isinstance(src, list) and all([isinstance(i, str) for i in src]) and \
-            any([i not in supported_value for i in src]):
-            assert False, ("{} is not in supported {}: {}. Skip setting it.".format(
-                src, name, str(supported_value)))
+            assert False, "{} is not in supported {}: {}. Skip setting it.".format(
+                src, name, str(supported_value)
+            )
+        elif (
+            isinstance(src, list)
+            and all([isinstance(i, str) for i in src])
+            and any([i not in supported_value for i in src])
+        ):
+            assert False, "{} is not in supported {}: {}. Skip setting it.".format(
+                src, name, str(supported_value)
+            )
 
     return True
 
@@ -118,8 +135,14 @@ class Options:
         set_resume_from("workspace_path")
         set_tensorboard(True)
     """
-    def __init__(self, random_seed=1978, workspace=default_workspace,
-                 resume_from=None, tensorboard=False):
+
+    def __init__(
+        self,
+        random_seed=1978,
+        workspace=default_workspace,
+        resume_from=None,
+        tensorboard=False,
+    ):
         """Init an Option object."""
         self.random_seed = random_seed
         self.workspace = workspace
@@ -134,7 +157,7 @@ class Options:
     @random_seed.setter
     def random_seed(self, random_seed):
         """Set random seed."""
-        if _check_value('random_seed', random_seed, int):
+        if _check_value("random_seed", random_seed, int):
             self._random_seed = random_seed
 
     @property
@@ -145,7 +168,7 @@ class Options:
     @workspace.setter
     def workspace(self, workspace):
         """Set workspace."""
-        if _check_value('workspace', workspace, str):
+        if _check_value("workspace", workspace, str):
             self._workspace = workspace
 
     @property
@@ -156,7 +179,7 @@ class Options:
     @resume_from.setter
     def resume_from(self, resume_from):
         """Set resume_from."""
-        if resume_from is None or _check_value('resume_from', resume_from, str):
+        if resume_from is None or _check_value("resume_from", resume_from, str):
             self._resume_from = resume_from
 
     @property
@@ -167,7 +190,7 @@ class Options:
     @tensorboard.setter
     def tensorboard(self, tensorboard):
         """Set tensorboard."""
-        if _check_value('tensorboard', tensorboard, bool):
+        if _check_value("tensorboard", tensorboard, bool):
             self._tensorboard = tensorboard
 
 
@@ -192,7 +215,10 @@ class AccuracyCriterion:
             tolerable_loss=0.01,  # optional.
         )
     """
-    def __init__(self, higher_is_better=True, criterion='relative', tolerable_loss=0.01):
+
+    def __init__(
+        self, higher_is_better=True, criterion="relative", tolerable_loss=0.01
+    ):
         """Init an AccuracyCriterion object."""
         self.higher_is_better = higher_is_better
         self.criterion = criterion
@@ -206,33 +232,33 @@ class AccuracyCriterion:
     @higher_is_better.setter
     def higher_is_better(self, higher_is_better):
         """Set higher_is_better."""
-        if _check_value('higher_is_better', higher_is_better, bool):
+        if _check_value("higher_is_better", higher_is_better, bool):
             self._higher_is_better = higher_is_better
 
     @property
     def relative(self):
         """Get tolerable_loss when criterion is relative."""
-        if self.criterion != 'relative':
+        if self.criterion != "relative":
             return None
         return self.tolerable_loss
 
     @relative.setter
     def relative(self, relative):
         """Set tolerable_loss and criterion to relative."""
-        self.criterion = 'relative'
+        self.criterion = "relative"
         self.tolerable_loss = relative
 
     @property
     def absolute(self):
         """Get tolerable_loss when criterion is absolute."""
-        if self.criterion != 'absolute':
+        if self.criterion != "absolute":
             return None
         return self.tolerable_loss
 
     @absolute.setter
     def absolute(self, absolute):
         """Set tolerable_loss and criterion to absolute."""
-        self.criterion = 'absolute'
+        self.criterion = "absolute"
         self.tolerable_loss = absolute
 
     @property
@@ -243,7 +269,7 @@ class AccuracyCriterion:
     @criterion.setter
     def criterion(self, criterion):
         """Set criterion."""
-        if _check_value('criterion', criterion, str, ['relative', 'absolute']):
+        if _check_value("criterion", criterion, str, ["relative", "absolute"]):
             self._criterion = criterion
 
     @property
@@ -254,7 +280,7 @@ class AccuracyCriterion:
     @tolerable_loss.setter
     def tolerable_loss(self, tolerable_loss):
         """Set tolerable_loss."""
-        if _check_value('tolerable_loss', tolerable_loss, float):
+        if _check_value("tolerable_loss", tolerable_loss, float):
             self._tolerable_loss = tolerable_loss
 
     def __str__(self):
@@ -263,7 +289,7 @@ class AccuracyCriterion:
 
     def keys(self):
         """Returns keys of the dict."""
-        return ('higher_is_better', 'criterion', 'tolerable_loss')
+        return ("higher_is_better", "criterion", "tolerable_loss")
 
     def __getitem__(self, item):
         """Get the dict."""
@@ -345,30 +371,33 @@ class _BaseQuantizationConfig:
         accuracy_criterion: Accuracy constraint settings.
         use_distributed_tuning: Whether use distributed tuning or not.
     """
-    def __init__(self,
-                 inputs=[],
-                 outputs=[],
-                 backend="default",
-                 domain="auto",
-                 recipes={},
-                 quant_format="default",
-                 device="cpu",
-                 calibration_sampling_size=[100],
-                 op_type_dict=None,
-                 op_name_dict=None,
-                 strategy="basic",
-                 strategy_kwargs=None,
-                 objective="performance",
-                 timeout=0,
-                 max_trials=100,
-                 performance_only=False,
-                 reduce_range=None,
-                 example_inputs=None,
-                 excluded_precisions=[],
-                 quant_level="auto",
-                 accuracy_criterion=accuracy_criterion,
-                 use_distributed_tuning=False,
-                 diagnosis=False):
+
+    def __init__(
+        self,
+        inputs=[],
+        outputs=[],
+        backend="default",
+        domain="auto",
+        recipes={},
+        quant_format="default",
+        device="cpu",
+        calibration_sampling_size=[100],
+        op_type_dict=None,
+        op_name_dict=None,
+        strategy="basic",
+        strategy_kwargs=None,
+        objective="performance",
+        timeout=0,
+        max_trials=100,
+        performance_only=False,
+        reduce_range=None,
+        example_inputs=None,
+        excluded_precisions=[],
+        quant_level="auto",
+        accuracy_criterion=accuracy_criterion,
+        use_distributed_tuning=False,
+        diagnosis=False,
+    ):
         """Initialize _BaseQuantizationConfig class."""
         self.inputs = inputs
         self.outputs = outputs
@@ -403,8 +432,12 @@ class _BaseQuantizationConfig:
     @domain.setter
     def domain(self, domain):
         """Set domain."""
-        if _check_value("domain", domain, str,
-            ["auto", "cv", "object_detection", "nlp", "recommendation_system"]):
+        if _check_value(
+            "domain",
+            domain,
+            str,
+            ["auto", "cv", "object_detection", "nlp", "recommendation_system"],
+        ):
             self._domain = domain
 
     @property
@@ -430,7 +463,9 @@ class _BaseQuantizationConfig:
                 for k, v in val.items():
                     if k == "alpha":
                         if isinstance(v, str):
-                            assert v == "auto", "the alpha of sq only supports float and 'auto'"
+                            assert (
+                                v == "auto"
+                            ), "the alpha of sq only supports float and 'auto'"
                         else:
                             _check_value("alpha", v, float)
 
@@ -458,8 +493,12 @@ class _BaseQuantizationConfig:
 
         def graph_optimization_level(val=None):
             if val is not None:
-                return _check_value("graph_optimization_level", val, str,
-                    ["DISABLE_ALL", "ENABLE_BASIC", "ENABLE_EXTENDED", "ENABLE_ALL"])
+                return _check_value(
+                    "graph_optimization_level",
+                    val,
+                    str,
+                    ["DISABLE_ALL", "ENABLE_BASIC", "ENABLE_EXTENDED", "ENABLE_ALL"],
+                )
             else:
                 return None
 
@@ -499,19 +538,20 @@ class _BaseQuantizationConfig:
             else:
                 return False
 
-        RECIPES = {"smooth_quant": smooth_quant,
-                   "smooth_quant_args": smooth_quant_args,
-                   "fast_bias_correction": fast_bias_correction,
-                   "weight_correction": weight_correction,
-                   "gemm_to_matmul": gemm_to_matmul,
-                   "graph_optimization_level": graph_optimization_level,
-                   "first_conv_or_matmul_quantization": first_conv_or_matmul_quantization,
-                   "last_conv_or_matmul_quantization": last_conv_or_matmul_quantization,
-                   "pre_post_process_quantization": pre_post_process_quantization,
-                   "add_qdq_pair_to_weight": add_qdq_pair_to_weight,
-                   "optypes_to_exclude_output_quant": optypes_to_exclude_output_quant,
-                   "dedicated_qdq_pair": dedicated_qdq_pair
-                   }
+        RECIPES = {
+            "smooth_quant": smooth_quant,
+            "smooth_quant_args": smooth_quant_args,
+            "fast_bias_correction": fast_bias_correction,
+            "weight_correction": weight_correction,
+            "gemm_to_matmul": gemm_to_matmul,
+            "graph_optimization_level": graph_optimization_level,
+            "first_conv_or_matmul_quantization": first_conv_or_matmul_quantization,
+            "last_conv_or_matmul_quantization": last_conv_or_matmul_quantization,
+            "pre_post_process_quantization": pre_post_process_quantization,
+            "add_qdq_pair_to_weight": add_qdq_pair_to_weight,
+            "optypes_to_exclude_output_quant": optypes_to_exclude_output_quant,
+            "dedicated_qdq_pair": dedicated_qdq_pair,
+        }
         self._recipes = {}
         for k in RECIPES.keys():
             if k in recipes and RECIPES[k](recipes[k]):
@@ -534,7 +574,9 @@ class _BaseQuantizationConfig:
 
     @excluded_precisions.setter
     def excluded_precisions(self, excluded_precisions):
-        if _check_value("excluded_precisions", excluded_precisions, str, ["bf16", "fp16"]):
+        if _check_value(
+            "excluded_precisions", excluded_precisions, str, ["bf16", "fp16"]
+        ):
             self._excluded_precisions = excluded_precisions
             self._use_bf16 = "bf16" not in excluded_precisions
 
@@ -552,7 +594,7 @@ class _BaseQuantizationConfig:
 
     @use_distributed_tuning.setter
     def use_distributed_tuning(self, use_distributed_tuning):
-        if _check_value('use_distributed_tuning', use_distributed_tuning, bool):
+        if _check_value("use_distributed_tuning", use_distributed_tuning, bool):
             self._use_distributed_tuning = use_distributed_tuning
 
     @property
@@ -561,7 +603,7 @@ class _BaseQuantizationConfig:
 
     @reduce_range.setter
     def reduce_range(self, reduce_range):
-        if reduce_range is None or _check_value('reduce_range', reduce_range, bool):
+        if reduce_range is None or _check_value("reduce_range", reduce_range, bool):
             self._reduce_range = reduce_range
 
     @property
@@ -570,7 +612,7 @@ class _BaseQuantizationConfig:
 
     @performance_only.setter
     def performance_only(self, performance_only):
-        if _check_value('performance_only', performance_only, bool):
+        if _check_value("performance_only", performance_only, bool):
             self._performance_only = performance_only
 
     @property
@@ -579,7 +621,7 @@ class _BaseQuantizationConfig:
 
     @max_trials.setter
     def max_trials(self, max_trials):
-        if _check_value('max_trials', max_trials, int):
+        if _check_value("max_trials", max_trials, int):
             self._max_trials = max_trials
 
     @property
@@ -588,7 +630,7 @@ class _BaseQuantizationConfig:
 
     @timeout.setter
     def timeout(self, timeout):
-        if _check_value('timeout', timeout, int):
+        if _check_value("timeout", timeout, int):
             self._timeout = timeout
 
     @property
@@ -597,8 +639,12 @@ class _BaseQuantizationConfig:
 
     @objective.setter
     def objective(self, objective):
-        if _check_value('objective', objective, str,
-            ['performance', 'accuracy', 'modelsize', 'footprint']):
+        if _check_value(
+            "objective",
+            objective,
+            str,
+            ["performance", "accuracy", "modelsize", "footprint"],
+        ):
             self._objective = objective
 
     @property
@@ -607,8 +653,22 @@ class _BaseQuantizationConfig:
 
     @strategy.setter
     def strategy(self, strategy):
-        if _check_value('strategy', strategy, str,
-            ['basic', 'mse', 'bayesian', 'random', 'exhaustive', 'sigopt', 'tpe', 'mse_v2', 'hawq_v2']):
+        if _check_value(
+            "strategy",
+            strategy,
+            str,
+            [
+                "basic",
+                "mse",
+                "bayesian",
+                "random",
+                "exhaustive",
+                "sigopt",
+                "tpe",
+                "mse_v2",
+                "hawq_v2",
+            ],
+        ):
             self._strategy = strategy
 
     @property
@@ -632,8 +692,9 @@ class _BaseQuantizationConfig:
                 ops_schema.validate(v)
             self._op_name_dict = op_name_dict
         else:
-            assert False, ("Type of op_name_dict should be dict but not {}, ".format(
-                type(op_name_dict)))
+            assert False, "Type of op_name_dict should be dict but not {}, ".format(
+                type(op_name_dict)
+            )
 
     @property
     def op_type_dict(self):
@@ -648,8 +709,9 @@ class _BaseQuantizationConfig:
                 ops_schema.validate(v)
             self._op_type_dict = op_type_dict
         else:
-            assert False, ("Type of op_type_dict should be dict but not {}".format(
-                type(op_type_dict)))
+            assert False, "Type of op_type_dict should be dict but not {}".format(
+                type(op_type_dict)
+            )
 
     @property
     def calibration_sampling_size(self):
@@ -657,7 +719,7 @@ class _BaseQuantizationConfig:
 
     @calibration_sampling_size.setter
     def calibration_sampling_size(self, sampling_size):
-        if _check_value('calibration_sampling_size', sampling_size, int):
+        if _check_value("calibration_sampling_size", sampling_size, int):
             if isinstance(sampling_size, int):
                 sampling_size = [sampling_size]
             self._calibration_sampling_size = sampling_size
@@ -668,7 +730,7 @@ class _BaseQuantizationConfig:
 
     @device.setter
     def device(self, device):
-        if _check_value('device', device, str, ['cpu', 'gpu']):
+        if _check_value("device", device, str, ["cpu", "gpu"]):
             self._device = device
 
     @property
@@ -677,8 +739,9 @@ class _BaseQuantizationConfig:
 
     @quant_format.setter
     def quant_format(self, quant_format):
-        if _check_value('quant_format', quant_format, str,
-            ['default', 'QDQ', 'QOperator']):
+        if _check_value(
+            "quant_format", quant_format, str, ["default", "QDQ", "QOperator"]
+        ):
             self._quant_format = quant_format
 
     @property
@@ -687,8 +750,12 @@ class _BaseQuantizationConfig:
 
     @backend.setter
     def backend(self, backend):
-        if _check_value('backend', backend, str, [
-                'default', 'itex', 'ipex', 'onnxrt_trt_ep', 'onnxrt_cuda_ep']):
+        if _check_value(
+            "backend",
+            backend,
+            str,
+            ["default", "itex", "ipex", "onnxrt_trt_ep", "onnxrt_cuda_ep"],
+        ):
             self._backend = backend
 
     @property
@@ -697,7 +764,7 @@ class _BaseQuantizationConfig:
 
     @outputs.setter
     def outputs(self, outputs):
-        if _check_value('outputs', outputs, str):
+        if _check_value("outputs", outputs, str):
             self._outputs = outputs
 
     @property
@@ -706,7 +773,7 @@ class _BaseQuantizationConfig:
 
     @inputs.setter
     def inputs(self, inputs):
-        if _check_value('inputs', inputs, str):
+        if _check_value("inputs", inputs, str):
             self._inputs = inputs
 
     @property
@@ -747,25 +814,28 @@ class BenchmarkConfig:
         conf = BenchmarkConfig(iteration=100, cores_per_instance=4, num_of_instance=7)
         fit(model='./int8.pb', config=conf, b_dataloader=eval_dataloader)
     """
-    def __init__(self,
-                 inputs=[],
-                 outputs=[],
-                 backend='default',
-                 device='cpu',
-                 warmup=5,
-                 iteration=-1,
-                 model=None,
-                 model_name='',
-                 cores_per_instance=None,
-                 num_of_instance=None,
-                 inter_num_of_threads=None,
-                 intra_num_of_threads=None,
-                 diagnosis=False):
+
+    def __init__(
+        self,
+        inputs=[],
+        outputs=[],
+        backend="default",
+        device="cpu",
+        warmup=5,
+        iteration=-1,
+        model=None,
+        model_name="",
+        cores_per_instance=None,
+        num_of_instance=None,
+        inter_num_of_threads=None,
+        intra_num_of_threads=None,
+        diagnosis=False,
+    ):
         """Init a BenchmarkConfig object."""
         self.inputs = inputs
         self.outputs = outputs
         self.backend = backend
-        self.device=device
+        self.device = device
         self.warmup = warmup
         self.iteration = iteration
         self.model = model
@@ -779,9 +849,21 @@ class BenchmarkConfig:
 
     def keys(self):
         """Returns keys of the dict."""
-        return ('inputs', 'outputs', 'backend', 'device', 'warmup', 'iteration', 'model', \
-                'model_name', 'cores_per_instance', 'num_of_instance', 'framework', \
-                'inter_num_of_threads','intra_num_of_threads')
+        return (
+            "inputs",
+            "outputs",
+            "backend",
+            "device",
+            "warmup",
+            "iteration",
+            "model",
+            "model_name",
+            "cores_per_instance",
+            "num_of_instance",
+            "framework",
+            "inter_num_of_threads",
+            "intra_num_of_threads",
+        )
 
     def __getitem__(self, item):
         """Get the dict."""
@@ -795,8 +877,12 @@ class BenchmarkConfig:
     @backend.setter
     def backend(self, backend):
         """Set backend."""
-        if _check_value('backend', backend, str, [
-                'default', 'itex', 'ipex', 'onnxrt_trt_ep', 'onnxrt_cuda_ep']):
+        if _check_value(
+            "backend",
+            backend,
+            str,
+            ["default", "itex", "ipex", "onnxrt_trt_ep", "onnxrt_cuda_ep"],
+        ):
             self._backend = backend
 
     @property
@@ -806,7 +892,7 @@ class BenchmarkConfig:
 
     @device.setter
     def device(self, device):
-        if _check_value('device', device, str, ['cpu', 'gpu']):
+        if _check_value("device", device, str, ["cpu", "gpu"]):
             self._device = device
 
     @property
@@ -817,7 +903,7 @@ class BenchmarkConfig:
     @outputs.setter
     def outputs(self, outputs):
         """Set outputs."""
-        if _check_value('outputs', outputs, str):
+        if _check_value("outputs", outputs, str):
             self._outputs = outputs
 
     @property
@@ -828,7 +914,7 @@ class BenchmarkConfig:
     @inputs.setter
     def inputs(self, inputs):
         """Set inputs."""
-        if _check_value('inputs', inputs, str):
+        if _check_value("inputs", inputs, str):
             self._inputs = inputs
 
     @property
@@ -839,7 +925,7 @@ class BenchmarkConfig:
     @warmup.setter
     def warmup(self, warmup):
         """Set warmup."""
-        if _check_value('warmup', warmup, int):
+        if _check_value("warmup", warmup, int):
             self._warmup = warmup
 
     @property
@@ -850,7 +936,7 @@ class BenchmarkConfig:
     @iteration.setter
     def iteration(self, iteration):
         """Set iteration."""
-        if _check_value('iteration', iteration, int):
+        if _check_value("iteration", iteration, int):
             self._iteration = iteration
 
     @property
@@ -861,8 +947,9 @@ class BenchmarkConfig:
     @cores_per_instance.setter
     def cores_per_instance(self, cores_per_instance):
         """Set cores_per_instance."""
-        if cores_per_instance is None or _check_value('cores_per_instance', cores_per_instance,
-                                                     int):
+        if cores_per_instance is None or _check_value(
+            "cores_per_instance", cores_per_instance, int
+        ):
             self._cores_per_instance = cores_per_instance
 
     @property
@@ -873,7 +960,9 @@ class BenchmarkConfig:
     @num_of_instance.setter
     def num_of_instance(self, num_of_instance):
         """Set num_of_instance."""
-        if num_of_instance is None or _check_value('num_of_instance', num_of_instance, int):
+        if num_of_instance is None or _check_value(
+            "num_of_instance", num_of_instance, int
+        ):
             self._num_of_instance = num_of_instance
 
     @property
@@ -884,8 +973,9 @@ class BenchmarkConfig:
     @inter_num_of_threads.setter
     def inter_num_of_threads(self, inter_num_of_threads):
         """Set inter_num_of_threads."""
-        if inter_num_of_threads is None or _check_value('inter_num_of_threads',
-                                                       inter_num_of_threads, int):
+        if inter_num_of_threads is None or _check_value(
+            "inter_num_of_threads", inter_num_of_threads, int
+        ):
             self._inter_num_of_threads = inter_num_of_threads
 
     @property
@@ -896,8 +986,9 @@ class BenchmarkConfig:
     @intra_num_of_threads.setter
     def intra_num_of_threads(self, intra_num_of_threads):
         """Get intra_num_of_threads."""
-        if intra_num_of_threads is None or _check_value('intra_num_of_threads',
-                                                       intra_num_of_threads, int):
+        if intra_num_of_threads is None or _check_value(
+            "intra_num_of_threads", intra_num_of_threads, int
+        ):
             self._intra_num_of_threads = intra_num_of_threads
 
     @property
@@ -933,26 +1024,28 @@ class BenchmarkConfig:
 
 
 class QuantizationConfig(_BaseQuantizationConfig):
-    def __init__(self,
-                 inputs=[],
-                 outputs=[],
-                 backend='default',
-                 device='cpu',
-                 approach='post_training_static_quant',
-                 calibration_sampling_size=[100],
-                 op_type_dict=None,
-                 op_name_dict=None,
-                 strategy='basic',
-                 strategy_kwargs=None,
-                 objective='performance',
-                 timeout=0,
-                 max_trials=100,
-                 performance_only=False,
-                 reduce_range=None,
-                 use_bf16=True,
-                 quant_level="auto",
-                 accuracy_criterion=accuracy_criterion,
-                 diagnosis=False):
+    def __init__(
+        self,
+        inputs=[],
+        outputs=[],
+        backend="default",
+        device="cpu",
+        approach="post_training_static_quant",
+        calibration_sampling_size=[100],
+        op_type_dict=None,
+        op_name_dict=None,
+        strategy="basic",
+        strategy_kwargs=None,
+        objective="performance",
+        timeout=0,
+        max_trials=100,
+        performance_only=False,
+        reduce_range=None,
+        use_bf16=True,
+        quant_level="auto",
+        accuracy_criterion=accuracy_criterion,
+        diagnosis=False,
+    ):
         excluded_precisions = ["bf16"] if not use_bf16 else []
         super().__init__(
             inputs=inputs,
@@ -972,7 +1065,7 @@ class QuantizationConfig(_BaseQuantizationConfig):
             excluded_precisions=excluded_precisions,
             accuracy_criterion=accuracy_criterion,
             quant_level=quant_level,
-            diagnosis=diagnosis
+            diagnosis=diagnosis,
         )
         self.approach = approach
 
@@ -983,8 +1076,14 @@ class QuantizationConfig(_BaseQuantizationConfig):
     @approach.setter
     def approach(self, approach):
         if _check_value(
-            'approach', approach, str,
-            ['post_training_static_quant', 'post_training_dynamic_quant', 'quant_aware_training']
+            "approach",
+            approach,
+            str,
+            [
+                "post_training_static_quant",
+                "post_training_dynamic_quant",
+                "quant_aware_training",
+            ],
         ):
             self._approach = approach
 
@@ -1061,30 +1160,43 @@ class WeightPruningConfig:
         prune.model = self.model
     """
 
-    def __init__(self, pruning_configs=[{}],  ##empty dict will use global values
-                 target_sparsity=0.9, pruning_type="snip_momentum", pattern="4x1", op_names=[],
-                 excluded_op_names=[],
-                 start_step=0, end_step=0, pruning_scope="global", pruning_frequency=1,
-                 min_sparsity_ratio_per_op=0.0, max_sparsity_ratio_per_op=0.98,
-                 sparsity_decay_type="exp", pruning_op_types=['Conv', 'Linear'],
-                 **kwargs):
+    def __init__(
+        self,
+        pruning_configs=[{}],  ##empty dict will use global values
+        target_sparsity=0.9,
+        pruning_type="snip_momentum",
+        pattern="4x1",
+        op_names=[],
+        excluded_op_names=[],
+        start_step=0,
+        end_step=0,
+        pruning_scope="global",
+        pruning_frequency=1,
+        min_sparsity_ratio_per_op=0.0,
+        max_sparsity_ratio_per_op=0.98,
+        sparsity_decay_type="exp",
+        pruning_op_types=["Conv", "Linear"],
+        **kwargs
+    ):
         """Init a WeightPruningConfig object."""
         self.pruning_configs = pruning_configs
-        self._weight_compression = DotDict({
-            'target_sparsity': target_sparsity,
-            'pruning_type': pruning_type,
-            'pattern': pattern,
-            'op_names': op_names,
-            'excluded_op_names': excluded_op_names,  ##global only
-            'start_step': start_step,
-            'end_step': end_step,
-            'pruning_scope': pruning_scope,
-            'pruning_frequency': pruning_frequency,
-            'min_sparsity_ratio_per_op': min_sparsity_ratio_per_op,
-            'max_sparsity_ratio_per_op': max_sparsity_ratio_per_op,
-            'sparsity_decay_type': sparsity_decay_type,
-            'pruning_op_types': pruning_op_types,
-        })
+        self._weight_compression = DotDict(
+            {
+                "target_sparsity": target_sparsity,
+                "pruning_type": pruning_type,
+                "pattern": pattern,
+                "op_names": op_names,
+                "excluded_op_names": excluded_op_names,  ##global only
+                "start_step": start_step,
+                "end_step": end_step,
+                "pruning_scope": pruning_scope,
+                "pruning_frequency": pruning_frequency,
+                "min_sparsity_ratio_per_op": min_sparsity_ratio_per_op,
+                "max_sparsity_ratio_per_op": max_sparsity_ratio_per_op,
+                "sparsity_decay_type": sparsity_decay_type,
+                "pruning_op_types": pruning_op_types,
+            }
+        )
         self._weight_compression.update(kwargs)
 
     @property
@@ -1111,7 +1223,7 @@ class WeightConf:
 
     @datatype.setter
     def datatype(self, datatype):
-        if _check_value('datatype', datatype, str, ['fp32', 'bf16', 'uint8', 'int8']):
+        if _check_value("datatype", datatype, str, ["fp32", "bf16", "uint8", "int8"]):
             self._datatype = datatype if isinstance(datatype, list) else [datatype]
 
     @property
@@ -1120,7 +1232,7 @@ class WeightConf:
 
     @scheme.setter
     def scheme(self, scheme):
-        if _check_value('scheme', scheme, str, ['sym', 'asym']):
+        if _check_value("scheme", scheme, str, ["sym", "asym"]):
             self._scheme = scheme if isinstance(scheme, list) else [scheme]
 
     @property
@@ -1129,8 +1241,10 @@ class WeightConf:
 
     @granularity.setter
     def granularity(self, granularity):
-        if _check_value('granularity', granularity, str, ['per_channel', 'per_tensor']):
-            self._granularity = granularity if isinstance(granularity, list) else [granularity]
+        if _check_value("granularity", granularity, str, ["per_channel", "per_tensor"]):
+            self._granularity = (
+                granularity if isinstance(granularity, list) else [granularity]
+            )
 
     @property
     def algorithm(self):
@@ -1138,7 +1252,7 @@ class WeightConf:
 
     @algorithm.setter
     def algorithm(self, algorithm):
-        if _check_value('algorithm', algorithm, str, ['minmax', 'kl']):
+        if _check_value("algorithm", algorithm, str, ["minmax", "kl"]):
             self._algorithm = algorithm if isinstance(algorithm, list) else [algorithm]
 
 
@@ -1169,15 +1283,20 @@ class KnowledgeDistillationLossConfig:
         compression_manager = prepare_compression(model, d_conf)
         model = compression_manager.model
     """
-    def __init__(self, temperature=1.0, loss_types=['CE', 'CE'], loss_weights=[0.5, 0.5]):
+
+    def __init__(
+        self, temperature=1.0, loss_types=["CE", "CE"], loss_weights=[0.5, 0.5]
+    ):
         """Init a KnowledgeDistillationLossConfig object."""
-        self.config = DotDict({
-            'KnowledgeDistillationLoss': {
-                'temperature': temperature,
-                'loss_types': loss_types,
-                'loss_weights': loss_weights
+        self.config = DotDict(
+            {
+                "KnowledgeDistillationLoss": {
+                    "temperature": temperature,
+                    "loss_types": loss_types,
+                    "loss_weights": loss_weights,
+                }
             }
-        })
+        )
 
 
 criterion = KnowledgeDistillationLossConfig()
@@ -1205,12 +1324,13 @@ class DistillationConfig:
         compression_manager = prepare_compression(model, conf)
         model = compression_manager.model
     """
-    def __init__(self,
-                 teacher_model=None,
-                 criterion=criterion,
-                 optimizer={'SGD': {
-                     'learning_rate': 0.0001
-                 }}):
+
+    def __init__(
+        self,
+        teacher_model=None,
+        criterion=criterion,
+        optimizer={"SGD": {"learning_rate": 0.0001}},
+    ):
         """Init a DistillationConfig object."""
         self.criterion = criterion
         self.optimizer = optimizer
@@ -1268,7 +1388,7 @@ class OpQuantConf:
 
     @op_type.setter
     def op_type(self, op_type):
-        if _check_value('op_type', op_type, str):
+        if _check_value("op_type", op_type, str):
             self._op_type = op_type
 
     @property
@@ -1292,7 +1412,9 @@ class MXNet:
     def precisions(self, precisions):
         if not isinstance(precisions, list):
             precisions = [precisions]
-        if _check_value('precisions', precisions, str, ['int8', 'uint8', 'fp32', 'bf16', 'fp16']):
+        if _check_value(
+            "precisions", precisions, str, ["int8", "uint8", "fp32", "bf16", "fp16"]
+        ):
             self._precisions = precisions
 
 
@@ -1307,8 +1429,12 @@ class ONNX(MXNet):
 
     @graph_optimization_level.setter
     def graph_optimization_level(self, graph_optimization_level):
-        if _check_value('graph_optimization_level', graph_optimization_level, str,
-            ['DISABLE_ALL', 'ENABLE_BASIC', 'ENABLE_EXTENDED', 'ENABLE_ALL']):
+        if _check_value(
+            "graph_optimization_level",
+            graph_optimization_level,
+            str,
+            ["DISABLE_ALL", "ENABLE_BASIC", "ENABLE_EXTENDED", "ENABLE_ALL"],
+        ):
             self._graph_optimization_level = graph_optimization_level
 
 
@@ -1328,33 +1454,52 @@ class PyTorch(MXNet):
 
 
 class DyNASConfig:
-    def __init__(self, supernet=None, metrics=None, population=50, num_evals=100000,
-                 results_csv_path=None, dataset_path=None, batch_size=64):
+    def __init__(
+        self,
+        supernet=None,
+        metrics=None,
+        population=50,
+        num_evals=100000,
+        results_csv_path=None,
+        dataset_path=None,
+        batch_size=64,
+    ):
         self.config = {
-            'supernet': supernet,
-            'metrics': metrics,
-            'population': population,
-            'num_evals': num_evals,
-            'results_csv_path': results_csv_path,
-            'dataset_path': dataset_path,
-            'batch_size': batch_size,
+            "supernet": supernet,
+            "metrics": metrics,
+            "population": population,
+            "num_evals": num_evals,
+            "results_csv_path": results_csv_path,
+            "dataset_path": dataset_path,
+            "batch_size": batch_size,
         }
 
 
 class NASConfig:
-    def __init__(self, approach=None, search_space=None, search_algorithm=None,
-                 metrics=[], higher_is_better=[], max_trials=3, seed=42, dynas=None):
+    def __init__(
+        self,
+        approach=None,
+        search_space=None,
+        search_algorithm=None,
+        metrics=[],
+        higher_is_better=[],
+        max_trials=3,
+        seed=42,
+        dynas=None,
+    ):
         self._approach = approach
-        self._search = DotDict({
-            'search_space': search_space,
-            'search_algorithm': search_algorithm,
-            'metrics': metrics,
-            'higher_is_better': higher_is_better,
-            'max_trials': max_trials,
-            'seed': seed
-        })
+        self._search = DotDict(
+            {
+                "search_space": search_space,
+                "search_algorithm": search_algorithm,
+                "metrics": metrics,
+                "higher_is_better": higher_is_better,
+                "max_trials": max_trials,
+                "seed": seed,
+            }
+        )
         self.dynas = None
-        if approach == 'dynas' and dynas:
+        if approach == "dynas" and dynas:
             self.dynas = dynas.config
 
     @property
@@ -1388,18 +1533,20 @@ mxnet_config = MXNet()
 
 
 class Config:
-    def __init__(self,
-                 quantization=quantization,
-                 benchmark=benchmark,
-                 options=options,
-                 pruning=pruning,
-                 distillation=distillation,
-                 nas=nas,
-                 onnxruntime=onnxruntime_config,
-                 tensorflow=tensorflow_config,
-                 pytorch=pytorch_config,
-                 mxnet=mxnet_config,
-                 keras=keras_config):
+    def __init__(
+        self,
+        quantization=quantization,
+        benchmark=benchmark,
+        options=options,
+        pruning=pruning,
+        distillation=distillation,
+        nas=nas,
+        onnxruntime=onnxruntime_config,
+        tensorflow=tensorflow_config,
+        pytorch=pytorch_config,
+        mxnet=mxnet_config,
+        keras=keras_config,
+    ):
         self._quantization = quantization
         self._benchmark = benchmark
         self._options = options

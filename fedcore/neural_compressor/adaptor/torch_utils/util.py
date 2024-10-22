@@ -137,10 +137,16 @@ def collate_torch_preds(results):
         results = zip(*results)
         collate_results = []
         for output in results:
-            output = [batch.numpy() if isinstance(batch, torch.Tensor) else batch for batch in output]
+            output = [
+                batch.numpy() if isinstance(batch, torch.Tensor) else batch
+                for batch in output
+            ]
             collate_results.append(np.concatenate(output))
     elif isinstance(batch, torch.Tensor):
-        results = [batch.numpy() if isinstance(batch, torch.Tensor) else batch for batch in results]
+        results = [
+            batch.numpy() if isinstance(batch, torch.Tensor) else batch
+            for batch in results
+        ]
         collate_results = np.concatenate(results)
     return collate_results
 
@@ -175,9 +181,20 @@ def append_attr(fx_model, model, fx_white_list=[]):
     """
     fx_attr = dir(fx_model)
     org_attr = dir(model)
-    ignore_match_patterns = [r"_", r"quant", r"dequant", r"weight", r"bias", r"activation_post_process"]
+    ignore_match_patterns = [
+        r"_",
+        r"quant",
+        r"dequant",
+        r"weight",
+        r"bias",
+        r"activation_post_process",
+    ]
     ignore_search_patterns = [r"_scale_", r"_zero_point_", r"_activation_post_process_"]
-    add_special_patterns = [r"_forward_hooks", r"_forward_pre_hooks", r"_backward_hooks"]
+    add_special_patterns = [
+        r"_forward_hooks",
+        r"_forward_pre_hooks",
+        r"_backward_hooks",
+    ]
     attr_names = []
     if hasattr(fx_model, "module") and hasattr(fx_model.module, "weight"):
         if not isinstance(fx_model.module.weight, torch.Tensor):
@@ -185,7 +202,10 @@ def append_attr(fx_model, model, fx_white_list=[]):
         else:
             fx_model.weight = fx_model.module.weight
         if hasattr(fx_model.module, "bias"):
-            if not isinstance(fx_model.module.bias, torch.Tensor) and fx_model.module.bias is not None:
+            if (
+                not isinstance(fx_model.module.bias, torch.Tensor)
+                and fx_model.module.bias is not None
+            ):
                 fx_model.bias = fx_model.module.bias()
             else:
                 fx_model.bias = fx_model.module.bias
@@ -205,13 +225,17 @@ def append_attr(fx_model, model, fx_white_list=[]):
     for name in attr_names:
         attr = getattr(model, name, None)
 
-        if isinstance(attr, torch.nn.Module) or isinstance(attr, torch.quantization.qconfig.QConfig):
+        if isinstance(attr, torch.nn.Module) or isinstance(
+            attr, torch.quantization.qconfig.QConfig
+        ):
             continue
         setattr(fx_model, name, attr)
     return fx_model
 
 
-def generate_activation_observer(scheme, algorithm, smooth_quant=False, smooth_quant_enable=False):  # pragma: no cover
+def generate_activation_observer(
+    scheme, algorithm, smooth_quant=False, smooth_quant_enable=False
+):  # pragma: no cover
     """This is a helper method to generate an activation observer.
 
     Args:
@@ -324,8 +348,12 @@ def check_cfg_and_qconfig(
             # to int8
             ipex_op_cfg = op_infos_from_cfgs[name]
             input_tensor_infos = ipex_op_cfg["input_tensor_infos"]
-            if op_name[1] == "Linear" or op_name[1] == "Linear&add":  # record op_name for possible op-wise fallback
-                logger.debug(f"ipex_op_cfg['fqn'] - op_name {ipex_op_cfg['fqn']}  {op_name}")
+            if (
+                op_name[1] == "Linear" or op_name[1] == "Linear&add"
+            ):  # record op_name for possible op-wise fallback
+                logger.debug(
+                    f"ipex_op_cfg['fqn'] - op_name {ipex_op_cfg['fqn']}  {op_name}"
+                )
             for index, input_tensor_info in enumerate(input_tensor_infos):
                 if "force_dtype" not in input_tensor_info.keys():
                     continue
@@ -340,7 +368,8 @@ def check_cfg_and_qconfig(
                         ipex_op_cfg["input_tensor_infos"] = input_tensor_infos
                         if (
                             "op_type" in ipex_op_cfg
-                            and ipex_op_cfg["op_type"] == "<class 'torch.nn.modules.linear.Linear'>"
+                            and ipex_op_cfg["op_type"]
+                            == "<class 'torch.nn.modules.linear.Linear'>"
                         ):
                             smooth_quant_enable = True
                         else:
@@ -352,7 +381,9 @@ def check_cfg_and_qconfig(
                             if inc_scheme == "sym":
                                 input_tensor_infos[index]["force_dtype"] = "torch.qint8"
                             if inc_scheme == "asym":
-                                input_tensor_infos[index]["force_dtype"] = "torch.quint8"
+                                input_tensor_infos[index][
+                                    "force_dtype"
+                                ] = "torch.quint8"
                         ipex_op_cfg["activation_observer"] = activation_observer
                     # int8 -> fp32
                     else:
@@ -366,15 +397,21 @@ def check_cfg_and_qconfig(
                             pre_op_module = pre_op_name[0][0]
                             pre_op_state = pre_op_name[0][1]
                             pre_op_index = pre_op_name[0][2]
-                            pre_op_infos = cfgs[pre_op_module][pre_op_state][pre_op_index]
+                            pre_op_infos = cfgs[pre_op_module][pre_op_state][
+                                pre_op_index
+                            ]
                             pre_op_output_infos = pre_op_infos["output_tensor_infos"]
                             for index, pre_op_output in enumerate(pre_op_output_infos):
                                 if pre_op_output["id"] == input_tensor_id:
-                                    pre_op_output_infos[index]["inf_dtype"] = input_tensor_dtype
+                                    pre_op_output_infos[index][
+                                        "inf_dtype"
+                                    ] = input_tensor_dtype
                                 else:
                                     pass
                             pre_op_infos["output_tensor_infos"] = pre_op_output_infos
-                            cfgs[pre_op_module][pre_op_state][pre_op_index] = pre_op_infos
+                            cfgs[pre_op_module][pre_op_state][
+                                pre_op_index
+                            ] = pre_op_infos
                         else:
                             pass
             cfgs[name[0]][name[1]][name[2]] = ipex_op_cfg
@@ -416,7 +453,9 @@ def paser_cfgs(cfgs):  # pragma: no cover
                 if name not in ops_name:
                     ops_name.append(name)
                 else:
-                    assert False, "Please check IPEX int8 configure json whether have the same name ops"
+                    assert (
+                        False
+                    ), "Please check IPEX int8 configure json whether have the same name ops"
                 op_infos_from_cfgs[name] = op_info
                 input_tensors = op_info["input_tensor_infos"]
                 for input_tensor in input_tensors:
@@ -438,10 +477,17 @@ def paser_cfgs(cfgs):  # pragma: no cover
                         output_tensor_ids_op_name[output_tensor_id] = [name]
                     else:
                         output_tensor_ids_op_name[output_tensor_id].append(name)
-    return ops_name, op_infos_from_cfgs, input_tensor_ids_op_name, output_tensor_ids_op_name
+    return (
+        ops_name,
+        op_infos_from_cfgs,
+        input_tensor_ids_op_name,
+        output_tensor_ids_op_name,
+    )
 
 
-def get_quantizable_ops_from_cfgs(ops_name, op_infos_from_cfgs, input_tensor_ids_op_name):  # pragma: no cover
+def get_quantizable_ops_from_cfgs(
+    ops_name, op_infos_from_cfgs, input_tensor_ids_op_name
+):  # pragma: no cover
     """Get quantizable ops from configs, combine fused ops as one op.
 
     Args:
@@ -485,7 +531,10 @@ def get_quantizable_ops_from_cfgs(ops_name, op_infos_from_cfgs, input_tensor_ids
                 op_info = op_infos_from_cfgs[cur_name]
                 output_tensors = op_info["output_tensor_infos"]
                 for output_tensor in output_tensors:
-                    if output_tensor["inf_dtype"] == "torch.qint8" or output_tensor["inf_dtype"] == "torch.quint8":
+                    if (
+                        output_tensor["inf_dtype"] == "torch.qint8"
+                        or output_tensor["inf_dtype"] == "torch.quint8"
+                    ):
                         q_ops.append(cur + [cur_name])
                         break
                     try:
@@ -516,17 +565,31 @@ def update_sq_scale(ipex_config_path, smoothquant_scale_info):
                     # update alpha data instead of updating weight scale
                     op_name = v1["fqn"]  # fqn always exists even it's empty.
                     if op_name in smoothquant_scale_info and v1["op_type_is_module"]:
-                        input_scale_for_mul = smoothquant_scale_info[op_name]["input_scale_for_mul"].tolist()
-                        input_scale_after_mul = smoothquant_scale_info[op_name]["input_scale_after_mul"].tolist()
+                        input_scale_for_mul = smoothquant_scale_info[op_name][
+                            "input_scale_for_mul"
+                        ].tolist()
+                        input_scale_after_mul = smoothquant_scale_info[op_name][
+                            "input_scale_after_mul"
+                        ].tolist()
                         input_zero_point_after_mul = smoothquant_scale_info[op_name][
                             "input_zero_point_after_mul"
                         ].tolist()
-                        weight_scale_for_mul = (1 / smoothquant_scale_info[op_name]["input_scale_for_mul"]).tolist()
-                        weight_scale_after_mul = smoothquant_scale_info[op_name]["weight_scale_after_mul"].tolist()
+                        weight_scale_for_mul = (
+                            1 / smoothquant_scale_info[op_name]["input_scale_for_mul"]
+                        ).tolist()
+                        weight_scale_after_mul = smoothquant_scale_info[op_name][
+                            "weight_scale_after_mul"
+                        ].tolist()
                         v1["input_tensor_infos"][0]["scale"] = input_scale_after_mul
-                        v1["input_tensor_infos"][0]["zero_point"] = input_zero_point_after_mul
-                        v1["input_tensor_infos"][0]["smooth_quant_scaling_factor"] = input_scale_for_mul
-                        v1["weight_tensor_infos"][0]["smooth_quant_scaling_factor"] = weight_scale_for_mul
+                        v1["input_tensor_infos"][0][
+                            "zero_point"
+                        ] = input_zero_point_after_mul
+                        v1["input_tensor_infos"][0][
+                            "smooth_quant_scaling_factor"
+                        ] = input_scale_for_mul
+                        v1["weight_tensor_infos"][0][
+                            "smooth_quant_scaling_factor"
+                        ] = weight_scale_for_mul
                         v1["weight_tensor_infos"][0]["scale"] = weight_scale_after_mul
                         # # observers were overridden by the fallback step, setting it back.
         f.close()
@@ -545,7 +608,9 @@ def auto_copy(module):  # pragma: no cover
     Returns:
         fp32 model.
     """
-    from intel_extension_for_pytorch.quantization._quantization_state import AutoQuantizationStateModuleDict
+    from intel_extension_for_pytorch.quantization._quantization_state import (
+        AutoQuantizationStateModuleDict,
+    )
 
     def _nn_sequential_patched_forward(cls, x):
         for module in cls:
@@ -732,7 +797,13 @@ def get_example_input(dataloader, i=1):
 
 
 def get_fallback_order(
-    adaptor, fp32_model, dataloader, tune_cfg, confidence_batches, fallback=False, requantize_cfgs=None
+    adaptor,
+    fp32_model,
+    dataloader,
+    tune_cfg,
+    confidence_batches,
+    fallback=False,
+    requantize_cfgs=None,
 ):
     """Get the fall back order for strategy.
 
@@ -751,12 +822,16 @@ def get_fallback_order(
     for i in range(0, confidence_batches):
         example_input = get_example_input(dataloader, i)
         if fallback:
-            ordered_ops = get_mse_order_per_fp32(adaptor, fp32_model, example_input, tune_cfg)
+            ordered_ops = get_mse_order_per_fp32(
+                adaptor, fp32_model, example_input, tune_cfg
+            )
             for i, name in enumerate(ordered_ops):
                 order_dict[name] = order_dict.get(name, 0) + len(order_dict) - i
             ordered_ops = sorted(order_dict, key=lambda k: order_dict[k], reverse=True)
         else:
-            ordered_ops = get_mse_order_per_int8(adaptor, fp32_model, example_input, tune_cfg)
+            ordered_ops = get_mse_order_per_int8(
+                adaptor, fp32_model, example_input, tune_cfg
+            )
             for i, name in enumerate(ordered_ops):
                 order_dict[name] = order_dict.get(name, 0) + len(order_dict) - i
     return ordered_ops
@@ -826,23 +901,33 @@ def get_mse_order_per_fp32(adaptor, model, example_inp, tune_cfg):
                     fx_op_cfgs,
                 )
         else:
-            PyTorch_FXAdaptor.prepare_sub_graph(adaptor.sub_module_list, fx_op_cfgs, tmp_model, prefix="")
+            PyTorch_FXAdaptor.prepare_sub_graph(
+                adaptor.sub_module_list, fx_op_cfgs, tmp_model, prefix=""
+            )
         simple_inference(tmp_model, example_inp)
         if adaptor.sub_module_list is None:
             tmp_model = convert_fx(tmp_model)
         else:
-            PyTorch_FXAdaptor.convert_sub_graph(adaptor.sub_module_list, tmp_model, prefix="")
+            PyTorch_FXAdaptor.convert_sub_graph(
+                adaptor.sub_module_list, tmp_model, prefix=""
+            )
 
         # insert hook to get output tesnor from last module
         module = fetch_module(tmp_model, list(op_cfgs.keys())[-1])  # get last module
         module.register_forward_hook(output_hook)
         output_qdq = simple_inference(tmp_model, example_inp)
-        inner_output_int8 = inner_output.dequantize() if inner_output.dtype == torch.quint8 else inner_output
+        inner_output_int8 = (
+            inner_output.dequantize()
+            if inner_output.dtype == torch.quint8
+            else inner_output
+        )
         mse_val = (inner_output_fp32 - inner_output_int8).pow(2).sum()
         fallback_order[(op_name, op_type_dict[op_name])] = mse_val
 
     logger.debug(f"fallback order: {fallback_order}")
-    ordered_ops = sorted(fallback_order.keys(), key=lambda key: fallback_order[key], reverse=False)
+    ordered_ops = sorted(
+        fallback_order.keys(), key=lambda key: fallback_order[key], reverse=False
+    )
     if not ordered_ops:
         return ordered_ops
     min_mse, max_mse = fallback_order[ordered_ops[0]], fallback_order[ordered_ops[-1]]
@@ -882,22 +967,34 @@ def get_mse_order_per_fp32(adaptor, model, example_inp, tune_cfg):
                     fx_op_cfgs,
                 )
         else:
-            PyTorch_FXAdaptor.prepare_sub_graph(adaptor.sub_module_list, fx_op_cfgs, tmp_model, prefix="")
+            PyTorch_FXAdaptor.prepare_sub_graph(
+                adaptor.sub_module_list, fx_op_cfgs, tmp_model, prefix=""
+            )
         simple_inference(tmp_model, example_inp)
         if adaptor.sub_module_list is None:
             tmp_model = convert_fx(tmp_model)
         else:
-            PyTorch_FXAdaptor.convert_sub_graph(adaptor.sub_module_list, tmp_model, prefix="")
+            PyTorch_FXAdaptor.convert_sub_graph(
+                adaptor.sub_module_list, tmp_model, prefix=""
+            )
 
         # insert hook to get output tesnor from last module
         module = fetch_module(tmp_model, last_module_name)  # get last module
         module.register_forward_hook(output_hook)
         output_qdq = simple_inference(tmp_model, example_inp)
-        inner_output_int8 = inner_output.dequantize() if inner_output.dtype == torch.quint8 else inner_output
+        inner_output_int8 = (
+            inner_output.dequantize()
+            if inner_output.dtype == torch.quint8
+            else inner_output
+        )
         mse_val = (inner_output_fp32 - inner_output_int8).pow(2).sum()
         new_fallback_order[(op_name, op_type_dict[op_name])] = mse_val
 
-    ordered_ops = sorted(new_fallback_order.keys(), key=lambda key: new_fallback_order[key], reverse=False)
+    ordered_ops = sorted(
+        new_fallback_order.keys(),
+        key=lambda key: new_fallback_order[key],
+        reverse=False,
+    )
 
     return ordered_ops
 
@@ -955,7 +1052,9 @@ def get_mse_order_per_int8(adaptor, fp32_model, example_input, tune_cfg):
 
             # do quantization
             if adaptor.sub_module_list is None:
-                if adaptor.version.release >= Version("1.13.0").release:  # pragma: no cover
+                if (
+                    adaptor.version.release >= Version("1.13.0").release
+                ):  # pragma: no cover
                     tmp_model = prepare_fx(tmp_model, fx_op_cfgs, example_inp)
                 else:
                     tmp_model = prepare_fx(  # pylint: disable=E1120
@@ -963,15 +1062,21 @@ def get_mse_order_per_int8(adaptor, fp32_model, example_input, tune_cfg):
                         fx_op_cfgs,
                     )
             else:
-                PyTorch_FXAdaptor.prepare_sub_graph(adaptor.sub_module_list, fx_op_cfgs, tmp_model, prefix="")
+                PyTorch_FXAdaptor.prepare_sub_graph(
+                    adaptor.sub_module_list, fx_op_cfgs, tmp_model, prefix=""
+                )
             simple_inference(tmp_model, example_inp)
             if adaptor.sub_module_list is None:
                 tmp_model = convert_fx(tmp_model)
             else:
-                PyTorch_FXAdaptor.convert_sub_graph(adaptor.sub_module_list, tmp_model, prefix="")
+                PyTorch_FXAdaptor.convert_sub_graph(
+                    adaptor.sub_module_list, tmp_model, prefix=""
+                )
 
             # record int8 model output tensor
-            module = fetch_module(tmp_model, list(op_cfgs.keys())[-1])  # get last module
+            module = fetch_module(
+                tmp_model, list(op_cfgs.keys())[-1]
+            )  # get last module
             module.register_forward_hook(output_hook)
             output_qdq = simple_inference(tmp_model, example_inp)
             inner_output_int8 = inner_output
@@ -983,7 +1088,9 @@ def get_mse_order_per_int8(adaptor, fp32_model, example_input, tune_cfg):
             mse_val = (inner_output_fp32 - inner_output_int8).pow(2).sum()
             fallback_order[(op_name, op_type_dict[op_name])] = mse_val
             # re-insert fp32 module into model
-    ordered_ops = sorted(fallback_order.keys(), key=lambda key: fallback_order[key], reverse=False)
+    ordered_ops = sorted(
+        fallback_order.keys(), key=lambda key: fallback_order[key], reverse=False
+    )
     return ordered_ops
 
 
@@ -1114,7 +1221,13 @@ def collect_weight_info(model, q_config):
 
 
 def get_module_input_output(
-    model, module_hook_config={}, dataloader=None, iters=-1, calib_func=None, input_func=None, output_func=None
+    model,
+    module_hook_config={},
+    dataloader=None,
+    iters=-1,
+    calib_func=None,
+    input_func=None,
+    output_func=None,
 ):
     """A help function to get input and output tensor of modules in module_name_list.
 
@@ -1195,7 +1308,9 @@ def get_module_input_output(
     return total_values
 
 
-def get_absorb_layers(model, example_inputs, supported_layers=["Linear"], folding=False):
+def get_absorb_layers(
+    model, example_inputs, supported_layers=["Linear"], folding=False
+):
     """Get absorb_to_layer and no_absorb_layer.
 
     Args:
@@ -1212,7 +1327,9 @@ def get_absorb_layers(model, example_inputs, supported_layers=["Linear"], foldin
     from .smooth_quant import GraphTrace
 
     tg = GraphTrace()
-    absorb_to_layer, no_absorb_layers = tg.get_absorb_to_layer(model, example_inputs, supported_layers)
+    absorb_to_layer, no_absorb_layers = tg.get_absorb_to_layer(
+        model, example_inputs, supported_layers
+    )
     if absorb_to_layer is None or absorb_to_layer == {}:
         absorb_to_layer = {}
         logger.warning("No absorb layer is detected.")
@@ -1324,7 +1441,9 @@ def get_hidden_states(model, dataloader=None, n_samples=128, calib_func=None):
     model.forward = partial(model_forward, model)
 
     # Step 3: execute calibration
-    calibration(model, dataloader=dataloader, n_samples=n_samples, calib_func=calib_func)
+    calibration(
+        model, dataloader=dataloader, n_samples=n_samples, calib_func=calib_func
+    )
     logger.info("The hidden_states collection is done.")
 
     # Step 4: recover model and block forward

@@ -32,7 +32,9 @@ from torch.serialization import (
     _open_zipfile_reader,
 )
 
-from fedcore.neural_compressor.adaptor.torch_utils.layer_wise_quant import modified_pickle as pickle
+from fedcore.neural_compressor.adaptor.torch_utils.layer_wise_quant import (
+    modified_pickle as pickle,
+)
 
 from .utils import torch
 
@@ -40,7 +42,11 @@ torch_version = torch.__version__.split("+")[0]
 version = Version(torch_version)
 
 FILE_LIKE = Union[str, os.PathLike, BinaryIO, IO[bytes]]
-MAP_LOCATION = Optional[Union[Callable[[torch.Tensor, str], torch.Tensor], torch.device, str, Dict[str, str]]]
+MAP_LOCATION = Optional[
+    Union[
+        Callable[[torch.Tensor, str], torch.Tensor], torch.device, str, Dict[str, str]
+    ]
+]
 
 if version.release < Version("1.13.0").release:
     UntypedStorage = torch._UntypedStorage
@@ -48,7 +54,15 @@ else:
     UntypedStorage = torch.UntypedStorage
 
 
-def _load(zip_file, tensor_name, prefix, map_location, pickle_module, pickle_file="data.pkl", **pickle_load_args):
+def _load(
+    zip_file,
+    tensor_name,
+    prefix,
+    map_location,
+    pickle_module,
+    pickle_file="data.pkl",
+    **pickle_load_args,
+):
     restore_location = _get_restore_location(map_location)
 
     loaded_storages = {}
@@ -57,17 +71,35 @@ def _load(zip_file, tensor_name, prefix, map_location, pickle_module, pickle_fil
         name = f"data/{key}"
 
         if version.release < Version("1.13.0").release:
-            storage = zip_file.get_storage_from_record(name, numel, torch._UntypedStorage).storage()._untyped()
-            typed_storage = torch.storage._TypedStorage(wrap_storage=restore_location(storage, location), dtype=dtype)
+            storage = (
+                zip_file.get_storage_from_record(name, numel, torch._UntypedStorage)
+                .storage()
+                ._untyped()
+            )
+            typed_storage = torch.storage._TypedStorage(
+                wrap_storage=restore_location(storage, location), dtype=dtype
+            )
             loaded_storages[key] = typed_storage
         elif version.release < Version("2.0.0").release:  # pragma: no cover
-            storage = zip_file.get_storage_from_record(name, numel, UntypedStorage).storage().untyped()
-            typed_storage = torch.storage.TypedStorage(wrap_storage=restore_location(storage, location), dtype=dtype)
+            storage = (
+                zip_file.get_storage_from_record(name, numel, UntypedStorage)
+                .storage()
+                .untyped()
+            )
+            typed_storage = torch.storage.TypedStorage(
+                wrap_storage=restore_location(storage, location), dtype=dtype
+            )
             loaded_storages[key] = typed_storage
         else:
-            storage = zip_file.get_storage_from_record(name, numel, UntypedStorage)._typed_storage()._untyped_storage
+            storage = (
+                zip_file.get_storage_from_record(name, numel, UntypedStorage)
+                ._typed_storage()
+                ._untyped_storage
+            )
             typed_storage = torch.storage.TypedStorage(
-                wrap_storage=restore_location(storage, location), dtype=dtype, _internal=True
+                wrap_storage=restore_location(storage, location),
+                dtype=dtype,
+                _internal=True,
             )
 
             if typed_storage._data_ptr() != 0:
@@ -123,7 +155,9 @@ def _load(zip_file, tensor_name, prefix, map_location, pickle_module, pickle_fil
                     typed_storage = None
                 else:
                     nbytes = numel * torch._utils._element_size(dtype)
-                    typed_storage = load_tensor(dtype, nbytes, key, _maybe_decode_ascii(location))
+                    typed_storage = load_tensor(
+                        dtype, nbytes, key, _maybe_decode_ascii(location)
+                    )
 
             return typed_storage
 
@@ -240,12 +274,19 @@ def load(
     """
     torch._C._log_api_usage_once("torch.load")
     # Add ability to force safe only weight loads via environment variable
-    if os.getenv("TORCH_FORCE_WEIGHTS_ONLY_LOAD", "0").lower() in ["1", "y", "yes", "true"]:  # pragma: no cover
+    if os.getenv("TORCH_FORCE_WEIGHTS_ONLY_LOAD", "0").lower() in [
+        "1",
+        "y",
+        "yes",
+        "true",
+    ]:  # pragma: no cover
         weights_only = True
 
     if weights_only:  # pragma: no cover
         if pickle_module is not None:
-            raise RuntimeError("Can not safely load weights when explicit pickle_module is specified")
+            raise RuntimeError(
+                "Can not safely load weights when explicit pickle_module is specified"
+            )
     else:
         if pickle_module is None:
             pickle_module = pickle
@@ -269,4 +310,11 @@ def load(
                     )
                     opened_file.seek(orig_position)
                     return torch.jit.load(opened_file, map_location=map_location)
-                return _load(opened_zipfile, tensor_name, prefix, map_location, pickle_module, **pickle_load_args)
+                return _load(
+                    opened_zipfile,
+                    tensor_name,
+                    prefix,
+                    map_location,
+                    pickle_module,
+                    **pickle_load_args,
+                )

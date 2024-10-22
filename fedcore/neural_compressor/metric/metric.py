@@ -18,7 +18,6 @@
 
 
 from abc import abstractmethod
-from ctypes import Union
 
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -208,7 +207,9 @@ class METRICS(object):
         Returns:
              The metric with the specified type.
         """
-        assert metric_type in self.metrics.keys(), "only support metrics in {}".format(self.metrics.keys())
+        assert metric_type in self.metrics.keys(), "only support metrics in {}".format(
+            self.metrics.keys()
+        )
 
         return self.metrics[metric_type]
 
@@ -480,8 +481,16 @@ def _topk_shape_validate(preds, labels):
 
 
 def _shape_validate(preds, labels):
-    assert type(preds) in [int, list, np.ndarray], "preds must be in int or list, ndarray"
-    assert type(labels) in [int, list, np.ndarray], "labels must be in int or list, ndarray"
+    assert type(preds) in [
+        int,
+        list,
+        np.ndarray,
+    ], "preds must be in int or list, ndarray"
+    assert type(labels) in [
+        int,
+        list,
+        np.ndarray,
+    ], "labels must be in int or list, ndarray"
     if isinstance(preds, int):
         preds = [np.array([preds])]
     elif isinstance(preds[0], int):
@@ -495,13 +504,18 @@ def _shape_validate(preds, labels):
     else:
         labels = [np.array(label) for label in labels]
     for pred, label in zip(preds, labels):
-        assert pred.shape == label.shape, "Shape mismatch, label shape {} vs pred shape {}".format(
+        assert (
+            pred.shape == label.shape
+        ), "Shape mismatch, label shape {} vs pred shape {}".format(
             label.shape, pred.shape
         )
     return preds, labels
 
 
-@metric_registry("F1", "tensorflow, tensorflow_itex, pytorch, mxnet, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "F1",
+    "tensorflow, tensorflow_itex, pytorch, mxnet, onnxrt_qlinearops, onnxrt_integerops",
+)
 class F1(BaseMetric):
     """F1 score of a binary classification problem.
 
@@ -561,7 +575,9 @@ def _accuracy_shape_check(preds, labels):
     if isinstance(labels, int):
         labels = [labels]
     labels = np.array(labels)
-    if len(labels.shape) != len(preds.shape) and len(labels.shape) + 1 != len(preds.shape):
+    if len(labels.shape) != len(preds.shape) and len(labels.shape) + 1 != len(
+        preds.shape
+    ):
         raise ValueError(
             "labels must have shape of (batch_size, ..) and preds must have"
             "shape of (batch_size, num_classes, ...) or (batch_size, ..),"
@@ -594,7 +610,10 @@ def _accuracy_type_check(preds, labels):
     return update_type
 
 
-@metric_registry("Accuracy", "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "Accuracy",
+    "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops",
+)
 class Accuracy(BaseMetric):
     """The Accuracy for the classification tasks.
 
@@ -709,7 +728,9 @@ class PyTorchLoss:
         return self._sum.item() / self._num_examples
 
 
-@metric_registry("Loss", "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "Loss", "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops"
+)
 class Loss(BaseMetric):
     """A dummy Metric.
 
@@ -755,7 +776,9 @@ class Loss(BaseMetric):
         return self.sum / self.sample
 
 
-@metric_registry("MAE", "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "MAE", "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops"
+)
 class MAE(BaseMetric):
     """Computes Mean Absolute Error (MAE) loss.
 
@@ -813,7 +836,10 @@ class MAE(BaseMetric):
         return aes_sum / aes_size
 
 
-@metric_registry("RMSE", "tensorflow, tensorflow_itex, pytorch, mxnet, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "RMSE",
+    "tensorflow, tensorflow_itex, pytorch, mxnet, onnxrt_qlinearops, onnxrt_integerops",
+)
 class RMSE(BaseMetric):
     """Computes Root Mean Squared Error (RMSE) loss.
 
@@ -855,7 +881,9 @@ class RMSE(BaseMetric):
         return np.sqrt(self.mse.result())
 
 
-@metric_registry("MSE", "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "MSE", "tensorflow, tensorflow_itex, pytorch, onnxrt_qlinearops, onnxrt_integerops"
+)
 class MSE(BaseMetric):
     """Computes Mean Squared Error (MSE) loss.
 
@@ -946,7 +974,11 @@ class TensorflowTopK(BaseMetric):
             sample_weight: The sample weight.
         """
         # extract the contents from tf.Tensor
-        if not isinstance(labels, int) and len(labels) > 0 and isinstance(labels[0], tf.Tensor):
+        if (
+            not isinstance(labels, int)
+            and len(labels) > 0
+            and isinstance(labels[0], tf.Tensor)
+        ):
             temp_labels = []
             for label_tensor in labels:
                 label_contents = label_tensor.numpy()
@@ -958,7 +990,9 @@ class TensorflowTopK(BaseMetric):
         labels = labels.reshape([len(labels)])
         with tf.Graph().as_default() as acc_graph:
             topk = tf.nn.in_top_k(
-                predictions=tf.constant(preds, dtype=tf.float32), targets=tf.constant(labels, dtype=tf.int32), k=self.k
+                predictions=tf.constant(preds, dtype=tf.float32),
+                targets=tf.constant(labels, dtype=tf.int32),
+                k=self.k,
             )
             fp32_topk = tf.cast(topk, tf.float32)
             correct_tensor = tf.reduce_sum(input_tensor=fp32_topk)
@@ -1058,7 +1092,9 @@ class GeneralTopK(BaseMetric):
         return self.num_correct / self.num_sample
 
 
-@metric_registry("COCOmAPv2", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "COCOmAPv2", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops"
+)
 class COCOmAPv2(BaseMetric):
     """Compute mean average precision of the detection task."""
 
@@ -1068,7 +1104,12 @@ class COCOmAPv2(BaseMetric):
         iou_thrs="0.5:0.05:0.95",
         map_points=101,
         map_key="DetectionBoxes_Precision/mAP",
-        output_index_mapping={"num_detections": -1, "boxes": 0, "scores": 1, "classes": 2},
+        output_index_mapping={
+            "num_detections": -1,
+            "boxes": 0,
+            "scores": 1,
+            "classes": 2,
+        },
     ):
         """Initialize the metric.
 
@@ -1117,30 +1158,50 @@ class COCOmAPv2(BaseMetric):
             labels: The labels corresponding to the predictions.
             sample_weight: The sample weight. Defaults to None.
         """
-        from .coco_tools import ExportSingleImageDetectionBoxesToCoco, ExportSingleImageGroundtruthToCoco
+        from .coco_tools import (
+            ExportSingleImageDetectionBoxesToCoco,
+            ExportSingleImageGroundtruthToCoco,
+        )
 
         detections = []
-        if "num_detections" in self.output_index_mapping and self.output_index_mapping["num_detections"] > -1:
+        if (
+            "num_detections" in self.output_index_mapping
+            and self.output_index_mapping["num_detections"] > -1
+        ):
             for item in zip(*predicts):
                 detection = {}
                 num = int(item[self.output_index_mapping["num_detections"]])
-                detection["boxes"] = np.asarray(item[self.output_index_mapping["boxes"]])[0:num]
-                detection["scores"] = np.asarray(item[self.output_index_mapping["scores"]])[0:num]
-                detection["classes"] = np.asarray(item[self.output_index_mapping["classes"]])[0:num]
+                detection["boxes"] = np.asarray(
+                    item[self.output_index_mapping["boxes"]]
+                )[0:num]
+                detection["scores"] = np.asarray(
+                    item[self.output_index_mapping["scores"]]
+                )[0:num]
+                detection["classes"] = np.asarray(
+                    item[self.output_index_mapping["classes"]]
+                )[0:num]
                 detections.append(detection)
         else:
             for item in zip(*predicts):
                 detection = {}
-                detection["boxes"] = np.asarray(item[self.output_index_mapping["boxes"]])
-                detection["scores"] = np.asarray(item[self.output_index_mapping["scores"]])
-                detection["classes"] = np.asarray(item[self.output_index_mapping["classes"]])
+                detection["boxes"] = np.asarray(
+                    item[self.output_index_mapping["boxes"]]
+                )
+                detection["scores"] = np.asarray(
+                    item[self.output_index_mapping["scores"]]
+                )
+                detection["classes"] = np.asarray(
+                    item[self.output_index_mapping["classes"]]
+                )
                 detections.append(detection)
 
         bboxes, str_labels, int_labels, image_ids = labels
         labels = []
         if len(int_labels[0]) == 0:
             for str_label in str_labels:
-                str_label = [x if type(x) == "str" else x.decode("utf-8") for x in str_label]
+                str_label = [
+                    x if type(x) == "str" else x.decode("utf-8") for x in str_label
+                ]
                 labels.append([self.category_map_reverse[x] for x in str_label])
         elif len(str_labels[0]) == 0:
             for int_label in int_labels:
@@ -1199,10 +1260,14 @@ class COCOmAPv2(BaseMetric):
             groundtruth_dict = {
                 "annotations": self.ground_truth_list,
                 "images": [{"id": image_id} for image_id in self.image_ids],
-                "categories": [{"id": k, "name": v} for k, v in self.category_map.items()],
+                "categories": [
+                    {"id": k, "name": v} for k, v in self.category_map.items()
+                ],
             }
             coco_wrapped_groundtruth = COCOWrapper(groundtruth_dict)
-            coco_wrapped_detections = coco_wrapped_groundtruth.LoadAnnotations(self.detection_list)
+            coco_wrapped_detections = coco_wrapped_groundtruth.LoadAnnotations(
+                self.detection_list
+            )
             box_evaluator = COCOEvalWrapper(
                 coco_wrapped_groundtruth,
                 coco_wrapped_detections,
@@ -1214,16 +1279,27 @@ class COCOmAPv2(BaseMetric):
                 include_metrics_per_category=False, all_metrics_per_category=False
             )
             box_metrics.update(box_per_category_ap)
-            box_metrics = {"DetectionBoxes_" + key: value for key, value in iter(box_metrics.items())}
+            box_metrics = {
+                "DetectionBoxes_" + key: value
+                for key, value in iter(box_metrics.items())
+            }
 
             return box_metrics[self.map_key]
 
 
-@metric_registry("mAP", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "mAP", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops"
+)
 class TensorflowMAP(BaseMetric):
     """Computes mean average precision."""
 
-    def __init__(self, anno_path=None, iou_thrs=0.5, map_points=0, map_key="DetectionBoxes_Precision/mAP"):
+    def __init__(
+        self,
+        anno_path=None,
+        iou_thrs=0.5,
+        map_points=0,
+        map_key="DetectionBoxes_Precision/mAP",
+    ):
         """Initialize the metric.
 
         Args:
@@ -1269,9 +1345,14 @@ class TensorflowMAP(BaseMetric):
             sample_weight: The sample weight.
         """
         if getattr(self, "_hvd", None) is not None:
-            raise NotImplementedError("Metric TensorflowMAP currently do not support distributed inference.")
+            raise NotImplementedError(
+                "Metric TensorflowMAP currently do not support distributed inference."
+            )
 
-        from .coco_tools import ExportSingleImageDetectionBoxesToCoco, ExportSingleImageGroundtruthToCoco
+        from .coco_tools import (
+            ExportSingleImageDetectionBoxesToCoco,
+            ExportSingleImageGroundtruthToCoco,
+        )
 
         detections = []
         if len(predicts) == 3:
@@ -1296,7 +1377,9 @@ class TensorflowMAP(BaseMetric):
         labels = []
         if len(int_labels[0]) == 0:
             for str_label in str_labels:
-                str_label = [x if type(x) == "str" else x.decode("utf-8") for x in str_label]
+                str_label = [
+                    x if type(x) == "str" else x.decode("utf-8") for x in str_label
+                ]
                 labels.append([self.category_map_reverse[x] for x in str_label])
         elif len(str_labels[0]) == 0:
             for int_label in int_labels:
@@ -1355,10 +1438,14 @@ class TensorflowMAP(BaseMetric):
             groundtruth_dict = {
                 "annotations": self.ground_truth_list,
                 "images": [{"id": image_id} for image_id in self.image_ids],
-                "categories": [{"id": k, "name": v} for k, v in self.category_map.items()],
+                "categories": [
+                    {"id": k, "name": v} for k, v in self.category_map.items()
+                ],
             }
             coco_wrapped_groundtruth = COCOWrapper(groundtruth_dict)
-            coco_wrapped_detections = coco_wrapped_groundtruth.LoadAnnotations(self.detection_list)
+            coco_wrapped_detections = coco_wrapped_groundtruth.LoadAnnotations(
+                self.detection_list
+            )
             box_evaluator = COCOEvalWrapper(
                 coco_wrapped_groundtruth,
                 coco_wrapped_detections,
@@ -1370,16 +1457,27 @@ class TensorflowMAP(BaseMetric):
                 include_metrics_per_category=False, all_metrics_per_category=False
             )
             box_metrics.update(box_per_category_ap)
-            box_metrics = {"DetectionBoxes_" + key: value for key, value in iter(box_metrics.items())}
+            box_metrics = {
+                "DetectionBoxes_" + key: value
+                for key, value in iter(box_metrics.items())
+            }
 
             return box_metrics[self.map_key]
 
 
-@metric_registry("COCOmAP", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "COCOmAP", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops"
+)
 class TensorflowCOCOMAP(TensorflowMAP):
     """Computes mean average precision using algorithm in COCO."""
 
-    def __init__(self, anno_path=None, iou_thrs=None, map_points=None, map_key="DetectionBoxes_Precision/mAP"):
+    def __init__(
+        self,
+        anno_path=None,
+        iou_thrs=None,
+        map_points=None,
+        map_key="DetectionBoxes_Precision/mAP",
+    ):
         """Initialize the iou threshold and max points.
 
         Args:
@@ -1392,16 +1490,26 @@ class TensorflowCOCOMAP(TensorflowMAP):
             map_key: The key that mapping to pycocotools COCOeval.
               Defaults to 'DetectionBoxes_Precision/mAP'.
         """
-        super(TensorflowCOCOMAP, self).__init__(anno_path, iou_thrs, map_points, map_key)
+        super(TensorflowCOCOMAP, self).__init__(
+            anno_path, iou_thrs, map_points, map_key
+        )
         self.iou_thrs = "0.5:0.05:0.95"
         self.map_points = 101
 
 
-@metric_registry("VOCmAP", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops")
+@metric_registry(
+    "VOCmAP", "tensorflow, tensorflow_itex, onnxrt_qlinearops, onnxrt_integerops"
+)
 class TensorflowVOCMAP(TensorflowMAP):
     """Computes mean average precision using algorithm in VOC."""
 
-    def __init__(self, anno_path=None, iou_thrs=None, map_points=None, map_key="DetectionBoxes_Precision/mAP"):
+    def __init__(
+        self,
+        anno_path=None,
+        iou_thrs=None,
+        map_points=None,
+        map_key="DetectionBoxes_Precision/mAP",
+    ):
         """Initialize the iou threshold and max points.
 
         Args:
@@ -1488,14 +1596,17 @@ class mIOU(BaseMetric):
         if getattr(self, "_hvd", None) is not None:
             preds = self._hvd.allgather_object(preds)
             labels = self._hvd.allgather_object(labels)
-            preds_list, labels_list = np.array([], dtype=p_dtype), np.array([], dtype=l_dtype)
+            preds_list, labels_list = np.array([], dtype=p_dtype), np.array(
+                [], dtype=l_dtype
+            )
             for i in range(self._hvd.size()):
                 preds_list = np.append(preds_list, preds[i])
                 labels_list = np.append(labels_list, labels[i])
             preds, labels = preds_list, labels_list
         mask = (labels >= 0) & (labels < self.num_classes)
         self.hist += np.bincount(
-            self.num_classes * labels[mask].astype(int) + preds[mask], minlength=self.num_classes**2
+            self.num_classes * labels[mask].astype(int) + preds[mask],
+            minlength=self.num_classes**2,
         ).reshape(self.num_classes, self.num_classes)
 
     def reset(self):
@@ -1508,7 +1619,9 @@ class mIOU(BaseMetric):
         Returns:
             The mean IOU score.
         """
-        iu = np.diag(self.hist) / (self.hist.sum(axis=1) + self.hist.sum(axis=0) - np.diag(self.hist))
+        iu = np.diag(self.hist) / (
+            self.hist.sum(axis=1) + self.hist.sum(axis=0) - np.diag(self.hist)
+        )
         mean_iu = np.nanmean(iu)
         return mean_iu
 
@@ -1524,7 +1637,17 @@ class ONNXRTGLUE(BaseMetric):
             task:The name of the task (Choices: mrpc, qqp, qnli, rte,
               sts-b, cola, mnli, wnli.).
         """
-        assert task in ["mrpc", "qqp", "qnli", "rte", "sts-b", "cola", "mnli", "wnli", "sst-2"], "Unsupported task type"
+        assert task in [
+            "mrpc",
+            "qqp",
+            "qnli",
+            "rte",
+            "sts-b",
+            "cola",
+            "mnli",
+            "wnli",
+            "sst-2",
+        ], "Unsupported task type"
         self.pred_list = None
         self.label_list = None
         self.task = task
@@ -1548,7 +1671,9 @@ class ONNXRTGLUE(BaseMetric):
             labels: The labels corresponding to the predictions.
         """
         if getattr(self, "_hvd", None) is not None:
-            raise NotImplementedError("Metric ONNXRTGLUE currently do not support distributed inference.")
+            raise NotImplementedError(
+                "Metric ONNXRTGLUE currently do not support distributed inference."
+            )
         if isinstance(preds, list) and len(preds) == 1:
             preds = preds[0]
         if isinstance(labels, list) and len(labels) == 1:
@@ -1573,7 +1698,9 @@ class ONNXRTGLUE(BaseMetric):
             processed_preds = np.argmax(self.pred_list, axis=1)
         elif output_mode == "regression":
             processed_preds = np.squeeze(self.pred_list)
-        result = transformers.glue_compute_metrics(self.task, processed_preds, self.label_list)
+        result = transformers.glue_compute_metrics(
+            self.task, processed_preds, self.label_list
+        )
         return result[self.return_key[self.task]]
 
 
@@ -1626,7 +1753,7 @@ class ROC(BaseMetric):
 
         scores = np.squeeze(self.pred_list)
         targets = np.squeeze(self.label_list)
-        roc_auc = sklearn.metrics.roc_auc_score(targets, scores)
+        sklearn.metrics.roc_auc_score(targets, scores)
         acc = sklearn.metrics.accuracy_score(targets, np.round(scores))
         return acc
 
@@ -1675,7 +1802,9 @@ def register_customer_metric(user_metric, framework):
                 metric_cfg = {name: {**user_metric.kwargs}}
         else:
             for i in ["reset", "update", "result"]:
-                assert hasattr(user_metric, i), "Please realise {} function" "in user defined metric".format(i)
+                assert hasattr(
+                    user_metric, i
+                ), "Please realise {} function" "in user defined metric".format(i)
             metric_cls = type(user_metric).__name__
             name = "user_" + metric_cls
             metric_cfg = {name: id(user_metric)}

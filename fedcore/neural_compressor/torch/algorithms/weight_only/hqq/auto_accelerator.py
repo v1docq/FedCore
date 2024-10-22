@@ -64,7 +64,9 @@ class AcceleratorRegistry:
     def get_sorted_accelerators(cls) -> List["Auto_Accelerator"]:
         """Get registered accelerators sorted by priority."""
         accelerator_pairs = cls.registered_accelerators.values()
-        sorted_accelerators_pairs = sorted(accelerator_pairs, key=lambda x: x[1], reverse=True)
+        sorted_accelerators_pairs = sorted(
+            accelerator_pairs, key=lambda x: x[1], reverse=True
+        )
         sorted_accelerators = [pair[0] for pair in sorted_accelerators_pairs]
         return sorted_accelerators
 
@@ -207,7 +209,10 @@ def auto_detect_accelerator() -> Auto_Accelerator:
     # if runtime_accelerator.accelerator:
     #     return runtime_accelerator.accelerator
     FORCE_DEVICE = os.environ.get("FORCE_DEVICE", None)
-    if FORCE_DEVICE and accelerator_registry.get_accelerator_cls_by_name(FORCE_DEVICE) is not None:
+    if (
+        FORCE_DEVICE
+        and accelerator_registry.get_accelerator_cls_by_name(FORCE_DEVICE) is not None
+    ):
         logger.warning("Force use %s accelerator.", FORCE_DEVICE)
         return accelerator_registry.get_accelerator_cls_by_name(FORCE_DEVICE)()
     for accelerator_cls in accelerator_registry.get_sorted_accelerators():

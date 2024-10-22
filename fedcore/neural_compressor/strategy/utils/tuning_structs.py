@@ -44,7 +44,11 @@ class OpTuningConfig:
         self.weight_dtype = None
         self.has_weight = self.op_name_type in tuning_space.ops_attr["weight"]
         self._set_dtype()
-        self.tune_list = WEIGHT_ONLY_TUNING_ITEMS_LST if self.op_quant_mode == "weight_only" else TUNING_ITEMS_LST
+        self.tune_list = (
+            WEIGHT_ONLY_TUNING_ITEMS_LST
+            if self.op_quant_mode == "weight_only"
+            else TUNING_ITEMS_LST
+        )
 
     def _set_dtype(self):
         """Set the date type."""

@@ -18,7 +18,10 @@
 import torch
 from packaging.version import Version
 
-from fedcore.neural_compressor.adaptor.pytorch import PyTorch_FXAdaptor, get_torch_version
+from fedcore.neural_compressor.adaptor.pytorch import (
+    PyTorch_FXAdaptor,
+    get_torch_version,
+)
 
 version = get_torch_version()
 

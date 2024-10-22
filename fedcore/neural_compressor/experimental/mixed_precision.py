@@ -103,7 +103,9 @@ class MixedPrecision(GraphOptimization):
         Returns:
             converted model: best converted model found, otherwise return None
         """
-        assert isinstance(self._model, BaseModel), "need set your Model for mixed precision...."
+        assert isinstance(
+            self._model, BaseModel
+        ), "need set your Model for mixed precision...."
         if "onnx" in self.framework and "bf16" in self._precisions:
             logger.warning("Mixed precision doesn't support bf16 for ONNX models.")
             self._precisions.remove("bf16")
@@ -115,7 +117,10 @@ class MixedPrecision(GraphOptimization):
                     "the hardware doesn't support bf16 instruction."
                 )
             else:
-                logger.warning("Mixed precision exits due to the hardware " "doesn't support bf16 instruction.")
+                logger.warning(
+                    "Mixed precision exits due to the hardware "
+                    "doesn't support bf16 instruction."
+                )
                 self._precisions.remove("bf16")
 
         if "fp16" in self._precisions and "gpu" not in self.conf.usr_cfg.device:
@@ -125,7 +130,10 @@ class MixedPrecision(GraphOptimization):
                     "the hardware doesn't support fp16 instruction."
                 )
             else:
-                logger.warning("Mixed precision exits due to the hardware " "doesn't support fp16 instruction.")
+                logger.warning(
+                    "Mixed precision exits due to the hardware "
+                    "doesn't support fp16 instruction."
+                )
                 self._precisions.remove("fp16")
 
         if self._precisions == ["fp32"] or len(self._precisions) == 0:
@@ -134,13 +142,20 @@ class MixedPrecision(GraphOptimization):
         cfg = self.conf.usr_cfg
         if self.framework == "tensorflow":
             self._model.name = cfg.model.name
-            self._model.output_tensor_names = cfg.model.outputs if not self._output else self._output
-            self._model.input_tensor_names = cfg.model.inputs if not self._input else self._input
+            self._model.output_tensor_names = (
+                cfg.model.outputs if not self._output else self._output
+            )
+            self._model.input_tensor_names = (
+                cfg.model.inputs if not self._input else self._input
+            )
             self._model.workspace_path = cfg.tuning.workspace.path
             if (
                 "bf16" in self._precisions
                 or (cfg.mixed_precision and "bf16" in cfg.mixed_precision.precisions)
-                or (cfg.graph_optimization and "bf16" in cfg.graph_optimization.precisions)
+                or (
+                    cfg.graph_optimization
+                    and "bf16" in cfg.graph_optimization.precisions
+                )
             ):
                 cfg.use_bf16 = True
 
@@ -151,11 +166,15 @@ class MixedPrecision(GraphOptimization):
                 if eval_dataloader_cfg is None:
                     self._eval_func = None
                 else:
-                    self._eval_dataloader = create_dataloader(self.framework, eval_dataloader_cfg)
+                    self._eval_dataloader = create_dataloader(
+                        self.framework, eval_dataloader_cfg
+                    )
 
         strategy = cfg.tuning.strategy.name.lower()
 
-        assert strategy in EXP_STRATEGIES, "Tuning strategy {} is NOT supported".format(strategy)
+        assert strategy in EXP_STRATEGIES, "Tuning strategy {} is NOT supported".format(
+            strategy
+        )
 
         _resume = None
         # check if interrupted tuning procedure exists. if yes, it will resume the
@@ -166,14 +185,20 @@ class MixedPrecision(GraphOptimization):
             else None
         )
         if self.resume_file:  # pragma: no cover
-            assert os.path.exists(self.resume_file), "The specified resume file {} doesn't exist!".format(
+            assert os.path.exists(
                 self.resume_file
-            )
+            ), "The specified resume file {} doesn't exist!".format(self.resume_file)
             with open(self.resume_file, "rb") as f:
                 _resume = pickle.load(f).__dict__
 
         self.strategy = EXP_STRATEGIES[strategy](
-            self._model, self.conf, None, None, self._eval_dataloader, self._eval_func, _resume
+            self._model,
+            self.conf,
+            None,
+            None,
+            self._eval_dataloader,
+            self._eval_func,
+            _resume,
         )
 
         try:
@@ -182,7 +207,9 @@ class MixedPrecision(GraphOptimization):
         except KeyboardInterrupt:  # pragma: no cover
             pass
         except Exception as e:  # pragma: no cover
-            logger.info("Unexpected exception {} happened during turing.".format(repr(e)))
+            logger.info(
+                "Unexpected exception {} happened during turing.".format(repr(e))
+            )
         finally:
             if self.strategy.best_qmodel:
                 logger.info(
@@ -196,7 +223,10 @@ class MixedPrecision(GraphOptimization):
                     "Not found any converted model which meet accuracy goal. Exit."
                 )
 
-            logger.info("Mixed Precision is done. Please invoke model.save() to save " "optimized model to disk.")
+            logger.info(
+                "Mixed Precision is done. Please invoke model.save() to save "
+                "optimized model to disk."
+            )
 
             return self.strategy.best_qmodel
 
@@ -213,7 +243,9 @@ class MixedPrecision(GraphOptimization):
         if isinstance(customized_precisions, list):
             self._precisions = sorted([i.strip() for i in customized_precisions])
         elif isinstance(customized_precisions, str):
-            self._precisions = sorted([i.strip() for i in customized_precisions.split(",")])
+            self._precisions = sorted(
+                [i.strip() for i in customized_precisions.split(",")]
+            )
         self.conf.usr_cfg.mixed_precision.precisions = self._precisions
 
     def set_config_by_model(self, model_obj):
@@ -223,7 +255,9 @@ class MixedPrecision(GraphOptimization):
             self.conf.usr_cfg.model.inputs = self._input
         if self._output:
             if isinstance(self._output, str) and "," in self._output:
-                self.conf.usr_cfg.model.outputs = [s.strip() for s in self._output.split(",")]
+                self.conf.usr_cfg.model.outputs = [
+                    s.strip() for s in self._output.split(",")
+                ]
             else:
                 self.conf.usr_cfg.model.outputs = self._output
 

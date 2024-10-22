@@ -58,7 +58,11 @@ class PytorchProgressivePruner(PytorchBasicPruner):
         self.use_progressive = self.config["progressive"]
         # progressive parameters
         # dict passed to Pattern's functions
-        self.progressive_configs = {"progressive_steps": 4, "progressive_type": "scores", "use_global": True}
+        self.progressive_configs = {
+            "progressive_steps": 4,
+            "progressive_type": "scores",
+            "use_global": True,
+        }
         self.progressive_steps = self.progressive_configs["progressive_steps"]
         self.progressive_type = self.progressive_configs["progressive_type"]
         self.use_global = self.progressive_configs["use_global"]
@@ -75,13 +79,19 @@ class PytorchProgressivePruner(PytorchBasicPruner):
         #                               f"support NxM and per-channel pruning patterns.")
 
         # step 2: check if current set up will "degrade" into non-progressive
-        if (self.end_step - self.start_step) <= self.progressive_steps or self.progressive_steps <= 1:
-            logger.info("Current progressive setting will degrading to non-progressive pruning.")
+        if (
+            self.end_step - self.start_step
+        ) <= self.progressive_steps or self.progressive_steps <= 1:
+            logger.info(
+                "Current progressive setting will degrading to non-progressive pruning."
+            )
             self.use_progressive = False
             return
 
         if self.pruning_frequency == 1:
-            logger.info("Current progressive setting will degrading to non-progressive pruning.")
+            logger.info(
+                "Current progressive setting will degrading to non-progressive pruning."
+            )
             self.use_progressive = False
             return
 
@@ -100,7 +110,9 @@ class PytorchProgressivePruner(PytorchBasicPruner):
                 #     self.progressive_steps = 2
                 self.pruning_frequency_progressive = self.progressive_steps
             else:
-                self.pruning_frequency_progressive = self.pruning_frequency // self.progressive_steps
+                self.pruning_frequency_progressive = (
+                    self.pruning_frequency // self.progressive_steps
+                )
             # this is a structural pruning step, it fits self.pruning_frequency
             self.structured_update_step = 0
 
@@ -109,10 +121,14 @@ class PytorchProgressivePruner(PytorchBasicPruner):
         # check some problematic settings
         if self.progressive_type == "linear":
             # linear based progressive pruning, only valid for NxM pattern
-            assert type(self.pattern).__name__ == "PytorchPatternNxM", "Progressive linear pruning only support NxM."
+            assert (
+                type(self.pattern).__name__ == "PytorchPatternNxM"
+            ), "Progressive linear pruning only support NxM."
             if self.use_global:
                 # when global progressive is applied, linear type is contradict.
-                raise NotImplementedError("Global progressive pruning do not support linear pattern")
+                raise NotImplementedError(
+                    "Global progressive pruning do not support linear pattern"
+                )
             # When linear, progressive_step should not meet a indivisible
             for key in self.pattern.block_size.keys():
                 block_size = self.pattern.block_size[key]
@@ -184,7 +200,11 @@ class PytorchProgressivePruner(PytorchBasicPruner):
             progressive_idx = step_offset // self.pruning_frequency_progressive
             if progressive_idx < (self.progressive_steps - 1):
                 self.progressive_masks = self.pattern.update_progressive_masks(
-                    self.pre_masks, self.masks, self.criterion.scores, progressive_idx + 1, self.progressive_configs
+                    self.pre_masks,
+                    self.masks,
+                    self.criterion.scores,
+                    progressive_idx + 1,
+                    self.progressive_configs,
                 )
             else:
                 # in the end, directly use new masks.
@@ -199,7 +219,10 @@ class PytorchProgressivePruner(PytorchBasicPruner):
         tmp_step = self.global_step
         self.structured_update_step = tmp_step
         current_target_sparsity_ratio = self.scheduler.update_sparsity_ratio(
-            self.target_sparsity_ratio, self.completed_pruned_cnt, self.total_prune_cnt, self.masks
+            self.target_sparsity_ratio,
+            self.completed_pruned_cnt,
+            self.total_prune_cnt,
+            self.masks,
         )
         logger.info(f"current target ratio is {current_target_sparsity_ratio}")
         self.criterion.on_step_begin()
@@ -221,7 +244,11 @@ class PytorchProgressivePruner(PytorchBasicPruner):
             self.masks,
         )
         self.progressive_masks = self.pattern.update_progressive_masks(
-            self.pre_masks, self.masks, self.criterion.scores, 1, self.progressive_configs
+            self.pre_masks,
+            self.masks,
+            self.criterion.scores,
+            1,
+            self.progressive_configs,
         )
         self.mask_weights_general(self.progressive_masks)
         if self.progressive_logger:
@@ -281,14 +308,20 @@ class PytorchProgressivePruner(PytorchBasicPruner):
     def print_progressive_sparsity(self):
         """Output the progressive sparsity."""
         cur_sp = self.pattern.get_sparsity_ratio_progressive(self.progressive_masks)
-        logger.info("Step: {} -> Current progressive sparsity: {}".format(self.global_step, cur_sp))
+        logger.info(
+            "Step: {} -> Current progressive sparsity: {}".format(
+                self.global_step, cur_sp
+            )
+        )
 
     def obtain_weight_sparsity(self, modules):
         total_numels = 0
         sparse_numels = 0
         for key in modules.keys():
             total_numels += modules[key].weight.data.numel()
-            sparse_numels += torch.sum(torch.where(modules[key].weight.data == 0, 1, 0)).item()
+            sparse_numels += torch.sum(
+                torch.where(modules[key].weight.data == 0, 1, 0)
+            ).item()
         return sparse_numels / total_numels
 
     def align_masks_after_pruning(self):
@@ -302,4 +335,6 @@ class PytorchProgressivePruner(PytorchBasicPruner):
         self.mask_weights_general(self.masks)
         # step 3 calculate sparsity under progressive masks
         sparsity2 = self.obtain_weight_sparsity(self.modules)
-        logger.info(f"Replace progressive mask with complete masks: Sparsity Update: {sparsity1} => {sparsity2}")
+        logger.info(
+            f"Replace progressive mask with complete masks: Sparsity Update: {sparsity1} => {sparsity2}"
+        )

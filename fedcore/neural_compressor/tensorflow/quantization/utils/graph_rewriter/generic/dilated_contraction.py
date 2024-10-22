@@ -16,11 +16,14 @@
 # limitations under the License.
 """Dilated Contraction Graph Rewriter."""
 
-from tensorflow.core.framework import attr_value_pb2
-from tensorflow.python.framework import dtypes, tensor_util
+from tensorflow.python.framework import tensor_util
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase
@@ -49,13 +52,25 @@ class DilatedContraction(GraphRewriterBase):
             block_shape_node = graph_info[btos_node.input[1]].node
             crops_node = graph_info[btos_node.input[2]].node
 
-            block_value = [i for i in tensor_util.MakeNdarray(block_shape_node.attr["value"].tensor).flat]
+            block_value = [
+                i
+                for i in tensor_util.MakeNdarray(
+                    block_shape_node.attr["value"].tensor
+                ).flat
+            ]
             new_dilation = [1, block_value[0], block_value[1], 1]
             # if padding input of SpaceToBatchND can't be directly fetched, we continue
             if stob_padding_node.op != "Const":
                 continue
-            padding_value = [i for i in tensor_util.MakeNdarray(stob_padding_node.attr["value"].tensor).flat]
-            crops_value = [i for i in tensor_util.MakeNdarray(crops_node.attr["value"].tensor).flat]
+            padding_value = [
+                i
+                for i in tensor_util.MakeNdarray(
+                    stob_padding_node.attr["value"].tensor
+                ).flat
+            ]
+            crops_value = [
+                i for i in tensor_util.MakeNdarray(crops_node.attr["value"].tensor).flat
+            ]
 
             contraction_node.input[0] = stob_node.input[0]
             Helper.set_attr_int_list(contraction_node, "dilations", new_dilation)
@@ -76,7 +91,9 @@ class DilatedContraction(GraphRewriterBase):
                     explict_padding[5] = real_padding[1]
                     explict_padding[6] = real_padding[2]
                     explict_padding[7] = real_padding[3]
-                Helper.set_attr_int_list(contraction_node, "explicit_paddings", explict_padding)
+                Helper.set_attr_int_list(
+                    contraction_node, "explicit_paddings", explict_padding
+                )
 
             contraction_node.attr.pop("_output_shapes")
             cur_graph.remove_node(stob_node.name)

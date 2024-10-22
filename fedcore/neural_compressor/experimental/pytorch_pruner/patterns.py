@@ -93,7 +93,9 @@ class Pattern:
         self.pattern = config.pattern
         self.is_global = config.prune_domain == "global"
 
-    def get_masks(self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer):
+    def get_masks(
+        self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer
+    ):
         """Call when new masks for pruning are to be calculated.
 
         Args:
@@ -106,11 +108,17 @@ class Pattern:
             A dict with the identical size as pre_masks. Update the 0/1 values in it.
         """
         if self.is_global:
-            return self.get_masks_global(scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer)
+            return self.get_masks_global(
+                scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer
+            )
         else:
-            return self.get_masks_local(scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer)
+            return self.get_masks_local(
+                scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer
+            )
 
-    def get_masks_global(self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer):
+    def get_masks_global(
+        self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer
+    ):
         """To be implemented in subclasses."""
         raise NotImplementedError
 
@@ -139,7 +147,9 @@ class Pattern:
         """To be implemented in subclasses."""
         raise NotImplementedError
 
-    def get_masks_local(self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer):
+    def get_masks_local(
+        self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer
+    ):
         """Obtain layers' local masks.
 
         Args:
@@ -157,7 +167,9 @@ class Pattern:
         for key in scores.keys():
             score = {key: scores[key]}
             pre_mask = {key: pre_masks[key]}
-            mask = self.get_masks_global(score, target_sparsity_ratio, pre_mask, max_sparsity_ratio_per_layer)
+            mask = self.get_masks_global(
+                score, target_sparsity_ratio, pre_mask, max_sparsity_ratio_per_layer
+            )
             masks[key] = mask[key]
         return masks
 
@@ -275,10 +287,17 @@ class PatternNxM(Pattern):
             if len(shape) == 4:
                 shape = pre_mask.reshape(pre_mask.shape[0], -1).shape
             if shape[0] % block_size[0] != 0 or shape[1] % block_size[1] != 0:
-                logger.warning(f"layer {key} is not support under current pattern, ignoring")
+                logger.warning(
+                    f"layer {key} is not support under current pattern, ignoring"
+                )
                 continue
 
-            new_shape = [shape[0] // block_size[0], block_size[0], shape[1] // block_size[1], block_size[1]]
+            new_shape = [
+                shape[0] // block_size[0],
+                block_size[0],
+                shape[1] // block_size[1],
+                block_size[1],
+            ]
             pre_mask = pre_mask.reshape(new_shape)
             pre_mask_sum = pre_mask.sum(-1).sum(1)
             zero_cnt += torch.sum(pre_mask_sum == 0.0).data.item()
@@ -286,7 +305,12 @@ class PatternNxM(Pattern):
         return float(zero_cnt) / total_cnt
 
     def get_masks_global(
-        self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer, keep_pre_mask=False
+        self,
+        scores,
+        target_sparsity_ratio,
+        pre_masks,
+        max_sparsity_ratio_per_layer,
+        keep_pre_mask=False,
     ):
         """Generate masks for layers.
 
@@ -310,15 +334,24 @@ class PatternNxM(Pattern):
         for key in scores.keys():
             block_size = self.block_size[key]
             current_score = scores[key]
-            if len(current_score.shape) == 4:  ##TODO need to verify whether it's ok for transposed conv
+            if (
+                len(current_score.shape) == 4
+            ):  ##TODO need to verify whether it's ok for transposed conv
                 current_score = current_score.permute(0, 2, 3, 1)  ##cout,k,k,cin
                 current_score = current_score.reshape(current_score.shape[0], -1)
             shape = current_score.shape
-            if shape[0] % block_size[0] != 0 or shape[1] % block_size[1] != 0:  ## only consider input channel
+            if (
+                shape[0] % block_size[0] != 0 or shape[1] % block_size[1] != 0
+            ):  ## only consider input channel
                 not_divided_keys.append(key)
                 continue
 
-            new_shape = [shape[0] // block_size[0], block_size[0], shape[1] // block_size[1], block_size[1]]
+            new_shape = [
+                shape[0] // block_size[0],
+                block_size[0],
+                shape[1] // block_size[1],
+                block_size[1],
+            ]
             current_score = current_score.reshape(new_shape)
             current_score_sum = current_score.mean(-1).mean(
                 1
@@ -335,12 +368,20 @@ class PatternNxM(Pattern):
                 zero = torch.tensor([0.0]).to(score.device)
                 one = torch.tensor([1.0]).to(score.device)
                 mask = torch.where(score <= threshold, zero, one)
-                mask = mask.repeat_interleave(block_size[0], dim=0).repeat_interleave(block_size[1], dim=-1)
+                mask = mask.repeat_interleave(block_size[0], dim=0).repeat_interleave(
+                    block_size[1], dim=-1
+                )
                 if torch.sum(mask) / mask.numel() < 1.0 - max_sparsity_ratio_per_layer:
                     ##to prevent some layer not be purned too much
                     ##this is different with our original implementation
-                    masks[key] = self.get_mask_single(new_scores[key], max_sparsity_ratio_per_layer)
-                    masks[key] = masks[key].repeat_interleave(block_size[0], 0).repeat_interleave(block_size[1], -1)
+                    masks[key] = self.get_mask_single(
+                        new_scores[key], max_sparsity_ratio_per_layer
+                    )
+                    masks[key] = (
+                        masks[key]
+                        .repeat_interleave(block_size[0], 0)
+                        .repeat_interleave(block_size[1], -1)
+                    )
                     # if pre_masks != {}:##when use one shot, this is not right
                     #     masks[key] = pre_masks[key]
                     # else:
@@ -354,7 +395,9 @@ class PatternNxM(Pattern):
             for key in not_divided_keys:
                 p = scores[key]
                 masks[key] = torch.ones(p.shape).to(p.device)
-                logger.warning(f"{key} shape {scores[key].shape} cannot be divided by {self.pattern}")
+                logger.warning(
+                    f"{key} shape {scores[key].shape} cannot be divided by {self.pattern}"
+                )
 
         else:
             for key in scores.keys():
@@ -362,10 +405,15 @@ class PatternNxM(Pattern):
                 masks[key] = torch.ones(p.shape).to(p.device)
 
         for key in masks.keys():
-            if len(scores[key].shape) == 4 and len(masks[key].shape) == 2:  ## need to permute
+            if (
+                len(scores[key].shape) == 4 and len(masks[key].shape) == 2
+            ):  ## need to permute
                 mask = masks[key]
                 mask = mask.reshape(
-                    scores[key].shape[0], scores[key].shape[2], scores[key].shape[3], scores[key].shape[1]
+                    scores[key].shape[0],
+                    scores[key].shape[2],
+                    scores[key].shape[3],
+                    scores[key].shape[1],
                 )
                 mask = mask.permute(0, 3, 1, 2)
                 masks[key] = mask
@@ -390,16 +438,25 @@ class PatternNxM(Pattern):
                 weight = weight.permute(0, 2, 3, 1)
                 weight = weight.reshape(weight.shape[0], -1)
             shape = weight.shape
-            new_shape = [shape[0] // block_size[0], block_size[0], shape[1] // block_size[1], block_size[1]]
+            new_shape = [
+                shape[0] // block_size[0],
+                block_size[0],
+                shape[1] // block_size[1],
+                block_size[1],
+            ]
             p = weight.reshape(new_shape)
             p_mag = p.abs()  # avoid the scene which sum is zero but weights are not
             weight_block_sum = p_mag.sum(-1).sum(1)
             mask = torch.ones(weight_block_sum.shape)
             mask[weight_block_sum == 0] = 0.0
-            mask = mask.repeat_interleave(block_size[0], dim=0).repeat_interleave(block_size[1], dim=-1)
+            mask = mask.repeat_interleave(block_size[0], dim=0).repeat_interleave(
+                block_size[1], dim=-1
+            )
             orig_shape = modules[key].weight.shape
             if len(orig_shape) == 4:
-                mask = mask.reshape(orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1])
+                mask = mask.reshape(
+                    orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1]
+                )
                 mask = mask.permute(0, 3, 1, 2)
             if len(orig_shape) == 3:
                 mask = mask.reshape(orig_shape[0], orig_shape[2], orig_shape[1])
@@ -449,7 +506,9 @@ class PatternNInM(Pattern):
             total_cnt += pre_masks[key].numel()
         return 1.0 - float(non_zero_cnt) / total_cnt
 
-    def get_masks_global(self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer):
+    def get_masks_global(
+        self, scores, target_sparsity_ratio, pre_masks, max_sparsity_ratio_per_layer
+    ):
         """Generate masks for layers.
 
         Gather all layer's scores together and calculate a common threshold.
@@ -466,7 +525,9 @@ class PatternNInM(Pattern):
         """
         N = self.N
         M = self.M
-        target_sparsity_ratio = target_sparsity_ratio / (float(N / M))  ##recover sparsity for block wise
+        target_sparsity_ratio = target_sparsity_ratio / (
+            float(N / M)
+        )  ##recover sparsity for block wise
         all_nm_masks = {}
         new_scores = {}
         not_divided_keys = []
@@ -476,7 +537,9 @@ class PatternNInM(Pattern):
             if shape[1] % M != 0:
                 not_divided_keys.append(key)
                 continue
-            if len(current_score.shape) == 4:  ##TODO need to verify whether it's ok for transposed conv
+            if (
+                len(current_score.shape) == 4
+            ):  ##TODO need to verify whether it's ok for transposed conv
                 current_score = current_score.permute(0, 2, 3, 1)  ##cout,k,k,cin
                 current_score = current_score.reshape(current_score.shape[0], -1)
                 shape = current_score.shape
@@ -516,7 +579,9 @@ class PatternNInM(Pattern):
                 mask = torch.where(mask <= 0, zero, one)
                 if torch.sum(mask) / mask.numel() < 1.0 - max_sparsity_ratio_per_layer:
                     ##trick, to prevent some layer not be purned too much
-                    masks[key] = self.get_mask_single(new_scores[key], max_sparsity_ratio_per_layer)
+                    masks[key] = self.get_mask_single(
+                        new_scores[key], max_sparsity_ratio_per_layer
+                    )
                     masks[key] = masks[key].repeat_interleave(M, dim=-1)
                     ## both zero will be zero
                     masks[key] = masks[key] + all_nm_masks[key]
@@ -526,17 +591,24 @@ class PatternNInM(Pattern):
             for key in not_divided_keys:
                 p = scores[key]
                 masks[key] = torch.ones(p.shape).to(p.device)
-                logger.warning(f"{key} shape {scores[key].shape} cannot be divided by {self.pattern}")
+                logger.warning(
+                    f"{key} shape {scores[key].shape} cannot be divided by {self.pattern}"
+                )
 
         else:
             for key in scores.keys():
                 p = scores[key]
                 masks[key] = torch.ones(p.shape).to(p.device)
         for key in masks.keys():
-            if len(scores[key].shape) == 4 and len(masks[key].shape) == 2:  ## need to permute
+            if (
+                len(scores[key].shape) == 4 and len(masks[key].shape) == 2
+            ):  ## need to permute
                 mask = masks[key]
                 mask = mask.reshape(
-                    scores[key].shape[0], scores[key].shape[2], scores[key].shape[3], scores[key].shape[1]
+                    scores[key].shape[0],
+                    scores[key].shape[2],
+                    scores[key].shape[3],
+                    scores[key].shape[1],
                 )
                 mask = mask.permute(0, 3, 1, 2)
                 masks[key] = mask
@@ -569,14 +641,18 @@ class PatternNInM(Pattern):
             zeros = M - nonzeros
             mask1[weight_new == 0] = 0.0
             mask2[zeros >= N] = 0.0
-            mask3 = mask1 + mask2  # zero in mask3 means its block has been completely pruned.
+            mask3 = (
+                mask1 + mask2
+            )  # zero in mask3 means its block has been completely pruned.
             zero = torch.tensor([0.0]).to(weight.device)
             one = torch.tensor([1.0]).to(weight.device)
             mask = torch.where(mask3 == 0, zero, one)
             mask = mask.reshape(shape)
             orig_shape = modules[key].weight.shape
             if len(orig_shape) == 4:
-                mask = mask.reshape(orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1])
+                mask = mask.reshape(
+                    orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1]
+                )
                 mask = mask.permute(0, 3, 1, 2)
             if len(orig_shape) == 3:
                 mask = mask.reshape(orig_shape[0], orig_shape[2], orig_shape[1])

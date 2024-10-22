@@ -58,7 +58,9 @@ class UnicodeRegex(object):
               with a specific prefix.
         """
         punctuation = "".join(
-            six.unichr(x) for x in range(sys.maxunicode) if unicodedata.category(six.unichr(x)).startswith(prefix)
+            six.unichr(x)
+            for x in range(sys.maxunicode)
+            if unicodedata.category(six.unichr(x)).startswith(prefix)
         )
         return punctuation
 

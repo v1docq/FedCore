@@ -154,7 +154,16 @@ class DummyDataset:  # pragma: no cover
     (TODO) construct dummy data from real dataset or iteration of data.
     """
 
-    def __init__(self, shape, low=-128.0, high=127.0, dtype="float32", label=True, transform=None, filter=None):
+    def __init__(
+        self,
+        shape,
+        low=-128.0,
+        high=127.0,
+        dtype="float32",
+        label=True,
+        transform=None,
+        filter=None,
+    ):
         """Initialize `DummyDataset` class.
 
         Args:
@@ -222,22 +231,30 @@ class DummyDataset:  # pragma: no cover
                 low = [low]
             else:
                 assert (
-                    isinstance(low, list) and len(low) == 1 and isinstance(low[0], float)
+                    isinstance(low, list)
+                    and len(low) == 1
+                    and isinstance(low[0], float)
                 ), "low should be float or list of float with length 1"
 
             if isinstance(high, float):
                 high = [high]
             else:
                 assert (
-                    isinstance(high, list) and len(high) == 1 and isinstance(high[0], float)
+                    isinstance(high, list)
+                    and len(high) == 1
+                    and isinstance(high[0], float)
                 ), "high should be float or list of float with length 1"
 
             if isinstance(dtype, str):
-                assert dtype in dtype_map.keys(), "dtype only support {}".format(dtype_map.keys())
+                assert dtype in dtype_map.keys(), "dtype only support {}".format(
+                    dtype_map.keys()
+                )
                 dtype = [dtype]
             else:
                 assert (
-                    isinstance(dtype, list) and len(dtype) == 1 and dtype[0] in dtype_map.keys()
+                    isinstance(dtype, list)
+                    and len(dtype) == 1
+                    and dtype[0] in dtype_map.keys()
                 ), "dtype should be str or list of str in supported dtypes"
 
         self.dataset = []
@@ -275,7 +292,14 @@ class DummyDatasetV2:  # pragma: no cover
     """
 
     def __init__(
-        self, input_shape, label_shape=None, low=-128.0, high=127.0, dtype="float32", transform=None, filter=None
+        self,
+        input_shape,
+        label_shape=None,
+        low=-128.0,
+        high=127.0,
+        dtype="float32",
+        transform=None,
+        filter=None,
     ):
         """Initialize `DummyDataset` class.
 
@@ -359,7 +383,9 @@ class DummyDatasetV2:  # pragma: no cover
         while True:
             input_data = []
             for idx in range(0, self.input_dim):
-                tensor = np.random.uniform(low=self.low[idx], high=self.high[idx], size=self.input_shape[idx])
+                tensor = np.random.uniform(
+                    low=self.low[idx], high=self.high[idx], size=self.input_shape[idx]
+                )
                 tensor = tensor.astype(self.dtype_map[self.dtype[idx]])
                 input_data.append(tensor)
 
@@ -367,7 +393,9 @@ class DummyDatasetV2:  # pragma: no cover
             for idx in range(0, self.label_dim):
                 shift_idx = self.input_dim + idx
                 tensor = np.random.uniform(
-                    low=self.low[shift_idx], high=self.high[shift_idx], size=self.label_shape[idx]
+                    low=self.low[shift_idx],
+                    high=self.high[shift_idx],
+                    size=self.label_shape[idx],
                 )
                 tensor = tensor.astype(self.dtype_map[self.dtype[shift_idx]])
                 label.append(tensor)

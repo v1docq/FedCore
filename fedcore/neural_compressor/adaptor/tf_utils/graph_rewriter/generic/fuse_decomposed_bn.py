@@ -16,17 +16,11 @@
 # limitations under the License.
 """Fuse Decomposed BatchNorm Graph Rewriter."""
 
-import collections
-import math
 import re
 
-import numpy as np
-from tensorflow.compat.v1 import graph_util
 from tensorflow.core.framework import attr_value_pb2, graph_pb2, node_def_pb2
-from tensorflow.python.framework import dtypes, tensor_util
-from tensorflow.python.platform import flags as flags_lib
+from tensorflow.python.framework import tensor_util
 from tensorflow.python.platform import tf_logging
-from tensorflow.python.tools import strip_unused_lib
 
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
 
@@ -146,7 +140,10 @@ class FuseDecomposedBNOptimizer:
             if "data_format" in node.attr.keys():
                 data_format = node.attr["data_format"]
             if data_format is not None and data_format.s != b"NHWC":
-                tf_logging.warn("%s in %s format, not candidate for batchnorm fusion." % (node.name, data_format.s))
+                tf_logging.warn(
+                    "%s in %s format, not candidate for batchnorm fusion."
+                    % (node.name, data_format.s)
+                )
                 return self.input_graph_def
             else:
                 continue
@@ -184,7 +181,9 @@ class FuseDecomposedBNOptimizer:
                 continue
 
             if input_data_op.input:
-                ancestor_input_data_op = node_from_map(input_node_map, input_data_op.input[0])
+                ancestor_input_data_op = node_from_map(
+                    input_node_map, input_data_op.input[0]
+                )
                 if ancestor_input_data_op.op == "MatMul":
                     continue
 
@@ -197,7 +196,9 @@ class FuseDecomposedBNOptimizer:
             elif scale_op.op == "Mul":
                 # Mul (Rsqrt, Constant_gamma)
                 rsqrt_op = node_from_map(input_node_map, scale_op.input[0])
-                gamma_op, gamma_reshape_op = bypass_reshape(input_node_map, scale_op.input[1])
+                gamma_op, gamma_reshape_op = bypass_reshape(
+                    input_node_map, scale_op.input[1]
+                )
                 if rsqrt_op.op != "Rsqrt":
                     continue
                 if gamma_op.op != "Const" or get_const_dim_count(gamma_op) != 1:
@@ -206,7 +207,9 @@ class FuseDecomposedBNOptimizer:
                 continue
 
             # Sub (Constant_beta, Mul)
-            beta_op, beta_reshape_op = bypass_reshape(input_node_map, bias_mean_sub_op.input[0])
+            beta_op, beta_reshape_op = bypass_reshape(
+                input_node_map, bias_mean_sub_op.input[0]
+            )
             mean_scale_mul_op = node_from_map(input_node_map, bias_mean_sub_op.input[1])
             if mean_scale_mul_op.op != "Mul":
                 continue
@@ -217,7 +220,9 @@ class FuseDecomposedBNOptimizer:
             if scale_op != node_from_map(input_node_map, mean_scale_mul_op.input[1]):
                 continue
 
-            mean_op, mean_reshape_op = bypass_reshape(input_node_map, mean_scale_mul_op.input[0])
+            mean_op, mean_reshape_op = bypass_reshape(
+                input_node_map, mean_scale_mul_op.input[0]
+            )
             if mean_op.op != "Const" or get_const_dim_count(mean_op) != 1:
                 continue
 
@@ -226,7 +231,9 @@ class FuseDecomposedBNOptimizer:
             if variance_epsilon_add_op.op != "Add":
                 continue
 
-            variance_op, variance_reshape_op = bypass_reshape(input_node_map, variance_epsilon_add_op.input[0])
+            variance_op, variance_reshape_op = bypass_reshape(
+                input_node_map, variance_epsilon_add_op.input[0]
+            )
             epsilon_op = node_from_map(input_node_map, variance_epsilon_add_op.input[1])
             if epsilon_op.op != "Const" or get_const_dim_count(epsilon_op) != 0:
                 continue
@@ -266,7 +273,10 @@ class FuseDecomposedBNOptimizer:
                 gamma_op.attr["value"].CopyFrom(
                     attr_value_pb2.AttrValue(
                         tensor=tensor_util.make_tensor_proto(
-                            1, beta_value.dtype.type, beta_value.shape, allow_broadcast=True
+                            1,
+                            beta_value.dtype.type,
+                            beta_value.shape,
+                            allow_broadcast=True,
                         )
                     )
                 )
@@ -276,12 +286,22 @@ class FuseDecomposedBNOptimizer:
             new_fused_batchnorm_op.op = "FusedBatchNorm"
             new_fused_batchnorm_op.name = node.name
             new_fused_batchnorm_op.attr["T"].CopyFrom(node.attr["T"])
-            new_fused_batchnorm_op.attr["is_training"].CopyFrom(attr_value_pb2.AttrValue(b=False))
-            new_fused_batchnorm_op.attr["epsilon"].CopyFrom(attr_value_pb2.AttrValue(f=epsilon.tolist()))
+            new_fused_batchnorm_op.attr["is_training"].CopyFrom(
+                attr_value_pb2.AttrValue(b=False)
+            )
+            new_fused_batchnorm_op.attr["epsilon"].CopyFrom(
+                attr_value_pb2.AttrValue(f=epsilon.tolist())
+            )
             if data_format is not None:
                 new_fused_batchnorm_op.attr["data_format"].CopyFrom(data_format)
             new_fused_batchnorm_op.input.extend(
-                [input_data_op.name, gamma_op.name, beta_op.name, mean_op.name, variance_op.name]
+                [
+                    input_data_op.name,
+                    gamma_op.name,
+                    beta_op.name,
+                    mean_op.name,
+                    variance_op.name,
+                ]
             )
 
             new_ops.append(new_fused_batchnorm_op)
@@ -294,7 +314,10 @@ class FuseDecomposedBNOptimizer:
             new_node.CopyFrom(node)
             retained_input = []
             for input_node in new_node.input:
-                if not input_node.startswith("^") or input_node[1:] not in nodes_to_skip:
+                if (
+                    not input_node.startswith("^")
+                    or input_node[1:] not in nodes_to_skip
+                ):
                     retained_input.append(input_node)
             new_node.input[:] = retained_input
             result_graph_def.node.append(new_node)
@@ -346,7 +369,10 @@ def values_from_const(node_def):
         ValueError: If the node isn't a Const.
     """
     if node_def.op != "Const":
-        raise ValueError("Can not extract constant value from a node that is not Const. Got:\n" f"{node_def}")
+        raise ValueError(
+            "Can not extract constant value from a node that is not Const. Got:\n"
+            f"{node_def}"
+        )
     input_tensor = node_def.attr["value"].tensor
     tensor_value = tensor_util.MakeNdarray(input_tensor)
     return tensor_value
@@ -354,13 +380,19 @@ def values_from_const(node_def):
 
 def valid_reshape_inputs(reshape_in0_ndef, reshape_in1_ndef):
     """Check if the inputs of the Reshape are valid."""
-    if reshape_in0_ndef.op != "Const" or reshape_in1_ndef.op != "Const" or get_const_dim_count(reshape_in0_ndef) != 1:
+    if (
+        reshape_in0_ndef.op != "Const"
+        or reshape_in1_ndef.op != "Const"
+        or get_const_dim_count(reshape_in0_ndef) != 1
+    ):
         return False
     input0_vec_size = values_from_const(reshape_in0_ndef).shape[0]
     const_value = values_from_const(reshape_in1_ndef)
     shape_ndims = const_value.ndim
     if shape_ndims != 1:
-        raise ValueError("Num of dims of the shape must be 1, got {}.".format(shape_ndims))
+        raise ValueError(
+            "Num of dims of the shape must be 1, got {}.".format(shape_ndims)
+        )
     for value in const_value.tolist()[:-1]:
         if value != 1:
             return False

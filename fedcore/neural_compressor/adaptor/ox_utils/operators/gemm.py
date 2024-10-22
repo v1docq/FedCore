@@ -18,8 +18,18 @@
 
 import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg, find_by_name, is_B_transposed, ms_domain
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    attribute_to_kwarg,
+    find_by_name,
+    is_B_transposed,
+    ms_domain,
+)
 
 
 @op_registry(op_types="Gemm")
@@ -33,7 +43,9 @@ class GemmOperator(Operator):
     def quantize_check(self):
         """Check if quantizaion can be done."""
         node = self.node
-        if len(node.input) == 3 and not find_by_name(node.input[2], self.quantizer.model.initializer()):
+        if len(node.input) == 3 and not find_by_name(
+            node.input[2], self.quantizer.model.initializer()
+        ):
             from fedcore.neural_compressor.utils import logger
 
             logger.warning(
@@ -48,14 +60,22 @@ class GemmOperator(Operator):
         """Do quantizaion."""
         node = self.node
         self.quantizer.quantize_inputs(node, [0])
-        if self.per_channel and find_by_name(node.input[1], self.quantizer.model.initializer()):
+        if self.per_channel and find_by_name(
+            node.input[1], self.quantizer.model.initializer()
+        ):
             self.quantizer.quantize_weights_per_channel(
-                node, [1], self.weight_dtype, self.weight_scheme, 0 if is_B_transposed(node) else 1
+                node,
+                [1],
+                self.weight_dtype,
+                self.weight_scheme,
+                0 if is_B_transposed(node) else 1,
             )
         else:
             self.quantizer.quantize_inputs(node, [1])
 
-        if len(node.input) == 3 and find_by_name(node.input[2], self.quantizer.model.initializer()):
+        if len(node.input) == 3 and find_by_name(
+            node.input[2], self.quantizer.model.initializer()
+        ):
             self.quantizer.quantize_bias_tensor(node)
             beta_attribute = [attr for attr in node.attribute if attr.name == "beta"]
             if len(beta_attribute):
@@ -68,7 +88,9 @@ class GemmOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
 
         children = self.quantizer.model.get_children(node)
         if len(children) == 0 or not node.name.endswith("_quant"):
@@ -94,7 +116,9 @@ class GemmOperator(Operator):
                 kwargs.update(attribute_to_kwarg(attribute))
                 kwargs["domain"] = ms_domain
 
-        qgemm_node = onnx.helper.make_node("QGemm", qgemm_inputs, [qgemm_output], node.name, **kwargs)
+        qgemm_node = onnx.helper.make_node(
+            "QGemm", qgemm_inputs, [qgemm_output], node.name, **kwargs
+        )
 
         self.quantizer.new_nodes.append(qgemm_node)
         self.quantizer.remove_nodes.extend(parents)
@@ -118,27 +142,41 @@ class QGemmOperator(QOperator):
         add_nodes = []
         inits = []
 
-        input_scale = onnx.numpy_helper.to_array(find_by_name(node.input[1], self.initializers))
-        weight_scale = onnx.numpy_helper.to_array(find_by_name(node.input[4], self.initializers))
+        input_scale = onnx.numpy_helper.to_array(
+            find_by_name(node.input[1], self.initializers)
+        )
+        weight_scale = onnx.numpy_helper.to_array(
+            find_by_name(node.input[4], self.initializers)
+        )
         bias_scale = input_scale * weight_scale
 
         # input dq
         in_dq1 = onnx.helper.make_node(
-            "DequantizeLinear", node.input[:3], [node.name + "_in_dequant1"], node.name + "_in_dequant1"
+            "DequantizeLinear",
+            node.input[:3],
+            [node.name + "_in_dequant1"],
+            node.name + "_in_dequant1",
         )
 
         in_dq2 = onnx.helper.make_node(
-            "DequantizeLinear", node.input[3:6], [node.name + "_in_dequant2"], node.name + "_in_dequant2"
+            "DequantizeLinear",
+            node.input[3:6],
+            [node.name + "_in_dequant2"],
+            node.name + "_in_dequant2",
         )
 
         # update scale initializer
         bias_scale_data = np.asarray(bias_scale, dtype=np.float32).reshape(-1)
-        bias_scale_initializer = onnx.numpy_helper.from_array(bias_scale_data, node.input[6] + "_scale")
+        bias_scale_initializer = onnx.numpy_helper.from_array(
+            bias_scale_data, node.input[6] + "_scale"
+        )
         inits.extend([bias_scale_initializer])
 
         # update zero initializer
         bias_zp_data = np.zeros(bias_scale.shape, dtype=np.int32).reshape(-1)
-        bias_zp_initializer = onnx.numpy_helper.from_array(bias_zp_data, node.input[6] + "_zero_point")
+        bias_zp_initializer = onnx.numpy_helper.from_array(
+            bias_zp_data, node.input[6] + "_zero_point"
+        )
         inits.extend([bias_zp_initializer])
         in_dq3 = onnx.helper.make_node(
             "DequantizeLinear",
@@ -151,7 +189,10 @@ class QGemmOperator(QOperator):
 
         # output q
         out_q = onnx.helper.make_node(
-            "QuantizeLinear", [node.name + "_out", node.input[6], node.input[7]], node.output, node.name + "_out_quant"
+            "QuantizeLinear",
+            [node.name + "_out", node.input[6], node.input[7]],
+            node.output,
+            node.name + "_out_quant",
         )
         outputs = [node.name + "_out"]
         add_nodes.append(out_q)
@@ -160,6 +201,8 @@ class QGemmOperator(QOperator):
         for attribute in node.attribute:  # pragma: no cover
             kwargs.update(attribute_to_kwarg(attribute))
 
-        gemm_node = onnx.helper.make_node("Gemm", inputs, outputs, node.name + "_convert", **kwargs)
+        gemm_node = onnx.helper.make_node(
+            "Gemm", inputs, outputs, node.name + "_convert", **kwargs
+        )
         add_nodes.append(gemm_node)
         return True, add_nodes, inits

@@ -73,14 +73,18 @@ class AutoTuneStrategy(TuneStrategy):
 
     def _transfer_alpha(self, pre_strategy):
         sq_alpha = (
-            pre_strategy.cur_best_tuning_cfg.get("recipe_cfgs", {}).get("smooth_quant_args", {}).get("alpha", None)
+            pre_strategy.cur_best_tuning_cfg.get("recipe_cfgs", {})
+            .get("smooth_quant_args", {})
+            .get("alpha", None)
         )
         if sq_alpha and self.conf.quantization.recipes:
             logger.warning(
                 f"[Strategy] Override the user config's smooth quant alpha into best alpha"
                 f"({sq_alpha: .4f}) found in pre-strategy."
             )
-            self.conf.quantization.recipes.setdefault("smooth_quant_args", {})["alpha"] = sq_alpha
+            self.conf.quantization.recipes.setdefault("smooth_quant_args", {})[
+                "alpha"
+            ] = sq_alpha
 
     def sequential_traverse(self):
         """Try different strategies sequentially."""
@@ -115,7 +119,9 @@ class AutoTuneStrategy(TuneStrategy):
             tune_config (dict): A dict containing the tuning configuration for quantization.
         """
         tuning_space = self.tuning_space
-        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         _, _, op_tuning_cfg = self.initial_tuning_cfg()
         op_tuning_cfg["calib_sampling_size"] = calib_sampling_size_lst[0]
         if not self.cur_best_tuning_cfg:
@@ -123,12 +129,16 @@ class AutoTuneStrategy(TuneStrategy):
 
         # try to tune a WeightOnlyQuant algorithm
         if self._should_tuning_woq_algo():
-            for tune_cfg in self.tuning_woq_algo(tuning_space, deepcopy(self.cur_best_tuning_cfg)):
+            for tune_cfg in self.tuning_woq_algo(
+                tuning_space, deepcopy(self.cur_best_tuning_cfg)
+            ):
                 yield tune_cfg
 
         # try to tune sq alpha
         if self._should_tuning_sq_alpha(self.config.recipes):
-            for tune_cfg in self.tuning_sq_alpha(tuning_space, deepcopy(self.cur_best_tuning_cfg), self.config.recipes):
+            for tune_cfg in self.tuning_sq_alpha(
+                tuning_space, deepcopy(self.cur_best_tuning_cfg), self.config.recipes
+            ):
                 yield tune_cfg
 
         logger.info("Quantize the model with default config.")
@@ -139,7 +149,9 @@ class AutoTuneStrategy(TuneStrategy):
         # Quantize model with default config
         super().traverse()
         if self.best_qmodel:
-            logger.info("[Strategy] Found the model meets accuracy requirements, ending the tuning process.")
+            logger.info(
+                "[Strategy] Found the model meets accuracy requirements, ending the tuning process."
+            )
             return
         elif self.config.tuning_criterion.max_trials == 1:
             logger.info(

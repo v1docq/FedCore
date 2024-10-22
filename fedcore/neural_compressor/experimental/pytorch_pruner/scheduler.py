@@ -84,7 +84,9 @@ class Scheduler:
         """Initialize."""
         self.config = config
 
-    def update_sparsity_ratio(self, aggressive_ratio, current_prune_step, total_prune_steps, masks):
+    def update_sparsity_ratio(
+        self, aggressive_ratio, current_prune_step, total_prune_steps, masks
+    ):
         """To be implemented in subclasses."""
         raise NotImplementedError
 
@@ -108,7 +110,9 @@ class OneshotScheduler(Scheduler):
         """Initialize."""
         super(OneshotScheduler, self).__init__(config)
 
-    def update_sparsity_ratio(self, aggressive_ratio, current_prune_step, total_prune_steps, masks):
+    def update_sparsity_ratio(
+        self, aggressive_ratio, current_prune_step, total_prune_steps, masks
+    ):
         """Return the aggressive ratio."""
         return aggressive_ratio
 
@@ -133,7 +137,9 @@ class IterativeScheduler(Scheduler):
         super(IterativeScheduler, self).__init__(config)
         # self.decay_type = config["sparsity_decay_type"]
 
-    def update_sparsity_ratio(self, target_ratio, current_prune_step, total_prune_steps, masks):
+    def update_sparsity_ratio(
+        self, target_ratio, current_prune_step, total_prune_steps, masks
+    ):
         """Obtain new target sparsity ratio according to the step.
 
         Args:
@@ -149,22 +155,35 @@ class IterativeScheduler(Scheduler):
         # if self.config.prune_domain == "global":
         #     aggressive_ratio += 0.02
 
-        aggressive_ratio = min(self.config.max_sparsity_ratio_per_layer, aggressive_ratio)  # legacy issue
+        aggressive_ratio = min(
+            self.config.max_sparsity_ratio_per_layer, aggressive_ratio
+        )  # legacy issue
 
         decay_type = self.config.sparsity_decay_type
         if decay_type == "cos":
             current_target_sparsity = (aggressive_ratio) * (
-                1.0 - math.cos(float(current_prune_step) / total_prune_steps * (math.pi / 2))
+                1.0
+                - math.cos(
+                    float(current_prune_step) / total_prune_steps * (math.pi / 2)
+                )
             )
         elif decay_type == "exp":
-            target_dense_change_ratio = (1.0 - aggressive_ratio) ** (1 / total_prune_steps)
-            current_target_sparsity = 1.0 - target_dense_change_ratio**current_prune_step
+            target_dense_change_ratio = (1.0 - aggressive_ratio) ** (
+                1 / total_prune_steps
+            )
+            current_target_sparsity = (
+                1.0 - target_dense_change_ratio**current_prune_step
+            )
 
         elif decay_type == "linear":
-            current_target_sparsity = (aggressive_ratio) * float(current_prune_step) / total_prune_steps
+            current_target_sparsity = (
+                (aggressive_ratio) * float(current_prune_step) / total_prune_steps
+            )
 
         elif decay_type == "cube":
-            current_target_sparsity = (aggressive_ratio) * ((float(current_prune_step) / total_prune_steps) ** 3)
+            current_target_sparsity = (aggressive_ratio) * (
+                (float(current_prune_step) / total_prune_steps) ** 3
+            )
         else:
             assert False, "{} is not supported".format(decay_type)
 

@@ -12,7 +12,7 @@ from fedcore.architecture.settings.computational import default_device
 
 def init_lin_zero(m):
     if isinstance(m, nn.Linear):
-        if getattr(m, 'bias', None) is not None:
+        if getattr(m, "bias", None) is not None:
             nn.init.constant_(m.bias, 0)
         nn.init.constant_(m.weight, 0)
     for l in m.children():
@@ -40,24 +40,24 @@ class Reshape(nn.Module):
         return x.view(-1, *self.out_shape)
 
 
-def get_norm(nf, ndim=1, norm='Batch', zero_norm=False, init=True, **kwargs):
+def get_norm(nf, ndim=1, norm="Batch", zero_norm=False, init=True, **kwargs):
     """Norm layer with `nf` features and `ndim` with auto init."""
     assert 1 <= ndim <= 3
     nl = getattr(nn, f"{snake2camel(norm)}Norm{ndim}d")(nf, **kwargs)
     if nl.affine and init:
         nl.bias.data.fill_(1e-3)
-        nl.weight.data.fill_(0. if zero_norm else 1.)
+        nl.weight.data.fill_(0.0 if zero_norm else 1.0)
     return nl
 
 
-BN1d = partial(get_norm, ndim=1, norm='Batch')
-IN1d = partial(get_norm, ndim=1, norm='Instance')
+BN1d = partial(get_norm, ndim=1, norm="Batch")
+IN1d = partial(get_norm, ndim=1, norm="Instance")
 
 
 class LinLnDrop(nn.Sequential):
     """Module grouping `LayerNorm1d`, `Dropout` and `Linear` layers"""
 
-    def __init__(self, n_in, n_out, ln=True, p=0., act=None, lin_first=False):
+    def __init__(self, n_in, n_out, ln=True, p=0.0, act=None, lin_first=False):
         layers = [nn.LayerNorm(n_out if lin_first else n_in)] if ln else []
         if p != 0:
             layers.append(nn.Dropout(p))
@@ -69,8 +69,8 @@ class LinLnDrop(nn.Sequential):
 
 
 class LambdaPlus(Module):
-    def __init__(self, func, *args, **
-                 kwargs): self.func, self.args, self.kwargs = func, args, kwargs
+    def __init__(self, func, *args, **kwargs):
+        self.func, self.args, self.kwargs = func, args, kwargs
 
     def forward(self, x):
         return self.func(x, *self.args, **self.kwargs)
@@ -84,7 +84,7 @@ class Squeeze(Module):
         return x.squeeze(dim=self.dim)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(dim={self.dim})'
+        return f"{self.__class__.__name__}(dim={self.dim})"
 
 
 class Unsqueeze(Module):
@@ -95,7 +95,7 @@ class Unsqueeze(Module):
         return x.unsqueeze(dim=self.dim)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(dim={self.dim})'
+        return f"{self.__class__.__name__}(dim={self.dim})"
 
 
 class Add(Module):
@@ -103,7 +103,7 @@ class Add(Module):
         return x.add(y)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}'
+        return f"{self.__class__.__name__}"
 
 
 class Concat(Module):
@@ -114,12 +114,11 @@ class Concat(Module):
         return torch.cat(*x, dim=self.dim)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(dim={self.dim})'
+        return f"{self.__class__.__name__}(dim={self.dim})"
 
 
 class Unfold(Module):
-    def __init__(self, dim, size,
-                 step=1):
+    def __init__(self, dim, size, step=1):
         self.dim, self.size, self.step = dim, size, step
 
     def forward(self, x: Tensor) -> Tensor:
@@ -137,7 +136,9 @@ class Permute(Module):
         return x.permute(self.dims)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(dims={', '.join([str(d) for d in self.dims])})"
+        return (
+            f"{self.__class__.__name__}(dims={', '.join([str(d) for d in self.dims])})"
+        )
 
 
 class Transpose(Module):
@@ -154,7 +155,9 @@ class Transpose(Module):
         if self.contiguous:
             return f"{self.__class__.__name__}(dims={', '.join([str(d) for d in self.dims])}).contiguous()"
         else:
-            return f"{self.__class__.__name__}({', '.join([str(d) for d in self.dims])})"
+            return (
+                f"{self.__class__.__name__}({', '.join([str(d) for d in self.dims])})"
+            )
 
 
 class View(Module):
@@ -162,11 +165,18 @@ class View(Module):
         self.shape = shape
 
     def forward(self, x):
-        return x.view(x.shape[0], -1).contiguous() if not self.shape else x.view(-1).contiguous(
-        ) if self.shape == (-1,) else x.view(x.shape[0], *self.shape).contiguous()
+        return (
+            x.view(x.shape[0], -1).contiguous()
+            if not self.shape
+            else (
+                x.view(-1).contiguous()
+                if self.shape == (-1,)
+                else x.view(x.shape[0], *self.shape).contiguous()
+            )
+        )
 
-    def __repr__(
-        self): return f"{self.__class__.__name__}({', '.join(['bs'] + [str(s) for s in self.shape])})"
+    def __repr__(self):
+        return f"{self.__class__.__name__}({', '.join(['bs'] + [str(s) for s in self.shape])})"
 
 
 class Reshape(Module):
@@ -174,8 +184,15 @@ class Reshape(Module):
         self.shape = shape
 
     def forward(self, x):
-        return x.reshape(x.shape[0], -1) if not self.shape else x.reshape(
-            -1) if self.shape == (-1,) else x.reshape(x.shape[0], *self.shape)
+        return (
+            x.reshape(x.shape[0], -1)
+            if not self.shape
+            else (
+                x.reshape(-1)
+                if self.shape == (-1,)
+                else x.reshape(x.shape[0], *self.shape)
+            )
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({', '.join(['bs'] + [str(s) for s in self.shape])})"
@@ -189,7 +206,7 @@ class Max(Module):
         return x.max(self.dim, keepdim=self.keepdim)[0]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(dim={self.dim}, keepdim={self.keepdim})'
+        return f"{self.__class__.__name__}(dim={self.dim}, keepdim={self.keepdim})"
 
 
 class LastStep(Module):
@@ -197,7 +214,7 @@ class LastStep(Module):
         return x[..., -1]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}()'
+        return f"{self.__class__.__name__}()"
 
 
 class SoftMax(Module):
@@ -209,7 +226,8 @@ class SoftMax(Module):
     def forward(self, x):
         return F.softmax(x, dim=self.dim)
 
-    def __repr__(self): return f'{self.__class__.__name__}(dim={self.dim})'
+    def __repr__(self):
+        return f"{self.__class__.__name__}(dim={self.dim})"
 
 
 class Clamp(Module):
@@ -220,7 +238,7 @@ class Clamp(Module):
         return x.clamp(min=self.min, max=self.max)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(min={self.min}, max={self.max})'
+        return f"{self.__class__.__name__}(min={self.min}, max={self.max})"
 
 
 class Clip(Module):
@@ -235,7 +253,7 @@ class Clip(Module):
         return x
 
     def __repr__(self):
-        return f'{self.__class__.__name__}()'
+        return f"{self.__class__.__name__}()"
 
 
 class ReZero(Module):
@@ -252,8 +270,7 @@ class AddCoords1d(Module):
 
     def forward(self, x):
         bs, _, seq_len = x.shape
-        cc = torch.linspace(-1, 1, x.shape[-1],
-                            device=x.device).repeat(bs, 1, 1)
+        cc = torch.linspace(-1, 1, x.shape[-1], device=x.device).repeat(bs, 1, 1)
         cc = (cc - cc.mean()) / cc.std()
         x = torch.cat([x, cc], dim=1)
         return x
@@ -272,11 +289,13 @@ class FlattenHead(nn.Module):
         if individual:
             self.layers = nn.ModuleList()
             for i in range(self.n):
-                self.layers.append(nn.Sequential(nn.Flatten(
-                    start_dim=-2), nn.Linear(nf, pred_dim)))
+                self.layers.append(
+                    nn.Sequential(nn.Flatten(start_dim=-2), nn.Linear(nf, pred_dim))
+                )
         else:
-            self.layer = nn.Sequential(nn.Flatten(
-                start_dim=-2), nn.Linear(nf, pred_dim))
+            self.layer = nn.Sequential(
+                nn.Flatten(start_dim=-2), nn.Linear(nf, pred_dim)
+            )
 
     def forward(self, x: Tensor):
         """
@@ -296,12 +315,11 @@ class FlattenHead(nn.Module):
                 return self.layer(x)
             except Exception:
                 self.layer = nn.Sequential(
-                    nn.Flatten(
-                        start_dim=-2),
+                    nn.Flatten(start_dim=-2),
                     nn.Linear(
-                        x.shape[3] * self.nf,
-                        self.pred_dim,
-                        device=default_device()))
+                        x.shape[3] * self.nf, self.pred_dim, device=default_device()
+                    ),
+                )
                 return self.layer(x)
 
 

@@ -58,7 +58,9 @@ class PytorchBlockMaskPruner(PytorchBasePruner):
         self.pruner_masks = [self.masks]
         self._rewrite_forward(self.pruner_masks)
         self.scheduler = get_scheduler(self.config)
-        self.criterion = get_criterion(self.config, self.modules, self.pattern, self.masks)
+        self.criterion = get_criterion(
+            self.config, self.modules, self.pattern, self.masks
+        )
         self.reg = get_reg(self.config, self.modules, self.pattern)
 
         if "channel" not in self.pattern.pattern:
@@ -67,8 +69,13 @@ class PytorchBlockMaskPruner(PytorchBasePruner):
     def _rewrite_forward(self, pruner_masks):
         def forward(self, input):
             block_mask = pruner_masks[0][self.mask_name]
-            block_mask.requires_grad_(True)  # Makesure that the gradient of block mask is always avilible
-            block_size = [self.weight.shape[0] // block_mask.shape[0], self.weight.shape[1] // block_mask.shape[1]]
+            block_mask.requires_grad_(
+                True
+            )  # Makesure that the gradient of block mask is always avilible
+            block_size = [
+                self.weight.shape[0] // block_mask.shape[0],
+                self.weight.shape[1] // block_mask.shape[1],
+            ]
             mask = (
                 block_mask.repeat_interleave(block_size[0], dim=0)
                 .repeat_interleave(block_size[1], dim=-1)
@@ -122,7 +129,9 @@ class PytorchBlockMaskPruner(PytorchBasePruner):
         self.completed_pruned_cnt += 1
         if self.criterion.scores == {}:
             return
-        self.masks = self.pattern.get_masks(self.criterion.scores, current_target_sparsity_ratio, self.masks)
+        self.masks = self.pattern.get_masks(
+            self.criterion.scores, current_target_sparsity_ratio, self.masks
+        )
         self.pruner_masks[0] = self.masks
 
         self.mask_weights()

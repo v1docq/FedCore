@@ -17,12 +17,15 @@
 """Pre Optimization Entrance."""
 
 import copy
-import logging
 
 import tensorflow as tf
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.util import version1_eq_version2, version1_gte_version2, version1_lt_version2
+from fedcore.neural_compressor.adaptor.tf_utils.util import (
+    version1_eq_version2,
+    version1_gte_version2,
+    version1_lt_version2,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
 
 from .convert_add_to_biasadd import ConvertAddToBiasAddOptimizer
@@ -61,7 +64,9 @@ class PreOptimization:
     def __init__(self, model, new_api, device):
         """Initialization."""
         self.model = model
-        if version1_gte_version2(tf.version.VERSION, "2.1.0") or version1_eq_version2(tf.version.VERSION, "1.15.0-up3"):
+        if version1_gte_version2(tf.version.VERSION, "2.1.0") or version1_eq_version2(
+            tf.version.VERSION, "1.15.0-up3"
+        ):
             self.optimization = {
                 "pruning": True,
                 "shape": True,
@@ -118,7 +123,11 @@ class PreOptimization:
         """
         from fedcore.neural_compressor.model import Model
 
-        origin_model = Model(self.model._model, **self.model.kwargs, backend="itex" if itex_mode else "default")
+        origin_model = Model(
+            self.model._model,
+            **self.model.kwargs,
+            backend="itex" if itex_mode else "default"
+        )
         origin_model.name = self.model.name
         origin_model.model_type = self.model.model_type
         origin_model.output_tensor_names = self.model.output_tensor_names
@@ -156,11 +165,17 @@ class PreOptimization:
                 node.device = node_device
             self._tmp_graph_def = cur_graph.dump_graph()
 
-            self._tmp_graph_def = ConvertLayoutOptimizer(self._tmp_graph_def, output_node_names).do_transformation()
+            self._tmp_graph_def = ConvertLayoutOptimizer(
+                self._tmp_graph_def, output_node_names
+            ).do_transformation()
         else:
-            self._tmp_graph_def = ConvertLayoutOptimizer(self.model.graph_def, output_node_names).do_transformation()
+            self._tmp_graph_def = ConvertLayoutOptimizer(
+                self.model.graph_def, output_node_names
+            ).do_transformation()
 
-        self._tmp_graph_def = ConvertPlaceholderToConst(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = ConvertPlaceholderToConst(
+            self._tmp_graph_def
+        ).do_transformation()
 
         self._tmp_graph_def = SwitchOptimizer(self._tmp_graph_def).do_transformation()
 
@@ -176,22 +191,36 @@ class PreOptimization:
             self._tmp_graph_def, protected_nodes=input_output_names
         ).do_transformation()
 
-        self._tmp_graph_def = SplitSharedInputOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = SplitSharedInputOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
         # Put FuseDecomposedBNOptimizer before GraphFoldConstantOptimizer
         # The 'Sub' op in the small decomposed ops of BN will be converted to const by GraphFoldConstantOptimizer.
         # Then the FuseDecomposedBNOptimizer can't fuse the small decomposed ops to BN.
         if self.new_api:
-            self._tmp_graph_def = FuseDecomposedBNOptimizer(self._tmp_graph_def).do_transformation()
-            self._tmp_graph_def = FuseDecomposedINOptimizer(self._tmp_graph_def).do_transformation()
-            self._tmp_graph_def = FuseLayerNormOptimizer(self._tmp_graph_def).do_transformation()
+            self._tmp_graph_def = FuseDecomposedBNOptimizer(
+                self._tmp_graph_def
+            ).do_transformation()
+            self._tmp_graph_def = FuseDecomposedINOptimizer(
+                self._tmp_graph_def
+            ).do_transformation()
+            self._tmp_graph_def = FuseLayerNormOptimizer(
+                self._tmp_graph_def
+            ).do_transformation()
 
-        self._tmp_graph_def = GraphFoldConstantOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = GraphFoldConstantOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
         if not self.new_api:
-            self._tmp_graph_def = FuseDecomposedBNOptimizer(self._tmp_graph_def).do_transformation()
+            self._tmp_graph_def = FuseDecomposedBNOptimizer(
+                self._tmp_graph_def
+            ).do_transformation()
 
-        self._tmp_graph_def = FuseColumnWiseMulOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = FuseColumnWiseMulOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
         self._tmp_graph_def = StripUnusedNodesOptimizer(
             self._tmp_graph_def, input_node_names, output_node_names
@@ -201,23 +230,41 @@ class PreOptimization:
 
         self._tmp_graph_def = GraphCseOptimizer(self._tmp_graph_def).do_transformation()
 
-        self._tmp_graph_def = FoldBatchNormNodesOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = FoldBatchNormNodesOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = RenameBatchNormOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = RenameBatchNormOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = ConvertLeakyReluOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = ConvertLeakyReluOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = ConvertAddToBiasAddOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = ConvertAddToBiasAddOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = FuseTransposeReshapeOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = FuseTransposeReshapeOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = FuseConvWithMathOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = FuseConvWithMathOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = ExpandDimsOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = ExpandDimsOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = FetchWeightFromReshapeOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = FetchWeightFromReshapeOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = MoveSqueezeAfterReluOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = MoveSqueezeAfterReluOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
         if not self.new_api and not itex_mode:
             # TODO we need to remove below optimizer once the TF enabled the single
@@ -226,14 +273,22 @@ class PreOptimization:
                 self._tmp_graph_def, output_node_names
             ).do_transformation()
 
-        self._tmp_graph_def = FuseBiasAddAndAddOptimizer(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = FuseBiasAddAndAddOptimizer(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = ConvertNanToRandom(self._tmp_graph_def).do_transformation()
+        self._tmp_graph_def = ConvertNanToRandom(
+            self._tmp_graph_def
+        ).do_transformation()
 
-        self._tmp_graph_def = StripEquivalentNodesOptimizer(self._tmp_graph_def, output_node_names).do_transformation()
+        self._tmp_graph_def = StripEquivalentNodesOptimizer(
+            self._tmp_graph_def, output_node_names
+        ).do_transformation()
 
         if self.new_api or itex_mode:
-            self._tmp_graph_def = DilatedContraction(self._tmp_graph_def).do_transformation()
+            self._tmp_graph_def = DilatedContraction(
+                self._tmp_graph_def
+            ).do_transformation()
 
         # node device info will be removed by GrapplerOptimizer, insert it again.
         if version1_lt_version2(tf.version.VERSION, "2.0.0"):  # pragma: no cover
@@ -269,7 +324,9 @@ class PreOptimization:
 
         for function_def in self.model.graph_def.library.function:
             if function_def.signature.name == "swish_f32":
-                self._tmp_graph_def.library.function.extend([copy.deepcopy(function_def)])
+                self._tmp_graph_def.library.function.extend(
+                    [copy.deepcopy(function_def)]
+                )
 
         origin_model.graph_def = self._tmp_graph_def
         return origin_model
@@ -290,7 +347,13 @@ class PreOptimization:
         res = []
 
         for sub_pattern in patterns:
-            res.extend([i for i in self.analyzer.query_fusion_pattern_nodes(sub_pattern) if i not in res])
+            res.extend(
+                [
+                    i
+                    for i in self.analyzer.query_fusion_pattern_nodes(sub_pattern)
+                    if i not in res
+                ]
+            )
         return res
 
     def has_positive_input(self, node_name):

@@ -12,7 +12,7 @@ class SVDLoss(Module):
             (default: ``1``).
     """
 
-    def __init__(self, factor: float = 1.) -> None:
+    def __init__(self, factor: float = 1.0) -> None:
         super().__init__()
         self.factor = factor
 
@@ -25,7 +25,7 @@ class OrthogonalLoss(SVDLoss):
             (default: ``1``).
     """
 
-    def __init__(self, factor: float = 1.) -> None:
+    def __init__(self, factor: float = 1.0) -> None:
         super().__init__(factor=factor)
 
     def forward(self, model: Module) -> Tensor:
@@ -37,7 +37,7 @@ class OrthogonalLoss(SVDLoss):
         loss = 0
         n = 0
         for name, parameter in model.named_parameters():
-            if name.split('.')[-1] == 'U':
+            if name.split(".")[-1] == "U":
                 if len(parameter.size()) < 3:
                     U = parameter
                 else:
@@ -49,7 +49,7 @@ class OrthogonalLoss(SVDLoss):
                 E = torch.eye(r, device=U.device)
                 loss += matrix_norm(U.transpose(0, 1) @ U - E) ** 2 / r
 
-            elif name.split('.')[-1] == 'Vh':
+            elif name.split(".")[-1] == "Vh":
                 if len(parameter.size()) < 3:
                     Vh = parameter
                 else:
@@ -65,12 +65,12 @@ class OrthogonalLoss(SVDLoss):
 class HoyerLoss(SVDLoss):
     """Hoyer regularizer for matrix with singular values obtained by SVD decomposition.
 
-        Args:
-        factor: The hyperparameter by which the calculated loss function is multiplied
-            (default: ``1``).
+    Args:
+    factor: The hyperparameter by which the calculated loss function is multiplied
+        (default: ``1``).
     """
 
-    def __init__(self, factor: float = 1.) -> None:
+    def __init__(self, factor: float = 1.0) -> None:
         super().__init__(factor=factor)
 
     def forward(self, model: Module) -> Tensor:
@@ -82,7 +82,7 @@ class HoyerLoss(SVDLoss):
         loss = 0
         n = 0
         for name, parameter in model.named_parameters():
-            if name.split('.')[-1] == 'S':
+            if name.split(".")[-1] == "S":
                 n += 1
                 S = parameter
                 loss += vector_norm(S, ord=1) / vector_norm(S, ord=2)

@@ -17,14 +17,11 @@
 """Class for Tensorflow model."""
 
 import copy
-import importlib
 import json
 import os
 import shutil
-import sys
 import tempfile
 import time
-from abc import abstractmethod
 
 from fedcore.neural_compressor import config as cfg
 from fedcore.neural_compressor.model.base_model import BaseModel
@@ -32,8 +29,6 @@ from fedcore.neural_compressor.utils import logger
 from fedcore.neural_compressor.utils.utility import (
     LazyImport,
     compute_sparsity,
-    version1_gt_version2,
-    version1_gte_version2,
     version1_lt_version2,
 )
 
@@ -52,7 +47,10 @@ def get_model_type(model):
     Returns:
         string: model type
     """
-    from fedcore.neural_compressor.adaptor.tf_utils.util import is_ckpt_format, is_saved_model_format
+    from fedcore.neural_compressor.adaptor.tf_utils.util import (
+        is_ckpt_format,
+        is_saved_model_format,
+    )
 
     if isinstance(model, str):
         model = os.path.abspath(os.path.expanduser(model))
@@ -62,7 +60,10 @@ def get_model_type(model):
             or (os.path.isdir(model) and is_saved_model_format(model))
         ):
             if version1_lt_version2(tf.version.VERSION, "2.10.0"):  # pragma: no cover
-                logger.warn("keras model running on tensorflow 2.10.0 and" " lower not support intel ITEX.")
+                logger.warn(
+                    "keras model running on tensorflow 2.10.0 and"
+                    " lower not support intel ITEX."
+                )
             try:
                 model = tf.keras.models.load_model(model)
                 if isinstance(model, tf.keras.Model) and hasattr(model, "to_json"):
@@ -115,12 +116,18 @@ def validate_graph_node(graph_def, node_names):
     all_node_name = [node.name for node in graph_def.node]
     for user_name in node_names:
         if user_name not in all_node_name:
-            logger.warn(str("Node name {} specified in yaml doesn't exist in the model.").format(user_name))
+            logger.warn(
+                str(
+                    "Node name {} specified in yaml doesn't exist in the model."
+                ).format(user_name)
+            )
             return False
     return True
 
 
-def validate_and_inference_input_output(graph_def, input_tensor_names, output_tensor_names):
+def validate_and_inference_input_output(
+    graph_def, input_tensor_names, output_tensor_names
+):
     """Validate and inference the input and output tensor names of graph_def.
 
     Args:
@@ -132,13 +139,17 @@ def validate_and_inference_input_output(graph_def, input_tensor_names, output_te
         input_tensor_names (list of string): validated input_tensor_names.
         output_tensor_names (list of string): validated output_tensor_names.
     """
-    from fedcore.neural_compressor.adaptor.tf_utils.util import get_input_output_node_names
+    from fedcore.neural_compressor.adaptor.tf_utils.util import (
+        get_input_output_node_names,
+    )
 
     temp_output_tensor_names = []
     if validate_graph_node(graph_def, tensor_to_node(input_tensor_names)):
         input_tensor_names = input_tensor_names
     else:
-        input_tensor_names, temp_output_tensor_names = get_input_output_node_names(graph_def)
+        input_tensor_names, temp_output_tensor_names = get_input_output_node_names(
+            graph_def
+        )
 
     if validate_graph_node(graph_def, tensor_to_node(output_tensor_names)):
         output_tensor_names = output_tensor_names
@@ -188,14 +199,14 @@ def graph_def_session(model, input_tensor_names, output_tensor_names, **kwargs):
         input_tensor_names (list of string): validated input_tensor_names
         output_tensor_names (list of string): validated output_tensor_names
     """
-    device = kwargs.get("device")
+    kwargs.get("device")
     graph = tf.Graph()
     if version1_lt_version2(tf.version.VERSION, "2.0.0"):  # pragma: no cover
         from tensorflow._api.v1.config import experimental
 
-        list_physical_devices = experimental.list_physical_devices
+        experimental.list_physical_devices
     else:
-        list_physical_devices = tf.config.list_physical_devices
+        tf.config.list_physical_devices
 
     try:
         with graph.as_default():
@@ -204,7 +215,10 @@ def graph_def_session(model, input_tensor_names, output_tensor_names, **kwargs):
         input_tensor_names, output_tensor_names = validate_and_inference_input_output(
             model, input_tensor_names, output_tensor_names
         )
-        from fedcore.neural_compressor.adaptor.tf_utils.util import fix_ref_type_of_graph_def, strip_unused_nodes
+        from fedcore.neural_compressor.adaptor.tf_utils.util import (
+            fix_ref_type_of_graph_def,
+            strip_unused_nodes,
+        )
 
         model = fix_ref_type_of_graph_def(model)
         input_node_names = tensor_to_node(input_tensor_names)
@@ -233,18 +247,24 @@ def frozen_pb_session(model, input_tensor_names, output_tensor_names, **kwargs):
     model = model if model.endswith(".pb") else model + ".pb"
     with open(model, "rb") as f:
         graph_def.ParseFromString(f.read())
-    return graph_def_session(graph_def, input_tensor_names, output_tensor_names, **kwargs)
+    return graph_def_session(
+        graph_def, input_tensor_names, output_tensor_names, **kwargs
+    )
 
 
 def _contains_function_with_implements_attr(saved_model_proto):
     meta_graph = saved_model_proto.meta_graphs[0]
     for function in meta_graph.graph_def.library.function:
-        if function.attr.get("_implements", None) or function.attr.get("api_implements", None):
+        if function.attr.get("_implements", None) or function.attr.get(
+            "api_implements", None
+        ):
             return True
     return False
 
 
-def load_saved_model(model, saved_model_tags, input_tensor_names, output_tensor_names):  # pragma: no cover
+def load_saved_model(
+    model, saved_model_tags, input_tensor_names, output_tensor_names
+):  # pragma: no cover
     """Load graph_def from saved model with the default serving signature key.
 
     Args:
@@ -266,14 +286,20 @@ def load_saved_model(model, saved_model_tags, input_tensor_names, output_tensor_
         sess = tf.compat.v1.Session(graph=tf.Graph(), config=config)
         loader = tf.compat.v1.saved_model.loader.load(sess, ["serve"], model)
         if len(input_tensor_names) == 0:
-            input_tensor_names = [i.name for _, i in loader.signature_def["serving_default"].inputs.items()]
+            input_tensor_names = [
+                i.name
+                for _, i in loader.signature_def["serving_default"].inputs.items()
+            ]
         else:
             assert validate_graph_node(
                 sess.graph.as_graph_def(), tensor_to_node(input_tensor_names)
             ), "tensor names {} not in the graph".format(input_tensor_names)
 
         if len(output_tensor_names) == 0:
-            output_tensor_names = [i.name for _, i in loader.signature_def["serving_default"].outputs.items()]
+            output_tensor_names = [
+                i.name
+                for _, i in loader.signature_def["serving_default"].outputs.items()
+            ]
         else:
             assert validate_graph_node(
                 sess.graph.as_graph_def(), tensor_to_node(output_tensor_names)
@@ -282,14 +308,21 @@ def load_saved_model(model, saved_model_tags, input_tensor_names, output_tensor_
         return sess.graph.as_graph_def(), input_tensor_names, output_tensor_names
     else:
         from tensorflow.core.protobuf import config_pb2, meta_graph_pb2
-        from tensorflow.python.eager import context
-        from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
+        from tensorflow.python.framework.convert_to_constants import (
+            convert_variables_to_constants_v2,
+        )
         from tensorflow.python.grappler import tf_optimizer
-        from tensorflow.python.saved_model import load, signature_constants, tag_constants
+        from tensorflow.python.saved_model import (
+            load,
+            signature_constants,
+            tag_constants,
+        )
         from tensorflow.python.training import saver
 
         _saved_model = load.load(model, [tag_constants.SERVING])
-        func = _saved_model.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+        func = _saved_model.signatures[
+            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
+        ]
         frozen_func = convert_variables_to_constants_v2(func)
         grappler_meta_graph_def = saver.export_meta_graph(
             graph_def=frozen_func.graph.as_graph_def(), graph=frozen_func.graph
@@ -302,36 +335,41 @@ def load_saved_model(model, saved_model_tags, input_tensor_names, output_tensor_
         fetch_collection = meta_graph_pb2.CollectionDef()
         for array in frozen_func.inputs + frozen_func.outputs:
             fetch_collection.node_list.value.append(array.name)
-            grappler_meta_graph_def.collection_def["train_op"].CopyFrom(fetch_collection)
+            grappler_meta_graph_def.collection_def["train_op"].CopyFrom(
+                fetch_collection
+            )
         grappler_session_config = config_pb2.ConfigProto()
         rewrite_options = grappler_session_config.graph_options.rewrite_options
         rewrite_options.min_graph_nodes = -1
-        opt = tf_optimizer.OptimizeGraph(grappler_session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
+        opt = tf_optimizer.OptimizeGraph(
+            grappler_session_config, grappler_meta_graph_def, graph_id=b"tf_graph"
+        )
         return opt, input_tensor_names, output_tensor_names
 
 
-def _get_graph_from_saved_model_v2(saved_model_dir, input_tensor_names, output_tensor_names):
+def _get_graph_from_saved_model_v2(
+    saved_model_dir, input_tensor_names, output_tensor_names
+):
     from tensorflow.python.saved_model import signature_constants, tag_constants
 
     from fedcore.neural_compressor.adaptor.tf_utils.util import parse_saved_model
 
-    saved_model_exported_names = [signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+    [signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
     saved_model_tags = set([tag_constants.SERVING])
     try:
         graph_def, _saved_model, _, _, input_names, output_names = parse_saved_model(
             saved_model_dir, True, input_tensor_names, output_tensor_names
         )
     except:
-        return load_saved_model(saved_model_dir, saved_model_tags, input_tensor_names, output_tensor_names)
+        return load_saved_model(
+            saved_model_dir, saved_model_tags, input_tensor_names, output_tensor_names
+        )
     return graph_def, input_names, output_names
 
 
 def _get_graph_from_original_keras_v2(model, output_dir):
-    from tensorflow.lite.python.convert import OpsSet
     from tensorflow.lite.python.util import (
-        get_grappler_config,
         model_input_signature,
-        run_graph_optimizations,
         trace_model_call,
     )
     from tensorflow.python.eager import def_function
@@ -347,16 +385,20 @@ def _get_graph_from_original_keras_v2(model, output_dir):
     concrete_func = func.get_concrete_function()
     funcs = [concrete_func]
 
-    frozen_func, graph_def = convert_to_constants.convert_variables_to_constants_v2_as_graph(
-        funcs[0], lower_control_flow=False
+    frozen_func, graph_def = (
+        convert_to_constants.convert_variables_to_constants_v2_as_graph(
+            funcs[0], lower_control_flow=False
+        )
     )
 
-    input_tensors = [tensor for tensor in frozen_func.inputs if tensor.dtype != dtypes.resource]
+    input_tensors = [
+        tensor for tensor in frozen_func.inputs if tensor.dtype != dtypes.resource
+    ]
     output_tensors = frozen_func.outputs
     # Grappler will also try to lower while loop into switch merge
     # representation which is undesired for Ophints, so we simply remove
     # those attributes to prevent Grappler from doing so.
-    graph = convert_to_constants.disable_lower_using_switch_merge(graph_def)
+    convert_to_constants.disable_lower_using_switch_merge(graph_def)
     # Run function inlining optimization to ensure any models generated
     # through the from_frozen_graph path have been inlined.
     # grappler_config = get_grappler_config(['function'])
@@ -373,12 +415,17 @@ def _get_graph_from_original_keras_v2(model, output_dir):
 def _check_keras_format(model, saved_model_dir):
     from tensorflow.python import saved_model
     from tensorflow.python.saved_model import save_options
-    from tensorflow.python.saved_model.load import load
-    from tensorflow.python.saved_model.loader_impl import parse_saved_model_with_debug_info
+    from tensorflow.python.saved_model.loader_impl import (
+        parse_saved_model_with_debug_info,
+    )
 
     version = "saved_model_v2"
     try:
-        saved_model.save(model, saved_model_dir, options=save_options.SaveOptions(save_debug_info=True))
+        saved_model.save(
+            model,
+            saved_model_dir,
+            options=save_options.SaveOptions(save_debug_info=True),
+        )
     except:
         return "trackable_object"
     saved_model_proto, _ = parse_saved_model_with_debug_info(saved_model_dir)
@@ -386,15 +433,25 @@ def _check_keras_format(model, saved_model_dir):
     if saved_model_version == 0:
         return "saved_model_v1"
     if saved_model_version not in [1, 2]:
-        raise ValueError("SavedModel file format({0}) is not supported".format(saved_model_version))
+        raise ValueError(
+            "SavedModel file format({0}) is not supported".format(saved_model_version)
+        )
     return version
 
 
 def _get_graph_from_saved_model_v1(model):
-    from tensorflow.lite.python.convert_saved_model import get_inputs_outputs, get_meta_graph_def, get_signature_def
+    from tensorflow.lite.python.convert_saved_model import (
+        get_inputs_outputs,
+        get_meta_graph_def,
+        get_signature_def,
+    )
     from tensorflow.python.client import session
     from tensorflow.python.framework import ops
-    from tensorflow.python.saved_model import constants, signature_constants, tag_constants
+    from tensorflow.python.saved_model import (
+        constants,
+        signature_constants,
+        tag_constants,
+    )
 
     saved_model_tags = set([tag_constants.SERVING])
     signature_key = signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
@@ -421,13 +478,17 @@ def _get_graph_from_saved_model_v1(model):
         node_ops = [node.op for node in graph.as_graph_def().node]
         if "MakeIterator" in node_ops:
             output_nodes.append("MakeIterator")
-        table_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TABLE_INITIALIZERS)
+        table_ops = tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.TABLE_INITIALIZERS
+        )
         # For table initialization
         for table_op in table_ops:
             output_nodes.append(table_op.name)
         if len(table_ops) > 0:
             output_nodes.append("init_all_tables")
-        graph_def = tf_graph_util.convert_variables_to_constants(sess, graph.as_graph_def(), output_nodes)
+        graph_def = tf_graph_util.convert_variables_to_constants(
+            sess, graph.as_graph_def(), output_nodes
+        )
     return graph_def, inputs, outputs
 
 
@@ -460,13 +521,17 @@ def keras_session(model, input_tensor_names, output_tensor_names, **kwargs):
                 keras_format = "trackable_object"
         if keras_format == "trackable_object":
             try:
-                graph_def, input_names, output_names = _get_graph_from_original_keras_v2(model, temp_dir)
+                graph_def, input_names, output_names = (
+                    _get_graph_from_original_keras_v2(model, temp_dir)
+                )
             except:
                 keras_format = "saved_model_v1"
         if keras_format == "saved_model_v1":  # pragma: no cover
             try:
                 tf.keras.backend.set_learning_phase(0)
-                graph_def, input_names, output_names = _get_graph_from_saved_model_v1(model)
+                graph_def, input_names, output_names = _get_graph_from_saved_model_v1(
+                    model
+                )
             except:
                 raise ValueError("Not supported keras model type...")
 
@@ -478,7 +543,9 @@ def keras_session(model, input_tensor_names, output_tensor_names, **kwargs):
     return graph_def_session(graph_def, input_names, output_names, **kwargs)
 
 
-def slim_session(model, input_tensor_names, output_tensor_names, **kwargs):  # pragma: no cover
+def slim_session(
+    model, input_tensor_names, output_tensor_names, **kwargs
+):  # pragma: no cover
     """Build session with slim model.
 
     Args:
@@ -491,12 +558,16 @@ def slim_session(model, input_tensor_names, output_tensor_names, **kwargs):  # p
         input_tensor_names (list of string): validated input_tensor_names.
         output_tensor_names (list of string): validated output_tensor_names.
     """
-    assert version1_lt_version2(tf.version.VERSION, "2.0.0"), "slim model only used in tensorflow 1.x"
+    assert version1_lt_version2(
+        tf.version.VERSION, "2.0.0"
+    ), "slim model only used in tensorflow 1.x"
     from .nets_factory import TFSlimNetsFactory
 
     factory = TFSlimNetsFactory()
     assert "name" in kwargs, "model name should be set in slim checkpoint...."
-    assert kwargs["name"] in factory.default_slim_models, "only support topology {}".format(factory.default_slim_models)
+    assert (
+        kwargs["name"] in factory.default_slim_models
+    ), "only support topology {}".format(factory.default_slim_models)
     net = copy.deepcopy(factory.networks_map[kwargs["name"]])
     model_func = net.pop("model")
     arg_scope = net.pop("arg_scope")()
@@ -505,14 +576,24 @@ def slim_session(model, input_tensor_names, output_tensor_names, **kwargs):  # p
     import tf_slim as slim
 
     with tf.Graph().as_default():
-        images = tf.compat.v1.placeholder(name="input", dtype=tf.float32, shape=inputs_shape)
+        images = tf.compat.v1.placeholder(
+            name="input", dtype=tf.float32, shape=inputs_shape
+        )
         with tf.compat.v1.Session() as sess:
-            with slim.arg_scope(arg_scope) as scope:  # pylint: disable=not-context-manager
+            with slim.arg_scope(
+                arg_scope
+            ) as scope:  # pylint: disable=not-context-manager
                 model_func(images, is_training=False, **kwargs)
             graph_def = sess.graph.as_graph_def()
-            output_tensor_names = output_tensor_names if len(output_tensor_names) > 0 else [graph_def.node[-1].name]
+            output_tensor_names = (
+                output_tensor_names
+                if len(output_tensor_names) > 0
+                else [graph_def.node[-1].name]
+            )
 
-            from tensorflow.python.tools.freeze_graph import freeze_graph_with_def_protos
+            from tensorflow.python.tools.freeze_graph import (
+                freeze_graph_with_def_protos,
+            )
 
             graph_def = freeze_graph_with_def_protos(
                 input_graph_def=graph_def,
@@ -546,7 +627,9 @@ def checkpoint_session(model, input_tensor_names, output_tensor_names, **kwargs)
         output_tensor_names is not None and len(output_tensor_names) > 0
     ), "outputs should not be None of checkpoint...."
 
-    ckpt_prefix = [os.path.splitext(i)[0] for i in os.listdir(model) if i.endswith(".meta")][0]
+    ckpt_prefix = [
+        os.path.splitext(i)[0] for i in os.listdir(model) if i.endswith(".meta")
+    ][0]
 
     config = tf.compat.v1.ConfigProto()
     config.use_per_session_threads = 1
@@ -570,14 +653,20 @@ def checkpoint_session(model, input_tensor_names, output_tensor_names, **kwargs)
                     os.path.join(model, ckpt_prefix + ".meta"), clear_devices=True
                 )
         else:  # pragma: no cover
-            saver = tf.compat.v1.train.import_meta_graph(os.path.join(model, ckpt_prefix + ".meta"), clear_devices=True)
+            saver = tf.compat.v1.train.import_meta_graph(
+                os.path.join(model, ckpt_prefix + ".meta"), clear_devices=True
+            )
 
         sess.run(tf.compat.v1.global_variables_initializer())
         saver.restore(sess, os.path.join(model, ckpt_prefix))
 
-    from fedcore.neural_compressor.adaptor.tf_utils.util import get_input_output_node_names
+    from fedcore.neural_compressor.adaptor.tf_utils.util import (
+        get_input_output_node_names,
+    )
 
-    if validate_graph_node(sess.graph.as_graph_def(), tensor_to_node(input_tensor_names)):
+    if validate_graph_node(
+        sess.graph.as_graph_def(), tensor_to_node(input_tensor_names)
+    ):
         input_tensor_names = input_tensor_names
     else:
         input_tensor_names, _ = get_input_output_node_names(sess.graph.as_graph_def())
@@ -598,10 +687,16 @@ def estimator_session(model, input_tensor_names, output_tensor_names, **kwargs):
         input_tensor_names (list of string): validated input_tensor_names.
         output_tensor_names (list of string): validated output_tensor_names.
     """
-    assert "input_fn" in kwargs, "input func should be supplied for estimator session...."
+    assert (
+        "input_fn" in kwargs
+    ), "input func should be supplied for estimator session...."
     with tf.Graph().as_default() as g:
-        features, input_hooks = model._get_features_from_input_fn(kwargs["input_fn"], tf.estimator.ModeKeys.PREDICT)
-        estimator_spec = model._call_model_fn(features, None, tf.estimator.ModeKeys.PREDICT, model.config)
+        features, input_hooks = model._get_features_from_input_fn(
+            kwargs["input_fn"], tf.estimator.ModeKeys.PREDICT
+        )
+        estimator_spec = model._call_model_fn(
+            features, None, tf.estimator.ModeKeys.PREDICT, model.config
+        )
 
         if len(output_tensor_names) == 0:
             outputs = (
@@ -624,7 +719,9 @@ def estimator_session(model, input_tensor_names, output_tensor_names, **kwargs):
             if "MakeIterator" in [node.op for node in g.as_graph_def().node]:
                 output_nodes.append("MakeIterator")
 
-            graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(sess, g.as_graph_def(), output_nodes)
+            graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
+                sess, g.as_graph_def(), output_nodes
+            )
 
         return graph_def_session(graph_def, input_tensor_names, outputs, **kwargs)
 
@@ -791,7 +888,10 @@ class TensorflowBaseModel(BaseModel):
         if self._sess is not None:
             self._sess.close()
         output_sess = SESSIONS["graph_def"](
-            graph_def, self._input_tensor_names, self._output_tensor_names, **self.kwargs
+            graph_def,
+            self._input_tensor_names,
+            self._output_tensor_names,
+            **self.kwargs
         )
 
         self._sess = output_sess[0]
@@ -803,7 +903,9 @@ class TensorflowBaseModel(BaseModel):
         if self.name:
             kwargs.update({"name": self.name})
         # assert self.model_type, 'model type not set....'
-        output_sess = SESSIONS[self.model_type](model, self._input_tensor_names, self._output_tensor_names, **kwargs)
+        output_sess = SESSIONS[self.model_type](
+            model, self._input_tensor_names, self._output_tensor_names, **kwargs
+        )
         self._sess = output_sess[0]
         self._input_tensor_names = output_sess[1]
         self._output_tensor_names = output_sess[2]
@@ -907,14 +1009,19 @@ class TensorflowBaseModel(BaseModel):
         from fedcore.neural_compressor.config import TF2ONNXConfig
 
         if isinstance(conf, TF2ONNXConfig):
-            if conf.quant_format == "QDQ" and conf.opset_version < 13:  # pragma: no cover
+            if (
+                conf.quant_format == "QDQ" and conf.opset_version < 13
+            ):  # pragma: no cover
                 conf.opset_version = 13
                 logger.warning(
                     "QDQ format requires opset_version >= 13, "
                     + "we reset opset_version={} here".format(conf.opset_version)
                 )
 
-            from fedcore.neural_compressor.experimental.export import tf_to_fp32_onnx, tf_to_int8_onnx
+            from fedcore.neural_compressor.experimental.export import (
+                tf_to_fp32_onnx,
+                tf_to_int8_onnx,
+            )
 
             inputs_as_nchw = conf.kwargs.get("inputs_as_nchw", None)
             if conf.dtype == "int8":
@@ -922,8 +1029,16 @@ class TensorflowBaseModel(BaseModel):
                     self.graph_def,
                     save_path,
                     opset_version=conf.opset_version,
-                    input_names=conf.input_names if conf.input_names else self.input_tensor_names,
-                    output_names=conf.output_names if conf.output_names else self.output_tensor_names,
+                    input_names=(
+                        conf.input_names
+                        if conf.input_names
+                        else self.input_tensor_names
+                    ),
+                    output_names=(
+                        conf.output_names
+                        if conf.output_names
+                        else self.output_tensor_names
+                    ),
                     inputs_as_nchw=inputs_as_nchw,
                 )
             elif conf.dtype == "fp32":
@@ -931,14 +1046,28 @@ class TensorflowBaseModel(BaseModel):
                     self.graph_def,
                     save_path,
                     opset_version=conf.opset_version,
-                    input_names=conf.input_names if conf.input_names else self.input_tensor_names,
-                    output_names=conf.output_names if conf.output_names else self.output_tensor_names,
+                    input_names=(
+                        conf.input_names
+                        if conf.input_names
+                        else self.input_tensor_names
+                    ),
+                    output_names=(
+                        conf.output_names
+                        if conf.output_names
+                        else self.output_tensor_names
+                    ),
                     inputs_as_nchw=inputs_as_nchw,
                 )
             else:  # pragma: no cover
-                assert False, "Not allowed dtype: {}, please use 'fp32' or 'int8'.".format(conf.dtype)
+                assert (
+                    False
+                ), "Not allowed dtype: {}, please use 'fp32' or 'int8'.".format(
+                    conf.dtype
+                )
         else:
-            logger.warning("Unsupported config for export, only TF2ONNXConfig is supported!")
+            logger.warning(
+                "Unsupported config for export, only TF2ONNXConfig is supported!"
+            )
             exit(0)
 
 
@@ -970,7 +1099,6 @@ class TensorflowSavedModelModel(TensorflowBaseModel):
 
     def update_weights(self, tensor_name, new_tensor):
         """Update model weights."""
-        pass
 
     def get_weight(self, tensor_name):
         """Return model weight with a given tensor name.
@@ -1012,11 +1140,12 @@ class TensorflowSavedModelModel(TensorflowBaseModel):
             df (DataFrame): DataFrame of sparsity of each weight.
             total_sparsity (float): total sparsity of model.
         """
-        import numpy as np
         import pandas as pd
         import tensorflow as tf
 
-        df = pd.DataFrame(columns=["Name", "Shape", "NNZ (dense)", "NNZ (sparse)", "Sparsity(%)"])
+        df = pd.DataFrame(
+            columns=["Name", "Shape", "NNZ (dense)", "NNZ (sparse)", "Sparsity(%)"]
+        )
         pd.set_option("display.precision", 2)
         param_dims = [2, 4]
         params_size = 0
@@ -1028,7 +1157,9 @@ class TensorflowSavedModelModel(TensorflowBaseModel):
             # as its "type"
             weights = layer.get_weights()[0]
             if weights.ndim in param_dims:
-                param_size, sparse_param_size, dense_param_size = compute_sparsity(weights)
+                param_size, sparse_param_size, dense_param_size = compute_sparsity(
+                    weights
+                )
                 density = dense_param_size / param_size
                 params_size += param_size
                 sparse_params_size += sparse_param_size
@@ -1091,7 +1222,9 @@ class TensorflowSavedModelModel(TensorflowBaseModel):
                     {k: v for k, v in zip(self._output_tensor_names, out)},
                 )
             )
-            builder.add_meta_graph_and_variables(sess, [tag_constants.SERVING], signature_def_map=sigs)
+            builder.add_meta_graph_and_variables(
+                sess, [tag_constants.SERVING], signature_def_map=sigs
+            )
         return root, builder
 
     def save(self, root=None):
@@ -1172,7 +1305,9 @@ class TensorflowLLMModel(TensorflowSavedModelModel):
         """Return weight_name_mapping function."""
         if not self._weight_name_mapping:
             self._weight_name_mapping = self.kwargs.get("weight_name_mapping", None)
-        assert self._weight_name_mapping is not None, "weight_name_mapping should not be None!"
+        assert (
+            self._weight_name_mapping is not None
+        ), "weight_name_mapping should not be None!"
         return self._weight_name_mapping
 
     @weight_name_mapping.setter
@@ -1186,7 +1321,9 @@ class TensorflowLLMModel(TensorflowSavedModelModel):
         """Return dict of weight scaler for smooth quantization."""
         if not self._sq_weight_scale_dict:
             self._sq_weight_scale_dict = self.kwargs.get("sq_weight_scale_dict", None)
-        assert self._weight_name_mapping is not None, "sq_weight_scale_dict should not be None!"
+        assert (
+            self._weight_name_mapping is not None
+        ), "sq_weight_scale_dict should not be None!"
         return self._sq_weight_scale_dict
 
     @sq_weight_scale_dict.setter
@@ -1244,9 +1381,13 @@ class TensorflowLLMModel(TensorflowSavedModelModel):
         """Adjust weight of LLM saved_model by scale."""
         from tensorflow.python.saved_model import load, tag_constants
 
-        from fedcore.neural_compressor.adaptor.tf_utils.util import reconstruct_saved_model
+        from fedcore.neural_compressor.adaptor.tf_utils.util import (
+            reconstruct_saved_model,
+        )
 
-        reconstruct_saved_model(graph_def, self.func, self.frozen_func, self._saved_model, self.model_path)
+        reconstruct_saved_model(
+            graph_def, self.func, self.frozen_func, self._saved_model, self.model_path
+        )
         model = load.load(self.model_path, [tag_constants.SERVING])
 
         for idx, weight_tensor in enumerate(model.variables):
@@ -1260,14 +1401,20 @@ class TensorflowLLMModel(TensorflowSavedModelModel):
                 weight_array = weight_tensor
 
             if parsed_weight_name not in self._weight_tensor_minmax_dict:
-                self._weight_tensor_minmax_dict[parsed_weight_name] = [np.min(weight_array), np.max(weight_array)]
+                self._weight_tensor_minmax_dict[parsed_weight_name] = [
+                    np.min(weight_array),
+                    np.max(weight_array),
+                ]
         self._auto_trackable = model
 
     def save(self, root=None):
         """Save the model to the root path."""
         import shutil
 
-        from fedcore.neural_compressor.adaptor.tf_utils.util import parse_saved_model, reconstruct_saved_model
+        from fedcore.neural_compressor.adaptor.tf_utils.util import (
+            parse_saved_model,
+            reconstruct_saved_model,
+        )
 
         if not root:
             root = cfg.default_workspace
@@ -1277,7 +1424,9 @@ class TensorflowLLMModel(TensorflowSavedModelModel):
         os.makedirs(root, exist_ok=True)
 
         self.adjust_weight(self._graph_def)
-        graph_def, _saved_model, func, frozen_func, _, _ = parse_saved_model(self._auto_trackable)
+        graph_def, _saved_model, func, frozen_func, _, _ = parse_saved_model(
+            self._auto_trackable
+        )
         reconstruct_saved_model(graph_def, func, frozen_func, _saved_model, root)
         logger.info("Save quantized model to {}.".format(root))
         # delete the LLM file saved in this temporary path
@@ -1360,7 +1509,9 @@ class TensorflowCheckpointModel(TensorflowBaseModel):
         graph_def = self.sess.graph.as_graph_def()
         graph_def = _parse_ckpt_bn_input(graph_def)
         return graph_util.convert_variables_to_constants(
-            sess=self._sess, input_graph_def=graph_def, output_node_names=self.output_node_names
+            sess=self._sess,
+            input_graph_def=graph_def,
+            output_node_names=self.output_node_names,
         )
 
     @graph_def.setter
@@ -1369,7 +1520,10 @@ class TensorflowCheckpointModel(TensorflowBaseModel):
         if self._sess is not None:
             self._sess.close()
         output_sess = SESSIONS["graph_def"](
-            graph_def, self._input_tensor_names, self._output_tensor_names, **self.kwargs
+            graph_def,
+            self._input_tensor_names,
+            self._output_tensor_names,
+            **self.kwargs
         )
         self._sess = output_sess[0]
         self._input_tensor_names = output_sess[1]

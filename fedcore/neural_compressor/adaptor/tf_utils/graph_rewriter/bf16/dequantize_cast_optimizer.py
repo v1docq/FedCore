@@ -61,7 +61,9 @@ class DequantizeCastOptimizer(GraphRewriterBase):
             all_cast_outputs_bf16 = True
             for cast_output in cast_outputs:
                 cast_output_node = graph_info[cast_output].node
-                if cast_output_node.attr["T"] != DT_BFLOAT16:  # des dtype of the cast must be bfloat16
+                if (
+                    cast_output_node.attr["T"] != DT_BFLOAT16
+                ):  # des dtype of the cast must be bfloat16
                     all_cast_outputs_bf16 = False
             if not all_cast_outputs_bf16:
                 continue

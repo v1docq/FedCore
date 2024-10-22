@@ -55,9 +55,13 @@ class FP8HistogramObserver(HistogramObserver):
         scale = FP8_amax / dst_bin_max
         if torch.isinf(torch.tensor(scale)):
             scale = torch.tensor(3.4e38)
-        tmp = torch.ops.hpu.cast_to_fp8_v2(src_bin_begin, scale, False, False, self.dtype)[0]
+        tmp = torch.ops.hpu.cast_to_fp8_v2(
+            src_bin_begin, scale, False, False, self.dtype
+        )[0]
         dst_bin_begin = torch.ops.hpu.cast_from_fp8(tmp, None, torch.float32)
-        tmp = torch.ops.hpu.cast_to_fp8_v2(src_bin_end, scale, False, False, self.dtype)[0]
+        tmp = torch.ops.hpu.cast_to_fp8_v2(
+            src_bin_end, scale, False, False, self.dtype
+        )[0]
         dst_bin_end = torch.ops.hpu.cast_from_fp8(tmp, None, torch.float32)
         # get bin width of dst bin value, dst_bin_begin must contain 0 and the max qvalue.
         dst_bin = list(set(dst_bin_begin.detach().cpu().numpy()))
@@ -69,13 +73,21 @@ class FP8HistogramObserver(HistogramObserver):
             if bin == 0:
                 width_dict[bin] = {"left": 0, "right": dst_bin[i + 1]}
             elif i == len(dst_bin) - 1:
-                width_dict[bin] = {"left": dst_bin[i] - dst_bin[i - 1], "right": dst_bin[i] - dst_bin[i - 1]}
+                width_dict[bin] = {
+                    "left": dst_bin[i] - dst_bin[i - 1],
+                    "right": dst_bin[i] - dst_bin[i - 1],
+                }
             else:
-                width_dict[bin] = {"left": dst_bin[i] - dst_bin[i - 1], "right": dst_bin[i + 1] - dst_bin[i]}
+                width_dict[bin] = {
+                    "left": dst_bin[i] - dst_bin[i - 1],
+                    "right": dst_bin[i + 1] - dst_bin[i],
+                }
         dst_bin_of_begin = [bin_of_dst_dict[float(i)] for i in dst_bin_begin]
         dst_bin_of_end = [bin_of_dst_dict[float(i)] for i in dst_bin_end]
         left_dst_bin_end_width = [width_dict[float(i)]["left"] for i in dst_bin_end]
-        right_dst_bin_begin_width = [width_dict[float(i)]["right"] for i in dst_bin_begin]
+        right_dst_bin_begin_width = [
+            width_dict[float(i)]["right"] for i in dst_bin_begin
+        ]
         return (
             dst_bin_begin,
             dst_bin_end,
@@ -116,7 +128,9 @@ class FP8HistogramObserver(HistogramObserver):
         norm += self._get_norm(delta_begin, delta_end, density)
 
         norm += (dst_bin_of_end - dst_bin_of_begin - 1) * self._get_norm(
-            torch.tensor(-left_dst_bin_end_width), torch.tensor(right_dst_bin_begin_width), density
+            torch.tensor(-left_dst_bin_end_width),
+            torch.tensor(right_dst_bin_begin_width),
+            density,
         )
 
         delta_begin = -left_dst_bin_end_width
@@ -149,7 +163,6 @@ class FP8HistogramObserver(HistogramObserver):
 
         while alpha < beta:
             # Find the next step
-            next_alpha = alpha
             next_beta = beta - stepsize
 
             # find the right bins between the quantile bounds
@@ -199,8 +212,12 @@ class FP8HistogramObserver(HistogramObserver):
             self.min_val.copy_(min_val)
             self.max_val.resize_(max_val.shape)
             self.max_val.copy_(max_val)
-            assert min_val.numel() == 1 and max_val.numel() == 1, "histogram min/max values must be scalar."
-            torch.histc(x, self.bins, min=int(min_val), max=int(max_val), out=self.histogram)
+            assert (
+                min_val.numel() == 1 and max_val.numel() == 1
+            ), "histogram min/max values must be scalar."
+            torch.histc(
+                x, self.bins, min=int(min_val), max=int(max_val), out=self.histogram
+            )
         else:
             new_min, new_max = torch.aminmax(x)
             combined_min = torch.min(new_min, min_val)
@@ -214,8 +231,12 @@ class FP8HistogramObserver(HistogramObserver):
                 downsample_rate,
                 start_idx,
             ) = self._adjust_min_max(combined_min, combined_max, self.upsample_rate)
-            assert combined_min.numel() == 1 and combined_max.numel() == 1, "histogram min/max values must be scalar."
-            combined_histogram = torch.histc(x, self.bins, min=int(combined_min), max=int(combined_max))
+            assert (
+                combined_min.numel() == 1 and combined_max.numel() == 1
+            ), "histogram min/max values must be scalar."
+            combined_histogram = torch.histc(
+                x, self.bins, min=int(combined_min), max=int(combined_max)
+            )
             if combined_min == min_val and combined_max == max_val:
                 combined_histogram += self.histogram
             else:

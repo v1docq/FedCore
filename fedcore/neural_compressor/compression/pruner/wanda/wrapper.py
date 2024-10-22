@@ -46,7 +46,9 @@ class WrappedGPT:
         tmp = inp.shape[0]
         import torch
 
-        if isinstance(self.layer, (nn.Conv1d, nn.Linear, transformers.Conv1D)):  # pragma: no cover
+        if isinstance(
+            self.layer, (nn.Conv1d, nn.Linear, transformers.Conv1D)
+        ):  # pragma: no cover
             if len(inp.shape) == 3:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
@@ -62,12 +64,16 @@ class WrappedGPT:
         var_inp = torch.var(inp, dim=1, unbiased=False, keepdim=True)
         num_inp = inp.shape[1]
         self.var = (
-            var_inp if self.ntokens == 0 else (self.var * self.ntokens + var_inp * num_inp) / (self.ntokens + num_inp)
+            var_inp
+            if self.ntokens == 0
+            else (self.var * self.ntokens + var_inp * num_inp)
+            / (self.ntokens + num_inp)
         )
         self.mean = (
             mean_inp
             if self.ntokens == 0
-            else (self.mean * self.ntokens + mean_inp * num_inp) / (self.ntokens + num_inp)
+            else (self.mean * self.ntokens + mean_inp * num_inp)
+            / (self.ntokens + num_inp)
         )
         self.ntokens += num_inp
 

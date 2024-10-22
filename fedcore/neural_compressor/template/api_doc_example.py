@@ -201,8 +201,6 @@ class ExampleClass:
     def __special__(self):
         """This function won't be documented that start with and
         end with a double underscore."""
-        pass
 
     def _private(self):
         """Private members are not included."""
-        pass

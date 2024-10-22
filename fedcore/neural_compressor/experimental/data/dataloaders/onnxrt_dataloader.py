@@ -58,8 +58,15 @@ class ONNXRTBertDataLoader(DefaultDataLoader):
 
         for batch in dataloader:
             try:
-                batch_seq_length = max_seq_length if not dynamic_length else torch.max(batch[-2], 0)[0].item()
-                batch = tuple(t.detach().cpu().numpy() if not isinstance(t, np.ndarray) else t for t in batch)
+                batch_seq_length = (
+                    max_seq_length
+                    if not dynamic_length
+                    else torch.max(batch[-2], 0)[0].item()
+                )
+                batch = tuple(
+                    t.detach().cpu().numpy() if not isinstance(t, np.ndarray) else t
+                    for t in batch
+                )
                 if model_type == "bert":
                     data = [
                         batch[0][:, :batch_seq_length],
@@ -67,7 +74,10 @@ class ONNXRTBertDataLoader(DefaultDataLoader):
                         batch[2][:, :batch_seq_length],
                     ]
                 else:
-                    data = [batch[0][:, :batch_seq_length], batch[1][:, :batch_seq_length]]
+                    data = [
+                        batch[0][:, :batch_seq_length],
+                        batch[1][:, :batch_seq_length],
+                    ]
                 label = batch[-1]
                 yield data, label
             except StopIteration:
@@ -92,7 +102,10 @@ class ONNXRTDataLoader(BaseDataLoader):
         distributed,
     ):
         if shuffle:
-            logging.warning("Shuffle is not supported yet in ONNXRTDataLoader, " "ignoring shuffle keyword.")
+            logging.warning(
+                "Shuffle is not supported yet in ONNXRTDataLoader, "
+                "ignoring shuffle keyword."
+            )
 
         if isinstance(dataset, ONNXRTBertDataset):
             return ONNXRTBertDataLoader(

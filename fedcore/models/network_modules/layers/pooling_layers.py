@@ -6,7 +6,12 @@ from fastai.torch_core import Module
 from fastcore.basics import store_attr
 
 from fedcore.models.network_modules.layers.conv_layers import Conv1d
-from fedcore.models.network_modules.layers.linear_layers import init_lin_zero, LinLnDrop, Reshape, SoftMax
+from fedcore.models.network_modules.layers.linear_layers import (
+    init_lin_zero,
+    LinLnDrop,
+    Reshape,
+    SoftMax,
+)
 
 
 class PPV(Module):
@@ -17,7 +22,7 @@ class PPV(Module):
         return torch.gt(x, 0).sum(dim=self.dim).float() / x.shape[self.dim]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(dim={self.dim})'
+        return f"{self.__class__.__name__}(dim={self.dim})"
 
 
 class PPAuc(Module):
@@ -29,7 +34,7 @@ class PPAuc(Module):
         return x
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(dim={self.dim})'
+        return f"{self.__class__.__name__}(dim={self.dim})"
 
 
 class MaxPPVPool1d(Module):
@@ -49,14 +54,17 @@ class AdaptiveWeightedAvgPool1d(Module):
     arXiv preprint arXiv:1907.11440.
     """
 
-    def __init__(self, n_in,
-                 seq_len,
-                 mult=2,
-                 n_layers=2,
-                 ln=False,
-                 dropout=0.5,
-                 act=nn.ReLU(),
-                 zero_init=True):
+    def __init__(
+        self,
+        n_in,
+        seq_len,
+        mult=2,
+        n_layers=2,
+        ln=False,
+        dropout=0.5,
+        act=nn.ReLU(),
+        zero_init=True,
+    ):
         layers = nn.ModuleList()
         for i in range(n_layers):
             inp_mult = mult if i > 0 else 1
@@ -64,14 +72,13 @@ class AdaptiveWeightedAvgPool1d(Module):
             p = dropout[i] if isinstance(dropout, list) else dropout
             layers.append(
                 LinLnDrop(
-                    seq_len *
-                    inp_mult,
-                    seq_len *
-                    out_mult,
+                    seq_len * inp_mult,
+                    seq_len * out_mult,
                     ln=False,
                     p=p,
-                    act=act if i < n_layers -
-                    1 and n_layers > 1 else None))
+                    act=act if i < n_layers - 1 and n_layers > 1 else None,
+                )
+            )
         self.layers = layers
         self.softmax = SoftMax(-1)
         if zero_init:
@@ -110,20 +117,25 @@ class GACP1d(Module):
 class GAWP1d(Module):
     "Global AdaptiveWeightedAvgPool1d + Flatten"
 
-    def __init__(self, n_in,
-                 seq_len,
-                 n_layers=2,
-                 ln=False,
-                 dropout=0.5,
-                 act=nn.ReLU(),
-                 zero_init=False):
-        self.gacp = AdaptiveWeightedAvgPool1d(n_in,
-                                              seq_len,
-                                              n_layers=n_layers,
-                                              ln=ln,
-                                              dropout=dropout,
-                                              act=act,
-                                              zero_init=zero_init)
+    def __init__(
+        self,
+        n_in,
+        seq_len,
+        n_layers=2,
+        ln=False,
+        dropout=0.5,
+        act=nn.ReLU(),
+        zero_init=False,
+    ):
+        self.gacp = AdaptiveWeightedAvgPool1d(
+            n_in,
+            seq_len,
+            n_layers=n_layers,
+            ln=ln,
+            dropout=dropout,
+            act=act,
+            zero_init=zero_init,
+        )
         self.flatten = Reshape()
 
     def forward(self, x):
@@ -131,7 +143,7 @@ class GAWP1d(Module):
 
 
 class GlobalWeightedAveragePool1d(Module):
-    """ Global Weighted Average Pooling layer
+    """Global Weighted Average Pooling layer
 
     Inspired by Building Efficient CNN Architecture for Offline Handwritten Chinese Character Recognition
     https://arxiv.org/pdf/1804.01259.pdf
@@ -149,11 +161,12 @@ class GlobalWeightedAveragePool1d(Module):
 GWAP1d = GlobalWeightedAveragePool1d
 
 
-def gwa_pool_head(n_in, output_dim, seq_len, batch_norm=True, fc_dropout=0.):
+def gwa_pool_head(n_in, output_dim, seq_len, batch_norm=True, fc_dropout=0.0):
     return nn.Sequential(
-        GlobalWeightedAveragePool1d(
-            n_in, seq_len), Reshape(), LinBnDrop(
-            n_in, output_dim, p=fc_dropout, batch_norm=batch_norm))
+        GlobalWeightedAveragePool1d(n_in, seq_len),
+        Reshape(),
+        LinBnDrop(n_in, output_dim, p=fc_dropout, batch_norm=batch_norm),
+    )
 
 
 class AttentionalPool1d(Module):
@@ -175,59 +188,61 @@ class AttentionalPool1d(Module):
 class GAttP1d(nn.Sequential):
     def __init__(self, n_in, output_dim, batch_norm=False):
         super().__init__(
-            AttentionalPool1d(
-                n_in,
-                output_dim,
-                batch_norm=batch_norm),
-            Reshape())
+            AttentionalPool1d(n_in, output_dim, batch_norm=batch_norm), Reshape()
+        )
 
 
-def attentional_pool_head(
-        n_in,
-        output_dim,
-        seq_len=None,
-        batch_norm=True,
-        **kwargs):
+def attentional_pool_head(n_in, output_dim, seq_len=None, batch_norm=True, **kwargs):
     return nn.Sequential(
-        AttentionalPool1d(
-            n_in,
-            output_dim,
-            batch_norm=batch_norm,
-            **kwargs),
-        Reshape())
+        AttentionalPool1d(n_in, output_dim, batch_norm=batch_norm, **kwargs), Reshape()
+    )
 
 
 class PoolingLayer(Module):
-    def __init__(self, method='cls', seq_len=None, token=True, seq_last=True):
+    def __init__(self, method="cls", seq_len=None, token=True, seq_last=True):
         method = method.lower()
-        assert method in ['cls', 'max', 'mean',
-                          'max-mean', 'linear', 'conv1d', 'flatten']
-        if method == 'cls':
-            assert token, 'you can only choose method=cls if a token exists'
+        assert method in [
+            "cls",
+            "max",
+            "mean",
+            "max-mean",
+            "linear",
+            "conv1d",
+            "flatten",
+        ]
+        if method == "cls":
+            assert token, "you can only choose method=cls if a token exists"
         self.method = method
         self.token = token
         self.seq_last = seq_last
-        if method == 'linear' or method == 'conv1d':
+        if method == "linear" or method == "conv1d":
             self.linear = nn.Linear(seq_len - token, 1)
 
     def forward(self, x):
-        if self.method == 'cls':
+        if self.method == "cls":
             return x[..., 0] if self.seq_last else x[:, 0]
         if self.token:
             x = x[..., 1:] if self.seq_last else x[:, 1:]
-        if self.method == 'max':
+        if self.method == "max":
             return torch.max(x, -1)[0] if self.seq_last else torch.max(x, 1)[0]
-        elif self.method == 'mean':
+        elif self.method == "mean":
             return torch.mean(x, -1) if self.seq_last else torch.mean(x, 1)
-        elif self.method == 'max-mean':
-            return torch.cat([torch.max(x, -
-                                        1)[0] if self.seq_last else torch.max(x, 1)[0], torch.mean(x, -
-                                                                                                   1) if self.seq_last else torch.mean(x, 1)], 1)
-        elif self.method == 'flatten':
+        elif self.method == "max-mean":
+            return torch.cat(
+                [
+                    torch.max(x, -1)[0] if self.seq_last else torch.max(x, 1)[0],
+                    torch.mean(x, -1) if self.seq_last else torch.mean(x, 1),
+                ],
+                1,
+            )
+        elif self.method == "flatten":
             return x.flatten(1)
-        elif self.method == 'linear' or self.method == 'conv1d':
-            return self.linear(x)[..., 0] if self.seq_last else self.linear(
-                x.transpose(1, 2))[..., 0]
+        elif self.method == "linear" or self.method == "conv1d":
+            return (
+                self.linear(x)[..., 0]
+                if self.seq_last
+                else self.linear(x.transpose(1, 2))[..., 0]
+            )
 
     def __repr__(self):
         return f"{self.__class__.__name__}(method={self.method}, token={self.token}, seq_last={self.seq_last})"

@@ -16,9 +16,13 @@
 
 from typing import Optional
 
-from fedcore.neural_compressor.data.dataloaders.onnxrt_dataloader import ONNXRTDataLoader
+from fedcore.neural_compressor.data.dataloaders.onnxrt_dataloader import (
+    ONNXRTDataLoader,
+)
 from fedcore.neural_compressor.model.onnx_model import ONNXModel
-from fedcore.neural_compressor.profiling.profiler.onnxrt_profiler.profiler import Profiler
+from fedcore.neural_compressor.profiling.profiler.onnxrt_profiler.profiler import (
+    Profiler,
+)
 
 
 class ProfilerFactory:

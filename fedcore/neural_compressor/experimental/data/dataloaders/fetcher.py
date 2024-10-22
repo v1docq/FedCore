@@ -64,8 +64,12 @@ class IterableFetcher(Fetcher):
         super(IterableFetcher, self).__init__(dataset, collate_fn, drop_last)
         self.dataset_iter = iter(dataset)
         self.index_whole = 0
-        self.process_rank = 0  # The default rank is 0, which represents the main process
-        self.process_size = 1  # By default, process_size=1, only the main process is running
+        self.process_rank = (
+            0  # The default rank is 0, which represents the main process
+        )
+        self.process_size = (
+            1  # By default, process_size=1, only the main process is running
+        )
         if distributed:
             import horovod.tensorflow as hvd
 
@@ -99,7 +103,9 @@ class IterableFetcher(Fetcher):
                     break
             except StopIteration:
                 break
-        if len(batch_data) == 0 or (self.drop_last and len(batch_data) < len(batched_indices)):
+        if len(batch_data) == 0 or (
+            self.drop_last and len(batch_data) < len(batched_indices)
+        ):
             raise StopIteration
         return self.collate_fn(batch_data)
 

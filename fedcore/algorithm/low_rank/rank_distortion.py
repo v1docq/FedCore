@@ -3,7 +3,6 @@ from typing import Optional
 import loralib as lora
 import torch
 
-import torch.nn.utils.parametrize as parametrize
 from fedot.core.operations.operation_parameters import OperationParameters
 from torch import nn
 
@@ -14,7 +13,7 @@ from fedcore.repository.constanst_repository import default_device
 class LoraTrainer:
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__()
-        self.lora_strategy = params.get('lora_strategy', None)
+        self.lora_strategy = params.get("lora_strategy", None)
         self.device = default_device()
         self.trainer = BaseNeuralModel(params)
 
@@ -32,7 +31,7 @@ class LoraTrainer:
 
 
 class LoRAParametrization(nn.Module):
-    def __init__(self, features_in, features_out, rank=1, alpha=1, device='cpu'):
+    def __init__(self, features_in, features_out, rank=1, alpha=1, device="cpu"):
         super().__init__()
         # Section 4.1 of the paper:
         #   We use a random Gaussian initialization for A and zero for B, so ∆W = BA is zero at the beginning of training
@@ -51,7 +50,11 @@ class LoRAParametrization(nn.Module):
     def forward(self, original_weights):
         if self.enabled:
             # Return W + (B * A) * scale
-            return original_weights + torch.matmul(self.lora_B, self.lora_A).view(original_weights.shape) * self.scale
+            return (
+                original_weights
+                + torch.matmul(self.lora_B, self.lora_A).view(original_weights.shape)
+                * self.scale
+            )
         else:
             return original_weights
 
@@ -65,4 +68,6 @@ def linear_layer_parameterization(layer, device, rank=1, lora_alpha=1):
     #   We leave the empirical investigation of [...], and biases to a future work.
 
     features_in, features_out = layer.weight.shape
-    return LoRAParametrization(features_in, features_out, rank=rank, alpha=lora_alpha, device=device)
+    return LoRAParametrization(
+        features_in, features_out, rank=rank, alpha=lora_alpha, device=device
+    )

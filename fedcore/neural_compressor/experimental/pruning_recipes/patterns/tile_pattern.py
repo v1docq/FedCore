@@ -38,7 +38,9 @@ class TilePatternBase(PatternBase):
 
     def repeat_mask(self, mask, ori_shape=None):
         """Repeat mask in 2 dimensions."""
-        flatten_mask = np.repeat(np.repeat(mask, self.mask_shape[0], axis=-2), self.mask_shape[1], axis=-1)
+        flatten_mask = np.repeat(
+            np.repeat(mask, self.mask_shape[0], axis=-2), self.mask_shape[1], axis=-1
+        )
         if ori_shape:
             return flatten_mask.reshape(ori_shape)
         else:

@@ -27,9 +27,9 @@ def get_default_params(operation_type: str) -> dict:
 
 
 class DefaultOperationParamsRepository:
-    def __init__(self, repository_name: str = 'default_operation_params.json'):
+    def __init__(self, repository_name: str = "default_operation_params.json"):
         repo_folder_path = str(os.path.dirname(__file__))
-        file = os.path.join('data', repository_name)
+        file = os.path.join("data", repository_name)
         self._repo_path = os.path.join(repo_folder_path, file)
         self._repo = self._initialise_repo()
 
@@ -46,7 +46,7 @@ class DefaultOperationParamsRepository:
         return repository_json
 
     def get_default_params_for_operation(self, model_name: str) -> dict:
-        model_name = model_name.split('/')[0]
+        model_name = model_name.split("/")[0]
         if model_name in self._repo:
             return self._repo[model_name]
         return {}

@@ -5,7 +5,7 @@ from fastai.torch_core import Module
 
 
 class Pad1d(nn.ConstantPad1d):
-    def __init__(self, padding, value=0.):
+    def __init__(self, padding, value=0.0):
         super().__init__(padding, value)
 
 
@@ -15,15 +15,15 @@ class SameConv1d(Module):
     def __init__(self, ni, nf, ks=3, stride=1, dilation=1, **kwargs):
         self.ks, self.stride, self.dilation = ks, stride, dilation
         self.conv1d_same = nn.Conv1d(
-            ni, nf, ks, stride=stride, dilation=dilation, **kwargs)
+            ni, nf, ks, stride=stride, dilation=dilation, **kwargs
+        )
         self.weight = self.conv1d_same.weight
         self.bias = self.conv1d_same.bias
         self.pad = Pad1d
 
     def forward(self, x):
         # stride=self.stride not used in padding calculation!
-        self.padding = same_padding1d(
-            x.shape[-1], self.ks, dilation=self.dilation)
+        self.padding = same_padding1d(x.shape[-1], self.ks, dilation=self.dilation)
         return self.conv1d_same(self.pad(self.padding)(x))
 
 
@@ -33,7 +33,7 @@ class Chomp1d(nn.Module):
         self.chomp_size = chomp_size
 
     def forward(self, x):
-        return x[:, :, :-self.chomp_size].contiguous()
+        return x[:, :, : -self.chomp_size].contiguous()
 
 
 def same_padding1d(seq_len, ks, stride=1, dilation=1):
@@ -58,5 +58,5 @@ def same_padding2d(H, W, ks, stride=(1, 1), dilation=(1, 1)):
 
 
 class Pad2d(nn.ConstantPad2d):
-    def __init__(self, padding, value=0.):
+    def __init__(self, padding, value=0.0):
         super().__init__(padding, value)

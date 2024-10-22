@@ -17,7 +17,9 @@
 from typing import Any
 
 
-def create_onnx_config(ort: Any, intra_num_of_threads: int, inter_num_of_threads: int) -> Any:
+def create_onnx_config(
+    ort: Any, intra_num_of_threads: int, inter_num_of_threads: int
+) -> Any:
     """Create tensorflow config.
 
     Args:

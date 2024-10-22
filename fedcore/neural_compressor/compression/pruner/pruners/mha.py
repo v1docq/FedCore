@@ -73,7 +73,9 @@ class PythonMultiheadAttentionPruner(PytorchBasePruner):
         self.end_step = self.config["end_step"]
         self.pruning_frequency = self.config["pruning_frequency"]
         # this is different with original code
-        self.total_prune_cnt = (self.end_step - self.start_step + self.pruning_frequency) // self.pruning_frequency
+        self.total_prune_cnt = (
+            self.end_step - self.start_step + self.pruning_frequency
+        ) // self.pruning_frequency
         self.completed_pruned_cnt = 0
         self.total_prune_cnt -= 1  # not pruning at step 0
         if self.total_prune_cnt == 0:
@@ -112,16 +114,24 @@ class PythonMultiheadAttentionPruner(PytorchBasePruner):
             # initialize self.mha_compressions
             mha_comp = MHACompression(mha_module)
             self.mha_compressions[mha_module["mha_name"][0]] = mha_comp
-            head_nums_for_this_mha = getattr(mha_comp.mha[0], mha_comp.attributes_for_this_mha["head_nums"])
+            head_nums_for_this_mha = getattr(
+                mha_comp.mha[0], mha_comp.attributes_for_this_mha["head_nums"]
+            )
             # initialize head_masks
             # why use 1 x head_num shape? because this provides convenience for permute mask for qkv and ffn
-            self.head_masks[mha_module["mha_name"][0]] = torch.ones(1, head_nums_for_this_mha)
+            self.head_masks[mha_module["mha_name"][0]] = torch.ones(
+                1, head_nums_for_this_mha
+            )
             # initialize self.linear_layers
             for idx in range(mha_module["qkv_name"].__len__()):
                 # update qkv layers
-                self.linear_layers[mha_module["qkv_name"][idx]] = mha_module["qkv_module"][idx]
+                self.linear_layers[mha_module["qkv_name"][idx]] = mha_module[
+                    "qkv_module"
+                ][idx]
             for idx in range(mha_module["ffn_name"].__len__()):
-                self.linear_layers[mha_module["ffn_name"][idx]] = mha_module["ffn_module"][idx]
+                self.linear_layers[mha_module["ffn_name"][idx]] = mha_module[
+                    "ffn_module"
+                ][idx]
 
     def reduce_mha_scores(self, score, dim=0):
         # an 2D tensor, return its compiled scores
@@ -142,8 +152,12 @@ class PythonMultiheadAttentionPruner(PytorchBasePruner):
         for mha_name, mha_comp in self.mha_compressions.items():
             device = mha_comp.device
             # step 0: obtain hooked attributes in mha modules
-            head_size = getattr(mha_comp.mha[0], mha_comp.attributes_for_this_mha["head_size"])
-            head_nums = getattr(mha_comp.mha[0], mha_comp.attributes_for_this_mha["head_nums"])
+            head_size = getattr(
+                mha_comp.mha[0], mha_comp.attributes_for_this_mha["head_size"]
+            )
+            head_nums = getattr(
+                mha_comp.mha[0], mha_comp.attributes_for_this_mha["head_nums"]
+            )
             # step 1: gather qkv and ffn which belong to same mha together
             qkv_scores_for_this_mha = {}
             ffn_scores_for_this_mha = {}
@@ -166,7 +180,9 @@ class PythonMultiheadAttentionPruner(PytorchBasePruner):
             ]
             for qkv_name, qkv_score in qkv_scores_for_this_mha.items():
                 qkv_score_new = qkv_score.reshape(qkv_new_shape)
-                qkv_score_new = self.reduce_mha_scores(self.reduce_mha_scores(qkv_score_new, -1), 1)
+                qkv_score_new = self.reduce_mha_scores(
+                    self.reduce_mha_scores(qkv_score_new, -1), 1
+                )
                 # qkv_scores_for_this_mha[qkv_name] = qkv_score_new # [head_nums, 1]
                 qkv_gather_scores += qkv_score_new
             ffn_gather_scores = torch.zeros(1, head_nums).to(device)
@@ -180,12 +196,18 @@ class PythonMultiheadAttentionPruner(PytorchBasePruner):
             ]
             for ffn_name, ffn_score in ffn_scores_for_this_mha.items():
                 ffn_score_new = ffn_score.reshape(ffn_new_shape)
-                ffn_score_new = self.reduce_mha_scores(self.reduce_mha_scores(ffn_score_new, -1), 1)
+                ffn_score_new = self.reduce_mha_scores(
+                    self.reduce_mha_scores(ffn_score_new, -1), 1
+                )
                 # ffn_scores_for_this_mha[ffn_name] = ffn_score_new # [1, head_nums]
                 ffn_gather_scores += ffn_score_new
             # step 3: compile qkv ffn scores to obtain individual head's score
-            self.mha_scores[mha_name] = qkv_gather_scores + ffn_gather_scores.permute(1, 0)
-            self.mha_scores[mha_name] /= len(qkv_scores_for_this_mha) + len(ffn_scores_for_this_mha)  # should be 4
+            self.mha_scores[mha_name] = qkv_gather_scores + ffn_gather_scores.permute(
+                1, 0
+            )
+            self.mha_scores[mha_name] /= len(qkv_scores_for_this_mha) + len(
+                ffn_scores_for_this_mha
+            )  # should be 4
         return True
 
     def update_masks(self, local_step):
@@ -219,7 +241,9 @@ class PythonMultiheadAttentionPruner(PytorchBasePruner):
         # self.masks = self.pattern.get_masks(self.criterion.scores, current_target_sparsity_ratio, self.masks)
         # self.mask_weights()
         self.update_mha_scores()  # update self.mha_scores
-        self.head_masks = self.pattern.get_masks(self.mha_scores, current_target_sparsity_ratio, self.head_masks)
+        self.head_masks = self.pattern.get_masks(
+            self.mha_scores, current_target_sparsity_ratio, self.head_masks
+        )
         self.print_mha_masks()
         self.mask_weights()
 

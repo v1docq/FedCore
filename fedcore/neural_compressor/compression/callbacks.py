@@ -26,7 +26,13 @@ from ..utils import logger
 from ..utils.utility import LazyImport
 from .distillation.criterions import Criterions
 from .pruner.pruners import PRUNERS, get_pruner
-from .pruner.utils import get_sparsity_ratio, get_sparsity_ratio_tf, parse_to_prune, parse_to_prune_tf, process_config
+from .pruner.utils import (
+    get_sparsity_ratio,
+    get_sparsity_ratio_tf,
+    parse_to_prune,
+    parse_to_prune_tf,
+    process_config,
+)
 
 LazyImport("torch.nn")
 torch = LazyImport("torch")
@@ -51,7 +57,9 @@ class BaseCallbacks(object):
                     and DistillationConfig.
             model: Model to be compressed in this object. It should be neural compressor model.
         """
-        assert model is None or isinstance(model, BaseModel), "The model should be a instanceof BaseModel"
+        assert model is None or isinstance(
+            model, BaseModel
+        ), "The model should be a instanceof BaseModel"
         self.conf = conf
         self.framework = None
         self.model = model
@@ -108,19 +116,25 @@ class BaseCallbacks(object):
         else:
             return None
 
-    def on_after_compute_loss(self, input, student_output, student_loss, teacher_output=None):
+    def on_after_compute_loss(
+        self, input, student_output, student_loss, teacher_output=None
+    ):
         """Be called on the end of loss computation."""
         if len(self.hooks_dict["on_after_compute_loss"]) > 0:
             loss = student_loss
             for on_after_compute_loss_hook in self.hooks_dict["on_after_compute_loss"]:
-                loss = on_after_compute_loss_hook(input, student_output, loss, teacher_output)
+                loss = on_after_compute_loss_hook(
+                    input, student_output, loss, teacher_output
+                )
             return loss
         else:
             return None
 
     def on_before_optimizer_step(self):
         """Be called before optimizer step."""
-        for on_before_optimizer_step_hook in self.hooks_dict["on_before_optimizer_step"]:
+        for on_before_optimizer_step_hook in self.hooks_dict[
+            "on_before_optimizer_step"
+        ]:
             on_before_optimizer_step_hook()
 
     def on_after_optimizer_step(self):
@@ -167,7 +181,6 @@ class BaseCallbacks(object):
 
     def __repr__(self):
         """Represent this class."""
-        pass
 
     def remove_hook(self, scope, hook):
         """Remove hooks if user want to tune accuracy with train_func."""
@@ -222,9 +235,13 @@ class PruningCallbacks(BaseCallbacks):
         """Be called after the end of training."""
         for on_train_end_hook in self.hooks_dict["on_train_end"]:
             on_train_end_hook()
-        if self.conf.framework == "pytorch" and isinstance(self.model.model, torch.nn.Module):
+        if self.conf.framework == "pytorch" and isinstance(
+            self.model.model, torch.nn.Module
+        ):
             get_sparsity_ratio(self.pruners, self.model)
-        elif self.conf.framework == "keras" and isinstance(self.model.model, tf.keras.Model):
+        elif self.conf.framework == "keras" and isinstance(
+            self.model.model, tf.keras.Model
+        ):
             get_sparsity_ratio_tf(self.pruners, self.model)
 
     def __repr__(self):
@@ -240,7 +257,9 @@ class PruningCallbacks(BaseCallbacks):
 
     def _generate_pruners(self):
         """Obtain Pruner objects."""
-        if self.conf.framework == "pytorch" and isinstance(self.model.model, torch.nn.Module):
+        if self.conf.framework == "pytorch" and isinstance(
+            self.model.model, torch.nn.Module
+        ):
             # model auto slim related
             from .pruner.model_slim.pattern_analyzer import SelfMHASearcher
 
@@ -252,19 +271,25 @@ class PruningCallbacks(BaseCallbacks):
                     modules = pa_obj.obtain_mha_module(modules)
                     modules = pa_obj.from_layer_name_to_object(modules)
                     if len(modules) == 0:
-                        logger.warning("one pruner hooks no mha modules, please have a check")
+                        logger.warning(
+                            "one pruner hooks no mha modules, please have a check"
+                        )
                     self.pruners.append(get_pruner(info, modules))
                 else:
                     # original pruning types, e.g NxM or N:M
                     modules = parse_to_prune(info, self.model.model)
                     if modules == {}:
-                        logger.warning("one pruner hooks no layers, please have a check")
+                        logger.warning(
+                            "one pruner hooks no layers, please have a check"
+                        )
 
                     self.pruners.append(get_pruner(info, modules))
                     info["modules"] = [key for key in modules.keys()]
                     info["len_of_modules"] = len(info["modules"])
                     logger.info(info)
-        elif self.conf.framework == "keras" and isinstance(self.model.model, tf.keras.Model):
+        elif self.conf.framework == "keras" and isinstance(
+            self.model.model, tf.keras.Model
+        ):
             from tensorflow.python.ops.numpy_ops import np_config
 
             np_config.enable_numpy_behavior()
@@ -304,7 +329,9 @@ class DistillationCallbacks(BaseCallbacks):
         """Initialize the attributes."""
         super(DistillationCallbacks, self).__init__(conf=conf, model=model)
 
-        self.framework = list(MODELS.keys())[list(MODELS.values()).index(self._parse_model_class(model))]
+        self.framework = list(MODELS.keys())[
+            list(MODELS.values()).index(self._parse_model_class(model))
+        ]
         self._teacher_model = None
         self._criterion = None
         self._epoch_ran = 0
@@ -313,14 +340,20 @@ class DistillationCallbacks(BaseCallbacks):
         self.best_score = 0
         self.best_model = None
         self.hooks_registered = False
-        assert hasattr(self.conf, "teacher_model"), "Please assign teacher model in DistillationConfig."
+        assert hasattr(
+            self.conf, "teacher_model"
+        ), "Please assign teacher model in DistillationConfig."
         self.teacher_model = self.conf.teacher_model
         self.generate_hooks()
         self.create_criterion()
 
     def _parse_model_class(self, model):
         """Parse model class for getting framework."""
-        from fedcore.neural_compressor.model.tensorflow_model import TensorflowBaseModel, TensorflowModel, TensorflowQATModel
+        from fedcore.neural_compressor.model.tensorflow_model import (
+            TensorflowBaseModel,
+            TensorflowModel,
+            TensorflowQATModel,
+        )
 
         if isinstance(model, TensorflowQATModel):
             return type(model)
@@ -333,7 +366,9 @@ class DistillationCallbacks(BaseCallbacks):
         if self.criterion is not None and hasattr(self.criterion, "clear_features"):
             self.criterion.clear_features()
 
-    def _on_after_compute_loss(self, input, student_output, student_loss, teacher_output=None):
+    def _on_after_compute_loss(
+        self, input, student_output, student_loss, teacher_output=None
+    ):
         """Set or compute output of teacher model.
 
         Called after student model forward, calculate the output of the teacher model
@@ -350,8 +385,12 @@ class DistillationCallbacks(BaseCallbacks):
         assert self.criterion, "criterion must be set in yaml config file."
         if teacher_output is None:
             assert self.teacher_model, "teacher_model must be set."
-            teacher_output = self.criterion.teacher_model_forward(input, teacher_model=self.teacher_model._model)
-        return self.criterion.loss_cal_sloss(student_output, teacher_output, student_loss)
+            teacher_output = self.criterion.teacher_model_forward(
+                input, teacher_model=self.teacher_model._model
+            )
+        return self.criterion.loss_cal_sloss(
+            student_output, teacher_output, student_loss
+        )
 
     def init_train_cfg(self):
         """Initialize the training configuration."""
@@ -372,9 +411,10 @@ class DistillationCallbacks(BaseCallbacks):
                 "must be configured for distillation if criterion is NOT set."
             )
             criterion_cfg = self._train_cfg.config
-            assert (
-                len(criterion_cfg) == 1
-            ), "There must be exactly one loss in " "criterion part, instead got {} loss.".format(len(criterion_cfg))
+            assert len(criterion_cfg) == 1, (
+                "There must be exactly one loss in "
+                "criterion part, instead got {} loss.".format(len(criterion_cfg))
+            )
             loss = [i for i in criterion_cfg.keys()][0]
             loss_cfg = criterion_cfg[loss]
             criterion_builder = Criterions(self.framework)[loss](loss_cfg)

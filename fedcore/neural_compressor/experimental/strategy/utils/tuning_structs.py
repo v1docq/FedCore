@@ -20,8 +20,7 @@ from typing import Dict
 
 from deprecated import deprecated
 
-from ....utils import logger
-from .constant import PRECISION_SET, QUANT_MODE_SET, TUNING_ITEMS_LST
+from .constant import PRECISION_SET, TUNING_ITEMS_LST
 
 
 @deprecated(version="2.0")

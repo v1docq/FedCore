@@ -18,7 +18,9 @@ from fedcore.neural_compressor.onnxrt.quantization.algorithm_entry import (
     gptq_quantize_entry,
     awq_quantize_entry,
 )
-from fedcore.neural_compressor.onnxrt.quantization.calibrate import CalibrationDataReader
+from fedcore.neural_compressor.onnxrt.quantization.calibrate import (
+    CalibrationDataReader,
+)
 from fedcore.neural_compressor.onnxrt.quantization.config import (
     RTNConfig,
     get_default_rtn_config,
@@ -29,7 +31,10 @@ from fedcore.neural_compressor.onnxrt.quantization.config import (
     SmoohQuantConfig,
     get_default_sq_config,
 )
-from fedcore.neural_compressor.onnxrt.quantization.autotune import autotune, get_all_config_set
+from fedcore.neural_compressor.onnxrt.quantization.autotune import (
+    autotune,
+    get_all_config_set,
+)
 
 __all__ = [
     "smooth_quant_entry",

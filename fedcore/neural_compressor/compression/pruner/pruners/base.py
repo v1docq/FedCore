@@ -19,7 +19,12 @@
 
 import numpy as np
 
-from ..utils import F, safe_get_data, safe_get_grad, safe_get_shape, safe_set_data, tf, torch
+from ..utils import (
+    safe_get_data,
+    safe_get_shape,
+    safe_set_data,
+    torch,
+)
 
 PRUNERS = {}
 
@@ -84,7 +89,9 @@ class BasePruner:
         self.end_step = self.config["end_step"]
         self.pruning_frequency = self.config["pruning_frequency"]
         # this is different with original code
-        self.total_prune_cnt = (self.end_step - self.start_step + self.pruning_frequency) // self.pruning_frequency
+        self.total_prune_cnt = (
+            self.end_step - self.start_step + self.pruning_frequency
+        ) // self.pruning_frequency
         self.completed_pruned_cnt = 0
         self.total_prune_cnt -= 1  # not pruning at step 0
         if self.total_prune_cnt == 0:
@@ -98,18 +105,15 @@ class BasePruner:
 
     def _init(self):
         """Auxiliary function for initializing."""
-        pass
 
     def on_epoch_begin(self, epoch):
         """Implement at the beginning of each epoch."""
-        pass
 
     def mask_weights(self):
         """Apply masks to corresponding modules' weights.
 
         Weights are multiplied with masks. This is the formal pruning process.
         """
-        pass
 
     def on_step_begin(self, local_step):
         """Implement at the start of each step."""
@@ -120,19 +124,15 @@ class BasePruner:
 
     def update_masks(self, local_step):
         """Update the masks at a given local step."""
-        pass
 
     def on_epoch_end(self):
         """Implement at the end of each epoch."""
-        pass
 
     def on_step_end(self):
         """Implement at the end of each step."""
-        pass
 
     def on_before_optimizer_step(self):
         """Implement before optimizer.step()."""
-        pass
 
     def on_after_optimizer_step(self):
         """Implement after optimizer.step().
@@ -144,19 +144,15 @@ class BasePruner:
 
     def on_train_begin(self, dataloader=None):
         """Implement at the beginning of training phase."""
-        pass
 
     def on_train_end(self):
         """Implement at the end of training phase."""
-        pass
 
     def on_before_eval(self):
         """Implement at the beginning of evaluation phase."""
-        pass
 
     def on_after_eval(self):
         """Implement at the end of evaluation phase."""
-        pass
 
     def check_is_pruned_step(self, step):
         """Check if a pruning process should be performed at the current step.
@@ -265,4 +261,6 @@ class KerasBasePruner(BasePruner):
         """
         for key in self.modules.keys():
             module = self.modules[key]
-            module.set_weights([module.get_weights()[0] * self.masks[key]] + module.get_weights()[1:])
+            module.set_weights(
+                [module.get_weights()[0] * self.masks[key]] + module.get_weights()[1:]
+            )

@@ -20,7 +20,9 @@ import numpy as np
 from tensorflow.python.framework import dtypes, tensor_util
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.adaptor.tf_utils.util import TF_SPR_BASE_VERSIONS
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
 
@@ -40,13 +42,17 @@ class ConvertAddToBiasAddOptimizer(GraphRewriterBase):
         import tensorflow as tf
 
         if tf.version.VERSION not in TF_SPR_BASE_VERSIONS:
-            target_nodes = g.query_fusion_pattern_nodes([["MatMul", "Conv2D"], ["Add", "AddV2"]])
+            target_nodes = g.query_fusion_pattern_nodes(
+                [["MatMul", "Conv2D"], ["Add", "AddV2"]]
+            )
         else:
             target_nodes = g.query_fusion_pattern_nodes([["MatMul"], ["Add", "AddV2"]])
         for i in target_nodes:
             successor_node_names = graph_info[i[1]].outputs
             matmul_input_name = graph_info[i[0]].node.input[0]
-            matmul_input_node = graph_info[Helper.node_name_from_input(matmul_input_name)].node
+            matmul_input_node = graph_info[
+                Helper.node_name_from_input(matmul_input_name)
+            ].node
             # Fixme below two lines was added due to MatMul kernel limitation for matmul input type
             # should be quint8.
             if matmul_input_node.op == "Const":
@@ -55,7 +61,9 @@ class ConvertAddToBiasAddOptimizer(GraphRewriterBase):
             add_second_const_node = graph_info[add_second_input_name].node
             if add_second_const_node.op != "Const":
                 continue
-            bias_tensor = tensor_util.MakeNdarray(add_second_const_node.attr["value"].tensor)
+            bias_tensor = tensor_util.MakeNdarray(
+                add_second_const_node.attr["value"].tensor
+            )
 
             if bias_tensor.ndim > 2:
                 continue
@@ -67,9 +75,13 @@ class ConvertAddToBiasAddOptimizer(GraphRewriterBase):
             bias_node_name = i[1]
             bias_const_node_name = add_second_const_node.name + "_flattern"
 
-            bias_const_node = Helper.create_constant_node(bias_const_node_name, new_bias_tensor, dtypes.float32)
+            bias_const_node = Helper.create_constant_node(
+                bias_const_node_name, new_bias_tensor, dtypes.float32
+            )
 
-            bias_node = Helper.create_node("BiasAdd", bias_node_name, [i[0], bias_const_node_name])
+            bias_node = Helper.create_node(
+                "BiasAdd", bias_node_name, [i[0], bias_const_node_name]
+            )
             Helper.set_attr_dtype(bias_node, "T", dtypes.float32)
 
             g.add_node(bias_const_node, None, [bias_node_name])

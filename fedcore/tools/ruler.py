@@ -8,20 +8,30 @@ from tqdm import tqdm
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.metrics.metric_impl import MetricCounter, ClassificationMetricCounter, ObjectDetectionMetricCounter
+from fedcore.metrics.metric_impl import (
+    MetricCounter,
+    ObjectDetectionMetricCounter,
+)
 
 
 class PerformanceEvaluator:
     def __init__(self, model, dataset, device=default_device(), batch_size=32):
-        is_class_container = hasattr(model, 'model')
+        is_class_container = hasattr(model, "model")
         is_pipeline_class = isinstance(model, Pipeline)
         dataset_from_directory = isinstance(dataset, str)
         self.model = model.model if is_class_container else model
-        self.model = model.operator.root_node.fitted_operation.model if is_pipeline_class else model
+        self.model = (
+            model.operator.root_node.fitted_operation.model
+            if is_pipeline_class
+            else model
+        )
         self.dataset = dataset
         self.batch_size = batch_size
-        self.data_loader = DataLoader(dataset,
-                                      batch_size=batch_size, shuffle=False) if dataset_from_directory else dataset
+        self.data_loader = (
+            DataLoader(dataset, batch_size=batch_size, shuffle=False)
+            if dataset_from_directory
+            else dataset
+        )
         self.preload_batches = [i[0] for i in self.data_loader]
         self.device = device
         self.model.to(device)
@@ -34,10 +44,7 @@ class PerformanceEvaluator:
 
     def eval(self):
         lat, thr = self.measure_latency_throughput()
-        result = dict(latency=lat,
-                      throughput=thr,
-                      model_size=self.measure_model_size()
-                      )
+        result = dict(latency=lat, throughput=thr, model_size=self.measure_model_size())
         self.report()
         return result
 
@@ -45,7 +52,7 @@ class PerformanceEvaluator:
     def throughput_eval(self, num_iterations=30):
         self.model.eval()
         thr_list = []
-        for batch in tqdm(self.preload_batches[:self.batch_to_eval]):
+        for batch in tqdm(self.preload_batches[: self.batch_to_eval]):
             images = batch.cuda(non_blocking=True)
             batch_size = images.shape[0]
             for i in range(50):
@@ -64,7 +71,7 @@ class PerformanceEvaluator:
         self.model.eval()
         lat_list = []
         dataset = self.data_loader.dataset
-        dataset.data = dataset.data[:self.batch_to_eval, :, :, :]
+        dataset.data = dataset.data[: self.batch_to_eval, :, :, :]
         data_loader = DataLoader(dataset, batch_size=1, shuffle=False)
         for idx, (images, _) in tqdm(enumerate(data_loader)):
             images = images.cuda(non_blocking=True)
@@ -79,19 +86,23 @@ class PerformanceEvaluator:
         timings_lat = []
         timings_thr = []
 
-        with tqdm(total=reps, desc='Measuring latency and throughput', unit='rep') as pbar:
+        with tqdm(
+            total=reps, desc="Measuring latency and throughput", unit="rep"
+        ) as pbar:
             for rep in range(reps):
                 timings_thr.append(self.throughput_eval())
                 timings_lat.append(self.latency_eval())
                 pbar.update(1)
 
-        latency = np.array([[np.mean(x),np.std(x)] for x in timings_lat])
-        throughput = np.array([[np.mean(x),np.std(x)] for x in timings_thr])
-        self.latency, self.throughput = np.mean(latency,axis=0), np.mean(throughput,axis=0)
+        latency = np.array([[np.mean(x), np.std(x)] for x in timings_lat])
+        throughput = np.array([[np.mean(x), np.std(x)] for x in timings_thr])
+        self.latency, self.throughput = np.mean(latency, axis=0), np.mean(
+            throughput, axis=0
+        )
         return self.latency, self.throughput
 
     def measure_model_size(self):
-        size_constant = 1024 ** 2
+        size_constant = 1024**2
         if isinstance(self.model, ONNXInferenceModel):
             size_all_mb = round(self.model.size(), 3) / size_constant
         else:
@@ -115,13 +126,15 @@ class PerformanceEvaluator:
 
     def report(self):
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
-        print(f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}")
+        print(
+            f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"
+        )
         print(f"Model size: {self.model_size} MB")
 
 
 class PerformanceEvaluatorOD:
     def __init__(self, model, data_loader, device=None, batch_size=32):
-        self.model = model.model if hasattr(model, 'model') else model
+        self.model = model.model if hasattr(model, "model") else model
         self.data_loader = data_loader
         # self.dataset = dataset
         self.batch_size = batch_size
@@ -138,10 +151,12 @@ class PerformanceEvaluatorOD:
 
     def eval(self):
 
-        result = dict(latency=self.measure_latency(),
-                      throughput=self.measure_throughput(),
-                      model_size=self.measure_model_size(),
-                      target_metrics=self.measure_target_metric())
+        result = dict(
+            latency=self.measure_latency(),
+            throughput=self.measure_throughput(),
+            model_size=self.measure_model_size(),
+            target_metrics=self.measure_target_metric(),
+        )
         self.report()
         return result
 
@@ -150,7 +165,7 @@ class PerformanceEvaluatorOD:
         if torch.cuda.is_available():
             self.warm_up_cuda()
         with torch.no_grad():
-            with tqdm(total=reps, desc='Measuring latency', unit='rep') as pbar:
+            with tqdm(total=reps, desc="Measuring latency", unit="rep") as pbar:
                 for rep in range(reps):
                     for inputs, _ in self.data_loader:
                         start_time = time.time()
@@ -170,7 +185,7 @@ class PerformanceEvaluatorOD:
         start_time = time.time()
         # measure for n batches
         with torch.no_grad():
-            with tqdm(total=batches, desc='Measuring throughput', unit='batch') as pbar:
+            with tqdm(total=batches, desc="Measuring throughput", unit="batch") as pbar:
                 for inputs, _ in self.data_loader:
                     inputs = list(input.to(self.device) for input in inputs)
                     if batches == 0:
@@ -179,7 +194,7 @@ class PerformanceEvaluatorOD:
                     _ = self.model(inputs)
                     batches -= 1
                     pbar.update(1)
-        if self.device == 'cuda':
+        if self.device == "cuda":
             torch.cuda.synchronize()
         total_time = (time.time() - start_time) / 1000
         self.throughput = round(total_data_size / total_time, 0)
@@ -189,21 +204,21 @@ class PerformanceEvaluatorOD:
         if not metric_counter:
             metric_counter = ObjectDetectionMetricCounter()
         with torch.no_grad():
-            with tqdm(desc='Measuring target metric', unit='batch') as pbar:
+            with tqdm(desc="Measuring target metric", unit="batch") as pbar:
                 for batch in self.data_loader:
                     inputs, targets = batch
                     inputs = list(input.to(self.device) for input in inputs)
                     prediction = self.model(inputs)
                     metric_counter.update(prediction, targets)
                     pbar.update(1)
-        if self.device == 'cuda':
+        if self.device == "cuda":
             torch.cuda.synchronize()
         self.target_metrics = metric_counter.compute()
         return self.target_metrics
 
     def measure_model_size(self):
         if isinstance(self.model, ONNXInferenceModel):
-            size_all_mb = round(self.model.size(), 3) / 1024 ** 2
+            size_all_mb = round(self.model.size(), 3) / 1024**2
         else:
             param_size = 0
             for param in self.model.parameters():
@@ -212,7 +227,7 @@ class PerformanceEvaluatorOD:
             for buffer in self.model.buffers():
                 buffer_size += buffer.nelement() * buffer.element_size()
 
-            size_all_mb = (param_size + buffer_size) / 1024 ** 2
+            size_all_mb = (param_size + buffer_size) / 1024**2
         self.model_size = round(size_all_mb, 3)
         return self.model_size
 
@@ -226,5 +241,7 @@ class PerformanceEvaluatorOD:
 
     def report(self):
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
-        print(f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}")
+        print(
+            f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"
+        )
         print(f"Model size: {self.model_size} MB")

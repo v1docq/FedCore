@@ -61,8 +61,12 @@ class PytorchBasicPruner(PytorchBasePruner):
         self.reg = get_reg(self.config, self.modules, self.pattern)
         # if switch off progressive but use per-channel pruning, give a warn
         if "channel" in self.pattern.pattern:
-            logger.info("UserWarning: use per-channel pruning pattern without progressive pruning!")
-            logger.info("Instead, enabling progressive pruning would be a better choice.")
+            logger.info(
+                "UserWarning: use per-channel pruning pattern without progressive pruning!"
+            )
+            logger.info(
+                "Instead, enabling progressive pruning would be a better choice."
+            )
         else:
             pass
 
@@ -104,7 +108,9 @@ class PytorchBasicPruner(PytorchBasePruner):
         self.completed_pruned_cnt += 1
         if self.criterion.scores == {}:
             return
-        self.masks = self.pattern.get_masks(self.criterion.scores, current_target_sparsity_ratio, self.masks)
+        self.masks = self.pattern.get_masks(
+            self.criterion.scores, current_target_sparsity_ratio, self.masks
+        )
         self.mask_weights()
 
         self.current_sparsity_ratio = self.pattern.get_sparsity_ratio(self.masks)
@@ -152,8 +158,12 @@ class KerasBasicPruner(KerasBasePruner):
         self.reg = get_reg(self.config, self.modules, self.pattern)
         # if switch off progressive but use per-channel pruning, give a warn
         if "channel" in self.pattern.pattern:
-            logger.info("UserWarning: use per-channel pruning pattern without progressive pruning!")
-            logger.info("Instead, enabling progressive pruning would be a better choice.")
+            logger.info(
+                "UserWarning: use per-channel pruning pattern without progressive pruning!"
+            )
+            logger.info(
+                "Instead, enabling progressive pruning would be a better choice."
+            )
         else:
             pass
 
@@ -195,7 +205,9 @@ class KerasBasicPruner(KerasBasePruner):
         self.completed_pruned_cnt += 1
         if self.criterion.scores == {}:
             return
-        self.masks = self.pattern.get_masks(self.criterion.scores, current_target_sparsity_ratio, self.masks)
+        self.masks = self.pattern.get_masks(
+            self.criterion.scores, current_target_sparsity_ratio, self.masks
+        )
         self.mask_weights()
 
         self.current_sparsity_ratio = self.pattern.get_sparsity_ratio(self.masks)

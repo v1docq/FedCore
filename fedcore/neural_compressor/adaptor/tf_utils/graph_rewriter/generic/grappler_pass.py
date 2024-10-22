@@ -35,7 +35,13 @@ class GrapplerOptimizer(GraphRewriterBase):
         super().__init__(model)
         self.input_output_names = input_output_names
         self.opt_cfg = opt_cfg
-        self.generic_optimizer = ("pruning", "shape", "dependency", "debug_stripper", "loop")
+        self.generic_optimizer = (
+            "pruning",
+            "shape",
+            "dependency",
+            "debug_stripper",
+            "loop",
+        )
         self.tf_2_optimizer = ("constfold", "arithmetic", "min_graph_nodes")
 
     @dump_elapsed_time("Pass GrapplerOptimizer")
@@ -45,7 +51,9 @@ class GrapplerOptimizer(GraphRewriterBase):
             g = tf.Graph()
             with g.as_default():
                 g = tf.compat.v1.import_graph_def(self.model, name="")
-                meta_graph = saver.export_meta_graph(graph_def=self.model, graph=g, clear_devices=True)
+                meta_graph = saver.export_meta_graph(
+                    graph_def=self.model, graph=g, clear_devices=True
+                )
                 fetch_collection = meta_graph_pb2.CollectionDef()
                 for fetch in self.input_output_names:
                     fetch_collection.node_list.value.append(fetch)

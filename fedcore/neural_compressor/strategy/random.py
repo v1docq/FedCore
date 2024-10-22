@@ -37,11 +37,17 @@ class RandomTuneStrategy(TuneStrategy):
             tune_config (dict): A dict containing the tuning configuration for quantization.
         """
         tuning_space = self.tuning_space
-        op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = self.initial_tuning_cfg()
-        op_wise_tuning_sampler = OpWiseTuningSampler(tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg)
+        op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = (
+            self.initial_tuning_cfg()
+        )
+        op_wise_tuning_sampler = OpWiseTuningSampler(
+            tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg
+        )
         op_tuning_cfg_lst = list(op_wise_tuning_sampler)
         op_tuning_cfg_cnt = len(op_tuning_cfg_lst)
-        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         calib_sampling_size_cnt = len(calib_sampling_size_lst)
         while True:
             calib_index = np.random.choice(calib_sampling_size_cnt)

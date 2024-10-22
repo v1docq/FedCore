@@ -97,7 +97,9 @@ class QConv2D(Conv):
         )
 
         if self.use_bias:
-            outputs = tf.keras.backend.bias_add(outputs, self.bias, data_format=self.data_format)
+            outputs = tf.keras.backend.bias_add(
+                outputs, self.bias, data_format=self.data_format
+            )
 
         if self.activation is not None:
             return self.activation(outputs)

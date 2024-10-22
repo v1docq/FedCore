@@ -18,8 +18,12 @@
 
 from tensorflow.core.framework import graph_pb2
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase
@@ -117,7 +121,9 @@ class GraphCseOptimizer(GraphRewriterBase):
                 # TODO Need to enhance below algorithm before golden.
                 filter_node = [node_names[0]]
                 for sub_node_name in node_names[1:]:
-                    if not Helper.compare_node_attr(graph_info[node_names[0]].node, graph_info[sub_node_name].node):
+                    if not Helper.compare_node_attr(
+                        graph_info[node_names[0]].node, graph_info[sub_node_name].node
+                    ):
                         continue
                     filter_node.append(sub_node_name)
 
@@ -128,13 +134,20 @@ class GraphCseOptimizer(GraphRewriterBase):
                 keep_sub_node_name = lower_node_name[0]
                 for removeable_node_name in lower_node_name[1:]:
                     graph_info[upper_node_name].outputs.remove(removeable_node_name)
-                    for grand_child_node_name in graph_info[removeable_node_name].outputs:
+                    for grand_child_node_name in graph_info[
+                        removeable_node_name
+                    ].outputs:
                         filter_input_name = [
-                            Helper.node_name_from_input(i) for i in graph_info[grand_child_node_name].node.input
+                            Helper.node_name_from_input(i)
+                            for i in graph_info[grand_child_node_name].node.input
                         ]
                         replace_index = filter_input_name.index(removeable_node_name)
-                        graph_info[grand_child_node_name].node.input[replace_index] = keep_sub_node_name
-                        graph_info[grand_child_node_name].node.input[replace_index] = keep_sub_node_name
+                        graph_info[grand_child_node_name].node.input[
+                            replace_index
+                        ] = keep_sub_node_name
+                        graph_info[grand_child_node_name].node.input[
+                            replace_index
+                        ] = keep_sub_node_name
                     graph_info.pop(removeable_node_name)
 
         output_graph_def = graph_pb2.GraphDef()

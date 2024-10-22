@@ -18,7 +18,12 @@
 
 import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
 from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg
 
 
@@ -41,12 +46,16 @@ class SplitOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
 
         parent = self.quantizer.model.get_parents(node)[0]
         children = self.quantizer.model.get_children(node)
         if (
-            parent.op_type != "DequantizeLinear" or len(children) == 0 or not node.name.endswith("_quant")
+            parent.op_type != "DequantizeLinear"
+            or len(children) == 0
+            or not node.name.endswith("_quant")
         ):  # pragma: no cover
             return False
         return True
@@ -76,14 +85,18 @@ class SplitOperator(Operator):
             else:  # pragma: no cover
                 outputs.append(output + "_quantized")
 
-        quantized_node = onnx.helper.make_node(node.op_type, quantized_input_names, outputs, node.name, **kwargs)
+        quantized_node = onnx.helper.make_node(
+            node.op_type, quantized_input_names, outputs, node.name, **kwargs
+        )
         self.quantizer.new_nodes.append(quantized_node)
         self.quantizer.remove_nodes.extend([parent, node])
 
     def cast(self):  # pragma: no cover
         """Cast node."""
         node = self.node
-        if node.input[0] not in [i.tensor_name for i in self.quantizer.new_value_info.values()]:
+        if node.input[0] not in [
+            i.tensor_name for i in self.quantizer.new_value_info.values()
+        ]:
             return
         self.quantizer.cast_inputs(self.node, self.dtype)
         self.quantizer.cast_outputs(self.node, self.dtype)
@@ -104,13 +117,21 @@ class QSplitOperator(QOperator):
         inputs = []
         inits = []
 
-        if all([child.op_type not in self.qop_list and child.op_type != "DequantizeLinear" for child in self.children]):
+        if all(
+            [
+                child.op_type not in self.qop_list
+                and child.op_type != "DequantizeLinear"
+                for child in self.children
+            ]
+        ):
             return False, add_nodes, inits
 
         # input dq
         in_dq = None
         for child in self.children:
-            idx = [list(child.input).index(i) for i in node.output if i in child.input][0]
+            idx = [list(child.input).index(i) for i in node.output if i in child.input][
+                0
+            ]
             if child.op_type in [
                 "DequantizeLinear",
                 "QLinearLeakyRelu",
@@ -121,13 +142,28 @@ class QSplitOperator(QOperator):
             ]:
                 in_dq_inputs = [node.input[0], child.input[1], child.input[2]]
             elif child.op_type in ["QEmbedLayerNormalization"]:
-                in_dq_inputs = [node.input[0], child.input[idx + 6], child.input[idx + 11]]
+                in_dq_inputs = [
+                    node.input[0],
+                    child.input[idx + 6],
+                    child.input[idx + 11],
+                ]
             elif child.op_type in ["QAttention"]:
-                in_dq_inputs = [node.input[0], child.input[idx + 3], child.input[idx + 3]]
+                in_dq_inputs = [
+                    node.input[0],
+                    child.input[idx + 3],
+                    child.input[idx + 3],
+                ]
             else:
-                in_dq_inputs = [node.input[0], child.input[idx + 1], child.input[idx + 2]]
+                in_dq_inputs = [
+                    node.input[0],
+                    child.input[idx + 1],
+                    child.input[idx + 2],
+                ]
             in_dq = onnx.helper.make_node(
-                "DequantizeLinear", in_dq_inputs, [node.name + "_in_dequant"], node.name + "_in_dequant"
+                "DequantizeLinear",
+                in_dq_inputs,
+                [node.name + "_in_dequant"],
+                node.name + "_in_dequant",
             )
             inputs.append(node.name + "_in_dequant")
             add_nodes.append(in_dq)
@@ -151,6 +187,8 @@ class QSplitOperator(QOperator):
         for attribute in node.attribute:  # pragma: no cover
             kwargs.update(attribute_to_kwarg(attribute))
 
-        new_node = onnx.helper.make_node(node.op_type, inputs, outputs, node.name + "_convert", **kwargs)
+        new_node = onnx.helper.make_node(
+            node.op_type, inputs, outputs, node.name + "_convert", **kwargs
+        )
         add_nodes.append(new_node)
         return True, add_nodes, inits

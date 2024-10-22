@@ -20,8 +20,7 @@
 import copy
 import logging
 
-import numpy as np
-from onnx import AttributeProto, TensorProto, helper, numpy_helper
+from onnx import helper, numpy_helper
 
 from . import tf2onnx_utils as utils
 from .onnx_schema import get_schema
@@ -108,7 +107,10 @@ class OnnxNode:
         schema = get_schema(self.type, self.graph.opset, self.domain)
         if schema is None and not (self.is_const() or self.is_graph_input()):
             logger.debug(
-                "Node %s uses non-stardard onnx op <%s, %s>, skip attribute check", self.name, self.domain, self.type
+                "Node %s uses non-stardard onnx op <%s, %s>, skip attribute check",
+                self.name,
+                self.domain,
+                self.type,
             )
         onnx_attrs = {}
         for a in self._attr.values():
@@ -193,7 +195,10 @@ class OnnxNode:
 
     def is_graph_input_default_const(self):
         """Check if the node is the input of the graph and const."""
-        return self.is_const() and any(out.is_graph_input() for out in self.graph.find_output_consumers(self.output[0]))
+        return self.is_const() and any(
+            out.is_graph_input()
+            for out in self.graph.find_output_consumers(self.output[0])
+        )
 
     def is_while(self):
         """Check if the node is while op."""
@@ -220,12 +225,18 @@ class OnnxNode:
             for name in self.input:
                 node = g.get_node_by_output(name)
                 op = node.type if node else "N/A"
-                lines.append("\t{}={}, {}, {}".format(name, op, g.get_shape(name), g.get_dtype(name)))
+                lines.append(
+                    "\t{}={}, {}, {}".format(
+                        name, op, g.get_shape(name), g.get_dtype(name)
+                    )
+                )
 
         if self.output:
             for name in self.output:
                 lines.append("Outputs:")
-                lines.append("\t{}={}, {}".format(name, g.get_shape(name), g.get_dtype(name)))
+                lines.append(
+                    "\t{}={}, {}".format(name, g.get_shape(name), g.get_dtype(name))
+                )
 
         return "\n".join(lines)
 
@@ -244,13 +255,21 @@ class OnnxNode:
     def get_attr_int(self, name):
         """Get attribute value as int."""
         attr_int = self.get_attr_value(name)
-        utils.assert_error(attr_int is not None and isinstance(attr_int, int), "attribute %s is None", name)
+        utils.assert_error(
+            attr_int is not None and isinstance(attr_int, int),
+            "attribute %s is None",
+            name,
+        )
         return attr_int
 
     def get_attr_str(self, name, encoding="utf-8"):
         """Get attribute value as string."""
         attr_str = self.get_attr_value(name)
-        utils.assert_error(attr_str is not None and isinstance(attr_str, bytes), "attribute %s is None", name)
+        utils.assert_error(
+            attr_str is not None and isinstance(attr_str, bytes),
+            "attribute %s is None",
+            name,
+        )
         return attr_str.decode(encoding)
 
     def set_attr(self, name, value):
@@ -377,7 +396,9 @@ class OnnxNode:
         attr_graphs = self.get_body_graphs()
         if attr_graphs:
             for attr_name, sub_graph in attr_graphs.items():
-                graph_proto = sub_graph.make_graph("graph for " + self.name + " " + attr_name)
+                graph_proto = sub_graph.make_graph(
+                    "graph for " + self.name + " " + attr_name
+                )
                 self.set_attr(attr_name, graph_proto)
 
         attr = list(self.get_onnx_attrs().values())
@@ -411,4 +432,6 @@ class OnnxNode:
 
     def _graph_check(self):
         """Check the graph is None."""
-        utils.assert_error(self.graph is not None, "Node %s not belonging any graph", self.name)
+        utils.assert_error(
+            self.graph is not None, "Node %s not belonging any graph", self.name
+        )

@@ -19,8 +19,13 @@
 import numpy
 import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, op_registry
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg, ms_domain
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    op_registry,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    attribute_to_kwarg,
+)
 
 
 @op_registry(op_types="LSTM")
@@ -38,9 +43,13 @@ class LSTMOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["dynamic"], "convert format for {} should be in ['dynamic']".format(node.op_type)
+        assert convert_format in [
+            "dynamic"
+        ], "convert format for {} should be in ['dynamic']".format(node.op_type)
 
-        if not self.quantizer.is_valid_quantize_weight(node.input[1]) or not self.quantizer.is_valid_quantize_weight(
+        if not self.quantizer.is_valid_quantize_weight(
+            node.input[1]
+        ) or not self.quantizer.is_valid_quantize_weight(
             node.input[2]
         ):  # pragma: no cover
             return False
@@ -84,14 +93,22 @@ class LSTMOperator(Operator):
         W_quant_array = onnx.numpy_helper.to_array(W_quant_weight)
         R_quant_array = onnx.numpy_helper.to_array(R_quant_weight)
 
-        W_quant_array = numpy.reshape(W_quant_array, (W_num_dir, W_4_hidden_size, W_input_size))
-        R_quant_array = numpy.reshape(R_quant_array, (R_num_dir, R_4_hidden_size, R_hidden_size))
+        W_quant_array = numpy.reshape(
+            W_quant_array, (W_num_dir, W_4_hidden_size, W_input_size)
+        )
+        R_quant_array = numpy.reshape(
+            R_quant_array, (R_num_dir, R_4_hidden_size, R_hidden_size)
+        )
 
         W_quant_array = numpy.transpose(W_quant_array, (0, 2, 1))
         R_quant_array = numpy.transpose(R_quant_array, (0, 2, 1))
 
-        W_quant_tranposed = onnx.numpy_helper.from_array(W_quant_array, quant_input_weight_tuple[0])
-        R_quant_tranposed = onnx.numpy_helper.from_array(R_quant_array, quant_recurrent_weight_tuple[0])
+        W_quant_tranposed = onnx.numpy_helper.from_array(
+            W_quant_array, quant_input_weight_tuple[0]
+        )
+        R_quant_tranposed = onnx.numpy_helper.from_array(
+            R_quant_array, quant_recurrent_weight_tuple[0]
+        )
 
         model.remove_initializers([W_quant_weight, R_quant_weight])
         model.add_initializer(W_quant_tranposed)
@@ -135,7 +152,12 @@ class LSTMOperator(Operator):
 
         quant_lstm_name = node.name + "_quant"
         quant_lstm_node = onnx.helper.make_node(
-            "DynamicQuantizeLSTM", inputs, node.output, quant_lstm_name, domain="com.microsoft", **kwargs
+            "DynamicQuantizeLSTM",
+            inputs,
+            node.output,
+            quant_lstm_name,
+            domain="com.microsoft",
+            **kwargs
         )
         self.quantizer.remove_nodes.append(node)
         self.quantizer.new_nodes.append(quant_lstm_node)

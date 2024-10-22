@@ -17,11 +17,20 @@ from typing import Any, Callable, Dict, Tuple
 
 import torch
 
-from fedcore.neural_compressor.common.base_config import BaseConfig, ComposableConfig, config_registry
+from fedcore.neural_compressor.common.base_config import (
+    BaseConfig,
+    ComposableConfig,
+    config_registry,
+)
 from fedcore.neural_compressor.common.utils import log_quant_execution
-from fedcore.neural_compressor.torch.quantization.config import SmoothQuantConfig, StaticQuantConfig
+from fedcore.neural_compressor.torch.quantization.config import (
+    SmoothQuantConfig,
+    StaticQuantConfig,
+)
 from fedcore.neural_compressor.torch.utils import is_ipex_available, logger
-from fedcore.neural_compressor.torch.utils.utility import WHITE_MODULE_LIST, algos_mapping, get_model_info
+from fedcore.neural_compressor.torch.utils.utility import (
+    algos_mapping,
+)
 
 FRAMEWORK_NAME = "torch"
 
@@ -54,8 +63,12 @@ def quantize(
     q_model = model if inplace else copy.deepcopy(model)
     registered_configs = config_registry.get_cls_configs()
     if isinstance(quant_config, dict):
-        quant_config = ComposableConfig.from_dict(quant_config, config_registry=registered_configs[FRAMEWORK_NAME])
-        logger.info(f"Parsed a config dict to construct the quantization config: {quant_config}.")
+        quant_config = ComposableConfig.from_dict(
+            quant_config, config_registry=registered_configs[FRAMEWORK_NAME]
+        )
+        logger.info(
+            f"Parsed a config dict to construct the quantization config: {quant_config}."
+        )
     else:
         assert isinstance(
             quant_config, BaseConfig
@@ -65,7 +78,8 @@ def quantize(
     # select quantization algo according to config
 
     if is_ipex_available and (
-        isinstance(quant_config, StaticQuantConfig) or isinstance(quant_config, SmoothQuantConfig)
+        isinstance(quant_config, StaticQuantConfig)
+        or isinstance(quant_config, SmoothQuantConfig)
     ):
         model_info = quant_config.get_model_info(q_model, example_inputs)
     else:

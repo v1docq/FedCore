@@ -80,8 +80,12 @@ class TensorFlowProfilingParser(ProfilingParser):
                     self.add_result(
                         ProfilingResult(
                             node_name=node_name,
-                            total_execution_time=int(self.unify_time(total_execution_time)),
-                            accelerator_execution_time=int(self.unify_time(accelerator_execution_time)),
+                            total_execution_time=int(
+                                self.unify_time(total_execution_time)
+                            ),
+                            accelerator_execution_time=int(
+                                self.unify_time(accelerator_execution_time)
+                            ),
                             cpu_execution_time=int(self.unify_time(cpu_execution_time)),
                             op_run=op_run,
                             op_defined=op_defined,

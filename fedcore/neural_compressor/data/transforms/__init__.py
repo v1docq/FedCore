@@ -30,7 +30,11 @@ from .transform import (
 from .transform import TFSquadV1PostTransform, TFSquadV1ModelZooPostTransform
 from .coco_transform import ParseDecodeCocoTransform
 from .postprocess import Postprocess
-from .imagenet_transform import LabelShift, BilinearImagenetTransform, TensorflowResizeCropImagenetTransform
+from .imagenet_transform import (
+    LabelShift,
+    BilinearImagenetTransform,
+    TensorflowResizeCropImagenetTransform,
+)
 from .imagenet_transform import TensorflowShiftRescale
 from os.path import dirname, basename, isfile, join
 import glob

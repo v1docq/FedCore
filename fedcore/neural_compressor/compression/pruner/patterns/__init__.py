@@ -46,7 +46,9 @@ def get_pattern(config, modules, framework="pytorch"):
     Raises:
         AssertionError: Currently only support patterns which have been registered in PATTERNS.
     """
-    assert framework in FRAMEWORK.keys(), f"does not support {framework}, currently only support {FRAMEWORK.keys()}"
+    assert (
+        framework in FRAMEWORK.keys()
+    ), f"does not support {framework}, currently only support {FRAMEWORK.keys()}"
 
     name = config.pattern
     name = name.split("_")[-1]

@@ -17,9 +17,6 @@
 
 import json
 
-import tensorflow as tf
-from tensorflow import quantization
-from tensorflow.keras import activations, backend, constraints, initializers, regularizers
 from tensorflow.keras.layers import AveragePooling2D, MaxPooling2D
 
 
@@ -35,7 +32,11 @@ class QAvgPool2D(AveragePooling2D):
         **kwargs
     ):
         super(QAvgPool2D, self).__init__(
-            pool_size=pool_size, strides=strides, padding=padding, data_format=data_format, **kwargs
+            pool_size=pool_size,
+            strides=strides,
+            padding=padding,
+            data_format=data_format,
+            **kwargs
         )
         self.min_value = json.loads(min_value)
         self.max_value = json.loads(max_value)
@@ -53,7 +54,11 @@ class QMaxPool2D(MaxPooling2D):
         **kwargs
     ):
         super(QMaxPool2D, self).__init__(
-            pool_size=pool_size, strides=strides, padding=padding, data_format=data_format, **kwargs
+            pool_size=pool_size,
+            strides=strides,
+            padding=padding,
+            data_format=data_format,
+            **kwargs
         )
         self.min_value = json.loads(min_value)
         self.max_value = json.loads(max_value)

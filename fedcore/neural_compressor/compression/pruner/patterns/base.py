@@ -21,7 +21,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from ..utils import safe_get_data, safe_get_grad, safe_get_shape, tf, torch
+from ..utils import safe_get_data, safe_get_shape, tf, torch
 
 PATTERNS = {}
 
@@ -61,7 +61,9 @@ class ProgressivePatternUtils(object):
         Returns:
             Reshaped data.
         """
-        if len(data.shape) == 4:  ##TODO need to verify whether it's ok for transposed conv
+        if (
+            len(data.shape) == 4
+        ):  ##TODO need to verify whether it's ok for transposed conv
             data = data.permute(0, 2, 3, 1)  ##cout,k,k,cin
             data = data.reshape(data.shape[0], -1)
         return data
@@ -79,7 +81,9 @@ class ProgressivePatternUtils(object):
         if len(orig_shape) == 2:
             return data
         elif len(orig_shape) == 4:
-            data = data.reshape(orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1])
+            data = data.reshape(
+                orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1]
+            )
             data = data.permute(0, 3, 1, 2)
         elif len(orig_shape) == 3:
             data = data.reshape(orig_shape[0], orig_shape[2], orig_shape[1])
@@ -132,7 +136,9 @@ class ProgressivePatternUtils(object):
         return new_added_masks
 
     @staticmethod
-    def update_progressive_masks_global_scores(pre_masks, cur_masks, scores, progressive_step, progressive_configs):
+    def update_progressive_masks_global_scores(
+        pre_masks, cur_masks, scores, progressive_step, progressive_configs
+    ):
         """Generate the progressive masks.
 
         Args:
@@ -150,9 +156,15 @@ class ProgressivePatternUtils(object):
         progressive_steps = progressive_configs["progressive_steps"]
         progressive_masks = {}
         global_new_added_score_list = []
-        new_added_masks = ProgressivePatternUtils.update_new_added_masks(pre_masks, cur_masks)
-        new_added_masks_cnts = ProgressivePatternUtils.count_new_masked_cnts(new_added_masks)
-        kth_masked_position = (new_added_masks_cnts * progressive_step) // progressive_steps
+        new_added_masks = ProgressivePatternUtils.update_new_added_masks(
+            pre_masks, cur_masks
+        )
+        new_added_masks_cnts = ProgressivePatternUtils.count_new_masked_cnts(
+            new_added_masks
+        )
+        kth_masked_position = (
+            new_added_masks_cnts * progressive_step
+        ) // progressive_steps
         for key in scores.keys():
             # block_size = self.block_size[key]
             # mask_num_each_block = progressive_step * int((block_size[0] * block_size[1]) // progressive_steps)
@@ -169,7 +181,9 @@ class ProgressivePatternUtils(object):
         if global_new_added_scores.size()[0] == 0:
             # an empty tensor, at target sparsity is 0 situation
             return pre_masks
-        threshold, _ = torch.kthvalue(global_new_added_scores, kth_masked_position, dim=0)
+        threshold, _ = torch.kthvalue(
+            global_new_added_scores, kth_masked_position, dim=0
+        )
         for key in scores.keys():  # pragma: no cover
             new_added_mask = new_added_masks[key]
             score = scores[key]
@@ -177,7 +191,9 @@ class ProgressivePatternUtils(object):
             score_masked = (score * new_added_filter).abs()
             zero = torch.tensor([0.0]).to(score.device)
             one = torch.tensor([1.0]).to(score.device)
-            progressive_mask = (new_added_mask + torch.where(score_masked <= threshold, zero, one)) * pre_masks[key]
+            progressive_mask = (
+                new_added_mask + torch.where(score_masked <= threshold, zero, one)
+            ) * pre_masks[key]
             progressive_masks[key] = progressive_mask
         return progressive_masks
 
@@ -198,21 +214,29 @@ class ProgressivePatternUtils(object):
             A dict{"layer_name": Tensor} that stores the masks generated in progressive pruning.
         """
         # local is a speicial type of global, therefore we can call global to implement this
-        progressive_steps = progressive_configs["progressive_steps"]
+        progressive_configs["progressive_steps"]
         progressive_masks = {}
         for key in scores.keys():
             # for local use
             pre_masks_for_this = {key: pre_masks[key]}
             cur_masks_for_this = {key: cur_masks[key]}
             scores_for_this = {key: scores[key]}
-            progressive_masks_for_this = ProgressivePatternUtils.update_progressive_masks_global_scores(
-                pre_masks_for_this, cur_masks_for_this, scores_for_this, progressive_step, progressive_configs
+            progressive_masks_for_this = (
+                ProgressivePatternUtils.update_progressive_masks_global_scores(
+                    pre_masks_for_this,
+                    cur_masks_for_this,
+                    scores_for_this,
+                    progressive_step,
+                    progressive_configs,
+                )
             )
             progressive_masks.update(progressive_masks_for_this)
         return progressive_masks
 
     @staticmethod
-    def update_progressive_masks_scores_order(pre_masks, cur_masks, scores, progressive_step, progressive_configs):
+    def update_progressive_masks_scores_order(
+        pre_masks, cur_masks, scores, progressive_step, progressive_configs
+    ):
         """Generate the progressive masks.
 
         Args:
@@ -236,7 +260,12 @@ class ProgressivePatternUtils(object):
 
     @staticmethod
     def update_progressive_masks_linear_order(
-        pre_masks, cur_masks, scores, progressive_step, progressive_configs: dict, block_sizes: dict
+        pre_masks,
+        cur_masks,
+        scores,
+        progressive_step,
+        progressive_configs: dict,
+        block_sizes: dict,
     ):
         """Generate the progressive masks.
 
@@ -253,12 +282,16 @@ class ProgressivePatternUtils(object):
         """
         progressive_steps = progressive_configs["progressive_steps"]
         progressive_masks = {}
-        new_added_masks = ProgressivePatternUtils.update_new_added_masks(pre_masks, cur_masks)
+        new_added_masks = ProgressivePatternUtils.update_new_added_masks(
+            pre_masks, cur_masks
+        )
         for key in pre_masks.keys():
             block_size = block_sizes[key]
             new_added_mask = new_added_masks[key]
             # conv
-            new_added_mask = ProgressivePatternUtils._reshape_orig_to_2dims(new_added_mask)
+            new_added_mask = ProgressivePatternUtils._reshape_orig_to_2dims(
+                new_added_mask
+            )
             shape = new_added_mask.shape
             # progressive masks are generated in the direction of block's large dim.
             if block_size[0] >= block_size[1]:
@@ -284,7 +317,9 @@ class ProgressivePatternUtils(object):
                 new_added_mask_reshape = new_added_mask.reshape(new_shape)
                 new_added_mask_reshape[:, :, :, progressive_step:, :] = 1.0
             new_added_mask = new_added_mask_reshape.reshape(shape)
-            new_added_mask = ProgressivePatternUtils._reshape_2dims_to_orig(new_added_mask, pre_masks[key].shape)
+            new_added_mask = ProgressivePatternUtils._reshape_2dims_to_orig(
+                new_added_mask, pre_masks[key].shape
+            )
             progressive_masks[key] = pre_masks[key] * new_added_mask
         return progressive_masks
 
@@ -324,7 +359,10 @@ class BasePattern:
         self.max_sparsity_ratio_per_op = self.config["max_sparsity_ratio_per_op"]
         self.min_sparsity_ratio_per_op = self.config["min_sparsity_ratio_per_op"]
         self.target_sparsity_ratio = self.config["target_sparsity"]
-        self.block = bool("block" in self.config["pruning_type"] or "retrain" in self.config["pruning_type"])
+        self.block = bool(
+            "block" in self.config["pruning_type"]
+            or "retrain" in self.config["pruning_type"]
+        )
         # Not using deterministic_algorithms for all examples
 
     def get_masks(self, scores, target_sparsity_ratio, pre_masks):
@@ -395,7 +433,6 @@ class BasePattern:
 
     def check_layer_validity(self):
         """Check if a layer is valid for this block_size."""
-        pass
 
     def get_reduced_masks_from_data(self, data, key):
         """Obtain the unpruned weights and reshape according to the block_size."""
@@ -415,11 +452,15 @@ class BasePattern:
         Returns:
             An int representing the number of weights left to be pruned to reach the target sparsity ratio.
         """
-        self.total_params_cnt = self.get_sparsity_ratio(masks, return_dict=True)["total_cnt"]
+        self.total_params_cnt = self.get_sparsity_ratio(masks, return_dict=True)[
+            "total_cnt"
+        ]
         to_prune_cnt = int(self.total_params_cnt * target_sparsity_ratio)
         for key in masks.keys():
             if self.keep_mask_layers.get(key, False):
-                zero_cnt = self.get_sparsity_ratio({key: masks[key]}, return_dict=True)["zero_cnt"]
+                zero_cnt = self.get_sparsity_ratio({key: masks[key]}, return_dict=True)[
+                    "zero_cnt"
+                ]
                 to_prune_cnt -= zero_cnt
 
         return to_prune_cnt
@@ -480,7 +521,9 @@ class BasePattern:
             info = infos[key]
             if key == layer_name:
                 info = SparsityInfo(
-                    zero_cnt=adjust_zero_cnt, total_cnt=adjust_total_cnt, sparsity_ratio=adjust_sparsity_ratio
+                    zero_cnt=adjust_zero_cnt,
+                    total_cnt=adjust_total_cnt,
+                    sparsity_ratio=adjust_sparsity_ratio,
                 )
             if info.sparsity_ratio < min_sparsity_ratio:
                 zero_cnt_below_min_sparsity += info.zero_cnt
@@ -488,7 +531,10 @@ class BasePattern:
             else:
                 zero_cnt_above_min_sparsity += info.zero_cnt
 
-        gap_cnt = int(total_cnt_below_min_sparsity * min_sparsity_ratio) - zero_cnt_below_min_sparsity
+        gap_cnt = (
+            int(total_cnt_below_min_sparsity * min_sparsity_ratio)
+            - zero_cnt_below_min_sparsity
+        )
         remaining_cnt = (
             int(net_info.total_cnt * final_target_sparsity_ratio)
             - zero_cnt_above_min_sparsity
@@ -572,7 +618,11 @@ class PytorchBasePattern(BasePattern):
             total_cnt += pre_mask.numel()  # FIXME
 
         if return_dict:
-            return {"sparsity_ratio": float(zero_cnt) / total_cnt, "zero_cnt": zero_cnt, "total_cnt": total_cnt}
+            return {
+                "sparsity_ratio": float(zero_cnt) / total_cnt,
+                "zero_cnt": zero_cnt,
+                "total_cnt": total_cnt,
+            }
         else:
             return float(zero_cnt) / total_cnt
 
@@ -638,7 +688,11 @@ class PytorchBasePattern(BasePattern):
         for key in masks.keys():
             if key in self.invalid_layers:
                 continue
-            reduced_mask = masks[key] if self.block else self.get_reduced_masks_from_data(masks[key], key)
+            reduced_mask = (
+                masks[key]
+                if self.block
+                else self.get_reduced_masks_from_data(masks[key], key)
+            )
 
             zero_cnt = int(torch.sum(reduced_mask == 0.0).data.item())
             total_cnt = int(reduced_mask.numel())
@@ -716,7 +770,11 @@ class KerasBasePattern(BasePattern):
                 continue
             if not isinstance(masks[key], np.ndarray):
                 masks[key] = masks[key].numpy()
-            reduced_mask = masks[key] if self.block else self.get_reduced_masks_from_data(masks[key], key)
+            reduced_mask = (
+                masks[key]
+                if self.block
+                else self.get_reduced_masks_from_data(masks[key], key)
+            )
             zero_cnt = int(np.sum(reduced_mask == 0.0))
             total_cnt = int(reduced_mask.size)
             sparsity_ratio = float(zero_cnt) / total_cnt

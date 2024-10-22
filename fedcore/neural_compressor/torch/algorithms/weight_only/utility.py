@@ -68,8 +68,40 @@ NF4 = [
     0.7229568362236023,
     1.0,
 ]
-FP4_BNB = [-12.0, -8.0, -6.0, -4.0, -3.0, -2.0, -0.0625, 0, 0.0625, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0]
-FP4_E2M1 = [-6.0, -4.0, -3.0, -2.0, -1.5, -1.0, -0.0625, 0, 0.0625, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0]
+FP4_BNB = [
+    -12.0,
+    -8.0,
+    -6.0,
+    -4.0,
+    -3.0,
+    -2.0,
+    -0.0625,
+    0,
+    0.0625,
+    2.0,
+    3.0,
+    4.0,
+    6.0,
+    8.0,
+    12.0,
+]
+FP4_E2M1 = [
+    -6.0,
+    -4.0,
+    -3.0,
+    -2.0,
+    -1.5,
+    -1.0,
+    -0.0625,
+    0,
+    0.0625,
+    1.0,
+    1.5,
+    2.0,
+    3.0,
+    4.0,
+    6.0,
+]
 
 # the order is the same as float list, bit value range is [-7, 7]
 # 1111 = -1, 1110 = -2, 1101= -3, ...
@@ -78,8 +110,18 @@ NF4_BIT = [7, 1, 2, 3, 4, 5, 6, 0, -8, -7, -6, -5, -4, -3, -2, -1]
 FP4_BNB_BIT = [-5, -6, -3, -4, -1, -2, -7, 0, 1, 6, 7, 4, 5, 2, 3]
 FP4_E2M1_BIT = [-1, -2, -3, -4, -5, -6, -7, 0, 1, 2, 3, 4, 5, 6, 7]
 
-FLOAT_MAPPING = {"nf4": NF4, "fp4": FP4_BNB, "fp4_e2m1_bnb": FP4_BNB, "fp4_e2m1": FP4_E2M1}
-INT_MAPPING = {"nf4": NF4_BIT, "fp4": FP4_BNB_BIT, "fp4_e2m1_bnb": FP4_BNB_BIT, "fp4_e2m1": FP4_E2M1_BIT}
+FLOAT_MAPPING = {
+    "nf4": NF4,
+    "fp4": FP4_BNB,
+    "fp4_e2m1_bnb": FP4_BNB,
+    "fp4_e2m1": FP4_E2M1,
+}
+INT_MAPPING = {
+    "nf4": NF4_BIT,
+    "fp4": FP4_BNB_BIT,
+    "fp4_e2m1_bnb": FP4_BNB_BIT,
+    "fp4_e2m1": FP4_E2M1_BIT,
+}
 
 
 def quantize_4bit(tensor, quantile=1.0, dtype="nf4", return_int=False, **kwargs):
@@ -104,16 +146,22 @@ def quantize_4bit(tensor, quantile=1.0, dtype="nf4", return_int=False, **kwargs)
         scale = tensor.abs().max(1)[0] * quantile / max(allow_data)
         scale.unsqueeze_(dim=-1)
     tensor.div_(scale)
-    mid_data = [(allow_data[i] + allow_data[i + 1]) / 2 for i in range(len(allow_data) - 1)]
+    mid_data = [
+        (allow_data[i] + allow_data[i + 1]) / 2 for i in range(len(allow_data) - 1)
+    ]
     q_tensor = torch.zeros_like(tensor)
     for i in range(len(allow_data)):
-        data = allow_data_bit[i] if return_int or "cast_int" in kwargs else allow_data[i]
+        data = (
+            allow_data_bit[i] if return_int or "cast_int" in kwargs else allow_data[i]
+        )
         if i == 0:
             q_tensor += torch.where(tensor <= mid_data[i], data, 0)
         elif i == len(allow_data) - 1:
             q_tensor += torch.where(tensor > mid_data[i - 1], data, 0)
         else:
-            q_tensor += torch.where((mid_data[i - 1] < tensor) & (tensor <= mid_data[i]), data, 0)
+            q_tensor += torch.where(
+                (mid_data[i - 1] < tensor) & (tensor <= mid_data[i]), data, 0
+            )
     tensor.copy_(q_tensor)
     keep_scale = kwargs.get("double_quant", False)
     if return_int or keep_scale:
@@ -158,7 +206,9 @@ def qdq_weight_asym(weight, bits=4, quantile=1.0, return_int=False, **kwargs):
     return weight.mul_(scale)
 
 
-def qdq_weight_sym(weight, bits=4, quantile=1.0, return_int=False, full_range=False, **kwargs):
+def qdq_weight_sym(
+    weight, bits=4, quantile=1.0, return_int=False, full_range=False, **kwargs
+):
     """Quant and dequant tensor with sym schema.
 
     Args:
@@ -206,7 +256,16 @@ def qdq_weight_sym(weight, bits=4, quantile=1.0, return_int=False, full_range=Fa
     return weight.mul_(scale)
 
 
-def qdq_weight_actor(weight, bits, scheme, quantile=1.0, dtype="int", return_int=False, full_range=False, **kwargs):
+def qdq_weight_actor(
+    weight,
+    bits,
+    scheme,
+    quantile=1.0,
+    dtype="int",
+    return_int=False,
+    full_range=False,
+    **kwargs,
+):
     """Quant and dequant tensor per channel. It is an in-place op.
 
     Args:
@@ -224,7 +283,9 @@ def qdq_weight_actor(weight, bits, scheme, quantile=1.0, dtype="int", return_int
     assert bits > 0, "bits should be larger than 0"
 
     if dtype in FLOAT_MAPPING.keys():
-        return quantize_4bit(weight, quantile=quantile, dtype=dtype, return_int=return_int, **kwargs)
+        return quantize_4bit(
+            weight, quantile=quantile, dtype=dtype, return_int=return_int, **kwargs
+        )
     if scheme == "sym":
         return qdq_weight_sym(weight, bits, quantile, return_int, full_range, **kwargs)
     else:
@@ -368,7 +429,9 @@ def quant_tensor(
         else:
             if weight.shape[1] % group_size != 0:
                 if zp is not None:
-                    weight1 = weight1.reshape(-1, group_size).sub_(zp[:, :-1].reshape(-1, 1))
+                    weight1 = weight1.reshape(-1, group_size).sub_(
+                        zp[:, :-1].reshape(-1, 1)
+                    )
                     weight2 = weight2.sub_(zp[:, -1].reshape(-1, 1))
                 else:
                     weight1 = weight1.reshape(-1, group_size)
@@ -388,7 +451,9 @@ def quant_tensor(
         return q_state
 
 
-def search_clip(m, bits=4, group_size=32, scheme="asym", dtype="int", enable_full_range=False):
+def search_clip(
+    m, bits=4, group_size=32, scheme="asym", dtype="int", enable_full_range=False
+):
     """Search best clip range of each linear in current block. It's not an in-place function.
 
     Args:
@@ -453,7 +518,11 @@ def quant_weight_w_scale(weight, scale, zp=None, group_size=-1, dtype="int"):
     if group_size == -1:
         if dtype in FLOAT_MAPPING.keys():  # NF4 FP4
             return quantize_4bit(weight, scale=scale, dtype=dtype, return_int=True)[0]
-        return weight.div_(scale).round_() if zp is None else weight.div_(scale).add_(zp).round_()
+        return (
+            weight.div_(scale).round_()
+            if zp is None
+            else weight.div_(scale).add_(zp).round_()
+        )
     int_weight = torch.zeros(weight.shape).to(device)
     leng = weight.shape[1] // group_size
     tail_flag = False if weight.shape[1] % group_size == 0 else True
@@ -461,19 +530,35 @@ def quant_weight_w_scale(weight, scale, zp=None, group_size=-1, dtype="int"):
     for i in range(leng):
         if dtype in FLOAT_MAPPING.keys():  # NF4 FP4
             int_weight_tmp = weight[:, i * group_size : (i + 1) * group_size]
-            quantize_4bit(int_weight_tmp, scale=scale[:, i].unsqueeze(1), dtype=dtype, return_int=True)[0]
+            quantize_4bit(
+                int_weight_tmp,
+                scale=scale[:, i].unsqueeze(1),
+                dtype=dtype,
+                return_int=True,
+            )[0]
         else:
-            int_weight_tmp = weight[:, i * group_size : (i + 1) * group_size].div_(scale[:, i].unsqueeze(1))
+            int_weight_tmp = weight[:, i * group_size : (i + 1) * group_size].div_(
+                scale[:, i].unsqueeze(1)
+            )
             if zp is not None:
                 int_weight_tmp.add_(zp[:, i].unsqueeze(1))
-            int_weight[:, i * group_size : (i + 1) * group_size].copy_(int_weight_tmp.round_())
+            int_weight[:, i * group_size : (i + 1) * group_size].copy_(
+                int_weight_tmp.round_()
+            )
     # tail_flag
     if tail_flag:
         if dtype in FLOAT_MAPPING.keys():  # NF4 FP4
             int_weight_tmp = weight[:, leng * group_size :]
-            quantize_4bit(int_weight_tmp, scale=scale[:, -1].unsqueeze(1), dtype=dtype, return_int=True)[0]
+            quantize_4bit(
+                int_weight_tmp,
+                scale=scale[:, -1].unsqueeze(1),
+                dtype=dtype,
+                return_int=True,
+            )[0]
         else:
-            int_weight_tmp = weight[:, leng * group_size :].div_(scale[:, -1].unsqueeze(1))
+            int_weight_tmp = weight[:, leng * group_size :].div_(
+                scale[:, -1].unsqueeze(1)
+            )
             if zp is not None:
                 int_weight_tmp.add_(zp[:, -1].unsqueeze(1))
             int_weight[:, leng * group_size :].copy_(int_weight_tmp.round_())
@@ -556,7 +641,9 @@ def set_module(model, key, new_module):
     for name in name_list[:-1]:
         if hasattr(module, name):
             module = getattr(module, name)
-        elif hasattr(module, ("sq_linear")):  # for peft models that Linears are contained in Linear
+        elif hasattr(
+            module, ("sq_linear")
+        ):  # for peft models that Linears are contained in Linear
             module = getattr(module, "sq_linear")
             module = getattr(module, name)
         elif hasattr(module, ("orig_layer")):  # for peft models and auto alpha
@@ -567,7 +654,9 @@ def set_module(model, key, new_module):
 
     if hasattr(module, "sq_linear") and name_list[-1] != "sq_linear":  # for peft models
         module = getattr(module, "sq_linear")
-    if hasattr(module, "orig_layer") and name_list[-1] != "orig_layer":  # for peft models and auto alpha
+    if (
+        hasattr(module, "orig_layer") and name_list[-1] != "orig_layer"
+    ):  # for peft models and auto alpha
         module = getattr(module, "orig_layer")
     setattr(module, name_list[-1], new_module)
 
@@ -594,7 +683,9 @@ def fetch_module(model, op_name):
 
 
 # copy from fedcore.neural_compressor/adaptor/torch_utils/util.py
-def get_absorb_layers(model, example_inputs, supported_layers=["Linear"], folding=False):
+def get_absorb_layers(
+    model, example_inputs, supported_layers=["Linear"], folding=False
+):
     """Get absorb_to_layer and no_absorb_layer.
 
     Args:
@@ -611,7 +702,9 @@ def get_absorb_layers(model, example_inputs, supported_layers=["Linear"], foldin
     # from .smooth_quant import GraphTrace, move GraphTrace into this file
 
     tg = GraphTrace()
-    absorb_to_layer, no_absorb_layers = tg.get_absorb_to_layer(model, example_inputs, supported_layers)
+    absorb_to_layer, no_absorb_layers = tg.get_absorb_to_layer(
+        model, example_inputs, supported_layers
+    )
     if absorb_to_layer is None or absorb_to_layer == {}:
         absorb_to_layer = {}
         logger.warning("No absorb layer is detected.")
@@ -683,7 +776,12 @@ class GraphTrace:
 
         ##TODO potential bug, need to check only have one bug
         ##TODO, must satisfy af(x)=f(ax),current skip layer may be incomplete
-        self.skip_ops_to_find_absorb = ["aten::to", "aten::relu", "aten::leaky_relu", "aten::hardtanh"]
+        self.skip_ops_to_find_absorb = [
+            "aten::to",
+            "aten::relu",
+            "aten::leaky_relu",
+            "aten::hardtanh",
+        ]
 
         self.could_absorb_layers = [
             "aten::layer_norm",
@@ -706,23 +804,36 @@ class GraphTrace:
             try:
                 # pylint: disable=E1123, E1120
                 traced_model = torch.jit.trace(
-                    model, example_kwarg_inputs=dict(dummy_input), strict=False, check_trace=False
+                    model,
+                    example_kwarg_inputs=dict(dummy_input),
+                    strict=False,
+                    check_trace=False,
                 )
-                traced_model = torch.jit.freeze(traced_model.eval(), optimize_numerics=optimize_numerics)
+                traced_model = torch.jit.freeze(
+                    traced_model.eval(), optimize_numerics=optimize_numerics
+                )
             except Exception as e:
                 logger.warning(e)
-                logger.warning("Jit trace in GraphTrace failed, absorb layer detection is skipped")
+                logger.warning(
+                    "Jit trace in GraphTrace failed, absorb layer detection is skipped"
+                )
         else:
             try:
                 traced_model = torch.jit.trace(model, dummy_input, strict=False)
-                traced_model = torch.jit.freeze(traced_model.eval(), optimize_numerics=optimize_numerics)
+                traced_model = torch.jit.freeze(
+                    traced_model.eval(), optimize_numerics=optimize_numerics
+                )
             except:
                 try:
                     traced_model = torch.jit.trace(model, dummy_input[0], strict=False)
-                    traced_model = torch.jit.freeze(traced_model.eval(), optimize_numerics=optimize_numerics)
+                    traced_model = torch.jit.freeze(
+                        traced_model.eval(), optimize_numerics=optimize_numerics
+                    )
                 except Exception as e:
                     logger.warning(e)
-                    logger.warning("Jit trace in GraphTrace failed, absorb layer detection is skipped")
+                    logger.warning(
+                        "Jit trace in GraphTrace failed, absorb layer detection is skipped"
+                    )
         model = model.to(orig_device)
         return traced_model
 
@@ -754,11 +865,17 @@ class GraphTrace:
                     parent_out_kinds = set(parent_out_kinds)
                     parent_out_kinds.discard("aten::size")
 
-                    if parent_out_kinds == parent_out_kinds.intersection(self.could_absorb_layers):
+                    if parent_out_kinds == parent_out_kinds.intersection(
+                        self.could_absorb_layers
+                    ):
                         prev_absorb_layer.append(parent)
                     elif parent_out_kinds.intersection(self.skip_ops_to_find_absorb):
                         res = self.skip_op_absorb_helper(parent)
-                        prev_absorb_layer.append(parent) if res else prev_absorb_layer.append(None)
+                        (
+                            prev_absorb_layer.append(parent)
+                            if res
+                            else prev_absorb_layer.append(None)
+                        )
                     else:  # When parent to multiple ops, sq transformation could be wrong.
                         prev_absorb_layer.append(None)
                 else:
@@ -800,13 +917,18 @@ class GraphTrace:
         if not isinstance(module, torch.nn.Conv2d):
             return True
         if module.groups > 1:
-            if module.in_channels == module.out_channels and module.groups == module.in_channels:
+            if (
+                module.in_channels == module.out_channels
+                and module.groups == module.in_channels
+            ):
                 return True
             else:
                 return False
         return True
 
-    def get_absorb_to_layer(self, model, example_input, op_types, skip_unsupported_layers=True):
+    def get_absorb_to_layer(
+        self, model, example_input, op_types, skip_unsupported_layers=True
+    ):
         traced_model = self.trace(model, example_input)
         if traced_model is None:
             return None, None
@@ -819,7 +941,9 @@ class GraphTrace:
         no_absorb_layers = []
         for index, absorb in enumerate(nodes_prev_absorb):
             if absorb is None:
-                no_absorb_layers.append(".".join(nodes[index].scopeName().split("/")[-1].split(".")[1:]))
+                no_absorb_layers.append(
+                    ".".join(nodes[index].scopeName().split("/")[-1].split(".")[1:])
+                )
                 continue
             node = nodes[index]
             layer_name = ".".join(node.scopeName().split("/")[-1].split(".")[1:])
@@ -831,7 +955,9 @@ class GraphTrace:
             else:
                 absorb_to_layer[absorb_name] = [layer_name]
         if skip_unsupported_layers:
-            absorb_to_layer = self.remove_unsupported_layers(model, absorb_to_layer, no_absorb_layers)
+            absorb_to_layer = self.remove_unsupported_layers(
+                model, absorb_to_layer, no_absorb_layers
+            )
         return absorb_to_layer, no_absorb_layers
 
     def remove_unsupported_layers(self, model, absorb_to_layer, no_absorb_layers):
@@ -846,7 +972,9 @@ class GraphTrace:
             for layer_name in absorb_to_layer[key]:
                 layer = get_module(model, layer_name)
                 layer_type = layer.__class__.__name__
-                if (layer_type not in self.supported_torch_module_to_aten.keys()) or not self._check_valid_conv(layer):
+                if (
+                    layer_type not in self.supported_torch_module_to_aten.keys()
+                ) or not self._check_valid_conv(layer):
                     supported = False
                     no_absorb_layers.extend(absorb_to_layer[key])
                     break
@@ -949,7 +1077,9 @@ def get_hidden_states(model, dataloader=None, n_samples=128, calib_func=None):
     model.forward = partial(model_forward, model)
 
     # Step 3: execute calibration
-    calibration(model, dataloader=dataloader, n_samples=n_samples, calib_func=calib_func)
+    calibration(
+        model, dataloader=dataloader, n_samples=n_samples, calib_func=calib_func
+    )
     logger.info("The hidden_states collection is done.")
 
     # Step 4: recover model and block forward
@@ -989,7 +1119,13 @@ def calibration(model, dataloader=None, n_samples=128, calib_func=None):
 
 # copy from fedcore.neural_compressor/adaptor/torch_utils/util.py
 def get_module_input_output(
-    model, module_hook_config={}, dataloader=None, iters=-1, calib_func=None, input_func=None, output_func=None
+    model,
+    module_hook_config={},
+    dataloader=None,
+    iters=-1,
+    calib_func=None,
+    input_func=None,
+    output_func=None,
 ):
     """A help function to get input and output tensor of modules in module_name_list.
 

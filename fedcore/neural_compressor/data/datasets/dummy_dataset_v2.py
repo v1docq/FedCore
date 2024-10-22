@@ -45,7 +45,14 @@ class DummyDataset(IterableDataset):  # pragma: no cover
     """
 
     def __init__(
-        self, input_shape, label_shape=None, low=-128.0, high=127.0, dtype="float32", transform=None, filter=None
+        self,
+        input_shape,
+        label_shape=None,
+        low=-128.0,
+        high=127.0,
+        dtype="float32",
+        transform=None,
+        filter=None,
     ):
         """Initialize `DummyDataset` class.
 
@@ -129,7 +136,9 @@ class DummyDataset(IterableDataset):  # pragma: no cover
         while True:
             input_data = []
             for idx in range(0, self.input_dim):
-                tensor = np.random.uniform(low=self.low[idx], high=self.high[idx], size=self.input_shape[idx])
+                tensor = np.random.uniform(
+                    low=self.low[idx], high=self.high[idx], size=self.input_shape[idx]
+                )
                 tensor = tensor.astype(self.dtype_map[self.dtype[idx]])
                 input_data.append(tensor)
 
@@ -137,7 +146,9 @@ class DummyDataset(IterableDataset):  # pragma: no cover
             for idx in range(0, self.label_dim):
                 shift_idx = self.input_dim + idx
                 tensor = np.random.uniform(
-                    low=self.low[shift_idx], high=self.high[shift_idx], size=self.label_shape[idx]
+                    low=self.low[shift_idx],
+                    high=self.high[shift_idx],
+                    size=self.label_shape[idx],
                 )
                 tensor = tensor.astype(self.dtype_map[self.dtype[shift_idx]])
                 label.append(tensor)
@@ -232,7 +243,9 @@ class SparseDummyDataset(IterableDataset):  # pragma: no cover
         else:
             if isinstance(label_shape, tuple):
                 self.label_shape = [label_shape]
-            if len(self.label_shape) == 1 and len(self.label_shape) != len(self.dense_shape):
+            if len(self.label_shape) == 1 and len(self.label_shape) != len(
+                self.dense_shape
+            ):
                 self.label_shape = len(self.dense_shape) * self.label_shape
             assert len(self.label_shape) == len(
                 self.dense_shape
@@ -247,8 +260,12 @@ class SparseDummyDataset(IterableDataset):  # pragma: no cover
                 isinstance(elem, float) for elem in sparse_ratio
             ), "sparse_ratio list length should same with input_dim"
         else:
-            self.sparse_ratio = (sparse_ratio * np.ones(self.input_dim)).astype(np.float32)
-        assert all([0 <= i <= 1 for i in self.sparse_ratio]), "sparse_ratio should be in [0,1]"
+            self.sparse_ratio = (sparse_ratio * np.ones(self.input_dim)).astype(
+                np.float32
+            )
+        assert all(
+            [0 <= i <= 1 for i in self.sparse_ratio]
+        ), "sparse_ratio should be in [0,1]"
 
         if isinstance(high, list):
             assert len(high) == self.total_dim and all(
@@ -276,25 +293,36 @@ class SparseDummyDataset(IterableDataset):  # pragma: no cover
         while True:
             input_data = []
             for idx, shape in enumerate(self.dense_shape):
-                dim = len(shape)
+                len(shape)
                 total = reduce(lambda x, y: x * y, shape)
                 sparse_num = round(total * (1 - self.sparse_ratio[idx]))
-                val = np.random.uniform(low=self.low[idx], high=self.high[idx], size=sparse_num)
+                val = np.random.uniform(
+                    low=self.low[idx], high=self.high[idx], size=sparse_num
+                )
                 val = val.astype(self.dtype_map[self.dtype[idx]])
                 nums = np.arange(sparse_num)
                 indices = []
-                dim_shape = [reduce(lambda x, y: x * y, shape[i:]) / shape[i] for i in range(len(shape))]
+                dim_shape = [
+                    reduce(lambda x, y: x * y, shape[i:]) / shape[i]
+                    for i in range(len(shape))
+                ]
                 for num in nums:
                     indice = []
                     for item in dim_shape:
                         indice.append(num // item)
-                        num = num - indice[-1] * item if num - indice[-1] * item > 0 else num
+                        num = (
+                            num - indice[-1] * item
+                            if num - indice[-1] * item > 0
+                            else num
+                        )
                     indices.append(indice)
 
                 if self.label_dim > 0:
                     shift_idx = self.input_dim + idx
                     tensor = np.random.uniform(
-                        low=self.low[shift_idx], high=self.high[shift_idx], size=self.label_shape[idx]
+                        low=self.low[shift_idx],
+                        high=self.high[shift_idx],
+                        size=self.label_shape[idx],
                     )
                     tensor = tensor.astype(self.dtype_map[self.dtype[shift_idx]])
                     input_data.append([(np.array(indices), val), tensor])

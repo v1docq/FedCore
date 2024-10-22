@@ -102,14 +102,18 @@ class ConservativeTuneStrategy(TuneStrategy):
             tune_config (dict): It's a dict containing the tuning configuration to run.
         """
         tuning_space = self.tuning_space
-        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         calib_sampling_size = calib_sampling_size_lst[0]
         op_item_dtype_dict, quant_mode_wise_items, tune_cfg = self.initialize_tune_cfg()
         tune_cfg["calib_sampling_size"] = calib_sampling_size
         op_type_priority = self._get_op_type_priority()
         quant_items_pool = self._quant_items_pool(op_type_priority)
         self.re_quant = True
-        logger.info("*** Try to convert op into lower precision to improve performance.")
+        logger.info(
+            "*** Try to convert op into lower precision to improve performance."
+        )
         for dtype, op_items in quant_items_pool.items():
             logger.info(f"*** Start to convert op into {dtype}.")
             for op_type, items_lst in op_items.items():
@@ -122,12 +126,16 @@ class ConservativeTuneStrategy(TuneStrategy):
                 yield tmp_tune_cfg
                 if self.objectives.accuracy_meets():
                     self.quant_status[op_type] = dtype
-                    logger.info(f"*** Convert all {op_type} ops to {dtype} and accuracy still meet the requirements")
+                    logger.info(
+                        f"*** Convert all {op_type} ops to {dtype} and accuracy still meet the requirements"
+                    )
                     tune_cfg = deepcopy(tmp_tune_cfg)
                 else:
                     # tmp_tune_cfg = deepcopy(tune_cfg)
                     self.quant_status[op_type] = "fp32"
-                    logger.info(f"*** Convert all {op_type} ops to {dtype} but accuracy not meet the requirements")
+                    logger.info(
+                        f"*** Convert all {op_type} ops to {dtype} but accuracy not meet the requirements"
+                    )
                 logger.info(f"***Current result {self.quant_status.items()}")
         logger.info("*** Ending tuning process due to no quantifiable op left.")
         self.re_quant = False
@@ -137,7 +145,9 @@ class ConservativeTuneStrategy(TuneStrategy):
         op_type_priority = list(optypewise_cap.keys())
         return op_type_priority
 
-    def _sorted_item_by_op_type(self, items_lst, op_type_priority: List[str]) -> OrderedDict[str, List]:
+    def _sorted_item_by_op_type(
+        self, items_lst, op_type_priority: List[str]
+    ) -> OrderedDict[str, List]:
         """Scoring the tuning items according to its op type.
 
         Args:
@@ -158,9 +168,13 @@ class ConservativeTuneStrategy(TuneStrategy):
             for target_op_type in self.quant_op_type_lst:
                 # conv: conv1d, conv2d, conv3d
                 if op_type.lower().startswith(target_op_type):
-                    sorted_items.setdefault(target_op_type, []).append((op_item, quant_mode))
+                    sorted_items.setdefault(target_op_type, []).append(
+                        (op_item, quant_mode)
+                    )
         new_sorted_items = COrderedDict(
-            (op_type, sorted_items[op_type]) for op_type in self.quant_op_type_lst if op_type in sorted_items
+            (op_type, sorted_items[op_type])
+            for op_type in self.quant_op_type_lst
+            if op_type in sorted_items
         )
         return new_sorted_items
 
@@ -227,8 +241,16 @@ class ConservativeTuneStrategy(TuneStrategy):
         for quant_mode, items_lst in quant_mode_wise_items.items():
             if "static" in quant_mode or "dynamic" in quant_mode:
                 _quant_mode = "static" if "static" in quant_mode else "dynamic"
-                op_item_pairs += [(item, _quant_mode) for item in items_lst if item.name not in quant_ops_name_set]
-                quant_ops_name_set = quant_ops_name_set.union([item.name for item in items_lst])
-                op_item_pairs = self._sorted_item_by_op_type(op_item_pairs, op_type_priority)
+                op_item_pairs += [
+                    (item, _quant_mode)
+                    for item in items_lst
+                    if item.name not in quant_ops_name_set
+                ]
+                quant_ops_name_set = quant_ops_name_set.union(
+                    [item.name for item in items_lst]
+                )
+                op_item_pairs = self._sorted_item_by_op_type(
+                    op_item_pairs, op_type_priority
+                )
                 quant_items_pool["int8"] = op_item_pairs
         return quant_items_pool

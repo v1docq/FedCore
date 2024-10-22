@@ -44,7 +44,9 @@ class GraphTransformBase(object):
                 with gfile.Open(input_pb, "rb") as f:
                     self.input_graph.ParseFromString(f.read())
             except Exception as e:
-                logger.error("Fail to read input pb from {} due to {}.".format(input_pb, str(e)))
+                logger.error(
+                    "Fail to read input pb from {} due to {}.".format(input_pb, str(e))
+                )
 
         self.node_mapping = {}
         self.node_name_list = []
@@ -108,4 +110,3 @@ class GraphTransformBase(object):
 
         Each transformation should implement it.
         """
-        pass

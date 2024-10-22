@@ -37,7 +37,10 @@ from .objective import MultiObjective
 from .profiling.parser.parser import ProfilingParser
 from .profiling.profiler.profiler import Profiler
 from .utils import OPTIONS, alias_param, logger
-from .utils.neural_insights_utils import register_neural_insights_workload, update_neural_insights_workload
+from .utils.neural_insights_utils import (
+    register_neural_insights_workload,
+    update_neural_insights_workload,
+)
 from .utils.utility import GLOBAL_STATE, MODE, Statistics, dump_table, print_table
 
 
@@ -65,7 +68,9 @@ def set_all_env_var(conf, overwrite_existing=False):
             conf.cores_per_instance * conf.num_of_instance <= cpu_counts
         ), "num_of_instance * cores_per_instance should <= cpu physical cores"
     else:
-        assert conf.num_of_instance <= cpu_counts, "num_of_instance should <= cpu counts"
+        assert (
+            conf.num_of_instance <= cpu_counts
+        ), "num_of_instance should <= cpu counts"
         conf.cores_per_instance = int(cpu_counts / conf.num_of_instance)
     for var, value in dict(conf).items():
         set_env_var(var.upper(), value, overwrite_existing)
@@ -74,8 +79,12 @@ def set_all_env_var(conf, overwrite_existing=False):
 def get_architecture():
     """Get the architecture name of the system."""
     p1 = subprocess.Popen("lscpu", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "Architecture"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p3 = subprocess.Popen(["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(
+        ["grep", "Architecture"], stdin=p1.stdout, stdout=subprocess.PIPE
+    )
+    p3 = subprocess.Popen(
+        ["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE
+    )
     res = None
     for line in iter(p3.stdout.readline, b""):
         res = line.decode("utf-8").strip()
@@ -85,8 +94,12 @@ def get_architecture():
 def get_threads_per_core():
     """Get the threads per core."""
     p1 = subprocess.Popen("lscpu", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "Thread(s) per core"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p3 = subprocess.Popen(["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(
+        ["grep", "Thread(s) per core"], stdin=p1.stdout, stdout=subprocess.PIPE
+    )
+    p3 = subprocess.Popen(
+        ["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE
+    )
     res = None
     for line in iter(p3.stdout.readline, b""):
         res = line.decode("utf-8").strip()
@@ -95,9 +108,15 @@ def get_threads_per_core():
 
 def get_threads():
     """Get the list of threads."""
-    p1 = subprocess.Popen(["cat", "/proc/cpuinfo"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "processor"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p3 = subprocess.Popen(["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p1 = subprocess.Popen(
+        ["cat", "/proc/cpuinfo"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+    p2 = subprocess.Popen(
+        ["grep", "processor"], stdin=p1.stdout, stdout=subprocess.PIPE
+    )
+    p3 = subprocess.Popen(
+        ["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE
+    )
     res = []
     for line in iter(p3.stdout.readline, b""):
         res.append(line.decode("utf-8").strip())
@@ -106,9 +125,15 @@ def get_threads():
 
 def get_physical_ids():
     """Get the list of sockets."""
-    p1 = subprocess.Popen(["cat", "/proc/cpuinfo"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(["grep", "physical id"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p3 = subprocess.Popen(["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p1 = subprocess.Popen(
+        ["cat", "/proc/cpuinfo"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+    p2 = subprocess.Popen(
+        ["grep", "physical id"], stdin=p1.stdout, stdout=subprocess.PIPE
+    )
+    p3 = subprocess.Popen(
+        ["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE
+    )
     res = []
     for line in iter(p3.stdout.readline, b""):
         res.append(line.decode("utf-8").strip())
@@ -117,9 +142,13 @@ def get_physical_ids():
 
 def get_core_ids():
     """Get the ids list of the cores."""
-    p1 = subprocess.Popen(["cat", "/proc/cpuinfo"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p1 = subprocess.Popen(
+        ["cat", "/proc/cpuinfo"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
     p2 = subprocess.Popen(["grep", "core id"], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p3 = subprocess.Popen(["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p3 = subprocess.Popen(
+        ["cut", "-d", ":", "-f2"], stdin=p2.stdout, stdout=subprocess.PIPE
+    )
     res = []
     for line in iter(p3.stdout.readline, b""):
         res.append(line.decode("utf-8").strip())
@@ -163,7 +192,12 @@ def run_instance(model, conf, b_dataloader=None, b_func=None):
         framework = conf.framework.lower()
         if "tensorflow" in framework:
             framework_specific_info.update(
-                {"inputs": conf.inputs, "outputs": conf.outputs, "recipes": {}, "workspace_path": options.workspace}
+                {
+                    "inputs": conf.inputs,
+                    "outputs": conf.outputs,
+                    "recipes": {},
+                    "workspace_path": options.workspace,
+                }
             )
         if framework == "keras":
             framework_specific_info.update({"workspace_path": options.workspace})
@@ -171,20 +205,35 @@ def run_instance(model, conf, b_dataloader=None, b_func=None):
             framework_specific_info.update({"b_dataloader": b_dataloader})
         if "onnx" in framework:
             framework_specific_info.update(
-                {"workspace_path": options.workspace, "graph_optimization": OPTIONS[framework].graph_optimization}
+                {
+                    "workspace_path": options.workspace,
+                    "graph_optimization": OPTIONS[framework].graph_optimization,
+                }
             )
-        if framework == "pytorch_ipex" or framework == "pytorch" or framework == "pytorch_fx":
-            framework_specific_info.update({"workspace_path": options.workspace, "q_dataloader": None})
+        if (
+            framework == "pytorch_ipex"
+            or framework == "pytorch"
+            or framework == "pytorch_fx"
+        ):
+            framework_specific_info.update(
+                {"workspace_path": options.workspace, "q_dataloader": None}
+            )
 
-        assert isinstance(model, BaseModel), "need set neural_compressor Model for quantization...."
+        assert isinstance(
+            model, BaseModel
+        ), "need set neural_compressor Model for quantization...."
 
         adaptor = FRAMEWORKS[framework](framework_specific_info)
 
         assert b_dataloader is not None, "dataloader should not be None"
 
-        from fedcore.neural_compressor.utils.create_obj_from_config import create_eval_func
+        from fedcore.neural_compressor.utils.create_obj_from_config import (
+            create_eval_func,
+        )
 
-        b_func = create_eval_func(conf.framework, b_dataloader, adaptor, None, iteration=conf.iteration)
+        b_func = create_eval_func(
+            conf.framework, b_dataloader, adaptor, None, iteration=conf.iteration
+        )
 
         objectives = MultiObjective(["performance"], {"relative": 0.1}, is_measure=True)
 
@@ -238,7 +287,9 @@ def generate_prefix(core_list):
             from functools import reduce
 
             hex_core = hex(reduce(lambda x, y: x | y, [1 << p for p in core_list]))
-            return "start /b /WAIT /node {} /affinity {} CMD /c".format(socket_id, hex_core)
+            return "start /b /WAIT /node {} /affinity {} CMD /c".format(
+                socket_id, hex_core
+            )
     else:
         return ""
 
@@ -246,7 +297,11 @@ def generate_prefix(core_list):
 def call_one(cmd, log_file):
     """Execute one command for one instance in one thread and dump the log (for Windows)."""
     proc = subprocess.Popen(
-        cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        shell=True,
     )  # nosec
     with open(log_file, "w", 1, encoding="utf-8") as log_file:
         log_file.write(f"[ COMMAND ] {cmd} \n")
@@ -269,10 +324,16 @@ def config_instance(raw_cmd):
     logger.info("num of instance: {}".format(num_of_instance))
     logger.info("cores per instance: {}".format(cores_per_instance))
 
-    if sys.platform in ["linux"] and get_architecture() == "aarch64" and int(get_threads_per_core()) > 1:
+    if (
+        sys.platform in ["linux"]
+        and get_architecture() == "aarch64"
+        and int(get_threads_per_core()) > 1
+    ):
         raise OSError("Currently no support on ARM with hyperthreads")
     elif sys.platform in ["linux"]:
-        bounded_threads = get_bounded_threads(get_core_ids(), get_threads(), get_physical_ids())
+        bounded_threads = get_bounded_threads(
+            get_core_ids(), get_threads(), get_physical_ids()
+        )
 
     for i in range(0, num_of_instance):
         if sys.platform in ["linux"] and get_architecture() == "x86_64":
@@ -285,7 +346,9 @@ def config_instance(raw_cmd):
         instance_cmd = "{} {}".format(prefix, raw_cmd)
         if sys.platform in ["linux"]:
             instance_log = "{}_{}_{}.log".format(num_of_instance, cores_per_instance, i)
-            multi_instance_cmd += "{} 2>&1|tee {} & \\\n".format(instance_cmd, instance_log)
+            multi_instance_cmd += "{} 2>&1|tee {} & \\\n".format(
+                instance_cmd, instance_log
+            )
         else:  # pragma: no cover
             multi_instance_cmd += "{} \n".format(instance_cmd)
 
@@ -294,16 +357,28 @@ def config_instance(raw_cmd):
     # each instance will execute single instance
     set_env_var("NC_ENV_CONF", True, overwrite_existing=True)
     if sys.platform in ["linux"]:
-        p = subprocess.Popen(multi_instance_cmd, preexec_fn=os.setsid, shell=True)  # nosec
+        p = subprocess.Popen(
+            multi_instance_cmd, preexec_fn=os.setsid, shell=True
+        )  # nosec
     elif sys.platform in ["win32"]:  # pragma: no cover
         cmd_list = multi_instance_cmd.split("\n")[:-1]
         threads = []
         for idx, cmd in enumerate(cmd_list):
             # wrap each execution of windows bat file in one thread
             # write the log to the log file of the corresponding instance
-            logger.info("Will dump to {}_{}_{}.log".format(num_of_instance, cores_per_instance, idx))
+            logger.info(
+                "Will dump to {}_{}_{}.log".format(
+                    num_of_instance, cores_per_instance, idx
+                )
+            )
             threads.append(
-                Thread(target=call_one, args=(cmd, "{}_{}_{}.log".format(num_of_instance, cores_per_instance, idx)))
+                Thread(
+                    target=call_one,
+                    args=(
+                        cmd,
+                        "{}_{}_{}.log".format(num_of_instance, cores_per_instance, idx),
+                    ),
+                )
             )
         for command_thread in threads:
             command_thread.start()
@@ -331,21 +406,34 @@ def summary_benchmark():
             with open(log, "r") as f:
                 for line in f:
                     latency = re.search(r"[L,l]atency:\s+(\d+(\.\d+)?)", line)
-                    latency_l.append(float(latency.group(1))) if latency and latency.group(1) else None
+                    (
+                        latency_l.append(float(latency.group(1)))
+                        if latency and latency.group(1)
+                        else None
+                    )
                     throughput = re.search(r"[T,t]hroughput:\s+(\d+(\.\d+)?)", line)
-                    throughput_l.append(float(throughput.group(1))) if throughput and throughput.group(1) else None
+                    (
+                        throughput_l.append(float(throughput.group(1)))
+                        if throughput and throughput.group(1)
+                        else None
+                    )
         if throughput_l and latency_l:
             assert (
                 len(latency_l) == len(throughput_l) == num_of_instance
             ), "Multiple instance benchmark failed with some instance!"
 
             output_data = [
-                ["Latency average [second/sample]", "{:.6f}".format((sum(latency_l) / len(latency_l)) / 1000)],
+                [
+                    "Latency average [second/sample]",
+                    "{:.6f}".format((sum(latency_l) / len(latency_l)) / 1000),
+                ],
                 ["Throughput sum [samples/second]", "{:.3f}".format(sum(throughput_l))],
             ]
             logger.info("********************************************")
             Statistics(
-                output_data, header="Multiple Instance Benchmark Summary", field_names=["Items", "Result"]
+                output_data,
+                header="Multiple Instance Benchmark Summary",
+                field_names=["Items", "Result"],
             ).print_stat()
     else:
         # (TODO) should add summary after win32 benchmark has log
@@ -473,8 +561,11 @@ def benchmark_with_raw_cmd(raw_cmd, conf=None):
     """
     if conf is not None:
         if conf.backend == "ipex":
-            import intel_extension_for_pytorch
-        assert sys.platform in ["linux", "win32"], "only support platform windows and linux..."
+            pass
+        assert sys.platform in [
+            "linux",
+            "win32",
+        ], "only support platform windows and linux..."
         # disable multi-instance for running benchmark on GPU device
         set_all_env_var(conf)
 
@@ -504,7 +595,7 @@ def fit(model, conf, b_dataloader=None, b_func=None):
         fit(model='./int8.pb', conf=conf, b_dataloader=eval_dataloader)
     """
     if conf.backend == "ipex":
-        import intel_extension_for_pytorch
+        pass
 
     wrapped_model = Model(model, conf=conf)
 
@@ -537,6 +628,8 @@ def fit(model, conf, b_dataloader=None, b_func=None):
 
     logger.info("Start to run Benchmark.")
     if os.environ.get("NC_ENV_CONF") == "True":
-        return run_instance(model=wrapped_model, conf=conf, b_dataloader=b_dataloader, b_func=b_func)
+        return run_instance(
+            model=wrapped_model, conf=conf, b_dataloader=b_dataloader, b_func=b_func
+        )
     raw_cmd = sys.executable + " " + " ".join(sys.argv)
     benchmark_with_raw_cmd(raw_cmd)

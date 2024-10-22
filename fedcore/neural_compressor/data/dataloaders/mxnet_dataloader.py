@@ -44,7 +44,10 @@ class MXNetDataLoader(BaseDataLoader):  # pragma: no cover
     ):
         """Overwrite _generate_dataloader function."""
         if shuffle:
-            logging.warning("Shuffle is not supported yet in MXNetDataLoader, " "ignoring shuffle keyword.")
+            logging.warning(
+                "Shuffle is not supported yet in MXNetDataLoader, "
+                "ignoring shuffle keyword."
+            )
         return mx.gluon.data.DataLoader(
             dataset,
             batch_size=batch_size,

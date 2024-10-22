@@ -1,4 +1,3 @@
-import time
 from typing import List, Type, Union, Dict
 from typing import Dict, List, Optional, Type, Union
 
@@ -16,11 +15,7 @@ import torch.nn.functional as F
 from fedcore.repository.constanst_repository import FORWARD_MODE
 
 
-def parameter_value_check(
-        parameter: str,
-        value: Any,
-        valid_values: Set
-) -> None:
+def parameter_value_check(parameter: str, value: Any, valid_values: Set) -> None:
     """Checks if the parameter value is in the set of valid values.
 
     Args:
@@ -43,23 +38,21 @@ class BasicBlock(nn.Module):
     expansion: int = 1
 
     def __init__(
-            self,
-            sizes: Dict[str, Tensor],
-            stride: int = 1,
-            downsample: Optional[nn.Module] = None,
+        self,
+        sizes: Dict[str, Tensor],
+        stride: int = 1,
+        downsample: Optional[nn.Module] = None,
     ) -> None:
         super().__init__()
         norm_layer = nn.BatchNorm2d
-        self.conv1 = conv3x3(
-            sizes['conv1'][1], sizes['conv1'][0], stride=stride)
-        self.bn1 = norm_layer(sizes['conv1'][0])
+        self.conv1 = conv3x3(sizes["conv1"][1], sizes["conv1"][0], stride=stride)
+        self.bn1 = norm_layer(sizes["conv1"][0])
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(sizes['conv2'][1], sizes['conv2'][0])
-        self.bn2 = norm_layer(sizes['conv2'][0])
+        self.conv2 = conv3x3(sizes["conv2"][1], sizes["conv2"][0])
+        self.bn2 = norm_layer(sizes["conv2"][0])
         self.downsample = downsample
         self.stride = stride
-        self.register_buffer('indices', torch.zeros(
-            sizes['indices'], dtype=torch.int))
+        self.register_buffer("indices", torch.zeros(sizes["indices"], dtype=torch.int))
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
@@ -84,25 +77,23 @@ class Bottleneck(nn.Module):
     expansion: int = 4
 
     def __init__(
-            self,
-            sizes: Dict[str, Tensor],
-            stride: int = 1,
-            downsample: Optional[nn.Module] = None,
+        self,
+        sizes: Dict[str, Tensor],
+        stride: int = 1,
+        downsample: Optional[nn.Module] = None,
     ) -> None:
         super().__init__()
         norm_layer = nn.BatchNorm2d
-        self.conv1 = conv1x1(sizes['conv1'][1], sizes['conv1'][0])
-        self.bn1 = norm_layer(sizes['conv1'][0])
-        self.conv2 = conv3x3(
-            sizes['conv2'][1], sizes['conv2'][0], stride=stride)
-        self.bn2 = norm_layer(sizes['conv2'][0])
-        self.conv3 = conv1x1(sizes['conv3'][1], sizes['conv3'][0])
-        self.bn3 = norm_layer(sizes['conv3'][0])
+        self.conv1 = conv1x1(sizes["conv1"][1], sizes["conv1"][0])
+        self.bn1 = norm_layer(sizes["conv1"][0])
+        self.conv2 = conv3x3(sizes["conv2"][1], sizes["conv2"][0], stride=stride)
+        self.bn2 = norm_layer(sizes["conv2"][0])
+        self.conv3 = conv1x1(sizes["conv3"][1], sizes["conv3"][0])
+        self.bn3 = norm_layer(sizes["conv3"][0])
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
-        self.register_buffer('indices', torch.zeros(
-            sizes['indices'], dtype=torch.int))
+        self.register_buffer("indices", torch.zeros(sizes["indices"], dtype=torch.int))
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
@@ -138,62 +129,53 @@ class PrunedResNet(nn.Module):
     """
 
     def __init__(
-            self,
-            block: Type[Union[BasicBlock, Bottleneck]],
-            layers: List[int],
-            sizes: Dict,
+        self,
+        block: Type[Union[BasicBlock, Bottleneck]],
+        layers: List[int],
+        sizes: Dict,
     ) -> None:
         super().__init__()
         self.inplanes = 64
         self.conv1 = nn.Conv2d(
-            sizes['conv1'][1], sizes['conv1'][0], kernel_size=7, stride=2, padding=3, bias=False)
-        self.bn1 = nn.BatchNorm2d(sizes['conv1'][0])
+            sizes["conv1"][1],
+            sizes["conv1"][0],
+            kernel_size=7,
+            stride=2,
+            padding=3,
+            bias=False,
+        )
+        self.bn1 = nn.BatchNorm2d(sizes["conv1"][0])
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(
-            block=block,
-            blocks=layers[0],
-            sizes=sizes['layer1']
+            block=block, blocks=layers[0], sizes=sizes["layer1"]
         )
         self.layer2 = self._make_layer(
-            block=block,
-            blocks=layers[1],
-            sizes=sizes['layer2'],
-            stride=2)
+            block=block, blocks=layers[1], sizes=sizes["layer2"], stride=2
+        )
         self.layer3 = self._make_layer(
-            block=block,
-            blocks=layers[2],
-            sizes=sizes['layer3'],
-            stride=2)
+            block=block, blocks=layers[2], sizes=sizes["layer3"], stride=2
+        )
         self.layer4 = self._make_layer(
-            block=block,
-            blocks=layers[3],
-            sizes=sizes['layer4'],
-            stride=2)
+            block=block, blocks=layers[3], sizes=sizes["layer4"], stride=2
+        )
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(sizes['fc'][1], sizes['fc'][0])
+        self.fc = nn.Linear(sizes["fc"][1], sizes["fc"][0])
 
     def _make_layer(
-            self,
-            block: Type[Union[BasicBlock, Bottleneck]],
-            blocks: int,
-            sizes: Dict,
-            stride: int = 1,
+        self,
+        block: Type[Union[BasicBlock, Bottleneck]],
+        blocks: int,
+        sizes: Dict,
+        stride: int = 1,
     ) -> nn.Sequential:
         downsample = None
-        if 'downsample' in sizes.keys():
+        if "downsample" in sizes.keys():
             downsample = nn.Sequential(
-                conv1x1(sizes['downsample'][1],
-                        sizes['downsample'][0], stride=stride),
-                nn.BatchNorm2d(sizes['downsample'][0]),
+                conv1x1(sizes["downsample"][1], sizes["downsample"][0], stride=stride),
+                nn.BatchNorm2d(sizes["downsample"][0]),
             )
-        layers = [
-            block(
-                sizes=sizes[0],
-                stride=stride,
-                downsample=downsample
-            )
-        ]
+        layers = [block(sizes=sizes[0], stride=stride, downsample=downsample)]
         for i in range(1, blocks):
             layers.append(block(sizes=sizes[i]))
         return nn.Sequential(*layers)
@@ -226,14 +208,12 @@ class DoubleConv(nn.Module):
         if not mid_channels:
             mid_channels = out_channels
         self.double_conv = nn.Sequential(
-            nn.Conv2d(in_channels, mid_channels,
-                      kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(mid_channels, out_channels,
-                      kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
     def forward(self, x):
@@ -246,8 +226,7 @@ class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
-            nn.MaxPool2d(2),
-            DoubleConv(in_channels, out_channels)
+            nn.MaxPool2d(2), DoubleConv(in_channels, out_channels)
         )
 
     def forward(self, x):
@@ -262,12 +241,12 @@ class Up(nn.Module):
 
         # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
-            self.up = nn.Upsample(
-                scale_factor=2, mode='bilinear', align_corners=True)
+            self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
         else:
             self.up = nn.ConvTranspose2d(
-                in_channels, in_channels // 2, kernel_size=2, stride=2)
+                in_channels, in_channels // 2, kernel_size=2, stride=2
+            )
             self.conv = DoubleConv(in_channels, out_channels)
 
     def forward(self, x1, x2):
@@ -276,8 +255,7 @@ class Up(nn.Module):
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]
 
-        x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                        diffY // 2, diffY - diffY // 2])
+        x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
 
@@ -301,7 +279,7 @@ class OutConv(nn.Module):
 #             dtype=None,
 #             ) -> None:
 #     pass
-    
+
 
 class DecomposedConv2d(Conv2d):
     """Extends the Conv2d layer by implementing the singular value decomposition of
@@ -315,21 +293,25 @@ class DecomposedConv2d(Conv2d):
     """
 
     def __init__(
-            self,
-            base_conv: Conv2d,
-            decomposing_mode: Optional[str] = 'channel',
-            forward_mode: str = 'two_layers',
-            device=None,
-            dtype=None,
+        self,
+        base_conv: Conv2d,
+        decomposing_mode: Optional[str] = "channel",
+        forward_mode: str = "two_layers",
+        device=None,
+        dtype=None,
     ) -> None:
 
-        parameter_value_check('forward_mode', forward_mode, {
-            'one_layer', 'two_layers', 'three_layers'})
+        parameter_value_check(
+            "forward_mode", forward_mode, {"one_layer", "two_layers", "three_layers"}
+        )
 
-        if forward_mode != 'one_layer':
-            assert base_conv.padding_mode == 'zeros', \
-                "only 'zeros' padding mode is supported for '{forward_mode}' forward mode."
-            assert base_conv.groups == 1, f"only 1 group is supported for '{forward_mode}' forward mode."
+        if forward_mode != "one_layer":
+            assert (
+                base_conv.padding_mode == "zeros"
+            ), "only 'zeros' padding mode is supported for '{forward_mode}' forward mode."
+            assert (
+                base_conv.groups == 1
+            ), f"only 1 group is supported for '{forward_mode}' forward mode."
 
         super().__init__(
             base_conv.in_channels,
@@ -354,53 +336,56 @@ class DecomposedConv2d(Conv2d):
             self.S = None
             self.Vh = None
             self.decomposing = None
-        self.inference_dict = {'one_layer': self._one_layer_forward,
-                               'two_layers': self._two_layers_forward,
-                               'three_layers': self._three_layers_forward}
+        self.inference_dict = {
+            "one_layer": self._one_layer_forward,
+            "two_layers": self._two_layers_forward,
+            "three_layers": self._three_layers_forward,
+        }
 
     def __set_decomposing_params(self, decomposing_mode):
         n, c, w, h = self.weight.size()
         compose_shape = (n, c, w, h)
         decomposing_modes = {
-            'channel': {
-                'type': 'channel',
-                'permute': (0, 1, 2, 3),
-                'decompose_shape': (n, c * w * h),
-                'compose_shape': compose_shape,
-                'U shape': (n, 1, 1, -1),
-                'U': {
-                    'stride': 1,
-                    'padding': 0,
-                    'dilation': 1,
+            "channel": {
+                "type": "channel",
+                "permute": (0, 1, 2, 3),
+                "decompose_shape": (n, c * w * h),
+                "compose_shape": compose_shape,
+                "U shape": (n, 1, 1, -1),
+                "U": {
+                    "stride": 1,
+                    "padding": 0,
+                    "dilation": 1,
                 },
-                'Vh shape': (-1, c, w, h),
-                'Vh': {
-                    'stride': self.stride,
-                    'padding': self.padding,
-                    'dilation': self.dilation,
-                }
+                "Vh shape": (-1, c, w, h),
+                "Vh": {
+                    "stride": self.stride,
+                    "padding": self.padding,
+                    "dilation": self.dilation,
+                },
             },
-            'spatial': {
-                'type': 'spatial',
-                'permute': (0, 2, 1, 3),
-                'decompose_shape': (n * w, c * h),
-                'compose_shape': compose_shape,
-                'U shape': (n, w, 1, -1),
-                'U': {
-                    'stride': (self.stride[0], 1),
-                    'padding': (self.padding[0], 0),
-                    'dilation': (self.dilation[0], 1),
+            "spatial": {
+                "type": "spatial",
+                "permute": (0, 2, 1, 3),
+                "decompose_shape": (n * w, c * h),
+                "compose_shape": compose_shape,
+                "U shape": (n, w, 1, -1),
+                "U": {
+                    "stride": (self.stride[0], 1),
+                    "padding": (self.padding[0], 0),
+                    "dilation": (self.dilation[0], 1),
                 },
-                'Vh shape': (-1, c, 1, h),
-                'Vh': {
-                    'stride': (1, self.stride[1]),
-                    'padding': (0, self.padding[1]),
-                    'dilation': (1, self.dilation[1]),
-                }
+                "Vh shape": (-1, c, 1, h),
+                "Vh": {
+                    "stride": (1, self.stride[1]),
+                    "padding": (0, self.padding[1]),
+                    "dilation": (1, self.dilation[1]),
+                },
             },
         }
-        parameter_value_check('decomposing_mode',
-                              decomposing_mode, set(decomposing_modes.keys()))
+        parameter_value_check(
+            "decomposing_mode", decomposing_mode, set(decomposing_modes.keys())
+        )
         self.decomposing = decomposing_modes[decomposing_mode]
 
     def compose_weight_for_inference(self):
@@ -416,12 +401,14 @@ class DecomposedConv2d(Conv2d):
             ValueError: If ``decomposing_mode`` not in valid values.
         """
         self.__set_decomposing_params(decomposing_mode=decomposing_mode)
-        W = self.weight.permute(self.decomposing['permute']).reshape(self.decomposing['decompose_shape'])
+        W = self.weight.permute(self.decomposing["permute"]).reshape(
+            self.decomposing["decompose_shape"]
+        )
         U, S, Vh = torch.linalg.svd(W, full_matrices=False)
         self.U = Parameter(U)
         self.S = Parameter(S)
         self.Vh = Parameter(Vh)
-        self.register_parameter('weight', None)
+        self.register_parameter("weight", None)
         self.inference_mode = False
 
     def compose(self) -> None:
@@ -429,57 +416,77 @@ class DecomposedConv2d(Conv2d):
         Replaces U, S, Vh matrices with weights such that weights = U * S * Vh.
         """
         W = self.U @ torch.diag(self.S) @ self.Vh
-        self.weight = Parameter(W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute']))
-        self.register_parameter('U', None)
-        self.register_parameter('S', None)
-        self.register_parameter('Vh', None)
+        self.weight = Parameter(
+            W.reshape(self.decomposing["compose_shape"]).permute(
+                self.decomposing["permute"]
+            )
+        )
+        self.register_parameter("U", None)
+        self.register_parameter("S", None)
+        self.register_parameter("Vh", None)
         self.decomposing = None
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         if not self.inference_mode:
             self.compose_weight_for_inference()
-        if self.forward_mode == 'one_layer':
+        if self.forward_mode == "one_layer":
             # tic1 = time.time()
             x = self._conv_forward(input, self.weight, self.bias)
             # tic2 = time.time()
             # tickrate = tic2 - tic1
             return x
-        if self.forward_mode == 'two_layers':
-            #tic1 = time.time()
-            x = conv2d(input=input, weight=self.Vh, groups=self.groups, **self.decomposing['Vh'])
-            x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+        if self.forward_mode == "two_layers":
+            # tic1 = time.time()
+            x = conv2d(
+                input=input,
+                weight=self.Vh,
+                groups=self.groups,
+                **self.decomposing["Vh"],
+            )
+            x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing["U"])
             # tic2 = time.time()
             # tickrate = tic2 - tic1
             return x
-        if self.forward_mode == 'three_layers':
-            x = conv2d(input=input, weight=self.Vh, groups=self.groups, **self.decomposing['Vh'])
+        if self.forward_mode == "three_layers":
+            x = conv2d(
+                input=input,
+                weight=self.Vh,
+                groups=self.groups,
+                **self.decomposing["Vh"],
+            )
             x = conv2d(input=x, weight=self.S, padding=0)
-            return conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+            return conv2d(
+                input=x, weight=self.U, bias=self.bias, **self.decomposing["U"]
+            )
 
     def _one_layer_forward(self):
         W = self.U @ torch.diag(self.S) @ self.Vh
-        self.weight = W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute'])
+        self.weight = W.reshape(self.decomposing["compose_shape"]).permute(
+            self.decomposing["permute"]
+        )
 
     def _two_layers_forward(self):
         SVh = torch.diag(self.S) @ self.Vh
-        self.Vh = Parameter(SVh.view(self.decomposing['Vh shape']))
-        self.U = Parameter(self.U.reshape(self.decomposing['U shape']).permute(0, 3, 1, 2))
+        self.Vh = Parameter(SVh.view(self.decomposing["Vh shape"]))
+        self.U = Parameter(
+            self.U.reshape(self.decomposing["U shape"]).permute(0, 3, 1, 2)
+        )
 
     def _three_layers_forward(self):
         self.S = torch.diag(self.S).view([len(self.S), len(self.S), 1, 1])
-        self.Vh = self.Vh.view(self.decomposing['Vh shape'])
-        self.U = self.U.view(self.decomposing['U shape']).permute(0, 3, 1, 2)
+        self.Vh = self.Vh.view(self.decomposing["Vh shape"])
+        self.U = self.U.view(self.decomposing["U shape"]).permute(0, 3, 1, 2)
 
-    def set_U_S_Vh(self,
-                   u: torch.Tensor,
-                   s: torch.Tensor,
-                   vh: torch.Tensor,
-                   rank: int = 1) -> None:
+    def set_U_S_Vh(
+        self, u: torch.Tensor, s: torch.Tensor, vh: torch.Tensor, rank: int = 1
+    ) -> None:
         """Update U, S, Vh matrices.
         Raises:
             Assertion Error: If ``self.decomposing`` is False.
         """
-        assert self.decomposing is not None, "for setting U, S and Vh, the model must be decomposed"
+        assert (
+            self.decomposing is not None
+        ), "for setting U, S and Vh, the model must be decomposed"
         self.U = Parameter(u)
         self.S = Parameter(s)
         self.Vh = Parameter(vh)
@@ -501,12 +508,12 @@ class DecomposedLinear(nn.Linear):
     """
 
     def __init__(
-            self,
-            base_lin: nn.Linear,
-            decomposing: bool = True,
-            forward_mode: str = FORWARD_MODE,
-            device=None,
-            dtype=None,
+        self,
+        base_lin: nn.Linear,
+        decomposing: bool = True,
+        forward_mode: str = FORWARD_MODE,
+        device=None,
+        dtype=None,
     ) -> None:
 
         super().__init__(
@@ -520,8 +527,10 @@ class DecomposedLinear(nn.Linear):
         self.forward_mode = forward_mode
         self.decomposing = decomposing
         self.inference_mode = False
-        self.inference_dict = {'one_layer': self._one_layer_forward,
-                               'two_layers': self._two_layers_forward}
+        self.inference_dict = {
+            "one_layer": self._one_layer_forward,
+            "two_layers": self._two_layers_forward,
+        }
         if decomposing:
             self.decompose()
         else:
@@ -538,22 +547,24 @@ class DecomposedLinear(nn.Linear):
             ValueError: If ``decomposing_mode`` not in valid values.
         """
         W = self.weight
-        U, S, Vh = torch.linalg.svd(W, full_matrices=False) ### here the transposed version is returned, not Vh
+        U, S, Vh = torch.linalg.svd(
+            W, full_matrices=False
+        )  ### here the transposed version is returned, not Vh
         self.U = Parameter(U)
         self.S = Parameter(S)
         self.Vh = Parameter(Vh)
-        self.register_parameter('weight', None)
+        self.register_parameter("weight", None)
         # assert ((self.U * self.S) @ self.Vh - W).abs().max() < 1e-5, 'transpose Vh!'
 
     def compose(self) -> None:
         """Compose the weight matrix from singular value decomposition.
         Replaces U, S, Vh matrices with weights such that weights = U * S * Vh.
         """
-        W = self.U @ torch.diag(self.S) @ self.Vh ### deleted extra .T
+        W = self.U @ torch.diag(self.S) @ self.Vh  ### deleted extra .T
         self.weight = W
-        self.register_parameter('U', None)
-        self.register_parameter('S', None)
-        self.register_parameter('Vh', None)
+        self.register_parameter("U", None)
+        self.register_parameter("S", None)
+        self.register_parameter("Vh", None)
         self.decomposing = None
 
     def compose_weight_for_inference(self):
@@ -563,9 +574,9 @@ class DecomposedLinear(nn.Linear):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         if not self.inference_mode:
             self.compose_weight_for_inference()
-        if self.forward_mode == 'one_layer':
+        if self.forward_mode == "one_layer":
             x = input @ self.W.T
-        if self.forward_mode == 'two_layers':
+        if self.forward_mode == "two_layers":
             x = input @ self.Vh.T
             x = x @ self.U.T
         if self.bias is not None:
@@ -573,7 +584,7 @@ class DecomposedLinear(nn.Linear):
         return x
 
     def _one_layer_forward(self):
-        self.W = Parameter((self.U * self.S) @ self.Vh) ### shouldn't it be transposed?
+        self.W = Parameter((self.U * self.S) @ self.Vh)  ### shouldn't it be transposed?
 
     def _two_layers_forward(self):
         singular_diag = torch.diag(self.S)
@@ -586,7 +597,9 @@ class DecomposedLinear(nn.Linear):
         Raises:
             Assertion Error: If ``self.decomposing`` is False.
         """
-        assert self.decomposing is not None, "for setting U, S and Vh, the model must be decomposed"
+        assert (
+            self.decomposing is not None
+        ), "for setting U, S and Vh, the model must be decomposed"
         self.U = Parameter(u)
         self.S = Parameter(s)
         self.Vh = Parameter(vh)
@@ -604,12 +617,12 @@ class DecomposedEmbedding(nn.Embedding):
     """
 
     def __init__(
-            self,
-            base_emb: nn.Embedding,
-            decomposing: bool = True,
-            forward_mode: str = FORWARD_MODE,
-            device=None,
-            dtype=None,
+        self,
+        base_emb: nn.Embedding,
+        decomposing: bool = True,
+        forward_mode: str = FORWARD_MODE,
+        device=None,
+        dtype=None,
     ) -> None:
 
         super().__init__(
@@ -622,8 +635,10 @@ class DecomposedEmbedding(nn.Embedding):
         self.forward_mode = forward_mode
         self.decomposing = decomposing
         self.inference_mode = False
-        self.inference_dict = {'one_layer': self._one_layer_forward,
-                               'two_layers': self._two_layers_forward}
+        self.inference_dict = {
+            "one_layer": self._one_layer_forward,
+            "two_layers": self._two_layers_forward,
+        }
         if decomposing:
             self.decompose()
         else:
@@ -641,12 +656,12 @@ class DecomposedEmbedding(nn.Embedding):
         """
         W = self.weight
         U, S, Vh = torch.linalg.svd(W, full_matrices=False)
-        
+
         self.U = Parameter(U)
         self.S = Parameter(S)
         self.Vh = Parameter(Vh)
-        assert ((self.U * self.S) @ self.Vh - W).abs().max() < 1e-5, 'transpose Vh!'
-        self.register_parameter('weight', None)
+        assert ((self.U * self.S) @ self.Vh - W).abs().max() < 1e-5, "transpose Vh!"
+        self.register_parameter("weight", None)
 
     def compose(self) -> None:
         """Compose the weight matrix from singular value decomposition.
@@ -654,9 +669,9 @@ class DecomposedEmbedding(nn.Embedding):
         """
         W = (self.U * self.S) @ self.Vh
         self.weight = Parameter(W)
-        self.register_parameter('U', None)
-        self.register_parameter('S', None)
-        self.register_parameter('Vh', None)
+        self.register_parameter("U", None)
+        self.register_parameter("S", None)
+        self.register_parameter("Vh", None)
         self.decomposing = None
 
     def compose_weight_for_inference(self):
@@ -666,9 +681,9 @@ class DecomposedEmbedding(nn.Embedding):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         if not self.inference_mode:
             self.compose_weight_for_inference()
-        if self.forward_mode == 'one_layer':
+        if self.forward_mode == "one_layer":
             x = self.W[input]
-        if self.forward_mode == 'two_layers':
+        if self.forward_mode == "two_layers":
             x = self.U[input]
             x = x @ self.Vh
         return x
@@ -688,7 +703,9 @@ class DecomposedEmbedding(nn.Embedding):
         Raises:
             Assertion Error: If ``self.decomposing`` is False.
         """
-        assert self.decomposing is not None, "for setting U, S and Vh, the model must be decomposed"
+        assert (
+            self.decomposing is not None
+        ), "for setting U, S and Vh, the model must be decomposed"
         self.U = Parameter(u)
         self.S = Parameter(s)
         self.Vh = Parameter(vh)

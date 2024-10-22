@@ -44,7 +44,9 @@ def model_slim_ffn2(model, dataloader=None, round_multiplier=32):
     from .pattern_analyzer import Linear2LinearSearcher
     from .weight_slim import LinearCompressionIterator
 
-    logger.warning("You are using model slim methods, some weight channels will be removed permanently.")
+    logger.warning(
+        "You are using model slim methods, some weight channels will be removed permanently."
+    )
     pa_obj = Linear2LinearSearcher(model, dataloader)
     layers = pa_obj.search()
     layers = pa_obj.from_layer_name_to_object(layers)
@@ -62,7 +64,9 @@ def model_slim_mha(model, dataloader=None):
     from .pattern_analyzer import SelfMHASearcher
     from .weight_slim import MHACompression
 
-    logger.warning("You are using model slim methods, some attention heads will be removed permanently.")
+    logger.warning(
+        "You are using model slim methods, some attention heads will be removed permanently."
+    )
     pa_obj = SelfMHASearcher(model, dataloader)
     layers, _ = pa_obj.search(split_qkv_ffn=False)
     layers = pa_obj.obtain_mha_module(layers)
@@ -74,13 +78,19 @@ def model_slim_mha(model, dataloader=None):
 
 
 # auto slim config
-def parse_auto_slim_config(model, dataloader=None, ffn2_sparsity=0.0, mha_sparsity=0.0, **kwargs):
+def parse_auto_slim_config(
+    model, dataloader=None, ffn2_sparsity=0.0, mha_sparsity=0.0, **kwargs
+):
     """Get model slim pruning configs."""
     auto_slim_configs = []
     if ffn2_sparsity > 0 and ffn2_sparsity < 1:
-        auto_slim_configs += generate_ffn2_pruning_config(model, dataloader, ffn2_sparsity, **kwargs)
+        auto_slim_configs += generate_ffn2_pruning_config(
+            model, dataloader, ffn2_sparsity, **kwargs
+        )
     if mha_sparsity > 0 and mha_sparsity < 1:
-        auto_slim_configs += generate_mha_pruning_config(model, dataloader, mha_sparsity, **kwargs)
+        auto_slim_configs += generate_mha_pruning_config(
+            model, dataloader, mha_sparsity, **kwargs
+        )
     return auto_slim_configs
 
 
@@ -92,7 +102,13 @@ def generate_ffn2_pruning_config(model, dataloader, ffn2_sparsity, **kwargs):
     layers = searcher.search()
     # extract the second linear layer
     ffn_layers = [ffn2_module["root_linear"] for ffn2_module in layers]
-    ffn2_pruning_config = [{"op_names": ffn_layers, "pattern": "channelx1", "target_sparsity": ffn2_sparsity}]
+    ffn2_pruning_config = [
+        {
+            "op_names": ffn_layers,
+            "pattern": "channelx1",
+            "target_sparsity": ffn2_sparsity,
+        }
+    ]
     # append kwargs to generated config
     for item in ffn2_pruning_config:
         item.update(kwargs)

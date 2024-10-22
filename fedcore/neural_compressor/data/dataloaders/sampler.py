@@ -32,7 +32,6 @@ class Sampler(object):  # pragma: no cover
 
     def __init__(self, data_source):
         """Initialize Sampler."""
-        pass
 
     @abstractmethod
     def __iter__(self):
@@ -62,7 +61,9 @@ class IterableSampler(Sampler):  # pragma: no cover
 
     def __len__(self):
         """Return the length of dataset."""
-        raise NotImplementedError("'__len__' for IterableDataset object has not defined")
+        raise NotImplementedError(
+            "'__len__' for IterableDataset object has not defined"
+        )
 
 
 class SequentialSampler(Sampler):  # pragma: no cover
@@ -80,8 +81,12 @@ class SequentialSampler(Sampler):  # pragma: no cover
 
     def __iter__(self):
         """Yield data in iterative order."""
-        self.process_rank = 0  # The default rank is 0, which represents the main process
-        self.process_size = 1  # By default, process_size=1, only the main process is running
+        self.process_rank = (
+            0  # The default rank is 0, which represents the main process
+        )
+        self.process_size = (
+            1  # By default, process_size=1, only the main process is running
+        )
         if self.distributed:
             import horovod.tensorflow as hvd
 
@@ -96,7 +101,9 @@ class SequentialSampler(Sampler):  # pragma: no cover
                     " 'distributed: False'. Or If you want to use distributed DataLoader,"
                     " please set 'distributed: True' and launch multiple processes."
                 )
-        return iter(range(self.process_rank, len(self.whole_dataset), self.process_size))
+        return iter(
+            range(self.process_rank, len(self.whole_dataset), self.process_size)
+        )
 
     def __len__(self):
         """Return the length of dataset."""

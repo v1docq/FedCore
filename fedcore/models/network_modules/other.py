@@ -8,7 +8,10 @@ from fastai.torch_core import Module
 from fastcore.basics import listify
 from torch import Tensor
 
-from fedot_ind.core.models.nn.network_modules.activation import pytorch_act_names, pytorch_acts
+from fedot_ind.core.models.nn.network_modules.activation import (
+    pytorch_act_names,
+    pytorch_acts,
+)
 from fedot_ind.core.models.nn.network_modules.layers.linear_layers import Noop
 from fedot_ind.core.models.nn.network_modules.layers.pooling_layers import GAP1d
 
@@ -23,12 +26,12 @@ def pass_through(X):
 
 
 def test_module_to_torchscript(
-        m: torch.nn.Module,
-        inputs: Tensor,
-        trace: bool = True,
-        script: bool = True,
-        serialize: bool = True,
-        verbose: bool = True,
+    m: torch.nn.Module,
+    inputs: Tensor,
+    trace: bool = True,
+    script: bool = True,
+    serialize: bool = True,
+    verbose: bool = True,
 ):
     """Tests if a PyTorch module can be correctly traced or scripted and serialized
 
@@ -50,8 +53,11 @@ def test_module_to_torchscript(
 
     # Get the model's output
     output = m(*inputs) if inp_is_tuple else m(inputs)
-    output_shapes = output.shape if not isinstance(output, (tuple, list)) else [
-        o.shape for o in output]
+    output_shapes = (
+        output.shape
+        if not isinstance(output, (tuple, list))
+        else [o.shape for o in output]
+    )
     if verbose:
         print(f"output.shape: {output_shapes}")
 
@@ -66,8 +72,7 @@ def test_module_to_torchscript(
                 torch.jit.save(traced_m, file_path)
                 torch.jit.load(file_path)
                 file_path.unlink()
-            traced_output = traced_m(
-                *inputs) if inp_is_tuple else traced_m(inputs)
+            traced_output = traced_m(*inputs) if inp_is_tuple else traced_m(inputs)
             torch.testing.assert_close(traced_output, output)
             if verbose:
                 print(f"...{m_name} has been successfully traced 😃\n")
@@ -89,8 +94,9 @@ def test_module_to_torchscript(
                 torch.jit.save(scripted_m, file_path)
                 torch.jit.load(file_path)
                 file_path.unlink()
-            scripted_output = scripted_m(
-                *inputs) if inp_is_tuple else scripted_m(inputs)
+            scripted_output = (
+                scripted_m(*inputs) if inp_is_tuple else scripted_m(inputs)
+            )
             torch.testing.assert_close(scripted_output, output)
             if verbose:
                 print(f"...{m_name} has been successfully scripted 😃\n")
@@ -105,7 +111,7 @@ def test_module_to_torchscript(
 
 def init_lin_zero(m):
     if isinstance(m, nn.Linear):
-        if getattr(m, 'bias', None) is not None:
+        if getattr(m, "bias", None) is not None:
             nn.init.constant_(m.bias, 0)
         nn.init.constant_(m.weight, 0)
     for l in m.children():
@@ -155,6 +161,7 @@ lin_zero_init = init_lin_zero
 #     def forward(self, x):
 #         return self.act(self.convpath(x) + self.idpath(x))
 
+
 class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
 
@@ -167,12 +174,11 @@ class DropPath(nn.Module):
         self.p = p
 
     def forward(self, x):
-        if self.p == 0. or not self.training:
+        if self.p == 0.0 or not self.training:
             return x
         keep_prob = 1 - self.p
         shape = (x.shape[0],) + (1,) * (x.ndim - 1)
-        random_tensor = keep_prob + \
-            torch.rand(shape, dtype=x.dtype, device=x.device)
+        random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
         random_tensor.floor_()
         output = x.div(keep_prob) * random_tensor
         # output = x.div(random_tensor.mean()) * random_tensor # divide by the
@@ -183,10 +189,11 @@ class DropPath(nn.Module):
 class Sharpen(Module):
     """This is used to increase confidence in predictions - MixMatch paper"""
 
-    def __init__(self, T=.5): self.T = T
+    def __init__(self, T=0.5):
+        self.T = T
 
     def forward(self, x):
-        x = x ** (1. / self.T)
+        x = x ** (1.0 / self.T)
         return x / x.sum(dim=1, keepdims=True)
 
 
@@ -231,7 +238,7 @@ class Temp_Scale(Module):
     """Used to perform Temperature Scaling (dirichlet=False) or Single-parameter Dirichlet calibration
     (dirichlet=True)"""
 
-    def __init__(self, temp=1., dirichlet=False):
+    def __init__(self, temp=1.0, dirichlet=False):
         self.weight = nn.Parameter(Tensor(temp))
         self.bias = None
         self.log_softmax = dirichlet
@@ -262,7 +269,7 @@ class MatrixScale(Module):
     def __init__(self, n_classes=1, dirichlet=False):
         self.ms = nn.Linear(n_classes, n_classes)
         self.ms.weight.data = nn.Parameter(torch.eye(n_classes))
-        nn.init.constant_(self.ms.bias.data, 0.)
+        nn.init.constant_(self.ms.bias.data, 0.0)
         self.weight = self.ms.weight
         self.bias = self.ms.bias
         self.log_softmax = dirichlet
@@ -276,20 +283,20 @@ class MatrixScale(Module):
 def get_calibrator(calibrator=None, n_classes=1, **kwargs):
     if calibrator is None or not calibrator:
         return Noop
-    elif calibrator.lower() == 'temp':
+    elif calibrator.lower() == "temp":
         return Temp_Scale(dirichlet=False, **kwargs)
-    elif calibrator.lower() == 'vector':
+    elif calibrator.lower() == "vector":
         return VectorScale(n_classes=n_classes, dirichlet=False, **kwargs)
-    elif calibrator.lower() == 'matrix':
+    elif calibrator.lower() == "matrix":
         return MatrixScale(n_classes=n_classes, dirichlet=False, **kwargs)
-    elif calibrator.lower() == 'dtemp':
+    elif calibrator.lower() == "dtemp":
         return Temp_Scale(dirichlet=True, **kwargs)
-    elif calibrator.lower() == 'dvector':
+    elif calibrator.lower() == "dvector":
         return VectorScale(n_classes=n_classes, dirichlet=True, **kwargs)
-    elif calibrator.lower() == 'dmatrix':
+    elif calibrator.lower() == "dmatrix":
         return MatrixScale(n_classes=n_classes, dirichlet=True, **kwargs)
     else:
-        assert False, f'please, select a correct calibrator instead of {calibrator}'
+        assert False, f"please, select a correct calibrator instead of {calibrator}"
 
 
 class LogitAdjustmentLayer(Module):
@@ -320,16 +327,11 @@ class SqueezeExciteBlock(Module):
     def __init__(self, ni, reduction=16):
         self.avg_pool = GAP1d(1)
         self.fc = nn.Sequential(
-            nn.Linear(
-                ni,
-                ni // reduction,
-                bias=False),
+            nn.Linear(ni, ni // reduction, bias=False),
             nn.ReLU(),
-            nn.Linear(
-                ni // reduction,
-                ni,
-                bias=False),
-            nn.Sigmoid())
+            nn.Linear(ni // reduction, ni, bias=False),
+            nn.Sigmoid(),
+        )
 
     def forward(self, x):
         y = self.avg_pool(x)
@@ -357,20 +359,21 @@ class GaussianNoise(Module):
     def forward(self, x):
         if self.training and self.sigma not in [0, None]:
             scale = self.sigma * (x.detach() if self.is_relative_detach else x)
-            sampled_noise = torch.empty(
-                x.size(), device=x.device).normal_() * scale
+            sampled_noise = torch.empty(x.size(), device=x.device).normal_() * scale
             x = x + sampled_noise
         return x
 
 
 class PositionwiseFeedForward(nn.Sequential):
-    def __init__(self, dim, dropout=0., act='reglu', mlp_ratio=1):
+    def __init__(self, dim, dropout=0.0, act="reglu", mlp_ratio=1):
         act_mult = 2 if act.lower() in ["geglu", "reglu"] else 1
-        super().__init__(nn.Linear(dim, dim * mlp_ratio * act_mult),
-                         get_act_fn(act),
-                         nn.Dropout(dropout),
-                         nn.Linear(dim * mlp_ratio, dim),
-                         nn.Dropout(dropout))
+        super().__init__(
+            nn.Linear(dim, dim * mlp_ratio * act_mult),
+            get_act_fn(act),
+            nn.Dropout(dropout),
+            nn.Linear(dim * mlp_ratio, dim),
+            nn.Dropout(dropout),
+        )
 
 
 class TokenLayer(Module):
@@ -389,12 +392,12 @@ class LSTMOutput(Module):
         return x[0]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}()'
+        return f"{self.__class__.__name__}()"
 
 
 def emb_sz_rule(n_cat):
     """Rule of thumb to pick embedding size corresponding to `n_cat` (original from fastai)"""
-    return min(600, round(1.6 * n_cat ** 0.56))
+    return min(600, round(1.6 * n_cat**0.56))
 
 
 class TSEmbedding(nn.Embedding):
@@ -409,20 +412,20 @@ class TSEmbedding(nn.Embedding):
 
 class MultiEmbedding(Module):
     def __init__(
-            self,
-            c_in,
-            n_cat_embeds,
-            cat_embed_dims=None,
-            cat_pos=None,
-            std=0.01,
-            cat_padding_idxs=None):
+        self,
+        c_in,
+        n_cat_embeds,
+        cat_embed_dims=None,
+        cat_pos=None,
+        std=0.01,
+        cat_padding_idxs=None,
+    ):
         cat_n_embeds = listify(n_cat_embeds)
         if cat_padding_idxs is None:
             cat_padding_idxs = [None]
         else:
             cat_padding_idxs = listify(cat_padding_idxs)
-        if len(cat_padding_idxs) == 1 and len(
-                cat_padding_idxs) < len(cat_n_embeds):
+        if len(cat_padding_idxs) == 1 and len(cat_padding_idxs) < len(cat_n_embeds):
             cat_padding_idxs = cat_padding_idxs * len(cat_n_embeds)
         assert len(cat_n_embeds) == len(cat_padding_idxs)
         if cat_embed_dims is None:
@@ -438,22 +441,30 @@ class MultiEmbedding(Module):
             cat_pos = torch.arange(len(cat_n_embeds))
         self.register_buffer("cat_pos", cat_pos)
         cont_pos = torch.tensor(
-            [p for p in torch.arange(c_in) if p not in self.cat_pos])
+            [p for p in torch.arange(c_in) if p not in self.cat_pos]
+        )
         self.register_buffer("cont_pos", cont_pos)
         self.cat_embed = nn.ModuleList(
             [
-                TSEmbedding(
-                    n, d, std=std, padding_idx=p) for n, d, p in zip(
-                    cat_n_embeds, cat_embed_dims, cat_padding_idxs)])
+                TSEmbedding(n, d, std=std, padding_idx=p)
+                for n, d, p in zip(cat_n_embeds, cat_embed_dims, cat_padding_idxs)
+            ]
+        )
 
     def forward(self, x):
         if isinstance(x, tuple):
             x_cat, x_cont, *_ = x
         else:
             x_cat, x_cont = x[:, self.cat_pos], x[:, self.cont_pos]
-        x_cat = torch.cat([e(torch.round(x_cat[:, i]).long()).transpose(
-            1, 2) for i, e in enumerate(self.cat_embed)], 1)
+        x_cat = torch.cat(
+            [
+                e(torch.round(x_cat[:, i]).long()).transpose(1, 2)
+                for i, e in enumerate(self.cat_embed)
+            ],
+            1,
+        )
         return torch.cat([x_cat, x_cont], 1)
+
 
 # def build_ts_model(arch, c_in=None, c_out=None, seq_len=None, d=None, dls=None, device=None, verbose=False,
 #                    s_cat_idxs=None, s_cat_embeddings=None, s_cat_embedding_dims=None, s_cont_idxs=None,

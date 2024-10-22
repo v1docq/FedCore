@@ -39,4 +39,6 @@ class StripUnusedNodesOptimizer(GraphRewriterBase):
         )
 
         self.model = fix_ref_type_of_graph_def(self.model)
-        return strip_unused_nodes(self.model, self.input_node_names, self.output_node_names)
+        return strip_unused_nodes(
+            self.model, self.input_node_names, self.output_node_names
+        )

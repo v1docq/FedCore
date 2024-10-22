@@ -16,14 +16,11 @@
 # limitations under the License.
 """Rename FusedBatchNorm op to FusedBatchNormV2 Graph Rewriter."""
 
-import math
 
-import numpy as np
-from tensorflow.core.framework import attr_value_pb2, node_def_pb2
-from tensorflow.python.framework import tensor_util
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase

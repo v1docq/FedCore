@@ -48,23 +48,35 @@ class ConvertLayoutOptimizer(GraphRewriterBase):
         """Execute converting layout."""
         convert = False
         for node in self.model.node:
-            if "Conv" in node.op and "data_format" in node.attr and node.attr["data_format"].s == b"NCHW":
+            if (
+                "Conv" in node.op
+                and "data_format" in node.attr
+                and node.attr["data_format"].s == b"NCHW"
+            ):
                 convert = True
                 break
         if convert and version1_gt_version2(tf.version.VERSION, "2.3.0"):
             g = tf.Graph()
             with g.as_default():  # pylint: disable=not-context-manager
                 g = tf.compat.v1.import_graph_def(self.model, name="")
-                meta_graph = saver_lib.export_meta_graph(graph_def=self.model, graph=g, clear_devices=False)
+                meta_graph = saver_lib.export_meta_graph(
+                    graph_def=self.model, graph=g, clear_devices=False
+                )
                 fetch_collection = meta_graph_pb2.CollectionDef()
                 for fetch in self.outputs:
-                    fetch_collection.node_list.value.append(fetch)  # pylint: disable=no-member
-                meta_graph.collection_def["train_op"].CopyFrom(  # pylint: disable=no-member
+                    fetch_collection.node_list.value.append(
+                        fetch
+                    )  # pylint: disable=no-member
+                meta_graph.collection_def[
+                    "train_op"
+                ].CopyFrom(  # pylint: disable=no-member
                     fetch_collection
                 )  # pylint: disable=no-member
 
             config = config_pb2.ConfigProto()
-            convert = rewriter_config_pb2.RewriterConfig.NCHW_TO_NHWC  # pylint: disable=no-member
+            convert = (
+                rewriter_config_pb2.RewriterConfig.NCHW_TO_NHWC
+            )  # pylint: disable=no-member
             config.graph_options.rewrite_options.CopyFrom(  # pylint: disable=no-member
                 rewriter_config_pb2.RewriterConfig(
                     disable_model_pruning=True,

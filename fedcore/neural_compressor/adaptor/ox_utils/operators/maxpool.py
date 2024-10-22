@@ -16,7 +16,12 @@
 # limitations under the License.
 """MaxPool Operator."""
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
 
 
 @op_registry(op_types="MaxPool")
@@ -34,7 +39,9 @@ class MaxPoolOperator(Operator):
         if self.quantizer.opset_version < 12:  # pragma: no cover
             return False
 
-        if not self.quantizer.is_valid_quantize_weight(node.input[0]):  # pragma: no cover
+        if not self.quantizer.is_valid_quantize_weight(
+            node.input[0]
+        ):  # pragma: no cover
             return False
 
         return True
@@ -50,7 +57,9 @@ class MaxPoolOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
 
         children = self.quantizer.model.get_children(node)
         if len(children) == 0 or not node.name.endswith("_quant"):  # pragma: no cover
@@ -72,7 +81,9 @@ class MaxPoolOperator(Operator):
             if child.op_type == "QuantizeLinear":
                 self.quantizer.remove_nodes.append(child)
                 for n in self.quantizer.model.get_children(child):
-                    self.quantizer.model.replace_node_input(n, child.output[0], node.output[0])
+                    self.quantizer.model.replace_node_input(
+                        n, child.output[0], node.output[0]
+                    )
 
         self.quantizer.remove_nodes.append(parent)
 

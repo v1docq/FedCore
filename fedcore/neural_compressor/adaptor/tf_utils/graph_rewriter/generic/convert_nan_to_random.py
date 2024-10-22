@@ -44,7 +44,9 @@ class ConvertNanToRandom(GraphRewriterBase):
                 const_node.attr["value"].CopyFrom(
                     attr_value_pb2.AttrValue(
                         tensor=tensor_util.make_tensor_proto(
-                            np.random.rand(*const_content.shape), dtypes.float32, const_content.shape
+                            np.random.rand(*const_content.shape),
+                            dtypes.float32,
+                            const_content.shape,
                         )
                     )
                 )

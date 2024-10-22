@@ -76,7 +76,9 @@ def get_pruner(config, modules, framework="pytorch"):
         if config["progressive"] is False:
             config["criterion_type"] = name
             if "block" in name or "free" in name:
-                assert ":" not in config["pattern"], f"{name} pruner type does not support {config['pattern']} pattern."
+                assert (
+                    ":" not in config["pattern"]
+                ), f"{name} pruner type does not support {config['pattern']} pattern."
             else:
                 name = "basic"  # return the basic pruner
         else:
@@ -87,5 +89,7 @@ def get_pruner(config, modules, framework="pytorch"):
 
     name = f"{FRAMEWORK[framework]}_{name}"
     if name not in PRUNERS.keys():
-        assert False, f"does not support {name}, currently only support {parse_valid_pruner_types()}"
+        assert (
+            False
+        ), f"does not support {name}, currently only support {parse_valid_pruner_types()}"
     return PRUNERS[name](config, modules)

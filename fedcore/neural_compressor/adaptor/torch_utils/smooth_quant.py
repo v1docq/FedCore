@@ -17,7 +17,6 @@
 #
 
 import copy
-import json
 
 try:
     from fedcore.neural_compressor.utils.utility import LazyImport
@@ -30,7 +29,7 @@ except:
     import torch
 
     logger = logging.getLogger()
-from collections import UserDict, defaultdict
+from collections import UserDict
 
 import numpy
 from tqdm import tqdm
@@ -90,14 +89,14 @@ def model_forward(model, dataloader, iters, device):
     try:
         cnt = 0
         for idx, (input, label) in enumerate(dataloader):
-            output = forward_wrapper(model, input, device)
+            forward_wrapper(model, input, device)
             cnt += 1
             if iters != -1 and cnt >= iters:
                 break
-    except Exception as e:
+    except Exception:
         cnt = 0
         for idx, input in enumerate(dataloader):
-            output = forward_wrapper(model, input, device)
+            forward_wrapper(model, input, device)
             cnt += 1
             if iters != -1 and cnt >= iters:
                 break
@@ -108,7 +107,7 @@ def model_forward_per_sample(model, sample, device):
         output = forward_wrapper(model, sample, device)
         return output
 
-    except Exception as e:
+    except Exception:
         output = forward_wrapper(model, sample[0], device)
         return output
 
@@ -164,7 +163,9 @@ def quant_dequant_w(m, num_bits=8, scheme="sym"):
         q_x = x / scale + bias
         q_x.clamp_(q_min, q_max).round_()
         q_dq_x = (q_x - bias) * scale
-        q_dq_x = q_dq_x.view(m.weight.shape[0], m.weight.shape[2], m.weight.shape[3], m.weight.shape[1])
+        q_dq_x = q_dq_x.view(
+            m.weight.shape[0], m.weight.shape[2], m.weight.shape[3], m.weight.shape[1]
+        )
         q_dq_x = torch.permute(q_dq_x, (0, 3, 1, 2))
         return q_dq_x
     else:
@@ -223,7 +224,9 @@ def set_module(model, key, new_module):
     for name in name_list[:-1]:
         if hasattr(module, name):
             module = getattr(module, name)
-        elif hasattr(module, ("sq_linear")):  # for peft models that Linears are contained in Linear
+        elif hasattr(
+            module, ("sq_linear")
+        ):  # for peft models that Linears are contained in Linear
             module = getattr(module, "sq_linear")
             module = getattr(module, name)
         elif hasattr(module, ("orig_layer")):  # for peft models and auto alpha
@@ -234,7 +237,9 @@ def set_module(model, key, new_module):
 
     if hasattr(module, "sq_linear") and name_list[-1] != "sq_linear":  # for peft models
         module = getattr(module, "sq_linear")
-    if hasattr(module, "orig_layer") and name_list[-1] != "orig_layer":  # for peft models and auto alpha
+    if (
+        hasattr(module, "orig_layer") and name_list[-1] != "orig_layer"
+    ):  # for peft models and auto alpha
         module = getattr(module, "orig_layer")
     setattr(module, name_list[-1], new_module)
 
@@ -288,7 +293,9 @@ class WrapperLayer(torch.nn.Module):
             x = quant_dequant_x(x, self.input_min, self.input_max)
         else:
             x = input_scale * x
-            x = quant_dequant_x(x, self.input_min * input_scale, self.input_max * input_scale)  ##FIXME
+            x = quant_dequant_x(
+                x, self.input_min * input_scale, self.input_max * input_scale
+            )  ##FIXME
         output = layer_copy(x)
         return output
 
@@ -298,7 +305,9 @@ class WrapperLayer(torch.nn.Module):
             x = quant_dequant_x(x, self.input_min, self.input_max)
         else:
             x = input_scale * x
-            x = quant_dequant_x(x, self.input_min * input_scale, self.input_max * input_scale)  ##FIXME
+            x = quant_dequant_x(
+                x, self.input_min * input_scale, self.input_max * input_scale
+            )  ##FIXME
         output = layer_copy(x)
         return output
 
@@ -329,7 +338,14 @@ class TorchSmoothQuant:
     to recover the weights if needed
     """
 
-    def __init__(self, model, dataloader=None, example_inputs=None, q_func=None, traced_model=None):
+    def __init__(
+        self,
+        model,
+        dataloader=None,
+        example_inputs=None,
+        q_func=None,
+        traced_model=None,
+    ):
         """
         :param model: Torch model :param dataloader: Calibration dataloader :param traced_model: A specific model
         shares the same architecture as the model and could be traced by torch.jit. If not supplied, we use model
@@ -385,7 +401,9 @@ class TorchSmoothQuant:
         def save_input_hook(module, inputs, outputs):
             input = inputs[0]
             ##TODO check input channel is correct
-            if len(module.weight.shape) == 4:  ##conv3d or conv1d not supported now, need better way
+            if (
+                len(module.weight.shape) == 4
+            ):  ##conv3d or conv1d not supported now, need better way
                 input = input.permute(0, 2, 3, 1)
             input = input.reshape(-1, input.shape[-1])
             max_tensor = torch.max(input, dim=0)[0]
@@ -471,7 +489,9 @@ class TorchSmoothQuant:
         :return: reshaped scale."""
         if hasattr(layer, "orig_layer"):
             layer = layer.orig_layer
-        if isinstance(layer, torch.nn.Conv2d) and layer.groups > 1:  ##only depthwise conv could hit here
+        if (
+            isinstance(layer, torch.nn.Conv2d) and layer.groups > 1
+        ):  ##only depthwise conv could hit here
             scale = scale.view(scale.shape[0], 1, 1, 1)  ##mount on output channel
 
         elif isinstance(layer, torch.nn.Conv2d):
@@ -508,7 +528,9 @@ class TorchSmoothQuant:
 
         return scale
 
-    def _scale_layer_weight(self, layer_name, scale, alpha=0.5, input_minmax=None):  ##input channel
+    def _scale_layer_weight(
+        self, layer_name, scale, alpha=0.5, input_minmax=None
+    ):  ##input channel
         """Scale the layer weights at input channel, depthwise conv output channel
         :param layer_name: The layer name
         :param scale: The scale to be multiplied
@@ -554,9 +576,14 @@ class TorchSmoothQuant:
                 layer.bias *= scale
             else:
                 layer.affine = True
-                weight = torch.ones(layer.num_features, device=self.device, dtype=self.dtype) * scale
+                weight = (
+                    torch.ones(layer.num_features, device=self.device, dtype=self.dtype)
+                    * scale
+                )
                 layer.weight = torch.nn.Parameter(weight, requires_grad=False)
-                bias = torch.zeros(layer.num_features, device=self.device, dtype=self.dtype)
+                bias = torch.zeros(
+                    layer.num_features, device=self.device, dtype=self.dtype
+                )
                 layer.bias = torch.nn.Parameter(bias, requires_grad=False)
         elif isinstance(layer, torch.nn.LayerNorm):
             if layer.elementwise_affine:
@@ -564,9 +591,16 @@ class TorchSmoothQuant:
                 layer.bias *= scale
             else:
                 layer.elementwise_affine = True
-                weight = torch.ones(layer.num_features, device=self.device, dtype=self.dtype) * scale
-                layer.weight = torch.nn.Parameter(torch.ones(weight, requires_grad=False))
-                bias = torch.zeros(layer.num_features, device=self.device, dtype=self.dtype)
+                weight = (
+                    torch.ones(layer.num_features, device=self.device, dtype=self.dtype)
+                    * scale
+                )
+                layer.weight = torch.nn.Parameter(
+                    torch.ones(weight, requires_grad=False)
+                )
+                bias = torch.zeros(
+                    layer.num_features, device=self.device, dtype=self.dtype
+                )
                 layer.bias = torch.nn.Parameter(bias, requires_grad=False)
 
         elif isinstance(layer, torch.nn.Conv2d):
@@ -582,7 +616,10 @@ class TorchSmoothQuant:
             scale = scale.view(scale.shape[0], 1)
             layer.weight *= scale
 
-        elif layer.__class__.__name__ == "LlamaRMSNorm" or layer.__class__.__name__ == "T5LayerNorm":  ##quite tricky
+        elif (
+            layer.__class__.__name__ == "LlamaRMSNorm"
+            or layer.__class__.__name__ == "T5LayerNorm"
+        ):  ##quite tricky
             layer.weight *= scale
 
         else:
@@ -620,12 +657,17 @@ class TorchSmoothQuant:
                     weight = self._reshape_in_channel_to_last(layer_name)
                     weights.append(weight)
 
-                weight_max_per_channel = torch.max(torch.abs(torch.cat(weights, dim=0)), dim=0)[0]
+                weight_max_per_channel = torch.max(
+                    torch.abs(torch.cat(weights, dim=0)), dim=0
+                )[0]
                 if self.weight_clip:
                     weight_max_per_channel = weight_max_per_channel.clamp(min=1e-5)
                 if self.record_max_info and not tuning:
                     # the input of layers with same absorb layer is the same.
-                    input_minmax = [self.input_mins[layer_names[0]], self.input_maxes[layer_names[0]]]
+                    input_minmax = [
+                        self.input_mins[layer_names[0]],
+                        self.input_maxes[layer_names[0]],
+                    ]
                     self.max_value_info[key] = {}
                     self.max_value_info[key]["alpha"] = alpha_tmp
                     self.max_value_info[key]["input_minmax"] = input_minmax
@@ -634,7 +676,10 @@ class TorchSmoothQuant:
                     continue
 
                 if self._save_scale:
-                    if key in self.weight_scale_dict and alpha_tmp in self.weight_scale_dict[key]:
+                    if (
+                        key in self.weight_scale_dict
+                        and alpha_tmp in self.weight_scale_dict[key]
+                    ):
                         scale = self.weight_scale_dict[key][alpha_tmp]
                     else:
                         scale = cal_scale(input_max, weights, alpha_tmp)
@@ -659,7 +704,9 @@ class TorchSmoothQuant:
         :param input_maxes: The channel-wise input max info for layers
         :param alpha: Alpha value to balance the quantization difficulty of activation and weight, a float of a dict
         :return:"""
-        absorb_scales_info, weight_scales_info = self._cal_scales(absorb_to_layer, input_maxes, alpha, tuning)
+        absorb_scales_info, weight_scales_info = self._cal_scales(
+            absorb_to_layer, input_maxes, alpha, tuning
+        )
         if not absorb_scales_info or not weight_scales_info:
             return weight_scales_info, absorb_scales_info
         for index, key in enumerate(absorb_to_layer.keys()):
@@ -671,11 +718,18 @@ class TorchSmoothQuant:
             self._absorb_scales(key, absorb_scale)
             layer_names = absorb_to_layer[key]
             for layer_name in layer_names:
-                input_minmax = [self.input_mins[layer_names[0]], self.input_maxes[layer_names[0]]]
-                self._scale_layer_weight(layer_name, weight_scales_info[layer_name], alpha_tmp, input_minmax)
+                input_minmax = [
+                    self.input_mins[layer_names[0]],
+                    self.input_maxes[layer_names[0]],
+                ]
+                self._scale_layer_weight(
+                    layer_name, weight_scales_info[layer_name], alpha_tmp, input_minmax
+                )
         return weight_scales_info, absorb_scales_info
 
-    def _check_need_calibration(self, alpha, percentile, op_types, scales_per_op, calib_iter):
+    def _check_need_calibration(
+        self, alpha, percentile, op_types, scales_per_op, calib_iter
+    ):
         """
         check need calibration or not
         :param alpha: current alpha
@@ -756,17 +810,26 @@ class TorchSmoothQuant:
         module_names = self._get_all_hook_module_names()
         self.to_unwrap_module_names = module_names
         for name in module_names:
-            if name not in self.input_mins:  # skip module if it's not used in calibration
+            if (
+                name not in self.input_mins
+            ):  # skip module if it's not used in calibration
                 continue
             module = get_module(self.model, name)
-            new_module = WrapperLayer(module, self.input_mins[name], self.input_maxes[name], save_q_input=save_q_input)
+            new_module = WrapperLayer(
+                module,
+                self.input_mins[name],
+                self.input_maxes[name],
+                save_q_input=save_q_input,
+            )
             set_module(self.model, name, new_module)
 
     def _qdq_model_unwrapper_for_auto(self):
         module_names = self.to_unwrap_module_names
         for name in module_names:
             module = get_module(self.model, name)
-            if not hasattr(module, "orig_layer"):  # skip module if it's not used in calibration
+            if not hasattr(
+                module, "orig_layer"
+            ):  # skip module if it's not used in calibration
                 continue
             set_module(self.model, name, module.orig_layer)
 
@@ -775,7 +838,9 @@ class TorchSmoothQuant:
         for name in module_names:
             name = name.split(".orig_layer")[0]
             module = get_module(self.model, name)
-            if not hasattr(module, "orig_layer"):  # skip module if it's not used in calibration
+            if not hasattr(
+                module, "orig_layer"
+            ):  # skip module if it's not used in calibration
                 continue
             if enable:
                 module.enable_quant()
@@ -815,7 +880,9 @@ class TorchSmoothQuant:
 
         return save_blockwise_hook
 
-    def _get_one_batch_auto_loss(self, input, alpha_space, orig_best_alpha, input_maxes):
+    def _get_one_batch_auto_loss(
+        self, input, alpha_space, orig_best_alpha, input_maxes
+    ):
         self._change_qdq_for_auto(enable=False)
         module_names = self._get_sq_layer_names()
 
@@ -825,7 +892,9 @@ class TorchSmoothQuant:
                 block_modules[key] = get_module(self.model, key)
             self._add_blockwise_observer(block_modules)
 
-        forward_wrapper(self.model, input, self.device)  ##disable quant and get fp32 output
+        forward_wrapper(
+            self.model, input, self.device
+        )  ##disable quant and get fp32 output
 
         fp32_output = {}
         if not self.do_blockwise:
@@ -863,7 +932,9 @@ class TorchSmoothQuant:
         else:
             for block_name in self.block_names:
                 block = get_module(self.model, block_name)
-                loss = self._get_auto_loss(fp32_output[block_name], self.block_outputs[block_name])
+                loss = self._get_auto_loss(
+                    fp32_output[block_name], self.block_outputs[block_name]
+                )
                 cur_alpha = orig_best_alpha
                 if isinstance(orig_best_alpha, dict):
                     cur_alpha = orig_best_alpha[self.block_to_module[block_name][0]]
@@ -872,7 +943,9 @@ class TorchSmoothQuant:
         # for name in module_names:
         #     loss_alphas[name]={}
         for alpha in alpha_space:
-            absorb_input_scales, weight_scales = self._cal_scales(self.absorb_to_layer, input_maxes, alpha, tuning=True)
+            absorb_input_scales, weight_scales = self._cal_scales(
+                self.absorb_to_layer, input_maxes, alpha, tuning=True
+            )
             self._update_scales_for_auto(absorb_input_scales, weight_scales)
             if not self.do_blockwise:
                 for name in module_names:
@@ -880,7 +953,9 @@ class TorchSmoothQuant:
                     if str(alpha) in losses.keys():
                         continue
                     module = get_module(self.model, name)
-                    output = module.q_dq_forward(module.q_input, module.input_scale, module.weight_scale)
+                    output = module.q_dq_forward(
+                        module.q_input, module.input_scale, module.weight_scale
+                    )
                     loss = self._get_auto_loss(fp32_output[name], output)
                     loss_alphas[name][str(alpha)] = loss
             else:
@@ -891,7 +966,10 @@ class TorchSmoothQuant:
                     block = get_module(self.model, block_name)
                     block_copy = copy.deepcopy(block)
                     for name in self.block_to_module[block_name]:
-                        if name == block_name and len(self.block_to_module[block_name]) == 1:
+                        if (
+                            name == block_name
+                            and len(self.block_to_module[block_name]) == 1
+                        ):
                             module, module_copy = block, block_copy
                         else:
                             module = get_module(block, name)
@@ -901,14 +979,23 @@ class TorchSmoothQuant:
                         q_dq_weight = quant_dequant_w(module_copy.orig_layer)
                         module_copy.orig_layer.weight.data.copy_(q_dq_weight)
                         module_copy.do_blockwise = True
-                        if not (name == block_name and len(self.block_to_module[block_name]) == 1):
+                        if not (
+                            name == block_name
+                            and len(self.block_to_module[block_name]) == 1
+                        ):
                             set_module(block_copy, name, module_copy)
                     try:
                         output = block_copy(self.block_inputs[block_name])[0]
                     except:  # Llama model decoder_layer forward requires position_id
-                        position_ids = torch.arange(self.block_inputs[block_name].size()[1])
-                        position_ids = position_ids.view(self.block_inputs[block_name].size()[0], -1)
-                        output = block_copy(self.block_inputs[block_name], position_ids=position_ids)[0]
+                        position_ids = torch.arange(
+                            self.block_inputs[block_name].size()[1]
+                        )
+                        position_ids = position_ids.view(
+                            self.block_inputs[block_name].size()[0], -1
+                        )
+                        output = block_copy(
+                            self.block_inputs[block_name], position_ids=position_ids
+                        )[0]
                     loss = self._get_auto_loss(fp32_output[block_name], output)
                     loss_alphas[block_name][str(alpha)] = loss
                     del block_copy  # release memory
@@ -979,9 +1066,13 @@ class TorchSmoothQuant:
         """
         logger.info("start sq auto tuning")
         round_num = max(
-            len(str(alpha_min).split(".")[1]), len(str(alpha_max).split(".")[1]), len(str(alpha_step).split(".")[1])
+            len(str(alpha_min).split(".")[1]),
+            len(str(alpha_max).split(".")[1]),
+            len(str(alpha_step).split(".")[1]),
         )
-        alpha_space = numpy.round(numpy.arange(alpha_min, alpha_max + alpha_step, alpha_step), round_num).tolist()
+        alpha_space = numpy.round(
+            numpy.arange(alpha_min, alpha_max + alpha_step, alpha_step), round_num
+        ).tolist()
         ##wrapper new module
         self._qdq_model_wrapper_for_auto(save_q_input=True)
         ##set alpha to 0.5 as default
@@ -998,12 +1089,18 @@ class TorchSmoothQuant:
         alpha_update_iter = 0
         # multiply_factor is used to combine samples to calib_sample_num // 4 before summarizing the best alpha
         tune_cnt = 4
-        multiply_factor = calib_sample_num // tune_cnt if calib_sample_num >= tune_cnt else calib_sample_num
+        multiply_factor = (
+            calib_sample_num // tune_cnt
+            if calib_sample_num >= tune_cnt
+            else calib_sample_num
+        )
         self.fp32_output_val = {}
 
         best_alphas = default_alpha
         if not self.dataloader:
-            logger.info(f"Auto-tuning failed due to no dataloader, using {best_alphas} instead.")
+            logger.info(
+                f"Auto-tuning failed due to no dataloader, using {best_alphas} instead."
+            )
             self._qdq_model_unwrapper_for_auto()
             return best_alphas
         bar = tqdm(self.dataloader, total=calib_sample_num, desc="auto tune alpha")
@@ -1015,9 +1112,13 @@ class TorchSmoothQuant:
                     for key in self.absorb_to_layer.keys():
                         layer_names = self.absorb_to_layer[key]
                         for layer_name in layer_names:
-                            best_alphas_per_module[layer_name] = best_alphas_per_module[key]
+                            best_alphas_per_module[layer_name] = best_alphas_per_module[
+                                key
+                            ]
 
-                loss_tmp = self._get_one_batch_auto_loss(input, alpha_space, best_alphas_per_module, input_maxes)
+                loss_tmp = self._get_one_batch_auto_loss(
+                    input, alpha_space, best_alphas_per_module, input_maxes
+                )
                 if self.do_blockwise:
                     if loss_alphas == {}:
                         for block_name in self.block_names:
@@ -1028,7 +1129,9 @@ class TorchSmoothQuant:
                             for key in self.block_to_module[block_name]:
                                 cur_loss = loss_alphas[key]
                                 for alpha_key in cur_loss.keys():
-                                    cur_loss[alpha_key] += loss_tmp[block_name][alpha_key]
+                                    cur_loss[alpha_key] += loss_tmp[block_name][
+                                        alpha_key
+                                    ]
                 else:
                     if loss_alphas == {}:
                         loss_alphas = loss_tmp
@@ -1042,9 +1145,13 @@ class TorchSmoothQuant:
                 if tmp_cnt // multiply_factor >= 1:
                     alpha_update_iter += 1
                     tmp_cnt = 0
-                    best_alphas = self._get_best_alpha(self.absorb_to_layer, loss_alphas, shared_criterion)
+                    best_alphas = self._get_best_alpha(
+                        self.absorb_to_layer, loss_alphas, shared_criterion
+                    )
                     for key in best_alphas.keys():
-                        logger.info(f"Auto alpha update iter: {alpha_update_iter}, {key}: {best_alphas[key]}")
+                        logger.info(
+                            f"Auto alpha update iter: {alpha_update_iter}, {key}: {best_alphas[key]}"
+                        )
                     absorb_input_scales, weight_scales = self._cal_scales(
                         self.absorb_to_layer, input_maxes, best_alphas, tuning=True
                     )
@@ -1061,9 +1168,13 @@ class TorchSmoothQuant:
                     for key in self.absorb_to_layer.keys():
                         layer_names = self.absorb_to_layer[key]
                         for layer_name in layer_names:
-                            best_alphas_per_module[layer_name] = best_alphas_per_module[key]
+                            best_alphas_per_module[layer_name] = best_alphas_per_module[
+                                key
+                            ]
 
-                loss_tmp = self._get_one_batch_auto_loss(input, alpha_space, best_alphas_per_module, input_maxes)
+                loss_tmp = self._get_one_batch_auto_loss(
+                    input, alpha_space, best_alphas_per_module, input_maxes
+                )
                 if self.do_blockwise:
                     if loss_alphas == {}:
                         for block_name in self.block_names:
@@ -1074,7 +1185,9 @@ class TorchSmoothQuant:
                             for key in self.block_to_module[block_name]:
                                 cur_loss = loss_alphas[key]
                                 for alpha_key in cur_loss.keys():
-                                    cur_loss[alpha_key] += loss_tmp[block_name][alpha_key]
+                                    cur_loss[alpha_key] += loss_tmp[block_name][
+                                        alpha_key
+                                    ]
                 else:
                     if loss_alphas == {}:
                         loss_alphas = loss_tmp
@@ -1089,9 +1202,13 @@ class TorchSmoothQuant:
                     alpha_update_iter += 1
                     tmp_cnt = 0
 
-                    best_alphas = self._get_best_alpha(self.absorb_to_layer, loss_alphas, shared_criterion)
+                    best_alphas = self._get_best_alpha(
+                        self.absorb_to_layer, loss_alphas, shared_criterion
+                    )
                     for key in best_alphas.keys():
-                        logger.info(f"Auto alpha update iter: {alpha_update_iter}, {key}: {best_alphas[key]}")
+                        logger.info(
+                            f"Auto alpha update iter: {alpha_update_iter}, {key}: {best_alphas[key]}"
+                        )
                     absorb_input_scales, weight_scales = self._cal_scales(
                         self.absorb_to_layer, input_maxes, best_alphas, tuning=True
                     )
@@ -1100,7 +1217,9 @@ class TorchSmoothQuant:
                 if total_cnt >= calib_sample_num:
                     break
 
-        best_alphas = self._get_best_alpha(self.absorb_to_layer, loss_alphas, shared_criterion)
+        best_alphas = self._get_best_alpha(
+            self.absorb_to_layer, loss_alphas, shared_criterion
+        )
         for key in best_alphas.keys():
             logger.info(f"Final alpha {key}:{best_alphas[key]}")
         max_op, max_ratio, max_key = "", 0, ""
@@ -1122,7 +1241,9 @@ class TorchSmoothQuant:
                 )
         import operator
 
-        ratio_info = dict(sorted(ratio_info.items(), key=operator.itemgetter(1), reverse=True))
+        ratio_info = dict(
+            sorted(ratio_info.items(), key=operator.itemgetter(1), reverse=True)
+        )
         for key in list(ratio_info.keys()):
             logger.debug(f"sorted opname-ratio: {key}:  {ratio_info[key]}")
         if max_op != "":
@@ -1177,7 +1298,9 @@ class TorchSmoothQuant:
             self.block_names = self.get_blocks()
             logger.info("Blockwise auto-tuning will be performed")
         if not isinstance(self.model, torch.nn.Module):
-            logger.warning("smooth quant is ignored since the model is not a torch module")
+            logger.warning(
+                "smooth quant is ignored since the model is not a torch module"
+            )
             return self.model
 
         if folding:
@@ -1193,15 +1316,23 @@ class TorchSmoothQuant:
         self.default_alpha = default_alpha
         self.auto_alpha_args = auto_alpha_args
         self.recover()
-        need_calibration = self._check_need_calibration(alpha, percentile, op_types, scales_per_op, calib_iter)
+        need_calibration = self._check_need_calibration(
+            alpha, percentile, op_types, scales_per_op, calib_iter
+        )
         with torch.no_grad():
             str_op_types = [i.__name__ for i in op_types]
             input_maxes_abs = self.input_maxes_abs
-            if need_calibration:  ##avoid multiple calibaration during tuning if the only difference is alpha
+            if (
+                need_calibration
+            ):  ##avoid multiple calibaration during tuning if the only difference is alpha
                 if self.insert_mul:
-                    self.self_absorb_layers = self._get_all_layer_names(op_types)  # TODO: only support linear now.
+                    self.self_absorb_layers = self._get_all_layer_names(
+                        op_types
+                    )  # TODO: only support linear now.
                     # fetch modules with the same input
-                    group_modules = self._trace(str_op_types, skip_unsupported_layers=False)
+                    group_modules = self._trace(
+                        str_op_types, skip_unsupported_layers=False
+                    )
                     if group_modules is not None:
                         # use one input for qkv
                         for k, v in group_modules.items():
@@ -1246,15 +1377,23 @@ class TorchSmoothQuant:
                         if not checked:
                             self.block_to_module[module] = [module]
                     self.block_names = list(self.block_to_module.keys())
-                    logger.info(f"Blockwise auto-tuning: {len(self.block_names)} blocks found")
-                    logger.debug(f"Blockwise auto-tuning blocks info: {self.block_to_module}")
+                    logger.info(
+                        f"Blockwise auto-tuning: {len(self.block_names)} blocks found"
+                    )
+                    logger.debug(
+                        f"Blockwise auto-tuning blocks info: {self.block_to_module}"
+                    )
 
-                input_maxes_abs = self._calibrate(self.absorb_to_layer, calib_iter, percentile)
+                input_maxes_abs = self._calibrate(
+                    self.absorb_to_layer, calib_iter, percentile
+                )
 
                 # Check if input_maxes match self.absorb_to_layer
                 # (due to self._get_all_layer_names use layer tree instead of forward_path)
                 if not folding:
-                    diff_modules = set(self.absorb_to_layer.keys()).difference(input_maxes_abs.keys())
+                    diff_modules = set(self.absorb_to_layer.keys()).difference(
+                        input_maxes_abs.keys()
+                    )
                     for d in diff_modules:
                         del self.absorb_to_layer[d]
 
@@ -1262,11 +1401,13 @@ class TorchSmoothQuant:
                 for key in self.absorb_to_layer:
                     layer_name = self.absorb_to_layer[key][0]
                     input_max = input_maxes_abs[layer_name]
-                    scale_memo_use += 4 * input_max.shape[0] * len(self.absorb_to_layer[key])
+                    scale_memo_use += (
+                        4 * input_max.shape[0] * len(self.absorb_to_layer[key])
+                    )
                 if alpha == "auto":
-                    alpha_space = (auto_alpha_args["alpha_max"] - auto_alpha_args["alpha_min"]) / auto_alpha_args[
-                        "alpha_step"
-                    ] + 1
+                    alpha_space = (
+                        auto_alpha_args["alpha_max"] - auto_alpha_args["alpha_min"]
+                    ) / auto_alpha_args["alpha_step"] + 1
                     scale_memo_use *= alpha_space
                 self._save_scale = enough_memo_store_scale(self.device, scale_memo_use)
 
@@ -1279,7 +1420,9 @@ class TorchSmoothQuant:
                 alpha = self.alpha_per_layer
             example_inputs = self._get_example_input()
             if example_inputs is not None:
-                out_pre_sq = model_forward_per_sample(self.model, example_inputs, self.device)
+                out_pre_sq = model_forward_per_sample(
+                    self.model, example_inputs, self.device
+                )
 
             if folding:
                 self._save_scale = False
@@ -1296,7 +1439,9 @@ class TorchSmoothQuant:
             self.model._smoothquant_optimized = True
             if example_inputs is not None:
                 # Check mathematical equivelancy
-                out_post_sq = model_forward_per_sample(self.model, example_inputs, self.device)
+                out_post_sq = model_forward_per_sample(
+                    self.model, example_inputs, self.device
+                )
 
                 if not self.output_is_equal(out_post_sq, out_pre_sq):
                     logger.warning(
@@ -1304,16 +1449,24 @@ class TorchSmoothQuant:
                         "Please kindly report this issue to https://github.com/intel/neural-compressor."
                     )
             else:
-                logger.warning(" Could not get example input, equivelancy check is skipped")
+                logger.warning(
+                    " Could not get example input, equivelancy check is skipped"
+                )
 
             return self.model
 
     def output_is_equal(self, out1, out2, atol=1e-04):
         try:
             if isinstance(out1, tuple):
-                return all(torch.all(torch.isclose(out1[i], out2[i], atol=atol)) for i in range(len(out1)))
+                return all(
+                    torch.all(torch.isclose(out1[i], out2[i], atol=atol))
+                    for i in range(len(out1))
+                )
             elif isinstance(out1, dict):
-                return all(torch.all(torch.isclose(out1[k], out2[k], atol=atol)) for k in out1.keys())
+                return all(
+                    torch.all(torch.isclose(out1[k], out2[k], atol=atol))
+                    for k in out1.keys()
+                )
             elif isinstance(out1, torch.Tensor):
                 return torch.all(torch.isclose(out1, out2, atol=atol))
             return False
@@ -1432,7 +1585,12 @@ class GraphTrace:
 
         ##TODO potential bug, need to check only have one bug
         ##TODO, must satisfy af(x)=f(ax),current skip layer may be incomplete
-        self.skip_ops_to_find_absorb = ["aten::to", "aten::relu", "aten::leaky_relu", "aten::hardtanh"]
+        self.skip_ops_to_find_absorb = [
+            "aten::to",
+            "aten::relu",
+            "aten::leaky_relu",
+            "aten::hardtanh",
+        ]
 
         self.could_absorb_layers = [
             "aten::layer_norm",
@@ -1454,23 +1612,36 @@ class GraphTrace:
         if isinstance(dummy_input, dict) or isinstance(dummy_input, UserDict):
             try:
                 traced_model = torch.jit.trace(
-                    model, example_kwarg_inputs=dict(dummy_input), strict=False, check_trace=False
+                    model,
+                    example_kwarg_inputs=dict(dummy_input),
+                    strict=False,
+                    check_trace=False,
                 )
-                traced_model = torch.jit.freeze(traced_model.eval(), optimize_numerics=optimize_numerics)
+                traced_model = torch.jit.freeze(
+                    traced_model.eval(), optimize_numerics=optimize_numerics
+                )
             except Exception as e:
                 logger.warning(e)
-                logger.warning("Jit trace in GraphTrace failed, absorb layer detection is skipped")
+                logger.warning(
+                    "Jit trace in GraphTrace failed, absorb layer detection is skipped"
+                )
         else:
             try:
                 traced_model = torch.jit.trace(model, dummy_input, strict=False)
-                traced_model = torch.jit.freeze(traced_model.eval(), optimize_numerics=optimize_numerics)
+                traced_model = torch.jit.freeze(
+                    traced_model.eval(), optimize_numerics=optimize_numerics
+                )
             except:
                 try:
                     traced_model = torch.jit.trace(model, dummy_input[0], strict=False)
-                    traced_model = torch.jit.freeze(traced_model.eval(), optimize_numerics=optimize_numerics)
+                    traced_model = torch.jit.freeze(
+                        traced_model.eval(), optimize_numerics=optimize_numerics
+                    )
                 except Exception as e:
                     logger.warning(e)
-                    logger.warning("Jit trace in GraphTrace failed, absorb layer detection is skipped")
+                    logger.warning(
+                        "Jit trace in GraphTrace failed, absorb layer detection is skipped"
+                    )
         model = model.to(orig_device)
         return traced_model
 
@@ -1502,11 +1673,17 @@ class GraphTrace:
                     parent_out_kinds = set(parent_out_kinds)
                     parent_out_kinds.discard("aten::size")
 
-                    if parent_out_kinds == parent_out_kinds.intersection(self.could_absorb_layers):
+                    if parent_out_kinds == parent_out_kinds.intersection(
+                        self.could_absorb_layers
+                    ):
                         prev_absorb_layer.append(parent)
                     elif parent_out_kinds.intersection(self.skip_ops_to_find_absorb):
                         res = self.skip_op_absorb_helper(parent)
-                        prev_absorb_layer.append(parent) if res else prev_absorb_layer.append(None)
+                        (
+                            prev_absorb_layer.append(parent)
+                            if res
+                            else prev_absorb_layer.append(None)
+                        )
                     else:  # When parent to multiple ops, sq transformation could be wrong.
                         prev_absorb_layer.append(None)
                 else:
@@ -1548,13 +1725,18 @@ class GraphTrace:
         if not isinstance(module, torch.nn.Conv2d):
             return True
         if module.groups > 1:
-            if module.in_channels == module.out_channels and module.groups == module.in_channels:
+            if (
+                module.in_channels == module.out_channels
+                and module.groups == module.in_channels
+            ):
                 return True
             else:
                 return False
         return True
 
-    def get_absorb_to_layer(self, model, example_input, op_types, skip_unsupported_layers=True):
+    def get_absorb_to_layer(
+        self, model, example_input, op_types, skip_unsupported_layers=True
+    ):
         traced_model = self.trace(model, example_input)
         if traced_model is None:
             return None, None
@@ -1567,7 +1749,9 @@ class GraphTrace:
         no_absorb_layers = []
         for index, absorb in enumerate(nodes_prev_absorb):
             if absorb is None:
-                no_absorb_layers.append(".".join(nodes[index].scopeName().split("/")[-1].split(".")[1:]))
+                no_absorb_layers.append(
+                    ".".join(nodes[index].scopeName().split("/")[-1].split(".")[1:])
+                )
                 continue
             node = nodes[index]
             layer_name = ".".join(node.scopeName().split("/")[-1].split(".")[1:])
@@ -1579,7 +1763,9 @@ class GraphTrace:
             else:
                 absorb_to_layer[absorb_name] = [layer_name]
         if skip_unsupported_layers:
-            absorb_to_layer = self.remove_unsupported_layers(model, absorb_to_layer, no_absorb_layers)
+            absorb_to_layer = self.remove_unsupported_layers(
+                model, absorb_to_layer, no_absorb_layers
+            )
         return absorb_to_layer, no_absorb_layers
 
     def remove_unsupported_layers(self, model, absorb_to_layer, no_absorb_layers):
@@ -1594,7 +1780,9 @@ class GraphTrace:
             for layer_name in absorb_to_layer[key]:
                 layer = get_module(model, layer_name)
                 layer_type = layer.__class__.__name__
-                if (layer_type not in self.supported_torch_module_to_aten.keys()) or not self._check_valid_conv(layer):
+                if (
+                    layer_type not in self.supported_torch_module_to_aten.keys()
+                ) or not self._check_valid_conv(layer):
                     supported = False
                     no_absorb_layers.extend(absorb_to_layer[key])
                     break

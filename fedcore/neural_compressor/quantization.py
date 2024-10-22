@@ -143,7 +143,6 @@ def fit(
         # Saved quantized model in ./saved folder
         q_model.save("./saved")
     """
-    _raw_model = model
     ni_workload_id = None
 
     if calib_dataloader is not None:
@@ -161,7 +160,9 @@ def fit(
     else:
         metric = None
 
-    config = _Config(quantization=conf, benchmark=None, pruning=None, distillation=None, nas=None)
+    config = _Config(
+        quantization=conf, benchmark=None, pruning=None, distillation=None, nas=None
+    )
     strategy_name = conf.tuning_criterion.strategy
 
     if conf.quant_level == "auto":
@@ -171,22 +172,33 @@ def fit(
 
     if strategy_name == "mse_v2":
         if not (
-            conf.framework.startswith("tensorflow") or conf.framework in ["pytorch_fx", "onnxruntime"]
+            conf.framework.startswith("tensorflow")
+            or conf.framework in ["pytorch_fx", "onnxruntime"]
         ):  # pragma: no cover
             strategy_name = "basic"
-            logger.warning(f"MSE_v2 does not support {conf.framework} now, use basic instead.")
-            logger.warning("Only tensorflow, pytorch_fx is supported by MSE_v2 currently.")
-    assert strategy_name in STRATEGIES, "Tuning strategy {} is NOT supported".format(strategy_name)
+            logger.warning(
+                f"MSE_v2 does not support {conf.framework} now, use basic instead."
+            )
+            logger.warning(
+                "Only tensorflow, pytorch_fx is supported by MSE_v2 currently."
+            )
+    assert strategy_name in STRATEGIES, "Tuning strategy {} is NOT supported".format(
+        strategy_name
+    )
 
     logger.info(f"Start {strategy_name} tuning.")
     _resume = None
     # check if interrupted tuning procedure exists. if yes, it will resume the
     # whole auto tune process.
     resume_file = (
-        os.path.abspath(os.path.expanduser(options.resume_from)) if options.workspace and options.resume_from else None
+        os.path.abspath(os.path.expanduser(options.resume_from))
+        if options.workspace and options.resume_from
+        else None
     )
     if resume_file:
-        assert os.path.exists(resume_file), "The specified resume file {} doesn't exist!".format(resume_file)
+        assert os.path.exists(
+            resume_file
+        ), "The specified resume file {} doesn't exist!".format(resume_file)
         with open(resume_file, "rb") as f:
             _resume = pickle.load(f).__dict__
 
@@ -251,7 +263,8 @@ def fit(
     finally:
         if strategy.best_qmodel:
             logger.info(
-                "Specified timeout or max trials is reached! " "Found a quantized model which meet accuracy goal. Exit."
+                "Specified timeout or max trials is reached! "
+                "Found a quantized model which meet accuracy goal. Exit."
             )
             strategy.deploy_config()
         else:

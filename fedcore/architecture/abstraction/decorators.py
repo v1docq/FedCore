@@ -1,5 +1,4 @@
 import ssl
-from enum import Enum
 
 import dask
 import distributed.dashboard.components.scheduler as dashboard
@@ -8,12 +7,17 @@ from distributed.security import Security
 from weakref import WeakValueDictionary
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
-from fedcore.architecture.preprocessing.data_convertor import CustomDatasetCLF, CustomDatasetTS, DataConverter, \
-    TensorConverter
+from fedcore.architecture.preprocessing.data_convertor import (
+    CustomDatasetCLF,
+    CustomDatasetTS,
+    DataConverter,
+    TensorConverter,
+)
 from fedcore.architecture.settings.computational import backend_methods as np
 
 
 # from dask.distributed import LocalCluster, Client
+
 
 def fedot_data_type(func):
     def decorated_func(self, *args):
@@ -96,12 +100,14 @@ def remove_1_dim_axis(func):
 def convert_to_input_data(func):
     def decorated_func(*args, **kwargs):
         features, names = func(*args, **kwargs)
-        ts_data = InputData(idx=np.arange(len(features)),
-                            features=features,
-                            target='no_target',
-                            task='no_task',
-                            data_type=DataTypesEnum.table,
-                            supplementary_data={'feature_name': names})
+        ts_data = InputData(
+            idx=np.arange(len(features)),
+            features=features,
+            target="no_target",
+            task="no_task",
+            data_type=DataTypesEnum.table,
+            supplementary_data={"feature_name": names},
+        )
         return ts_data
 
     return decorated_func
@@ -120,27 +126,27 @@ class Singleton(type):
 class DaskServer(metaclass=Singleton):
     def __init__(self):
         self._overload_dask_config()
-        print('Creating Dask Server')
-        cluster = LocalCluster(processes=False,
-                               security=self.sec
-                               )
+        print("Creating Dask Server")
+        cluster = LocalCluster(processes=False, security=self.sec)
         # connect client to your cluster
         self.client = Client(cluster)
 
     def _overload_dask_config(self):
-        self.sec = Security(tls_max_version=ssl.TLSVersion.TLSv1_3,
-                            tls_min_version=ssl.TLSVersion.TLSv1_2)
-        dask.config.set({"distributed.scheduler.idle-timeout": '5 minutes'})
+        self.sec = Security(
+            tls_max_version=ssl.TLSVersion.TLSv1_3,
+            tls_min_version=ssl.TLSVersion.TLSv1_2,
+        )
+        dask.config.set({"distributed.scheduler.idle-timeout": "5 minutes"})
         # Shut down the scheduler after this duration if no activity has occurred
-        dask.config.set({"distributed.scheduler.no-workers-timeout": '5 minutes'})
+        dask.config.set({"distributed.scheduler.no-workers-timeout": "5 minutes"})
         # Timeout for tasks in an unrunnable state. If task remains unrunnable for longer than this, it fails.
         # A task is considered unrunnable IFF it has no pending dependencies,
         # and the task has restrictions that are not satisfied by any available worker
         # or no workers are running at all. In adaptive clusters,
         # this timeout must be set to be safely higher than the time it takes for workers to spin up.
-        dask.config.set({"distributed.worker.lifetime.duration": '1 hour'})
+        dask.config.set({"distributed.worker.lifetime.duration": "1 hour"})
         # The time after creation to close the worker, like "1 hour"
-        setattr(dashboard, 'BOKEH_THEME', 'night_sky')
+        setattr(dashboard, "BOKEH_THEME", "night_sky")
         # 'caliber'
         # 'light_minimal'
         # 'dark_minimal'

@@ -43,7 +43,9 @@ def _prepare_inputs(pt_model, input_names, example_inputs):
         import inspect
 
         input_order = inspect.signature(pt_model.forward).parameters.keys()
-        flag = [name in input_order for name in input_names]  # whether should be checked
+        flag = [
+            name in input_order for name in input_names
+        ]  # whether should be checked
         if all(flag):
             new_input_names = []
             new_example_inputs = []
@@ -94,7 +96,9 @@ def get_node_mapping(
 
     module_node_mapping = {}
     fp32_onnx_model = onnx.load(fp32_onnx_path)
-    initializer_data = {tensor.name: tensor for tensor in fp32_onnx_model.graph.initializer}
+    initializer_data = {
+        tensor.name: tensor for tensor in fp32_onnx_model.graph.initializer
+    }
     from onnx import numpy_helper
 
     for node in fp32_onnx_model.graph.node:
@@ -191,14 +195,20 @@ def dynamic_quant_export(
     if REDUCE_RANGE:
         logger.info("Reduce range is {}".format(str(REDUCE_RANGE)))
 
-    logger.info("Quantization format is not available when executing dynamic quantization.")
+    logger.info(
+        "Quantization format is not available when executing dynamic quantization."
+    )
 
     if weight_type.upper() == "S8":
         weight_type = ortq.QuantType.QInt8
     elif weight_type.upper() == "U8":
         weight_type = ortq.QuantType.QUInt8
     else:
-        assert False, "Right now, we don't support weight type: {}, " "please use S8/U8.".format(weight_type)
+        assert (
+            False
+        ), "Right now, we don't support weight type: {}, " "please use S8/U8.".format(
+            weight_type
+        )
 
     ortq.quantize_dynamic(
         fp32_onnx_path,
@@ -240,7 +250,9 @@ def static_quant_export(
         output_names (dict, optional): output names. Defaults to None.
         quant_format (str, optional): _quantization format of ONNX model. Defaults to 'QDQ'.
     """
-    input_names, example_inputs = _prepare_inputs(pt_int8_model, input_names, example_inputs)
+    input_names, example_inputs = _prepare_inputs(
+        pt_int8_model, input_names, example_inputs
+    )
 
     def model_wrapper(model_fn):
         # export doesn't support a dictionary output, so manually turn it into a tuple
@@ -288,7 +300,9 @@ def static_quant_export(
 
     if quant_format != "QDQ":
         sess_options = ort.SessionOptions()
-        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+        sess_options.graph_optimization_level = (
+            ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+        )
         sess_options.optimized_model_filepath = save_path
         ort.InferenceSession(save_path, sess_options)
 
@@ -326,7 +340,9 @@ def torch_to_fp32_onnx(
         + "please customize a eval_func when quantizing, if not, such as `lambda x: 1`."
     )
 
-    input_names, example_inputs = _prepare_inputs(pt_fp32_model, input_names, example_inputs)
+    input_names, example_inputs = _prepare_inputs(
+        pt_fp32_model, input_names, example_inputs
+    )
 
     with torch.no_grad():
         torch.onnx.export(
@@ -383,7 +399,8 @@ def torch_to_int8_onnx(
     from fedcore.neural_compressor.utils.pytorch import is_int8_model
 
     assert is_int8_model(pt_int8_model), (
-        "The exported model is not INT8 model, " "please reset 'dtype' to 'FP32' or check your model."
+        "The exported model is not INT8 model, "
+        "please reset 'dtype' to 'FP32' or check your model."
     )
 
     assert q_config is not None, "'q_config' is needed when export an INT8 model."
@@ -392,7 +409,8 @@ def torch_to_int8_onnx(
     if quant_format == "QDQ" and opset_version < 13:  # pragma: no cover
         opset_version = 13
         logger.warning(
-            "QDQ format requires opset_version >= 13, " + "we reset opset_version={} here".format(opset_version)
+            "QDQ format requires opset_version >= 13, "
+            + "we reset opset_version={} here".format(opset_version)
         )
 
     if q_config["approach"] == "post_training_dynamic_quant":

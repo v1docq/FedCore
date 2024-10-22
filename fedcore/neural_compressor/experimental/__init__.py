@@ -26,7 +26,6 @@ from .model_conversion import ModelConversion
 from .distillation import Distillation
 from .nas import NAS
 from . import export
-from .contrib import *
 
 __all__ = [
     "Component",
