@@ -24,7 +24,6 @@ from dataclasses import dataclass
 from typing import List, Optional, Union
 
 from fedcore.neural_compressor.utils.utility import LazyImport
-
 from .dataset import Dataset, dataset_registry
 
 torch = LazyImport("torch")
@@ -72,7 +71,10 @@ class PytorchBertDataset(Dataset):
     def __init__(self, dataset, task, model_type="bert", transform=None, filter=None):
         """Initialize the attributes of class."""
         self.dataset = dataset
-        assert task in ("classifier", "squad"), "Bert task support only classifier squad"
+        assert task in (
+            "classifier",
+            "squad",
+        ), "Bert task support only classifier squad"
         self.task = task
         self.transform = transform
         self.model_type = model_type
@@ -90,7 +92,11 @@ class PytorchBertDataset(Dataset):
         if self.transform is not None:
             sample = self.transform(sample)
         if self.task == "classifier":
-            inputs = {"input_ids": sample[0], "attention_mask": sample[1], "labels": sample[3]}
+            inputs = {
+                "input_ids": sample[0],
+                "attention_mask": sample[1],
+                "labels": sample[3],
+            }
 
             if self.model_type != "distilbert":
                 # XLM, DistilBERT and RoBERTa don't use segment_ids
@@ -105,7 +111,9 @@ class PytorchBertDataset(Dataset):
             }
             if self.model_type != "distilbert":
                 # XLM, DistilBERT and RoBERTa don't use segment_ids
-                inputs["token_type_ids"] = sample[2] if self.model_type in ["bert", "xlnet"] else None
+                inputs["token_type_ids"] = (
+                    sample[2] if self.model_type in ["bert", "xlnet"] else None
+                )
             if self.model_type in ["xlnet", "xlm"]:
                 inputs.update({"cls_index": sample[4], "p_mask": sample[5]})
             example_indices = sample[3]
@@ -162,7 +170,16 @@ class ONNXRTBertDataset(Dataset):
         """Initialize the attributes of class."""
         task = task.lower()
         model_type = model_type.lower()
-        assert task in ["mrpc", "qqp", "qnli", "rte", "sts-b", "cola", "mnli", "wnli"], "Unsupported task type"
+        assert task in [
+            "mrpc",
+            "qqp",
+            "qnli",
+            "rte",
+            "sts-b",
+            "cola",
+            "mnli",
+            "wnli",
+        ], "Unsupported task type"
         assert model_type in [
             "distilbert",
             "bert",
@@ -174,9 +191,17 @@ class ONNXRTBertDataset(Dataset):
         self.dynamic_length = dynamic_length
         self.model_type = model_type
         self.max_seq_length = max_seq_length
-        tokenizer = transformers.AutoTokenizer.from_pretrained(model_name_or_path, do_lower_case=do_lower_case)
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            model_name_or_path, do_lower_case=do_lower_case
+        )
         self.dataset = load_and_cache_examples(
-            data_dir, model_name_or_path, max_seq_length, task, model_type, tokenizer, evaluate
+            data_dir,
+            model_name_or_path,
+            max_seq_length,
+            task,
+            model_type,
+            tokenizer,
+            evaluate,
         )
 
     def __len__(self):
@@ -191,7 +216,9 @@ class ONNXRTBertDataset(Dataset):
         return self.dataset[index]
 
 
-def load_and_cache_examples(data_dir, model_name_or_path, max_seq_length, task, model_type, tokenizer, evaluate):
+def load_and_cache_examples(
+    data_dir, model_name_or_path, max_seq_length, task, model_type, tokenizer, evaluate
+):
     """Load and cache the examples.
 
     Helper Function for ONNXRTBertDataset.
@@ -221,7 +248,11 @@ def load_and_cache_examples(data_dir, model_name_or_path, max_seq_length, task, 
         if task in ["mnli", "mnli-mm"] and model_type in ["roberta"]:
             # HACK(label indices are swapped in RoBERTa pretrained model)
             label_list[1], label_list[2] = label_list[2], label_list[1]
-        examples = processor.get_dev_examples(data_dir) if evaluate else processor.get_train_examples(data_dir)
+        examples = (
+            processor.get_dev_examples(data_dir)
+            if evaluate
+            else processor.get_train_examples(data_dir)
+        )
         features = convert_examples_to_features(
             examples,
             tokenizer,
@@ -234,14 +265,24 @@ def load_and_cache_examples(data_dir, model_name_or_path, max_seq_length, task, 
         torch.save(features, cached_features_file)
     # Convert to Tensors and build dataset
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-    all_attention_mask = torch.tensor([f.attention_mask for f in features], dtype=torch.long)
-    all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long)
+    all_attention_mask = torch.tensor(
+        [f.attention_mask for f in features], dtype=torch.long
+    )
+    all_token_type_ids = torch.tensor(
+        [f.token_type_ids for f in features], dtype=torch.long
+    )
     all_seq_lengths = torch.tensor([f.seq_length for f in features], dtype=torch.long)
     if output_mode == "classification":
         all_labels = torch.tensor([f.label for f in features], dtype=torch.long)
     elif output_mode == "regression":
         all_labels = torch.tensor([f.label for f in features], dtype=torch.float)
-    dataset = TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_seq_lengths, all_labels)
+    dataset = TensorDataset(
+        all_input_ids,
+        all_attention_mask,
+        all_token_type_ids,
+        all_seq_lengths,
+        all_labels,
+    )
     return dataset
 
 
@@ -285,14 +326,22 @@ def convert_examples_to_features(
         padding_length = max_length - len(input_ids)
 
         input_ids = input_ids + ([pad_token] * padding_length)
-        attention_mask = attention_mask + ([0 if mask_padding_with_zero else 1] * padding_length)
+        attention_mask = attention_mask + (
+            [0 if mask_padding_with_zero else 1] * padding_length
+        )
         token_type_ids = token_type_ids + ([pad_token_segment_id] * padding_length)
 
-        assert len(input_ids) == max_length, "Error with input_ids length {} vs {}".format(len(input_ids), max_length)
-        assert len(attention_mask) == max_length, "Error with attention_mask length {} vs {}".format(
+        assert (
+            len(input_ids) == max_length
+        ), "Error with input_ids length {} vs {}".format(len(input_ids), max_length)
+        assert (
+            len(attention_mask) == max_length
+        ), "Error with attention_mask length {} vs {}".format(
             len(attention_mask), max_length
         )
-        assert len(token_type_ids) == max_length, "Error with token_type_ids length {} vs {}".format(
+        assert (
+            len(token_type_ids) == max_length
+        ), "Error with token_type_ids length {} vs {}".format(
             len(token_type_ids), max_length
         )
         if output_mode == "classification":
@@ -342,7 +391,9 @@ class InputFeatures:
         return json.dumps(dataclasses.asdict(self)) + "\n"
 
 
-@dataset_registry(dataset_type="bert", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="bert", framework="tensorflow, tensorflow_itex", dataset_format=""
+)
 class TensorflowBertDataset(Dataset):
     """Tensorflow dataset used for model Bert.
 
@@ -357,7 +408,15 @@ class TensorflowBertDataset(Dataset):
                                                  to specific conditions
     """
 
-    def __init__(self, root, label_file, task="squad", model_type="bert", transform=None, filter=None):
+    def __init__(
+        self,
+        root,
+        label_file,
+        task="squad",
+        model_type="bert",
+        transform=None,
+        filter=None,
+    ):
         """Initialize the attributes of class."""
         import json
 
@@ -411,7 +470,9 @@ class ParseDecodeBert:
         return (input_ids, input_mask, segment_ids)
 
 
-@dataset_registry(dataset_type="mzbert", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="mzbert", framework="tensorflow, tensorflow_itex", dataset_format=""
+)
 class TensorflowModelZooBertDataset(Dataset):
     """Tensorflow dataset for three-input Bert in tf record format.
 
@@ -425,7 +486,16 @@ class TensorflowModelZooBertDataset(Dataset):
           filter (Filter objects, default=None): filter out examples according.
     """
 
-    def __init__(self, root, label_file, task="squad", model_type="bert", transform=None, filter=None, num_cores=28):
+    def __init__(
+        self,
+        root,
+        label_file,
+        task="squad",
+        model_type="bert",
+        transform=None,
+        filter=None,
+        num_cores=28,
+    ):
         """Initialize the attributes of class."""
         import json
 
@@ -441,7 +511,10 @@ class TensorflowModelZooBertDataset(Dataset):
             example.ParseFromString(element)
             break
         feature = example.context.feature
-        if len(feature["input_ids"].int64_list.value) == 0 and len(feature["input_mask"].int64_list.value) == 0:
+        if (
+            len(feature["input_ids"].int64_list.value) == 0
+            and len(feature["input_mask"].int64_list.value) == 0
+        ):
             raise ValueError(
                 "Tfrecord format is incorrect, please refer\
                 'https://github.com/tensorflow/models/blob/master/research/\

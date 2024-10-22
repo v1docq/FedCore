@@ -38,7 +38,11 @@ def get_func_from_config(func_dict, cfg, compose=True):
             func_args.append(func_value)
         func_list.append(func_dict[func_name](*func_args, **func_kwargs))
 
-    func = func_dict["Compose"](func_list) if compose else (func_list[0] if len(func_list) > 0 else None)
+    func = (
+        func_dict["Compose"](func_list)
+        if compose
+        else (func_list[0] if len(func_list) > 0 else None)
+    )
     return func
 
 
@@ -76,7 +80,6 @@ def get_algorithm(algorithms, cfg, compose=False):
 
 def create_dataset(framework, data_source, cfg_preprocess, cfg_filter):
     """Create the dataset from the data source."""
-    transform_list = []
     # generate framework specific transforms
     preprocess = None
     if cfg_preprocess is not None:
@@ -93,18 +96,34 @@ def create_dataset(framework, data_source, cfg_preprocess, cfg_filter):
         filter_dataset_type = filter_type + dataset_type
         filter = filters[filter_dataset_type](**cfg_filter[filter_type])
     # in this case we should prepare eval_data and calib_data separately
-    dataset = datasets[dataset_type](**data_source[dataset_type], transform=preprocess, filter=filter)
+    dataset = datasets[dataset_type](
+        **data_source[dataset_type], transform=preprocess, filter=filter
+    )
     return dataset
 
 
 def create_dataloader(framework, dataloader_cfg):
     """Create the dataloader according to the framework."""
     batch_size = (
-        int(dataloader_cfg["batch_size"]) if dataloader_cfg.get("batch_size") is not None else DEFAULT_BATCH_SIZE
+        int(dataloader_cfg["batch_size"])
+        if dataloader_cfg.get("batch_size") is not None
+        else DEFAULT_BATCH_SIZE
     )
-    last_batch = dataloader_cfg["last_batch"] if dataloader_cfg.get("last_batch") is not None else "rollover"
-    shuffle = dataloader_cfg["shuffle"] if dataloader_cfg.get("shuffle") is not None else False
-    distributed = dataloader_cfg["distributed"] if dataloader_cfg.get("distributed") is not None else False
+    last_batch = (
+        dataloader_cfg["last_batch"]
+        if dataloader_cfg.get("last_batch") is not None
+        else "rollover"
+    )
+    shuffle = (
+        dataloader_cfg["shuffle"]
+        if dataloader_cfg.get("shuffle") is not None
+        else False
+    )
+    distributed = (
+        dataloader_cfg["distributed"]
+        if dataloader_cfg.get("distributed") is not None
+        else False
+    )
 
     dataset = create_dataset(
         framework,
@@ -114,12 +133,23 @@ def create_dataloader(framework, dataloader_cfg):
     )
 
     return DATALOADERS[framework](
-        dataset=dataset, batch_size=batch_size, last_batch=last_batch, shuffle=shuffle, distributed=distributed
+        dataset=dataset,
+        batch_size=batch_size,
+        last_batch=last_batch,
+        shuffle=shuffle,
+        distributed=distributed,
     )
 
 
 def create_eval_func(
-    framework, dataloader, adaptor, metric, postprocess_cfg=None, iteration=-1, tensorboard=False, fp32_baseline=False
+    framework,
+    dataloader,
+    adaptor,
+    metric,
+    postprocess_cfg=None,
+    iteration=-1,
+    tensorboard=False,
+    fp32_baseline=False,
 ):
     """The interface to create evaluate function from config.
 
@@ -150,7 +180,9 @@ def create_eval_func(
             if (
                 isinstance(val, int)
                 and len([i for i in gc.get_objects() if id(i) == val]) > 0
-                and "user_" + type([i for i in gc.get_objects() if id(i) == val][0]).__name__ == name
+                and "user_"
+                + type([i for i in gc.get_objects() if id(i) == val][0]).__name__
+                == name
             ):
                 metrics.extend([i for i in gc.get_objects() if id(i) == val])
             elif name not in ["weight", "higher_is_better"]:
@@ -160,7 +192,14 @@ def create_eval_func(
 
     def eval_func(model, measurer=None):
         return adaptor.evaluate(
-            model, dataloader, postprocess, metrics, measurer, iteration, tensorboard, fp32_baseline
+            model,
+            dataloader,
+            postprocess,
+            metrics,
+            measurer,
+            iteration,
+            tensorboard,
+            fp32_baseline,
         )
 
     # TODO: to find a better way
@@ -169,7 +208,9 @@ def create_eval_func(
     return eval_func
 
 
-def create_train_func(framework, dataloader, adaptor, train_cfg, hooks=None, callbacks=None):
+def create_train_func(
+    framework, dataloader, adaptor, train_cfg, hooks=None, callbacks=None
+):
     """The interface to create train function from config.
 
     Args:
@@ -199,7 +240,9 @@ def create_train_func(framework, dataloader, adaptor, train_cfg, hooks=None, cal
     else:
         postprocess = None
     if isinstance(train_cfg.optimizer, dict):
-        assert train_cfg.optimizer and len(train_cfg.optimizer) == 1, "optimizer should only set once"
+        assert (
+            train_cfg.optimizer and len(train_cfg.optimizer) == 1
+        ), "optimizer should only set once"
         key, value = next(iter(train_cfg.optimizer.items()))
         optimizer = Optimizers(framework)[key](value)
         optimizer = optimizer()
@@ -210,14 +253,19 @@ def create_train_func(framework, dataloader, adaptor, train_cfg, hooks=None, cal
             optimizer = (lambda p: train_cfg.optimizer, {"p": 0})
 
     if isinstance(train_cfg.criterion, dict):
-        assert train_cfg.criterion and len(train_cfg.criterion) == 1, "criterion should only set once"
+        assert (
+            train_cfg.criterion and len(train_cfg.criterion) == 1
+        ), "criterion should only set once"
         key, value = next(iter(train_cfg.criterion.items()))
         criterion = Criterions(framework)[next(iter(train_cfg.criterion))](value)
         criterion = criterion()
     else:
         criterion = (lambda p: train_cfg.criterion, {"p": 0})
 
-    default_dict = {k: train_cfg[k] for k in train_cfg.keys() - {"optimizer", "criterion", "dataloader"}}
+    default_dict = {
+        k: train_cfg[k]
+        for k in train_cfg.keys() - {"optimizer", "criterion", "dataloader"}
+    }
     default_dict["callbacks"] = callbacks
 
     def train_func(model):

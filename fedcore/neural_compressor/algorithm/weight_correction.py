@@ -61,7 +61,11 @@ class WeightCorrection(Algorithm):
         # (TODO) assume int8 model also use fp32 op list
         # in adaptor fp32 op will be mapped to corresponding int8 op
         graph_info = origin_model.graph_info
-        op_list = [op_name for op_name, op_type in graph_info.items() if "conv" in op_type.lower()]
+        op_list = [
+            op_name
+            for op_name, op_type in graph_info.items()
+            if "conv" in op_type.lower()
+        ]
 
         # (TODO) assume the weight format should be(oc, ic, h, w)
         cap = adaptor.query_fw_capability(origin_model)
@@ -101,10 +105,8 @@ class WeightCorrection(Algorithm):
             for name, value in fp32_weights[fp32_op].items():
                 if len(value.shape) > 1:
                     fp32_weight = value
-                    fp32_weight_name = name
                 if len(value.shape) == 1:
-                    fp32_bias = value
-                    fp32_bias_name = name
+                    pass
 
             q_weight, q_weight_name = None, ""
             q_bias, q_bias_name = None, ""
@@ -113,8 +115,7 @@ class WeightCorrection(Algorithm):
                     q_weight = value
                     q_weight_name = name
                 if len(value.shape) == 1:
-                    q_bias = value
-                    q_bias_name = name
+                    pass
 
             # (fp32_node_name, fp32_weight), fp32_bias = fp32_weights[fp32_op].items()
             # (q_node_name, q_weight), q_bias = q_weights[q_op].items()
@@ -127,14 +128,18 @@ class WeightCorrection(Algorithm):
             t_q_weight = np.transpose(q_weight, transpose_shape)
             t_q_weight = t_q_weight.reshape(t_q_weight.shape[0], -1)
 
-            channel_variance = np.std(t_fp32_weight, axis=1) / (np.std(t_q_weight, axis=1) + self.eps)
+            channel_variance = np.std(t_fp32_weight, axis=1) / (
+                np.std(t_q_weight, axis=1) + self.eps
+            )
 
             broad_shape = np.ones(len(fp32_weight.shape), dtype=np.int32)
             broad_shape[self.channel_axis] = len(channel_variance)
             channel_variance = channel_variance.reshape(broad_shape)
             variance_q_weight = q_weight * channel_variance
             variance_q_weight = np.transpose(variance_q_weight, transpose_shape)
-            variance_q_weight = variance_q_weight.reshape(variance_q_weight.shape[0], -1)
+            variance_q_weight = variance_q_weight.reshape(
+                variance_q_weight.shape[0], -1
+            )
 
             channel_mean = np.mean(t_fp32_weight, axis=self.channel_axis) - np.mean(
                 variance_q_weight, axis=self.channel_axis

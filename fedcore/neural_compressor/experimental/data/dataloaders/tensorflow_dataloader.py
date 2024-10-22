@@ -86,7 +86,10 @@ class TFDataDataLoader(BaseDataLoader):
         """Yield data."""
         drop_last = False if last_batch == "rollover" else True
         if shuffle:
-            logging.warning("Shuffle is not supported yet in TFDataLoader, " "ignoring shuffle keyword.")
+            logging.warning(
+                "Shuffle is not supported yet in TFDataLoader, "
+                "ignoring shuffle keyword."
+            )
 
         def check_dynamic_shape(element_spec):
             if isinstance(element_spec, collections.abc.Sequence):
@@ -188,7 +191,10 @@ class TensorflowBertDataLoader(DefaultDataLoader):
         distributed,
     ):
         if shuffle:
-            logging.warning("Shuffle is not supported yet in TensorflowBertDataLoader, " "ignoring shuffle keyword.")
+            logging.warning(
+                "Shuffle is not supported yet in TensorflowBertDataLoader, "
+                "ignoring shuffle keyword."
+            )
 
         def bert_collate_fn(batch):
             elem = batch[0]
@@ -197,7 +203,9 @@ class TensorflowBertDataLoader(DefaultDataLoader):
         drop_last = False if last_batch == "rollover" else True
         sampler = self._generate_sampler(dataset, distributed)
         self.batch_sampler = BatchSampler(sampler, batch_size, drop_last)
-        self.fetcher = FETCHERS[self.dataset_type](dataset, bert_collate_fn, drop_last, distributed)
+        self.fetcher = FETCHERS[self.dataset_type](
+            dataset, bert_collate_fn, drop_last, distributed
+        )
 
         for batched_indices in self.batch_sampler:
             try:
@@ -228,7 +236,10 @@ class TensorflowModelZooBertDataLoader(DefaultDataLoader):
         distributed,
     ):
         if shuffle:
-            logging.warning("Shuffle is not supported yet in TensorflowBertDataLoader, " "ignoring shuffle keyword.")
+            logging.warning(
+                "Shuffle is not supported yet in TensorflowBertDataLoader, "
+                "ignoring shuffle keyword."
+            )
 
         def bert_collate_fn(batch):
             input_ids = []
@@ -244,9 +255,10 @@ class TensorflowModelZooBertDataLoader(DefaultDataLoader):
         drop_last = False if last_batch == "rollover" else True
         sampler = self._generate_sampler(dataset, distributed)
         self.batch_sampler = BatchSampler(sampler, batch_size, drop_last)
-        self.fetcher = FETCHERS[self.dataset_type](dataset, bert_collate_fn, drop_last, distributed)
+        self.fetcher = FETCHERS[self.dataset_type](
+            dataset, bert_collate_fn, drop_last, distributed
+        )
 
-        inputs = []
         for batched_indices in self.batch_sampler:
             try:
                 data = self.fetcher(batched_indices)
@@ -277,7 +289,10 @@ class TensorflowDataLoader(BaseDataLoader):
         distributed,
     ):
         if shuffle:
-            logging.warning("Shuffle is not supported yet in TensorflowDataLoader, " "ignoring shuffle keyword.")
+            logging.warning(
+                "Shuffle is not supported yet in TensorflowDataLoader, "
+                "ignoring shuffle keyword."
+            )
         if isinstance(dataset, tf.data.Dataset):
             if int(tf.__version__[0]) > 1:
                 has_batch = hasattr(dataset, "_batch_size")
@@ -291,7 +306,9 @@ class TensorflowDataLoader(BaseDataLoader):
                     f" Please pass in 'tf.data.Dataset' without batch attributes."
                 )
             process_rank = 0  # The default rank is 0, which represents the main process
-            process_size = 1  # By default, process_size=1, only the main process is running
+            process_size = (
+                1  # By default, process_size=1, only the main process is running
+            )
             if self.distributed:
                 import horovod.tensorflow as hvd
 
@@ -312,7 +329,8 @@ class TensorflowDataLoader(BaseDataLoader):
         elif isinstance(dataset, TensorflowBertDataset):
             if distributed:
                 raise NotImplementedError(
-                    "Distributed TensorflowBertDataLoader" " is not yet supported, please set 'distributed: False'"
+                    "Distributed TensorflowBertDataLoader"
+                    " is not yet supported, please set 'distributed: False'"
                 )
             tf_bert_dataloader = TensorflowBertDataLoader(
                 dataset,
@@ -330,7 +348,8 @@ class TensorflowDataLoader(BaseDataLoader):
         elif isinstance(dataset, TensorflowModelZooBertDataset):
             if distributed:
                 raise NotImplementedError(
-                    "Distributed TensorflowBertDataLoader" " is not yet supported, please set 'distributed: False'"
+                    "Distributed TensorflowBertDataLoader"
+                    " is not yet supported, please set 'distributed: False'"
                 )
             tf_bert_dataloader = TensorflowModelZooBertDataLoader(
                 dataset,

@@ -19,9 +19,10 @@
 from tensorflow.python.framework import dtypes, tensor_util
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
-
 from ..graph_base import GraphRewriterBase
 
 
@@ -54,23 +55,31 @@ class ConvertLeakyReluOptimizer(GraphRewriterBase):
 
             if len(common_input) != 1:
                 continue
-            mul_coeff_node_name = list(set(mul_input_names).difference(set(max_input_names)))[0]
+            mul_coeff_node_name = list(
+                set(mul_input_names).difference(set(max_input_names))
+            )[0]
             mul_coeff_node = graph_info[mul_coeff_node_name].node
             if mul_coeff_node.op != "Const":
                 continue
             nd = tensor_util.MakeNdarray(mul_coeff_node.attr["value"].tensor).ndim
             if nd > 1:
                 continue
-            alpha_value = float(tensor_util.MakeNdarray(mul_coeff_node.attr["value"].tensor))
+            alpha_value = float(
+                tensor_util.MakeNdarray(mul_coeff_node.attr["value"].tensor)
+            )
             if alpha_value > 1.0:
                 continue
 
             leaky_relu_node_name = i[1] + "_leakyrelu"
-            leaky_relu_node = Helper.create_node("LeakyRelu", leaky_relu_node_name, common_input)
+            leaky_relu_node = Helper.create_node(
+                "LeakyRelu", leaky_relu_node_name, common_input
+            )
             Helper.set_attr_dtype(leaky_relu_node, "T", dtypes.float32)
             Helper.set_attr_float(leaky_relu_node, "alpha", alpha_value)
 
-            g.replace_single_node(leaky_relu_node, common_input, i[1], successor_node_names, i[1])
+            g.replace_single_node(
+                leaky_relu_node, common_input, i[1], successor_node_names, i[1]
+            )
             g.remove_node(i[1])
             g.remove_node(i[0])
             g.remove_node(mul_coeff_node_name)

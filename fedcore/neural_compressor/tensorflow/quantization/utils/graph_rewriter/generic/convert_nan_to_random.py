@@ -20,8 +20,9 @@ import numpy as np
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import dtypes, tensor_util
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
 from ..graph_base import GraphRewriterBase
 
 
@@ -44,7 +45,9 @@ class ConvertNanToRandom(GraphRewriterBase):
                 const_node.attr["value"].CopyFrom(
                     attr_value_pb2.AttrValue(
                         tensor=tensor_util.make_tensor_proto(
-                            np.random.rand(*const_content.shape), dtypes.float32, const_content.shape
+                            np.random.rand(*const_content.shape),
+                            dtypes.float32,
+                            const_content.shape,
                         )
                     )
                 )

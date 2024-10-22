@@ -13,7 +13,12 @@
 # limitations under the License.
 
 from fedcore.neural_compressor.onnxrt.utils.onnx_model import ONNXModel
-from fedcore.neural_compressor.onnxrt.utils.utility import PRIORITY_RTN, PRIORITY_GPTQ, PRIORITY_AWQ, PRIORITY_SMOOTH_QUANT
+from fedcore.neural_compressor.onnxrt.utils.utility import (
+    PRIORITY_RTN,
+    PRIORITY_GPTQ,
+    PRIORITY_AWQ,
+    PRIORITY_SMOOTH_QUANT,
+)
 
 __all__ = [
     "ONNXModel",

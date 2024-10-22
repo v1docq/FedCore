@@ -66,7 +66,14 @@ class FakeQuantizeBase(object):
 class FakeQuantize(FakeQuantizeBase):
     """The class that applies fake quantization."""
 
-    def __init__(self, per_channel=False, num_bits=8, channel_axis=-1, symmetric=True, narrow_range=True):
+    def __init__(
+        self,
+        per_channel=False,
+        num_bits=8,
+        channel_axis=-1,
+        symmetric=True,
+        narrow_range=True,
+    ):
         """Initialize a FakeQuantize class.
 
         Args:
@@ -114,11 +121,15 @@ class FakeQuantize(FakeQuantizeBase):
                 if input_dim == 2:
                     reduce_dims = [0]
                 elif input_dim == 4:
-                    reduce_dims = [i for i in range(input_dim) if i != self.channel_axis]
+                    reduce_dims = [
+                        i for i in range(input_dim) if i != self.channel_axis
+                    ]
 
             if self.per_channel:
                 if input_dim >= 2:
-                    batch_min = tf.math.reduce_min(inputs, axis=reduce_dims, name="BatchMin")
+                    batch_min = tf.math.reduce_min(
+                        inputs, axis=reduce_dims, name="BatchMin"
+                    )
                 else:
                     batch_min = inputs
             else:
@@ -126,7 +137,9 @@ class FakeQuantize(FakeQuantizeBase):
 
             if self.per_channel:
                 if input_dim >= 2:
-                    batch_max = tf.math.reduce_max(inputs, axis=reduce_dims, name="BatchMax")
+                    batch_max = tf.math.reduce_max(
+                        inputs, axis=reduce_dims, name="BatchMax"
+                    )
                 else:
                     batch_max = inputs
             else:

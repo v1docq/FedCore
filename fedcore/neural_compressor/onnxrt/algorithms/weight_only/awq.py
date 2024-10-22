@@ -28,11 +28,21 @@ from packaging.version import Version
 
 from fedcore.neural_compressor.common import Logger
 from fedcore.neural_compressor.onnxrt.algorithms.weight_only.rtn import rtn_quantize
-from fedcore.neural_compressor.onnxrt.algorithms.weight_only.utility import pad_tensor, prepare_inputs, qdq_tensor
-from fedcore.neural_compressor.onnxrt.quantization.calibrate import CalibrationDataReader
+from fedcore.neural_compressor.onnxrt.algorithms.weight_only.utility import (
+    pad_tensor,
+    prepare_inputs,
+    qdq_tensor,
+)
+from fedcore.neural_compressor.onnxrt.quantization.calibrate import (
+    CalibrationDataReader,
+)
 from fedcore.neural_compressor.onnxrt.quantization.config import AWQConfig
 from fedcore.neural_compressor.onnxrt.utils.onnx_model import ONNXModel
-from fedcore.neural_compressor.onnxrt.utils.utility import ONNXRT116_VERSION, ONNXRT1161_VERSION, dtype_mapping
+from fedcore.neural_compressor.onnxrt.utils.utility import (
+    ONNXRT116_VERSION,
+    ONNXRT1161_VERSION,
+    dtype_mapping,
+)
 
 logger = Logger().get_logger()
 
@@ -43,13 +53,19 @@ def _get_weight_scale(weight, group_size):
     """Get the scale of weight."""
     org_shape = weight.shape
     weight = np.reshape(weight, (-1, group_size)) if group_size != -1 else weight
-    scale = np.mean(np.reshape(np.abs(weight) / np.max(np.abs(weight), axis=1, keepdims=True), org_shape), axis=0)
+    scale = np.mean(
+        np.reshape(
+            np.abs(weight) / np.max(np.abs(weight), axis=1, keepdims=True), org_shape
+        ),
+        axis=0,
+    )
     return scale
 
 
-def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits, group_size, scheme):
+def _apply_awq_scale(
+    model, weight_config, absorb_pairs, output_dicts, num_bits, group_size, scheme
+):
     """Apply scale for salient weight."""
-    best_scales = {}
     new_init_tensors = []
     new_added_mul_nodes = []
     replace_input = []
@@ -60,7 +76,13 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
         if any([node.input[0] not in output_dicts for node in nodes]):
             logger.warning(
                 "Miss input tensors of nodes {} during AWQ, skip it!".format(
-                    ", ".join([node.name for node in nodes if node.input[0] not in output_dicts])
+                    ", ".join(
+                        [
+                            node.name
+                            for node in nodes
+                            if node.input[0] not in output_dicts
+                        ]
+                    )
                 )
             )
             continue
@@ -70,7 +92,10 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
         weight = []
         org_out = []
         for node in nodes:
-            if node.name in weight_config and weight_config.get(node.name, "fp32") != "fp32":
+            if (
+                node.name in weight_config
+                and weight_config.get(node.name, "fp32") != "fp32"
+            ):
                 num_bits = weight_config[node.name]["bits"]
                 group_size = weight_config[node.name]["group_size"]
                 scheme = weight_config[node.name]["scheme"]
@@ -78,7 +103,6 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
 
         # search scale
         best_error = float("inf")
-        best_ratio = -1
         best_scale = None
         n_grid = 20
 
@@ -89,7 +113,9 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
                 if weight_config.get(node.name, {}) == "fp32":
                     continue
 
-                weight = onnx.numpy_helper.to_array(model.get_initializer(node.input[1]), base_dir)
+                weight = onnx.numpy_helper.to_array(
+                    model.get_initializer(node.input[1]), base_dir
+                )
                 if len(weight.shape) != 2:
                     continue
 
@@ -98,30 +124,43 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
                 group_size = group_size if group_size != -1 else org_w_shape[0]
 
                 w_scale = _get_weight_scale(weight.T, weight.shape[0])
-                scales = np.clip(np.power(inp_scale, ratio) / np.power(w_scale, (1 - ratio)), 1e-4, None)
+                scales = np.clip(
+                    np.power(inp_scale, ratio) / np.power(w_scale, (1 - ratio)),
+                    1e-4,
+                    None,
+                )
                 scales = scales / np.sqrt(np.max(scales) * np.min(scales))
                 weight = weight.T * scales
-                weight = pad_tensor(weight, group_size, (org_w_shape[0] + group_size - 1) // group_size).T
+                weight = pad_tensor(
+                    weight, group_size, (org_w_shape[0] + group_size - 1) // group_size
+                ).T
 
-                if (Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4) or (
-                    Version(ort.__version__) >= ONNXRT116_VERSION and num_bits == 4 and group_size == 32
+                if (
+                    Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4
+                ) or (
+                    Version(ort.__version__) >= ONNXRT116_VERSION
+                    and num_bits == 4
+                    and group_size == 32
                 ):  # pragma: no cover
                     # MatMulFpQ4 support 4 bits and 32 group_size with ort 1.16.0 and 1.16.1 versions
                     # MatMulNBits supports 4 bits and 2^n group_size with ort > 1.16.1
-                    q_weight = qdq_tensor(weight, num_bits, group_size, scheme, "uint") / np.expand_dims(
-                        scales, axis=-1
-                    )
+                    q_weight = qdq_tensor(
+                        weight, num_bits, group_size, scheme, "uint"
+                    ) / np.expand_dims(scales, axis=-1)
                 else:
-                    q_weight = qdq_tensor(weight, num_bits, group_size, scheme, "int") / np.expand_dims(scales, axis=-1)
+                    q_weight = qdq_tensor(
+                        weight, num_bits, group_size, scheme, "int"
+                    ) / np.expand_dims(scales, axis=-1)
 
-                q_weight = np.reshape(q_weight, (org_w_shape[1], -1))[:, : org_w_shape[0]]
+                q_weight = np.reshape(q_weight, (org_w_shape[1], -1))[
+                    :, : org_w_shape[0]
+                ]
                 out = np.matmul(inp, q_weight.T)
                 loss += np.mean(np.power((org_out - out), 2))
 
             is_best = loss < best_error
             if is_best:
                 best_error = loss
-                best_ratio = ratio
                 best_scale = scales
 
         for node in nodes:
@@ -153,16 +192,24 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
         if parent.name in updated_nodes:
             continue
 
-        if parent.op_type in ["LayerNormalization", "BatchNormalization", "InstanceNormalization"] and len(
-            model.input_name_to_nodes()[nodes[0].input[0]]
-        ) == len(nodes):
+        if parent.op_type in [
+            "LayerNormalization",
+            "BatchNormalization",
+            "InstanceNormalization",
+        ] and len(model.input_name_to_nodes()[nodes[0].input[0]]) == len(nodes):
             for idx in [1, 2]:
-                tensor = onnx.numpy_helper.to_array(model.get_initializer(parent.input[idx]), base_dir)
+                tensor = onnx.numpy_helper.to_array(
+                    model.get_initializer(parent.input[idx]), base_dir
+                )
                 dtype = tensor.dtype
                 new_tensor = tensor / np.reshape(best_scale, (1, -1))
-                model.set_initializer(parent.input[idx], new_tensor.astype(dtype), raw=True)
+                model.set_initializer(
+                    parent.input[idx], new_tensor.astype(dtype), raw=True
+                )
                 updated_nodes.append(parent.name)
-            output_dicts[parent.output[0]] = output_dicts[parent.output[0]] / np.reshape(best_scale, (1, -1))
+            output_dicts[parent.output[0]] = output_dicts[
+                parent.output[0]
+            ] / np.reshape(best_scale, (1, -1))
 
         elif (
             parent.op_type in ["SimplifiedLayerNormalization", "MatMul", "Gemm", "Mul"]
@@ -171,22 +218,32 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
         ):  # pragma: no cover
             for inp in parent.input:
                 if model.get_initializer(inp) is not None:
-                    tensor = onnx.numpy_helper.to_array(model.get_initializer(inp), base_dir)
+                    tensor = onnx.numpy_helper.to_array(
+                        model.get_initializer(inp), base_dir
+                    )
                     dtype = tensor.dtype
                     new_tensor = tensor / np.reshape(best_scale, (1, -1))
                     model.set_initializer(inp, new_tensor.astype(dtype), raw=True)
             updated_nodes.append(parent.name)
-            output_dicts[parent.output[0]] = output_dicts[parent.output[0]] / np.reshape(best_scale, (1, -1))
+            output_dicts[parent.output[0]] = output_dicts[
+                parent.output[0]
+            ] / np.reshape(best_scale, (1, -1))
 
-        elif parent.op_type in ["Conv", "FusedConv"] and len(model.input_name_to_nodes()[nodes[0].input[0]]) == len(
+        elif parent.op_type in ["Conv", "FusedConv"] and len(
+            model.input_name_to_nodes()[nodes[0].input[0]]
+        ) == len(
             nodes
         ):  # pragma: no cover
-            tensor = onnx.numpy_helper.to_array(model.get_initializer(parent.input[2]), base_dir)
+            tensor = onnx.numpy_helper.to_array(
+                model.get_initializer(parent.input[2]), base_dir
+            )
             dtype = tensor.dtype
             new_tensor = tensor / np.reshape(best_scale, (1, -1))
             model.set_initializer(parent.input[2], new_tensor.astype(dtype), raw=True)
             updated_nodes.append(parent.name)
-            output_dicts[parent.output[0]] = output_dicts[parent.output[0]] / np.reshape(best_scale, (1, -1))
+            output_dicts[parent.output[0]] = output_dicts[
+                parent.output[0]
+            ] / np.reshape(best_scale, (1, -1))
 
         else:  # pragma: no cover
             # insert mul
@@ -208,7 +265,9 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
             for node in nodes:
                 replace_input.append([node, node.input[0], mul_node.output[0]])
             updated_nodes.append(parent.name)
-            output_dicts[mul_node.output[0]] = output_dicts[mul_node.input[0]] / np.reshape(best_scale, (1, -1))
+            output_dicts[mul_node.output[0]] = output_dicts[
+                mul_node.input[0]
+            ] / np.reshape(best_scale, (1, -1))
 
     model.add_nodes(new_added_mul_nodes)
     model.add_initializers(new_init_tensors)
@@ -218,7 +277,9 @@ def _apply_awq_scale(model, weight_config, absorb_pairs, output_dicts, num_bits,
     return model, output_dicts
 
 
-def _apply_awq_clip(model, weight_config, absorb_pairs, output_dicts, num_bits, group_size, scheme):
+def _apply_awq_clip(
+    model, weight_config, absorb_pairs, output_dicts, num_bits, group_size, scheme
+):
     """Apply clip for weight by checking mse."""
     base_dir = os.path.dirname(model.model_path) if model.model_path is not None else ""
     ratios = {}
@@ -226,7 +287,13 @@ def _apply_awq_clip(model, weight_config, absorb_pairs, output_dicts, num_bits, 
         if any([node.input[0] not in output_dicts for node in nodes]):
             logger.warning(
                 "Miss input tensors of nodes {} during AWQ, skip it!".format(
-                    ", ".join([node.name for node in nodes if node.input[0] not in output_dicts])
+                    ", ".join(
+                        [
+                            node.name
+                            for node in nodes
+                            if node.input[0] not in output_dicts
+                        ]
+                    )
                 )
             )
             continue
@@ -239,7 +306,9 @@ def _apply_awq_clip(model, weight_config, absorb_pairs, output_dicts, num_bits, 
                 group_size = weight_config[node.name]["group_size"]
                 scheme = weight_config[node.name]["scheme"]
 
-            org_weight = onnx.numpy_helper.to_array(model.get_initializer(node.input[1]), base_dir=base_dir)
+            org_weight = onnx.numpy_helper.to_array(
+                model.get_initializer(node.input[1]), base_dir=base_dir
+            )
             org_w_shape = org_weight.shape  # ic, oc
             group_size = group_size if group_size != -1 else org_w_shape[0]
             org_out = np.matmul(inp, org_weight)  # n_token, oc
@@ -254,14 +323,32 @@ def _apply_awq_clip(model, weight_config, absorb_pairs, output_dicts, num_bits, 
             for i_s in range(10):
                 ratio = 1 - i_s / 100
                 weight = copy.deepcopy(org_weight)
-                if (Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4) or (
-                    Version(ort.__version__) >= ONNXRT116_VERSION and num_bits == 4 and group_size == 32
+                if (
+                    Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4
+                ) or (
+                    Version(ort.__version__) >= ONNXRT116_VERSION
+                    and num_bits == 4
+                    and group_size == 32
                 ):  # pragma: no cover
                     # MatMulFpQ4 support 4 bits and 32 group_size with ort 1.16.0 and 1.16.1 versions
                     # MatMulNBits supports 4 bits and 2^n group_size with ort > 1.16.1
-                    weight = qdq_tensor(weight, num_bits, group_size, scheme, "uint", ratios.get(node.input[1], 1))
+                    weight = qdq_tensor(
+                        weight,
+                        num_bits,
+                        group_size,
+                        scheme,
+                        "uint",
+                        ratios.get(node.input[1], 1),
+                    )
                 else:
-                    weight = qdq_tensor(weight, num_bits, group_size, scheme, "int", ratios.get(node.input[1], 1))
+                    weight = qdq_tensor(
+                        weight,
+                        num_bits,
+                        group_size,
+                        scheme,
+                        "int",
+                        ratios.get(node.input[1], 1),
+                    )
                 weight = np.reshape(weight, (org_w_shape[1], -1))[:, : org_w_shape[0]]
                 cur_out = np.matmul(inp, weight.T)
                 loss = np.mean(np.power((org_out - cur_out), 2))
@@ -337,7 +424,10 @@ def awq_quantize(
             if (
                 node.op_type in ["MatMul"]
                 and model.get_initializer(node.input[1]) is not None
-                and weight_config.get((node.name, node.op_type), {}).get("weight_dtype", "fp32") != "fp32"
+                and weight_config.get((node.name, node.op_type), {}).get(
+                    "weight_dtype", "fp32"
+                )
+                != "fp32"
             ):
                 output_names.append(node.input[0])
         output_names = list(set(output_names))
@@ -352,9 +442,13 @@ def awq_quantize(
             )
 
         session = (
-            ort.InferenceSession(model.model.SerializeToString(), so, providers=providers)
+            ort.InferenceSession(
+                model.model.SerializeToString(), so, providers=providers
+            )
             if not model.is_large_model
-            else ort.InferenceSession(model.model_path + "_augment.onnx", so, providers=providers)
+            else ort.InferenceSession(
+                model.model_path + "_augment.onnx", so, providers=providers
+            )
         )
 
         for input_name in output_names:
@@ -368,7 +462,10 @@ def awq_quantize(
                 if (
                     node.op_type in ["MatMul"]
                     and model.get_initializer(node.input[1]) is not None
-                    and weight_config.get((node.name, node.op_type), {}).get("weight_dtype", "fp32") != "fp32"
+                    and weight_config.get((node.name, node.op_type), {}).get(
+                        "weight_dtype", "fp32"
+                    )
+                    != "fp32"
                 ):
                     dump_pairs[parent.name].append(model.get_node(node.name))
 
@@ -406,7 +503,16 @@ def awq_quantize(
 
         model.remove_tensors_from_outputs(output_names)
         model.model.graph.output.MergeFrom(org_output)
-    model = rtn_quantize(model, weight_config, num_bits, group_size, scheme, full_ratio, accuracy_level, providers)
+    model = rtn_quantize(
+        model,
+        weight_config,
+        num_bits,
+        group_size,
+        scheme,
+        full_ratio,
+        accuracy_level,
+        providers,
+    )
     return model
 
 
@@ -427,11 +533,17 @@ def apply_awq_on_model(
     """
     # set model params
     kwargs = {}
-    kwargs = {key: quant_config.pop(key) for key in AWQConfig.model_params_list if key in quant_config}
+    kwargs = {
+        key: quant_config.pop(key)
+        for key in AWQConfig.model_params_list
+        if key in quant_config
+    }
 
     # change op config to dict type
     for op_name_type, op_config in quant_config.items():
         if isinstance(op_config, AWQConfig):
             quant_config[op_name_type] = op_config.to_dict()
 
-    return awq_quantize(model, dataloader=calibration_data_reader, weight_config=quant_config, **kwargs)
+    return awq_quantize(
+        model, dataloader=calibration_data_reader, weight_config=quant_config, **kwargs
+    )

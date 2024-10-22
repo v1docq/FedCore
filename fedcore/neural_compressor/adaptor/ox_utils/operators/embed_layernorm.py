@@ -18,8 +18,16 @@
 
 import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg, ms_domain
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    attribute_to_kwarg,
+    ms_domain,
+)
 
 
 @op_registry(op_types="EmbedLayerNormalization")
@@ -42,7 +50,9 @@ class EmbedLayerNormalizationOperator(Operator):
         assert convert_format in [
             "dynamic",
             "static",
-        ], "convert format for {} should be in ['dynamic', 'static']".format(node.op_type)
+        ], "convert format for {} should be in ['dynamic', 'static']".format(
+            node.op_type
+        )
 
         if not node.name.endswith("_quant"):
             return False
@@ -52,7 +62,11 @@ class EmbedLayerNormalizationOperator(Operator):
         """Convert to QOperator format."""
         node = self.node
 
-        parents = [i for i in self.quantizer.model.get_parents(node) if i.op_type == "DequantizeLinear"]
+        parents = [
+            i
+            for i in self.quantizer.model.get_parents(node)
+            if i.op_type == "DequantizeLinear"
+        ]
         inputs = []
         # 'input_ids'
         inputs.extend([node.input[0]])

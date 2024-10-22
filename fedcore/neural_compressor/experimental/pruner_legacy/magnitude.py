@@ -42,7 +42,11 @@ class BasicMagnitudePruner(Pruner):
     def on_epoch_begin(self, epoch):
         """Update target sparsity according to the schedule and compute mask accordingly."""
         self.sparsity = self.update_sparsity(epoch)
-        logger.debug("Start pruning in epoch {} with sparsity {}.".format(str(epoch), str(self.sparsity)))
+        logger.debug(
+            "Start pruning in epoch {} with sparsity {}.".format(
+                str(epoch), str(self.sparsity)
+            )
+        )
         self.is_last_epoch = epoch == self.end_epoch
         if epoch >= self.start_epoch and epoch <= self.end_epoch:
             self.compute_mask()
@@ -53,7 +57,9 @@ class BasicMagnitudePruner(Pruner):
 
         for weight in self.weights:
             if weight in self.masks:
-                new_weight = self.masks[weight] * np.array(self.model.get_weight(weight))
+                new_weight = self.masks[weight] * np.array(
+                    self.model.get_weight(weight)
+                )
                 self.model.update_weights(weight, new_weight)
                 res[weight] = new_weight
         return res
@@ -67,15 +73,21 @@ class BasicMagnitudePruner(Pruner):
                 if self.method == "per_channel":
                     tensor_flat = reduced_tensor.reshape(list(tensor.shape)[:-2], -1)
                     tensor_flat.sort(axis=-1)
-                    threshold = tensor_flat[..., int(self.sparsity * tensor_flat.shape[-1])]
+                    threshold = tensor_flat[
+                        ..., int(self.sparsity * tensor_flat.shape[-1])
+                    ]
                     threshold = np.expand_dims(np.expand_dims(threshold, -1), -1)
                     threshold = np.repeat(threshold, reduced_tensor.shape[-1], axis=-1)
                     threshold = np.repeat(threshold, reduced_tensor.shape[-2], axis=-2)
                 else:
                     tensor_flat = sorted(np.abs(reduced_tensor.flatten()))
-                    threshold = float(tensor_flat[int(len(tensor_flat) * self.sparsity)])
+                    threshold = float(
+                        tensor_flat[int(len(tensor_flat) * self.sparsity)]
+                    )
                 reduced_mask = threshold < np.abs(reduced_tensor)
-                self.masks[weight] = self.pattern.repeat_mask(reduced_mask, tensor.shape)
+                self.masks[weight] = self.pattern.repeat_mask(
+                    reduced_mask, tensor.shape
+                )
 
     def on_epoch_end(self):
         """Sparsity ratio summary and apply mask to the weight."""
@@ -91,7 +103,9 @@ class BasicMagnitudePruner(Pruner):
                             str(1 - self.masks[weight].sum() / self.masks[weight].size),
                         )
                     )
-                    new_weight = self.masks[weight] * np.array(self.model.get_weight(weight))
+                    new_weight = self.masks[weight] * np.array(
+                        self.model.get_weight(weight)
+                    )
                     self.model.update_weights(weight, new_weight)
                     res[weight] = new_weight
         return res
@@ -101,7 +115,9 @@ class BasicMagnitudePruner(Pruner):
         res = dict()
         for weight in self.weights:
             if weight in self.masks:
-                new_weight = self.masks[weight] * np.array(self.model.get_weight(weight))
+                new_weight = self.masks[weight] * np.array(
+                    self.model.get_weight(weight)
+                )
                 self.model.update_weights(weight, new_weight)
                 res[weight] = new_weight
         return res

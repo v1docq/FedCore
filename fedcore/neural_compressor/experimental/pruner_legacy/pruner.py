@@ -32,7 +32,9 @@ def pruner_registry(cls):
     Returns:
         cls: The class of register.
     """
-    assert cls.__name__.endswith("Pruner"), "The name of subclass of Pruner should end with 'Pruner' substring."
+    assert cls.__name__.endswith(
+        "Pruner"
+    ), "The name of subclass of Pruner should end with 'Pruner' substring."
     if cls.__name__[: -len("Pruner")].lower() in PRUNERS:
         raise ValueError("Cannot have two pruner with the same name")
     PRUNERS[cls.__name__[: -len("Pruner")]] = cls
@@ -112,15 +114,12 @@ class Pruner:
 
     def on_before_optimizer_step(self):
         """Be called before optimizer steps."""
-        pass
 
     def on_train_begin(self, dataloader=None):
         """Be called on the beginning of the training process."""
-        pass
 
     def on_train_end(self):
         """Be called on the end of the training process."""
-        pass
 
     def update_sparsity(self, epoch):
         """Update sparsity goals according to epoch numbers.
@@ -135,6 +134,8 @@ class Pruner:
             return 0
         if self.start_epoch == self.end_epoch or epoch > self.end_epoch:
             return self.target_sparsity
-        return self.initial_sparsity + (self.target_sparsity - self.initial_sparsity) * (
-            (epoch - self.start_epoch + 1) // self.freq
-        ) * self.freq / (self.end_epoch - self.start_epoch + 1)
+        return self.initial_sparsity + (
+            self.target_sparsity - self.initial_sparsity
+        ) * ((epoch - self.start_epoch + 1) // self.freq) * self.freq / (
+            self.end_epoch - self.start_epoch + 1
+        )

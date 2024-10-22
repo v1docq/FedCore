@@ -22,12 +22,19 @@ from typing import Callable, List, Union
 
 import numpy as np
 
-from fedcore.neural_compressor import DistillationConfig, QuantizationAwareTrainingConfig, WeightPruningConfig
+from fedcore.neural_compressor import (
+    DistillationConfig,
+    QuantizationAwareTrainingConfig,
+    WeightPruningConfig,
+)
 from fedcore.neural_compressor.strategy.strategy import STRATEGIES
 
 from .adaptor import FRAMEWORKS
-from .compression.callbacks import DistillationCallbacks, PruningCallbacks, QuantizationAwareTrainingCallbacks
-from .compression.pruner import prepare_pruning
+from .compression.callbacks import (
+    DistillationCallbacks,
+    PruningCallbacks,
+    QuantizationAwareTrainingCallbacks,
+)
 from .config import _Config, options
 from .metric import register_customer_metric
 from .model.model import Model
@@ -83,7 +90,9 @@ class CompressionManager:
 
         if isinstance(confs, List) and len(confs) > 1:
             for conf in confs:
-                if isinstance(conf, QuantizationAwareTrainingConfig) or isinstance(conf, WeightPruningConfig):
+                if isinstance(conf, QuantizationAwareTrainingConfig) or isinstance(
+                    conf, WeightPruningConfig
+                ):
                     self.model = Model(model, conf=conf)
             if self.model is None:
                 self.model = Model(model)
@@ -102,7 +111,9 @@ class CompressionManager:
                         "approach": conf.approach,
                     }
                     if "tensorflow" in conf.framework:
-                        framework_specific_info.update({"inputs": conf.inputs, "outputs": conf.outputs})
+                        framework_specific_info.update(
+                            {"inputs": conf.inputs, "outputs": conf.outputs}
+                        )
 
                     # TODO: will be removed once 'op_type_dict' and 'op_name_dicts'
                     # for quant_aware_training can be handled in strategy
@@ -111,7 +122,9 @@ class CompressionManager:
 
                     self.adaptor = FRAMEWORKS[conf.framework](framework_specific_info)
                     self.adaptor.model = self.model
-                    callbacks_list.append(QuantizationAwareTrainingCallbacks(conf, adaptor=self.adaptor))
+                    callbacks_list.append(
+                        QuantizationAwareTrainingCallbacks(conf, adaptor=self.adaptor)
+                    )
                 elif isinstance(conf, WeightPruningConfig):
                     p_conf = conf
                     callbacks_list.append(PruningCallbacks(conf, model=self.model))
@@ -120,7 +133,13 @@ class CompressionManager:
                     callbacks_list.append(DistillationCallbacks(conf, model=self.model))
                 else:
                     assert False, "Unsupported configure: {}".format(type(conf))
-            self.conf = _Config(quantization=q_conf, benchmark=None, pruning=p_conf, distillation=d_conf, nas=None)
+            self.conf = _Config(
+                quantization=q_conf,
+                benchmark=None,
+                pruning=p_conf,
+                distillation=d_conf,
+                nas=None,
+            )
         else:
             if isinstance(confs, List):
                 confs = confs[0]
@@ -137,7 +156,9 @@ class CompressionManager:
                     "approach": confs.approach,
                 }
                 if "tensorflow" in confs.framework:
-                    framework_specific_info.update({"inputs": confs.inputs, "outputs": confs.outputs})
+                    framework_specific_info.update(
+                        {"inputs": confs.inputs, "outputs": confs.outputs}
+                    )
 
                 # TODO: will be removed once 'op_type_dict' and 'op_name_dicts'
                 # for quant_aware_training can be handled in strategy
@@ -146,16 +167,36 @@ class CompressionManager:
 
                 self.adaptor = FRAMEWORKS[confs.framework](framework_specific_info)
                 self.adaptor.model = self.model
-                callbacks_list.append(QuantizationAwareTrainingCallbacks(confs, adaptor=self.adaptor))
-                self.conf = _Config(quantization=confs, benchmark=None, pruning=None, distillation=None, nas=None)
+                callbacks_list.append(
+                    QuantizationAwareTrainingCallbacks(confs, adaptor=self.adaptor)
+                )
+                self.conf = _Config(
+                    quantization=confs,
+                    benchmark=None,
+                    pruning=None,
+                    distillation=None,
+                    nas=None,
+                )
             elif isinstance(confs, WeightPruningConfig):
                 self.model = Model(model, conf=confs)
                 callbacks_list.append(PruningCallbacks(confs, model=self.model))
-                self.conf = _Config(quantization=None, benchmark=None, pruning=confs, distillation=None, nas=None)
+                self.conf = _Config(
+                    quantization=None,
+                    benchmark=None,
+                    pruning=confs,
+                    distillation=None,
+                    nas=None,
+                )
             elif isinstance(confs, DistillationConfig):
                 self.model = Model(model)
                 callbacks_list.append(DistillationCallbacks(confs, model=self.model))
-                self.conf = _Config(quantization=None, benchmark=None, pruning=None, distillation=confs, nas=None)
+                self.conf = _Config(
+                    quantization=None,
+                    benchmark=None,
+                    pruning=None,
+                    distillation=confs,
+                    nas=None,
+                )
             else:
                 assert False, logger.error(
                     "confs should be one of QuantizationAwareTrainingConfig, "
@@ -194,7 +235,14 @@ class CompressionManager:
         self.model.export(save_path, conf)  # pylint: disable=no-member
 
 
-def fit(compression_manager, train_func, eval_func=None, eval_dataloader=None, eval_metric=None, **kwargs):
+def fit(
+    compression_manager,
+    train_func,
+    eval_func=None,
+    eval_dataloader=None,
+    eval_metric=None,
+    **kwargs,
+):
     """Compress the model with accuracy tuning for quantization.
 
     Args:
@@ -267,7 +315,9 @@ def fit(compression_manager, train_func, eval_func=None, eval_dataloader=None, e
 
         model = fit(compression_manager, train_func=train_func, eval_func=eval_func)
     """
-    assert compression_manager.conf.quantization is not None, "Only quantization supports tuning with accuracy driven."
+    assert (
+        compression_manager.conf.quantization is not None
+    ), "Only quantization supports tuning with accuracy driven."
     seed = options.random_seed
     random.seed(seed)
     np.random.seed(seed)
@@ -275,11 +325,17 @@ def fit(compression_manager, train_func, eval_func=None, eval_dataloader=None, e
     # Remove qat hooks if user want to tune accuracy with train function.
     for callback in compression_manager.callbacks.callbacks_list:
         if isinstance(callback, QuantizationAwareTrainingCallbacks):
-            callback.remove_hook("on_train_begin", compression_manager.adaptor._pre_hook_for_qat)
-            callback.remove_hook("on_train_end", compression_manager.adaptor._post_hook_for_qat)
+            callback.remove_hook(
+                "on_train_begin", compression_manager.adaptor._pre_hook_for_qat
+            )
+            callback.remove_hook(
+                "on_train_end", compression_manager.adaptor._post_hook_for_qat
+            )
 
     if eval_metric is not None:
-        metric = register_customer_metric(eval_metric, compression_manager.conf.quantization.framework)
+        metric = register_customer_metric(
+            eval_metric, compression_manager.conf.quantization.framework
+        )
     else:
         metric = None
 
@@ -297,20 +353,29 @@ def fit(compression_manager, train_func, eval_func=None, eval_dataloader=None, e
         ):  # pragma: no cover
             strategy_name = "basic"
             logger.warning(
-                f"MSE_v2 does not support {compression_manager.conf.quantization.framework} now," "use basic instead."
+                f"MSE_v2 does not support {compression_manager.conf.quantization.framework} now,"
+                "use basic instead."
             )
-            logger.warning("Only tensorflow, pytorch_fx is supported by MSE_v2 currently.")
-    assert strategy_name in STRATEGIES, "Tuning strategy {} is NOT supported".format(strategy_name)
+            logger.warning(
+                "Only tensorflow, pytorch_fx is supported by MSE_v2 currently."
+            )
+    assert strategy_name in STRATEGIES, "Tuning strategy {} is NOT supported".format(
+        strategy_name
+    )
 
     logger.info(f"Start {strategy_name} tuning.")
     _resume = None
     # check if interrupted tuning procedure exists. if yes, it will resume the
     # whole auto tune process.
     resume_file = (
-        os.path.abspath(os.path.expanduser(options.resume_from)) if options.workspace and options.resume_from else None
+        os.path.abspath(os.path.expanduser(options.resume_from))
+        if options.workspace and options.resume_from
+        else None
     )
     if resume_file:
-        assert os.path.exists(resume_file), "The specified resume file {} doesn't exist!".format(resume_file)
+        assert os.path.exists(
+            resume_file
+        ), "The specified resume file {} doesn't exist!".format(resume_file)
         with open(resume_file, "rb") as f:
             _resume = pickle.load(f).__dict__
 
@@ -343,7 +408,8 @@ def fit(compression_manager, train_func, eval_func=None, eval_dataloader=None, e
     finally:
         if strategy.best_qmodel:
             logger.info(
-                "Specified timeout or max trials is reached! " "Found a quantized model which meet accuracy goal. Exit."
+                "Specified timeout or max trials is reached! "
+                "Found a quantized model which meet accuracy goal. Exit."
             )
             strategy.deploy_config()
         else:
@@ -406,7 +472,9 @@ class CallBacks:
         Callbacks list should be any of the instance of QuantizationAwareTrainingCallbacks,
         PruningCallbacks and DistillationCallbacks.
         """
-        assert len(callbacks_list) >= 1, "The length of callbacks list must be greater than 1."
+        assert (
+            len(callbacks_list) >= 1
+        ), "The length of callbacks list must be greater than 1."
         self.callbacks_list = callbacks_list
 
     def on_train_begin(self, dataloader=None):
@@ -434,11 +502,15 @@ class CallBacks:
                 res_list.append(res)
         return res_list
 
-    def on_after_compute_loss(self, input, student_output, student_loss, teacher_output=None):
+    def on_after_compute_loss(
+        self, input, student_output, student_loss, teacher_output=None
+    ):
         """Be called on the end of loss computation."""
         loss_list = []
         for callbacks in self.callbacks_list:
-            loss = callbacks.on_after_compute_loss(input, student_output, student_loss, teacher_output)
+            loss = callbacks.on_after_compute_loss(
+                input, student_output, student_loss, teacher_output
+            )
             if loss is not None:
                 loss_list.append(loss)
         return loss_list[0] if len(loss_list) == 1 else loss_list

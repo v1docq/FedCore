@@ -17,7 +17,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import tensorflow as tf
@@ -107,7 +106,9 @@ class StaticQuantConfig(BaseConfig):
             tf.keras.layers.AveragePooling2D,
             tf.keras.layers.MaxPooling2D,
         ]
-        supported_configs.append(OperatorConfig(config=static_quant_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=static_quant_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -132,7 +133,9 @@ class StaticQuantConfig(BaseConfig):
         return filter_result
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "StaticQuantConfig", List["StaticQuantConfig"]]:
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "StaticQuantConfig", List["StaticQuantConfig"]]:
         # TODO fwk owner needs to update it.
         return StaticQuantConfig(weight_sym=[True, False])
 
@@ -214,7 +217,9 @@ class SmoothQuantConfig(BaseConfig):
         supported_configs = []
         smooth_quant_config = SmoothQuantConfig()
         operators = ["MatMul", "Conv2D"]
-        supported_configs.append(OperatorConfig(config=smooth_quant_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=smooth_quant_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -229,7 +234,9 @@ class SmoothQuantConfig(BaseConfig):
         return filter_result
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "SmoothQuantConfig", List["SmoothQuantConfig"]]:
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "SmoothQuantConfig", List["SmoothQuantConfig"]]:
         # TODO fwk owner needs to update it.
         return SmoothQuantConfig(alpha=0.5)
 

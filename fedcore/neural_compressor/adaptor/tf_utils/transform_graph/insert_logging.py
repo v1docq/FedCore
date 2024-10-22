@@ -29,14 +29,26 @@ class InsertLogging(GraphTransformBase):
     """Insert logging graph transformation."""
 
     op_output_type_mapping = {
-        "RequantizationRange": [dtypes.float32.as_datatype_enum, dtypes.float32.as_datatype_enum],
-        "RequantizationRangePerChannel": [dtypes.float32.as_datatype_enum, dtypes.float32.as_datatype_enum],
+        "RequantizationRange": [
+            dtypes.float32.as_datatype_enum,
+            dtypes.float32.as_datatype_enum,
+        ],
+        "RequantizationRangePerChannel": [
+            dtypes.float32.as_datatype_enum,
+            dtypes.float32.as_datatype_enum,
+        ],
         "QuantizedConv2DWithBiasAndRelu": [dtypes.qint32.as_datatype_enum],
         "QuantizedConv2DWithBiasAndReluAndRequantize": [dtypes.quint8.as_datatype_enum],
         "QuantizedConv2DWithBiasAndRequantize": [dtypes.qint8.as_datatype_enum],
-        "QuantizedConv2DWithBiasSignedSumAndReluAndRequantize": [dtypes.qint8.as_datatype_enum],
-        "QuantizedConv2DWithBiasSumAndReluAndRequantize": [dtypes.quint8.as_datatype_enum],
-        "QuantizedDepthwiseConv2DWithBiasAndReluAndRequantize": [dtypes.quint8.as_datatype_enum],
+        "QuantizedConv2DWithBiasSignedSumAndReluAndRequantize": [
+            dtypes.qint8.as_datatype_enum
+        ],
+        "QuantizedConv2DWithBiasSumAndReluAndRequantize": [
+            dtypes.quint8.as_datatype_enum
+        ],
+        "QuantizedDepthwiseConv2DWithBiasAndReluAndRequantize": [
+            dtypes.quint8.as_datatype_enum
+        ],
         "QuantizedConv2DWithBias": [dtypes.qint32.as_datatype_enum],
         "Relu": [dtypes.float32.as_datatype_enum],
         "Relu6": [dtypes.float32.as_datatype_enum],
@@ -106,7 +118,11 @@ class InsertLogging(GraphTransformBase):
             ):
                 continue
 
-            if self.ops and self.node_mapping[node_name].op in self.ops or node_name in self.node_name_list:
+            if (
+                self.ops
+                and self.node_mapping[node_name].op in self.ops
+                or node_name in self.node_name_list
+            ):
                 name_suffix = "__print__"
                 print_node = node_def_pb2.NodeDef()
                 print_node.op = "Print"
@@ -124,10 +140,17 @@ class InsertLogging(GraphTransformBase):
 
                 print_node.input.append(node_name + ":0")
                 print_node.attr["T"].CopyFrom(
-                    attr_value_pb2.AttrValue(type=self.op_output_type_mapping[self.node_mapping[node_name].op][0])
+                    attr_value_pb2.AttrValue(
+                        type=self.op_output_type_mapping[
+                            self.node_mapping[node_name].op
+                        ][0]
+                    )
                 )
 
-                if self.node_mapping[node_name].op in ("QuantizedConv2DWithBias", "QuantizedConv2DWithBiasAndRelu"):
+                if self.node_mapping[node_name].op in (
+                    "QuantizedConv2DWithBias",
+                    "QuantizedConv2DWithBiasAndRelu",
+                ):
                     for index in sorted(self.output_name_index_mapping[node_name])[:1]:
                         print_node.input.append(node_name + ":" + str(index))
 
@@ -135,13 +158,21 @@ class InsertLogging(GraphTransformBase):
                         print_node_1.op = "Print"
                         print_node_1.name = node_name + name_suffix + "_min_output"
 
-                        print_node_1.attr["message"].s = (node_message + "_min_output").encode()
+                        print_node_1.attr["message"].s = (
+                            node_message + "_min_output"
+                        ).encode()
                         print_node_1.attr["first_n"].i = self.first_n
                         print_node_1.attr["summarize"].i = self.summarize
                         print_node_1.attr["U"].list.CopyFrom(
-                            attr_value_pb2.AttrValue.ListValue(type=[dtypes.float32.as_datatype_enum])
+                            attr_value_pb2.AttrValue.ListValue(
+                                type=[dtypes.float32.as_datatype_enum]
+                            )
                         )
-                        print_node_1.attr["T"].CopyFrom(attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum))
+                        print_node_1.attr["T"].CopyFrom(
+                            attr_value_pb2.AttrValue(
+                                type=dtypes.float32.as_datatype_enum
+                            )
+                        )
                         print_node_1.input.append(node_name + ":1")
                         print_node_1.input.append(node_name + ":1")
                         self.input_graph.node.extend([print_node_1])
@@ -151,26 +182,44 @@ class InsertLogging(GraphTransformBase):
                         print_node_2.op = "Print"
                         print_node_2.name = node_name + name_suffix + "_max_output"
 
-                        print_node_2.attr["message"].s = (node_message + "_max_output").encode()
+                        print_node_2.attr["message"].s = (
+                            node_message + "_max_output"
+                        ).encode()
                         print_node_2.attr["first_n"].i = self.first_n
                         print_node_2.attr["summarize"].i = self.summarize
                         print_node_2.attr["U"].list.CopyFrom(
-                            attr_value_pb2.AttrValue.ListValue(type=[dtypes.float32.as_datatype_enum])
+                            attr_value_pb2.AttrValue.ListValue(
+                                type=[dtypes.float32.as_datatype_enum]
+                            )
                         )
-                        print_node_2.attr["T"].CopyFrom(attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum))
+                        print_node_2.attr["T"].CopyFrom(
+                            attr_value_pb2.AttrValue(
+                                type=dtypes.float32.as_datatype_enum
+                            )
+                        )
                         print_node_2.input.append(node_name + ":2")
                         print_node_2.input.append(node_name + ":2")
                         self.input_graph.node.extend([print_node_2])
                         self.input_rename[node_name + ":2"] = print_node_2.name + ":0"
                 else:
-                    for index in range(len(self.op_output_type_mapping[self.node_mapping[node_name].op])):
+                    for index in range(
+                        len(
+                            self.op_output_type_mapping[self.node_mapping[node_name].op]
+                        )
+                    ):
                         print_node.input.append(
-                            node_name + ":" + str(sorted(self.output_name_index_mapping[node_name])[index])
+                            node_name
+                            + ":"
+                            + str(
+                                sorted(self.output_name_index_mapping[node_name])[index]
+                            )
                         )
 
                 print_node.attr["U"].list.CopyFrom(
                     attr_value_pb2.AttrValue.ListValue(
-                        type=self.op_output_type_mapping[self.node_mapping[node_name].op]
+                        type=self.op_output_type_mapping[
+                            self.node_mapping[node_name].op
+                        ]
                     )
                 )
 
@@ -183,9 +232,13 @@ class InsertLogging(GraphTransformBase):
         for node_name in self.node_mapping:
             for index, input_name in enumerate(self.node_mapping[node_name].input):
                 if input_name in self.input_rename:
-                    self.node_mapping[node_name].input[index] = self.input_rename[input_name]
+                    self.node_mapping[node_name].input[index] = self.input_rename[
+                        input_name
+                    ]
                 elif input_name + ":0" in self.input_rename:
-                    self.node_mapping[node_name].input[index] = self.input_rename[input_name + ":0"]
+                    self.node_mapping[node_name].input[index] = self.input_rename[
+                        input_name + ":0"
+                    ]
 
     def do_transformation(self):
         """Execute the insert logging transformation.

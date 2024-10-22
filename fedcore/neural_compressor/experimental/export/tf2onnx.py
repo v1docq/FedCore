@@ -49,7 +49,14 @@ def _split_nodename_and_shape(name):
 
 
 @deprecated(version="2.0")
-def tf_to_fp32_onnx(graph_def, save_path, opset_version=14, input_names=None, output_names=None, inputs_as_nchw=None):
+def tf_to_fp32_onnx(
+    graph_def,
+    save_path,
+    opset_version=14,
+    input_names=None,
+    output_names=None,
+    inputs_as_nchw=None,
+):
     """Export FP32 Tensorflow model into FP32 ONNX model using tf2onnx tool.
 
     Args:
@@ -83,7 +90,12 @@ def tf_to_fp32_onnx(graph_def, save_path, opset_version=14, input_names=None, ou
 
 @deprecated(version="2.0")
 def tf_to_int8_onnx(
-    int8_model, save_path, opset_version: int = 14, input_names=None, output_names=None, inputs_as_nchw=None
+    int8_model,
+    save_path,
+    opset_version: int = 14,
+    input_names=None,
+    output_names=None,
+    inputs_as_nchw=None,
 ):
     """Export INT8 Tensorflow model into INT8 ONNX model.
 
@@ -102,10 +114,17 @@ def tf_to_int8_onnx(
         input_names[:] = [o + ":0" for o in input_names]
     output_names[:] = [o + ":0" for o in output_names]
     onnx_convert_graph = "./converted_graph.onnx"
-    from fedcore.neural_compressor.adaptor.tf_utils.tf2onnx_converter import TensorflowQDQToOnnxQDQConverter
+    from fedcore.neural_compressor.adaptor.tf_utils.tf2onnx_converter import (
+        TensorflowQDQToOnnxQDQConverter,
+    )
 
     TensorflowQDQToOnnxQDQConverter(
-        int8_model, input_names, output_names, shape_override, inputs_as_nchw, opset_version
+        int8_model,
+        input_names,
+        output_names,
+        shape_override,
+        inputs_as_nchw,
+        opset_version,
     ).convert(onnx_convert_graph)
 
     import onnxruntime as ort

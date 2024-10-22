@@ -87,7 +87,10 @@ class MinMaxCalibrator(CalibratorBase):
         else:
             datas = np.asarray(datas)
             datas = datas.flatten()
-            assert datas.size > 0, "collected intermediate data size" "should not be 0, please check augmented_model"
+            assert datas.size > 0, (
+                "collected intermediate data size"
+                "should not be 0, please check augmented_model"
+            )
             self._collect_value(datas)
 
     def _collect_value(self, data):
@@ -136,7 +139,9 @@ class PercentileCalibrator(CalibratorBase):
     def compute_percentile_range(self, percentile):
         """Compute percentile range."""
         if percentile < 0 or percentile > 100:
-            raise ValueError("Invalid percentile. Must be in range 0 <= percentile <= 100.")
+            raise ValueError(
+                "Invalid percentile. Must be in range 0 <= percentile <= 100."
+            )
 
         calib_hist, calib_bin_edges, min_range, max_range, th = self.collector.histogram
         total = calib_hist.sum()
@@ -190,7 +195,9 @@ class KLCalibrator(CalibratorBase):
     def compute_kl_range(self):
         """Compute kl range."""
         histogram = self.collector.histogram
-        self._calib_min, self._calib_max = self.get_kl_threshold(histogram, self.num_quantized_bins)
+        self._calib_min, self._calib_max = self.get_kl_threshold(
+            histogram, self.num_quantized_bins
+        )
 
     def get_kl_threshold(self, histogram, num_quantized_bins):
         """Compute kl threshold.
@@ -221,7 +228,11 @@ class KLCalibrator(CalibratorBase):
 
         for i in range(num_half_quantized_bin, zero_bin_index + 1, 1):
             start_index = zero_bin_index - i
-            end_index = zero_bin_index + i + 1 if (zero_bin_index + i + 1) <= num_bins else num_bins
+            end_index = (
+                zero_bin_index + i + 1
+                if (zero_bin_index + i + 1) <= num_bins
+                else num_bins
+            )
 
             thresholds[i - num_half_quantized_bin] = (
                 float(hist_edges[start_index]),
@@ -249,7 +260,9 @@ class KLCalibrator(CalibratorBase):
                 start = index * num_merged_bins
                 end = start + num_merged_bins
                 quantized_bins[index] = sum(sliced_distribution[start:end])
-            quantized_bins[-1] += sum(sliced_distribution[num_quantized_bins * num_merged_bins :])
+            quantized_bins[-1] += sum(
+                sliced_distribution[num_quantized_bins * num_merged_bins :]
+            )
 
             # in order to compare p and q, we need to make length of q equals to length of p
             # expand quantized bins into p.size bins
@@ -310,7 +323,10 @@ class HistogramCollector:
         else:
             datas = np.asarray(datas)
             datas = datas.flatten()
-            assert datas.size > 0, "collected intermediate data size" "should not be 0, please check augmented_model"
+            assert datas.size > 0, (
+                "collected intermediate data size"
+                "should not be 0, please check augmented_model"
+            )
             self._collect_value(datas)
 
     def _collect_value(self, data):
@@ -324,14 +340,18 @@ class HistogramCollector:
             hist, hist_edges = np.histogram(data, self._num_bins, range=(-th, th))
             self._histogram = (hist, hist_edges, min_range, max_range, th)
         else:
-            self._histogram = self.combine_histogram(self._histogram, data, min_range, max_range, th)
+            self._histogram = self.combine_histogram(
+                self._histogram, data, min_range, max_range, th
+            )
 
     def combine_histogram(self, old_hist, data_arr, new_min, new_max, new_th):
         """Combine histogram."""
         (old_hist, old_hist_edges, old_min, old_max, old_th) = old_hist
 
         if new_th <= old_th:
-            hist, _ = np.histogram(data_arr, bins=len(old_hist), range=(-old_th, old_th))
+            hist, _ = np.histogram(
+                data_arr, bins=len(old_hist), range=(-old_th, old_th)
+            )
             return (
                 old_hist + hist,
                 old_hist_edges,
@@ -342,7 +362,9 @@ class HistogramCollector:
         else:
             # Need to generate new histogram with new_th
             if old_th == 0:
-                hist, hist_edges = np.histogram(data_arr, len(old_hist), range=(-new_th, new_th))
+                hist, hist_edges = np.histogram(
+                    data_arr, len(old_hist), range=(-new_th, new_th)
+                )
                 hist += old_hist
             else:
                 old_num_bins = len(old_hist)
@@ -350,8 +372,12 @@ class HistogramCollector:
                 half_increased_bins = int((new_th - old_th) // old_step + 1)
                 new_num_bins = half_increased_bins * 2 + old_num_bins
                 new_th = half_increased_bins * old_step + old_th
-                hist, hist_edges = np.histogram(data_arr, bins=new_num_bins, range=(-new_th, new_th))
-                hist[half_increased_bins : new_num_bins - half_increased_bins] += old_hist
+                hist, hist_edges = np.histogram(
+                    data_arr, bins=new_num_bins, range=(-new_th, new_th)
+                )
+                hist[
+                    half_increased_bins : new_num_bins - half_increased_bins
+                ] += old_hist
             return (
                 hist,
                 hist_edges,

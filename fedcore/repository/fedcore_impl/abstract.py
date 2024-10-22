@@ -1,31 +1,27 @@
 from enum import Enum
 from typing import Optional, Sequence
 
-import torch
 from fedot.core.data.data import InputData
 from fedot.core.data.multi_modal import MultiModalData
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.tasks import TaskTypesEnum
 from golem.core.optimisers.genetic.operators.base_mutations import MutationTypesEnum
 from golem.utilities.memory import MemoryAnalytics
-from torch_pruning.ops import TORCH_CONV, TORCH_LINEAR
 
 from fedcore.repository.fedcore_impl.optimisation import FedcoreMutations
 
 
 class TaskCompression(Enum):
-    classification = 'classification'
-    regression = 'regression'
-    pruning = 'pruning'
-    quantisation = 'quantisation'
-    distilation = 'distilation'
+    classification = "classification"
+    regression = "regression"
+    pruning = "pruning"
+    quantisation = "quantisation"
+    distilation = "distilation"
 
 
-def _fit_assumption_and_check_correctness(self,
-                                          pipeline,
-                                          pipelines_cache,
-                                          preprocessing_cache,
-                                          eval_n_jobs: int = -1):
+def _fit_assumption_and_check_correctness(
+    self, pipeline, pipelines_cache, preprocessing_cache, eval_n_jobs: int = -1
+):
     """
     Check if initial pipeline can be fitted on a presented data
 
@@ -36,7 +32,7 @@ def _fit_assumption_and_check_correctness(self,
     """
     try:
         data_train, data_test = _train_test_data_setup(self.data)
-        self.log.info('Initial pipeline fitting started')
+        self.log.info("Initial pipeline fitting started")
         # load preprocessing
         pipeline.try_load_from_cache(pipelines_cache, preprocessing_cache)
         pipeline.fit(data_train, n_jobs=eval_n_jobs)
@@ -50,18 +46,20 @@ def _fit_assumption_and_check_correctness(self,
             _ = 1
 
         pipeline.predict(data_test)
-        self.log.info('Initial pipeline was fitted successfully')
+        self.log.info("Initial pipeline was fitted successfully")
 
-        MemoryAnalytics.log(self.log,
-                            additional_info='fitting of the initial pipeline',
-                            logging_level=45)  # message logging level
+        MemoryAnalytics.log(
+            self.log,
+            additional_info="fitting of the initial pipeline",
+            logging_level=45,
+        )  # message logging level
 
     except Exception as ex:
         self._raise_evaluating_exception(ex)
     return pipeline
 
 
-def _merge(self) -> 'InputData':
+def _merge(self) -> "InputData":
     return self.main_output
 
 
@@ -86,7 +84,7 @@ def _fit(self, params, data):
 
 
 def _train_test_data_setup(data):
-    """ Function for train and test split for both InputData and MultiModalData
+    """Function for train and test split for both InputData and MultiModalData
 
     :param data: InputData object to split
     :param split_ratio: share of train data between 0 and 1
@@ -104,32 +102,45 @@ def _train_test_data_setup(data):
     elif isinstance(data, MultiModalData):
         train_data, test_data = MultiModalData(), MultiModalData()
     else:
-        raise ValueError((f'Dataset {type(data)} is not supported. Supported types:'
-                          ' InputData, MultiModalData'))
+        raise ValueError(
+            (
+                f"Dataset {type(data)} is not supported. Supported types:"
+                " InputData, MultiModalData"
+            )
+        )
 
     return train_data, test_data
+
+
 def predict_operation_fedcore(
-        self,
-        fitted_operation,
-        data: InputData,
-        params: Optional[OperationParameters] = None,
-        output_mode: str = 'default',
-        is_fit_stage: bool = False):
+    self,
+    fitted_operation,
+    data: InputData,
+    params: Optional[OperationParameters] = None,
+    output_mode: str = "default",
+    is_fit_stage: bool = False,
+):
     is_main_target = data.supplementary_data.is_main_target
     data_flow_length = data.supplementary_data.data_flow_length
-    self._init(data.task, output_mode=output_mode, params=params,
-               n_samples_data=data.features.shape[0])
+    self._init(
+        data.task,
+        output_mode=output_mode,
+        params=params,
+        n_samples_data=data.features.shape[0],
+    )
 
     if is_fit_stage:
         prediction = self._eval_strategy.predict_for_fit(
             trained_operation=fitted_operation,
             predict_data=data,
-            output_mode=output_mode)
+            output_mode=output_mode,
+        )
     else:
         prediction = self._eval_strategy.predict(
             trained_operation=fitted_operation,
             predict_data=data,
-            output_mode=output_mode)
+            output_mode=output_mode,
+        )
     prediction = self.assign_tabular_column_types(prediction, output_mode)
 
     # any inplace operations here are dangerous!
@@ -138,32 +149,35 @@ def predict_operation_fedcore(
 
     prediction.supplementary_data.data_flow_length = data_flow_length
     return prediction
+
+
 def fedcore_preprocess_predicts(self, predicts):
     return predicts
 
+
 def merge_fedcore_predicts(self, predicts):
     sample_shape, channel_shape, elem_shape = [
-        (x.shape[0], x.shape[1], x.shape[2]) for x in predicts][0]
+        (x.shape[0], x.shape[1], x.shape[2]) for x in predicts
+    ][0]
 
     sample_wise_concat = [x.shape[0] == sample_shape for x in predicts]
     chanel_concat = [x.shape[1] == channel_shape for x in predicts]
     element_wise_concat = [x.shape[2] == elem_shape for x in predicts]
 
-    channel_match = all(chanel_concat)
-    element_match = all(element_wise_concat)
+    all(chanel_concat)
+    all(element_wise_concat)
     sample_match = all(sample_wise_concat)
     return sample_match
 
 
 def _get_default_fedcore_mutations(
-        task_type: TaskTypesEnum,
-        params) -> Sequence[MutationTypesEnum]:
+    task_type: TaskTypesEnum, params
+) -> Sequence[MutationTypesEnum]:
     ind_mutations = FedcoreMutations(task_type=task_type)
     mutations = [
         ind_mutations.parameter_change_mutation,
         ind_mutations.single_change,
-        #ind_mutations.single_drop,
-        #ind_mutations.single_add
-
+        # ind_mutations.single_drop,
+        # ind_mutations.single_add
     ]
     return mutations

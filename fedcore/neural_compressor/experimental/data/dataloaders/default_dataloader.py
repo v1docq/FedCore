@@ -152,7 +152,9 @@ class DefaultDataLoader(BaseDataLoader):
     ):
         sampler = self._generate_sampler(dataset, distributed)
         self.batch_sampler = BatchSampler(sampler, batch_size, self.drop_last)
-        self.fetcher = FETCHERS[self.dataset_type](dataset, collate_fn, self.drop_last, distributed)
+        self.fetcher = FETCHERS[self.dataset_type](
+            dataset, collate_fn, self.drop_last, distributed
+        )
 
         for batched_indices in self.batch_sampler:
             try:

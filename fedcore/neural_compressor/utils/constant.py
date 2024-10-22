@@ -33,9 +33,19 @@ INT8_SYM_MINMAX_PERTENSOR = {
     "granularity": ["per_tensor"],
 }
 
-INT8_SYM_KL_PERTENSOR = {"dtype": ["int8"], "scheme": ["sym"], "algorithm": ["kl"], "granularity": ["per_tensor"]}
+INT8_SYM_KL_PERTENSOR = {
+    "dtype": ["int8"],
+    "scheme": ["sym"],
+    "algorithm": ["kl"],
+    "granularity": ["per_tensor"],
+}
 
-INT8_SYM_KL_PERCHANNEL = {"dtype": ["int8"], "scheme": ["sym"], "algorithm": ["kl"], "granularity": ["per_channel"]}
+INT8_SYM_KL_PERCHANNEL = {
+    "dtype": ["int8"],
+    "scheme": ["sym"],
+    "algorithm": ["kl"],
+    "granularity": ["per_channel"],
+}
 
 UINT8_ASYM_MINMAX_PERCHANNEL = {
     "dtype": ["uint8"],
@@ -51,9 +61,19 @@ UINT8_ASYM_MINMAX_PERTENSOR = {
     "granularity": ["per_tensor"],
 }
 
-UINT8_ASYM_KL_PERTENSOR = {"dtype": ["uint8"], "scheme": ["asym"], "algorithm": ["kl"], "granularity": ["per_tensor"]}
+UINT8_ASYM_KL_PERTENSOR = {
+    "dtype": ["uint8"],
+    "scheme": ["asym"],
+    "algorithm": ["kl"],
+    "granularity": ["per_tensor"],
+}
 
-UINT8_ASYM_KL_PERCHANNEL = {"dtype": ["uint8"], "scheme": ["asym"], "algorithm": ["kl"], "granularity": ["per_channel"]}
+UINT8_ASYM_KL_PERCHANNEL = {
+    "dtype": ["uint8"],
+    "scheme": ["asym"],
+    "algorithm": ["kl"],
+    "granularity": ["per_channel"],
+}
 
 
 # Options for recipes, the first options is the default value.

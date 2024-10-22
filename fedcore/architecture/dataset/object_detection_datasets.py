@@ -7,7 +7,6 @@ from typing import Callable, Dict, Tuple
 import numpy as np
 import torch
 import yaml
-import imageio
 from PIL import Image
 from torch.utils.data import Dataset
 from tqdm import tqdm
@@ -15,11 +14,26 @@ from tqdm import tqdm
 import opendatasets as od
 from opendatasets.utils.archive import extract_archive
 
-from fedcore.architecture.utils.paths import data_path, yolo_data_path, yolo_yaml_path, YOLO_DATA_URL, YOLO_YAML_URL
+from fedcore.architecture.utils.paths import (
+    data_path,
+    yolo_data_path,
+    yolo_yaml_path,
+    YOLO_DATA_URL,
+    YOLO_YAML_URL,
+)
 from fedcore.architecture.utils.loader import transform
 
-IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp',
-                  '.pgm', '.tif', '.tiff', '.webp')
+IMG_EXTENSIONS = (
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".ppm",
+    ".bmp",
+    ".pgm",
+    ".tif",
+    ".tiff",
+    ".webp",
+)
 
 
 class COCODataset(Dataset):
@@ -51,36 +65,34 @@ class COCODataset(Dataset):
         with open(json_path) as f:
             data = json.load(f)
 
-        for category in data['categories']:
-            id = category['id'] + 1 if fix_zero_class else category['id']
-            self.classes[id] = category['name']
+        for category in data["categories"]:
+            id = category["id"] + 1 if fix_zero_class else category["id"]
+            self.classes[id] = category["name"]
 
         samples = {}
-        for image in data['images']:
-            samples[image['id']] = {
-                'image': os.path.join(images_path, image['file_name']),
-                'area': [],
-                'iscrowd': [],
-                'labels': [],
-                'boxes': [],
+        for image in data["images"]:
+            samples[image["id"]] = {
+                "image": os.path.join(images_path, image["file_name"]),
+                "area": [],
+                "iscrowd": [],
+                "labels": [],
+                "boxes": [],
             }
 
-        for annotation in tqdm(data['annotations']):
-            if annotation['area'] > 0:
-                bbox = np.array(annotation['bbox'])
+        for annotation in tqdm(data["annotations"]):
+            if annotation["area"] > 0:
+                bbox = np.array(annotation["bbox"])
                 bbox[2:] += bbox[:2]  # x, y, w, h -> x1, y1, x2, y2
-                labels = annotation['category_id']
+                labels = annotation["category_id"]
                 labels = labels + 1 if fix_zero_class else labels
                 labels = 1 if replace_to_binary else labels
-                samples[annotation['image_id']]['labels'].append(labels)
-                samples[annotation['image_id']]['boxes'].append(bbox)
-                samples[annotation['image_id']]['area'].append(
-                    annotation['area'])
-                samples[annotation['image_id']]['iscrowd'].append(
-                    annotation['iscrowd'])
+                samples[annotation["image_id"]]["labels"].append(labels)
+                samples[annotation["image_id"]]["boxes"].append(bbox)
+                samples[annotation["image_id"]]["area"].append(annotation["area"])
+                samples[annotation["image_id"]]["iscrowd"].append(annotation["iscrowd"])
 
         for sample in samples.values():
-            if len(sample['labels']) > 0:
+            if len(sample["labels"]) > 0:
                 self.samples.append(sample)
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
@@ -96,24 +108,24 @@ class COCODataset(Dataset):
 
         """
         sample = self.samples[idx]
-        image = Image.open(sample['image']).convert('RGB')
+        image = Image.open(sample["image"]).convert("RGB")
         image = self.transform(image)
-        if len(sample['boxes']) != 0:
+        if len(sample["boxes"]) != 0:
             targets = {
-                'labels': torch.tensor(sample['labels'], dtype=torch.int64),
-                'boxes': torch.tensor(np.stack(sample['boxes']), dtype=torch.float32),
-                'image_id': torch.tensor([idx]),
-                'area': torch.tensor(sample['area'], dtype=torch.float32),
-                'iscrowd': torch.tensor(sample['iscrowd'], dtype=torch.int64),
+                "labels": torch.tensor(sample["labels"], dtype=torch.int64),
+                "boxes": torch.tensor(np.stack(sample["boxes"]), dtype=torch.float32),
+                "image_id": torch.tensor([idx]),
+                "area": torch.tensor(sample["area"], dtype=torch.float32),
+                "iscrowd": torch.tensor(sample["iscrowd"], dtype=torch.int64),
             }
         else:
             targets = {
-                'labels': torch.zeros(0, dtype=torch.int64),
-                'boxes': torch.zeros((0, 4), dtype=torch.float32),
-                'image_id': torch.tensor([idx]),
-                'area': torch.zeros(0, dtype=torch.float32),
-                'iscrowd': torch.zeros((0,), dtype=torch.int64)
-                }
+                "labels": torch.zeros(0, dtype=torch.int64),
+                "boxes": torch.zeros((0, 4), dtype=torch.float32),
+                "image_id": torch.tensor([idx]),
+                "area": torch.zeros(0, dtype=torch.float32),
+                "iscrowd": torch.zeros((0,), dtype=torch.int64),
+            }
         return image, targets
 
     def __len__(self) -> int:
@@ -123,8 +135,11 @@ class COCODataset(Dataset):
 
 def img2label_paths(img_path):
     """Define label path as a function of image path."""
-    sa, sb = f'{os.sep}images{os.sep}', f'{os.sep}labels{os.sep}'  # /images/, /labels/ substrings
-    return sb.join(img_path.rsplit(sa, 1)).rsplit('.', 1)[0] + '.txt'
+    sa, sb = (
+        f"{os.sep}images{os.sep}",
+        f"{os.sep}labels{os.sep}",
+    )  # /images/, /labels/ substrings
+    return sb.join(img_path.rsplit(sa, 1)).rsplit(".", 1)[0] + ".txt"
 
 
 class YOLODataset(Dataset):
@@ -142,39 +157,44 @@ class YOLODataset(Dataset):
     def __init__(
         self,
         path: str = None,
-        dataset_name: str = None ,
+        dataset_name: str = None,
         transform: Callable = transform(),
         train: bool = True,
         replace_to_binary: bool = False,
         download: bool = False,
-        log: bool = False
+        log: bool = False,
     ) -> None:
-        
+
         if dataset_name is not None:
             path_flag = os.path.isdir(data_path(dataset_name, log=log))
-            if path_flag is False or download is True:            
-                    dataset_url = f'{YOLO_DATA_URL}{dataset_name}.zip'
-                    yaml_url = f'{YOLO_YAML_URL}{dataset_name}.yaml'
+            if path_flag is False or download is True:
+                dataset_url = f"{YOLO_DATA_URL}{dataset_name}.zip"
+                yaml_url = f"{YOLO_YAML_URL}{dataset_name}.yaml"
 
-                    od.download(dataset_url, data_dir=data_path(dataset_name))
-                    od.download(yaml_url, data_dir=data_path(dataset_name))
-                    extract_archive(from_path=str(yolo_data_path(dataset_name)), 
-                                    to_path=str(data_path(dataset_name)), 
-                                    remove_finished=True)
-                    
+                od.download(dataset_url, data_dir=data_path(dataset_name))
+                od.download(yaml_url, data_dir=data_path(dataset_name))
+                extract_archive(
+                    from_path=str(yolo_data_path(dataset_name)),
+                    to_path=str(data_path(dataset_name)),
+                    remove_finished=True,
+                )
+
             path = yolo_yaml_path(dataset_name)
-    
+
         self.transform = transform
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             data = yaml.safe_load(f)
-        self.root = os.path.abspath(os.path.join(os.path.dirname(
-            path), (data['train'] if train else data['test'])))
-        self.classes = {0: 'background'}
-        
-        for k in data['names']:
+        self.root = os.path.abspath(
+            os.path.join(
+                os.path.dirname(path), (data["train"] if train else data["test"])
+            )
+        )
+        self.classes = {0: "background"}
+
+        for k in data["names"]:
             id = k + 1
-            self.classes[id] = data['names'][k]
-            
+            self.classes[id] = data["names"][k]
+
         self.binary = replace_to_binary
         self.samples = []
 
@@ -182,8 +202,8 @@ class YOLODataset(Dataset):
             if file.lower().endswith(IMG_EXTENSIONS):
                 self.samples.append(
                     {
-                        'image': os.path.join(self.root, file),
-                        'label': img2label_paths(os.path.join(self.root, file))
+                        "image": os.path.join(self.root, file),
+                        "label": img2label_paths(os.path.join(self.root, file)),
                     }
                 )
 
@@ -200,9 +220,9 @@ class YOLODataset(Dataset):
 
         """
         sample = self.samples[idx]
-        image = Image.open(sample['image']).convert('RGB')
+        image = Image.open(sample["image"]).convert("RGB")
         image = self.transform(image)
-        annotation = np.loadtxt(sample['label'], ndmin=2)
+        annotation = np.loadtxt(sample["label"], ndmin=2)
         labels = annotation[:, 0] + 1
         labels = np.ones_like(labels) if self.binary else labels
         boxes = annotation[:, 1:]
@@ -213,29 +233,30 @@ class YOLODataset(Dataset):
             # x centre, y centre, w, h -> x1, y1, w, h
             boxes[:, :2] -= boxes[:, 2:] / 2
             boxes[:, 2:] += boxes[:, :2]  # x1, y1, w, h -> x1, y1, x2, y2
-            
+
             targets = {
-                'labels': torch.tensor(labels, dtype=torch.int64),
-                'boxes': torch.tensor(boxes, dtype=torch.float32),
-                'image_id': torch.tensor([idx]),
-                'area': torch.tensor(area, dtype=torch.float32),
-                'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64)
+                "labels": torch.tensor(labels, dtype=torch.int64),
+                "boxes": torch.tensor(boxes, dtype=torch.float32),
+                "image_id": torch.tensor([idx]),
+                "area": torch.tensor(area, dtype=torch.float32),
+                "iscrowd": torch.zeros(annotation.shape[0], dtype=torch.int64),
             }
         else:
             targets = {
-                'labels': torch.zeros(0, dtype=torch.int64),
-                'boxes': torch.zeros((0, 4), dtype=torch.float32),
-                'image_id': torch.tensor([idx]),
-                'area': torch.zeros(0, dtype=torch.float32),
-                'iscrowd': torch.zeros((0,), dtype=torch.int64)
-                }
+                "labels": torch.zeros(0, dtype=torch.int64),
+                "boxes": torch.zeros((0, 4), dtype=torch.float32),
+                "image_id": torch.tensor([idx]),
+                "area": torch.zeros(0, dtype=torch.float32),
+                "iscrowd": torch.zeros((0,), dtype=torch.int64),
+            }
 
         return image, targets
 
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
-    
+
+
 class UnlabeledDataset(Dataset):
     """Class-loader for custom dataset.
 
@@ -245,23 +266,16 @@ class UnlabeledDataset(Dataset):
             transformed version.
     """
 
-    def __init__(
-        self,
-        images_path: str,
-        transform: Callable = transform()
-    ) -> None:
+    def __init__(self, images_path: str, transform: Callable = transform()) -> None:
         self.transform = transform
         self.images_path = images_path
-        
+
         self.samples = []
         for file in os.listdir(self.images_path):
-                    if file.lower().endswith(IMG_EXTENSIONS):
-                        self.samples.append(
-                            {   
-                                'image': os.path.join(self.images_path, file),
-                                'name': file
-                            }
-                        )
+            if file.lower().endswith(IMG_EXTENSIONS):
+                self.samples.append(
+                    {"image": os.path.join(self.images_path, file), "name": file}
+                )
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """Returns a sample from a dataset.
@@ -276,15 +290,15 @@ class UnlabeledDataset(Dataset):
 
         """
         sample = self.samples[idx]
-        image = Image.open(sample['image'])
+        image = Image.open(sample["image"])
         image = self.transform(image)
         targets = {
-            'name': sample['name'],
-            'labels': torch.zeros(0, dtype=torch.int64),
-            'boxes': torch.zeros((0, 4), dtype=torch.float32),
-            'image_id': torch.tensor([idx]),
-            'area': torch.zeros(0, dtype=torch.float32),
-            'iscrowd': torch.zeros((0,), dtype=torch.int64)
+            "name": sample["name"],
+            "labels": torch.zeros(0, dtype=torch.int64),
+            "boxes": torch.zeros((0, 4), dtype=torch.float32),
+            "image_id": torch.tensor([idx]),
+            "area": torch.zeros(0, dtype=torch.float32),
+            "iscrowd": torch.zeros((0,), dtype=torch.int64),
         }
         return image, targets
 

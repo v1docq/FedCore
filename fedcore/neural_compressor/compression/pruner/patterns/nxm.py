@@ -18,8 +18,14 @@
 # limitations under the License.
 import numpy as np
 
-from ..utils import logger, nn, safe_get_data, safe_get_grad, safe_get_shape, tf, torch
-from .base import KerasBasePattern, ProgressivePatternUtils, PytorchBasePattern, SparsityInfo, register_pattern
+from ..utils import logger, nn, safe_get_data, safe_get_shape, tf, torch
+from .base import (
+    KerasBasePattern,
+    ProgressivePatternUtils,
+    PytorchBasePattern,
+    SparsityInfo,
+    register_pattern,
+)
 
 
 @register_pattern("ptNxM")
@@ -94,9 +100,13 @@ class PytorchPatternNxM(PytorchBasePattern):
             data = self._reshape_orig_to_2dims(data)
             shape = data.shape
             block_size = block_sizes[key]
-            if shape[0] % block_size[0] != 0 or shape[1] % block_size[1] != 0:  # only consider input channel
+            if (
+                shape[0] % block_size[0] != 0 or shape[1] % block_size[1] != 0
+            ):  # only consider input channel
                 self.invalid_layers.append(key)
-                logger.warning(f"{key} shape {data.shape} cannot be divided by {self.pattern}")
+                logger.warning(
+                    f"{key} shape {data.shape} cannot be divided by {self.pattern}"
+                )
 
     def get_reduced_masks_from_data(self, data, key):
         """Obtain the unpruned weights and reshape according to the block_size.
@@ -112,7 +122,12 @@ class PytorchPatternNxM(PytorchBasePattern):
         block_size = self.block_size[key]
         data = self._reshape_orig_to_2dims(data)
         shape = data.shape
-        new_shape = [shape[0] // block_size[0], block_size[0], shape[1] // block_size[1], block_size[1]]
+        new_shape = [
+            shape[0] // block_size[0],
+            block_size[0],
+            shape[1] // block_size[1],
+            block_size[1],
+        ]
         data = data.reshape(new_shape)
         data = data.sum(-1).sum(1)
         reduced_mask = data != 0
@@ -134,7 +149,9 @@ class PytorchPatternNxM(PytorchBasePattern):
             if key in self.invalid_layers:
                 continue
             reduced_mask = (
-                pre_masks[key].float() if self.block else self.get_reduced_masks_from_data(pre_masks[key].float(), key)
+                pre_masks[key].float()
+                if self.block
+                else self.get_reduced_masks_from_data(pre_masks[key].float(), key)
             )
             zero_cnt += int(torch.sum(reduced_mask == 0.0).data.item())
             total_cnt += int(reduced_mask.numel())
@@ -143,7 +160,11 @@ class PytorchPatternNxM(PytorchBasePattern):
         else:
             sparsity_ratio = float(zero_cnt) / total_cnt
         if return_dict:
-            return {"sparsity_ratio": sparsity_ratio, "zero_cnt": zero_cnt, "total_cnt": total_cnt}
+            return {
+                "sparsity_ratio": sparsity_ratio,
+                "zero_cnt": zero_cnt,
+                "total_cnt": total_cnt,
+            }
         else:
             return sparsity_ratio
 
@@ -195,7 +216,9 @@ class PytorchPatternNxM(PytorchBasePattern):
         if len(orig_shape) == 2:
             return data
         elif len(orig_shape) == 4:
-            data = data.reshape(orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1])
+            data = data.reshape(
+                orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1]
+            )
             if isinstance(data, np.ndarray):  # pragma: no cover
                 data = np.transpose(data, (0, 3, 1, 2))
             else:
@@ -227,7 +250,12 @@ class PytorchPatternNxM(PytorchBasePattern):
         block_size = self.block_size[key]
         data = self._reshape_orig_to_2dims(data)
         shape = data.shape
-        new_shape = [shape[0] // block_size[0], block_size[0], shape[1] // block_size[1], block_size[1]]
+        new_shape = [
+            shape[0] // block_size[0],
+            block_size[0],
+            shape[1] // block_size[1],
+            block_size[1],
+        ]
         data = data.reshape(new_shape)
         return data
 
@@ -247,7 +275,9 @@ class PytorchPatternNxM(PytorchBasePattern):
         if self.keep_mask_layers.get(key, False):
             return data
         block_size = self.block_size[key]
-        data = data.repeat_interleave(block_size[0], dim=0).repeat_interleave(block_size[1], dim=-1)
+        data = data.repeat_interleave(block_size[0], dim=0).repeat_interleave(
+            block_size[1], dim=-1
+        )
         data = self._reshape_2dims_to_orig(data, orig_shape)
         return data
 
@@ -292,7 +322,9 @@ class PytorchPatternNxM(PytorchBasePattern):
             # sum or mean is quite different for per channel pruning
             if current_score.dtype == torch.bool:
                 current_score = current_score.float()
-            current_score_sum = self.reduce_tensor(self.reduce_tensor(current_score, dim=-1), dim=1)
+            current_score_sum = self.reduce_tensor(
+                self.reduce_tensor(current_score, dim=-1), dim=1
+            )
             new_scores[key] = current_score_sum
         return new_scores
 
@@ -302,12 +334,20 @@ class PytorchPatternNxM(PytorchBasePattern):
         one = torch.tensor([True]).to(score.device)
         mask = torch.where(score <= threshold, zero, one)
         if not self.block:
-            mask = mask.repeat_interleave(block_size[0], dim=0).repeat_interleave(block_size[1], dim=-1)
+            mask = mask.repeat_interleave(block_size[0], dim=0).repeat_interleave(
+                block_size[1], dim=-1
+            )
         else:
             mask = mask.float()
         return mask
 
-    def get_masks_global(self, scores, cur_target_sparsity_ratio, pre_masks, keep_exact_sparsity_ratio=True):
+    def get_masks_global(
+        self,
+        scores,
+        cur_target_sparsity_ratio,
+        pre_masks,
+        keep_exact_sparsity_ratio=True,
+    ):
         """Generate masks for layers.
 
         Gather all layer's scores together and calculate a common threshold.
@@ -336,11 +376,20 @@ class PytorchPatternNxM(PytorchBasePattern):
             sparsity_infos_perlayer, _ = self.get_sparsity_ratio_each_layer(masks)
 
         while True:
-            new_not_exceed_layers = [key for key in new_scores.keys() if not self.keep_mask_layers.get(key, False)]
-            if not_exceed_layers == new_not_exceed_layers or len(new_not_exceed_layers) == 0:
+            new_not_exceed_layers = [
+                key
+                for key in new_scores.keys()
+                if not self.keep_mask_layers.get(key, False)
+            ]
+            if (
+                not_exceed_layers == new_not_exceed_layers
+                or len(new_not_exceed_layers) == 0
+            ):
                 break
             not_exceed_layers = new_not_exceed_layers
-            global_scores = torch.cat([torch.flatten(new_scores[key]) for key in not_exceed_layers])
+            global_scores = torch.cat(
+                [torch.flatten(new_scores[key]) for key in not_exceed_layers]
+            )
             if residual_k < 1:  # pragma: no cover
                 break
             threshold, _ = torch.kthvalue(global_scores, residual_k)
@@ -353,7 +402,9 @@ class PytorchPatternNxM(PytorchBasePattern):
                 zero_cnt = info["zero_cnt"]
                 total_cnt = info["total_cnt"]
                 current_sparsity_ratio = float(zero_cnt) / total_cnt
-                key_new_sparsity = SparsityInfo(zero_cnt, total_cnt, current_sparsity_ratio)
+                key_new_sparsity = SparsityInfo(
+                    zero_cnt, total_cnt, current_sparsity_ratio
+                )
                 need_adjust, adjust_ratio = self.adjust_ratio(
                     masks,
                     key,
@@ -365,11 +416,19 @@ class PytorchPatternNxM(PytorchBasePattern):
                 if need_adjust:
                     # uptade status
                     self.keep_mask_layers[key] = True
-                    masks[key] = self.get_single_mask_per_target_ratio(new_scores[key], adjust_ratio)
+                    masks[key] = self.get_single_mask_per_target_ratio(
+                        new_scores[key], adjust_ratio
+                    )
                     if not self.block:
-                        masks[key] = masks[key].repeat_interleave(block_size[0], 0).repeat_interleave(block_size[1], -1)
+                        masks[key] = (
+                            masks[key]
+                            .repeat_interleave(block_size[0], 0)
+                            .repeat_interleave(block_size[1], -1)
+                        )
                     if keep_exact_sparsity_ratio:
-                        zero_cnt = self.get_sparsity_ratio({key: masks[key]}, return_dict=True)["zero_cnt"]
+                        zero_cnt = self.get_sparsity_ratio(
+                            {key: masks[key]}, return_dict=True
+                        )["zero_cnt"]
                         residual_k -= zero_cnt
                 else:
                     masks[key] = mask
@@ -436,10 +495,13 @@ class PytorchPatternNxM(PytorchBasePattern):
             weight = module.weight
             if type(module).__name__ not in ["Linear"]:
                 logger.warning(
-                    f"Currently only support Linear block mask pruning," f"{type(module).__name__} won't be pruned."
+                    f"Currently only support Linear block mask pruning,"
+                    f"{type(module).__name__} won't be pruned."
                 )
                 continue
-            block_mask = self.get_reduced_masks_from_data(weight.detach(), key).to(dtype=weight.dtype)
+            block_mask = self.get_reduced_masks_from_data(weight.detach(), key).to(
+                dtype=weight.dtype
+            )
             masks[key] = block_mask
 
         return masks
@@ -462,7 +524,9 @@ class PytorchPatternNxM(PytorchBasePattern):
             reshaped_weight = self._reshape_orig_to_2dims(module.weight.data) * mask
             module.weight.data = self._reshape_2dims_to_orig(reshaped_weight, org_shape)
 
-    def update_progressive_masks(self, pre_masks, cur_masks, scores, progressive_step, progressive_configs):
+    def update_progressive_masks(
+        self, pre_masks, cur_masks, scores, progressive_step, progressive_configs
+    ):
         """Generate the progressive masks.
 
         Args:
@@ -475,12 +539,18 @@ class PytorchPatternNxM(PytorchBasePattern):
         Returns:
             A dict{"layer_name": Tensor} that stores the masks generated in progressive pruning.
         """
-        score_or_linear = progressive_configs["progressive_type"]  # "scores" or "linear"
+        score_or_linear = progressive_configs[
+            "progressive_type"
+        ]  # "scores" or "linear"
         new_scores = {}
         for key in scores.keys():
             if scores[key].shape != pre_masks[key].shape:
                 block_size = self.block_size[key]
-                data = scores[key].repeat_interleave(block_size[0], dim=0).repeat_interleave(block_size[1], dim=-1)
+                data = (
+                    scores[key]
+                    .repeat_interleave(block_size[0], dim=0)
+                    .repeat_interleave(block_size[1], dim=-1)
+                )
                 data = self._reshape_2dims_to_orig(data, pre_masks[key].shape)
                 new_scores[key] = data
             else:
@@ -491,7 +561,12 @@ class PytorchPatternNxM(PytorchBasePattern):
             )
         elif score_or_linear == "linear":
             return ProgressivePatternUtils.update_progressive_masks_linear_order(
-                pre_masks, cur_masks, new_scores, progressive_step, progressive_configs, self.block_size
+                pre_masks,
+                cur_masks,
+                new_scores,
+                progressive_step,
+                progressive_configs,
+                self.block_size,
             )
         else:
             raise NotImplementedError
@@ -632,9 +707,13 @@ class KerasPatternNxM(KerasBasePattern):
             data = self._reshape_orig_to_2dims(data)
             shape = data.shape
             block_size = block_sizes[key]
-            if shape[0] % block_size[0] != 0 or shape[1] % block_size[1] != 0:  ## only consider input channel
+            if (
+                shape[0] % block_size[0] != 0 or shape[1] % block_size[1] != 0
+            ):  ## only consider input channel
                 self.invalid_layers.append(key)
-                logger.warning(f"{key} shape {data.shape} cannot be divided by {self.pattern}")
+                logger.warning(
+                    f"{key} shape {data.shape} cannot be divided by {self.pattern}"
+                )
 
     def get_reduced_masks_from_data(self, data, key):
         """Obtain the unpruned weights and reshape according to the block_size.
@@ -650,7 +729,12 @@ class KerasPatternNxM(KerasBasePattern):
         block_size = self.block_size[key]
         data = self._reshape_orig_to_2dims(data)
         shape = data.shape
-        new_shape = [shape[0] // block_size[0], block_size[0], shape[1] // block_size[1], block_size[1]]
+        new_shape = [
+            shape[0] // block_size[0],
+            block_size[0],
+            shape[1] // block_size[1],
+            block_size[1],
+        ]
         data = data.reshape(new_shape)
         data = data.sum(-1).sum(1)
         reduced_mask = data != 0
@@ -673,7 +757,11 @@ class KerasPatternNxM(KerasBasePattern):
                 continue
             if not isinstance(pre_masks[key], np.ndarray):
                 pre_masks[key] = pre_masks[key].numpy()
-            reduced_mask = pre_masks[key] if self.block else self.get_reduced_masks_from_data(pre_masks[key], key)
+            reduced_mask = (
+                pre_masks[key]
+                if self.block
+                else self.get_reduced_masks_from_data(pre_masks[key], key)
+            )
             zero_cnt += int(np.sum(reduced_mask == 0.0))
             total_cnt += int(reduced_mask.size)
         if total_cnt == 0:
@@ -681,7 +769,11 @@ class KerasPatternNxM(KerasBasePattern):
         else:
             sparsity_ratio = float(zero_cnt) / total_cnt
         if return_dict:
-            return {"sparsity_ratio": sparsity_ratio, "zero_cnt": zero_cnt, "total_cnt": total_cnt}
+            return {
+                "sparsity_ratio": sparsity_ratio,
+                "zero_cnt": zero_cnt,
+                "total_cnt": total_cnt,
+            }
         else:
             return sparsity_ratio
 
@@ -713,7 +805,9 @@ class KerasPatternNxM(KerasBasePattern):
             Reshaped data.
         """
         if len(orig_shape) == 4:
-            data = data.reshape(orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1])
+            data = data.reshape(
+                orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1]
+            )
             if isinstance(data, np.ndarray):
                 data = np.transpose(data, (0, 3, 1, 2))
             else:
@@ -733,7 +827,12 @@ class KerasPatternNxM(KerasBasePattern):
         block_size = self.block_size[key]
         data = self._reshape_orig_to_2dims(data)
         shape = data.shape
-        new_shape = [shape[0] // block_size[0], block_size[0], shape[1] // block_size[1], block_size[1]]
+        new_shape = [
+            shape[0] // block_size[0],
+            block_size[0],
+            shape[1] // block_size[1],
+            block_size[1],
+        ]
         data = data.reshape(new_shape)
         return data
 
@@ -753,7 +852,9 @@ class KerasPatternNxM(KerasBasePattern):
         if self.keep_mask_layers.get(key, False):
             return data
         block_size = self.block_size[key]
-        data = data.repeat_interleave(block_size[0], dim=0).repeat_interleave(block_size[1], dim=-1)
+        data = data.repeat_interleave(block_size[0], dim=0).repeat_interleave(
+            block_size[1], dim=-1
+        )
         data = self._reshape_2dims_to_orig(data, orig_shape)
         return data
 
@@ -775,7 +876,9 @@ class KerasPatternNxM(KerasBasePattern):
             self.keep_mask_layers[key] = False
             current_score = scores[key]
             current_score = self.reshape_orig_to_pattern(current_score, key)
-            current_score_sum = self.reduce_tensor(self.reduce_tensor(current_score, dim=-1), dim=1)
+            current_score_sum = self.reduce_tensor(
+                self.reduce_tensor(current_score, dim=-1), dim=1
+            )
             new_scores[key] = current_score_sum
         return new_scores
 
@@ -790,7 +893,13 @@ class KerasPatternNxM(KerasBasePattern):
         mask = mask.numpy()
         return mask
 
-    def get_masks_global(self, scores, cur_target_sparsity_ratio, pre_masks, keep_exact_sparsity_ratio=True):
+    def get_masks_global(
+        self,
+        scores,
+        cur_target_sparsity_ratio,
+        pre_masks,
+        keep_exact_sparsity_ratio=True,
+    ):
         """Generate masks for layers.
 
         Gather all layer's scores together and calculate a common threshold.
@@ -818,11 +927,20 @@ class KerasPatternNxM(KerasBasePattern):
             sparsity_infos_perlayer, _ = self.get_sparsity_ratio_each_layer(masks)
 
         while True:
-            new_not_exceed_layers = [key for key in new_scores.keys() if not self.keep_mask_layers.get(key, False)]
-            if not_exceed_layers == new_not_exceed_layers or len(new_not_exceed_layers) == 0:
+            new_not_exceed_layers = [
+                key
+                for key in new_scores.keys()
+                if not self.keep_mask_layers.get(key, False)
+            ]
+            if (
+                not_exceed_layers == new_not_exceed_layers
+                or len(new_not_exceed_layers) == 0
+            ):
                 break
             not_exceed_layers = new_not_exceed_layers
-            global_scores = np.concatenate([tf.reshape(new_scores[key], [-1]).numpy() for key in not_exceed_layers])
+            global_scores = np.concatenate(
+                [tf.reshape(new_scores[key], [-1]).numpy() for key in not_exceed_layers]
+            )
             threshold = np.partition(global_scores, kth=residual_k)[residual_k]
 
             for key in not_exceed_layers:
@@ -833,7 +951,9 @@ class KerasPatternNxM(KerasBasePattern):
                 zero_cnt = info["zero_cnt"]
                 total_cnt = info["total_cnt"]
                 current_sparsity_ratio = float(zero_cnt) / total_cnt
-                key_new_sparsity = SparsityInfo(zero_cnt, total_cnt, current_sparsity_ratio)
+                key_new_sparsity = SparsityInfo(
+                    zero_cnt, total_cnt, current_sparsity_ratio
+                )
                 need_adjust, adjust_ratio = self.adjust_ratio(
                     masks,
                     key,
@@ -845,12 +965,20 @@ class KerasPatternNxM(KerasBasePattern):
                 if need_adjust:
                     # uptade status
                     self.keep_mask_layers[key] = True
-                    masks[key] = self.get_single_mask_per_target_ratio(new_scores[key], adjust_ratio)
+                    masks[key] = self.get_single_mask_per_target_ratio(
+                        new_scores[key], adjust_ratio
+                    )
                     if not self.block:
-                        masks[key] = tf.repeat(masks[key], repeats=block_size[0], axis=0)
-                        masks[key] = tf.repeat(masks[key], repeats=block_size[1], axis=-1)
+                        masks[key] = tf.repeat(
+                            masks[key], repeats=block_size[0], axis=0
+                        )
+                        masks[key] = tf.repeat(
+                            masks[key], repeats=block_size[1], axis=-1
+                        )
                     if keep_exact_sparsity_ratio:
-                        zero_cnt = self.get_sparsity_ratio({key: masks[key]}, return_dict=True)["zero_cnt"]
+                        zero_cnt = self.get_sparsity_ratio(
+                            {key: masks[key]}, return_dict=True
+                        )["zero_cnt"]
                         residual_k -= zero_cnt
                 else:
                     masks[key] = mask

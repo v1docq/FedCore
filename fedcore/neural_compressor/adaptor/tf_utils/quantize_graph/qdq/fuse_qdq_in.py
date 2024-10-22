@@ -19,8 +19,9 @@
 from tensorflow.core.framework import graph_pb2, node_def_pb2
 from tensorflow.python.framework import dtypes
 
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper as helper
-
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
 from ..quantize_graph_base import QuantizeNodeBase
 
 
@@ -65,33 +66,56 @@ class FuseNodeStartWithFusedInstanceNorm(QuantizeNodeBase):
             if node.name in skip_node_name:
                 self.logger.debug("skip node {}".format(node.name))
             elif node.name == match_node_name[0]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
 
-                relu_node_name = match_node_name[1] if len(match_node_name) == 2 else None
+                relu_node_name = (
+                    match_node_name[1] if len(match_node_name) == 2 else None
+                )
 
                 node_op = "_QuantizedFusedInstanceNorm"
                 quantized_node_name = node.name + "_eightbit_quantized_in"
                 output_min_node_name = quantized_node_name + "_input7_output_min"
                 output_max_node_name = quantized_node_name + "_input8_output_max"
                 quantized_node_input_names = (
-                    all_input_names + [output_min_node_name] + [output_max_node_name] + control_inputs
+                    all_input_names
+                    + [output_min_node_name]
+                    + [output_max_node_name]
+                    + control_inputs
                 )
-                output_min_node = helper.create_constant_node(output_min_node_name, -1.0, dtypes.float32)
-                output_max_node = helper.create_constant_node(output_max_node_name, 1.0, dtypes.float32)
-                quantized_in_node = helper.create_node(node_op, quantized_node_name, quantized_node_input_names)
+                output_min_node = helper.create_constant_node(
+                    output_min_node_name, -1.0, dtypes.float32
+                )
+                output_max_node = helper.create_constant_node(
+                    output_max_node_name, 1.0, dtypes.float32
+                )
+                quantized_in_node = helper.create_node(
+                    node_op, quantized_node_name, quantized_node_input_names
+                )
 
                 if relu_node_name is not None:
                     relu_node = self.node_name_mapping[relu_node_name].node
                     if relu_node.op == "Relu":
-                        helper.set_attr_string(quantized_in_node, "activation_mode", b"Relu")
+                        helper.set_attr_string(
+                            quantized_in_node, "activation_mode", b"Relu"
+                        )
                     elif relu_node.op == "LeakyRelu":
-                        helper.set_attr_string(quantized_in_node, "activation_mode", b"LeakyRelu")
-                        helper.set_attr_float(quantized_in_node, "leakyrelu_alpha", relu_node.attr["alpha"].f)
+                        helper.set_attr_string(
+                            quantized_in_node, "activation_mode", b"LeakyRelu"
+                        )
+                        helper.set_attr_float(
+                            quantized_in_node,
+                            "leakyrelu_alpha",
+                            relu_node.attr["alpha"].f,
+                        )
 
                 helper.set_attr_dtype(quantized_in_node, "T", dtypes.qint8)
                 helper.set_attr_dtype(quantized_in_node, "U", dtypes.float32)
                 helper.set_attr_dtype(quantized_in_node, "Tout", dtypes.qint8)
-                helper.copy_attr(quantized_in_node, "reduction_axes", node.attr["reduction_axes"])
+                helper.copy_attr(
+                    quantized_in_node, "reduction_axes", node.attr["reduction_axes"]
+                )
                 """# 0.
 
                 x
@@ -172,12 +196,16 @@ class FuseNodeStartWithFusedInstanceNorm(QuantizeNodeBase):
                 if self.new_api:
                     self.logger.info("Unknown fusion pattern {} .".format(fusion_name))
                 if self.remove_redundant_quant_flag:
-                    self.input_graph = self.remove_redundant_quantization(self.input_graph)
+                    self.input_graph = self.remove_redundant_quantization(
+                        self.input_graph
+                    )
                 return self.input_graph, []
 
             self.input_graph = self.output_graph
             self._reset_output_node_maps()
             if self.remove_redundant_quant_flag:
-                self.output_graph = self.remove_redundant_quantization(self.output_graph)
+                self.output_graph = self.remove_redundant_quantization(
+                    self.output_graph
+                )
             return self.output_graph, []
         return self.input_graph, []

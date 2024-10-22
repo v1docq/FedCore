@@ -16,7 +16,9 @@
 
 from typing import List, Optional
 
-from fedcore.neural_compressor.profiling.parser.onnx_parser.parser import OnnxProfilingParser
+from fedcore.neural_compressor.profiling.parser.onnx_parser.parser import (
+    OnnxProfilingParser,
+)
 
 
 class OnnxrtParserFactory:

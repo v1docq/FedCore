@@ -18,7 +18,7 @@
 # limitations under the License.
 
 import re
-from collections import UserDict, defaultdict
+from collections import UserDict
 
 import numpy as np
 import yaml
@@ -41,10 +41,7 @@ try:
 except:
     import logging
 
-    import tensorflow as tf
     import torch
-    import torch.nn as nn
-    import torch.nn.functional as F
 
     from .dot_dict import DotDict  # #TODO
 
@@ -138,12 +135,17 @@ def get_sparsity_ratio(pruners, model):
             if pruner.pattern.block:
                 block_size = pruner.pattern.block_size[key]
                 block_num = block_size[0] * block_size[1]
-            element_sparsity_cnt += torch.sum(pruner.masks[key] == 0).data.item() * block_num
+            element_sparsity_cnt += (
+                torch.sum(pruner.masks[key] == 0).data.item() * block_num
+            )
 
     linear_conv_cnt = 0
     param_cnt = 0
     for name, module in model.named_modules():
-        if type(module).__name__ in ["Linear"] or re.search(r"Conv.d", type(module).__name__) is not None:
+        if (
+            type(module).__name__ in ["Linear"]
+            or re.search(r"Conv.d", type(module).__name__) is not None
+        ):
             linear_conv_cnt += module.weight.numel()
 
     for n, param in model.named_parameters():
@@ -153,7 +155,9 @@ def get_sparsity_ratio(pruners, model):
         elementwise_over_matmul_gemm_conv = 0
     else:
         blockwise_over_matmul_gemm_conv = float(pattern_sparsity_cnt) / linear_conv_cnt
-        elementwise_over_matmul_gemm_conv = float(element_sparsity_cnt) / linear_conv_cnt
+        elementwise_over_matmul_gemm_conv = (
+            float(element_sparsity_cnt) / linear_conv_cnt
+        )
     if param_cnt == 0:
         elementwise_over_all = 0
     else:
@@ -165,7 +169,11 @@ def get_sparsity_ratio(pruners, model):
         f"blockwise_over_matmul_gemm_conv:{blockwise_over_matmul_gemm_conv}"
     )
 
-    return elementwise_over_matmul_gemm_conv, elementwise_over_all, blockwise_over_matmul_gemm_conv
+    return (
+        elementwise_over_matmul_gemm_conv,
+        elementwise_over_all,
+        blockwise_over_matmul_gemm_conv,
+    )
 
 
 def get_sparsity_ratio_tf(pruners, model):
@@ -198,7 +206,10 @@ def get_sparsity_ratio_tf(pruners, model):
     linear_conv_cnt = 0
     param_cnt = 0
     for layer in model.layers:
-        if layer.__class__.__name__ in ["Dense"] or re.search(r"Conv.d", layer.__class__.__name__) is not None:
+        if (
+            layer.__class__.__name__ in ["Dense"]
+            or re.search(r"Conv.d", layer.__class__.__name__) is not None
+        ):
             linear_conv_cnt += layer.get_weights()[0].size
 
     for layer in model.layers:
@@ -210,7 +221,9 @@ def get_sparsity_ratio_tf(pruners, model):
         elementwise_over_matmul_gemm_conv = 0
     else:
         blockwise_over_matmul_gemm_conv = float(pattern_sparsity_cnt) / linear_conv_cnt
-        elementwise_over_matmul_gemm_conv = float(element_sparsity_cnt) / linear_conv_cnt
+        elementwise_over_matmul_gemm_conv = (
+            float(element_sparsity_cnt) / linear_conv_cnt
+        )
     if param_cnt == 0:
         elementwise_over_all = 0
     else:
@@ -222,7 +235,11 @@ def get_sparsity_ratio_tf(pruners, model):
         f"blockwise_over_matmul_gemm_conv:{blockwise_over_matmul_gemm_conv}"
     )
 
-    return elementwise_over_matmul_gemm_conv, elementwise_over_all, blockwise_over_matmul_gemm_conv
+    return (
+        elementwise_over_matmul_gemm_conv,
+        elementwise_over_all,
+        blockwise_over_matmul_gemm_conv,
+    )
 
 
 def check_config(prune_config):
@@ -239,19 +256,27 @@ def check_config(prune_config):
     """
     assert prune_config["start_step"] >= 0, "start_step should be greater than 0"
     assert prune_config["end_step"] >= -1, "end_step should be greater than 0"
-    assert prune_config["end_step"] >= prune_config["start_step"], "end_step should be greater than start_step"
+    assert (
+        prune_config["end_step"] >= prune_config["start_step"]
+    ), "end_step should be greater than start_step"
     assert (
         prune_config["target_sparsity"] >= 0 and prune_config["target_sparsity"] < 1.0
     ), "begin_pruning_step should be in range [0,1)"
-    assert prune_config["pruning_frequency"] > 0, "pruning_frequency should be greater than 0"
     assert (
-        prune_config["max_sparsity_ratio_per_op"] >= 0 and prune_config["max_sparsity_ratio_per_op"] < 1
+        prune_config["pruning_frequency"] > 0
     ), "pruning_frequency should be greater than 0"
     assert (
-        prune_config["pruning_scope"] == "global" or prune_config["pruning_scope"] == "local"
+        prune_config["max_sparsity_ratio_per_op"] >= 0
+        and prune_config["max_sparsity_ratio_per_op"] < 1
+    ), "pruning_frequency should be greater than 0"
+    assert (
+        prune_config["pruning_scope"] == "global"
+        or prune_config["pruning_scope"] == "local"
     ), "only support 'global' and 'local' prune domain"
     try:
-        prune_config["resume_from_pruned_checkpoint"] = bool(prune_config["resume_from_pruned_checkpoint"])
+        prune_config["resume_from_pruned_checkpoint"] = bool(
+            prune_config["resume_from_pruned_checkpoint"]
+        )
     except:
         assert False, "resume_from_pruned_checkpoint should be bool value"
     if "x" in prune_config["pattern"]:
@@ -277,16 +302,19 @@ def check_config(prune_config):
         assert M > N, "M should be greater than N"
         max_ratio = float(N) / M
         if prune_config["pruning_type"] != "pattern_lock":
-            assert prune_config["target_sparsity"] <= max_ratio, "in N:M pattern, the max sparsity is N/M={}".format(
-                max_ratio
-            )
-        prune_config["max_sparsity_ratio_per_op"] = min(max_ratio, prune_config["max_sparsity_ratio_per_op"])
+            assert (
+                prune_config["target_sparsity"] <= max_ratio
+            ), "in N:M pattern, the max sparsity is N/M={}".format(max_ratio)
+        prune_config["max_sparsity_ratio_per_op"] = min(
+            max_ratio, prune_config["max_sparsity_ratio_per_op"]
+        )
     if prune_config["reg_coeff"] is not None:
         prune_config["reg_coeff"] = float(prune_config["reg_coeff"])
         assert prune_config["reg_coeff"] >= 0, "only support positive reg_type"
     assert (
         prune_config["min_sparsity_ratio_per_op"] >= 0
-        and prune_config["min_sparsity_ratio_per_op"] <= prune_config["max_sparsity_ratio_per_op"]
+        and prune_config["min_sparsity_ratio_per_op"]
+        <= prune_config["max_sparsity_ratio_per_op"]
     ), "min_sparsity_ratio_per_op should in[0, max_sparsity_ratio_per_op]"
 
 
@@ -345,7 +373,9 @@ def process_weight_config(global_config, local_configs, default_config):
         for pruner_info in local_configs:
             for key in default_config.keys():
                 ##pruner_info[key] = reset_none_to_default(pruner_info, key, global_config[key])
-                pruner_info[key] = reset_none_to_default(pruner_info, key, default_all[key])
+                pruner_info[key] = reset_none_to_default(
+                    pruner_info, key, default_all[key]
+                )
             update_params(pruner_info)
             check_config(pruner_info)
             pruner_info = DotDict(pruner_info)
@@ -379,7 +409,9 @@ def process_yaml_config(global_config, local_configs, default_config):
         for pruner in local_configs:
             for key in default_config.keys():
                 pruner_info = pruner.pruner_config
-                pruner_info[key] = reset_none_to_default(pruner_info, key, default_all[key])
+                pruner_info[key] = reset_none_to_default(
+                    pruner_info, key, default_all[key]
+                )
             update_params(pruner_info)
             check_config(pruner_info)
             pruner_info = DotDict(pruner_info)
@@ -503,10 +535,14 @@ def process_config(config):
             return process_and_check_config(val)
         except FileNotFoundError as f:
             logger.error("{}.".format(f))
-            raise RuntimeError("The yaml file is not exist. Please check the file name or path.")
+            raise RuntimeError(
+                "The yaml file is not exist. Please check the file name or path."
+            )
         except Exception as e:
             logger.error("{}.".format(e))
-            raise RuntimeError("The yaml file format is not correct. Please refer to document.")
+            raise RuntimeError(
+                "The yaml file format is not correct. Please refer to document."
+            )
 
     if isinstance(config, WeightPruningConfig) or isinstance(config, WeightPruningConf):
         return process_and_check_config(config)
@@ -564,7 +600,9 @@ def parse_to_prune(config, model):
             pattern = re.compile(raw)
         except:
             assert False, f"regular expression match does not support {raw}"
-        for name, module in filter(lambda t: pattern.search(t[0]), model.named_modules()):
+        for name, module in filter(
+            lambda t: pattern.search(t[0]), model.named_modules()
+        ):
             for layer_type in config["pruning_op_types"]:
                 if layer_type in type(module).__name__ and hasattr(module, "weight"):
                     modules[name] = module
@@ -718,7 +756,9 @@ def collect_layer_inputs(model, layers, layer_idx, layer_inputs, device="cuda:0"
                 for key in kwargs.keys():
                     if key not in other_input_infos.keys():
                         other_input_infos[key] = []
-                    other_input_infos[key].append(move_input_to_device(kwargs[key], device))
+                    other_input_infos[key].append(
+                        move_input_to_device(kwargs[key], device)
+                    )
                 raise ValueError
 
             forward_cache = layers[layer_idx].forward
@@ -789,12 +829,16 @@ def get_deepspeed_version():  # pragma: no cover
 
 def check_deepspeed_version():  # pragma: no cover
     version = get_deepspeed_version()
-    assert version >= Version("0.12.4"), f"The minimum version requirement of deepspeed is 0.12.4, but got {version}."
+    assert version >= Version(
+        "0.12.4"
+    ), f"The minimum version requirement of deepspeed is 0.12.4, but got {version}."
 
 
 USE_DEEPSPEED = os.environ.get("USE_DEEPSPEED", False)
 if USE_DEEPSPEED:  # pragma: no cover
-    assert is_deepspeed_available(), "Deepspeed is required: `pip install deepspeed>0.12.4"
+    assert (
+        is_deepspeed_available()
+    ), "Deepspeed is required: `pip install deepspeed>0.12.4"
     check_deepspeed_version()
 
 

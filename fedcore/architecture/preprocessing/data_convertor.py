@@ -18,13 +18,14 @@ from fedcore.architecture.settings.computational import backend_methods as np
 from fedcore.architecture.settings.computational import default_device
 
 
-
 class CustomDatasetTS:
     def __init__(self, ts):
-        self.x = torch.from_numpy(DataConverter(
-            data=ts.features).convert_to_torch_format()).float()
-        self.y = torch.from_numpy(DataConverter(
-            data=ts.target).convert_to_torch_format()).float()
+        self.x = torch.from_numpy(
+            DataConverter(data=ts.features).convert_to_torch_format()
+        ).float()
+        self.y = torch.from_numpy(
+            DataConverter(data=ts.target).convert_to_torch_format()
+        ).float()
 
     def __getitem__(self, index):
         pass
@@ -36,7 +37,7 @@ class CustomDatasetTS:
 class CustomDatasetCLF:
     def __init__(self, ts):
         self.x = torch.from_numpy(ts.features).to(default_device()).float()
-        if ts.task.task_type.value == 'classification':
+        if ts.task.task_type.value == "classification":
             label_1 = max(ts.class_labels)
             label_0 = min(ts.class_labels)
             self.classes = ts.num_classes
@@ -55,14 +56,19 @@ class CustomDatasetCLF:
                 self.label_encoder = None
 
             try:
-                self.y = torch.nn.functional.one_hot(
-                    torch.from_numpy(
-                        ts.target).long(),
-                    num_classes=self.classes).to(
-                    default_device()).squeeze(1)
+                self.y = (
+                    torch.nn.functional.one_hot(
+                        torch.from_numpy(ts.target).long(), num_classes=self.classes
+                    )
+                    .to(default_device())
+                    .squeeze(1)
+                )
             except Exception:
-                self.y = torch.nn.functional.one_hot(torch.from_numpy(
-                    ts.target).long()).to(default_device()).squeeze(1)
+                self.y = (
+                    torch.nn.functional.one_hot(torch.from_numpy(ts.target).long())
+                    .to(default_device())
+                    .squeeze(1)
+                )
                 self.classes = self.y.shape[1]
         else:
             self.y = torch.from_numpy(ts.target).to(default_device()).float()
@@ -98,40 +104,43 @@ class FedotConverter:
             except Exception:
                 print(f"Can't convert {type(data)} to InputData", Warning)
 
-    def __init_input_data(self, features: pd.DataFrame,
-                          target: np.ndarray,
-                          task: str = 'classification') -> InputData:
+    def __init_input_data(
+        self, features: pd.DataFrame, target: np.ndarray, task: str = "classification"
+    ) -> InputData:
         if type(features) is np.ndarray:
             features = pd.DataFrame(features)
         is_multivariate_data = check_multivariate_data(features)
-        task_dict = {'classification': Task(TaskTypesEnum.classification),
-                     'regression': Task(TaskTypesEnum.regression)}
+        task_dict = {
+            "classification": Task(TaskTypesEnum.classification),
+            "regression": Task(TaskTypesEnum.regression),
+        }
         if is_multivariate_data:
-            input_data = InputData(idx=np.arange(len(features)),
-                                   features=np.array(
-                                       features.values.tolist()).astype(float),
-                                   target=target.astype(
-                                       float).reshape(-1, 1),
-                                   task=task_dict[task])
+            input_data = InputData(
+                idx=np.arange(len(features)),
+                features=np.array(features.values.tolist()).astype(float),
+                target=target.astype(float).reshape(-1, 1),
+                task=task_dict[task],
+            )
         else:
-            input_data = InputData(idx=np.arange(len(features)),
-                                   features=features.values,
-                                   target=np.ravel(target).reshape(-1, 1),
-                                   task=task_dict[task])
+            input_data = InputData(
+                idx=np.arange(len(features)),
+                features=features.values,
+                target=np.ravel(target).reshape(-1, 1),
+                task=task_dict[task],
+            )
         return input_data
 
-    def convert_to_output_data(self,
-                               prediction,
-                               predict_data,
-                               output_data_type):
+    def convert_to_output_data(self, prediction, predict_data, output_data_type):
         if isinstance(prediction, OutputData):
             output_data = prediction
         elif isinstance(prediction, list):
             output_data = prediction[0]
-            target = NumpyConverter(data=np.concatenate(
-                [p.target for p in prediction], axis=0)).convert_to_torch_format()
-            predict = NumpyConverter(data=np.concatenate(
-                [p.predict for p in prediction], axis=0)).convert_to_torch_format()
+            target = NumpyConverter(
+                data=np.concatenate([p.target for p in prediction], axis=0)
+            ).convert_to_torch_format()
+            predict = NumpyConverter(
+                data=np.concatenate([p.predict for p in prediction], axis=0)
+            ).convert_to_torch_format()
             output_data = OutputData(
                 idx=predict_data.idx,
                 features=predict_data.features,
@@ -139,7 +148,8 @@ class FedotConverter:
                 task=predict_data.task,
                 target=target,
                 data_type=output_data_type,
-                supplementary_data=predict_data.supplementary_data)
+                supplementary_data=predict_data.supplementary_data,
+            )
         else:
             output_data = OutputData(
                 idx=predict_data.idx,
@@ -148,7 +158,8 @@ class FedotConverter:
                 task=predict_data.task,
                 target=predict_data.target,
                 data_type=output_data_type,
-                supplementary_data=predict_data.supplementary_data)
+                supplementary_data=predict_data.supplementary_data,
+            )
         return output_data
 
     def unwrap_list_to_output(self):
@@ -157,19 +168,25 @@ class FedotConverter:
         return data_type, predict_data_copy
 
     def convert_input_to_output(self):
-        return OutputData(idx=self.input_data.idx,
-                          features=self.input_data.features,
-                          task=self.input_data.task,
-                          data_type=self.input_data.data_type,
-                          target=self.input_data.target,
-                          predict=self.input_data.features)
+        return OutputData(
+            idx=self.input_data.idx,
+            features=self.input_data.features,
+            task=self.input_data.task,
+            data_type=self.input_data.data_type,
+            target=self.input_data.target,
+            predict=self.input_data.features,
+        )
 
     def convert_to_industrial_composing_format(self, mode):
-        if mode == 'one_dimensional':
+        if mode == "one_dimensional":
             new_features, new_target = [
-                array.reshape(array.shape[0], array.shape[1] * array.shape[2])
-                if array is not None and len(array.shape) > 2 else array
-                for array in [self.input_data.features, self.input_data.target]]
+                (
+                    array.reshape(array.shape[0], array.shape[1] * array.shape[2])
+                    if array is not None and len(array.shape) > 2
+                    else array
+                )
+                for array in [self.input_data.features, self.input_data.target]
+            ]
             # if new_features.shape[0] != new_target.shape[0]:
             #     min_samples = min(new_features.shape[0], new_target.shape[0])
             #     new_features, new_target = new_features[:min_samples], new_target[:min_samples]
@@ -179,16 +196,21 @@ class FedotConverter:
                 target=new_target,
                 task=self.input_data.task,
                 data_type=self.input_data.data_type,
-                supplementary_data=self.input_data.supplementary_data)
-        elif mode == 'channel_independent':
+                supplementary_data=self.input_data.supplementary_data,
+            )
+        elif mode == "channel_independent":
             feats = self.input_data.features
             flat_input = self.input_data.features.shape[0] == 1
             if len(self.input_data.features.shape) == 1:
                 feats = self.input_data.features.reshape(1, -1)
-            elif len(self.input_data.features.shape) == 3 and self.input_data.features.shape[0] == 1:
+            elif (
+                len(self.input_data.features.shape) == 3
+                and self.input_data.features.shape[0] == 1
+            ):
                 feats = self.input_data.features.reshape(
                     self.input_data.features.shape[1],
-                    1 * self.input_data.features.shape[2])
+                    1 * self.input_data.features.shape[2],
+                )
             elif not flat_input:
                 feats = self.input_data.features.swapaxes(1, 0)
             input_data = [
@@ -198,17 +220,22 @@ class FedotConverter:
                     target=self.input_data.target,
                     task=self.input_data.task,
                     data_type=self.input_data.data_type,
-                    supplementary_data=self.input_data.supplementary_data) for features in feats]
-        elif mode == 'multi_dimensional':
+                    supplementary_data=self.input_data.supplementary_data,
+                )
+                for features in feats
+            ]
+        elif mode == "multi_dimensional":
             features = NumpyConverter(
-                data=self.input_data.features).convert_to_torch_format()
+                data=self.input_data.features
+            ).convert_to_torch_format()
             input_data = InputData(
                 idx=self.input_data.idx,
                 features=features,
                 target=self.input_data.target,
                 task=self.input_data.task,
                 data_type=DataTypesEnum.image,
-                supplementary_data=self.input_data.supplementary_data)
+                supplementary_data=self.input_data.supplementary_data,
+            )
 
         return input_data
 
@@ -227,8 +254,7 @@ class TensorConverter:
             return torch.from_numpy(data)
         elif isinstance(data, pd.DataFrame):
             if data.values.dtype == object:
-                return torch.from_numpy(
-                    np.array(data.values.tolist()).astype(float))
+                return torch.from_numpy(np.array(data.values.tolist()).astype(float))
             else:
                 return torch.from_numpy(data.values)
         elif isinstance(data, InputData):
@@ -243,7 +269,7 @@ class TensorConverter:
             return self.tensor_data[0, 0]
         if self.tensor_data.ndim == 2:
             return self.tensor_data[0]
-        assert False, f'Please, review input dimensions {self.tensor_data.ndim}'
+        assert False, f"Please, review input dimensions {self.tensor_data.ndim}"
 
     def convert_to_2d_tensor(self):
         if self.tensor_data.ndim == 2:
@@ -252,7 +278,7 @@ class TensorConverter:
             return self.tensor_data[None]
         elif self.tensor_data.ndim == 3:
             return self.tensor_data[0]
-        assert False, f'Please, review input dimensions {self.tensor_data.ndim}'
+        assert False, f"Please, review input dimensions {self.tensor_data.ndim}"
 
     def convert_to_3d_tensor(self):
         if self.tensor_data.ndim == 3:
@@ -261,16 +287,14 @@ class TensorConverter:
             return self.tensor_data[None, None]
         elif self.tensor_data.ndim == 2:
             return self.tensor_data[:, None]
-        assert False, f'Please, review input dimensions {self.tensor_data.ndim}'
+        assert False, f"Please, review input dimensions {self.tensor_data.ndim}"
 
 
 class NumpyConverter:
     def __init__(self, data):
         self.numpy_data = self.convert_to_array(data)
-        self.numpy_data = np.where(
-            np.isnan(self.numpy_data), 0, self.numpy_data)
-        self.numpy_data = np.where(
-            np.isinf(self.numpy_data), 0, self.numpy_data)
+        self.numpy_data = np.where(np.isnan(self.numpy_data), 0, self.numpy_data)
+        self.numpy_data = np.where(np.isinf(self.numpy_data), 0, self.numpy_data)
 
     def convert_to_array(self, data):
         if isinstance(data, tuple):
@@ -301,8 +325,7 @@ class NumpyConverter:
             return np.squeeze(self.numpy_data)
         elif self.numpy_data.ndim == 2:
             return self.numpy_data.flatten()
-        assert False, print(
-            f'Please, review input dimensions {self.numpy_data.ndim}')
+        assert False, print(f"Please, review input dimensions {self.numpy_data.ndim}")
 
     def convert_to_2d_array(self):
         if self.numpy_data.ndim == 2:
@@ -311,8 +334,7 @@ class NumpyConverter:
             return self.numpy_data.reshape(1, -1)
         elif self.numpy_data.ndim == 3:
             return self.numpy_data[0]
-        assert False, print(
-            f'Please, review input dimensions {self.numpy_data.ndim}')
+        assert False, print(f"Please, review input dimensions {self.numpy_data.ndim}")
 
     def convert_to_3d_array(self):
         if self.numpy_data.ndim == 3:
@@ -321,8 +343,7 @@ class NumpyConverter:
             return self.numpy_data[None, None]
         elif self.numpy_data.ndim == 2:
             return self.numpy_data[:, None]
-        assert False, print(
-            f'Please, review input dimensions {self.numpy_data.ndim}')
+        assert False, print(f"Please, review input dimensions {self.numpy_data.ndim}")
 
     def convert_to_4d_torch_format(self):
         if self.numpy_data.ndim == 4:
@@ -334,33 +355,30 @@ class NumpyConverter:
         elif self.numpy_data.ndim == 1:
             return self.numpy_data.reshape(-1, 1, 1)
         else:
-            return self.numpy_data.reshape(self.numpy_data.shape[0],
-                                           1,
-                                           self.numpy_data.shape[1],
-                                           self.numpy_data.shape[2])
+            return self.numpy_data.reshape(
+                self.numpy_data.shape[0],
+                1,
+                self.numpy_data.shape[1],
+                self.numpy_data.shape[2],
+            )
 
     def convert_to_torch_format(self):
         if self.numpy_data.ndim == 3:
             return self.numpy_data
         elif self.numpy_data.ndim == 1:
-            return self.numpy_data.reshape(self.numpy_data.shape[0],
-                                           1,
-                                           1)
+            return self.numpy_data.reshape(self.numpy_data.shape[0], 1, 1)
         elif self.numpy_data.ndim == 2 and self.numpy_data.shape[0] != 1:
             # add 1 channel
-            return self.numpy_data.reshape(self.numpy_data.shape[0],
-                                           1,
-                                           self.numpy_data.shape[1])
+            return self.numpy_data.reshape(
+                self.numpy_data.shape[0], 1, self.numpy_data.shape[1]
+            )
         elif self.numpy_data.ndim == 2 and self.numpy_data.shape[0] == 1:
             # add 1 channel
-            return self.numpy_data.reshape(1,
-                                           1,
-                                           self.numpy_data.shape[1])
+            return self.numpy_data.reshape(1, 1, self.numpy_data.shape[1])
 
         elif self.numpy_data.ndim > 3:
             return self.numpy_data.squeeze()
-        assert False, print(
-            f'Please, review input dimensions {self.numpy_data.ndim}')
+        assert False, print(f"Please, review input dimensions {self.numpy_data.ndim}")
 
     def convert_to_ts_format(self):
         if self.numpy_data.ndim > 1:
@@ -373,37 +391,40 @@ class ConditionConverter:
     def __init__(self, train_data, operation_implementation, mode):
         self.train_data = train_data
         self.operation_implementation = operation_implementation
-        self.operation_example = operation_implementation[0] if isinstance(
-            operation_implementation, list) else operation_implementation
+        self.operation_example = (
+            operation_implementation[0]
+            if isinstance(operation_implementation, list)
+            else operation_implementation
+        )
         self.mode = mode
 
     @property
     def have_transform_method(self):
-        return 'transform' in dir(self.operation_example)
+        return "transform" in dir(self.operation_example)
 
     @property
     def have_fit_method(self):
-        return 'fit' in dir(self.operation_example)
+        return "fit" in dir(self.operation_example)
 
     @property
     def have_predict_method(self):
-        return 'predict' in dir(self.operation_example)
+        return "predict" in dir(self.operation_example)
 
     @property
     def have_predict_for_fit_method(self):
-        return 'predict_for_fit' in dir(self.operation_example)
+        return "predict_for_fit" in dir(self.operation_example)
 
     @property
     def is_one_dim_operation(self):
-        return self.mode == 'one_dimensional'
+        return self.mode == "one_dimensional"
 
     @property
     def is_channel_independent_operation(self):
-        return self.mode == 'channel_independent'
+        return self.mode == "channel_independent"
 
     @property
     def is_multi_dimensional_operation(self):
-        return self.mode == 'multi_dimensional'
+        return self.mode == "multi_dimensional"
 
     @property
     def is_list_container(self):
@@ -415,34 +436,36 @@ class ConditionConverter:
 
     @property
     def have_predict_atr(self):
-        return 'predict' in vars(
-            self.operation_example) if self.is_operation_is_list_container else False
+        return (
+            "predict" in vars(self.operation_example)
+            if self.is_operation_is_list_container
+            else False
+        )
 
     @property
     def is_fit_input_fedot(self):
-        return str(
-            list(
-                signature(
-                    self.operation_example.fit).parameters.keys())[0]) == 'input_data'
+        return (
+            str(list(signature(self.operation_example.fit).parameters.keys())[0])
+            == "input_data"
+        )
 
     @property
     def is_transform_input_fedot(self):
-        return str(
-            list(
-                signature(
-                    self.operation_example.transform).parameters.keys())[0]) == 'input_data'
+        return (
+            str(list(signature(self.operation_example.transform).parameters.keys())[0])
+            == "input_data"
+        )
 
     @property
     def is_predict_input_fedot(self):
-        return str(
-            list(
-                signature(
-                    self.operation_example.predict).parameters.keys())[0]) == 'input_data'
+        return (
+            str(list(signature(self.operation_example.predict).parameters.keys())[0])
+            == "input_data"
+        )
 
     @property
     def is_regression_of_forecasting_task(self):
-        return self.train_data.task.task_type.value in [
-            'regression', 'ts_forecasting']
+        return self.train_data.task.task_type.value in ["regression", "ts_forecasting"]
 
     @property
     def is_multi_output_target(self):
@@ -457,26 +480,27 @@ class ConditionConverter:
         return self.operation_example is None
 
     def output_mode_converter(self, output_mode, n_classes):
-        if output_mode == 'labels':
-            return self.operation_example.predict(
-                self.train_data.features).reshape(-1, 1)
+        if output_mode == "labels":
+            return self.operation_example.predict(self.train_data.features).reshape(
+                -1, 1
+            )
         else:
             return self.probs_prediction_converter(output_mode, n_classes)
 
     def probs_prediction_converter(self, output_mode, n_classes):
         try:
-            prediction = self.operation_example.predict_proba(
-                self.train_data.features)
+            prediction = self.operation_example.predict_proba(self.train_data.features)
         except Exception:
             prediction = self.operation_example.predict_proba(
-                self.train_data.features.T)
+                self.train_data.features.T
+            )
         if n_classes < 2:
             raise ValueError(
-                'Data set contain only 1 target class. Please reformat your data.')
-        elif n_classes == 2 and output_mode != 'probs':
+                "Data set contain only 1 target class. Please reformat your data."
+            )
+        elif n_classes == 2 and output_mode != "probs":
             if self.is_multi_output_target:
-                prediction = np.stack([pred[:, 1]
-                                       for pred in prediction]).T
+                prediction = np.stack([pred[:, 1] for pred in prediction]).T
             else:
                 prediction = prediction[:, 1]
         return prediction
@@ -506,7 +530,7 @@ class ApiConverter:
 
     @staticmethod
     def ensemble_mode(predict_mode):
-        return predict_mode == 'RAF_ensemble'
+        return predict_mode == "RAF_ensemble"
 
     @staticmethod
     def solver_have_target_encoder(encoder):
@@ -517,7 +541,7 @@ class ApiConverter:
         return isinstance(input_data, (InputData, MultiModalData))
 
     def is_multiclf_with_labeling_problem(self, problem, target, predict):
-        clf_problem = problem == 'classification'
+        clf_problem = problem == "classification"
         uncorrect_labels = target.min() - predict.min() != 0
         multiclass = len(np.unique(predict).shape) != 1
         return clf_problem and uncorrect_labels and multiclass
@@ -539,11 +563,11 @@ class DataConverter(TensorConverter, NumpyConverter):
 
     @property
     def is_zarr(self):
-        return hasattr(self.data, 'oindex')
+        return hasattr(self.data, "oindex")
 
     @property
     def is_dask(self):
-        return hasattr(self.data, 'compute')
+        return hasattr(self.data, "compute")
 
     @property
     def is_memmap(self):
@@ -560,7 +584,7 @@ class DataConverter(TensorConverter, NumpyConverter):
     @property
     def is_torchvision_dataset(self):
         if self.is_tuple:
-            return self.data[1] == 'torchvision_dataset'
+            return self.data[1] == "torchvision_dataset"
         else:
             return False
 
@@ -592,8 +616,9 @@ class DataConverter(TensorConverter, NumpyConverter):
                 return list(self.data)
             except Exception:
                 print(
-                    f'passed object needs to be of type L, list, np.ndarray or torch.Tensor but is {type(self.data)}',
-                    Warning)
+                    f"passed object needs to be of type L, list, np.ndarray or torch.Tensor but is {type(self.data)}",
+                    Warning,
+                )
 
     def convert_data_to_1d(self):
         if self.data.ndim == 1:
@@ -638,8 +663,7 @@ class DataConverter(TensorConverter, NumpyConverter):
             features = self.data.features
         else:
             features = np.array(ListMonad(*self.data.values.tolist()).value)
-            features = np.array([series[~np.isnan(series)]
-                                 for series in features])
+            features = np.array([series[~np.isnan(series)] for series in features])
         return features
 
 
@@ -679,11 +703,11 @@ class NeuralNetworkConverter:
 
     @property
     def has_bias(self):
-        return hasattr(self.layer, 'bias') and self.layer.bias is not None
+        return hasattr(self.layer, "bias") and self.layer.bias is not None
 
     @property
     def has_weight(self):
-        return hasattr(self.layer, 'weight')
+        return hasattr(self.layer, "weight")
 
     @property
     def has_weight_or_bias(self):

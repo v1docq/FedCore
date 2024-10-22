@@ -18,9 +18,13 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from fedcore.neural_compressor.data.dataloaders.onnxrt_dataloader import ONNXRTDataLoader
+from fedcore.neural_compressor.data.dataloaders.onnxrt_dataloader import (
+    ONNXRTDataLoader,
+)
 from fedcore.neural_compressor.model.onnx_model import ONNXModel
-from fedcore.neural_compressor.profiling.profiler.onnxrt_profiler.utils import create_onnx_config
+from fedcore.neural_compressor.profiling.profiler.onnxrt_profiler.utils import (
+    create_onnx_config,
+)
 from fedcore.neural_compressor.profiling.profiler.profiler import Profiler as Parent
 
 
@@ -70,9 +74,13 @@ class Profiler(Parent):
         import onnxruntime as ort
 
         graph = self.model
-        onnx_options = create_onnx_config(ort, intra_num_of_threads, inter_num_of_threads)
+        onnx_options = create_onnx_config(
+            ort, intra_num_of_threads, inter_num_of_threads
+        )
         # Create a profile session
-        sess_profile = ort.InferenceSession(graph.SerializePartialToString(), onnx_options)
+        sess_profile = ort.InferenceSession(
+            graph.SerializePartialToString(), onnx_options
+        )
         input_tensors = sess_profile.get_inputs()
 
         for _, (inputs, _) in enumerate(self.dataloader):
@@ -81,7 +89,10 @@ class Profiler(Parent):
             if len(input_tensors) == 1:
                 input_dict = {input_tensors[0].name: inputs}
             else:
-                input_dict = {input_tensor.name: input_data for input_tensor, input_data in zip(input_tensors, inputs)}
+                input_dict = {
+                    input_tensor.name: input_data
+                    for input_tensor, input_data in zip(input_tensors, inputs)
+                }
             sess_profile.run(None, input_dict)
             break
 

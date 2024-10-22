@@ -25,7 +25,9 @@ class QuantizeLayerBase:  # pragma: no cover
     def __init__(self):
         """Initialize QuantizeLayerBase class."""
         self.quantize_patterns = []
-        assert "quantize_config" in global_config, "QuantizeConfig is not correctly created."
+        assert (
+            "quantize_config" in global_config
+        ), "QuantizeConfig is not correctly created."
         self.quantize_config = global_config["quantize_config"]
 
     def _find_input_layers(self, layer):

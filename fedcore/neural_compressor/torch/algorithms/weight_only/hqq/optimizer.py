@@ -54,7 +54,9 @@ def optimize_weights_proximal_legacy(
     zero = zero.to(dtype).to(device)
 
     if lp_norm == 1:
-        shrink_op = lambda x, beta: torch.sign(x) * torch.nn.functional.relu(torch.abs(x) - 1.0 / beta)
+        shrink_op = lambda x, beta: torch.sign(x) * torch.nn.functional.relu(
+            torch.abs(x) - 1.0 / beta
+        )
     else:
         shrink_op = lambda x, beta, p=lp_norm: torch.sign(x) * torch.nn.functional.relu(
             torch.abs(x) - (1.0 / beta) * torch.pow(torch.abs(x), p - 1)

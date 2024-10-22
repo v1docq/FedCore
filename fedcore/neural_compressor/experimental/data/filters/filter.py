@@ -138,7 +138,9 @@ class FILTERS(object):
 
         x[i] is roughly equivalent to type(x).__getitem__(x, index)
         """
-        assert filter_type in self.filters.keys(), "filter support {}".format(self.filters.keys())
+        assert filter_type in self.filters.keys(), "filter support {}".format(
+            self.filters.keys()
+        )
         return self.filters[filter_type]
 
 

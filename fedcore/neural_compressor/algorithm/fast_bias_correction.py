@@ -18,7 +18,6 @@
 
 import numpy as np
 
-from ..utils import logger
 from .algorithm import Algorithm, algorithm_registry
 
 
@@ -53,7 +52,11 @@ class FastBiasCorrection(Algorithm):
         # (TODO) assume int8 model also use fp32 op list
         # in adaptor fp32 op will be mapped to corresponding int8 op
         graph_info = origin_model.graph_info
-        op_list = [op_name for op_name, op_type in graph_info.items() if "conv" in op_type.lower()]
+        op_list = [
+            op_name
+            for op_name, op_type in graph_info.items()
+            if "conv" in op_type.lower()
+        ]
         iteration_list = list(range(1, iterations + 1))
         fp32_data = adaptor.inspect_tensor(
             origin_model.graph_def,
@@ -96,7 +99,9 @@ class FastBiasCorrection(Algorithm):
                 if isinstance(name, tuple):
                     name = name[0]
                 if name in fp32_activations:
-                    fp32_activations[name] = np.concatenate((fp32_activations[name], take_out_array(value)))
+                    fp32_activations[name] = np.concatenate(
+                        (fp32_activations[name], take_out_array(value))
+                    )
                 else:
                     fp32_activations[name] = take_out_array(value)
 
@@ -106,7 +111,9 @@ class FastBiasCorrection(Algorithm):
                 if isinstance(name, tuple):
                     name = name[0]
                 if name in q_activations:
-                    q_activations[name] = np.concatenate((q_activations[name], take_out_array(value)))
+                    q_activations[name] = np.concatenate(
+                        (q_activations[name], take_out_array(value))
+                    )
                 else:
                     q_activations[name] = take_out_array(value)
         tensor_dict = {}
@@ -123,20 +130,16 @@ class FastBiasCorrection(Algorithm):
             fp32_bias, fp32_bias_name = None, ""
             for name, value in fp32_weights[fp32_op].items():
                 if len(value.shape) > 1:
-                    fp32_weight = value
-                    fp32_weight_name = name
+                    pass
                 if len(value.shape) == 1:
                     fp32_bias = value
-                    fp32_bias_name = name
 
             q_weight, q_weight_name = None, ""
             q_bias, q_bias_name = None, ""
             for name, value in q_weights[q_op].items():
                 if len(value.shape) > 1:
-                    q_weight = value
-                    q_weight_name = name
+                    pass
                 if len(value.shape) == 1:
-                    q_bias = value
                     q_bias_name = name
 
             # (TODO) assume use conv output first tensor

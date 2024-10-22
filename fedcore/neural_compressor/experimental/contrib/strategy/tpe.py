@@ -24,9 +24,16 @@ from pathlib import Path
 import numpy as np
 from deprecated import deprecated
 
-from fedcore.neural_compressor.experimental.strategy.strategy import TuneStrategy, strategy_registry
-from fedcore.neural_compressor.experimental.strategy.utils.tuning_sampler import OpWiseTuningSampler
-from fedcore.neural_compressor.experimental.strategy.utils.tuning_structs import OpTuningConfig
+from fedcore.neural_compressor.experimental.strategy.strategy import (
+    TuneStrategy,
+    strategy_registry,
+)
+from fedcore.neural_compressor.experimental.strategy.utils.tuning_sampler import (
+    OpWiseTuningSampler,
+)
+from fedcore.neural_compressor.experimental.strategy.utils.tuning_structs import (
+    OpTuningConfig,
+)
 from fedcore.neural_compressor.utils import logger
 from fedcore.neural_compressor.utils.utility import LazyImport
 
@@ -86,7 +93,15 @@ class TpeTuneStrategy(TuneStrategy):
     """
 
     def __init__(
-        self, model, conf, q_dataloader, q_func=None, eval_dataloader=None, eval_func=None, dicts=None, q_hooks=None
+        self,
+        model,
+        conf,
+        q_dataloader,
+        q_func=None,
+        eval_dataloader=None,
+        eval_func=None,
+        dicts=None,
+        q_hooks=None,
     ):
         """Initialize the tpe tuning strategy if the user specified to use it."""
         assert (
@@ -102,10 +117,14 @@ class TpeTuneStrategy(TuneStrategy):
                     import subprocess
                     import sys
 
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "hyperopt"])
+                    subprocess.check_call(
+                        [sys.executable, "-m", "pip", "install", "hyperopt"]
+                    )
                     import hyperopt  # pylint: disable=import-error
                 except:
-                    assert False, "Unable to import hyperopt from the local environment."
+                    assert (
+                        False
+                    ), "Unable to import hyperopt from the local environment."
         else:
             pass
         self.hpopt_search_space = None
@@ -116,17 +135,36 @@ class TpeTuneStrategy(TuneStrategy):
         self.loss_function_config = {
             "acc_th": (
                 conf.usr_cfg.tuning.accuracy_criterion.relative
-                if conf.usr_cfg.tuning.accuracy_criterion and conf.usr_cfg.tuning.accuracy_criterion.relative
+                if conf.usr_cfg.tuning.accuracy_criterion
+                and conf.usr_cfg.tuning.accuracy_criterion.relative
                 else 0.01
             ),
             "acc_weight": conf.usr_cfg.tuning.strategy.get("accuracy_weight", 1.0),
             "lat_weight": conf.usr_cfg.tuning.strategy.get("latency_weight", 1.0),
         }
-        self.tpe_params = {"n_initial_point": 10, "gamma": 0.3, "n_EI_candidates": 100, "prior_weight": 1.0}
-        self.best_result = {"best_loss": float("inf"), "best_acc_loss": float("inf"), "best_lat_diff": 0.0}
+        self.tpe_params = {
+            "n_initial_point": 10,
+            "gamma": 0.3,
+            "n_EI_candidates": 100,
+            "prior_weight": 1.0,
+        }
+        self.best_result = {
+            "best_loss": float("inf"),
+            "best_acc_loss": float("inf"),
+            "best_lat_diff": 0.0,
+        }
         self._algo = None
 
-        super().__init__(model, conf, q_dataloader, q_func, eval_dataloader, eval_func, dicts, q_hooks)
+        super().__init__(
+            model,
+            conf,
+            q_dataloader,
+            q_func,
+            eval_dataloader,
+            eval_func,
+            dicts,
+            q_hooks,
+        )
 
     def __getstate__(self):
         """Magic method for pickle saving.
@@ -151,7 +189,9 @@ class TpeTuneStrategy(TuneStrategy):
         for param, configs in search_space.items():
             self.hpopt_search_space[(param)] = hyperopt.hp.choice((param[0]), configs)
         # Find minimum number of choices for params with more than one choice
-        multichoice_params = [len(configs) for param, configs in search_space.items() if len(configs) > 1]
+        multichoice_params = [
+            len(configs) for param, configs in search_space.items() if len(configs) > 1
+        ]
         if not multichoice_params:
             return False
         min_param_size = min(multichoice_params) if len(multichoice_params) > 0 else 1
@@ -171,22 +211,27 @@ class TpeTuneStrategy(TuneStrategy):
         logger.info("Start to run tpe strategy.")
         # prepare log file
         trials_file = os.path.join(os.path.dirname(self.history_path), "tpe_trials.csv")
-        best_result_file = os.path.join(os.path.dirname(self.history_path), "tpe_best_result.csv")
-        logger.debug("trials_file: {} ".format(trials_file) + "best_result_file: {}".format(best_result_file))
+        best_result_file = os.path.join(
+            os.path.dirname(self.history_path), "tpe_best_result.csv"
+        )
+        logger.debug(
+            "trials_file: {} ".format(trials_file)
+            + "best_result_file: {}".format(best_result_file)
+        )
         if Path(trials_file).exists():
             os.remove(trials_file)
         status = True
         tuning_history = self._find_self_tuning_history()
-
-        from copy import deepcopy
 
         tuning_space = self.tuning_space
         initial_op_tuning_cfg = {}
         for item in tuning_space.root_item.options:
             if item.item_type == "op":
                 op_name, op_type = item.name
-                initial_op_tuning_cfg[item.name] = OpTuningConfig(op_name, op_type, "fp32", tuning_space)
-        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+                initial_op_tuning_cfg[item.name] = OpTuningConfig(
+                    op_name, op_type, "fp32", tuning_space
+                )
+        tuning_space.root_item.get_option_by_name("calib_sampling_size").options
         # step1. collect the ops that support static and dynamic
         quant_mode_wise_items = OrderedDict()
         query_order = ["static", "dynamic", "bf16", "fp16", "fp32"]
@@ -204,26 +249,36 @@ class TpeTuneStrategy(TuneStrategy):
         op_item_dtype_dict = OrderedDict()
         for quant_mode, quant_mode_items in quant_mode_wise_items.items():
             initial_op_quant_mode(quant_mode_items, quant_mode, op_item_dtype_dict)
-        op_wise_pool = OpWiseTuningSampler(tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg)
+        op_wise_pool = OpWiseTuningSampler(
+            tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg
+        )
         self.op_configs = op_wise_pool.get_opwise_candidate()
         self.opwise_tune_cfgs = {}
         for key, val in self.op_configs.items():
             self.opwise_tune_cfgs[key[0]] = val
-        self.opwise_tune_cfgs["calib_sampling_size"] = self.tuning_space.root_item.get_option_by_name(
-            "calib_sampling_size"
-        ).options
+        self.opwise_tune_cfgs["calib_sampling_size"] = (
+            self.tuning_space.root_item.get_option_by_name(
+                "calib_sampling_size"
+            ).options
+        )
 
         if tuning_history and not self.warm_start:
             # prepare loss function scaling (best result from basic can be used)
             best_lat, worse_acc_loss = 0, 0
             for history in tuning_history["history"]:
-                acc_loss, lat_diff = self._calculate_acc_lat_diff(history["tune_result"][0], history["tune_result"][1])
+                acc_loss, lat_diff = self._calculate_acc_lat_diff(
+                    history["tune_result"][0], history["tune_result"][1]
+                )
                 if lat_diff > best_lat:
                     best_lat = lat_diff
                 if acc_loss > worse_acc_loss:
                     worse_acc_loss = acc_loss
-            self._calculate_loss_function_scaling_components(worse_acc_loss, best_lat, self.loss_function_config)
-            first_run_cfg = self.add_loss_to_tuned_history_and_find_best(tuning_history["history"])
+            self._calculate_loss_function_scaling_components(
+                worse_acc_loss, best_lat, self.loss_function_config
+            )
+            first_run_cfg = self.add_loss_to_tuned_history_and_find_best(
+                tuning_history["history"]
+            )
             # Prepare hpopt config with best cfg from history
             self._configure_hpopt_search_space_and_params(first_run_cfg)
             # Run first iteration with best result from history
@@ -240,11 +295,17 @@ class TpeTuneStrategy(TuneStrategy):
                 self._save_trials(trials_file)
                 self._update_best_result(best_result_file)
             # Prepare full hpopt search space
-            new_tune_cfgs = self._prepare_final_searchspace(first_run_cfg, self.opwise_tune_cfgs)
+            new_tune_cfgs = self._prepare_final_searchspace(
+                first_run_cfg, self.opwise_tune_cfgs
+            )
             status = self._configure_hpopt_search_space_and_params(new_tune_cfgs)
         elif not self.warm_start:
-            self._calculate_loss_function_scaling_components(0.01, 2, self.loss_function_config)
-            status = self._configure_hpopt_search_space_and_params(self.opwise_tune_cfgs)
+            self._calculate_loss_function_scaling_components(
+                0.01, 2, self.loss_function_config
+            )
+            status = self._configure_hpopt_search_space_and_params(
+                self.opwise_tune_cfgs
+            )
 
         if status:
             trials_count = len(self.hpopt_trials.trials) + 1
@@ -259,7 +320,9 @@ class TpeTuneStrategy(TuneStrategy):
                 + "".join(
                     [
                         ", {}: {:.4f}".format(x, y)
-                        for x, y in zip(self.objectives.representation, self.baseline[1])
+                        for x, y in zip(
+                            self.objectives.representation, self.baseline[1]
+                        )
                         if x != "Accuracy"
                     ]
                 )
@@ -270,12 +333,18 @@ class TpeTuneStrategy(TuneStrategy):
             logger.info("FP32 baseline is: {}".format(baseline_msg))
 
             if not self.objectives.relative:
-                self.loss_function_config["acc_th"] = (self.baseline[0] - self.objectives.acc_goal) / self.baseline[0]
+                self.loss_function_config["acc_th"] = (
+                    self.baseline[0] - self.objectives.acc_goal
+                ) / self.baseline[0]
             # start trials
             exit = False
             while not exit:
                 self.cfg_evaluated = False
-                logger.debug("Trial iteration start: {} / {}.".format(trials_count, self.max_trials))
+                logger.debug(
+                    "Trial iteration start: {} / {}.".format(
+                        trials_count, self.max_trials
+                    )
+                )
                 hyperopt.fmin(
                     partial(self.object_evaluation, model=self.model),
                     space=self.hpopt_search_space,
@@ -306,12 +375,16 @@ class TpeTuneStrategy(TuneStrategy):
 
     def add_loss_to_tuned_history_and_find_best(self, tuning_history_list):
         """Find the best tuned history."""
-        logger.debug("Number of resumed configs is {}.".format(len(tuning_history_list)))
+        logger.debug(
+            "Number of resumed configs is {}.".format(len(tuning_history_list))
+        )
         best_loss = None
         first_run_cfg = None
         for history in tuning_history_list:
             result = self._compute_metrics(
-                history["tune_cfg"]["op"], history["tune_result"][0], history["tune_result"][1]
+                history["tune_cfg"]["op"],
+                history["tune_result"][0],
+                history["tune_result"][1],
             )
             if best_loss is None or result["loss"] < best_loss:
                 best_loss = result["loss"]
@@ -321,7 +394,10 @@ class TpeTuneStrategy(TuneStrategy):
             logger.debug(
                 "Resumed iteration loss is {}, acc_loss is {}, lat_diff is {}, "
                 "quantization_ratio is {}.".format(
-                    result["loss"], result["acc_loss"], result["lat_diff"], result["quantization_ratio"]
+                    result["loss"],
+                    result["acc_loss"],
+                    result["lat_diff"],
+                    result["quantization_ratio"],
                 )
             )
         for op, cfg in first_run_cfg.items():
@@ -335,27 +411,42 @@ class TpeTuneStrategy(TuneStrategy):
         for k, v in self.op_configs.items():
             tune_cfg.update({k: tune_cfg.pop(k[0])})
         op_cfgs = self._tune_cfg_converter(tune_cfg)
-        self.last_qmodel = self.adaptor.quantize(op_cfgs, self.model, self.calib_dataloader)
+        self.last_qmodel = self.adaptor.quantize(
+            op_cfgs, self.model, self.calib_dataloader
+        )
         self.last_tune_cfg = copy.deepcopy(tune_cfg)
         self.last_tune_result = self._evaluate(self.last_qmodel)
-        logger.info("The last tune result is {}.".format((self.last_tune_result[0], self.last_tune_result[1][0])))
+        logger.info(
+            "The last tune result is {}.".format(
+                (self.last_tune_result[0], self.last_tune_result[1][0])
+            )
+        )
         saved_tune_cfg = copy.deepcopy(op_cfgs)
         saved_last_tune_result = copy.deepcopy(self.last_tune_result)
         # prepare result
-        result = self._compute_metrics(op_cfgs["op"], self.last_tune_result[0], self.last_tune_result[1][0])
+        result = self._compute_metrics(
+            op_cfgs["op"], self.last_tune_result[0], self.last_tune_result[1][0]
+        )
         result["source"] = "tpe"
         self._add_tuning_history(saved_tune_cfg, saved_last_tune_result, result=result)
         logger.info(
             "Current iteration loss is {}, acc_loss is {}, lat_diff is {}, "
             "quantization_ratio is {}.".format(
-                result["loss"], result["acc_loss"], result["lat_diff"], result["quantization_ratio"]
+                result["loss"],
+                result["acc_loss"],
+                result["lat_diff"],
+                result["quantization_ratio"],
             )
         )
         return result
 
     def _compute_metrics(self, tune_cfg, acc, lat):
         quantization_ratio = 1 - len(
-            [param for param in tune_cfg.values() if param["activation"]["dtype"] == "fp32"]
+            [
+                param
+                for param in tune_cfg.values()
+                if param["activation"]["dtype"] == "fp32"
+            ]
         ) / len(tune_cfg)
         acc_diff, lat_diff = self._calculate_acc_lat_diff(acc, lat)
         return {
@@ -385,7 +476,9 @@ class TpeTuneStrategy(TuneStrategy):
         acc_weight = config["acc_weight"] if acc_diff > config["acc_th"] else 0.0
         if acc_weight == 0 and config["lat_weight"] == 0:
             acc_weight = 1.0
-        loss = acc_weight * (config["acc_scale"] * (acc_loss_component - config["acc_min"])) + config["lat_weight"] * (
+        loss = acc_weight * (
+            config["acc_scale"] * (acc_loss_component - config["acc_min"])
+        ) + config["lat_weight"] * (
             config["lat_scale"] * (lat_loss_component - config["lat_min"])
         )
         if acc_diff > config["acc_th"]:
@@ -424,10 +517,14 @@ class TpeTuneStrategy(TuneStrategy):
             raise Exception("No trials loaded to get best result")
         trials_results = pd.DataFrame(self.hpopt_trials.results)
 
-        if not trials_results[trials_results.acc_loss <= self.loss_function_config["acc_th"]].empty:
+        if not trials_results[
+            trials_results.acc_loss <= self.loss_function_config["acc_th"]
+        ].empty:
             # If accuracy threshold reached, choose best latency
             best_result = (
-                trials_results[trials_results.acc_loss <= self.loss_function_config["acc_th"]]
+                trials_results[
+                    trials_results.acc_loss <= self.loss_function_config["acc_th"]
+                ]
                 .reset_index(drop=True)
                 .sort_values(by=["lat_diff", "acc_loss"], ascending=[False, True])
                 .reset_index(drop=True)
@@ -435,7 +532,11 @@ class TpeTuneStrategy(TuneStrategy):
             )
         else:
             # If accuracy threshold is not reached, choose based on loss function
-            best_result = trials_results.sort_values("loss", ascending=True).reset_index(drop=True).loc[0]
+            best_result = (
+                trials_results.sort_values("loss", ascending=True)
+                .reset_index(drop=True)
+                .loc[0]
+            )
 
         update_best_result = False
         if not self.best_result["best_loss"]:
@@ -495,8 +596,14 @@ class TpeTuneStrategy(TuneStrategy):
             )
             + "".join(
                 [
-                    ", {} ({}|fp32): {:.4f}|{:.4f}".format(x, self.cfg.quantization.dtype, y, z)
-                    for x, y, z in zip(self.objectives.representation, self.last_tune_result[1], self.baseline[1])
+                    ", {} ({}|fp32): {:.4f}|{:.4f}".format(
+                        x, self.cfg.quantization.dtype, y, z
+                    )
+                    for x, y, z in zip(
+                        self.objectives.representation,
+                        self.last_tune_result[1],
+                        self.baseline[1],
+                    )
                     if x != "Accuracy"
                 ]
             )
@@ -510,7 +617,9 @@ class TpeTuneStrategy(TuneStrategy):
             + "".join(
                 [
                     ", {}: {:.4f}".format(x, y)
-                    for x, y in zip(self.objectives.representation, self.best_tune_result[1])
+                    for x, y in zip(
+                        self.objectives.representation, self.best_tune_result[1]
+                    )
                     if x != "Accuracy"
                 ]
             )
@@ -519,7 +628,11 @@ class TpeTuneStrategy(TuneStrategy):
             else "n/a"
         )
 
-        logger.info("Tune {} result is: {}, Best tune result is: {}".format(trials_count, last_tune_msg, best_tune_msg))
+        logger.info(
+            "Tune {} result is: {}, Best tune result is: {}".format(
+                trials_count, last_tune_msg, best_tune_msg
+            )
+        )
 
         if timeout == 0 and self.best_tune_result:
             need_stop = True

@@ -16,7 +16,9 @@
 
 from typing import List, Optional
 
-from fedcore.neural_compressor.profiling.parser.tensorflow_parser.parser import TensorFlowProfilingParser
+from fedcore.neural_compressor.profiling.parser.tensorflow_parser.parser import (
+    TensorFlowProfilingParser,
+)
 
 
 class TensorFlowParserFactory:

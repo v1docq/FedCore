@@ -20,9 +20,10 @@ from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import dtypes, tensor_util
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
-
 from ..graph_base import GraphRewriterBase
 
 
@@ -36,15 +37,24 @@ class FuseColumnWiseMulOptimizer(GraphRewriterBase):
         cur_graph.graph = self.model
 
         graph_info = cur_graph.parse_graph()
-        target_nodes = cur_graph.query_fusion_pattern_nodes([["Conv2D", "DepthwiseConv2dNative", "MatMul"], "Mul"])
+        target_nodes = cur_graph.query_fusion_pattern_nodes(
+            [["Conv2D", "DepthwiseConv2dNative", "MatMul"], "Mul"]
+        )
 
         for node_combination in target_nodes:
             upper_node = graph_info[node_combination[0]].node
             mul_node = graph_info[node_combination[1]].node
-            if graph_info[Helper.node_name_from_input(mul_node.input[1])].node.op != "Const":
+            if (
+                graph_info[Helper.node_name_from_input(mul_node.input[1])].node.op
+                != "Const"
+            ):
                 continue
-            weights_node = graph_info[graph_info[node_combination[0]].node.input[1]].node
-            mul_value_node = graph_info[graph_info[node_combination[1]].node.input[1]].node
+            weights_node = graph_info[
+                graph_info[node_combination[0]].node.input[1]
+            ].node
+            mul_value_node = graph_info[
+                graph_info[node_combination[1]].node.input[1]
+            ].node
             upper_node_type = upper_node.op
 
             if upper_node_type == "Conv2D":
@@ -66,16 +76,24 @@ class FuseColumnWiseMulOptimizer(GraphRewriterBase):
                 self.logger.warning("Invalid Mul OP fusion.")
                 return self.model
 
-            mul_value_node_list = [i for i in tensor_util.MakeNdarray(mul_value_node_tensor).flat]
+            mul_value_node_list = [
+                i for i in tensor_util.MakeNdarray(mul_value_node_tensor).flat
+            ]
             new_weights = []
-            for index, i in enumerate(tensor_util.MakeNdarray(weights_node_tensor).flat):
-                new_weights_value = i * mul_value_node_list[index % len(mul_value_node_list)]
+            for index, i in enumerate(
+                tensor_util.MakeNdarray(weights_node_tensor).flat
+            ):
+                new_weights_value = (
+                    i * mul_value_node_list[index % len(mul_value_node_list)]
+                )
                 new_weights.append(new_weights_value)
 
             weights_node.attr["value"].CopyFrom(
                 attr_value_pb2.AttrValue(
                     tensor=tensor_util.make_tensor_proto(
-                        new_weights, dtypes.float32, tensor_util.MakeNdarray(weights_node_tensor).shape
+                        new_weights,
+                        dtypes.float32,
+                        tensor_util.MakeNdarray(weights_node_tensor).shape,
                     )
                 )
             )

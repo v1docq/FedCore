@@ -38,15 +38,12 @@ class PatternLockPruner(Pruner):
 
     def on_epoch_begin(self, epoch):
         """Be called on the beginning of epochs."""
-        pass
 
     def on_step_begin(self, batch_id):
         """Be called on the beginning of steps."""
-        pass
 
     def on_epoch_end(self):
         """Be called on the end of epochs."""
-        pass
 
     def on_step_end(self):
         """Update weights."""

@@ -14,17 +14,22 @@
 # pylint:disable=import-error
 
 import copy
-import os
 
 import habana_frameworks.torch.core as htcore
 import torch
 from deepspeed.module_inject import LinearAllreduce, LinearLayer
 from deepspeed.module_inject.layers import LmHeadLinearAllreduce
 
-from fedcore.neural_compressor.common.utils import FP8_QUANT
-from fedcore.neural_compressor.torch.quantization.modules import Autocast, BatchMatmul, Matmul
-from fedcore.neural_compressor.torch.utils.utility import fetch_module, logger, register_algo, set_module
-
+from fedcore.neural_compressor.torch.quantization.modules import (
+    Autocast,
+    BatchMatmul,
+    Matmul,
+)
+from fedcore.neural_compressor.torch.utils.utility import (
+    fetch_module,
+    logger,
+    set_module,
+)
 from .modules import (
     FP8BatchMatmul,
     FP8Cast,
@@ -61,7 +66,9 @@ def _replace_module(module, qconfig):
     if qconfig.approach == "static":
         if isinstance(module, white_list):
             QModule = quantization_mapping[type(module)]
-            assert qconfig.weight_dtype == qconfig.act_dtype, "weight and activation should be the same dtype."
+            assert (
+                qconfig.weight_dtype == qconfig.act_dtype
+            ), "weight and activation should be the same dtype."
             module = QModule(module, qconfig.act_dtype)
     elif qconfig.approach == "dynamic":
         dtype = qconfig.act_dtype
@@ -104,10 +111,12 @@ def _add_observer(module, qconfig):
         try:
             if isinstance(input[0], torch.Tensor):
                 self.input_activation_post_process(input[0])
-            if hasattr(self, "input_activation_post_process1") and isinstance(input[1], torch.Tensor):
+            if hasattr(self, "input_activation_post_process1") and isinstance(
+                input[1], torch.Tensor
+            ):
                 self.input_activation_post_process1(input[1])
             return input
-        except Exception as e:
+        except Exception:
             # The KL algorithm may encounter a overflow error on EltwiseAdd.
             pass
 
@@ -116,11 +125,13 @@ def _add_observer(module, qconfig):
 
     if isinstance(module, white_list):
         module.add_module(
-            "input_activation_post_process", FP8HistogramObserver() if algorithm == "kl" else MinMaxObserver()
+            "input_activation_post_process",
+            FP8HistogramObserver() if algorithm == "kl" else MinMaxObserver(),
         )
     if isinstance(module, (BatchMatmul, Matmul)):
         module.add_module(
-            "input_activation_post_process1", FP8HistogramObserver() if algorithm == "kl" else MinMaxObserver()
+            "input_activation_post_process1",
+            FP8HistogramObserver() if algorithm == "kl" else MinMaxObserver(),
         )
     module.register_forward_pre_hook(input_observer_forward_pre_hook)
 
@@ -131,8 +142,12 @@ def _remove_observer(module, qconfig):
 
     HF_max = E4M3_AMAX if qconfig.act_dtype == torch.float8_e4m3fn else E5M2_AMAX
     if hasattr(module, "input_activation_post_process"):
-        if hasattr(module.input_activation_post_process, "_non_linear_param_search"):  # kl
-            min_val, max_val = module.input_activation_post_process._non_linear_param_search()
+        if hasattr(
+            module.input_activation_post_process, "_non_linear_param_search"
+        ):  # kl
+            min_val, max_val = (
+                module.input_activation_post_process._non_linear_param_search()
+            )
         else:
             min_val = module.input_activation_post_process.min_val
             max_val = module.input_activation_post_process.max_val
@@ -145,7 +160,9 @@ def _remove_observer(module, qconfig):
         delattr(module, "input_activation_post_process")
     if hasattr(module, "input_activation_post_process1"):
         if hasattr(module.input_activation_post_process1, "_non_linear_param_search"):
-            min_val, max_val = module.input_activation_post_process1._non_linear_param_search()
+            min_val, max_val = (
+                module.input_activation_post_process1._non_linear_param_search()
+            )
         else:
             min_val = module.input_activation_post_process1.min_val
             max_val = module.input_activation_post_process1.max_val
@@ -161,7 +178,10 @@ def _remove_observer(module, qconfig):
     hook_map = module._forward_pre_hooks
     handle_ids_to_remove = set()
     for handle_id, hook_fn in hook_map.items():
-        if hasattr(hook_fn, "__name__") and hook_fn.__name__ == "input_observer_forward_pre_hook":
+        if (
+            hasattr(hook_fn, "__name__")
+            and hook_fn.__name__ == "input_observer_forward_pre_hook"
+        ):
             handle_ids_to_remove.add(handle_id)
     for handle_id in handle_ids_to_remove:
         hook_map.pop(handle_id)

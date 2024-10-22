@@ -16,7 +16,6 @@
 # limitations under the License.
 """Initialize the DATASETS class."""
 
-import numpy as np
 
 from fedcore.neural_compressor.utils.utility import LazyImport
 
@@ -60,7 +59,9 @@ class PyTorchDataLoader(BaseDataLoader):  # pragma: no cover
             _type_: _description_
         """
         drop_last = False if last_batch == "rollover" else True
-        assert len(dataset) != 0, "Warning: Dataset is empty, Please check dataset path!"
+        assert (
+            len(dataset) != 0
+        ), "Warning: Dataset is empty, Please check dataset path!"
         if distributed and sampler is None:
             # TODO: lazy init here
             hvd.init()

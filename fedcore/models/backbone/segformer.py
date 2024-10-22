@@ -4,9 +4,7 @@ import torch
 from transformers import SegformerForSemanticSegmentation
 
 
-def segformer_pretrain(id2label: Dict,
-                       label2id: Dict,
-                       pretrain_path: str = None):
+def segformer_pretrain(id2label: Dict, label2id: Dict, pretrain_path: str = None):
     model = SegformerForSemanticSegmentation.from_pretrained(
         "nvidia/mit-b0",
         num_labels=len(id2label),

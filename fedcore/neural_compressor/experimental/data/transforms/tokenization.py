@@ -35,7 +35,6 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
-import re
 import unicodedata
 
 import six
@@ -57,7 +56,9 @@ def convert_to_unicode(text):  # pragma: no cover
     elif six.PY2:
         if isinstance(text, str):
             return text.decode("utf-8", "ignore")
-        elif isinstance(text, unicode):  # pylint: disable=undefined-variable # noqa: F821
+        elif isinstance(
+            text, unicode
+        ):  # pylint: disable=undefined-variable # noqa: F821
             return text
         else:
             raise ValueError("Unsupported string type: %s" % (type(text)))
@@ -344,7 +345,12 @@ def _is_punctuation(char):  # pragma: no cover
     # Characters such as "^", "$", and "`" are not in the Unicode
     # Punctuation class but we treat them as punctuation anyways, for
     # consistency.
-    if (cp >= 33 and cp <= 47) or (cp >= 58 and cp <= 64) or (cp >= 91 and cp <= 96) or (cp >= 123 and cp <= 126):
+    if (
+        (cp >= 33 and cp <= 47)
+        or (cp >= 58 and cp <= 64)
+        or (cp >= 91 and cp <= 96)
+        or (cp >= 123 and cp <= 126)
+    ):
         return True
     cat = unicodedata.category(char)
     if cat.startswith("P"):

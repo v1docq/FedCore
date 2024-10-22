@@ -15,14 +15,23 @@
 import os
 import tempfile
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Union
 
 import onnx
 
-from fedcore.neural_compressor.common.base_config import BaseConfig, get_all_config_set_from_config_registry
-from fedcore.neural_compressor.common.base_tuning import TuningConfig, evaluator, init_tuning
+from fedcore.neural_compressor.common.base_config import (
+    BaseConfig,
+    get_all_config_set_from_config_registry,
+)
+from fedcore.neural_compressor.common.base_tuning import (
+    TuningConfig,
+    evaluator,
+    init_tuning,
+)
 from fedcore.neural_compressor.common.utils import logger
-from fedcore.neural_compressor.onnxrt.quantization.calibrate import CalibrationDataReader
+from fedcore.neural_compressor.onnxrt.quantization.calibrate import (
+    CalibrationDataReader,
+)
 from fedcore.neural_compressor.onnxrt.quantization.config import FRAMEWORK_NAME
 from fedcore.neural_compressor.onnxrt.quantization.quantize import _quantize
 
@@ -65,13 +74,17 @@ def autotune(
     best_quant_model = None
     evaluator.set_eval_fn_registry(eval_fns)
     evaluator.self_check()
-    config_loader, tuning_logger, tuning_monitor = init_tuning(tuning_config=tune_config)
+    config_loader, tuning_logger, tuning_monitor = init_tuning(
+        tuning_config=tune_config
+    )
     try:
         baseline: float = evaluator.evaluate(model_input)
     except Exception as e:
         print(e)
         if "'str' object has no attribute 'SerializeToString'" in str(e):
-            logger.warning("Please refine your eval_fns to accept model path (str) as input.")
+            logger.warning(
+                "Please refine your eval_fns to accept model path (str) as input."
+            )
         exit(0)
     tuning_monitor.set_baseline(baseline)
     tuning_logger.tuning_start()
@@ -81,7 +94,11 @@ def autotune(
         tuning_logger.trial_start(trial_index=trial_index)
         tuning_logger.quantization_start()
         logger.debug("quant config: {}".format(quant_config))
-        q_model = _quantize(model_input, quant_config=quant_config, calibration_data_reader=calibration_data_reader)
+        q_model = _quantize(
+            model_input,
+            quant_config=quant_config,
+            calibration_data_reader=calibration_data_reader,
+        )
         tuning_logger.quantization_end()
         tuning_logger.evaluation_start()
         with tempfile.TemporaryDirectory(prefix="ort.quant.") as tmp_dir:
@@ -91,7 +108,9 @@ def autotune(
                 Path(tmp_dir).joinpath(Path(model_input).name).as_posix(),
                 save_as_external_data=True,
                 all_tensors_to_one_file=True,
-                location=Path(model_input).with_suffix(Path(model_input).suffix + "_data").name,
+                location=Path(model_input)
+                .with_suffix(Path(model_input).suffix + "_data")
+                .name,
                 size_threshold=1024,
                 convert_attribute=False,
             )
@@ -105,7 +124,9 @@ def autotune(
                     Path(model_input).parent.joinpath("config.json").as_posix(),
                     Path(tmp_dir).joinpath("config.json").as_posix(),
                 )
-            eval_result: float = evaluator.evaluate(Path(tmp_dir).joinpath(Path(model_input).name).as_posix())
+            eval_result: float = evaluator.evaluate(
+                Path(tmp_dir).joinpath(Path(model_input).name).as_posix()
+            )
         tuning_logger.evaluation_end()
         logger.info("Evaluation result: %.4f", eval_result)
         tuning_monitor.add_trial_result(trial_index, eval_result, quant_config)
@@ -113,7 +134,9 @@ def autotune(
         if tuning_monitor.need_stop():
             best_quant_config: BaseConfig = tuning_monitor.get_best_quant_config()
             best_quant_model = _quantize(
-                model_input, quant_config=best_quant_config, calibration_data_reader=calibration_data_reader
+                model_input,
+                quant_config=best_quant_config,
+                calibration_data_reader=calibration_data_reader,
             )
             break
     tuning_logger.tuning_end()

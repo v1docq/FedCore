@@ -23,7 +23,6 @@ import numpy as np
 from deprecated import deprecated
 
 from fedcore.neural_compressor.utils import logger
-
 from .pruner import Pruner, pruner_registry
 
 
@@ -40,7 +39,9 @@ class GradientSensitivityPruner(Pruner):
 
     def __init__(self, model, local_config, global_config):
         """Initialize the attributes."""
-        super(GradientSensitivityPruner, self).__init__(model, local_config, global_config)
+        super(GradientSensitivityPruner, self).__init__(
+            model, local_config, global_config
+        )
         self.parameters = local_config.parameters
         self.importance = {}
         self.elementwise_prune = False if local_config.parameters is not None else True
@@ -52,7 +53,11 @@ class GradientSensitivityPruner(Pruner):
             self.model.register_forward_pre_hook()
         if self.elementwise_prune:
             self.sparsity = self.update_sparsity(epoch)
-            logger.debug("Start pruning in epoch {} with sparsity {}.".format(str(epoch), str(self.sparsity)))
+            logger.debug(
+                "Start pruning in epoch {} with sparsity {}.".format(
+                    str(epoch), str(self.sparsity)
+                )
+            )
             self.is_last_epoch = epoch == self.end_epoch
             if epoch >= self.start_epoch and epoch <= self.end_epoch:
                 self.compute_mask()
@@ -78,7 +83,11 @@ class GradientSensitivityPruner(Pruner):
                                 weight_name,
                                 str(self.masks[weight_name].size),
                                 str(self.masks[weight_name].sum()),
-                                str(1 - self.masks[weight_name].sum() / self.masks[weight_name].size),
+                                str(
+                                    1
+                                    - self.masks[weight_name].sum()
+                                    / self.masks[weight_name].size
+                                ),
                             )
                         )
                         new_weight = self.masks[weight_name].reshape(
@@ -88,7 +97,9 @@ class GradientSensitivityPruner(Pruner):
         else:
             for weight_name_raw in self.weights:
                 for weight_name in self.parse_weight_name(weight_name_raw):
-                    self.prune_weight(self.model, self.importance, weight_name, self.parameters)
+                    self.prune_weight(
+                        self.model, self.importance, weight_name, self.parameters
+                    )
         if self.is_last_epoch:
             # remove hooks for FWK model to ensure model saving
             self.model.remove_hooks()
@@ -102,14 +113,17 @@ class GradientSensitivityPruner(Pruner):
             weight_all_names = self.model.get_all_weight_names()
             importance_inputs = self.parameters["importance_inputs"]
             for single_weight_name in weight_all_names:
-                index_group = re.match(weight_name_pattern.replace("*", "(\d+)"), single_weight_name)
+                index_group = re.match(
+                    weight_name_pattern.replace("*", "(\d+)"), single_weight_name
+                )
                 if index_group is not None:
                     index = index_group.group(1)
                     if self.parameters.get(index) is None:
                         self.parameters["index"] = int(index)
                     # dynamic change importance_inputs with matched index
                     self.parameters["importance_inputs"] = [
-                        x.replace("*", index) for x in self.parameters["importance_inputs"]
+                        x.replace("*", index)
+                        for x in self.parameters["importance_inputs"]
                     ]
                     yield single_weight_name
                     # change importance_inputs back
@@ -119,7 +133,9 @@ class GradientSensitivityPruner(Pruner):
         """Update importance tensor."""
         if self.elementwise_prune:
             for weight_name in self.weights:
-                self.update_importance_elementwise(self.model, self.importance, weight_name)
+                self.update_importance_elementwise(
+                    self.model, self.importance, weight_name
+                )
                 if weight_name in self.masks:
                     new_weight = self.masks[weight_name].reshape(
                         np.array(self.model.get_weight(weight_name).shape)
@@ -129,9 +145,13 @@ class GradientSensitivityPruner(Pruner):
             for weight_name_raw in self.weights:
                 for weight_name in self.parse_weight_name(weight_name_raw):
                     if self.parameters["importance_metric"] == "abs_gradient":
-                        self.update_importance_abs(self.model, self.importance, weight_name, self.parameters)
+                        self.update_importance_abs(
+                            self.model, self.importance, weight_name, self.parameters
+                        )
                     elif self.parameters["importance_metric"] == "weighted_gradient":
-                        self.update_importance_weighted(self.model, self.importance, weight_name, self.parameters)
+                        self.update_importance_weighted(
+                            self.model, self.importance, weight_name, self.parameters
+                        )
 
     def compute_mask(self):
         """Compute masks according to absolute values."""
@@ -141,15 +161,25 @@ class GradientSensitivityPruner(Pruner):
                 if len(tensor.shape) in self.tensor_dims:
                     reduced_tensor = self.pattern.reduce(tensor)
                     if self.method == "per_channel":
-                        tensor_flat = reduced_tensor.reshape(list(tensor.shape)[:-2], -1)
+                        tensor_flat = reduced_tensor.reshape(
+                            list(tensor.shape)[:-2], -1
+                        )
                         tensor_flat.sort(axis=-1)
-                        threshold = tensor_flat[..., int(self.sparsity * tensor_flat.shape[-1])]
+                        threshold = tensor_flat[
+                            ..., int(self.sparsity * tensor_flat.shape[-1])
+                        ]
                         threshold = np.expand_dims(np.expand_dims(threshold, -1), -1)
-                        threshold = np.repeat(threshold, reduced_tensor.shape[-1], axis=-1)
-                        threshold = np.repeat(threshold, reduced_tensor.shape[-2], axis=-2)
+                        threshold = np.repeat(
+                            threshold, reduced_tensor.shape[-1], axis=-1
+                        )
+                        threshold = np.repeat(
+                            threshold, reduced_tensor.shape[-2], axis=-2
+                        )
                     else:
                         tensor_flat = sorted(np.abs(reduced_tensor.flatten()))
-                        threshold = float(tensor_flat[int(len(tensor_flat) * self.sparsity)])
+                        threshold = float(
+                            tensor_flat[int(len(tensor_flat) * self.sparsity)]
+                        )
                     reduced_mask = threshold < np.abs(reduced_tensor)
                     self.masks[weight_name] = self.pattern.repeat_mask(reduced_mask)
 
@@ -157,14 +187,18 @@ class GradientSensitivityPruner(Pruner):
         """Prune the specified weight by importance."""
         if parameters["normalize"]:
             exponent = 2
-            norm_by_layer = np.power(np.power(importance[weight_name], exponent).sum(-1), 1 / exponent)
+            norm_by_layer = np.power(
+                np.power(importance[weight_name], exponent).sum(-1), 1 / exponent
+            )
             importance[weight_name] /= np.expand_dims(norm_by_layer, -1) + 1e-20
         importance = importance[weight_name]
         weight_tensor = np.array(model.get_weight(weight_name))
         if parameters["transpose"]:
             weight_tensor = weight_tensor.transpose((1, 0))
 
-        weight_tensor = self.prune_by_importance(weight_tensor, importance, parameters["target"], parameters["stride"])
+        weight_tensor = self.prune_by_importance(
+            weight_tensor, importance, parameters["target"], parameters["stride"]
+        )
         if parameters["transpose"]:
             weight_tensor = weight_tensor.transpose((1, 0))
 
@@ -174,20 +208,30 @@ class GradientSensitivityPruner(Pruner):
         """Update importance tensor elementwisely."""
         if importance.get(weight_name) is not None:
             importance[weight_name] += np.absolute(
-                np.array(np.array(model.get_gradient(weight_name)) * np.array(model.get_weight(weight_name)))
+                np.array(
+                    np.array(model.get_gradient(weight_name))
+                    * np.array(model.get_weight(weight_name))
+                )
             )
         else:
             importance[weight_name] = np.absolute(
-                np.array(model.get_gradient(weight_name) * np.array(model.get_weight(weight_name)))
+                np.array(
+                    model.get_gradient(weight_name)
+                    * np.array(model.get_weight(weight_name))
+                )
             )
 
     def update_importance_abs(self, model, importance, weight_name, parameters):
         """Update importance tensor with absolute gradient."""
         head_mask = model.get_inputs(input_name=parameters["importance_inputs"][0])
         if importance.get(weight_name) is not None:
-            importance[weight_name] += np.absolute(np.array(model.get_gradient(head_mask)))[parameters["index"]]
+            importance[weight_name] += np.absolute(
+                np.array(model.get_gradient(head_mask))
+            )[parameters["index"]]
         else:
-            importance[weight_name] = np.absolute(np.array(model.get_gradient(head_mask)))[parameters["index"]]
+            importance[weight_name] = np.absolute(
+                np.array(model.get_gradient(head_mask))
+            )[parameters["index"]]
 
     def update_importance_weighted(self, model, importance, weight_name, parameters):
         """Update importance tensor with weighted gradient."""
@@ -202,7 +246,12 @@ class GradientSensitivityPruner(Pruner):
                 weighted_grad = weighted_grad.sum(1)
             return weighted_grad
 
-        accumulated_grad = sum([weighted_grad(input_weight) for input_weight in parameters["importance_inputs"]])
+        accumulated_grad = sum(
+            [
+                weighted_grad(input_weight)
+                for input_weight in parameters["importance_inputs"]
+            ]
+        )
 
         if importance.get(weight_name) is not None:
             importance[weight_name] += np.absolute(accumulated_grad)
@@ -223,11 +272,19 @@ class GradientSensitivityPruner(Pruner):
             head_to_add = heappop(importance_ordered)[1]
             if sorted_tensor_to_concat is None:
                 sorted_tensor_to_concat = (
-                    tensor[int(head_to_add * stride) : int(head_to_add * stride) + int(stride), ...],
+                    tensor[
+                        int(head_to_add * stride) : int(head_to_add * stride)
+                        + int(stride),
+                        ...,
+                    ],
                 )
             else:
                 sorted_tensor_to_concat += (
-                    tensor[int(head_to_add * stride) : int(head_to_add * stride) + int(stride), ...],
+                    tensor[
+                        int(head_to_add * stride) : int(head_to_add * stride)
+                        + int(stride),
+                        ...,
+                    ],
                 )
             i += 1
         return np.concatenate(sorted_tensor_to_concat)

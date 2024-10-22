@@ -19,7 +19,7 @@ import re
 from collections import OrderedDict
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Callable, List, NamedTuple, Union
 
 import numpy as np
 import onnx
@@ -28,9 +28,25 @@ from onnxruntime.quantization.quant_utils import QuantFormat, QuantType
 from onnxruntime.quantization.quantize import StaticQuantConfig
 
 from fedcore.neural_compressor.common import Logger
-from fedcore.neural_compressor.common.base_config import BaseConfig, register_config, register_supported_configs_for_fwk
-from fedcore.neural_compressor.common.utils import AWQ, DEFAULT_WHITE_LIST, GPTQ, OP_NAME_OR_MODULE_TYPE, RTN, SMOOTH_QUANT
-from fedcore.neural_compressor.onnxrt.utils import PRIORITY_AWQ, PRIORITY_GPTQ, PRIORITY_RTN, PRIORITY_SMOOTH_QUANT
+from fedcore.neural_compressor.common.base_config import (
+    BaseConfig,
+    register_config,
+    register_supported_configs_for_fwk,
+)
+from fedcore.neural_compressor.common.utils import (
+    AWQ,
+    DEFAULT_WHITE_LIST,
+    GPTQ,
+    OP_NAME_OR_MODULE_TYPE,
+    RTN,
+    SMOOTH_QUANT,
+)
+from fedcore.neural_compressor.onnxrt.utils import (
+    PRIORITY_AWQ,
+    PRIORITY_GPTQ,
+    PRIORITY_RTN,
+    PRIORITY_SMOOTH_QUANT,
+)
 
 logger = Logger().get_logger()
 
@@ -127,10 +143,14 @@ class RTNConfig(BaseConfig):
             act_dtype=["fp32"],
         )
         operators = ["MatMul"]
-        supported_configs.append(_OperatorConfig(config=linear_rtn_config, operators=operators))
+        supported_configs.append(
+            _OperatorConfig(config=linear_rtn_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
-    def to_config_mapping(self, config_list: List[BaseConfig] = None, model_info: list = None):
+    def to_config_mapping(
+        self, config_list: List[BaseConfig] = None, model_info: list = None
+    ):
         config_mapping = OrderedDict()
         if config_list is None:
             config_list = [self]
@@ -140,7 +160,9 @@ class RTNConfig(BaseConfig):
 
             # update node level setting
             global_config = config.global_config
-            op_type_config_dict, op_name_config_dict = config._get_op_name_op_type_config()
+            op_type_config_dict, op_name_config_dict = (
+                config._get_op_name_op_type_config()
+            )
             for op_name, op_type in model_info:
                 if self.global_config is not None:
                     config_mapping[(op_name, op_type)] = global_config
@@ -148,7 +170,9 @@ class RTNConfig(BaseConfig):
                     config_mapping[(op_name, op_type)] = op_name_config_dict[op_type]
                 for op_name_pattern in op_name_config_dict:
                     if re.match(op_name_pattern, op_name):
-                        config_mapping[(op_name, op_type)] = op_name_config_dict[op_name_pattern]
+                        config_mapping[(op_name, op_type)] = op_name_config_dict[
+                            op_name_pattern
+                        ]
         return config_mapping
 
     @staticmethod
@@ -165,7 +189,9 @@ class RTNConfig(BaseConfig):
         return filter_result
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "RTNConfig", List["RTNConfig"]]:  # pragma: no cover
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "RTNConfig", List["RTNConfig"]]:  # pragma: no cover
         # TODO fwk owner needs to update it.
         return RTNConfig(weight_bits=[4, 8], weight_sym=[True, False])
 
@@ -278,10 +304,14 @@ class GPTQConfig(BaseConfig):
             perchannel=[True, False],
         )
         operators = ["MatMul"]
-        supported_configs.append(_OperatorConfig(config=linear_gptq_config, operators=operators))
+        supported_configs.append(
+            _OperatorConfig(config=linear_gptq_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
-    def to_config_mapping(self, config_list: list = None, model_info: list = None) -> OrderedDict:
+    def to_config_mapping(
+        self, config_list: list = None, model_info: list = None
+    ) -> OrderedDict:
         config_mapping = OrderedDict()
         if config_list is None:
             config_list = [self]
@@ -291,7 +321,9 @@ class GPTQConfig(BaseConfig):
 
             # update node level setting
             global_config = config.global_config
-            op_type_config_dict, op_name_config_dict = config._get_op_name_op_type_config()
+            op_type_config_dict, op_name_config_dict = (
+                config._get_op_name_op_type_config()
+            )
             for op_name, op_type in model_info:
                 if self.global_config is not None:
                     config_mapping[(op_name, op_type)] = global_config
@@ -299,7 +331,9 @@ class GPTQConfig(BaseConfig):
                     config_mapping[(op_name, op_type)] = op_name_config_dict[op_type]
                 for op_name_pattern in op_name_config_dict:
                     if re.match(op_name_pattern, op_name):
-                        config_mapping[(op_name, op_type)] = op_name_config_dict[op_name_pattern]
+                        config_mapping[(op_name, op_type)] = op_name_config_dict[
+                            op_name_pattern
+                        ]
         return config_mapping
 
     @staticmethod
@@ -316,7 +350,9 @@ class GPTQConfig(BaseConfig):
         return filter_result
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "GPTQConfig", List["GPTQConfig"]]:  # pragma: no cover
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "GPTQConfig", List["GPTQConfig"]]:  # pragma: no cover
         # TODO fwk owner needs to update it.
         return GPTQConfig(
             weight_bits=[4, 8],
@@ -422,10 +458,14 @@ class AWQConfig(BaseConfig):
             enable_mse_search=[True, False],
         )
         operators = ["MatMul"]
-        supported_configs.append(_OperatorConfig(config=linear_awq_config, operators=operators))
+        supported_configs.append(
+            _OperatorConfig(config=linear_awq_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
-    def to_config_mapping(self, config_list: list = None, model_info: list = None) -> OrderedDict:
+    def to_config_mapping(
+        self, config_list: list = None, model_info: list = None
+    ) -> OrderedDict:
         config_mapping = OrderedDict()
         if config_list is None:
             config_list = [self]
@@ -435,7 +475,9 @@ class AWQConfig(BaseConfig):
 
             # update node level setting
             global_config = config.global_config
-            op_type_config_dict, op_name_config_dict = config._get_op_name_op_type_config()
+            op_type_config_dict, op_name_config_dict = (
+                config._get_op_name_op_type_config()
+            )
             for op_name, op_type in model_info:
                 if self.global_config is not None:
                     config_mapping[(op_name, op_type)] = global_config
@@ -443,7 +485,9 @@ class AWQConfig(BaseConfig):
                     config_mapping[(op_name, op_type)] = op_name_config_dict[op_type]
                 for op_name_pattern in op_name_config_dict:
                     if re.match(op_name_pattern, op_name):
-                        config_mapping[(op_name, op_type)] = op_name_config_dict[op_name_pattern]
+                        config_mapping[(op_name, op_type)] = op_name_config_dict[
+                            op_name_pattern
+                        ]
         return config_mapping
 
     @staticmethod
@@ -460,7 +504,9 @@ class AWQConfig(BaseConfig):
         return filter_result
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "AWQConfig", List["AWQConfig"]]:  # pragma: no cover
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "AWQConfig", List["AWQConfig"]]:  # pragma: no cover
         # TODO fwk owner needs to update it.
         return AWQConfig(
             weight_bits=[4, 8],
@@ -482,7 +528,11 @@ def get_default_awq_config() -> AWQConfig:
 ######################## SmoohQuant Config ###############################
 
 
-@register_config(framework_name=FRAMEWORK_NAME, algo_name=SMOOTH_QUANT, priority=PRIORITY_SMOOTH_QUANT)
+@register_config(
+    framework_name=FRAMEWORK_NAME,
+    algo_name=SMOOTH_QUANT,
+    priority=PRIORITY_SMOOTH_QUANT,
+)
 class SmoohQuantConfig(BaseConfig, StaticQuantConfig):
     """Smooth quant quantization config."""
 
@@ -504,7 +554,12 @@ class SmoohQuantConfig(BaseConfig, StaticQuantConfig):
         op_types: List[str] = ["Gemm", "Conv", "MatMul", "FusedConv"],
         calib_iter: int = 100,
         scales_per_op: bool = True,
-        auto_alpha_args: dict = {"alpha_min": 0.3, "alpha_max": 0.7, "alpha_step": 0.05, "attn_method": "min"},
+        auto_alpha_args: dict = {
+            "alpha_min": 0.3,
+            "alpha_max": 0.7,
+            "alpha_step": 0.05,
+            "attn_method": "min",
+        },
         providers: List[str] = ["CPUExecutionProvider"],
         white_list: List[OP_NAME_OR_MODULE_TYPE] = DEFAULT_WHITE_LIST,
         **kwargs,
@@ -541,14 +596,26 @@ class SmoohQuantConfig(BaseConfig, StaticQuantConfig):
         self.auto_alpha_args = auto_alpha_args
         self.providers = providers
         self.white_list = white_list
-        self.weight_type = self.weight_type.value if isinstance(self.weight_type, Enum) else self.weight_type
+        self.weight_type = (
+            self.weight_type.value
+            if isinstance(self.weight_type, Enum)
+            else self.weight_type
+        )
         self.activation_type = (
-            self.activation_type.value if isinstance(self.activation_type, Enum) else self.activation_type
+            self.activation_type.value
+            if isinstance(self.activation_type, Enum)
+            else self.activation_type
         )
         self.calibrate_method = (
-            self.calibrate_method.value if isinstance(self.calibrate_method, Enum) else self.calibrate_method
+            self.calibrate_method.value
+            if isinstance(self.calibrate_method, Enum)
+            else self.calibrate_method
         )
-        self.quant_format = self.quant_format.value if isinstance(self.quant_format, Enum) else self.quant_format
+        self.quant_format = (
+            self.quant_format.value
+            if isinstance(self.quant_format, Enum)
+            else self.quant_format
+        )
         self._post_init()
 
     @classmethod
@@ -556,7 +623,9 @@ class SmoohQuantConfig(BaseConfig, StaticQuantConfig):
         supported_configs = []
         smooth_quant_config = SmoohQuantConfig()
         operators = ["Gemm", "Conv", "MatMul", "FusedConv"]
-        supported_configs.append(_OperatorConfig(config=smooth_quant_config, operators=operators))
+        supported_configs.append(
+            _OperatorConfig(config=smooth_quant_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -571,7 +640,9 @@ class SmoohQuantConfig(BaseConfig, StaticQuantConfig):
         return filter_result
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "SmoohQuantConfig", List["SmoohQuantConfig"]]:  # pragma: no cover
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "SmoohQuantConfig", List["SmoohQuantConfig"]]:  # pragma: no cover
         # TODO fwk owner needs to update it.
         return SmoohQuantConfig(alpha=np.arange(0.3, 0.7, 0.05))
 

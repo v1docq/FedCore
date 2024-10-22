@@ -17,12 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .model_slim.auto_slim import model_slim
 # model slim related
 from .model_slim.auto_slim import parse_auto_slim_config
-from .model_slim.auto_slim import model_slim
 from .pruning import PRUNINGS
 from .utils import process_config, torch, logger
-from typing import Optional, Union
 
 FRAMEWORK = {"pytorch": "pt", "keras": "keras"}
 
@@ -87,7 +86,13 @@ def _rewrite_optimizer_step(opt):
     return opt
 
 
-def save(obj: object, f, pickle_module=None, pickle_protocol=None, _use_new_zipfile_serialization=None):
+def save(
+    obj: object,
+    f,
+    pickle_module=None,
+    pickle_protocol=None,
+    _use_new_zipfile_serialization=None,
+):
     """A rewrite function for torch save.
 
     :param obj:
@@ -182,7 +187,13 @@ def _prepare_hooks(model, pruning_list, opt=None):
 
 
 def prepare_pruning(
-    model, config, optimizer=None, dataloader=None, loss_func=None, framework="pytorch", device: str = None
+    model,
+    config,
+    optimizer=None,
+    dataloader=None,
+    loss_func=None,
+    framework="pytorch",
+    device: str = None,
 ):
     """Get registered pruning class, wrapper the model and optimizer to support all the pruning functionality.
 
@@ -209,7 +220,10 @@ def prepare_pruning(
     if optimizer is not None:
         basic_conf = []
         for pruner_info in pruning_conf:
-            if "gpt" in pruner_info["pruning_type"] or "retrain" in pruner_info["pruning_type"]:
+            if (
+                "gpt" in pruner_info["pruning_type"]
+                or "retrain" in pruner_info["pruning_type"]
+            ):
                 continue
             basic_conf.append(pruner_info)
         pruning_list.append(PRUNINGS["basic_pruning"](basic_conf, model, optimizer))
@@ -224,11 +238,21 @@ def prepare_pruning(
             elif "retrain" in pruner_info["pruning_type"]:
                 retrain_free_conf.append(pruner_info)
         if len(sparse_gpt_conf) > 0:
-            pruning_list.append(PRUNINGS["sparse_gpt_pruning"](sparse_gpt_conf, model, dataloader, loss_func, device))
+            pruning_list.append(
+                PRUNINGS["sparse_gpt_pruning"](
+                    sparse_gpt_conf, model, dataloader, loss_func, device
+                )
+            )
         if len(retrain_free_conf) > 0:
-            pruning_list.append(PRUNINGS["retrain_free_pruning"](retrain_free_conf, model, dataloader, loss_func))
+            pruning_list.append(
+                PRUNINGS["retrain_free_pruning"](
+                    retrain_free_conf, model, dataloader, loss_func
+                )
+            )
 
-    assert len(pruning_list) >= 1, "The pruning config is not standardized and cannot be initialized properly."
+    assert (
+        len(pruning_list) >= 1
+    ), "The pruning config is not standardized and cannot be initialized properly."
     if len(pruning_list) > 1:
         logger.info("Note that more than two pruning algorithms are currently used.")
         return pruning_list

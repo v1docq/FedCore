@@ -79,7 +79,9 @@ def export_compressed_model(
             scheme = v["scheme"]
         m = get_module(compressed_model, k)
         fp_weight = m.weight.data
-        scale = torch.tensor(v["scale"], dtype=torch.float32)  # may exist dtype dismatch problem
+        scale = torch.tensor(
+            v["scale"], dtype=torch.float32
+        )  # may exist dtype dismatch problem
         zp = None if scheme == "sym" else torch.tensor(v["zp"], dtype=torch.int32)
         int_weight = quant_weight_w_scale(fp_weight, scale, zp, group_size)
         int_weight = int_weight.type(torch.int32)

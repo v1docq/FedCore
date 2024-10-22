@@ -17,18 +17,21 @@
 """Fuse QuantizedMatMul with redundant Dequantize Graph Rewriter."""
 
 from tensorflow.core.framework import attr_value_pb2, node_def_pb2
-from tensorflow.python.framework import dtypes
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
-
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from ..graph_base import GraphRewriterBase
 
 
 class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
     """Fuse _QuantizedMatMul with the successor Dequantize Op."""
 
-    fuse_patterns = [["_QuantizedMatMul", "_QuantizedBatchMatMul"], ["Dequantize", "Cast"]]
+    fuse_patterns = [
+        ["_QuantizedMatMul", "_QuantizedBatchMatMul"],
+        ["Dequantize", "Cast"],
+    ]
 
     def __init__(self, model, device="cpu"):
         """Initialization."""
@@ -46,7 +49,9 @@ class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
         Returns:
             [graphdef]: the optimized graphdef object
         """
-        target_nodes = self.graph_analyzer.query_fusion_pattern_nodes(self.fuse_patterns)
+        target_nodes = self.graph_analyzer.query_fusion_pattern_nodes(
+            self.fuse_patterns
+        )
 
         for i in target_nodes:
             quantized_node_name = i[0]
@@ -54,7 +59,9 @@ class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
             dequantize_node_name = i[1]
             dequantize_node = self.graph_info[dequantize_node_name].node
 
-            if len(self.graph_info[quantized_node_name].outputs) > 3:  # pragma: no cover
+            if (
+                len(self.graph_info[quantized_node_name].outputs) > 3
+            ):  # pragma: no cover
                 need_drop = False
                 for output in self.graph_info[quantized_node_name].outputs:
                     if self.graph_info[output].node.op != "Dequantize":
@@ -66,8 +73,14 @@ class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
             # ignore shared output case for license-plate-recognition-barrier-0007 model
             if (
                 len(self.graph_info[dequantize_node_name].outputs) == 2
-                and self.graph_info[self.graph_info[dequantize_node_name].outputs[0]].node.op == "Reshape"
-                and self.graph_info[self.graph_info[dequantize_node_name].outputs[1]].node.op == "Shape"
+                and self.graph_info[
+                    self.graph_info[dequantize_node_name].outputs[0]
+                ].node.op
+                == "Reshape"
+                and self.graph_info[
+                    self.graph_info[dequantize_node_name].outputs[1]
+                ].node.op
+                == "Shape"
             ):
                 continue
 
@@ -75,18 +88,26 @@ class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
             new_node.op = quantized_node.op
 
             if dequantize_node.op == "Dequantize":
-                fused_ops = str(quantized_node.attr["fused_ops"].list.s).replace("Requantize", "Dequantize")
+                fused_ops = str(quantized_node.attr["fused_ops"].list.s).replace(
+                    "Requantize", "Dequantize"
+                )
             new_node.name = quantized_node.name + "_dequantize"
 
             for _, value in enumerate(quantized_node.input):
                 new_node.input.append(value)
 
             if "input_quant_mode" in quantized_node.attr:
-                new_node.attr["input_quant_mode"].CopyFrom(quantized_node.attr["input_quant_mode"])
+                new_node.attr["input_quant_mode"].CopyFrom(
+                    quantized_node.attr["input_quant_mode"]
+                )
             if "output_quant_mode" in quantized_node.attr:
-                new_node.attr["output_quant_mode"].CopyFrom(quantized_node.attr["output_quant_mode"])
+                new_node.attr["output_quant_mode"].CopyFrom(
+                    quantized_node.attr["output_quant_mode"]
+                )
             if "leakyrelu_alpha" in quantized_node.attr:
-                new_node.attr["leakyrelu_alpha"].CopyFrom(quantized_node.attr["leakyrelu_alpha"])
+                new_node.attr["leakyrelu_alpha"].CopyFrom(
+                    quantized_node.attr["leakyrelu_alpha"]
+                )
             if "T1" in quantized_node.attr:
                 new_node.attr["T1"].CopyFrom(quantized_node.attr["T1"])
             if "T2" in quantized_node.attr:
@@ -94,19 +115,33 @@ class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
             if "U" in quantized_node.attr:
                 new_node.attr["U"].CopyFrom(quantized_node.attr["U"])
             if "is_weight_const" in quantized_node.attr:
-                new_node.attr["is_weight_const"].CopyFrom(quantized_node.attr["is_weight_const"])
+                new_node.attr["is_weight_const"].CopyFrom(
+                    quantized_node.attr["is_weight_const"]
+                )
             if "is_bias_const" in quantized_node.attr:
-                new_node.attr["is_bias_const"].CopyFrom(quantized_node.attr["is_bias_const"])
+                new_node.attr["is_bias_const"].CopyFrom(
+                    quantized_node.attr["is_bias_const"]
+                )
             if "transpose_a" in quantized_node.attr:
-                new_node.attr["transpose_a"].CopyFrom(quantized_node.attr["transpose_a"])
+                new_node.attr["transpose_a"].CopyFrom(
+                    quantized_node.attr["transpose_a"]
+                )
             if "transpose_b" in quantized_node.attr:
-                new_node.attr["transpose_b"].CopyFrom(quantized_node.attr["transpose_b"])
+                new_node.attr["transpose_b"].CopyFrom(
+                    quantized_node.attr["transpose_b"]
+                )
             if "Tdevice_inputs" in quantized_node.attr:
-                new_node.attr["Tdevice_inputs"].CopyFrom(quantized_node.attr["Tdevice_inputs"])
+                new_node.attr["Tdevice_inputs"].CopyFrom(
+                    quantized_node.attr["Tdevice_inputs"]
+                )
             if "Tdevice_outputs" in quantized_node.attr:
-                new_node.attr["Tdevice_outputs"].CopyFrom(quantized_node.attr["Tdevice_outputs"])
+                new_node.attr["Tdevice_outputs"].CopyFrom(
+                    quantized_node.attr["Tdevice_outputs"]
+                )
             if "Thost_inputs" in quantized_node.attr:
-                new_node.attr["Thost_inputs"].CopyFrom(quantized_node.attr["Thost_inputs"])
+                new_node.attr["Thost_inputs"].CopyFrom(
+                    quantized_node.attr["Thost_inputs"]
+                )
             if "Tbias" in quantized_node.attr:
                 new_node.attr["Tbias"].CopyFrom(quantized_node.attr["Tbias"])
             if "adj_x" in quantized_node.attr:
@@ -114,26 +149,46 @@ class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
             if "adj_y" in quantized_node.attr:
                 new_node.attr["adj_y"].CopyFrom(quantized_node.attr["adj_y"])
             if "input_quant_mode" in quantized_node.attr:
-                new_node.attr["input_quant_mode"].CopyFrom(quantized_node.attr["input_quant_mode"])
+                new_node.attr["input_quant_mode"].CopyFrom(
+                    quantized_node.attr["input_quant_mode"]
+                )
             if "output_quant_mode" in quantized_node.attr:
-                new_node.attr["output_quant_mode"].CopyFrom(quantized_node.attr["output_quant_mode"])
+                new_node.attr["output_quant_mode"].CopyFrom(
+                    quantized_node.attr["output_quant_mode"]
+                )
             if "fused_ops" in quantized_node.attr:
                 new_node.attr["fused_ops"].CopyFrom(quantized_node.attr["fused_ops"])
 
             # update Tbias for single MatMul without bias case, same as Tout.
             if dequantize_node.op == "Dequantize":
-                Helper.set_attr_type_list(new_node, "Thost_outputs", [dequantize_node.attr["dtype"].type])
-                new_node.attr["Tout"].CopyFrom(attr_value_pb2.AttrValue(type=dequantize_node.attr["dtype"].type))
+                Helper.set_attr_type_list(
+                    new_node, "Thost_outputs", [dequantize_node.attr["dtype"].type]
+                )
+                new_node.attr["Tout"].CopyFrom(
+                    attr_value_pb2.AttrValue(type=dequantize_node.attr["dtype"].type)
+                )
                 if new_node.op == "_QuantizedBatchMatMul":
-                    new_node.attr["U"].CopyFrom(attr_value_pb2.AttrValue(type=dequantize_node.attr["DstT"].type))
+                    new_node.attr["U"].CopyFrom(
+                        attr_value_pb2.AttrValue(type=dequantize_node.attr["DstT"].type)
+                    )
                 if str(quantized_node.attr["fused_ops"].list.s) == str([b"Requantize"]):
-                    new_node.attr["Tbias"].CopyFrom(attr_value_pb2.AttrValue(type=dequantize_node.attr["dtype"].type))
+                    new_node.attr["Tbias"].CopyFrom(
+                        attr_value_pb2.AttrValue(
+                            type=dequantize_node.attr["dtype"].type
+                        )
+                    )
                 Helper.set_attr_string_list(new_node, "fused_ops", eval(fused_ops))
             else:
-                Helper.set_attr_type_list(new_node, "Thost_outputs", [dequantize_node.attr["DstT"].type])
-                new_node.attr["Tout"].CopyFrom(attr_value_pb2.AttrValue(type=dequantize_node.attr["DstT"].type))
+                Helper.set_attr_type_list(
+                    new_node, "Thost_outputs", [dequantize_node.attr["DstT"].type]
+                )
+                new_node.attr["Tout"].CopyFrom(
+                    attr_value_pb2.AttrValue(type=dequantize_node.attr["DstT"].type)
+                )
                 if new_node.op == "_QuantizedBatchMatMul":
-                    new_node.attr["U"].CopyFrom(attr_value_pb2.AttrValue(type=dequantize_node.attr["DstT"].type))
+                    new_node.attr["U"].CopyFrom(
+                        attr_value_pb2.AttrValue(type=dequantize_node.attr["DstT"].type)
+                    )
 
             top_node_name = Helper.node_name_from_input(quantized_node.input[0])
             if self.graph_info[dequantize_node_name].outputs:
@@ -150,7 +205,11 @@ class FuseMatMulRedundantDequantizeTransformer(GraphRewriterBase):
 
                 new_node.name = dequantize_node_name
                 self.graph_analyzer.replace_single_node(
-                    new_node, [top_node_name], quantized_node_name, [], dequantize_node_name
+                    new_node,
+                    [top_node_name],
+                    quantized_node_name,
+                    [],
+                    dequantize_node_name,
                 )
 
             self.graph_analyzer.remove_node(quantized_node_name)

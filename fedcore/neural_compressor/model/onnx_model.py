@@ -43,20 +43,36 @@ class ONNXModel(BaseModel):
             ignore_warning (bool): ignore large model warning. Default is False.
             load_external_data (bool): load external data for large model. Default is True.
         """
-        self._model = model if not isinstance(model, str) else onnx.load(model, load_external_data=False)
+        self._model = (
+            model
+            if not isinstance(model, str)
+            else onnx.load(model, load_external_data=False)
+        )
         self._model_path = None if not isinstance(model, str) else model
 
         self.check_is_large_model()
-        if self._is_large_model and self._model_path is None and not kwargs.get("ignore_warning", False):
-            logger.warning("Model size > 2GB. Please use model path instead of onnx model object to quantize")
+        if (
+            self._is_large_model
+            and self._model_path is None
+            and not kwargs.get("ignore_warning", False)
+        ):
+            logger.warning(
+                "Model size > 2GB. Please use model path instead of onnx model object to quantize"
+            )
 
-        if self._is_large_model and isinstance(model, str) and kwargs.get("load_external_data", True):
+        if (
+            self._is_large_model
+            and isinstance(model, str)
+            and kwargs.get("load_external_data", True)
+        ):
             from onnx.external_data_helper import load_external_data_for_model
 
             load_external_data_for_model(self._model, os.path.dirname(self._model_path))
 
         self._config = None
-        if isinstance(model, str) and os.path.exists(Path(model).parent.joinpath("config.json").as_posix()):
+        if isinstance(model, str) and os.path.exists(
+            Path(model).parent.joinpath("config.json").as_posix()
+        ):
             from transformers import AutoConfig
 
             self._config = AutoConfig.from_pretrained(Path(model).parent.as_posix())
@@ -75,7 +91,10 @@ class ONNXModel(BaseModel):
         init_size = 0
         for init in self._model.graph.initializer:
             # if initializer has external data location, return True
-            if init.HasField("data_location") and init.data_location == onnx.TensorProto.EXTERNAL:
+            if (
+                init.HasField("data_location")
+                and init.data_location == onnx.TensorProto.EXTERNAL
+            ):
                 self._is_large_model = True
                 return
             # if raise error of initializer size > 2GB, return True
@@ -177,7 +196,9 @@ class ONNXModel(BaseModel):
         if self.is_large_model:  # pragma: no cover
             from onnx.external_data_helper import load_external_data_for_model
 
-            load_external_data_for_model(self._model, os.path.split(self._model_path)[0])
+            load_external_data_for_model(
+                self._model, os.path.split(self._model_path)[0]
+            )
             onnx.save_model(
                 self._model,
                 root,
@@ -191,7 +212,11 @@ class ONNXModel(BaseModel):
             onnx.save(self._model, root)
 
         if self._config is not None:
-            model_type = "" if not hasattr(self._config, "model_type") else getattr(self._config, "model_type")
+            model_type = (
+                ""
+                if not hasattr(self._config, "model_type")
+                else getattr(self._config, "model_type")
+            )
             setattr(self._config.__class__, "model_type", model_type)
             output_config_file = Path(root).parent.joinpath("config.json").as_posix()
             self._config.to_json_file(output_config_file, use_diff=False)
@@ -288,7 +313,9 @@ class ONNXModel(BaseModel):
         new_tensor = (
             onnx.helper.make_tensor(tensor, data_type, dims, array.flatten().tolist())
             if not raw
-            else onnx.helper.make_tensor(tensor, data_type, dims, array.tostring(), raw=raw)
+            else onnx.helper.make_tensor(
+                tensor, data_type, dims, array.tostring(), raw=raw
+            )
         )
         self.add_initializer(new_tensor)
 
@@ -303,7 +330,8 @@ class ONNXModel(BaseModel):
             attrs = [
                 attr
                 for attr in node.attribute
-                if attr.type == onnx.AttributeProto.GRAPH or attr.type == onnx.AttributeProto.GRAPHS
+                if attr.type == onnx.AttributeProto.GRAPH
+                or attr.type == onnx.AttributeProto.GRAPHS
             ]
             if len(attrs) > 0:
                 for attr in attrs:
@@ -326,7 +354,8 @@ class ONNXModel(BaseModel):
             attrs = [
                 attr
                 for attr in node.attribute
-                if attr.type == onnx.AttributeProto.GRAPH or attr.type == onnx.AttributeProto.GRAPHS
+                if attr.type == onnx.AttributeProto.GRAPH
+                or attr.type == onnx.AttributeProto.GRAPHS
             ]
             if len(attrs) > 0:
                 for attr in attrs:
@@ -400,14 +429,28 @@ class ONNXModel(BaseModel):
     def get_scale_zero(self, tensor):
         """Help function to get scale and zero_point."""
         if not tensor.endswith("_quantized"):
-            logger.debug("Find {} in the quantized graph is not quantized.".format(tensor))
+            logger.debug(
+                "Find {} in the quantized graph is not quantized.".format(tensor)
+            )
             return None, None
 
         def _searcher(tensor_name):
             """Search scale and zero point tensor recursively."""
             node = self._input_name_to_nodes[tensor_name][0]
-            parent = self._output_name_to_node[tensor_name] if tensor_name in self._output_name_to_node else None
-            direct_int8 = ["Reshape", "Transpose", "Squeeze", "Unsqueeze", "MaxPool", "Pad", "Split"]
+            parent = (
+                self._output_name_to_node[tensor_name]
+                if tensor_name in self._output_name_to_node
+                else None
+            )
+            direct_int8 = [
+                "Reshape",
+                "Transpose",
+                "Squeeze",
+                "Unsqueeze",
+                "MaxPool",
+                "Pad",
+                "Split",
+            ]
             if parent is not None and parent.op_type in direct_int8:
                 fp32_tensor_name = (
                     parent.input[0]
@@ -424,7 +467,9 @@ class ONNXModel(BaseModel):
                 )
             else:
                 fp32_tensor_name = (
-                    tensor_name.replace("_quantized", "").replace("_QuantizeLinear", "").replace("_QuantizeInput", "")
+                    tensor_name.replace("_quantized", "")
+                    .replace("_QuantizeLinear", "")
+                    .replace("_QuantizeInput", "")
                 )
             scale = fp32_tensor_name + "_scale"
             scale_tensor = self.get_initializer(scale)
@@ -455,7 +500,9 @@ class ONNXModel(BaseModel):
 
         if use_external_data_format:
             convert_model_to_external_data(
-                self._model, all_tensors_to_one_file=True, location=Path(output_path).name + ".data"
+                self._model,
+                all_tensors_to_one_file=True,
+                location=Path(output_path).name + ".data",
             )
         onnx.save_model(self._model, output_path)
 
@@ -467,7 +514,9 @@ class ONNXModel(BaseModel):
             if node.input[j] == old_input_name:
                 node.input[j] = new_input_name
 
-    def replace_input_of_all_nodes(self, old_input_name, new_input_name, white_optype=[], black_optype=[]):
+    def replace_input_of_all_nodes(
+        self, old_input_name, new_input_name, white_optype=[], black_optype=[]
+    ):
         """Replace inputs of all nodes."""
         if len(white_optype) > 0:
             for node in self.model.graph.node:
@@ -486,16 +535,22 @@ class ONNXModel(BaseModel):
             if node.output[j] == old_output_name:
                 node.output[j] = new_output_name
 
-    def replace_output_of_all_nodes(self, old_output_name, new_output_name, white_optype=[], black_optype=[]):
+    def replace_output_of_all_nodes(
+        self, old_output_name, new_output_name, white_optype=[], black_optype=[]
+    ):
         """Replace outputs of all nodes."""
         if len(white_optype) > 0:
             for node in self.model.graph.node:
                 if node.op_type in white_optype:
-                    ONNXModel.replace_node_output(node, old_output_name, new_output_name)
+                    ONNXModel.replace_node_output(
+                        node, old_output_name, new_output_name
+                    )
         else:
             for node in self.model.graph.node:
                 if node.op_type not in black_optype:
-                    ONNXModel.replace_node_output(node, old_output_name, new_output_name)
+                    ONNXModel.replace_node_output(
+                        node, old_output_name, new_output_name
+                    )
 
     def remove_unused_nodes(self):
         """Remove unused nodes."""
@@ -513,7 +568,8 @@ class ONNXModel(BaseModel):
                 and len(self.get_children(node)) == 1
                 and self.get_children(node)[0].op_type == "DequantizeLinear"
                 and node.input[0] not in self._output_name_to_node
-                and self.get_children(node)[0].output[0] not in self._input_name_to_nodes
+                and self.get_children(node)[0].output[0]
+                not in self._input_name_to_nodes
             ):
                 unused_nodes.append(node)
                 unused_nodes.extend(self.get_children(node))
@@ -536,7 +592,10 @@ class ONNXModel(BaseModel):
 
         ununsed_weights = []
         for w in self._model.graph.initializer:
-            if w.name not in self._input_name_to_nodes and w.name not in self._model.graph.output:
+            if (
+                w.name not in self._input_name_to_nodes
+                and w.name not in self._model.graph.output
+            ):
                 ununsed_weights.append(w)
                 # Remove from graph.input
                 for graph_input in self.graph().input:
@@ -550,7 +609,6 @@ class ONNXModel(BaseModel):
         """Topological sort the model."""
         import copy
         from collections import deque
-        from functools import reduce
 
         if not enable_subgraph:
             input_name_to_nodes = {}
@@ -575,12 +633,23 @@ class ONNXModel(BaseModel):
         for inp in self.model.graph.input:
             q.extend(input_name_to_nodes[inp.name])
         for n in self.model.graph.node:
-            if all([i not in output_name_to_node and i not in self.input() for i in n.input]):
+            if all(
+                [
+                    i not in output_name_to_node and i not in self.input()
+                    for i in n.input
+                ]
+            ):
                 q.append(n)
 
         while q:
             n = q.popleft()
-            if not all([output_name_to_node[i].name in all_nodes for i in n.input if i in output_name_to_node]):
+            if not all(
+                [
+                    output_name_to_node[i].name in all_nodes
+                    for i in n.input
+                    if i in output_name_to_node
+                ]
+            ):
                 if n not in wait:
                     wait.append(n)
                 continue
@@ -588,12 +657,20 @@ class ONNXModel(BaseModel):
             all_nodes[n.name] = n
             for out in n.output:
                 if out in input_name_to_nodes:
-                    q.extend([i for i in input_name_to_nodes[out] if i.name not in all_nodes and i not in q])
+                    q.extend(
+                        [
+                            i
+                            for i in input_name_to_nodes[out]
+                            if i.name not in all_nodes and i not in q
+                        ]
+                    )
             if len(q) == 0 and len(wait) != 0:
                 q = copy.deepcopy(wait)
                 wait.clear()
         nodes = [i[1] for i in all_nodes.items()]
-        assert len(list(set([n.name for n in nodes]))) == len(list(set([n.name for n in self.model.graph.node])))
+        assert len(list(set([n.name for n in nodes]))) == len(
+            list(set([n.name for n in self.model.graph.node]))
+        )
         self.model.graph.ClearField("node")
         self.model.graph.node.extend(nodes)
 
@@ -611,7 +688,10 @@ class ONNXModel(BaseModel):
             elif isinstance(node, NodeProto):
                 start_node.append(node.name)
             else:
-                assert False, "'get_nodes_chain' function only support list[string]" "or list[NodeProto] params"
+                assert False, (
+                    "'get_nodes_chain' function only support list[string]"
+                    "or list[NodeProto] params"
+                )
 
         # process stop node list
         stop_node = []
@@ -621,7 +701,10 @@ class ONNXModel(BaseModel):
             elif isinstance(node, NodeProto):
                 stop_node.append(node.name)
             else:
-                assert False, "'get_nodes_chain' function only support list[string]" "or list[NodeProto] params"
+                assert False, (
+                    "'get_nodes_chain' function only support list[string]"
+                    "or list[NodeProto] params"
+                )
 
         while start_node:
             node_name = start_node.popleft()
@@ -675,12 +758,21 @@ class ONNXModel(BaseModel):
                         [0, None, 0, 0, 0],
                     ),
                     self.match_parent_path(
-                        start_node, ["Add", "MatMul", "Reshape", "Transpose", "MatMul"], [1, None, 0, 0, 0]
+                        start_node,
+                        ["Add", "MatMul", "Reshape", "Transpose", "MatMul"],
+                        [1, None, 0, 0, 0],
                     ),
                     # match gpt attention no past structure
                     self.match_parent_path(
                         start_node,
-                        ["Reshape", "Gemm", "Reshape", "Reshape", "Transpose", "MatMul"],
+                        [
+                            "Reshape",
+                            "Gemm",
+                            "Reshape",
+                            "Reshape",
+                            "Transpose",
+                            "MatMul",
+                        ],
                         [None, 0, 0, 0, 0, 0],
                         output_name_to_node=self.output_name_to_node,
                         return_indice=[],
@@ -703,7 +795,13 @@ class ONNXModel(BaseModel):
                     ),
                     self.match_parent_path(
                         start_node,
-                        ["MatMul", "Mul", "MatMul", "SimplifiedLayerNormalization", "Add"],
+                        [
+                            "MatMul",
+                            "Mul",
+                            "MatMul",
+                            "SimplifiedLayerNormalization",
+                            "Add",
+                        ],
                         [None, 0, None, 0, 0],
                     ),
                 ]
@@ -753,12 +851,21 @@ class ONNXModel(BaseModel):
                         [0, None, 0, 0, 0],
                     ),
                     self.match_parent_path(
-                        start_node, ["Add", "MatMul", "Reshape", "Transpose", "MatMul"], [1, None, 0, 0, 0]
+                        start_node,
+                        ["Add", "MatMul", "Reshape", "Transpose", "MatMul"],
+                        [1, None, 0, 0, 0],
                     ),
                     # match gpt attention no past structure
                     self.match_parent_path(
                         start_node,
-                        ["Reshape", "Gemm", "Reshape", "Reshape", "Transpose", "MatMul"],
+                        [
+                            "Reshape",
+                            "Gemm",
+                            "Reshape",
+                            "Reshape",
+                            "Transpose",
+                            "MatMul",
+                        ],
                         [None, 0, 0, 0, 0, 0],
                         output_name_to_node=self.output_name_to_node,
                         return_indice=[],
@@ -794,7 +901,9 @@ class ONNXModel(BaseModel):
             children = input_name_to_nodes[root_input]
             children_types = [child.op_type for child in children]
             if children_types.count("MatMul") == 3:
-                qkv.append([child.name for child in children if child.op_type == "MatMul"])
+                qkv.append(
+                    [child.name for child in children if child.op_type == "MatMul"]
+                )
                 if not find_all:
                     break
         return qkv
@@ -815,12 +924,20 @@ class ONNXModel(BaseModel):
             if idx != len(attention_index) - 1:
                 index = attention_index[idx + 1]
                 if index - 2 >= 0:
-                    ffn_matmul.append([attention_matmul_list[index - 2], attention_matmul_list[index - 1]])
+                    ffn_matmul.append(
+                        [
+                            attention_matmul_list[index - 2],
+                            attention_matmul_list[index - 1],
+                        ]
+                    )
             else:
                 index = attention_index[idx]
                 if index + block_len - 1 < len(attention_matmul_list):
                     ffn_matmul.append(
-                        [attention_matmul_list[index + block_len - 2], attention_matmul_list[index + block_len - 1]]
+                        [
+                            attention_matmul_list[index + block_len - 2],
+                            attention_matmul_list[index + block_len - 1],
+                        ]
                     )
         return ffn_matmul
 
@@ -830,7 +947,9 @@ class ONNXModel(BaseModel):
         from fedcore.neural_compressor.experimental.export import onnx_qlinear_to_qdq
 
         if isinstance(conf, ONNXQlinear2QDQConfig):
-            add_nodes, remove_nodes, inits = onnx_qlinear_to_qdq(self._model, self._input_name_to_nodes)
+            add_nodes, remove_nodes, inits = onnx_qlinear_to_qdq(
+                self._model, self._input_name_to_nodes
+            )
             self.add_nodes(add_nodes)
             self.remove_nodes(remove_nodes)
             self.add_initializers(inits)
@@ -839,7 +958,10 @@ class ONNXModel(BaseModel):
             self.topological_sort()
             self.save(save_path)
         else:
-            logger.warning("Unsupported config for export, " "only ONNXQlinear2QDQConfig is supported!")
+            logger.warning(
+                "Unsupported config for export, "
+                "only ONNXQlinear2QDQConfig is supported!"
+            )
             exit(0)
 
     def add_tensors_to_outputs(self, tensor_names):
@@ -865,7 +987,9 @@ class ONNXModel(BaseModel):
         removed_outputs = []
         for tensor in tensor_names:
             if tensor in self.output():
-                removed_outputs.append(self._model.graph.output[self.output().index(tensor)])
+                removed_outputs.append(
+                    self._model.graph.output[self.output().index(tensor)]
+                )
         for output in removed_outputs:
             self._model.graph.output.remove(output)
 
@@ -918,7 +1042,9 @@ class ONNXModel(BaseModel):
             output_name_to_node = self._output_name_to_node
 
         if input_index is None:
-            parent, index = self.match_first_parent(node, parent_op_type, output_name_to_node, exclude)
+            parent, index = self.match_first_parent(
+                node, parent_op_type, output_name_to_node, exclude
+            )
             if return_indice is not None:
                 return_indice.append(index)
             return parent
@@ -927,7 +1053,11 @@ class ONNXModel(BaseModel):
             return None
 
         parent = self.get_parent(node, input_index, output_name_to_node)
-        if parent is not None and parent.op_type == parent_op_type and parent not in exclude:
+        if (
+            parent is not None
+            and parent.op_type == parent_op_type
+            and parent not in exclude
+        ):
             return parent
 
         return None
@@ -995,7 +1125,11 @@ class ONNXModel(BaseModel):
         return split_nodes
 
     def split_model_with_node(
-        self, split_node_name, path_of_model_to_split, shape_infer=True, save_both_split_models=True
+        self,
+        split_node_name,
+        path_of_model_to_split,
+        shape_infer=True,
+        save_both_split_models=True,
     ):
         """Split model into two parts at a given node.
 
@@ -1037,7 +1171,9 @@ class ONNXModel(BaseModel):
 
         assert len(split_node_output) == 1, (
             "Only support split at node with 1 output tensor, while "
-            "current split node {} has {} output tensors".format(split_node_name, len(split_node_output))
+            "current split node {} has {} output tensors".format(
+                split_node_name, len(split_node_output)
+            )
         )
         split_tensor_name = split_node_output[0]
 
@@ -1046,7 +1182,11 @@ class ONNXModel(BaseModel):
             try:
                 from fedcore.neural_compressor.adaptor.ox_utils.util import infer_shapes
 
-                self._model = infer_shapes(self._model, auto_merge=True, base_dir=os.path.dirname(self._model_path))
+                self._model = infer_shapes(
+                    self._model,
+                    auto_merge=True,
+                    base_dir=os.path.dirname(self._model_path),
+                )
             except Exception as e:  # pragma: no cover
                 logger.error(
                     "Shape infer fails for layer-wise quantization. "
@@ -1056,8 +1196,12 @@ class ONNXModel(BaseModel):
                 )
                 raise e
 
-        split_tensor_type, split_tensor_shape = self._get_output_type_shape_by_tensor_name(split_tensor_name)
-        split_tensor = onnx.helper.make_tensor_value_info(split_tensor_name, split_tensor_type, split_tensor_shape)
+        split_tensor_type, split_tensor_shape = (
+            self._get_output_type_shape_by_tensor_name(split_tensor_name)
+        )
+        split_tensor = onnx.helper.make_tensor_value_info(
+            split_tensor_name, split_tensor_type, split_tensor_shape
+        )
 
         split_model_part_1 = ONNXModel(split_model_part_1, ignore_warning=True)
         split_model_part_2 = ONNXModel(split_model_part_2, ignore_warning=True)
@@ -1073,8 +1217,12 @@ class ONNXModel(BaseModel):
         insert_input_for_model_2 = []
         for output in split_model_part_1.output_name_to_node.keys():
             if output in split_model_part_2.input_name_to_nodes.keys():
-                output_type, output_shape = self._get_output_type_shape_by_tensor_name(output)
-                output_tensor = onnx.helper.make_tensor_value_info(output, output_type, output_shape)
+                output_type, output_shape = self._get_output_type_shape_by_tensor_name(
+                    output
+                )
+                output_tensor = onnx.helper.make_tensor_value_info(
+                    output, output_type, output_shape
+                )
                 if output_tensor not in split_model_part_1.model.graph.output:
                     insert_output_for_model_1.append(output_tensor)
                 if output_tensor not in split_model_part_2.model.graph.input:
@@ -1098,19 +1246,31 @@ class ONNXModel(BaseModel):
         dir_of_model_to_split = os.path.dirname(path_of_model_to_split)
 
         split_model_part_1.load_model_initializer_by_tensor(dir_of_model_to_split)
-        split_model_part_1_path = os.path.join(dir_of_model_to_split, "split_model_part_1.onnx")
+        split_model_part_1_path = os.path.join(
+            dir_of_model_to_split, "split_model_part_1.onnx"
+        )
         split_model_part_1.model_path = split_model_part_1_path
         split_model_part_1._save_split_model(split_model_part_1_path)
         split_model_part_1.check_is_large_model()
-        logger.debug("save split model part 1 to {} for layer wise quantization".format(split_model_part_1_path))
+        logger.debug(
+            "save split model part 1 to {} for layer wise quantization".format(
+                split_model_part_1_path
+            )
+        )
 
         if save_both_split_models:
             split_model_part_2.load_model_initializer_by_tensor(dir_of_model_to_split)
-            split_model_part_2_path = os.path.join(dir_of_model_to_split, "split_model_part_2.onnx")
+            split_model_part_2_path = os.path.join(
+                dir_of_model_to_split, "split_model_part_2.onnx"
+            )
             split_model_part_2.model_path = split_model_part_2_path
             split_model_part_2._save_split_model(split_model_part_2_path)
             split_model_part_2.check_is_large_model()
-            logger.debug("save split model part 2 to {} for layer wise quantization".format(split_model_part_2_path))
+            logger.debug(
+                "save split model part 2 to {} for layer wise quantization".format(
+                    split_model_part_2_path
+                )
+            )
             return split_model_part_1, split_model_part_2
         else:
             return split_model_part_1, split_model_part_2
@@ -1148,7 +1308,8 @@ class ONNXModel(BaseModel):
             if output.name == tensor_name:
                 elem_type = output.type.tensor_type.elem_type
                 shape = [
-                    dim.dim_value if dim.HasField("dim_value") else -1 for dim in output.type.tensor_type.shape.dim
+                    dim.dim_value if dim.HasField("dim_value") else -1
+                    for dim in output.type.tensor_type.shape.dim
                 ]
                 break
         return elem_type, shape
@@ -1189,10 +1350,15 @@ class ONNXModel(BaseModel):
         if data_path is None:
             data_path = os.path.dirname(self._model_path)
         for init in self._model.graph.initializer:
-            if init.HasField("data_location") and init.data_location == onnx.TensorProto.EXTERNAL:
+            if (
+                init.HasField("data_location")
+                and init.data_location == onnx.TensorProto.EXTERNAL
+            ):
                 load_external_data_for_tensor(init, data_path)
 
-    def write_external_data_to_new_location(self, external_data_location="external.data", overwrite=False):
+    def write_external_data_to_new_location(
+        self, external_data_location="external.data", overwrite=False
+    ):
         """Write external data of merged quantized model to new location to save memory.
 
         Args:
@@ -1200,14 +1366,23 @@ class ONNXModel(BaseModel):
                                                     Defaults to "external.data".
             overwrite (bool, optional): if True, remove existed externa data. Defaults to False.
         """
-        from onnx.external_data_helper import convert_model_to_external_data, write_external_data_tensors
+        from onnx.external_data_helper import (
+            convert_model_to_external_data,
+            write_external_data_tensors,
+        )
 
-        if overwrite and os.path.exists(os.path.join(os.path.dirname(self._model_path), external_data_location)):
-            os.remove(os.path.join(os.path.dirname(self._model_path), external_data_location))
+        if overwrite and os.path.exists(
+            os.path.join(os.path.dirname(self._model_path), external_data_location)
+        ):
+            os.remove(
+                os.path.join(os.path.dirname(self._model_path), external_data_location)
+            )
         self.load_model_initializer_by_tensor()
         convert_model_to_external_data(self._model, location=external_data_location)
         # TODO : if init is already saved, skip write it
-        write_external_data_tensors(self._model, filepath=os.path.dirname(self._model_path))
+        write_external_data_tensors(
+            self._model, filepath=os.path.dirname(self._model_path)
+        )
 
     def merge_split_models(self, to_merge_model):
         """Merge two split model into final model."""

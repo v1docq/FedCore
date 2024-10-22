@@ -20,12 +20,13 @@ import copy
 from collections import OrderedDict
 from itertools import groupby
 
-from fedcore.neural_compressor.adaptor.torch_utils.mixed_precision import ipex_mixed_precision
-
-from ..utils import logger
-from .strategy import TuneStrategy, strategy_registry
-from .utils.tuning_sampler import FallbackTuningSampler
-from .utils.tuning_structs import OpTuningConfig
+from fedcore.neural_compressor.adaptor.torch_utils.mixed_precision import (
+    ipex_mixed_precision,
+)
+from fedcore.neural_compressor.strategy.strategy import TuneStrategy, strategy_registry
+from fedcore.neural_compressor.strategy.utils.tuning_sampler import FallbackTuningSampler
+from fedcore.neural_compressor.strategy.utils.tuning_structs import OpTuningConfig
+from fedcore.neural_compressor.utils import logger
 
 
 @strategy_registry
@@ -44,7 +45,9 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
         config = conf.mixed_precision
         config.approach = getattr(config, "approach", None)
         config.recipes = getattr(config, "recipes", {})
-        config.calibration_sampling_size = getattr(config, "calibration_sampling_size", [0])
+        config.calibration_sampling_size = getattr(
+            config, "calibration_sampling_size", [0]
+        )
         config.op_type_dict = getattr(config, "op_type_dict", None)
         config.op_name_dict = getattr(config, "op_name_dict", None)
         config.quant_format = getattr(config, "quant_format", "")
@@ -76,7 +79,9 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
         for item in tuning_space.root_item.options:
             if item.item_type == "op":
                 op_name, op_type = item.name
-                initial_op_tuning_cfg[item.name] = OpTuningConfig(op_name, op_type, "fp32", tuning_space)
+                initial_op_tuning_cfg[item.name] = OpTuningConfig(
+                    op_name, op_type, "fp32", tuning_space
+                )
 
         if not target_dtypes:
             target_dtypes = ["bf16"]
@@ -117,7 +122,10 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
                 as quant level is {self.config.quant_level}"
             )
             for op_tuning_cfg in self.fallback_in_op_type_wise(
-                tuning_space, fallback_items_name_lst, deepcopy(initial_op_tuning_cfg), target_dtype
+                tuning_space,
+                fallback_items_name_lst,
+                deepcopy(initial_op_tuning_cfg),
+                target_dtype,
             ):
                 yield op_tuning_cfg
 
@@ -128,11 +136,16 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
                 as quant level is {self.config.quant_level}"
             )
             for op_tuning_cfg in self.fallback_in_op_wise(
-                tuning_space, fallback_items_name_lst, deepcopy(initial_op_tuning_cfg), target_dtype
+                tuning_space,
+                fallback_items_name_lst,
+                deepcopy(initial_op_tuning_cfg),
+                target_dtype,
             ):
                 yield op_tuning_cfg
 
-    def fallback_in_op_type_wise(self, tuning_space, fallback_items_name_lst, initial_op_tuning_cfg, target_dtype):
+    def fallback_in_op_type_wise(
+        self, tuning_space, fallback_items_name_lst, initial_op_tuning_cfg, target_dtype
+    ):
         """Fallback op in op type wise.
 
         Args:
@@ -165,7 +178,9 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
             acc, _ = self.last_tune_result
             op_fallback_acc_impact[fallback_items_name_lst[op_index]] = acc
 
-    def fallback_in_op_wise(self, tuning_space, fallback_items_name_lst, initial_op_tuning_cfg, target_dtype):
+    def fallback_in_op_wise(
+        self, tuning_space, fallback_items_name_lst, initial_op_tuning_cfg, target_dtype
+    ):
         """Fallback op in op wise.
 
         Args:
@@ -177,7 +192,9 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
         Yields:
             tuning config
         """
-        op_dtypes = OrderedDict(zip(fallback_items_name_lst, [target_dtype] * len(fallback_items_name_lst)))
+        op_dtypes = OrderedDict(
+            zip(fallback_items_name_lst, [target_dtype] * len(fallback_items_name_lst))
+        )
         fallback_sampler = FallbackTuningSampler(
             tuning_space,
             tuning_order_lst=[],
@@ -199,7 +216,9 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
                 key=lambda key: op_fallback_acc_impact[key],
                 reverse=self.higher_is_better,
             )
-            op_dtypes = OrderedDict(zip(ordered_ops, [target_dtype] * len(fallback_items_name_lst)))
+            op_dtypes = OrderedDict(
+                zip(ordered_ops, [target_dtype] * len(fallback_items_name_lst))
+            )
             logger.info("Start to accumulate fallback to {target_dtype}.")
             initial_op_tuning_cfg = copy.deepcopy(op_tuning_cfg)
             fallback_sampler = FallbackTuningSampler(
@@ -216,7 +235,9 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
     def traverse(self):
         """Traverse the tuning space according to auto-mixed precision strategy."""
         if self.config.backend == "ipex":
-            self.best_qmodel = ipex_mixed_precision(self.model, self.config.example_inputs, self.config.device)
+            self.best_qmodel = ipex_mixed_precision(
+                self.model, self.config.example_inputs, self.config.device
+            )
             if self.eval_dataloader or self.eval_func:
                 self._evaluate(self.best_qmodel)
             return
@@ -227,7 +248,10 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
             tune_cfg = self._tune_cfg_converter(op_tuning_cfg)
             self.trials_count += 1
             tuning_history = self._find_tuning_history(tune_cfg)
-            if tuning_history and self.trials_count < self.config.tuning_criterion.max_trials:
+            if (
+                tuning_history
+                and self.trials_count < self.config.tuning_criterion.max_trials
+            ):
                 self.last_tune_result = tuning_history["last_tune_result"]
                 self.best_tune_result = tuning_history["best_tune_result"]
                 logger.warn("Find evaluated tuning config, skip.")
@@ -235,23 +259,35 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
 
             logger.debug("Dump current mixed precision configuration:")
             logger.debug(tune_cfg)
-            self.last_qmodel = self.adaptor.quantize(tune_cfg, self.model, self.calib_dataloader, self.q_func)
+            self.last_qmodel = self.adaptor.quantize(
+                tune_cfg, self.model, self.calib_dataloader, self.q_func
+            )
             assert self.last_qmodel
             # Return the last quantized model as a result. if performance only.
             if self._not_tuning:
                 self.best_qmodel = self.last_qmodel
-                self._add_tuning_history(copy.deepcopy(tune_cfg), (-1, [0]), q_config=self.last_qmodel.q_config)
+                self._add_tuning_history(
+                    copy.deepcopy(tune_cfg),
+                    (-1, [0]),
+                    q_config=self.last_qmodel.q_config,
+                )
                 return
             self.last_tune_cfg = copy.deepcopy(tune_cfg)
             if self.eval_dataloader or self.eval_func:
                 q_config = copy.deepcopy(self.last_qmodel.q_config)
                 self.last_tune_result = self._evaluate(self.last_qmodel)
-                self.cur_best_acc, self.cur_best_tuning_cfg = self.update_best_op_tuning_cfg(op_tuning_cfg)
-                need_stop = self.stop(self.config.tuning_criterion.timeout, self.trials_count)
+                self.cur_best_acc, self.cur_best_tuning_cfg = (
+                    self.update_best_op_tuning_cfg(op_tuning_cfg)
+                )
+                need_stop = self.stop(
+                    self.config.tuning_criterion.timeout, self.trials_count
+                )
                 # record the tuning history
                 saved_tune_cfg = copy.deepcopy(tune_cfg)
                 saved_last_tune_result = copy.deepcopy(self.last_tune_result)
-                self._add_tuning_history(saved_tune_cfg, saved_last_tune_result, q_config=q_config)
+                self._add_tuning_history(
+                    saved_tune_cfg, saved_last_tune_result, q_config=q_config
+                )
             else:
                 # If the eval_dataloader was not specified under the config yaml file,
                 # We only converted the model with customized precisions.

@@ -22,10 +22,13 @@ import numpy as np
 from tensorflow.core.framework import attr_value_pb2, node_def_pb2
 from tensorflow.python.framework import tensor_util
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
-
 from ..graph_base import GraphRewriterBase
 
 
@@ -34,7 +37,13 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
 
     INPUT_ORDER = {
         # Order of inputs for BatchNormWithGlobalNormalization.
-        "BatchNormWithGlobalNormalization": ["conv_op", "mean_op", "var_op", "beta_op", "gamma_op"],
+        "BatchNormWithGlobalNormalization": [
+            "conv_op",
+            "mean_op",
+            "var_op",
+            "beta_op",
+            "gamma_op",
+        ],
         # Order of inputs for FusedBatchNorm.
         "FusedBatchNorm": ["conv_op", "gamma_op", "beta_op", "mean_op", "var_op"],
         "FusedBatchNormV3": ["conv_op", "gamma_op", "beta_op", "mean_op", "var_op"],
@@ -92,15 +101,24 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             [
                 ["Conv2D", "DepthwiseConv2dNative"],
                 ("BiasAdd", "Add", "AddV2"),
-                ["BatchNormWithGlobalNormalization", "FusedBatchNorm", "FusedBatchNormV3", "_FusedBatchNormEx"],
+                [
+                    "BatchNormWithGlobalNormalization",
+                    "FusedBatchNorm",
+                    "FusedBatchNormV3",
+                    "_FusedBatchNormEx",
+                ],
             ]
         )
         for node_combination in target_nodes:
             matched_node = node_combination[:-1]
             has_add_op = True if len(node_combination[-1]) == 3 else False
             conv_node = graph_info[Helper.node_name_from_input(matched_node[0])].node
-            weights_node_name = graph_info[Helper.node_name_from_input(matched_node[0])].node.input[1]
-            weights_node = graph_info[Helper.node_name_from_input(weights_node_name)].node
+            weights_node_name = graph_info[
+                Helper.node_name_from_input(matched_node[0])
+            ].node.input[1]
+            weights_node = graph_info[
+                Helper.node_name_from_input(weights_node_name)
+            ].node
             bn_node = graph_info[Helper.node_name_from_input(matched_node[-1])].node
 
             # oneDNN enabled _FusedBatchNormEx only supports num_side_inputs == 0
@@ -109,7 +127,8 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
                 if bn_node.attr["num_side_inputs"].i != 0:
                     continue
                 if not (
-                    bn_node.attr["activation_mode"].s == b"Identity" or bn_node.attr["activation_mode"].s == b"Relu"
+                    bn_node.attr["activation_mode"].s == b"Identity"
+                    or bn_node.attr["activation_mode"].s == b"Relu"
                 ):
                     continue
 
@@ -127,7 +146,9 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             elif conv_node.op == "DepthwiseConv2dNative":
                 channel_count = weights.shape[2] * weights.shape[3]
 
-            mean_node_name = Helper.node_name_from_input(bn_node.input[self.INPUT_ORDER[bn_node.op].index("mean_op")])
+            mean_node_name = Helper.node_name_from_input(
+                bn_node.input[self.INPUT_ORDER[bn_node.op].index("mean_op")]
+            )
             mean_node = graph_info[mean_node_name].node
 
             if mean_node.op != "Const":
@@ -136,7 +157,9 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             mean_value = Helper.values_from_const(mean_node)
 
             if has_add_op:
-                bias_node_name = graph_info[Helper.node_name_from_input(matched_node[1])].node.input[1]
+                bias_node_name = graph_info[
+                    Helper.node_name_from_input(matched_node[1])
+                ].node.input[1]
                 bias_node = graph_info[Helper.node_name_from_input(bias_node_name)].node
                 if bias_node.op != "Const":
                     continue
@@ -151,10 +174,14 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             if mean_value.shape != (channel_count,):
                 self.logger.warning(
                     "Incorrect shape for mean, found {}, expected {}, "
-                    "for node {}.".format(str(mean_value.shape), str((channel_count,)), conv_node.name)
+                    "for node {}.".format(
+                        str(mean_value.shape), str((channel_count,)), conv_node.name
+                    )
                 )
                 continue
-            var_node_name = Helper.node_name_from_input(bn_node.input[self.INPUT_ORDER[bn_node.op].index("var_op")])
+            var_node_name = Helper.node_name_from_input(
+                bn_node.input[self.INPUT_ORDER[bn_node.op].index("var_op")]
+            )
             var_node = graph_info[var_node_name].node
             if var_node.op != "Const":
                 continue
@@ -163,7 +190,9 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             if var_value.shape != (channel_count,):
                 continue
 
-            beta_node_name = Helper.node_name_from_input(bn_node.input[self.INPUT_ORDER[bn_node.op].index("beta_op")])
+            beta_node_name = Helper.node_name_from_input(
+                bn_node.input[self.INPUT_ORDER[bn_node.op].index("beta_op")]
+            )
             beta_node = graph_info[beta_node_name].node
             if beta_node.op != "Const":
                 continue
@@ -172,7 +201,9 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             if beta_value.shape != (channel_count,):
                 continue
 
-            gamma_node_name = Helper.node_name_from_input(bn_node.input[self.INPUT_ORDER[bn_node.op].index("gamma_op")])
+            gamma_node_name = Helper.node_name_from_input(
+                bn_node.input[self.INPUT_ORDER[bn_node.op].index("gamma_op")]
+            )
             gamma_node = graph_info[gamma_node_name].node
 
             if gamma_node.op != "Const":
@@ -185,9 +216,13 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             variance_epsilon_value = bn_node.attr[self.EPSILON_ATTR[bn_node.op]].f
 
             if self.scale_after_normalization(bn_node):
-                scale_value = (1.0 / np.vectorize(math.sqrt)(var_value + variance_epsilon_value)) * gamma_value
+                scale_value = (
+                    1.0 / np.vectorize(math.sqrt)(var_value + variance_epsilon_value)
+                ) * gamma_value
             else:
-                scale_value = 1.0 / np.vectorize(math.sqrt)(var_value + variance_epsilon_value)
+                scale_value = 1.0 / np.vectorize(math.sqrt)(
+                    var_value + variance_epsilon_value
+                )
 
             offset_value = (-mean_value * scale_value) + beta_value
 
@@ -195,15 +230,25 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
                 original_shape = weights.shape
                 tmp_shape = (original_shape[-1], int(weights.size / original_shape[-1]))
                 tmp_order = [weights.ndim - 1] + [i for i in range(weights.ndim - 1)]
-                scaled_weights = np.copy(weights).transpose(tmp_order).ravel().reshape(tmp_shape)
+                scaled_weights = (
+                    np.copy(weights).transpose(tmp_order).ravel().reshape(tmp_shape)
+                )
                 reshape_scale = np.array(scale_value).reshape(len(scale_value), 1)
-                scaled_weights = np.multiply(scaled_weights, reshape_scale).transpose().reshape(original_shape)
+                scaled_weights = (
+                    np.multiply(scaled_weights, reshape_scale)
+                    .transpose()
+                    .reshape(original_shape)
+                )
             elif conv_node.op == "DepthwiseConv2dNative":
                 scaled_weights = np.copy(weights)
-                it = np.nditer(scaled_weights, flags=["multi_index"], op_flags=["readwrite"])
+                it = np.nditer(
+                    scaled_weights, flags=["multi_index"], op_flags=["readwrite"]
+                )
                 channel_multiplier = weights.shape[3]
                 while not it.finished:
-                    current_scale = scale_value[it.multi_index[2] * channel_multiplier + it.multi_index[3]]
+                    current_scale = scale_value[
+                        it.multi_index[2] * channel_multiplier + it.multi_index[3]
+                    ]
                     it[0] *= current_scale
                     it.iternext()
 
@@ -213,10 +258,14 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             scaled_weights_node.attr["dtype"].CopyFrom(weights_node.attr["dtype"])
             scaled_weights_node.attr["value"].CopyFrom(
                 attr_value_pb2.AttrValue(
-                    tensor=tensor_util.make_tensor_proto(scaled_weights, weights.dtype.type, weights.shape)
+                    tensor=tensor_util.make_tensor_proto(
+                        scaled_weights, weights.dtype.type, weights.shape
+                    )
                 )
             )
-            cur_graph.replace_const_node(scaled_weights_node, [conv_node.name], weights_node_name)
+            cur_graph.replace_const_node(
+                scaled_weights_node, [conv_node.name], weights_node_name
+            )
 
             offset_node = node_def_pb2.NodeDef()
             offset_node.op = "Const"
@@ -224,7 +273,9 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             offset_node.attr["dtype"].CopyFrom(mean_node.attr["dtype"])
             offset_node.attr["value"].CopyFrom(
                 attr_value_pb2.AttrValue(
-                    tensor=tensor_util.make_tensor_proto(offset_value, mean_value.dtype.type, offset_value.shape)
+                    tensor=tensor_util.make_tensor_proto(
+                        offset_value, mean_value.dtype.type, offset_value.shape
+                    )
                 )
             )
             bias_add_node = node_def_pb2.NodeDef()
@@ -233,7 +284,10 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
             bias_add_node.attr["T"].CopyFrom(conv_node.attr["T"])
             bias_add_node.attr["data_format"].CopyFrom(conv_node.attr["data_format"])
             bias_add_node.input.extend([conv_node.name, offset_node.name])
-            if bn_node.op == "_FusedBatchNormEx" and bn_node.attr["activation_mode"].s == b"Relu":
+            if (
+                bn_node.op == "_FusedBatchNormEx"
+                and bn_node.attr["activation_mode"].s == b"Relu"
+            ):
                 # Create Relu op which takes Bias-Add as input.
                 #  Conv2D/Depthwise-Conv2D                         Conv2D/Depthwise-Conv2D
                 #      |                                                 |
@@ -248,19 +302,30 @@ class FoldBatchNormNodesOptimizer(GraphRewriterBase):
 
             cur_graph.add_node(offset_node, [], [bias_add_node.name])
             cur_graph.add_node(
-                bias_add_node, conv_node.name, graph_info[Helper.node_name_from_input(matched_node[-1])].outputs
+                bias_add_node,
+                conv_node.name,
+                graph_info[Helper.node_name_from_input(matched_node[-1])].outputs,
             )
-            if bn_node.op == "_FusedBatchNormEx" and bn_node.attr["activation_mode"].s == b"Relu":
-                matchd_node_outputs = graph_info[Helper.node_name_from_input(matched_node[-1])].outputs
+            if (
+                bn_node.op == "_FusedBatchNormEx"
+                and bn_node.attr["activation_mode"].s == b"Relu"
+            ):
+                matchd_node_outputs = graph_info[
+                    Helper.node_name_from_input(matched_node[-1])
+                ].outputs
                 cur_graph.add_node(offset_node, [], [bias_add_node.name])
                 cur_graph.add_node(bias_add_node, conv_node.name, [relu_node.name])
                 cur_graph.add_node(relu_node, bias_add_node.name, matchd_node_outputs)
             else:
                 cur_graph.add_node(offset_node, [], [bias_add_node.name])
                 cur_graph.add_node(
-                    bias_add_node, conv_node.name, graph_info[Helper.node_name_from_input(matched_node[-1])].outputs
+                    bias_add_node,
+                    conv_node.name,
+                    graph_info[Helper.node_name_from_input(matched_node[-1])].outputs,
                 )
-            cur_graph.replace_const_node(scaled_weights_node, [conv_node.name], weights_node_name)
+            cur_graph.replace_const_node(
+                scaled_weights_node, [conv_node.name], weights_node_name
+            )
 
             cur_graph.remove_node(weights_node_name)
             cur_graph.remove_node(mean_node_name)

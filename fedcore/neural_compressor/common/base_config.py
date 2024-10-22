@@ -75,7 +75,10 @@ class ConfigRegistry:
 
         def decorator(config_cls):
             cls.registered_configs.setdefault(framework_name, {})
-            cls.registered_configs[framework_name][algo_name] = {"priority": priority, "cls": config_cls}
+            cls.registered_configs[framework_name][algo_name] = {
+                "priority": priority,
+                "cls": config_cls,
+            }
             return config_cls
 
         return decorator
@@ -133,7 +136,9 @@ def register_config(framework_name="None", algo_name=None, priority=0):
             which will be tried first at the auto-tune stage. Defaults to 0.
     """
 
-    return config_registry.register_config_impl(framework_name=framework_name, algo_name=algo_name, priority=priority)
+    return config_registry.register_config_impl(
+        framework_name=framework_name, algo_name=algo_name, priority=priority
+    )
 
 
 class BaseConfig(ABC):
@@ -142,7 +147,9 @@ class BaseConfig(ABC):
     name = BASE_CONFIG
     params_list = []
 
-    def __init__(self, white_list: Optional[List[OP_NAME_OR_MODULE_TYPE]] = DEFAULT_WHITE_LIST) -> None:
+    def __init__(
+        self, white_list: Optional[List[OP_NAME_OR_MODULE_TYPE]] = DEFAULT_WHITE_LIST
+    ) -> None:
         self._global_config: Optional[BaseConfig] = None
         # For PyTorch, operator_type is the collective name for module type and functional operation type,
         # for example, `torch.nn.Linear`, and `torch.nn.functional.linear`.
@@ -193,7 +200,10 @@ class BaseConfig(ABC):
 
     def set_local(self, operator_name: str, config: BaseConfig) -> BaseConfig:
         if operator_name in self.local_config:
-            logger.warning("The configuration for %s has already been set, update it.", operator_name)
+            logger.warning(
+                "The configuration for %s has already been set, update it.",
+                operator_name,
+            )
         self.local_config[operator_name] = config
         return self
 
@@ -344,7 +354,9 @@ class BaseConfig(ABC):
         params_list = self.params_list
         config = self
         tuning_param_list = []
-        not_tuning_param_pair = {}  # key is the param name, value is the user specified value
+        not_tuning_param_pair = (
+            {}
+        )  # key is the param name, value is the user specified value
         for param in params_list:
             # Create `TuningParam` for each param
             # There are two cases:
@@ -352,7 +364,9 @@ class BaseConfig(ABC):
             # 2. The param is a `TuningParam` instance.
             if isinstance(param, str):
                 default_param = self.get_the_default_value_of_param(config, param)
-                tuning_param = TuningParam(name=param, tunable_type=List[type(default_param)])
+                tuning_param = TuningParam(
+                    name=param, tunable_type=List[type(default_param)]
+                )
             elif isinstance(param, TuningParam):
                 tuning_param = param
             else:
@@ -370,14 +384,20 @@ class BaseConfig(ABC):
         if len(tuning_param_list) == 0:
             config_list = [config]
         else:
-            tuning_param_name_lst = [tuning_param.name for tuning_param in tuning_param_list]
-            for params_values in product(*[tuning_param.options for tuning_param in tuning_param_list]):
+            tuning_param_name_lst = [
+                tuning_param.name for tuning_param in tuning_param_list
+            ]
+            for params_values in product(
+                *[tuning_param.options for tuning_param in tuning_param_list]
+            ):
                 tuning_param_pair = dict(zip(tuning_param_name_lst, params_values))
                 tmp_params_dict = {**not_tuning_param_pair, **tuning_param_pair}
                 new_config = self.__class__(**tmp_params_dict)
                 logger.info(new_config.to_dict())
                 config_list.append(new_config)
-        logger.info("Expanded the %s and got %d configs.", self.__class__.name, len(config_list))
+        logger.info(
+            "Expanded the %s and got %d configs.", self.__class__.name, len(config_list)
+        )
         return config_list
 
     def _get_op_name_op_type_config(self):
@@ -391,14 +411,18 @@ class BaseConfig(ABC):
         return op_type_config_dict, op_name_config_dict
 
     def to_config_mapping(
-        self, config_list: List[BaseConfig] = None, model_info: List[Tuple[str, str]] = None
+        self,
+        config_list: List[BaseConfig] = None,
+        model_info: List[Tuple[str, str]] = None,
     ) -> OrderedDict[Union[str, Callable], OrderedDict[str, BaseConfig]]:
         config_mapping = OrderedDict()
         if config_list is None:
             config_list = [self]
         for config in config_list:
             global_config = config.global_config
-            op_type_config_dict, op_name_config_dict = config._get_op_name_op_type_config()
+            op_type_config_dict, op_name_config_dict = (
+                config._get_op_name_op_type_config()
+            )
             for op_name, op_type in model_info:
                 if self.global_config is not None:
                     config_mapping[(op_name, op_type)] = global_config
@@ -406,7 +430,9 @@ class BaseConfig(ABC):
                     config_mapping[(op_name, op_type)] = op_name_config_dict[op_type]
                 for op_name_pattern in op_name_config_dict:
                     if re.match(op_name_pattern, op_name):
-                        config_mapping[(op_name, op_type)] = op_name_config_dict[op_name_pattern]
+                        config_mapping[(op_name, op_type)] = op_name_config_dict[
+                            op_name_pattern
+                        ]
         return config_mapping
 
     @staticmethod
@@ -440,8 +466,12 @@ class ComposableConfig(BaseConfig):
         return result
 
     @classmethod
-    def from_dict(cls, config_dict: OrderedDict[str, Dict], config_registry: Dict[str, BaseConfig]):
-        assert len(config_dict) >= 1, "The config dict must include at least one configuration."
+    def from_dict(
+        cls, config_dict: OrderedDict[str, Dict], config_registry: Dict[str, BaseConfig]
+    ):
+        assert (
+            len(config_dict) >= 1
+        ), "The config dict must include at least one configuration."
         num_configs = len(config_dict)
         name, value = next(iter(config_dict.items()))
         config = config_registry[name].from_dict(value)
@@ -457,7 +487,9 @@ class ComposableConfig(BaseConfig):
         return f"{self.__class__.__name__} {self.to_json_string()}"
 
     def to_config_mapping(
-        self, config_list: List[BaseConfig] = None, model_info: List[Tuple[str, str]] = None
+        self,
+        config_list: List[BaseConfig] = None,
+        model_info: List[Tuple[str, str]] = None,
     ) -> OrderedDict[str, BaseConfig]:
         return super().to_config_mapping(self.config_list, model_info)
 
@@ -472,8 +504,12 @@ class ComposableConfig(BaseConfig):
         return None
 
 
-def get_all_config_set_from_config_registry(fwk_name: str) -> Union[BaseConfig, List[BaseConfig]]:
-    all_registered_config_cls: List[BaseConfig] = config_registry.get_all_config_cls_by_fwk_name(fwk_name)
+def get_all_config_set_from_config_registry(
+    fwk_name: str,
+) -> Union[BaseConfig, List[BaseConfig]]:
+    all_registered_config_cls: List[BaseConfig] = (
+        config_registry.get_all_config_cls_by_fwk_name(fwk_name)
+    )
     config_set = []
     for config_cls in all_registered_config_cls:
         config_set.append(config_cls.get_config_set_for_tuning())
@@ -486,7 +522,9 @@ def register_supported_configs_for_fwk(fwk_name: str):
     Args:
         fwk_name: the framework name.
     """
-    all_registered_config_cls: List[BaseConfig] = config_registry.get_all_config_cls_by_fwk_name(fwk_name)
+    all_registered_config_cls: List[BaseConfig] = (
+        config_registry.get_all_config_cls_by_fwk_name(fwk_name)
+    )
     for config_cls in all_registered_config_cls:
         config_cls.register_supported_configs()
 
@@ -512,17 +550,23 @@ def _check_value(name, src, supported_type, supported_value=[]):
             name, str(supported_type), [type(i) for i in src]
         )
     elif not isinstance(src, list) and not isinstance(src, supported_type):
-        assert False, "Type of {} should be {} but not {}".format(name, str(supported_type), type(src))
+        assert False, "Type of {} should be {} but not {}".format(
+            name, str(supported_type), type(src)
+        )
 
     if len(supported_value) > 0:
         if isinstance(src, str) and src not in supported_value:
-            assert False, "{} is not in supported {}: {}. Skip setting it.".format(src, name, str(supported_value))
+            assert False, "{} is not in supported {}: {}. Skip setting it.".format(
+                src, name, str(supported_value)
+            )
         elif (
             isinstance(src, list)
             and all([isinstance(i, str) for i in src])
             and any([i not in supported_value for i in src])
         ):
-            assert False, "{} is not in supported {}: {}. Skip setting it.".format(src, name, str(supported_value))
+            assert False, "{} is not in supported {}: {}. Skip setting it.".format(
+                src, name, str(supported_value)
+            )
 
     return True
 
@@ -560,7 +604,13 @@ class Options:
         set_tensorboard(True)
     """
 
-    def __init__(self, random_seed=1978, workspace=DEFAULT_WORKSPACE, resume_from=None, tensorboard=False):
+    def __init__(
+        self,
+        random_seed=1978,
+        workspace=DEFAULT_WORKSPACE,
+        resume_from=None,
+        tensorboard=False,
+    ):
         """Init an Option object."""
         self.random_seed = random_seed
         self.workspace = workspace

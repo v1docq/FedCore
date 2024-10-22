@@ -23,7 +23,6 @@ from tensorflow.python.framework import dtypes
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
 from fedcore.neural_compressor.adaptor.tf_utils.util import TF_SPR_BASE_VERSIONS
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
-
 from ..graph_base import GraphRewriterBase
 
 
@@ -61,7 +60,9 @@ class DequantizeCastOptimizer(GraphRewriterBase):
             all_cast_outputs_bf16 = True
             for cast_output in cast_outputs:
                 cast_output_node = graph_info[cast_output].node
-                if cast_output_node.attr["T"] != DT_BFLOAT16:  # des dtype of the cast must be bfloat16
+                if (
+                    cast_output_node.attr["T"] != DT_BFLOAT16
+                ):  # des dtype of the cast must be bfloat16
                     all_cast_outputs_bf16 = False
             if not all_cast_outputs_bf16:
                 continue

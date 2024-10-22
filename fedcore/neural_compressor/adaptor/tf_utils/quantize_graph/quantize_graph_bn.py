@@ -19,7 +19,9 @@
 from tensorflow.core.framework import graph_pb2, node_def_pb2
 from tensorflow.python.framework import dtypes
 
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper as helper
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
 
 from .quantize_graph_base import QuantizeNodeBase
 
@@ -66,22 +68,37 @@ class FuseNodeStartWithFusedBatchNormV3(QuantizeNodeBase):  # pragma: no cover
             if node.name in skip_node_name:
                 self.logger.debug("skip node {}".format(node.name))
             elif node.name == match_node_name[0]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
 
-                relu_node_name = match_node_name[1] if len(match_node_name) == 2 else None
+                relu_node_name = (
+                    match_node_name[1] if len(match_node_name) == 2 else None
+                )
 
                 node_op = "_QuantizedFusedBatchNorm"
                 quantized_node_name = node.name + "_eightbit_quantized_bn"
                 output_min_node_name = quantized_node_name + "_input7_output_min"
                 output_max_node_name = quantized_node_name + "_input8_output_max"
                 quantized_node_input_names = (
-                    all_input_names + [output_min_node_name] + [output_max_node_name] + control_inputs
+                    all_input_names
+                    + [output_min_node_name]
+                    + [output_max_node_name]
+                    + control_inputs
                 )
-                output_min_node = helper.create_constant_node(output_min_node_name, -1.0, dtypes.float32)
-                output_max_node = helper.create_constant_node(output_max_node_name, 1.0, dtypes.float32)
-                quantized_bn_node = helper.create_node(node_op, quantized_node_name, quantized_node_input_names)
+                output_min_node = helper.create_constant_node(
+                    output_min_node_name, -1.0, dtypes.float32
+                )
+                output_max_node = helper.create_constant_node(
+                    output_max_node_name, 1.0, dtypes.float32
+                )
+                quantized_bn_node = helper.create_node(
+                    node_op, quantized_node_name, quantized_node_input_names
+                )
                 if relu_node_name is not None:
-                    helper.set_attr_string(quantized_bn_node, "activation_mode", b"Relu")
+                    helper.set_attr_string(
+                        quantized_bn_node, "activation_mode", b"Relu"
+                    )
                 if self.node_name_mapping[offset_name].node.op == "Const":
                     helper.set_attr_bool(quantized_bn_node, "is_offset_const", True)
                 else:
@@ -175,22 +192,37 @@ class FuseNodeStartWithFusedBatchNormV3(QuantizeNodeBase):  # pragma: no cover
             if node.name in skip_node_name:
                 self.logger.debug("skip node {}".format(node.name))
             elif node.name == match_node_name[0]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
                 leakyrelu_node_name = match_node_name[1]
                 node_op = "_QuantizedFusedBatchNorm"
                 quantized_node_name = node.name + "_eightbit_quantized_bn"
                 output_min_node_name = quantized_node_name + "_input7_output_min"
                 output_max_node_name = quantized_node_name + "_input8_output_max"
                 quantized_node_input_names = (
-                    all_input_names + [output_min_node_name] + [output_max_node_name] + control_inputs
+                    all_input_names
+                    + [output_min_node_name]
+                    + [output_max_node_name]
+                    + control_inputs
                 )
-                output_min_node = helper.create_constant_node(output_min_node_name, -1.0, dtypes.float32)
-                output_max_node = helper.create_constant_node(output_max_node_name, 1.0, dtypes.float32)
-                quantized_bn_node = helper.create_node(node_op, quantized_node_name, quantized_node_input_names)
+                output_min_node = helper.create_constant_node(
+                    output_min_node_name, -1.0, dtypes.float32
+                )
+                output_max_node = helper.create_constant_node(
+                    output_max_node_name, 1.0, dtypes.float32
+                )
+                quantized_bn_node = helper.create_node(
+                    node_op, quantized_node_name, quantized_node_input_names
+                )
 
-                helper.set_attr_string(quantized_bn_node, "activation_mode", b"LeakyRelu")
+                helper.set_attr_string(
+                    quantized_bn_node, "activation_mode", b"LeakyRelu"
+                )
                 helper.copy_attr(
-                    quantized_bn_node, "alpha", self.node_name_mapping[leakyrelu_node_name].node.attr["alpha"]
+                    quantized_bn_node,
+                    "alpha",
+                    self.node_name_mapping[leakyrelu_node_name].node.attr["alpha"],
                 )
                 if self.node_name_mapping[offset_name].node.op == "Const":
                     helper.set_attr_bool(quantized_bn_node, "is_offset_const", True)
@@ -281,18 +313,24 @@ class FuseNodeStartWithFusedBatchNormV3(QuantizeNodeBase):  # pragma: no cover
             else:
                 if is_training is True:
                     self.logger.info(
-                        "Skip quantizing the BN node '{}' due to the attr 'is_training == true'.".format(bn_node.name)
+                        "Skip quantizing the BN node '{}' due to the attr 'is_training == true'.".format(
+                            bn_node.name
+                        )
                     )
                     self.exclude_bn_nodes.append(bn_node.name)
                 elif self.new_api:
                     self.logger.info("Unknown fusion pattern {} .".format(fusion_name))
                 if self.remove_redundant_quant_flag:
-                    self.input_graph = self.remove_redundant_quantization(self.input_graph)
+                    self.input_graph = self.remove_redundant_quantization(
+                        self.input_graph
+                    )
                 return self.input_graph, self.exclude_bn_nodes
 
             self.input_graph = self.output_graph
             self._reset_output_node_maps()
             if self.remove_redundant_quant_flag:
-                self.output_graph = self.remove_redundant_quantization(self.output_graph)
+                self.output_graph = self.remove_redundant_quantization(
+                    self.output_graph
+                )
             return self.output_graph, matched_node_name, []
         return self.input_graph, [], []

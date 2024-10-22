@@ -20,8 +20,9 @@ import numpy as np
 from tensorflow.core.framework import graph_pb2, node_def_pb2
 from tensorflow.python.framework import dtypes, tensor_util
 
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper as helper
-
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
 from ..quantize_graph_base import QuantizeNodeBase
 
 
@@ -102,18 +103,24 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
         #   c. weight node is 'Enter' and its parent node is const,
         #      not insert QDQ in phase 1 for easy handling
         weight_name = normal_inputs[1]
-        weight_node = self.node_name_mapping[helper.node_name_from_input(weight_name)].node
+        weight_node = self.node_name_mapping[
+            helper.node_name_from_input(weight_name)
+        ].node
         enter_node = None
         quantizev2_weights_name = None
         weights_min_name = None
         weights_max_name = None
         # no QDQ inserted for 'Enter' node in phase 1
         if weight_node.op == "Enter":  # pragma: no cover
-            parent_node = self.node_name_mapping[helper.node_name_from_input(weight_node.input[0])].node
+            parent_node = self.node_name_mapping[
+                helper.node_name_from_input(weight_node.input[0])
+            ].node
             # FIXME We only quantize the MatMul op which second input node type is const. This is a
             # workaround for RNN model like LTSM.
             if parent_node.op != "Const":
-                self.logger.debug("The weight node of matched_node {} is not Const or Const + Enter, skipped")
+                self.logger.debug(
+                    "The weight node of matched_node {} is not Const or Const + Enter, skipped"
+                )
                 self.exclude_matmul_nodes.append(matched_node.node.name)
                 self.output_graph = self.input_graph
                 return []
@@ -128,7 +135,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             _, weights_name = self._get_node_input(quantizev2_weights_name)
             weights_min_name = weights_name[1]
             weights_max_name = weights_name[2]
-            weight_node = self.node_name_mapping[helper.node_name_from_input(weights_name[0])].node
+            weight_node = self.node_name_mapping[
+                helper.node_name_from_input(weights_name[0])
+            ].node
             weight_name = weight_node.name
 
         if weight_node.op == "Const":
@@ -161,12 +170,19 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 need_insert_dummy_biasadd = 0
                 offset = 0
             if need_insert_dummy_biasadd:
-                self.apply_matmul_biasadd_fusion(match_node_name[:2] + [match_node_name[-1]])
+                self.apply_matmul_biasadd_fusion(
+                    match_node_name[:2] + [match_node_name[-1]]
+                )
                 return match_node_name[1:2]
 
         if weight_node.op == "Const":
-            q_weights_name, q_weights_min_name, q_weights_max_name = self._intel_cpu_quantize_weight_eightbit(
-                matched_node.node.op, self.node_name_mapping[weight_name].node, self.per_channel, enter_node
+            q_weights_name, q_weights_min_name, q_weights_max_name = (
+                self._intel_cpu_quantize_weight_eightbit(
+                    matched_node.node.op,
+                    self.node_name_mapping[weight_name].node,
+                    self.per_channel,
+                    enter_node,
+                )
             )
             if weights_min_name:
                 skip_node_name.append(weights_min_name)
@@ -190,25 +206,40 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             if node.name in skip_node_name:
                 pass
             elif node.name == match_node_name[1]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
 
                 quantized_node_name = node.name + "_eightbit_quantized_mat_mul"
                 if need_insert_dummy_biasadd and weight_node.op == "Const":
                     t_b_index = 0 if matched_node.node.attr["transpose_b"].b else 1
-                    weights_content = tensor_util.MakeNdarray(weight_node.attr["value"].tensor)
+                    weights_content = tensor_util.MakeNdarray(
+                        weight_node.attr["value"].tensor
+                    )
                     bias_size = weights_content.shape[t_b_index]
                     bias_node_name = node.name + "_fake_bias"
                     bias_node = helper.create_constant_node(
-                        bias_node_name, [0] * bias_size, dtypes.float32, shape=[bias_size]
+                        bias_node_name,
+                        [0] * bias_size,
+                        dtypes.float32,
+                        shape=[bias_size],
                     )
 
                     if enter_node:  # pragma: no cover
-                        bias_enter_node = helper.create_node("Enter", bias_node_name + "_enter", [bias_node_name])
-                        helper.set_attr_string(bias_enter_node, "frame_name", enter_node.attr["frame_name"].s)
+                        bias_enter_node = helper.create_node(
+                            "Enter", bias_node_name + "_enter", [bias_node_name]
+                        )
+                        helper.set_attr_string(
+                            bias_enter_node,
+                            "frame_name",
+                            enter_node.attr["frame_name"].s,
+                        )
                         helper.set_attr_dtype(bias_enter_node, "T", dtypes.float32)
                         helper.set_attr_bool(bias_enter_node, "is_constant", True)
                         helper.set_attr_int(
-                            bias_enter_node, "parallel_iterations", enter_node.attr["parallel_iterations"].i
+                            bias_enter_node,
+                            "parallel_iterations",
+                            enter_node.attr["parallel_iterations"].i,
                         )
 
                         self.add_output_graph_node(bias_enter_node)
@@ -216,49 +247,84 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
 
                     self.add_output_graph_node(bias_node)
                 else:
-                    bias_node_name = self.node_name_mapping[match_node_name[2]].node.input[1]
+                    bias_node_name = self.node_name_mapping[
+                        match_node_name[2]
+                    ].node.input[1]
                 relu_node_name = match_node_name[3 - offset]
 
                 all_input_names = q_inputs[:1] + [q_weights_name] + q_inputs[1:]
                 all_input_names.append(q_weights_min_name)
                 all_input_names.append(q_weights_max_name)
                 quantized_node_input_names = (
-                    all_input_names[:2] + [bias_node_name] + all_input_names[2:] + control_inputs
+                    all_input_names[:2]
+                    + [bias_node_name]
+                    + all_input_names[2:]
+                    + control_inputs
                 )
 
                 quantized_matmul_node = helper.create_node(
                     "_QuantizedMatMul", quantized_node_name, quantized_node_input_names
                 )
-                helper.copy_attr(quantized_matmul_node, "transpose_a", node.attr["transpose_a"])
-                helper.copy_attr(quantized_matmul_node, "transpose_b", node.attr["transpose_b"])
+                helper.copy_attr(
+                    quantized_matmul_node, "transpose_a", node.attr["transpose_a"]
+                )
+                helper.copy_attr(
+                    quantized_matmul_node, "transpose_b", node.attr["transpose_b"]
+                )
                 helper.set_attr_dtype(quantized_matmul_node, "T1", dtypes.quint8)
                 helper.set_attr_dtype(quantized_matmul_node, "T2", dtypes.qint8)
                 helper.set_attr_dtype(quantized_matmul_node, "Tout", dtypes.qint32)
                 helper.set_attr_string(
-                    quantized_matmul_node, "input_quant_mode", b"MIN_FIRST" if self.is_asymmetric else b"SCALED"
+                    quantized_matmul_node,
+                    "input_quant_mode",
+                    b"MIN_FIRST" if self.is_asymmetric else b"SCALED",
                 )
                 helper.set_attr_string(
-                    quantized_matmul_node, "output_quant_mode", b"MIN_FIRST" if self.is_asymmetric else b"SCALED"
+                    quantized_matmul_node,
+                    "output_quant_mode",
+                    b"MIN_FIRST" if self.is_asymmetric else b"SCALED",
                 )
                 if self.node_name_mapping[relu_node_name].node.op == "Relu":
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Relu"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Relu"]
+                    )
                 elif self.node_name_mapping[relu_node_name].node.op == "Relu6":
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Relu6"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Relu6"]
+                    )
                 elif self.node_name_mapping[relu_node_name].node.op == "LeakyRelu":
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"LeakyRelu"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node, "fused_ops", [b"BiasAdd", b"LeakyRelu"]
+                    )
                 elif self.node_name_mapping[relu_node_name].node.op == "Gelu":
-                    if self.node_name_mapping[relu_node_name].node.attr["approximate"].b:
+                    if (
+                        self.node_name_mapping[relu_node_name]
+                        .node.attr["approximate"]
+                        .b
+                    ):
                         helper.set_attr_string_list(
-                            quantized_matmul_node, "fused_ops", [b"BiasAdd", b"GeluApproximate"]
+                            quantized_matmul_node,
+                            "fused_ops",
+                            [b"BiasAdd", b"GeluApproximate"],
                         )
                     else:
-                        helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"GeluExact"])
+                        helper.set_attr_string_list(
+                            quantized_matmul_node,
+                            "fused_ops",
+                            [b"BiasAdd", b"GeluExact"],
+                        )
                 elif self.node_name_mapping[relu_node_name].node.op == "Elu":
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Elu"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Elu"]
+                    )
                 elif self.node_name_mapping[relu_node_name].node.op == "Tanh":
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Tanh"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Tanh"]
+                    )
                 elif self.node_name_mapping[relu_node_name].node.op == "Sigmoid":
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Sigmoid"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Sigmoid"]
+                    )
                 helper.set_attr_dtype(quantized_matmul_node, "Tbias", dtypes.float32)
                 helper.set_attr_dtype(quantized_matmul_node, "U", dtypes.float32)
 
@@ -278,14 +344,22 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 helper.set_attr_type_list(
                     quantized_matmul_node,
                     "Thost_outputs",
-                    [dtypes.qint32.as_datatype_enum, dtypes.float32.as_datatype_enum, dtypes.float32.as_datatype_enum],
+                    [
+                        dtypes.qint32.as_datatype_enum,
+                        dtypes.float32.as_datatype_enum,
+                        dtypes.float32.as_datatype_enum,
+                    ],
                 )
 
                 self.add_output_graph_node(quantized_matmul_node)
 
-                quantize_down_name = self._add_quantize_down_nodes(node, quantized_node_name, dtypes.quint8, False)
+                quantize_down_name = self._add_quantize_down_nodes(
+                    node, quantized_node_name, dtypes.quint8, False
+                )
                 self._intel_cpu_add_dequantize_result_node(
-                    quantize_down_name, relu_node_name, performance_only=self.performance_only
+                    quantize_down_name,
+                    relu_node_name,
+                    performance_only=self.performance_only,
                 )
             else:
                 new_node = node_def_pb2.NodeDef()
@@ -295,7 +369,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 if new_node.name in matmul_node_output:
                     for idx, node_input in enumerate(new_node.input):
                         if helper.node_name_from_input(node_input) == matmul_node.name:
-                            new_node.input[idx] = node_input.replace(matmul_node.name, quantized_node_name)
+                            new_node.input[idx] = node_input.replace(
+                                matmul_node.name, quantized_node_name
+                            )
                 self.add_output_graph_node(new_node)
         return match_node_name
 
@@ -317,7 +393,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
         _, q_inputs = self._get_node_input(normal_inputs[0])
 
         weight_name = normal_inputs[1]
-        weight_node = self.node_name_mapping[helper.node_name_from_input(weight_name)].node
+        weight_node = self.node_name_mapping[
+            helper.node_name_from_input(weight_name)
+        ].node
         enter_node = None
         weights_min_name = None
         weights_max_name = None
@@ -325,11 +403,15 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
 
         # no QDQ inserted for 'Enter' node in phase 1
         if weight_node.op == "Enter":  # pragma: no cover
-            parent_node = self.node_name_mapping[helper.node_name_from_input(weight_node.input[0])].node
+            parent_node = self.node_name_mapping[
+                helper.node_name_from_input(weight_node.input[0])
+            ].node
             # FIXME We only quantize the MatMul op which second input node type is const. This is a
             # workaround for RNN model like LTSM.
             if parent_node.op != "Const":
-                self.logger.debug("The weight node of matched_node {} is not Const or Const + Enter, skipped")
+                self.logger.debug(
+                    "The weight node of matched_node {} is not Const or Const + Enter, skipped"
+                )
                 self.exclude_matmul_nodes.append(matched_node.node.name)
                 self.output_graph = self.input_graph
                 return []
@@ -344,7 +426,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             _, weights_name = self._get_node_input(quantizev2_weights_name)
             weights_min_name = weights_name[1]
             weights_max_name = weights_name[2]
-            weight_node = self.node_name_mapping[helper.node_name_from_input(weights_name[0])].node
+            weight_node = self.node_name_mapping[
+                helper.node_name_from_input(weights_name[0])
+            ].node
             weight_name = weight_node.name
 
         # TODO Remove below two lines once the TF enabled the QuantizedMatMul while
@@ -392,27 +476,52 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             ):
                 single_matmul_fusion = False
             else:
-                return self.apply_matmul_biasadd_fusion(match_node_name[:2] + [match_node_name[-1]])
+                return self.apply_matmul_biasadd_fusion(
+                    match_node_name[:2] + [match_node_name[-1]]
+                )
 
         sum_node_name = ""
         if len(match_node_name) == 4:
             if self.node_name_mapping[match_node_name[2]].node.op in ("Add", "AddV2"):
-                sum_index = 1 if match_node_name[1] == self.node_name_mapping[match_node_name[2]].node.input[0] else 0
-                sum_node_name = self.node_name_mapping[match_node_name[2]].node.input[sum_index]
+                sum_index = (
+                    1
+                    if match_node_name[1]
+                    == self.node_name_mapping[match_node_name[2]].node.input[0]
+                    else 0
+                )
+                sum_node_name = self.node_name_mapping[match_node_name[2]].node.input[
+                    sum_index
+                ]
                 deq_node = self.node_name_mapping[sum_node_name].node
                 if deq_node.op != "Dequantize" or deq_node.op.find("Quantize") != -1:
-                    return self.apply_matmul_biasadd_fusion(match_node_name[:2] + [match_node_name[-1]])
+                    return self.apply_matmul_biasadd_fusion(
+                        match_node_name[:2] + [match_node_name[-1]]
+                    )
         if len(match_node_name) == 5:
             if self.node_name_mapping[match_node_name[3]].node.op in ("Add", "AddV2"):
-                sum_index = 1 if match_node_name[2] == self.node_name_mapping[match_node_name[3]].node.input[0] else 0
-                sum_node_name = self.node_name_mapping[match_node_name[3]].node.input[sum_index]
+                sum_index = (
+                    1
+                    if match_node_name[2]
+                    == self.node_name_mapping[match_node_name[3]].node.input[0]
+                    else 0
+                )
+                sum_node_name = self.node_name_mapping[match_node_name[3]].node.input[
+                    sum_index
+                ]
                 deq_node = self.node_name_mapping[sum_node_name].node
                 if deq_node.op != "Dequantize" or deq_node.op.find("Quantize") != -1:
-                    return self.apply_matmul_biasadd_fusion(match_node_name[:3] + [match_node_name[-1]])
+                    return self.apply_matmul_biasadd_fusion(
+                        match_node_name[:3] + [match_node_name[-1]]
+                    )
 
         if weight_node.op == "Const":
-            q_weights_name, q_weights_min_name, q_weights_max_name = self._intel_cpu_quantize_weight_eightbit(
-                matched_node.node.op, self.node_name_mapping[weight_name].node, self.per_channel, enter_node
+            q_weights_name, q_weights_min_name, q_weights_max_name = (
+                self._intel_cpu_quantize_weight_eightbit(
+                    matched_node.node.op,
+                    self.node_name_mapping[weight_name].node,
+                    self.per_channel,
+                    enter_node,
+                )
             )
             if weights_min_name:
                 skip_node_name.append(weights_min_name)
@@ -428,7 +537,14 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
 
         skip_node_name.append(normal_inputs[0])
         if enter_node:
-            if len(self.node_name_mapping[helper.node_name_from_input(enter_node.name)].output) == 1:
+            if (
+                len(
+                    self.node_name_mapping[
+                        helper.node_name_from_input(enter_node.name)
+                    ].output
+                )
+                == 1
+            ):
                 skip_node_name.append(enter_node.name)
         else:
             skip_node_name.append(normal_inputs[1])
@@ -437,7 +553,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             if node.name in skip_node_name:
                 pass
             elif node.name == match_node_name[1]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
 
                 quantized_node_name = node.name + "_eightbit_quantized_mat_mul"
                 all_input_names = q_inputs[:1] + [q_weights_name] + q_inputs[1:]
@@ -447,12 +565,19 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 if single_matmul_fusion:
                     if sum_node_name:
                         quantized_node_input_names = (
-                            all_input_names[:2] + [sum_node_name] + all_input_names[2:] + control_inputs
+                            all_input_names[:2]
+                            + [sum_node_name]
+                            + all_input_names[2:]
+                            + control_inputs
                         )
                     else:
-                        quantized_node_input_names = all_input_names[:2] + all_input_names[2:] + control_inputs
+                        quantized_node_input_names = (
+                            all_input_names[:2] + all_input_names[2:] + control_inputs
+                        )
                 else:
-                    bias_node_name = self.node_name_mapping[match_node_name[2]].node.input[1]
+                    bias_node_name = self.node_name_mapping[
+                        match_node_name[2]
+                    ].node.input[1]
                     if sum_node_name:
                         quantized_node_input_names = (
                             all_input_names[:2]
@@ -463,27 +588,40 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                         )
                     else:
                         quantized_node_input_names = (
-                            all_input_names[:2] + [bias_node_name] + all_input_names[2:] + control_inputs
+                            all_input_names[:2]
+                            + [bias_node_name]
+                            + all_input_names[2:]
+                            + control_inputs
                         )
 
                 quantized_matmul_node = helper.create_node(
                     "_QuantizedMatMul", quantized_node_name, quantized_node_input_names
                 )
-                helper.copy_attr(quantized_matmul_node, "transpose_a", node.attr["transpose_a"])
-                helper.copy_attr(quantized_matmul_node, "transpose_b", node.attr["transpose_b"])
+                helper.copy_attr(
+                    quantized_matmul_node, "transpose_a", node.attr["transpose_a"]
+                )
+                helper.copy_attr(
+                    quantized_matmul_node, "transpose_b", node.attr["transpose_b"]
+                )
                 helper.set_attr_dtype(quantized_matmul_node, "T1", dtypes.quint8)
                 helper.set_attr_dtype(quantized_matmul_node, "T2", dtypes.qint8)
                 helper.set_attr_dtype(quantized_matmul_node, "Tout", dtypes.qint32)
                 helper.set_attr_dtype(quantized_matmul_node, "U", dtypes.float32)
                 helper.set_attr_string(
-                    quantized_matmul_node, "input_quant_mode", b"MIN_FIRST" if self.is_asymmetric else b"SCALED"
+                    quantized_matmul_node,
+                    "input_quant_mode",
+                    b"MIN_FIRST" if self.is_asymmetric else b"SCALED",
                 )
                 helper.set_attr_string(
-                    quantized_matmul_node, "output_quant_mode", b"MIN_FIRST" if self.is_asymmetric else b"SCALED"
+                    quantized_matmul_node,
+                    "output_quant_mode",
+                    b"MIN_FIRST" if self.is_asymmetric else b"SCALED",
                 )
                 helper.set_attr_dtype(quantized_matmul_node, "Tbias", dtypes.float32)
                 if sum_node_name:
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Add"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node, "fused_ops", [b"BiasAdd", b"Add"]
+                    )
                     helper.set_attr_type_list(
                         quantized_matmul_node,
                         "Thost_inputs",
@@ -500,7 +638,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                     )
                 else:
                     if not single_matmul_fusion:
-                        helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"BiasAdd"])
+                        helper.set_attr_string_list(
+                            quantized_matmul_node, "fused_ops", [b"BiasAdd"]
+                        )
                         helper.set_attr_type_list(
                             quantized_matmul_node,
                             "Thost_inputs",
@@ -530,24 +670,38 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 helper.set_attr_type_list(
                     quantized_matmul_node,
                     "Thost_outputs",
-                    [dtypes.qint32.as_datatype_enum, dtypes.float32.as_datatype_enum, dtypes.float32.as_datatype_enum],
+                    [
+                        dtypes.qint32.as_datatype_enum,
+                        dtypes.float32.as_datatype_enum,
+                        dtypes.float32.as_datatype_enum,
+                    ],
                 )
 
                 self.add_output_graph_node(quantized_matmul_node)
                 requantize_type = dtypes.qint8
 
-                quantize_down_name = self._add_quantize_down_nodes(node, quantized_node_name, requantize_type, False)
+                quantize_down_name = self._add_quantize_down_nodes(
+                    node, quantized_node_name, requantize_type, False
+                )
                 if sum_node_name:
                     self._intel_cpu_add_dequantize_result_node(
                         quantize_down_name,
-                        match_node_name[2] if single_matmul_fusion else match_node_name[3],
+                        (
+                            match_node_name[2]
+                            if single_matmul_fusion
+                            else match_node_name[3]
+                        ),
                         requantize_type,
                         performance_only=self.performance_only,
                     )
                 else:
                     self._intel_cpu_add_dequantize_result_node(
                         quantize_down_name,
-                        match_node_name[1] if single_matmul_fusion else match_node_name[2],
+                        (
+                            match_node_name[1]
+                            if single_matmul_fusion
+                            else match_node_name[2]
+                        ),
                         requantize_type,
                         performance_only=self.performance_only,
                     )
@@ -569,18 +723,24 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
         _, q_x_inputs = self._get_node_input(normal_inputs[0])
         quantizev2_input_name = q_x_inputs[0]
         weight_name = normal_inputs[1]
-        weight_node = self.node_name_mapping[helper.node_name_from_input(weight_name)].node
+        weight_node = self.node_name_mapping[
+            helper.node_name_from_input(weight_name)
+        ].node
         enter_node = None
         weights_min_name = None
         weights_max_name = None
         quantizev2_y_name = None
 
         if weight_node.op == "Enter":
-            parent_node = self.node_name_mapping[helper.node_name_from_input(weight_node.input[0])].node
+            parent_node = self.node_name_mapping[
+                helper.node_name_from_input(weight_node.input[0])
+            ].node
             # FIXME We only quantize the MatMul op which second input node type is const. This is a
             # workaround for RNN model like LTSM.
             if parent_node.op != "Const":
-                self.logger.debug("The weight node of matched_node {} is not Const or Const + Enter, skipped")
+                self.logger.debug(
+                    "The weight node of matched_node {} is not Const or Const + Enter, skipped"
+                )
                 self.exclude_matmul_nodes.append(matched_node.node.name)
                 self.output_graph = self.input_graph
                 return []
@@ -593,7 +753,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             _, weights_name = self._get_node_input(quantizev2_y_name)
             weights_min_name = weights_name[1]
             weights_max_name = weights_name[2]
-            weight_node = self.node_name_mapping[helper.node_name_from_input(weights_name[0])].node
+            weight_node = self.node_name_mapping[
+                helper.node_name_from_input(weights_name[0])
+            ].node
             weight_name = weight_node.name
 
         if weight_node.op == "Const":
@@ -614,8 +776,13 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                     self.exclude_matmul_nodes.append(matched_node.node.name)
                     return []
 
-            q_weights_name, q_weights_min_name, q_weights_max_name = self._intel_cpu_quantize_weight_eightbit(
-                matched_node.node.op, self.node_name_mapping[weight_name].node, self.per_channel, enter_node
+            q_weights_name, q_weights_min_name, q_weights_max_name = (
+                self._intel_cpu_quantize_weight_eightbit(
+                    matched_node.node.op,
+                    self.node_name_mapping[weight_name].node,
+                    self.per_channel,
+                    enter_node,
+                )
             )
 
             if weights_min_name:
@@ -642,17 +809,23 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             if node.name in skip_node_name:
                 pass
             elif node.name == match_node_name[1]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
 
                 quantized_node_name = node.name + "_eightbit_quantized_batch_matmul_v2"
-                all_input_names = [quantizev2_input_name] + [q_weights_name] + q_x_inputs[1:]
+                all_input_names = (
+                    [quantizev2_input_name] + [q_weights_name] + q_x_inputs[1:]
+                )
                 all_input_names.append(q_weights_min_name)
                 all_input_names.append(q_weights_max_name)
 
                 quantized_node_input_names = all_input_names + control_inputs
 
                 quantized_matmul_node = helper.create_node(
-                    "_QuantizedBatchMatMul", quantized_node_name, quantized_node_input_names
+                    "_QuantizedBatchMatMul",
+                    quantized_node_name,
+                    quantized_node_input_names,
                 )
 
                 helper.copy_attr(quantized_matmul_node, "adj_x", node.attr["adj_x"])
@@ -661,9 +834,15 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 helper.set_attr_dtype(quantized_matmul_node, "T2", dtypes.qint8)
                 helper.set_attr_dtype(quantized_matmul_node, "U", dtypes.float32)
                 helper.set_attr_dtype(quantized_matmul_node, "Tout", dtypes.float32)
-                helper.set_attr_string(quantized_matmul_node, "input_quant_mode", b"SCALED")
-                helper.set_attr_string(quantized_matmul_node, "output_quant_mode", b"SCALED")
-                helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"Dequantize"])
+                helper.set_attr_string(
+                    quantized_matmul_node, "input_quant_mode", b"SCALED"
+                )
+                helper.set_attr_string(
+                    quantized_matmul_node, "output_quant_mode", b"SCALED"
+                )
+                helper.set_attr_string_list(
+                    quantized_matmul_node, "fused_ops", [b"Dequantize"]
+                )
                 helper.set_attr_type_list(
                     quantized_matmul_node,
                     "Thost_inputs",
@@ -676,7 +855,11 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                         dtypes.float32.as_datatype_enum,
                     ],
                 )
-                helper.set_attr_type_list(quantized_matmul_node, "Thost_outputs", [dtypes.float32.as_datatype_enum])
+                helper.set_attr_type_list(
+                    quantized_matmul_node,
+                    "Thost_outputs",
+                    [dtypes.float32.as_datatype_enum],
+                )
 
                 self.add_output_graph_node(quantized_matmul_node)
                 for i in self.node_name_mapping[node.name].output:
@@ -703,33 +886,49 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
         skip_node_name = match_node_name[2:]
         matched_node = self.node_name_mapping[match_node_name[1]]
         # oneDNN limitation: add tensor ndim must be 4
-        if len(match_node_name) == 4 and self.node_name_mapping[match_node_name[2]].node.op in ("Add", "AddV2"):
-            add_node_input_name = self.node_name_mapping[match_node_name[2]].node.input[1]
+        if len(match_node_name) == 4 and self.node_name_mapping[
+            match_node_name[2]
+        ].node.op in ("Add", "AddV2"):
+            add_node_input_name = self.node_name_mapping[match_node_name[2]].node.input[
+                1
+            ]
             if add_node_input_name == matched_node.node.name:
-                add_node_input_name = self.node_name_mapping[match_node_name[2]].node.input[0]
+                add_node_input_name = self.node_name_mapping[
+                    match_node_name[2]
+                ].node.input[0]
             add_input_node = self.node_name_mapping[add_node_input_name].node
             if add_input_node.op != "Const":
-                return self.apply_batchmatmulv2_fusion(match_node_name[:2] + [match_node_name[-1]])
+                return self.apply_batchmatmulv2_fusion(
+                    match_node_name[:2] + [match_node_name[-1]]
+                )
 
             shape = tensor_util.MakeNdarray(add_input_node.attr["value"].tensor)
             if shape.ndim != 4:
-                return self.apply_batchmatmulv2_fusion(match_node_name[:2] + [match_node_name[-1]])
+                return self.apply_batchmatmulv2_fusion(
+                    match_node_name[:2] + [match_node_name[-1]]
+                )
 
         control_inputs, normal_inputs = self._get_node_input(matched_node.node.name)
 
         weight_name = normal_inputs[1]
-        weight_node = self.node_name_mapping[helper.node_name_from_input(weight_name)].node
+        weight_node = self.node_name_mapping[
+            helper.node_name_from_input(weight_name)
+        ].node
         _, q_x_inputs = self._get_node_input(normal_inputs[0])
         enter_node = None
         weights_min_name = None
         weights_max_name = None
         quantizev2_weights_name = None
         if weight_node.op == "Enter":
-            parent_node = self.node_name_mapping[helper.node_name_from_input(weight_node.input[0])].node
+            parent_node = self.node_name_mapping[
+                helper.node_name_from_input(weight_node.input[0])
+            ].node
             # FIXME We only quantize the MatMul op which second input node type is const. This is a
             # workaround for RNN model like LTSM.
             if parent_node.op != "Const":
-                self.logger.debug("The weight node of matched_node {} is not Const or Const + Enter, skipped")
+                self.logger.debug(
+                    "The weight node of matched_node {} is not Const or Const + Enter, skipped"
+                )
                 self.exclude_matmul_nodes.append(matched_node.node.name)
                 self.output_graph = self.input_graph
                 return []
@@ -742,7 +941,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             _, weights_name = self._get_node_input(quantizev2_weights_name)
             weights_min_name = weights_name[1]
             weights_max_name = weights_name[2]
-            weight_node = self.node_name_mapping[helper.node_name_from_input(weights_name[0])].node
+            weight_node = self.node_name_mapping[
+                helper.node_name_from_input(weights_name[0])
+            ].node
             weight_name = weight_node.name
 
         if weight_node.op == "Const":
@@ -763,8 +964,13 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                     self.exclude_matmul_nodes.append(matched_node.node.name)
                     return []
 
-            q_weights_name, q_weights_min_name, q_weights_max_name = self._intel_cpu_quantize_weight_eightbit(
-                matched_node.node.op, self.node_name_mapping[weight_name].node, self.per_channel, enter_node
+            q_weights_name, q_weights_min_name, q_weights_max_name = (
+                self._intel_cpu_quantize_weight_eightbit(
+                    matched_node.node.op,
+                    self.node_name_mapping[weight_name].node,
+                    self.per_channel,
+                    enter_node,
+                )
             )
 
             if weights_min_name:
@@ -790,28 +996,52 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             if node.name in skip_node_name:
                 pass
             elif node.name == match_node_name[1]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
                 quantized_node_name = node.name + "_eightbit_quantized_batch_matmul_v2"
 
                 if len(match_node_name) == 4:
                     if self.node_name_mapping[match_node_name[2]].node.op == "Mul":
-                        mul_node_name = self.node_name_mapping[match_node_name[2]].node.input[1]
-                        all_input_names = q_x_inputs[:1] + [q_weights_name] + [mul_node_name] + q_x_inputs[1:]
+                        mul_node_name = self.node_name_mapping[
+                            match_node_name[2]
+                        ].node.input[1]
+                        all_input_names = (
+                            q_x_inputs[:1]
+                            + [q_weights_name]
+                            + [mul_node_name]
+                            + q_x_inputs[1:]
+                        )
                         all_input_names.append(q_weights_min_name)
                         all_input_names.append(q_weights_max_name)
                     else:
-                        add_node_name = self.node_name_mapping[match_node_name[2]].node.input[1]
-                        all_input_names = q_x_inputs[:1] + [q_weights_name] + [add_node_name] + q_x_inputs[1:]
+                        add_node_name = self.node_name_mapping[
+                            match_node_name[2]
+                        ].node.input[1]
+                        all_input_names = (
+                            q_x_inputs[:1]
+                            + [q_weights_name]
+                            + [add_node_name]
+                            + q_x_inputs[1:]
+                        )
                         all_input_names.append(q_weights_min_name)
                         all_input_names.append(q_weights_max_name)
                     skip_node_name.append(match_node_name[2])
                 else:
-                    mul_node_name = self.node_name_mapping[match_node_name[2]].node.input[1]
-                    add_node_name = self.node_name_mapping[match_node_name[3]].node.input[1]
+                    mul_node_name = self.node_name_mapping[
+                        match_node_name[2]
+                    ].node.input[1]
+                    add_node_name = self.node_name_mapping[
+                        match_node_name[3]
+                    ].node.input[1]
                     skip_node_name.append(match_node_name[2])
                     skip_node_name.append(match_node_name[3])
                     all_input_names = (
-                        q_x_inputs[:1] + [q_weights_name] + [mul_node_name] + [add_node_name] + q_x_inputs[1:]
+                        q_x_inputs[:1]
+                        + [q_weights_name]
+                        + [mul_node_name]
+                        + [add_node_name]
+                        + q_x_inputs[1:]
                     )
                     all_input_names.append(q_weights_min_name)
                     all_input_names.append(q_weights_max_name)
@@ -819,7 +1049,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 quantized_node_input_names = all_input_names + control_inputs
 
                 quantized_matmul_node = helper.create_node(
-                    "_QuantizedBatchMatMul", quantized_node_name, quantized_node_input_names
+                    "_QuantizedBatchMatMul",
+                    quantized_node_name,
+                    quantized_node_input_names,
                 )
 
                 helper.copy_attr(quantized_matmul_node, "adj_x", node.attr["adj_x"])
@@ -828,13 +1060,21 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 helper.set_attr_dtype(quantized_matmul_node, "T2", dtypes.qint8)
                 helper.set_attr_dtype(quantized_matmul_node, "U", dtypes.float32)
                 helper.set_attr_dtype(quantized_matmul_node, "Tout", dtypes.float32)
-                helper.set_attr_string(quantized_matmul_node, "input_quant_mode", b"SCALED")
-                helper.set_attr_string(quantized_matmul_node, "output_quant_mode", b"SCALED")
+                helper.set_attr_string(
+                    quantized_matmul_node, "input_quant_mode", b"SCALED"
+                )
+                helper.set_attr_string(
+                    quantized_matmul_node, "output_quant_mode", b"SCALED"
+                )
                 if len(match_node_name) == 4:
                     if self.node_name_mapping[match_node_name[2]].node.op == "Mul":
-                        helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"Mul", b"Dequantize"])
+                        helper.set_attr_string_list(
+                            quantized_matmul_node, "fused_ops", [b"Mul", b"Dequantize"]
+                        )
                     else:
-                        helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"Add", b"Dequantize"])
+                        helper.set_attr_string_list(
+                            quantized_matmul_node, "fused_ops", [b"Add", b"Dequantize"]
+                        )
                     helper.set_attr_type_list(
                         quantized_matmul_node,
                         "Thost_inputs",
@@ -849,7 +1089,11 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                         ],
                     )
                 else:
-                    helper.set_attr_string_list(quantized_matmul_node, "fused_ops", [b"Mul", b"Add", b"Dequantize"])
+                    helper.set_attr_string_list(
+                        quantized_matmul_node,
+                        "fused_ops",
+                        [b"Mul", b"Add", b"Dequantize"],
+                    )
                     helper.set_attr_type_list(
                         quantized_matmul_node,
                         "Thost_inputs",
@@ -864,7 +1108,11 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                             dtypes.float32.as_datatype_enum,
                         ],
                     )
-                helper.set_attr_type_list(quantized_matmul_node, "Thost_outputs", [dtypes.float32.as_datatype_enum])
+                helper.set_attr_type_list(
+                    quantized_matmul_node,
+                    "Thost_outputs",
+                    [dtypes.float32.as_datatype_enum],
+                )
 
                 self.add_output_graph_node(quantized_matmul_node)
                 attr_fused_ops = "".join(
@@ -877,10 +1125,16 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                 )
                 if "MulAdd" in attr_fused_ops:
                     for i in self.node_name_mapping[match_node_name[3]].output:
-                        batchmatmul_next_node[i] = (quantized_node_name, match_node_name[3])
+                        batchmatmul_next_node[i] = (
+                            quantized_node_name,
+                            match_node_name[3],
+                        )
                 else:
                     for i in self.node_name_mapping[match_node_name[2]].output:
-                        batchmatmul_next_node[i] = (quantized_node_name, match_node_name[2])
+                        batchmatmul_next_node[i] = (
+                            quantized_node_name,
+                            match_node_name[2],
+                        )
             else:
                 new_node = node_def_pb2.NodeDef()
                 if batchmatmul_next_node.get(node.name):
@@ -900,10 +1154,15 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
     def apply_the_transform(self):
         """Quantize MatMul/BatchMatMul/BatchMatMulV2 and apply the fusion pattern."""
         self._get_op_list()
-        matched_rule, matched_node_name = self._is_match_matmul(self.sorted_patterns, True)
+        matched_rule, matched_node_name = self._is_match_matmul(
+            self.sorted_patterns, True
+        )
         if matched_node_name:
             _, normal_inputs = self._get_node_input(matched_node_name[1])
-        if matched_node_name and self.node_name_mapping[normal_inputs[0]].node.op == matched_node_name[0]:
+        if (
+            matched_node_name
+            and self.node_name_mapping[normal_inputs[0]].node.op == matched_node_name[0]
+        ):
             self.output_graph = graph_pb2.GraphDef()
             fusion_name = "".join(matched_rule)
             if fusion_name in self.fusion_mapping:
@@ -911,13 +1170,17 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
             else:  # pragma: no cover
                 self.logger.debug("Unknown fusion pattern {}.".format(fusion_name))
                 if self.remove_redundant_quant_flag:
-                    self.input_graph = self.remove_redundant_quantization(self.input_graph)
+                    self.input_graph = self.remove_redundant_quantization(
+                        self.input_graph
+                    )
                 return self.input_graph, self.exclude_matmul_nodes
 
             self.input_graph = self.output_graph
             self._reset_output_node_maps()
             if self.remove_redundant_quant_flag:
-                self.output_graph = self.remove_redundant_quantization(self.output_graph)
+                self.output_graph = self.remove_redundant_quantization(
+                    self.output_graph
+                )
             return self.output_graph, self.exclude_matmul_nodes
 
         if self.remove_redundant_quant_flag:
@@ -935,7 +1198,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
 
         for k, v in enumerate(self.op_list):
             if v in set(fusion[1] for fusion in patterns):
-                cur_node = self.node_name_mapping[list(self.node_name_mapping.keys())[k]].node
+                cur_node = self.node_name_mapping[
+                    list(self.node_name_mapping.keys())[k]
+                ].node
                 if cur_node.name != self.start_node_name:
                     continue
 
@@ -947,7 +1212,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
 
                 control_inputs, normal_inputs = self._get_node_input(cur_node.name)
                 weight_name = normal_inputs[1]
-                weight_node = self.node_name_mapping[helper.node_name_from_input(weight_name)].node
+                weight_node = self.node_name_mapping[
+                    helper.node_name_from_input(weight_name)
+                ].node
                 if not qdq_inserted:
                     # FIXME We only quantize the MatMul op which second input node type is const.
                     # This is a workaround for RNN model like LTSM.
@@ -962,20 +1229,33 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                                     helper.node_name_from_input(weight_node.input[0])
                                 ].node
                                 if weight_node.op == "Enter":  # pragma: no cover
-                                    if len(self.node_name_mapping[helper.node_name_from_input(weight_name)].output) > 1:
+                                    if (
+                                        len(
+                                            self.node_name_mapping[
+                                                helper.node_name_from_input(weight_name)
+                                            ].output
+                                        )
+                                        > 1
+                                    ):
                                         self.exclude_matmul_nodes.append(cur_node.name)
                                         continue
                                     if parent_node.op == "Const":
                                         weight_node = parent_node
-                                        weights_content = tensor_util.MakeNdarray(weight_node.attr["value"].tensor)
+                                        weights_content = tensor_util.MakeNdarray(
+                                            weight_node.attr["value"].tensor
+                                        )
                                         if np.any(np.isnan(weights_content)):
-                                            self.exclude_matmul_nodes.append(cur_node.name)
+                                            self.exclude_matmul_nodes.append(
+                                                cur_node.name
+                                            )
                                             continue
                                     else:
                                         self.exclude_matmul_nodes.append(cur_node.name)
                                         continue
                         else:
-                            weights_content = tensor_util.MakeNdarray(weight_node.attr["value"].tensor)
+                            weights_content = tensor_util.MakeNdarray(
+                                weight_node.attr["value"].tensor
+                            )
                             if np.any(np.isnan(weights_content)):  # pragma: no cover
                                 self.exclude_matmul_nodes.append(cur_node.name)
                                 continue
@@ -998,9 +1278,14 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
                         if control_inputs:  # pragma: no cover
                             self.exclude_matmul_nodes.append(cur_node.name)
                             continue
-                        if self.node_name_mapping[normal_inputs[0]].node.op != "Dequantize" or self.node_name_mapping[
+                        if self.node_name_mapping[
+                            normal_inputs[0]
+                        ].node.op != "Dequantize" or self.node_name_mapping[
                             normal_inputs[1]
-                        ].node.op not in ("Dequantize", "Enter"):
+                        ].node.op not in (
+                            "Dequantize",
+                            "Enter",
+                        ):
                             self.exclude_matmul_nodes.append(cur_node.name)
                             continue
 
@@ -1033,7 +1318,9 @@ class FuseNodeStartWithMatmul(QuantizeNodeBase):
 
                     if sub_rule_len == 1:
                         matched_node_name.append(sub_rule[-1])
-                        self.logger.debug("Match {} on nodes {}.".format(sub_rule, matched_node_name))
+                        self.logger.debug(
+                            "Match {} on nodes {}.".format(sub_rule, matched_node_name)
+                        )
                         return sub_rule, matched_node_name
 
         return None, None

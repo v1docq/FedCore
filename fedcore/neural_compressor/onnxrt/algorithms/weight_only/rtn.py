@@ -103,7 +103,10 @@ def rtn_quantize(
         if (
             node.op_type in ["MatMul"]  # check op_type of node is MatMul
             and model.get_initializer(node.input[1]) is not None
-            and weight_config.get((node.name, node.op_type), {}).get("weight_dtype", "fp32") != "fp32"
+            and weight_config.get((node.name, node.op_type), {}).get(
+                "weight_dtype", "fp32"
+            )
+            != "fp32"
         ):
             weight_tensor = model.get_initializer(node.input[1])
             weight = onnx.numpy_helper.to_array(weight_tensor, base_dir=base_dir).copy()
@@ -112,10 +115,20 @@ def rtn_quantize(
 
             dtype = weight.dtype
             if (node.name, node.op_type) in weight_config:
-                num_bits = weight_config[(node.name, node.op_type)].get("weight_bits", 4)
-                group_size = weight_config[(node.name, node.op_type)].get("weight_group_size", 32)
-                scheme = "sym" if weight_config[(node.name, node.op_type)].get("weight_sym", True) else "asym"
-                accuracy_level = weight_config[(node.name, node.op_type)].get("accuracy_level", 0)
+                num_bits = weight_config[(node.name, node.op_type)].get(
+                    "weight_bits", 4
+                )
+                group_size = weight_config[(node.name, node.op_type)].get(
+                    "weight_group_size", 32
+                )
+                scheme = (
+                    "sym"
+                    if weight_config[(node.name, node.op_type)].get("weight_sym", True)
+                    else "asym"
+                )
+                accuracy_level = weight_config[(node.name, node.op_type)].get(
+                    "accuracy_level", 0
+                )
 
             org_w_shape = weight.shape  # ic, oc
             group_size = group_size if group_size != -1 else org_w_shape[0]
@@ -125,18 +138,29 @@ def rtn_quantize(
 
             weight = pad_tensor(weight, group_size, k_blocks)
 
-            satisfy_MatMulNBits_condition = Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4
-            satisfy_MatMulFpQ4_condition = (
-                Version(ort.__version__) >= ONNXRT116_VERSION and num_bits == 4 and group_size == 32
+            satisfy_MatMulNBits_condition = (
+                Version(ort.__version__) > ONNXRT1161_VERSION and num_bits == 4
             )
-            if ("CUDAExecutionProvider" in providers and satisfy_MatMulNBits_condition) or (
+            satisfy_MatMulFpQ4_condition = (
+                Version(ort.__version__) >= ONNXRT116_VERSION
+                and num_bits == 4
+                and group_size == 32
+            )
+            if (
+                "CUDAExecutionProvider" in providers and satisfy_MatMulNBits_condition
+            ) or (
                 "CUDAExecutionProvider" not in providers
                 and (satisfy_MatMulFpQ4_condition or satisfy_MatMulNBits_condition)
             ):  # pragma: no cover
                 # MatMulFpQ4 support 4 bits and 32 group_size with ort 1.16.0 and 1.16.1 versions, supported by CPU EP
                 # MatMulNBits supports 4 bits and 2^n group_size with ort > 1.16.1, supported by CPU EP AND CUDA EP
                 q_weight, scale, zp = quant_tensor(
-                    weight.T, num_bits, group_size, scheme, "uint", ratios.get(node.input[1], 1)
+                    weight.T,
+                    num_bits,
+                    group_size,
+                    scheme,
+                    "uint",
+                    ratios.get(node.input[1], 1),
                 )
                 q_matmul_node, new_inits = make_matmul_weight_only_node(
                     node=node,
@@ -154,12 +178,20 @@ def rtn_quantize(
                 remove_nodes.append(node)
                 new_nodes.append(q_matmul_node)
             else:
-                q_weight = qdq_tensor(weight.T, num_bits, group_size, scheme, "int", ratios.get(node.input[1], 1))
+                q_weight = qdq_tensor(
+                    weight.T,
+                    num_bits,
+                    group_size,
+                    scheme,
+                    "int",
+                    ratios.get(node.input[1], 1),
+                )
                 q_weight = np.reshape(q_weight, (org_w_shape[1], -1))
                 q_weight = np.transpose(q_weight)
                 q_weight = q_weight[: org_w_shape[0], :].astype(dtype)
                 q_weight_tensor = onnx.helper.make_tensor(
-                    name=node.input[1] + "_Q{}G{}".format(str(num_bits), str(group_size)),
+                    name=node.input[1]
+                    + "_Q{}G{}".format(str(num_bits), str(group_size)),
                     data_type=dtype_mapping[str(dtype)],
                     dims=weight.shape,
                     vals=q_weight.tobytes(),

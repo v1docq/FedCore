@@ -3,20 +3,22 @@ from fastcore.basics import defaults
 
 
 class BackendMethods:
-    def __init__(self, device_type: str = 'cpu'):
+    def __init__(self, device_type: str = "cpu"):
         self.backend = self.define_backend(device_type)
 
-    def define_backend(self, device_type: str = 'cpu'):
-        if device_type == 'CUDA':
+    def define_backend(self, device_type: str = "cpu"):
+        if device_type == "CUDA":
             # TODO:
             import numpy
             import scipy.linalg
+
             return numpy, scipy.linalg
             # import cupy, cupyx.scipy.linalg
             # return cupy, cupyx.scipy.linalg
         else:
             import numpy
             import scipy.linalg
+
             return numpy, scipy.linalg
 
 
@@ -26,12 +28,12 @@ def _has_mps():
     # return nested_attr(torch, "backends.mps.is_available", noop)()
 
 
-backend_methods, backend_scipy = BackendMethods('cpu').backend
+backend_methods, backend_scipy = BackendMethods("cpu").backend
 
 
-def global_imports(object_name: str,
-                   short_name: str = None,
-                   context_module_name: str = None):
+def global_imports(
+    object_name: str, short_name: str = None, context_module_name: str = None
+):
     """Imports from local function as global import. Use this statement to import inside
     a function, but effective as import at the top of the module.
 
@@ -57,12 +59,11 @@ def global_imports(object_name: str,
     if not context_module_name:
         globals()[short_name] = __import__(object_name)
     else:
-        context_module = __import__(context_module_name,
-                                    fromlist=[object_name])
+        context_module = __import__(context_module_name, fromlist=[object_name])
         globals()[short_name] = getattr(context_module, object_name)
 
 
-def default_device(device_type: str = 'CUDA'):
+def default_device(device_type: str = "CUDA"):
     """Return or set default device. Modified from fastai.
 
     Args:
@@ -72,9 +73,9 @@ def default_device(device_type: str = 'CUDA'):
         torch.device: The default device: CUDA if available, else CPU.
 
     """
-    if device_type == 'CUDA':
+    if device_type == "CUDA":
         device_type = defaults.use_cuda
-    elif device_type == 'cpu':
+    elif device_type == "cpu":
         defaults.use_cuda = False
         return torch.device("cpu")
 

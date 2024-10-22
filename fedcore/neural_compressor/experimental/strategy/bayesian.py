@@ -25,9 +25,9 @@ from scipy.optimize import minimize
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 
-from ...utils import logger
-from .strategy import TuneStrategy, strategy_registry
-from .utils.tuning_sampler import OpWiseTuningSampler
+from fedcore.neural_compressor.experimental.strategy.strategy import TuneStrategy, strategy_registry
+from fedcore.neural_compressor.experimental.strategy.utils.tuning_sampler import OpWiseTuningSampler
+from fedcore.neural_compressor.utils import logger
 
 
 @deprecated(version="2.0")
@@ -36,10 +36,27 @@ class BayesianTuneStrategy(TuneStrategy):
     """The Bayesian tuning strategy."""
 
     def __init__(
-        self, model, conf, q_dataloader, q_func=None, eval_dataloader=None, eval_func=None, dicts=None, q_hooks=None
+        self,
+        model,
+        conf,
+        q_dataloader,
+        q_func=None,
+        eval_dataloader=None,
+        eval_func=None,
+        dicts=None,
+        q_hooks=None,
     ):
         """Init the BaySian tuning strategy."""
-        super().__init__(model, conf, q_dataloader, q_func, eval_dataloader, eval_func, dicts, q_hooks)
+        super().__init__(
+            model,
+            conf,
+            q_dataloader,
+            q_func,
+            eval_dataloader,
+            eval_func,
+            dicts,
+            q_hooks,
+        )
         self.bayes_opt = None
 
     def __getstate__(self):
@@ -56,14 +73,20 @@ class BayesianTuneStrategy(TuneStrategy):
 
     def _params_to_tune_configs(self, params):
         op_tuning_cfg = {}
-        calib_sampling_size_lst = self.tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+        calib_sampling_size_lst = self.tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         for op_name_type, configs in self.op_configs.items():
             if len(configs) == 1:
                 op_tuning_cfg[op_name_type] = configs[0]
             else:
-                op_tuning_cfg[op_name_type] = configs[min(len(configs) - 1, int(params[op_name_type[0]]))]
+                op_tuning_cfg[op_name_type] = configs[
+                    min(len(configs) - 1, int(params[op_name_type[0]]))
+                ]
         if len(calib_sampling_size_lst) > 1:
-            calib_sampling_size = calib_sampling_size_lst[min(len(configs) - 1, int(params["calib_sampling_size"]))]
+            calib_sampling_size = calib_sampling_size_lst[
+                min(len(configs) - 1, int(params["calib_sampling_size"]))
+            ]
         else:
             calib_sampling_size = calib_sampling_size_lst[0]
         op_tuning_cfg["calib_sampling_size"] = calib_sampling_size
@@ -83,9 +106,15 @@ class BayesianTuneStrategy(TuneStrategy):
         params = None
         pbounds = {}
         tuning_space = self.tuning_space
-        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name("calib_sampling_size").options
-        op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = self.initial_tuning_cfg()
-        op_wise_pool = OpWiseTuningSampler(tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg)
+        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
+        op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = (
+            self.initial_tuning_cfg()
+        )
+        op_wise_pool = OpWiseTuningSampler(
+            tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg
+        )
         self.op_configs = op_wise_pool.get_opwise_candidate()
 
         for op_name_type, configs in self.op_configs.items():
@@ -97,7 +126,9 @@ class BayesianTuneStrategy(TuneStrategy):
             yield self._params_to_tune_configs(params)
             return
         if self.bayes_opt is None:
-            self.bayes_opt = BayesianOptimization(pbounds=pbounds, random_seed=self.cfg.tuning.random_seed)
+            self.bayes_opt = BayesianOptimization(
+                pbounds=pbounds, random_seed=self.cfg.tuning.random_seed
+            )
         while True:
             params = self.bayes_opt.gen_next_params()
             logger.debug("Dump current bayesian params:")
@@ -107,7 +138,6 @@ class BayesianTuneStrategy(TuneStrategy):
                 self.bayes_opt._space.register(params, self.last_tune_result[0])
             except KeyError:
                 logger.debug("Find registered params, skip it.")
-                pass
 
 
 # Util part
@@ -131,17 +161,24 @@ def acq_max(ac, gp, y_max, bounds, random_seed, n_warmup=10000, n_iter=10):
         x_max: The arg max of the acquisition function.
     """
     # Warm up with random points
-    x_tries = np.random.uniform(bounds[:, 0], bounds[:, 1], size=(n_warmup, bounds.shape[0]))
+    x_tries = np.random.uniform(
+        bounds[:, 0], bounds[:, 1], size=(n_warmup, bounds.shape[0])
+    )
     ys = ac(x_tries, gp=gp, y_max=y_max)
     x_max = x_tries[ys.argmax()]
     max_acq = ys.max()
 
     # Explore the parameter space more thoroughly
-    x_seeds = np.random.uniform(bounds[:, 0], bounds[:, 1], size=(n_iter, bounds.shape[0]))
+    x_seeds = np.random.uniform(
+        bounds[:, 0], bounds[:, 1], size=(n_iter, bounds.shape[0])
+    )
     for x_try in x_seeds:
         # Find the minimum of minus the acquisition function
         res = minimize(
-            lambda x: -ac(x.reshape(1, -1), gp=gp, y_max=y_max), x_try.flatten(), bounds=bounds, method="L-BFGS-B"
+            lambda x: -ac(x.reshape(1, -1), gp=gp, y_max=y_max),
+            x_try.flatten(),
+            bounds=bounds,
+            method="L-BFGS-B",
         )
 
         # See if success
@@ -332,13 +369,18 @@ class TargetSpace(object):
         # TODO: support integer, category, and basic scipy.optimize constraints
         data = np.empty((1, self.dim))
         for col, (lower, upper) in enumerate(self._bounds):
-            data.T[col] = np.random.uniform(lower, upper, size=1)  # pylint: disable=unsupported-assignment-operation
+            data.T[col] = np.random.uniform(
+                lower, upper, size=1
+            )  # pylint: disable=unsupported-assignment-operation
         return data.ravel()
 
     def max(self):
         """Get maximum target value found and corresponding parameters."""
         try:
-            res = {"target": self.target.max(), "params": dict(zip(self.keys, self.params[self.target.argmax()]))}
+            res = {
+                "target": self.target.max(),
+                "params": dict(zip(self.keys, self.params[self.target.argmax()])),
+            }
         except ValueError:
             res = {}
         return res
@@ -347,7 +389,10 @@ class TargetSpace(object):
         """Get all target values found and corresponding parameters."""
         params = [dict(zip(self.keys, p)) for p in self.params]
 
-        return [{"target": target, "params": param} for target, param in zip(self.target, params)]
+        return [
+            {"target": target, "params": param}
+            for target, param in zip(self.target, params)
+        ]
 
 
 # Tuning part

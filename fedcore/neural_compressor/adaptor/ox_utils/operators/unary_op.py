@@ -16,7 +16,10 @@
 # limitations under the License.
 """Unary operator."""
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, op_registry
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    op_registry,
+)
 
 
 @op_registry(op_types="Exp, Log, Round, Sqrt")
@@ -54,11 +57,15 @@ class UnaryDirect8BitOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
 
         parents = self.quantizer.model.get_parents(node)
         children = self.quantizer.model.get_children(node)
-        if (len(children) == 0 and len(parents) == 0) or not node.name.endswith("_quant"):
+        if (len(children) == 0 and len(parents) == 0) or not node.name.endswith(
+            "_quant"
+        ):
             return False
         return True
 
@@ -79,5 +86,7 @@ class UnaryDirect8BitOperator(Operator):
             for child in children:
                 if child.op_type == "QuantizeLinear":
                     self.quantizer.remove_nodes.append(child)
-                    self.quantizer.model.replace_input_of_all_nodes(child.output[0], node.output[0] + "_quantized")
+                    self.quantizer.model.replace_input_of_all_nodes(
+                        child.output[0], node.output[0] + "_quantized"
+                    )
             node.output[0] = node.output[0] + "_quantized"

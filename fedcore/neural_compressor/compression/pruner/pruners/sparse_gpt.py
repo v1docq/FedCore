@@ -15,10 +15,7 @@
 import gc
 import math
 
-from ..criteria import get_criterion
 from ..patterns import get_pattern
-from ..regs import get_reg
-from ..schedulers import get_scheduler
 from ..utils import logger, nn, torch
 from .base import PytorchBasePruner, register_pruner
 
@@ -54,7 +51,9 @@ class SparseGPTPruner(PytorchBasePruner):
         # self.criterion = get_criterion(config=self.config, modules=self.modules)
         gc.collect()
         self.gpts = {}
-        logger.warning("sparse_gpt pruner fixed the weights, Please DO NOT train or update gradients.")
+        logger.warning(
+            "sparse_gpt pruner fixed the weights, Please DO NOT train or update gradients."
+        )
         assert (
             "1x1" in self.pattern.pattern or ":" in self.pattern.pattern
         ), "sparse_gpt pruner type only supports 1x1 and N:M patterns."
@@ -81,7 +80,9 @@ class SparseGPTPruner(PytorchBasePruner):
             if len(inp.shape) == 2:
                 inp = inp.unsqueeze(0)
             sample_num = inp.shape[0]  # batchsize
-            if isinstance(self.module, nn.Linear) or isinstance(self.module, transformers.Conv1D):
+            if isinstance(self.module, nn.Linear) or isinstance(
+                self.module, transformers.Conv1D
+            ):
                 if len(inp.shape) == 3:
                     inp = inp.reshape((-1, inp.shape[-1]))
                 inp = inp.t()
@@ -109,6 +110,10 @@ class SparseGPTPruner(PytorchBasePruner):
     def fasterprune(self, op_names):
         with torch.no_grad():
             for name in op_names:
-                logger.info(f"module: {name}\t target ratio: {self.target_sparsity_ratio}")
-                module = self.modules[name]
-                self.pattern.fasterprune(self.gpts[name])  # is there necessary to add a hyperparameter of blocksize
+                logger.info(
+                    f"module: {name}\t target ratio: {self.target_sparsity_ratio}"
+                )
+                self.modules[name]
+                self.pattern.fasterprune(
+                    self.gpts[name]
+                )  # is there necessary to add a hyperparameter of blocksize

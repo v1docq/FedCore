@@ -17,7 +17,9 @@ from typing import Optional
 
 from fedcore.neural_compressor.data.dataloaders.base_dataloader import BaseDataLoader
 from fedcore.neural_compressor.model import BaseModel
-from fedcore.neural_compressor.profiling.profiler.onnxrt_profiler.factory import ProfilerFactory as OnnxrtProfilerFactory
+from fedcore.neural_compressor.profiling.profiler.onnxrt_profiler.factory import (
+    ProfilerFactory as OnnxrtProfilerFactory,
+)
 from fedcore.neural_compressor.profiling.profiler.profiler import Profiler
 from fedcore.neural_compressor.profiling.profiler.tensorflow_profiler.factory import (
     ProfilerFactory as TensorflowProfilerFactory,
@@ -50,5 +52,7 @@ class ProfilerFactory:
 
         profiler = framework_profilers.get(model.framework(), None)
         if profiler is None:
-            raise Exception(f"Profiling for '{model.framework()}' framework is not supported.")
+            raise Exception(
+                f"Profiling for '{model.framework()}' framework is not supported."
+            )
         return profiler(**locals())

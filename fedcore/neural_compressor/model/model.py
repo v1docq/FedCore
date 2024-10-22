@@ -16,7 +16,6 @@
 # limitations under the License.
 """Model for multiple framework backends."""
 
-import copy
 import importlib
 import os
 import sys
@@ -79,17 +78,25 @@ def get_model_fwk_name(model):
 
         try:
             so = ort.SessionOptions()
-            if sys.version_info < (3, 11) and find_spec("onnxruntime_extensions"):  # pragma: no cover
+            if sys.version_info < (3, 11) and find_spec(
+                "onnxruntime_extensions"
+            ):  # pragma: no cover
                 from onnxruntime_extensions import get_library_path
 
                 so.register_custom_ops_library(get_library_path())
             if isinstance(model, str):
                 ort.InferenceSession(model, so, providers=ort.get_available_providers())
             else:
-                ort.InferenceSession(model.SerializeToString(), so, providers=ort.get_available_providers())
+                ort.InferenceSession(
+                    model.SerializeToString(),
+                    so,
+                    providers=ort.get_available_providers(),
+                )
         except Exception as e:  # pragma: no cover
             if "Message onnx.ModelProto exceeds maximum protobuf size of 2GB" in str(e):
-                logger.warning("Please use model path instead of onnx model object to quantize")
+                logger.warning(
+                    "Please use model path instead of onnx model object to quantize"
+                )
             else:
                 logger.warning(
                     "If you use an onnx model with custom_ops to do quantiztaion, "
@@ -116,7 +123,7 @@ def get_model_fwk_name(model):
         try:
             os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
             os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-            model_type = get_model_type(model)
+            get_model_type(model)
         except:
             os.environ.pop("CUDA_DEVICE_ORDER")
             os.environ.pop("CUDA_VISIBLE_DEVICES")
@@ -127,7 +134,9 @@ def get_model_fwk_name(model):
     def _is_mxnet(model):
         try:
             is_mxnet = isinstance(model, mx.gluon.HybridBlock) or (
-                hasattr(model, "__len__") and len(model) > 1 and isinstance(model[0], mx.symbol.Symbol)
+                hasattr(model, "__len__")
+                and len(model) > 1
+                and isinstance(model[0], mx.symbol.Symbol)
             )
         except:
             return "NA"
@@ -180,19 +189,29 @@ class Model(object):
         if isinstance(root, BaseModel):
             if conf != "NA" and conf.framework is None:
                 try:
-                    conf.framework = list(MODELS.keys())[list(MODELS.values()).index(type(root))]
+                    conf.framework = list(MODELS.keys())[
+                        list(MODELS.values()).index(type(root))
+                    ]
                 except:
                     conf.framework = get_model_fwk_name(root._model)
                 if hasattr(conf, "backend") and conf.backend == "ipex":
-                    assert conf.framework == "pytorch_ipex", "Please wrap the model with correct Model class!"
+                    assert (
+                        conf.framework == "pytorch_ipex"
+                    ), "Please wrap the model with correct Model class!"
                 if hasattr(conf, "backend") and conf.backend == "itex":
                     if get_model_type(root.model) == "keras":
-                        assert conf.framework == "keras", "Please wrap the model with KerasModel class!"
+                        assert (
+                            conf.framework == "keras"
+                        ), "Please wrap the model with KerasModel class!"
                     else:
-                        assert conf.framework == "tensorflow", "Please wrap the model with TensorflowModel class!"
+                        assert (
+                            conf.framework == "tensorflow"
+                        ), "Please wrap the model with TensorflowModel class!"
                         conf.framework = "tensorflow_itex"
                 if getattr(conf, "approach", None) == "quant_aware_training":
-                    assert conf.framework == "tensorflow_qat", "Please wrap the model with TensorflowQATModel class!"
+                    assert (
+                        conf.framework == "tensorflow_qat"
+                    ), "Please wrap the model with TensorflowQATModel class!"
             else:
                 if "tensorflow" in conf.framework:
                     if getattr(root, "name", None) is None:
@@ -251,10 +270,18 @@ class Model(object):
                                 model = MODELS[conf.framework]("keras", root, **kwargs)
                             else:
                                 conf.framework = "tensorflow_itex"
-                                model = MODELS[conf.framework](model_type, root, **kwargs)
+                                model = MODELS[conf.framework](
+                                    model_type, root, **kwargs
+                                )
                         else:
                             model = MODELS["tensorflow"](
-                                "keras" if model_type == "AutoTrackable" else model_type, root, **kwargs
+                                (
+                                    "keras"
+                                    if model_type == "AutoTrackable"
+                                    else model_type
+                                ),
+                                root,
+                                **kwargs
                             )
                 else:
                     model = MODELS[conf.framework](root, **kwargs)

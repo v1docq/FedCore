@@ -27,7 +27,14 @@ from fedcore.neural_compressor.adaptor.adaptor import Adaptor, adaptor_registry
 from fedcore.neural_compressor.adaptor.mxnet_utils.util import *
 from fedcore.neural_compressor.adaptor.query import QueryBackendCapability
 from fedcore.neural_compressor.data.dataloaders.base_dataloader import BaseDataLoader
-from fedcore.neural_compressor.utils.utility import GLOBAL_STATE, MODE, CpuInfo, LazyImport, dump_elapsed_time, singleton
+from fedcore.neural_compressor.utils.utility import (
+    GLOBAL_STATE,
+    MODE,
+    CpuInfo,
+    LazyImport,
+    dump_elapsed_time,
+    singleton,
+)
 
 mx = LazyImport("mxnet")
 logger = logging.getLogger("neural_compressor")
@@ -43,14 +50,18 @@ class MxNetAdaptor(Adaptor):
 
     def __init__(self, framework_specific_info):
         super(MxNetAdaptor, self).__init__(framework_specific_info)
-        assert check_mx_version("1.6.0"), "Need MXNet version >= 1.6.0, but got version: %s" % (mx.__version__)
+        assert check_mx_version(
+            "1.6.0"
+        ), "Need MXNet version >= 1.6.0, but got version: %s" % (mx.__version__)
 
         self.pre_optimized_model = None
         self.quantizable_nodes = []
         self._qtensor_to_tensor = {}
         self._tensor_to_node = {}
         self.qdataloader = framework_specific_info.get("q_dataloader")
-        self.query_handler = MXNetQuery(local_config_file=os.path.join(os.path.dirname(__file__), "mxnet.yaml"))
+        self.query_handler = MXNetQuery(
+            local_config_file=os.path.join(os.path.dirname(__file__), "mxnet.yaml")
+        )
 
         self.ctx = mx.cpu() if framework_specific_info["device"] == "cpu" else None
         self.benchmark = GLOBAL_STATE.STATE == MODE.BENCHMARK
@@ -72,25 +83,35 @@ class MxNetAdaptor(Adaptor):
         Returns:
             (MXNetModel): quantized model
         """
-        assert q_func is None, "quantization aware training mode is not supported on mxnet"
+        assert (
+            q_func is None
+        ), "quantization aware training mode is not supported on mxnet"
 
         calib_cache = nc_model.calib_cache
 
         def calib_func(tmp_tune_cfg, dataloader):
-            quant_cfg, calib_cfg, amp_cfg = parse_tune_config(tmp_tune_cfg, self.quantizable_nodes)
+            quant_cfg, calib_cfg, amp_cfg = parse_tune_config(
+                tmp_tune_cfg, self.quantizable_nodes
+            )
             logger.debug("Dump quantization configurations:")
             logger.debug(quant_cfg)
 
             sym_model, dataloader = prepare_model_data(nc_model, self.ctx, dataloader)
-            qsym_model, calib_tensors = quantize_sym_model(sym_model, self.ctx, quant_cfg)
-            calib_data = self._collect_thresholds(sym_model, dataloader, calib_tensors, calib_cfg, calib_cache)
+            qsym_model, calib_tensors = quantize_sym_model(
+                sym_model, self.ctx, quant_cfg
+            )
+            calib_data = self._collect_thresholds(
+                sym_model, dataloader, calib_tensors, calib_cfg, calib_cache
+            )
             qsym_model = calib_model(qsym_model, calib_data, calib_cfg)
             qsym_model = fuse(qsym_model, self.ctx)  # post-quantization fusion
 
             if len(amp_cfg["excluded_sym_names"]) < len(self.quantizable_nodes):
                 qsym_model = amp_convert(qsym_model, dataloader.input_desc, amp_cfg)
 
-            q_nc_model = make_nc_model(nc_model, qsym_model, self.ctx, dataloader.input_desc)
+            q_nc_model = make_nc_model(
+                nc_model, qsym_model, self.ctx, dataloader.input_desc
+            )
             q_nc_model.calib_cache["last"] = calib_data.th_dict
             q_nc_model.q_config = {
                 "mxnet_version": mx.__version__,
@@ -113,7 +134,8 @@ class MxNetAdaptor(Adaptor):
                         if i != 0:
                             logger.warning(
                                 "Reset `calibration.dataloader.batch_size` field "
-                                "to {}".format(calib_batch_size) + " to make sure the sampling_size is "
+                                "to {}".format(calib_batch_size)
+                                + " to make sure the sampling_size is "
                                 "divisible exactly by batch size"
                             )
                         break
@@ -123,24 +145,35 @@ class MxNetAdaptor(Adaptor):
                 dataloader.batch(calib_batch_size)
                 return calib_func(tmp_tune_cfg, dataloader)
             except Exception:  # pragma: no cover
-                logger.warning("Fail to forward with batch size={}, set to {} now.".format(batch_size, 1))
+                logger.warning(
+                    "Fail to forward with batch size={}, set to {} now.".format(
+                        batch_size, 1
+                    )
+                )
                 tmp_tune_cfg = deepcopy(tune_cfg)
                 tmp_tune_cfg["calib_iteration"] = calib_sampling_size
                 dataloader.batch(1)
                 return calib_func(tmp_tune_cfg, dataloader)
         else:
-            if hasattr(dataloader, "batch_size") and calib_sampling_size % dataloader.batch_size != 0:
+            if (
+                hasattr(dataloader, "batch_size")
+                and calib_sampling_size % dataloader.batch_size != 0
+            ):
                 iter = tune_cfg["calib_iteration"]
                 logger.warning(
                     "Please note that calibration sampling size {} "
                     "isn't divisible exactly by batch size {}. "
                     "So the real sampling size is {}.".format(
-                        calib_sampling_size, dataloader.batch_size, dataloader.batch_size * iter
+                        calib_sampling_size,
+                        dataloader.batch_size,
+                        dataloader.batch_size * iter,
                     )
                 )
             return calib_func(tune_cfg, dataloader)
 
-    def _collect_thresholds(self, sym_model, calib_data, calib_tensors, calib_cfg, calib_cache):
+    def _collect_thresholds(
+        self, sym_model, calib_data, calib_tensors, calib_cfg, calib_cache
+    ):
         """Calculate thresholds for each tensor. The calibration method can be min/max
            or KL on different tensors.
 
@@ -165,7 +198,9 @@ class MxNetAdaptor(Adaptor):
 
         cache_kl = calib_cache["kl"]
         cache_minmax = calib_cache["minmax"]
-        tensors_kl, tensors_minmax = distribute_calib_tensors(calib_tensors, calib_cfg, self._tensor_to_node)
+        tensors_kl, tensors_minmax = distribute_calib_tensors(
+            calib_tensors, calib_cfg, self._tensor_to_node
+        )
         to_collect_kl = tensors_kl - set(cache_kl.keys())
         to_collect_minmax = tensors_minmax - set(cache_minmax.keys())
         collector = CalibCollector(to_collect_kl, to_collect_minmax)
@@ -178,9 +213,19 @@ class MxNetAdaptor(Adaptor):
 
             logger.info("Start to collect tensors of the FP32 model.")
             batches = run_forward(
-                sym_model, self.ctx, calib_data, b_filter(), collector, collector.pre_batch, collector.post_batch
+                sym_model,
+                self.ctx,
+                calib_data,
+                b_filter(),
+                collector,
+                collector.pre_batch,
+                collector.post_batch,
             )
-            logger.info("Get collected tensors of the FP32 model from {} batches.".format(batches))
+            logger.info(
+                "Get collected tensors of the FP32 model from {} batches.".format(
+                    batches
+                )
+            )
 
             if len(collector.include_tensors_kl) > 0:
                 cache_kl.update(collector.calc_kl_th_dict(calib_cfg["quantized_dtype"]))
@@ -245,15 +290,40 @@ class MxNetAdaptor(Adaptor):
         if isinstance(data_x, BaseDataLoader) and not self.benchmark:
             try:
                 sym_model, dataloader = prepare_model_data(nc_model, self.ctx, data_x)
-                run_forward(sym_model, self.ctx, dataloader, b_filter(), pre_batch=pre_batch, post_batch=post_batch)
+                run_forward(
+                    sym_model,
+                    self.ctx,
+                    dataloader,
+                    b_filter(),
+                    pre_batch=pre_batch,
+                    post_batch=post_batch,
+                )
             except Exception:  # pragma: no cover
-                logger.warning("Fail to forward with batch size={}, set to {} now.".format(data_x.batch_size, 1))
+                logger.warning(
+                    "Fail to forward with batch size={}, set to {} now.".format(
+                        data_x.batch_size, 1
+                    )
+                )
                 data_x.batch(1)
                 sym_model, dataloader = prepare_model_data(nc_model, self.ctx, data_x)
-                run_forward(sym_model, self.ctx, dataloader, b_filter(), pre_batch=pre_batch, post_batch=post_batch)
+                run_forward(
+                    sym_model,
+                    self.ctx,
+                    dataloader,
+                    b_filter(),
+                    pre_batch=pre_batch,
+                    post_batch=post_batch,
+                )
         else:
             sym_model, dataloader = prepare_model_data(nc_model, self.ctx, data_x)
-            run_forward(sym_model, self.ctx, dataloader, b_filter(), pre_batch=pre_batch, post_batch=post_batch)
+            run_forward(
+                sym_model,
+                self.ctx,
+                dataloader,
+                b_filter(),
+                pre_batch=pre_batch,
+                post_batch=post_batch,
+            )
         acc = [metric.result() for metric in metrics] if metrics is not None else 0
         return acc if not isinstance(acc, list) or len(acc) > 1 else acc[0]
 
@@ -267,18 +337,22 @@ class MxNetAdaptor(Adaptor):
         Returns:
             dict: modelwise and opwise config.
         """
-        sym_model, self.qdataloader = prepare_model_data(nc_model, self.ctx, self.qdataloader)
+        sym_model, self.qdataloader = prepare_model_data(
+            nc_model, self.ctx, self.qdataloader
+        )
         # (TODO) to align with other fw, set pre_optimized_model here
         self.pre_optimized_model = sym_model
 
-        self.quantizable_nodes, self._tensor_to_node, all_op_nodes = query_quantizable_nodes(
-            sym_model, self.ctx, self.qdataloader
+        self.quantizable_nodes, self._tensor_to_node, all_op_nodes = (
+            query_quantizable_nodes(sym_model, self.ctx, self.qdataloader)
         )
 
         config = self.query_handler.get_quantization_capability()["int8"]
         bf16_config = self.query_handler.get_quantization_capability().get("bf16", {})
         valid_precisions = self.query_handler.get_mixed_precision_combination()
-        use_bf16 = ("bf16" in valid_precisions and CpuInfo().bf16) or os.getenv("FORCE_BF16") == "1"
+        use_bf16 = ("bf16" in valid_precisions and CpuInfo().bf16) or os.getenv(
+            "FORCE_BF16"
+        ) == "1"
         if use_bf16:
             config = combine_capabilities(config, bf16_config)
 
@@ -317,8 +391,17 @@ class MxNetAdaptor(Adaptor):
                 yield run
 
         sym_model, dataloader = prepare_model_data(nc_model, self.ctx, data_x)
-        collector = TensorCollector(node_list, self._qtensor_to_tensor, self._tensor_to_node)
-        num_batches = run_forward(sym_model, self.ctx, dataloader, b_filter(), collector, pre_batch=collector.pre_batch)
+        collector = TensorCollector(
+            node_list, self._qtensor_to_tensor, self._tensor_to_node
+        )
+        num_batches = run_forward(
+            sym_model,
+            self.ctx,
+            dataloader,
+            b_filter(),
+            collector,
+            pre_batch=collector.pre_batch,
+        )
         logger.debug("Inspect batches at {}.".format(num_batches))
         self._qtensor_to_tensor = collector.qtensor_to_tensor
         return collector.tensors_dicts
@@ -348,7 +431,9 @@ class MxNetAdaptor(Adaptor):
         if inspect_type not in ["all", "activation"]:
             raise NotImplementedError()
 
-        tensor_dict_list = self._inspect_tensor(nc_model, data_x, op_list, iteration_list)
+        tensor_dict_list = self._inspect_tensor(
+            nc_model, data_x, op_list, iteration_list
+        )
         for tensor_dict in tensor_dict_list:
             for key, tensors in tensor_dict.items():
                 for tensor_name, (is_quantized, tensor) in tensors.items():
@@ -363,11 +448,15 @@ class MxNetAdaptor(Adaptor):
                             max_range=mx.nd.array([max_th]).squeeze(),
                             out_type="float32",
                         )
-                    tensor_dict[key][tensor_name] = tensor_dict[key][tensor_name].asnumpy()
+                    tensor_dict[key][tensor_name] = tensor_dict[key][
+                        tensor_name
+                    ].asnumpy()
 
                 # transform to format expected by neural_compressor (assume only 1 tensor for now)
                 node = key
-                assert len(tensors) == 1, "Multiple tensors from a single node are not supported"
+                assert (
+                    len(tensors) == 1
+                ), "Multiple tensors from a single node are not supported"
                 tensor = list(tensor_dict[key].values())[0]
                 tensor_dict[key] = {node: tensor}
 
@@ -391,7 +480,9 @@ class MxNetAdaptor(Adaptor):
             )
 
         sym_model = prepare_model(nc_model, self.ctx, q_config["input_desc"])
-        qsym_model, calib_tensors = quantize_sym_model(sym_model, self.ctx, q_config["quant_cfg"])
+        qsym_model, calib_tensors = quantize_sym_model(
+            sym_model, self.ctx, q_config["quant_cfg"]
+        )
 
         calib_data = CalibData()
         calib_data.th_dict = q_config["th_dict"]
@@ -400,7 +491,9 @@ class MxNetAdaptor(Adaptor):
         qsym_model = calib_model(qsym_model, calib_data, q_config["calib_cfg"])
         qsym_model = fuse(qsym_model, self.ctx)  # post-quantization fusion
 
-        q_nc_model = make_nc_model(nc_model, qsym_model, self.ctx, q_config["input_desc"])
+        q_nc_model = make_nc_model(
+            nc_model, qsym_model, self.ctx, q_config["input_desc"]
+        )
         q_nc_model.calib_cache["last"] = q_config["th_dict"]
         q_nc_model.q_config = q_config
         return q_nc_model
@@ -444,7 +537,9 @@ class MXNetQuery(QueryBackendCapability):
                 logger.info("Fail to parse {} due to {}.".format(self.cfg, str(e)))
                 self.cur_config = None
                 raise ValueError(
-                    "Please check if the format of {} follows Neural Compressor yaml schema.".format(self.cfg)
+                    "Please check if the format of {} follows Neural Compressor yaml schema.".format(
+                        self.cfg
+                    )
                 )
         self._update_cfg_with_usr_definition()
 
@@ -507,6 +602,9 @@ class MXNetQuery(QueryBackendCapability):
         e.g['fp32', 'bf16', 'int8']
         """
         if self.cur_config["precisions"]["valid_mixed_precisions"]:
-            return [i.strip() for i in self.cur_config["precisions"]["valid_mixed_precisions"]]
+            return [
+                i.strip()
+                for i in self.cur_config["precisions"]["valid_mixed_precisions"]
+            ]
 
         return [i.strip() for i in self.get_precisions().split(",")]

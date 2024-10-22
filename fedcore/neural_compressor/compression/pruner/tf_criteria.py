@@ -36,7 +36,9 @@ def get_tf_criterion(config, modules):
     """Get registered criterion class."""
     name = config["criterion_type"]
     if name not in CRITERIA.keys():
-        assert False, f"criteria does not support {name}, currently only support {CRITERIA.keys()}"
+        assert (
+            False
+        ), f"criteria does not support {name}, currently only support {CRITERIA.keys()}"
     return CRITERIA[name](modules, config)
 
 
@@ -59,15 +61,12 @@ class PruningCriterion:
 
     def on_step_begin(self):
         """Calculate and store the pruning scores of pruning modules at the beginning of a step."""
-        pass
 
     def on_before_optimizer_step(self):
         """Calculate and store the pruning scores of pruning modules before the optimizer step."""
-        pass
 
     def on_after_optimizer_step(self):
         """Calculate and store the pruning scores of pruning modules after the optimizer step."""
-        pass
 
 
 @register_criterion("magnitude")

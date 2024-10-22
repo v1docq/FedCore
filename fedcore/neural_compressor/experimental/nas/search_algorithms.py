@@ -37,7 +37,9 @@ class Searcher(object):
 
     def __init__(self, search_space) -> None:
         """Initialize the attributes."""
-        assert isinstance(search_space, dict) and search_space, "Expect search_space to be a dict."
+        assert (
+            isinstance(search_space, dict) and search_space
+        ), "Expect search_space to be a dict."
         self.search_space = search_space
         self.search_space_keys = sorted(search_space.keys())
         for k in self.search_space_keys:
@@ -47,11 +49,12 @@ class Searcher(object):
 
     def suggest(self):
         """Suggest the model architecture."""
-        raise NotImplementedError("Depends on specific search algorithm.")  # pragma: no cover
+        raise NotImplementedError(
+            "Depends on specific search algorithm."
+        )  # pragma: no cover
 
     def get_feedback(self, metric):
         """Get metric feedback for the search algorithm."""
-        pass
 
     def params_vec2params_dict(self, para_vec):
         """Convert the parameters vector to parameters dictionary.
@@ -138,7 +141,9 @@ class BayesianOptimizationSearcher(Searcher):
     def __init__(self, search_space, seed=42) -> None:
         """Initialize the attributes."""
         super(BayesianOptimizationSearcher, self).__init__(search_space)
-        idx_search_space = {k: (0, len(search_space[k]) - 1) for k in self.search_space_keys}
+        idx_search_space = {
+            k: (0, len(search_space[k]) - 1) for k in self.search_space_keys
+        }
         self.bo_agent = BayesianOptimization(idx_search_space, random_seed=seed)
         self.last_param_indices = None
 
@@ -155,13 +160,13 @@ class BayesianOptimizationSearcher(Searcher):
     def get_feedback(self, metric):
         """Get metric feedback and register this metric."""
         assert self.last_param_indices is not None, (
-            "Need run suggest first " + "to get parameters and the input metric is corresponding to this parameters."
+            "Need run suggest first "
+            + "to get parameters and the input metric is corresponding to this parameters."
         )
         try:
             self.bo_agent._space.register(self.last_param_indices, metric)
         except KeyError:  # pragma: no cover
             logger.debug("Find registered params, skip it.")
-            pass
         self.last_param_indices = None
 
     def indices2params_vec(self, indices):

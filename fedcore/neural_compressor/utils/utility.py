@@ -76,12 +76,16 @@ def version1_eq_version2(version1, version2):
 
 def version1_gte_version2(version1, version2):
     """Check whether version1 is greater than version2 or is equal to it."""
-    return parse_version(version1) > parse_version(version2) or parse_version(version1) == parse_version(version2)
+    return parse_version(version1) > parse_version(version2) or parse_version(
+        version1
+    ) == parse_version(version2)
 
 
 def version1_lte_version2(version1, version2):
     """Check whether version1 is less than version2 or is equal to it."""
-    return parse_version(version1) < parse_version(version2) or parse_version(version1) == parse_version(version2)
+    return parse_version(version1) < parse_version(version2) or parse_version(
+        version1
+    ) == parse_version(version2)
 
 
 class LazyImport(object):
@@ -163,7 +167,11 @@ def get_size(obj, seen=None):
     # for Tensorflow case
     if isinstance(obj, tf.Graph):
         _graph_def = obj.as_graph_def()
-        _graph_node = _graph_def.node if isinstance(_graph_def, tf.compat.v1.GraphDef) else _graph_def.graph_def.node
+        _graph_node = (
+            _graph_def.node
+            if isinstance(_graph_def, tf.compat.v1.GraphDef)
+            else _graph_def.graph_def.node
+        )
         for node in _graph_node:
             if node.op == "Const":
                 input_tensor = node.attr["value"].tensor
@@ -192,7 +200,7 @@ def compute_sparsity(tensor):
     Return:
         (the original tensor size, number of zero elements, number of non-zero elements)
     """
-    mask = np.ones_like(tensor)
+    np.ones_like(tensor)
     tensor_size = tensor.size
     dense_mask = tensor != 0
     dense_size = dense_mask.sum()
@@ -203,7 +211,9 @@ def compute_sparsity(tensor):
 def fault_tolerant_file(name):
     """Make another temporary copy of the file."""
     dirpath, filename = osp.split(name)
-    with NamedTemporaryFile(dir=os.path.abspath(os.path.expanduser(dirpath)), delete=False, suffix=".tmp") as f:
+    with NamedTemporaryFile(
+        dir=os.path.abspath(os.path.expanduser(dirpath)), delete=False, suffix=".tmp"
+    ) as f:
         yield f
         f.flush()
         os.fsync(f)
@@ -221,7 +231,9 @@ def equal_dicts(d1, d2, compare_keys=None, ignore_keys=None):
             k: v for k, v in d2.items() if k not in ignore_keys
         }
     elif compare_keys is not None and ignore_keys is None:
-        return {k: v for k, v in d1.items() if k in compare_keys} == {k: v for k, v in d2.items() if k in compare_keys}
+        return {k: v for k, v in d1.items() if k in compare_keys} == {
+            k: v for k, v in d2.items() if k in compare_keys
+        }
     else:
         assert False
 
@@ -241,12 +253,17 @@ class CpuInfo(object):
             if max_extension_support >= 7:
                 ecx = cpuid._run_asm(
                     b"\x31\xC9",  # xor ecx, ecx
-                    b"\xB8\x07\x00\x00\x00" b"\x0f\xa2" b"\x89\xC8" b"\xC3",  # mov eax, 7  # cpuid  # mov ax, cx  # ret
+                    b"\xB8\x07\x00\x00\x00"
+                    b"\x0f\xa2"
+                    b"\x89\xC8"
+                    b"\xC3",  # mov eax, 7  # cpuid  # mov ax, cx  # ret
                 )
                 self._vnni = bool(ecx & (1 << 11))
                 eax = cpuid._run_asm(
                     b"\xB9\x01\x00\x00\x00",  # mov ecx, 1
-                    b"\xB8\x07\x00\x00\x00" b"\x0f\xa2" b"\xC3",  # mov eax, 7  # cpuid  # ret
+                    b"\xB8\x07\x00\x00\x00"
+                    b"\x0f\xa2"
+                    b"\xC3",  # mov eax, 7  # cpuid  # ret
                 )
                 self._bf16 = bool(eax & (1 << 5))
         if "arch" in info and "ARM" in info["arch"]:  # pragma: no cover
@@ -305,7 +322,10 @@ def dump_elapsed_time(customized_msg=""):
             end = time.time()
             logging.getLogger("neural_compressor").info(
                 "%s elapsed time: %s ms"
-                % (customized_msg if customized_msg else func.__qualname__, round((end - start) * 1000, 2))
+                % (
+                    customized_msg if customized_msg else func.__qualname__,
+                    round((end - start) * 1000, 2),
+                )
             )
             return res
 
@@ -322,7 +342,13 @@ def combine_histogram(old_hist, arr):
     (old_hist, old_hist_edges, old_min, old_max, old_th) = old_hist
     if new_th <= old_th:
         hist, _ = np.histogram(arr, bins=len(old_hist), range=(-old_th, old_th))
-        return (old_hist + hist, old_hist_edges, min(old_min, new_min), max(old_max, new_max), old_th)
+        return (
+            old_hist + hist,
+            old_hist_edges,
+            min(old_min, new_min),
+            max(old_max, new_max),
+            old_th,
+        )
     else:
         old_num_bins = len(old_hist)
         old_step = 2 * old_th / old_num_bins
@@ -345,7 +371,11 @@ def get_tensor_histogram(tensor_data, bins=2048):
 
 def get_all_fp32_data(data):
     """Get all the fp32 data."""
-    return [float(i) for i in data.replace("[", " ").replace("]", " ").split(" ") if i.strip() and len(i) < 32]
+    return [
+        float(i)
+        for i in data.replace("[", " ").replace("]", " ").split(" ")
+        if i.strip() and len(i) < 32
+    ]
 
 
 def get_tuning_history(tuning_history_path):
@@ -373,7 +403,7 @@ def recover(fp32_model, tuning_history_path, num, **kwargs):
     q_config = target_history[num]["q_config"]
     try:
         framework = tuning_history[0]["cfg"]["model"]["framework"]
-    except Exception as e:
+    except Exception:
         framework = tuning_history[0]["cfg"].quantization.framework
 
     if "pytorch" in framework:
@@ -418,7 +448,9 @@ def dequantize_weight(weight_tensor, min_filter_tensor, max_filter_tensor):
     """Dequantize the weight with min-max filter tensors."""
     weight_channel = weight_tensor.shape[-1]
     if len(min_filter_tensor) == 1:
-        weight_tensor = weight_tensor * ((max_filter_tensor[0] - min_filter_tensor[0]) / 127.0)
+        weight_tensor = weight_tensor * (
+            (max_filter_tensor[0] - min_filter_tensor[0]) / 127.0
+        )
     else:
         # TODO to calculate the de-quantized result in a parallel way
         for i in range(weight_channel):
@@ -657,7 +689,11 @@ class DotDict(dict):
             value = DotDict(value)
         if isinstance(value, list) and len(value) == 1 and isinstance(value[0], dict):
             value = DotDict(value[0])
-        if isinstance(value, list) and len(value) > 1 and all(isinstance(v, dict) for v in value):
+        if (
+            isinstance(value, list)
+            and len(value) > 1
+            and all(isinstance(v, dict) for v in value)
+        ):
             value = DotDict({k: v for d in value for k, v in d.items()})
         super(DotDict, self).__setitem__(key, value)
 
@@ -760,7 +796,9 @@ def print_table(
                 table_row.append(entry.get(attribute))
             else:
                 value = reduce(getattr, [entry] + attribute.split("."))
-                if (isinstance(value, np.floating) or isinstance(value, float)) and isinstance(precision, int):
+                if (
+                    isinstance(value, np.floating) or isinstance(value, float)
+                ) and isinstance(precision, int):
                     if "e" in str(value):
                         value = f"{value:.{precision}e}"
                     else:
@@ -817,17 +855,28 @@ def get_weights_details(workload_location: str) -> list:
 
     weights_details = []
 
-    input_model_tensors: dict = get_tensors_info(workload_location, model_type="input")["weight"]
-    optimized_model_tensors: dict = get_tensors_info(workload_location, model_type="optimized")["weight"]
+    input_model_tensors: dict = get_tensors_info(workload_location, model_type="input")[
+        "weight"
+    ]
+    optimized_model_tensors: dict = get_tensors_info(
+        workload_location, model_type="optimized"
+    )["weight"]
 
-    common_ops = list(set(input_model_tensors.keys()) & set(optimized_model_tensors.keys()))
+    common_ops = list(
+        set(input_model_tensors.keys()) & set(optimized_model_tensors.keys())
+    )
     for op_name in common_ops:
         input_model_op_tensors = input_model_tensors[op_name]
         optimized_model_op_tensors = optimized_model_tensors[op_name]
 
         if isinstance(input_model_op_tensors, dict):
-            tensors_data = zip(input_model_op_tensors.items(), optimized_model_op_tensors.items())
-            for (_, input_op_tensor_values), (_, optimized_op_tensor_values) in tensors_data:
+            tensors_data = zip(
+                input_model_op_tensors.items(), optimized_model_op_tensors.items()
+            )
+            for (_, input_op_tensor_values), (
+                _,
+                optimized_op_tensor_values,
+            ) in tensors_data:
                 if input_op_tensor_values.shape != optimized_op_tensor_values.shape:
                     continue
 
@@ -936,7 +985,9 @@ def get_number_of_sockets() -> int:
 class OpEntry:
     """OP entry class."""
 
-    def __init__(self, op_name: str, mse: float, activation_min: float, activation_max: float):
+    def __init__(
+        self, op_name: str, mse: float, activation_min: float, activation_max: float
+    ):
         """Initialize OP entry.
 
         Args:
@@ -963,9 +1014,13 @@ def print_op_list(workload_location: str):
     Returns:
         None
     """
-    minmax_file_path = os.path.join(workload_location, "inspect_saved", "activation_min_max.pkl")
+    minmax_file_path = os.path.join(
+        workload_location, "inspect_saved", "activation_min_max.pkl"
+    )
     if not os.path.exists(minmax_file_path):
-        logging.getLogger("neural_compressor").warning("Could not find activation min max data.")
+        logging.getLogger("neural_compressor").warning(
+            "Could not find activation min max data."
+        )
         return
     input_model_tensors = get_tensors_info(
         workload_location,
@@ -976,10 +1031,10 @@ def print_op_list(workload_location: str):
     optimized_model_tensors = get_tensors_info(
         workload_location,
         model_type="optimized",
-    )[
-        "activation"
-    ][0]
-    op_list = get_op_list(minmax_file_path, input_model_tensors, optimized_model_tensors)
+    )["activation"][0]
+    op_list = get_op_list(
+        minmax_file_path, input_model_tensors, optimized_model_tensors
+    )
     sorted_op_list = sorted(op_list, key=lambda x: x.mse, reverse=True)
     if len(op_list) <= 0:
         return
@@ -1012,7 +1067,9 @@ def print_op_list(workload_location: str):
     )
 
 
-def get_op_list(minmax_file_path, input_model_tensors, optimized_model_tensors) -> List[OpEntry]:
+def get_op_list(
+    minmax_file_path, input_model_tensors, optimized_model_tensors
+) -> List[OpEntry]:
     """Get OP list for model.
 
     Args:
@@ -1090,7 +1147,9 @@ def mse_metric_gap(fp32_tensor: Any, dequantize_tensor: Any) -> float:
         fp32_tensor_norm = (fp32_tensor - fp32_min) / (fp32_max - fp32_min)
 
     if (dequantize_max - dequantize_min) != 0:
-        dequantize_tensor_norm = (dequantize_tensor - dequantize_min) / (dequantize_max - dequantize_min)
+        dequantize_tensor_norm = (dequantize_tensor - dequantize_min) / (
+            dequantize_max - dequantize_min
+        )
 
     diff_tensor = fp32_tensor_norm - dequantize_tensor_norm
     euclidean_dist = np.sum(diff_tensor**2)  # type: ignore

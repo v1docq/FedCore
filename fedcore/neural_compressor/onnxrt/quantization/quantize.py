@@ -18,9 +18,15 @@ from typing import Union
 import onnx
 
 from fedcore.neural_compressor.common import Logger
-from fedcore.neural_compressor.common.base_config import BaseConfig, ComposableConfig, config_registry
+from fedcore.neural_compressor.common.base_config import (
+    BaseConfig,
+    ComposableConfig,
+    config_registry,
+)
 from fedcore.neural_compressor.common.utils import log_quant_execution
-from fedcore.neural_compressor.onnxrt.quantization.calibrate import CalibrationDataReader
+from fedcore.neural_compressor.onnxrt.quantization.calibrate import (
+    CalibrationDataReader,
+)
 from fedcore.neural_compressor.onnxrt.quantization.config import FRAMEWORK_NAME
 from fedcore.neural_compressor.onnxrt.utils.utility import algos_mapping
 
@@ -51,8 +57,12 @@ def _quantize(
     """
     registered_configs = config_registry.get_cls_configs()
     if isinstance(quant_config, dict):
-        quant_config = ComposableConfig.from_dict(quant_config, config_registry=registered_configs[FRAMEWORK_NAME])
-        logger.info(f"Parsed a config dict to construct the quantization config: {quant_config}.")
+        quant_config = ComposableConfig.from_dict(
+            quant_config, config_registry=registered_configs[FRAMEWORK_NAME]
+        )
+        logger.info(
+            f"Parsed a config dict to construct the quantization config: {quant_config}."
+        )
     else:
         assert isinstance(
             quant_config, BaseConfig
@@ -63,5 +73,9 @@ def _quantize(
     for algo_name, algo_func in algos_mapping.items():
         if _need_apply(quant_config, algo_name):
             logger.info(f"Start to apply {algo_name} on the model.")
-            q_model = algo_func(model_input, quant_config, calibration_data_reader=calibration_data_reader)
+            q_model = algo_func(
+                model_input,
+                quant_config,
+                calibration_data_reader=calibration_data_reader,
+            )
     return q_model

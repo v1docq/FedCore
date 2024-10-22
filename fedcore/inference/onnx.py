@@ -10,18 +10,15 @@ class ONNXInferenceModel(nn.Module):
         super().__init__(*args, **kwargs)
         self.model_name = model
         self.providers = [
-            'CUDAExecutionProvider',
-            'CPUExecutionProvider',
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider",
         ]
 
-        self.ort_session = ort.InferenceSession(
-            model,
-            providers=self.providers
-        )
+        self.ort_session = ort.InferenceSession(model, providers=self.providers)
 
     def forward(self, inputs):
         inputs = inputs.cpu()
-        return torch.Tensor(self.ort_session.run(None, {'input': inputs.numpy()}))
+        return torch.Tensor(self.ort_session.run(None, {"input": inputs.numpy()}))
 
     def to(self, device):
         # onnx runtime chooses it's own way

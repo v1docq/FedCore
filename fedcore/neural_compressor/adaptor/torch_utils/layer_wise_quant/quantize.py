@@ -57,13 +57,20 @@ def forward_wrapper(model, input, device="cpu"):
             output = model(**input)
         else:  # pragma: no cover
             for inp in input.keys():
-                input[inp] = input[inp].to(device) if isinstance(input[inp], torch.Tensor) else input[inp]
+                input[inp] = (
+                    input[inp].to(device)
+                    if isinstance(input[inp], torch.Tensor)
+                    else input[inp]
+                )
             output = model(**input)
     elif isinstance(input, list) or isinstance(input, tuple):  # pragma: no cover
         if device == "cpu":
             output = model(*input)
         else:  # pragma: no cover
-            input = [inp.to(device) if isinstance(inp, torch.Tensor) else inp for inp in input]  # pylint: disable=E1133
+            input = [
+                inp.to(device) if isinstance(inp, torch.Tensor) else inp
+                for inp in input
+            ]  # pylint: disable=E1133
             output = model(*input)
     else:  # pragma: no cover
         if device == "cpu" or not isinstance(input, torch.Tensor):
@@ -108,7 +115,9 @@ class LayerWiseQuant:
 
         self.smooth_quant = smooth_quant
         self.alpha = float(alpha)
-        assert self.alpha > 0 and self.alpha < 1, f"alpha should be in range (0, 1), but got {alpha}"
+        assert (
+            self.alpha > 0 and self.alpha < 1
+        ), f"alpha should be in range (0, 1), but got {alpha}"
         if smooth_quant:
             self.init_sq()
 
@@ -119,7 +128,11 @@ class LayerWiseQuant:
         op_types = ["Linear"]
         sq = TorchSmoothQuant(self.fp32_model, self.calib_data)
         sq._check_need_calibration(
-            self.alpha, percentile=99.999, op_types=["Linear", "Conv2d"], scales_per_op=False, calib_iter=100
+            self.alpha,
+            percentile=99.999,
+            op_types=["Linear", "Conv2d"],
+            scales_per_op=False,
+            calib_iter=100,
         )
         absorb_to_layer = sq._get_all_layer_names()
         assert absorb_to_layer is not None, "if you are using huggingface model,"
@@ -171,11 +184,19 @@ class LayerWiseQuant:
                 self.q_model(calib_data)
             else:
                 try:
-                    pbar = tqdm(enumerate(calib_data), total=len(calib_data), desc="layer_wise quant")
+                    pbar = tqdm(
+                        enumerate(calib_data),
+                        total=len(calib_data),
+                        desc="layer_wise quant",
+                    )
                     for idx, input in pbar:
                         forward_wrapper(self.q_model, input, self.device)
                 except Exception:  # pragma: no cover
-                    pbar = tqdm(enumerate(calib_data), total=len(calib_data), desc="layer_wise quant")
+                    pbar = tqdm(
+                        enumerate(calib_data),
+                        total=len(calib_data),
+                        desc="layer_wise quant",
+                    )
                     for idx, (input, label) in pbar:
                         forward_wrapper(self.q_model, input, self.device)
         self._remove_hooks()
@@ -202,7 +223,9 @@ class LayerWiseQuant:
     def _regist_hooks(self):
         def forward_pre_hook(name):
             def load_value(param_name):
-                if "lm_head" in param_name and getattr(self.q_model.config, "tie_word_embeddings", True):
+                if "lm_head" in param_name and getattr(
+                    self.q_model.config, "tie_word_embeddings", True
+                ):
                     input_embeddings = self.q_model.get_input_embeddings()
                     for name, module in self.modules:
                         if module == input_embeddings:
@@ -211,7 +234,9 @@ class LayerWiseQuant:
                 if "pytorch_model.bin.index.json" in os.listdir(self.path):
                     value = load_tensor_from_shard(self.path, param_name, prefix)
                 else:
-                    value = load_tensor(os.path.join(self.path, "pytorch_model.bin"), param_name, prefix)
+                    value = load_tensor(
+                        os.path.join(self.path, "pytorch_model.bin"), param_name, prefix
+                    )
                 return value
 
             def hook(module, input):
@@ -222,7 +247,9 @@ class LayerWiseQuant:
                     if isinstance(module, QDQLayer):
                         for n, _ in module.module.named_parameters():
                             value = load_value(name + "." + n)
-                            set_module_tensor_to_device(self.q_model, name + ".module." + n, self.device, value)
+                            set_module_tensor_to_device(
+                                self.q_model, name + ".module." + n, self.device, value
+                            )
                         if self.smooth_quant:
                             self._adjust_parameters(module, name, input[0])
                         prepare(module, inplace=True)
@@ -231,7 +258,9 @@ class LayerWiseQuant:
                             param_name = name + "." + n
                             value = load_value(param_name)
                             # from hf transformers.modeling_utils._load_state_dict_into_meta_model
-                            set_module_tensor_to_device(self.q_model, param_name, self.device, value)
+                            set_module_tensor_to_device(
+                                self.q_model, param_name, self.device, value
+                            )
 
             return hook
 
@@ -245,7 +274,9 @@ class LayerWiseQuant:
             return hook
 
         for name, module in self.modules:
-            self._handle[name] = [module.register_forward_pre_hook(forward_pre_hook(name))]
+            self._handle[name] = [
+                module.register_forward_pre_hook(forward_pre_hook(name))
+            ]
             self._handle[name] += [module.register_forward_hook(forward_hook(name))]
 
     def _remove_hooks(self, handles=None):
@@ -277,4 +308,6 @@ class LayerWiseQuant:
         file_path = os.path.join(weight_path, f"{module_name}.pt")
         state_dict = torch.load(file_path)
         for n, p in state_dict.items():
-            set_module_tensor_to_device(self.q_model, f"{module_name}.{n}", self.device, p)
+            set_module_tensor_to_device(
+                self.q_model, f"{module_name}.{n}", self.device, p
+            )
