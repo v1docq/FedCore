@@ -9,8 +9,8 @@ HERE = Path(__file__).parent.resolve()
 # The text of the README file
 NAME = 'fedcore'
 VERSION = '0.0.1'
-AUTHOR = 'NSS Lab'
-AUTHOR_EMAIL = 'itmo.nss.team@gmail.com'
+AUTHOR = 'Ilia Revin'
+AUTHOR_EMAIL = 'revine@inbox.ru'
 SHORT_DESCRIPTION = 'Federated learning core library'
 LONG_DESC_TYPE = 'text/x-rst'
 README = Path(HERE, 'README.rst').read_text(encoding='utf-8')
