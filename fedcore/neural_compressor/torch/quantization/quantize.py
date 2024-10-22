@@ -28,7 +28,9 @@ from fedcore.neural_compressor.torch.quantization.config import (
     StaticQuantConfig,
 )
 from fedcore.neural_compressor.torch.utils import is_ipex_available, logger
-from fedcore.neural_compressor.torch.utils.utility import algos_mapping
+from fedcore.neural_compressor.torch.utils.utility import (
+    algos_mapping,
+)
 
 FRAMEWORK_NAME = "torch"
 

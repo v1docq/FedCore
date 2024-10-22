@@ -19,7 +19,12 @@
 
 import numpy as np
 
-from fedcore.neural_compressor.compression.pruner.utils import safe_get_data, safe_get_shape, safe_set_data, torch
+from ..utils import (
+    safe_get_data,
+    safe_get_shape,
+    safe_set_data,
+    torch,
+)
 
 PRUNERS = {}
 

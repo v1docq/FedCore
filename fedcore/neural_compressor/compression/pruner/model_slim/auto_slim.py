@@ -18,11 +18,7 @@
 # limitations under the License.
 # model slim related
 
-from fedcore.neural_compressor.compression.pruner.model_slim.pattern_analyzer import Linear2LinearSearcher
-from fedcore.neural_compressor.compression.pruner.model_slim.pattern_analyzer import SelfMHASearcher
-from fedcore.neural_compressor.compression.pruner.model_slim.weight_slim import LinearCompressionIterator
-from fedcore.neural_compressor.compression.pruner.model_slim.weight_slim import MHACompression
-from fedcore.neural_compressor.utils import logger
+from ..utils import logger
 
 
 def model_slim(model, dataloader=None, round_multiplier=32):
@@ -45,6 +41,8 @@ def model_slim_ffn2(model, dataloader=None, round_multiplier=32):
         model: a sprase model.
         round_multiplier(int): the channel number after slimming should be multiple of this number.
     """
+    from .pattern_analyzer import Linear2LinearSearcher
+    from .weight_slim import LinearCompressionIterator
 
     logger.warning(
         "You are using model slim methods, some weight channels will be removed permanently."
@@ -63,6 +61,8 @@ def model_slim_mha(model, dataloader=None):
     Args:
         model: a sprase model.
     """
+    from .pattern_analyzer import SelfMHASearcher
+    from .weight_slim import MHACompression
 
     logger.warning(
         "You are using model slim methods, some attention heads will be removed permanently."
@@ -79,7 +79,7 @@ def model_slim_mha(model, dataloader=None):
 
 # auto slim config
 def parse_auto_slim_config(
-        model, dataloader=None, ffn2_sparsity=0.0, mha_sparsity=0.0, **kwargs
+    model, dataloader=None, ffn2_sparsity=0.0, mha_sparsity=0.0, **kwargs
 ):
     """Get model slim pruning configs."""
     auto_slim_configs = []
@@ -96,6 +96,8 @@ def parse_auto_slim_config(
 
 def generate_ffn2_pruning_config(model, dataloader, ffn2_sparsity, **kwargs):
     """Get consecutive linear layers pruning configs."""
+    from .pattern_analyzer import Linear2LinearSearcher
+
     searcher = Linear2LinearSearcher(model, dataloader)
     layers = searcher.search()
     # extract the second linear layer

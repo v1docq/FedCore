@@ -220,6 +220,7 @@ class TpeTuneStrategy(TuneStrategy):
         status = True
         tuning_history = self._find_self_tuning_history()
 
+
         tuning_space = self.tuning_space
         initial_op_tuning_cfg = {}
         for item in tuning_space.root_item.options:
@@ -228,7 +229,9 @@ class TpeTuneStrategy(TuneStrategy):
                 initial_op_tuning_cfg[item.name] = OpTuningConfig(
                     op_name, op_type, "fp32", tuning_space
                 )
-        tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         # step1. collect the ops that support static and dynamic
         quant_mode_wise_items = OrderedDict()
         query_order = ["static", "dynamic", "bf16", "fp16", "fp32"]

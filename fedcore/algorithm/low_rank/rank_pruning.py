@@ -1,9 +1,7 @@
-from math import floor
-
 import torch
-from joblib import cpu_count
-
 from fedcore.models.network_impl.layers import DecomposedConv2d
+from joblib import cpu_count
+from math import floor
 
 
 def rank_threshold_pruning(

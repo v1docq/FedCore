@@ -21,7 +21,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from fedcore.neural_compressor.compression.pruner.utils import safe_get_data, safe_get_shape, tf, torch
+from ..utils import safe_get_data, safe_get_shape, tf, torch
 
 PATTERNS = {}
 

@@ -23,6 +23,7 @@ from tensorflow.python.framework import dtypes, tensor_util
 from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
     GraphAnalyzer,
 )
+
 from ..graph_base import GraphRewriterBase
 
 

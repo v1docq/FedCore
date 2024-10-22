@@ -23,7 +23,9 @@ from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
     Operator,
     op_registry,
 )
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    attribute_to_kwarg,
+)
 
 
 @op_registry(op_types="LSTM")

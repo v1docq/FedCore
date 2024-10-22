@@ -22,11 +22,6 @@ from typing import Callable, List, Union
 
 import numpy as np
 
-from fedcore.neural_compressor import (
-    DistillationConfig,
-    QuantizationAwareTrainingConfig,
-    WeightPruningConfig,
-)
 from fedcore.neural_compressor.strategy.strategy import STRATEGIES
 
 from .adaptor import FRAMEWORKS
@@ -35,7 +30,7 @@ from .compression.callbacks import (
     PruningCallbacks,
     QuantizationAwareTrainingCallbacks,
 )
-from .config import _Config, options
+from .config import _Config, options, QuantizationAwareTrainingConfig, WeightPruningConfig, DistillationConfig
 from .metric import register_customer_metric
 from .model.model import Model
 from .utils import logger

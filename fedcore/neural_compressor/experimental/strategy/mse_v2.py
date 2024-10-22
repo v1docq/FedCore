@@ -97,7 +97,9 @@ class MSE_V2TuneStrategy(TuneStrategy):
             # Optype-wise tuning
             early_stop_tuning = True
             stage1_cnt = 0
-            quant_mode_wise_items["dynamic"] + quant_mode_wise_items["static"]
+            int8_ops = (
+                quant_mode_wise_items["dynamic"] + quant_mode_wise_items["static"]
+            )
             stage1_max = 2  # TODO set a more appropriate value
             op_wise_tuning_sampler = OpTypeWiseTuningSampler(
                 tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg

@@ -1,17 +1,17 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
-    d2_absolute_error_score,
-    explained_variance_score,
-    max_error,
-    median_absolute_error,
-)
-from sklearn.metrics import (
     mean_absolute_error,
     mean_absolute_percentage_error,
     mean_squared_error,
     mean_squared_log_error,
     r2_score,
+)
+from sklearn.metrics import (
+    d2_absolute_error_score,
+    explained_variance_score,
+    max_error,
+    median_absolute_error,
 )
 
 from fedcore.metrics.cv_metrics import CV_quality_metric

@@ -18,10 +18,7 @@
 """Built-in dataloaders, datasets, transforms, filters for multiple framework backends."""
 
 
-from fedcore.neural_compressor.data.dataloaders import DATALOADERS, DataLoader
-from fedcore.neural_compressor.data.dataloaders.dataloader import check_dataloader
-from fedcore.neural_compressor.data.dataloaders.default_dataloader import DefaultDataLoader
-from fedcore.neural_compressor.data.datasets import (
+from .datasets import (
     Datasets,
     Dataset,
     IterableDataset,
@@ -29,27 +26,31 @@ from fedcore.neural_compressor.data.datasets import (
     TensorflowImageRecord,
     COCORecordDataset,
 )
-from fedcore.neural_compressor.data.filters import FILTERS, Filter, filter_registry, LabelBalanceCOCORecordFilter
-from fedcore.neural_compressor.data.transforms import (
-    LabelShift,
-    BilinearImagenetTransform,
-    TensorflowResizeCropImagenetTransform,
-)
-from fedcore.neural_compressor.data.transforms import ParseDecodeCocoTransform, TensorflowShiftRescale
-from fedcore.neural_compressor.data.transforms import TFSquadV1PostTransform, TFSquadV1ModelZooPostTransform
-from fedcore.neural_compressor.data.transforms import (
+from .dataloaders import DATALOADERS, DataLoader
+from .dataloaders.dataloader import check_dataloader
+from .dataloaders.default_dataloader import DefaultDataLoader
+from .transforms import (
     TRANSFORMS,
     BaseTransform,
     ComposeTransform,
     transform_registry,
     Postprocess,
 )
-from fedcore.neural_compressor.data.transforms import (
+from .transforms import (
+    LabelShift,
+    BilinearImagenetTransform,
+    TensorflowResizeCropImagenetTransform,
+)
+from .transforms import TFSquadV1PostTransform, TFSquadV1ModelZooPostTransform
+from .transforms import (
     TensorflowResizeWithRatio,
     ResizeTFTransform,
     RescaleTFTransform,
     NormalizeTFTransform,
 )
+from .transforms import ParseDecodeCocoTransform, TensorflowShiftRescale
+
+from .filters import FILTERS, Filter, filter_registry, LabelBalanceCOCORecordFilter
 
 __all__ = [
     "check_dataloader",

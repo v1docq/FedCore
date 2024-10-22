@@ -1,6 +1,9 @@
 from fedot.core.data.data import InputData
 
-from fedcore.repository.constanst_repository import CROSS_ENTROPY, MSE
+from fedcore.repository.constanst_repository import (
+    CROSS_ENTROPY,
+    MSE,
+)
 
 
 def _get_loss_metric(input_data: InputData):

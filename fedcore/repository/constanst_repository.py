@@ -1,22 +1,22 @@
-from enum import Enum
-
 import torch
 import torch_pruning as tp
-import torchvision
-from fastai.torch_core import _has_mps
-from fastcore.basics import defaults
-from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-from fedot.core.pipelines.verification_rules import has_primary_nodes
-from fedot.core.repository.metrics_repository import QualityMetricsEnum
-from fedot.core.repository.tasks import Task, TaskTypesEnum
-from fedot.core.repository.tasks import TsForecastingParams
+from enum import Enum
 from golem.core.dag.verification_rules import (
     has_no_cycle,
     has_no_isolated_nodes,
     has_one_root,
 )
+from fedot.core.pipelines.verification_rules import (
+    has_primary_nodes,
+)
+from fastai.torch_core import _has_mps
+from fastcore.basics import defaults
 from golem.core.optimisers.genetic.operators.inheritance import GeneticSchemeTypesEnum
 from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
+import torchvision
+from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+from fedot.core.repository.metrics_repository import QualityMetricsEnum
+from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
 
@@ -32,6 +32,7 @@ from fedcore.metrics.api_metric import (
     calculate_classification_metric,
     calculate_computational_metric,
 )
+
 from fedcore.models.network_modules.losses import (
     CenterLoss,
     CenterPlusLoss,
@@ -44,6 +45,8 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
+
+from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 
 def default_device(device_type: str = "CPU"):

@@ -1,11 +1,8 @@
 from copy import deepcopy
 from typing import Dict, Optional
-
-import torch
-import torch_pruning as tp
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
-
+import torch_pruning as tp
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
@@ -22,6 +19,7 @@ from fedcore.repository.constanst_repository import (
     HOER_LOSS,
     ORTOGONAL_LOSS,
 )
+import torch
 from fedcore.repository.constanst_repository import default_device
 
 

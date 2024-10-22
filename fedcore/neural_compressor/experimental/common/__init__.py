@@ -17,12 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .criterion import Criterions
-from .dataloader import DataLoader, _generate_common_dataloader
-from .metric import Metric
 from .model import Model
-from .optimizer import Optimizers
+from .dataloader import DataLoader, _generate_common_dataloader
 from .postprocess import Postprocess
+from .metric import Metric
 
 __all__ = [
     "Model",

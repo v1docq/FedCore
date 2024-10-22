@@ -28,6 +28,7 @@ from fedcore.neural_compressor.adaptor.tf_utils.util import (
     version1_gt_version2,
     version1_lt_version2,
 )
+
 from ..graph_base import GraphRewriterBase
 
 

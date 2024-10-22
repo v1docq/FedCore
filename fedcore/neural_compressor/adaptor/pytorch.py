@@ -4045,6 +4045,7 @@ class PyTorch_IPEXAdaptor(TemplateAdaptor):
             None
         """
 
+
     def inspect_tensor(
         self,
         model,

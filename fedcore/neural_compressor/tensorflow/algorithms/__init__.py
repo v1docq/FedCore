@@ -13,5 +13,3 @@
 # limitations under the License.
 
 
-from fedcore.neural_compressor.tensorflow.algorithms.smoother import SmoothQuant
-from fedcore.neural_compressor.tensorflow.algorithms.static_quant import KerasAdaptor
