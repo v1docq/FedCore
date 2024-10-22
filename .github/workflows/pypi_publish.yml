@@ -29,9 +29,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
-      - name: Deploy source code
-        if: github.event_name == 'release'
-        uses: actions/upload-artifact@v4
-        with:
-          name: source-code-${{ matrix.python-version }}
-          path: .
+          repository_url: https://upload.pypi.org/legacy/
