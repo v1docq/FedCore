@@ -20,8 +20,13 @@ import tensorflow as tf
 from tensorflow.core.framework import node_def_pb2
 from tensorflow.python.framework import dtypes
 
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper as helper
-from fedcore.neural_compressor.adaptor.tf_utils.util import version1_eq_version2, version1_gt_version2, version1_lt_version2
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
+from fedcore.neural_compressor.adaptor.tf_utils.util import (
+    version1_gt_version2,
+    version1_lt_version2,
+)
 
 from .quantize_graph_base import QuantizeNodeBase
 
@@ -33,7 +38,8 @@ class FuseNodeStartWithPooling(QuantizeNodeBase):
         """Set quantized pooling node attributes."""
         pooling_type = (
             dtypes.quint8
-            if version1_lt_version2(tf.version.VERSION, "2.6.0") or self._find_relu_node(original_node)
+            if version1_lt_version2(tf.version.VERSION, "2.6.0")
+            or self._find_relu_node(original_node)
             else dtypes.qint8
         )
         helper.set_attr_dtype(quantized_op_node, "T", pooling_type)
@@ -52,7 +58,9 @@ class FuseNodeStartWithPooling(QuantizeNodeBase):
                 or version1_lt_version2(tf.version.VERSION, "2.6.0")
                 and self._find_relu_node(v.node)
             ):
-                self.eightbitize_single_input_tensor_node(v.node, self._add_pool_function)
+                self.eightbitize_single_input_tensor_node(
+                    v.node, self._add_pool_function
+                )
                 self.quantizable_node_names.append(v.node.name)
             else:
                 new_node = node_def_pb2.NodeDef()

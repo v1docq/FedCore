@@ -57,10 +57,14 @@ class SmoothQuantScaler:
             output_node_name: the concrete output weight node name
             w_i: distinguish between different output weight nodes on different branches when naming
         """
-        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+            GraphRewriterHelper as Helper,
+        )
 
         node_suffix = str(w_i)
-        mul_const_node = Helper.create_constant_node(input_node_name + "/scale_mul" + node_suffix, scale, tf.float32)
+        mul_const_node = Helper.create_constant_node(
+            input_node_name + "/scale_mul" + node_suffix, scale, tf.float32
+        )
         mul_node = Helper.create_node(
             "Mul",
             input_node_name + "_mul" + node_suffix,
@@ -69,7 +73,9 @@ class SmoothQuantScaler:
         Helper.set_attr_dtype(mul_node, "T", dtypes.float32)
         self.mul_list.append(mul_node.name)
         self.g_analyzer.add_node(mul_node, input_node_name, [output_node_name])
-        self.g_analyzer.add_node(mul_const_node, None, [input_node_name + "_mul" + node_suffix])
+        self.g_analyzer.add_node(
+            mul_const_node, None, [input_node_name + "_mul" + node_suffix]
+        )
 
     def _adjust_weight(self, scale, weight_node, original_weight):
         """In-place adjust weight by scale.
@@ -82,17 +88,27 @@ class SmoothQuantScaler:
         # scale: (ic,)
         original_shape = original_weight.shape
         if len(original_shape) == 4:  # (fh, hw, ic, oc)
-            W = np.transpose(original_weight, [0, 1, 3, 2])  # move input channel to last dimension
+            W = np.transpose(
+                original_weight, [0, 1, 3, 2]
+            )  # move input channel to last dimension
             W *= scale
             W = np.transpose(W, [0, 1, 3, 2])  # move input channel back
             weight_node.attr["value"].tensor.CopyFrom(tensor_util.make_tensor_proto(W))
-        elif len(original_shape) == 2:  # (ic, oc) if transpose_a == transpose_b == false
+        elif (
+            len(original_shape) == 2
+        ):  # (ic, oc) if transpose_a == transpose_b == false
             W = np.transpose(original_weight, [1, 0])
             W *= scale
             W = np.transpose(W, [1, 0])
             weight_node.attr["value"].tensor.CopyFrom(tensor_util.make_tensor_proto(W))
 
-    def transform(self, max_vals_per_channel, sq_weight_tensors, sq_weights_nodes, sq_weight_node_names):
+    def transform(
+        self,
+        max_vals_per_channel,
+        sq_weight_tensors,
+        sq_weights_nodes,
+        sq_weight_node_names,
+    ):
         """Apply scaling to weights and activations based on the maximum values per channel.
 
         Args:
@@ -123,7 +139,9 @@ class SmoothQuantScaler:
                         # activation: NHWC, also batch_shape + [in_height, in_width, in_channels]
                         tensor = np.abs(np.transpose(W, [0, 1, 3, 2]))
                         # reduce weight max to (in_channel, ), aligned with activation max
-                        W_max_per_in_channel = np.max(np.reshape(tensor, (-1, tensor.shape[-1])), axis=0)
+                        W_max_per_in_channel = np.max(
+                            np.reshape(tensor, (-1, tensor.shape[-1])), axis=0
+                        )
                     elif len(W.shape) == 2:  # matmul
                         # reduce weight max to (in_channel, ), aligned with activation max
                         tensor = np.abs(W)
@@ -137,7 +155,9 @@ class SmoothQuantScaler:
                         )
                     except ValueError as e:  # pragma: no cover
                         logger.info(e)
-                        logger.info("Skip smoothing the node: {}".format(cur_const_node.name))
+                        logger.info(
+                            "Skip smoothing the node: {}".format(cur_const_node.name)
+                        )
                         continue
                     # clip the scales that are too small
                     scale = np.clip(scale, a_min=1e-5, a_max=1e8)
@@ -146,7 +166,12 @@ class SmoothQuantScaler:
                     #     logger.info("skip smooth quant: {}".format(input_node_name))
                     #     continue
                     self._adjust_weight(scale, cur_const_node, W)
-                    self._adjust_activation(1 / scale, input_node_name, sq_weight_node_names[cur_const_node.name], w_i)
+                    self._adjust_activation(
+                        1 / scale,
+                        input_node_name,
+                        sq_weight_node_names[cur_const_node.name],
+                        w_i,
+                    )
         else:
             pass
         sq_graph_def = self.g_analyzer.dump_graph()
@@ -207,7 +232,9 @@ class SmoothQuantScalerLLM(SmoothQuantScaler):
             sq_weight_node_names[input_node_name] = curr_weights_node_names
         return sq_weight_tensors, sq_weight_node_names
 
-    def transform(self, max_vals_per_channel, sq_weight_tensor_dict, sq_target_node_names):
+    def transform(
+        self, max_vals_per_channel, sq_weight_tensor_dict, sq_target_node_names
+    ):
         """Apply scaling to weights and activations based on the maximum values per channel.
 
         Args:
@@ -218,7 +245,9 @@ class SmoothQuantScalerLLM(SmoothQuantScaler):
         self.g_analyzer = GraphAnalyzer()
         self.g_analyzer.graph = self.graph_def
         self.graph_info = self.g_analyzer.parse_graph()
-        sq_weight_tensors, sq_weight_node_names = self._parse_weight_dict(max_vals_per_channel, sq_weight_tensor_dict)
+        sq_weight_tensors, sq_weight_node_names = self._parse_weight_dict(
+            max_vals_per_channel, sq_weight_tensor_dict
+        )
         logger.info("Start scaling on model graph for Smooth Quantization.")
         if self.scales_per_op:
             # 1. obtain the smooth scale per op
@@ -237,7 +266,9 @@ class SmoothQuantScalerLLM(SmoothQuantScaler):
                         # activation: NHWC, also batch_shape + [in_height, in_width, in_channels]
                         tensor = np.abs(np.transpose(W, [0, 1, 3, 2]))
                         # reduce weight max to (in_channel, ), aligned with activation max
-                        W_max_per_in_channel = np.max(np.reshape(tensor, (-1, tensor.shape[-1])), axis=0)
+                        W_max_per_in_channel = np.max(
+                            np.reshape(tensor, (-1, tensor.shape[-1])), axis=0
+                        )
                     elif len(W.shape) == 2:  # matmul
                         # reduce weight max to (in_channel, ), aligned with activation max
                         tensor = np.abs(W)
@@ -246,12 +277,14 @@ class SmoothQuantScalerLLM(SmoothQuantScaler):
                         assert False, "not supported"
                     cur_weight_node_name = W_node_name_lst[w_i]
                     try:
-                        scale = np.power(activation_max_per_in_channel, self.alpha) / np.power(
-                            W_max_per_in_channel, (1 - self.alpha)
-                        )
+                        scale = np.power(
+                            activation_max_per_in_channel, self.alpha
+                        ) / np.power(W_max_per_in_channel, (1 - self.alpha))
                     except ValueError as e:  # pragma: no cover
                         logger.info(e)
-                        logger.info("Skip smoothing the node: {}".format(cur_weight_node_name))
+                        logger.info(
+                            "Skip smoothing the node: {}".format(cur_weight_node_name)
+                        )
                         continue
                     # clip the scales that are too small
                     scale = np.clip(scale, a_min=1e-5, a_max=1e8)
@@ -260,7 +293,12 @@ class SmoothQuantScalerLLM(SmoothQuantScaler):
                     #     logger.info("skip smooth quant: {}".format(input_node_name))
                     #     continue
                     self.sq_weight_scale_dict[cur_weight_node_name] = scale
-                    self._adjust_activation(1 / scale, input_node_name, sq_target_node_names[cur_weight_node_name], w_i)
+                    self._adjust_activation(
+                        1 / scale,
+                        input_node_name,
+                        sq_target_node_names[cur_weight_node_name],
+                        w_i,
+                    )
         else:
             pass
         sq_graph_def = self.g_analyzer.dump_graph()

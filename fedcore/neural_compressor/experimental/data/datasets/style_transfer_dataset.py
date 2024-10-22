@@ -64,7 +64,9 @@ class StyleTransferDataset(Dataset):
         self.style_folder = style_folder
         self.resize_shape = resize_shape
         self.crop_ratio = crop_ratio
-        self.content_images = glob.glob(os.path.join(content_folder, "*" + image_format))
+        self.content_images = glob.glob(
+            os.path.join(content_folder, "*" + image_format)
+        )
         self.style_images = glob.glob(os.path.join(style_folder, "*" + image_format))
         self.image_list = []
         for content in self.content_images:
@@ -84,7 +86,12 @@ class StyleTransferDataset(Dataset):
         style_image = Image.open(style_image)
         width, height = style_image.size
         crop_ratio = self.crop_ratio
-        crop_box = (crop_ratio * height, crop_ratio * width, (1 - crop_ratio) * height, (1 - crop_ratio) * width)
+        (
+            crop_ratio * height,
+            crop_ratio * width,
+            (1 - crop_ratio) * height,
+            (1 - crop_ratio) * width,
+        )
         content_image = np.asarray(content_image.resize(self.resize_shape))
         style_image = np.asarray(style_image.resize(self.resize_shape))
         if content_image.max() > 1.0:

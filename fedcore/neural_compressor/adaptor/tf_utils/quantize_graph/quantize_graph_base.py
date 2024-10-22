@@ -23,8 +23,13 @@ import tensorflow as tf
 from tensorflow.core.framework import graph_pb2
 from tensorflow.python.framework import dtypes
 
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper as helper
-from fedcore.neural_compressor.adaptor.tf_utils.util import version1_eq_version2, version1_gt_version2, version1_lt_version2
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
+from fedcore.neural_compressor.adaptor.tf_utils.util import (
+    version1_eq_version2,
+    version1_gt_version2,
+)
 
 
 class QuantizeGraphBase:
@@ -47,7 +52,6 @@ class QuantizeGraphBase:
 
         :return:
         """
-        pass
 
     def remove_dead_nodes(self, input_graph, output_names):
         """Removes nodes that are no longer needed for inference from the graph."""
@@ -80,7 +84,10 @@ class QuantizeNodeBase:
         self.remove_redundant_quant_flag = kwargs["remove_redundant_quant_flag"]
         self.fake_quant = kwargs["fake_quant"] if "fake_quant" in kwargs else False
         self.frame_info = kwargs["frame_info"] if "frame_info" in kwargs else None
-        self.per_channel, self.is_asymmetric = kwargs["op_wise_cfg"][0], kwargs["op_wise_cfg"][2]
+        self.per_channel, self.is_asymmetric = (
+            kwargs["op_wise_cfg"][0],
+            kwargs["op_wise_cfg"][2],
+        )
         self.op_wise_config_name_list = kwargs["op_wise_config_name_list"]
         self.weight_bit = kwargs["op_wise_cfg"][3]
         self.start_node_name = kwargs["start_node_name"]
@@ -99,11 +106,9 @@ class QuantizeNodeBase:
 
         :return: transformed graphdef
         """
-        pass
 
     def get_longest_fuse(self):
         """This is the virtual interface to be implemented by derived class."""
-        pass
 
     def _insert_dummy_biasadd(self, match_node_name, matched_node):  # pragma: no cover
         """Insert dummy BiasAdd op."""
@@ -116,7 +121,9 @@ class QuantizeNodeBase:
         if matmul_a_node.op == "Const" and matmul_b_node.op != "Const":
             pass
         else:
-            from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
+            from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+                GraphAnalyzer,
+            )
 
             g = GraphAnalyzer()
             g.graph = self.input_graph
@@ -137,26 +144,43 @@ class QuantizeNodeBase:
                 and matched_node.node.op.attr["data_format"].s == b"NCHW"
             ):
                 t_b_index = 1
-            elif matched_node.node.op == "Conv3D" and matched_node.node.attr["data_format"].s == b"NDHWC":
+            elif (
+                matched_node.node.op == "Conv3D"
+                and matched_node.node.attr["data_format"].s == b"NDHWC"
+            ):
                 t_b_index = 4
-            elif matched_node.node.op == "Conv3D" and matched_node.node.attr["data_format"].s == b"NCDHW":
+            elif (
+                matched_node.node.op == "Conv3D"
+                and matched_node.node.attr["data_format"].s == b"NCDHW"
+            ):
                 t_b_index = 1
-            bias_add_length = matmul_b_node.attr["value"].tensor.tensor_shape.dim[t_b_index].size
+            bias_add_length = (
+                matmul_b_node.attr["value"].tensor.tensor_shape.dim[t_b_index].size
+            )
 
             bias_add_content = [0.0] * bias_add_length
 
             bias_const_node = helper.create_constant_node(
-                bias_const_node_name, bias_add_content, dtypes.float32, shape=[bias_add_length]
+                bias_const_node_name,
+                bias_add_content,
+                dtypes.float32,
+                shape=[bias_add_length],
             )
-            bias_node = helper.create_node("BiasAdd", bias_node_name, [target_node_name, bias_const_node_name])
+            bias_node = helper.create_node(
+                "BiasAdd", bias_node_name, [target_node_name, bias_const_node_name]
+            )
             helper.set_attr_dtype(bias_node, "T", dtypes.float32)
 
             g.add_node(bias_node, target_node_name, next_node_names)
             g.add_node(bias_const_node, None, [bias_node_name])
             self.input_graph = g.dump_graph()
             self._parse_graph(self.input_graph)
-            new_match_node_name = match_node_name[:1] + [bias_node_name] + match_node_name[1:]
-            new_match_node_name = match_node_name[:1] + [bias_node_name] + match_node_name[1:]
+            new_match_node_name = (
+                match_node_name[:1] + [bias_node_name] + match_node_name[1:]
+            )
+            new_match_node_name = (
+                match_node_name[:1] + [bias_node_name] + match_node_name[1:]
+            )
 
             return new_match_node_name
 
@@ -171,13 +195,15 @@ class QuantizeNodeBase:
 
         for k, v in enumerate(self.op_list):
             if v in set(fusion[0] for fusion in patterns):
-                cur_node = self.node_name_mapping[list(self.node_name_mapping.keys())[k]].node
+                cur_node = self.node_name_mapping[
+                    list(self.node_name_mapping.keys())[k]
+                ].node
                 if cur_node.name != self.start_node_name:
                     continue
 
-                if ((v in ("Conv2D", "DepthwiseConv2dNative") and not self.enable_s8)) and not self._find_relu_node(
-                    cur_node
-                ):
+                if (
+                    (v in ("Conv2D", "DepthwiseConv2dNative") and not self.enable_s8)
+                ) and not self._find_relu_node(cur_node):
                     continue
 
                 for sub_rule in patterns:
@@ -201,7 +227,11 @@ class QuantizeNodeBase:
 
                         next_node_name = self.node_name_mapping[cur_node_name].output[0]
 
-                        is_shared_output = True if len(self.node_name_mapping[cur_node_name].output) > 1 else False
+                        is_shared_output = (
+                            True
+                            if len(self.node_name_mapping[cur_node_name].output) > 1
+                            else False
+                        )
 
                         add_op_quantizable = True
                         is_hardswish = False
@@ -211,7 +241,9 @@ class QuantizeNodeBase:
                                 is_hardswish = True
                                 count = count + 1
                                 if next_node_name.find("add") == -1:
-                                    next_node_name = self.node_name_mapping[cur_node_name].output[1]
+                                    next_node_name = self.node_name_mapping[
+                                        cur_node_name
+                                    ].output[1]
                             else:
                                 add_op_quantizable = False
                         next_node_op = self.node_name_mapping[next_node_name].node.op
@@ -222,12 +254,21 @@ class QuantizeNodeBase:
                             cur_node_index = next_node_inputs.index(cur_node_name)
 
                             for index, input_name in enumerate(next_node_inputs):
-                                node_type = self.node_name_mapping[helper.node_name_from_input(input_name)].node.op
-                                if input_name != cur_node_name and index < cur_node_index and node_type != "Dequantize":
+                                node_type = self.node_name_mapping[
+                                    helper.node_name_from_input(input_name)
+                                ].node.op
+                                if (
+                                    input_name != cur_node_name
+                                    and index < cur_node_index
+                                    and node_type != "Dequantize"
+                                ):
                                     add_op_quantizable = False
                                     break
 
-                        if add_op_quantizable and next_node_op == sub_rule[1 - sub_rule_len]:
+                        if (
+                            add_op_quantizable
+                            and next_node_op == sub_rule[1 - sub_rule_len]
+                        ):
                             if not is_shared_output:
                                 matched_node_name.append(next_node_name)
                                 sub_rule_len -= 1
@@ -257,7 +298,9 @@ class QuantizeNodeBase:
                             matched_node_name.clear()
                             self.logger.debug("Fail to match {}.".format(sub_rule))
                             break
-                        self.logger.debug("Match {} on nodes {}.".format(sub_rule, matched_node_name))
+                        self.logger.debug(
+                            "Match {} on nodes {}.".format(sub_rule, matched_node_name)
+                        )
                         return sub_rule, matched_node_name
 
         return None, None
@@ -296,15 +339,28 @@ class QuantizeNodeBase:
             node.op in ("Relu", "Relu6")
             or (
                 node.op.find("AndRelu") != -1
-                and ("alpha" not in node.attr or ("alpha" in node.attr and node.attr["alpha"].f == 0))
+                and (
+                    "alpha" not in node.attr
+                    or ("alpha" in node.attr and node.attr["alpha"].f == 0)
+                )
             )
         ) and (
             node.op != "Relu"
             or not self.new_api
             or not self.performance_only
-            or self.node_name_mapping[helper.node_name_from_input(node.input[0])].node.op.find("FusedBatchNorm") == -1
-            or self.node_name_mapping[helper.node_name_from_input(node.input[0])].node.attr["is_training"].b
-            or len(self.node_name_mapping[helper.node_name_from_input(node.input[0])].output) > 1
+            or self.node_name_mapping[
+                helper.node_name_from_input(node.input[0])
+            ].node.op.find("FusedBatchNorm")
+            == -1
+            or self.node_name_mapping[helper.node_name_from_input(node.input[0])]
+            .node.attr["is_training"]
+            .b
+            or len(
+                self.node_name_mapping[
+                    helper.node_name_from_input(node.input[0])
+                ].output
+            )
+            > 1
         ):
             return True
         elif "T" in node.attr and node.attr["T"].type in (dtypes.quint8, dtypes.uint8):
@@ -313,10 +369,15 @@ class QuantizeNodeBase:
             node.op.find("QuantizedConv") != -1
             or node.op.find("QuantizedDepthwiseConv") != -1
             or node.op.find("QuantizedMatMul") != -1
-        ) and (node.op.find("Relu") == -1 or ("alpha" in node.attr and node.attr["alpha"].f > 0)):
+        ) and (
+            node.op.find("Relu") == -1
+            or ("alpha" in node.attr and node.attr["alpha"].f > 0)
+        ):
             return False
         elif self._need_to_check(node.op):
-            input_node = self.node_name_mapping[helper.node_name_from_input(node.input[0])]
+            input_node = self.node_name_mapping[
+                helper.node_name_from_input(node.input[0])
+            ]
             return self._find_relu_node(input_node.node)
         else:
             return False
@@ -333,12 +394,17 @@ class QuantizeNodeBase:
 
     def _get_node_input(self, node_name):
         """Return control_input name, non-control_input node name."""
-        return [i for i in self.node_name_mapping[node_name].node.input if i[0] == "^"], [
-            i for i in self.node_name_mapping[node_name].node.input if i[0] != "^"
-        ]
+        return [
+            i for i in self.node_name_mapping[node_name].node.input if i[0] == "^"
+        ], [i for i in self.node_name_mapping[node_name].node.input if i[0] != "^"]
 
     def _intel_cpu_add_dequantize_result_node(
-        self, quantized_output_name, original_node_name, dtype=dtypes.quint8, min_tensor_index=1, performance_only=False
+        self,
+        quantized_output_name,
+        original_node_name,
+        dtype=dtypes.quint8,
+        min_tensor_index=1,
+        performance_only=False,
     ):
         """Add Dequantize node after the quantized node."""
         min_max_inputs = [
@@ -348,33 +414,51 @@ class QuantizeNodeBase:
         dequantize_name = original_node_name
 
         dequantize_node = helper.create_node(
-            "Dequantize", dequantize_name, [quantized_output_name, min_max_inputs[0], min_max_inputs[1]]
+            "Dequantize",
+            dequantize_name,
+            [quantized_output_name, min_max_inputs[0], min_max_inputs[1]],
         )
         helper.set_attr_dtype(dequantize_node, "T", dtype)
         if performance_only:
             helper.set_attr_string(dequantize_node, "mode", b"SCALED")
         else:
-            helper.set_attr_string(dequantize_node, "mode", b"MIN_FIRST" if self.is_asymmetric else b"SCALED")
+            helper.set_attr_string(
+                dequantize_node,
+                "mode",
+                b"MIN_FIRST" if self.is_asymmetric else b"SCALED",
+            )
         self.add_output_graph_node(dequantize_node)
 
     def eightbitize_single_input_tensor_node(self, original_node, add_op_function):
         """Quantize the single input tensor node."""
         quantized_op_name = original_node.name + "_eightbit_quantized"
         quantized_op_type = "Quantized" + original_node.op
-        if version1_gt_version2(tf.version.VERSION, "2.7.0") and original_node.op == "MaxPool3D":
+        if (
+            version1_gt_version2(tf.version.VERSION, "2.7.0")
+            and original_node.op == "MaxPool3D"
+        ):
             quantized_op_type = "_Quantized" + original_node.op
         all_input_names = self._add_eightbit_prologue_nodes(original_node.name)
-        quantized_op_node = helper.create_node(quantized_op_type, quantized_op_name, all_input_names)
+        quantized_op_node = helper.create_node(
+            quantized_op_type, quantized_op_name, all_input_names
+        )
         add_op_function(original_node, quantized_op_node)
         self.add_output_graph_node(quantized_op_node)
-        deq_type = dtypes.quint8 if self._find_relu_node(original_node) else dtypes.qint8
-        self._intel_cpu_add_dequantize_result_node(quantized_op_name, original_node.name, dtype=deq_type)
+        deq_type = (
+            dtypes.quint8 if self._find_relu_node(original_node) else dtypes.qint8
+        )
+        self._intel_cpu_add_dequantize_result_node(
+            quantized_op_name, original_node.name, dtype=deq_type
+        )
 
     def _add_eightbit_prologue_nodes(self, original_node):
         """Add quantized prologue nodes."""
         namespace_prefix = original_node + "_eightbit"
         reshape_dims_name, reduction_dims_name = self._add_common_quantization_nodes(
-            namespace_prefix, helper.node_name_from_input(self.node_name_mapping[original_node].node.input[0])
+            namespace_prefix,
+            helper.node_name_from_input(
+                self.node_name_mapping[original_node].node.input[0]
+            ),
         )
         input_names = []
         min_max_names = []
@@ -390,21 +474,36 @@ class QuantizeNodeBase:
                 input_node_name = helper.node_name_from_input(each_input_name)
                 if input_node_name in self.output_node_maps:
                     if self.output_node_maps[input_node_name].op == "Dequantize":
-                        dtype = dtypes.DType(self.output_node_maps[input_node_name].attr["T"].type)
-                    elif self._find_relu_node(self.node_name_mapping[original_node].node):
+                        dtype = dtypes.DType(
+                            self.output_node_maps[input_node_name].attr["T"].type
+                        )
+                    elif self._find_relu_node(
+                        self.node_name_mapping[original_node].node
+                    ):
                         dtype = dtypes.quint8
                     else:
                         dtype = dtypes.qint8
                 else:
                     dtype = (
                         dtypes.quint8
-                        if self._find_relu_node(self.node_name_mapping[original_node].node)
+                        if self._find_relu_node(
+                            self.node_name_mapping[original_node].node
+                        )
                         else dtypes.qint8
                     )
-                    if "FusedBatchNorm" in self.node_name_mapping[original_node].node.op:
+                    if (
+                        "FusedBatchNorm"
+                        in self.node_name_mapping[original_node].node.op
+                    ):
                         dtype = dtypes.qint8
-            quantize_input_name, min_input_name, max_input_name = self._eightbitize_input_to_node(
-                namespace_prefix, each_input_name, reshape_dims_name, reduction_dims_name, dtype=dtype
+            quantize_input_name, min_input_name, max_input_name = (
+                self._eightbitize_input_to_node(
+                    namespace_prefix,
+                    each_input_name,
+                    reshape_dims_name,
+                    reduction_dims_name,
+                    dtype=dtype,
+                )
             )
             input_names.append(quantize_input_name)
             min_max_names.append(min_input_name)
@@ -424,7 +523,9 @@ class QuantizeNodeBase:
         namespace_prefix = original_node + "_eightbit"
         reshape_dims_name, reduction_dims_name = self._add_common_quantization_nodes(
             namespace_prefix,
-            helper.node_name_from_input(self.node_name_mapping[original_node].node.input[0]),
+            helper.node_name_from_input(
+                self.node_name_mapping[original_node].node.input[0]
+            ),
             enter_node=enter_node,
         )
         input_names = []
@@ -439,21 +540,36 @@ class QuantizeNodeBase:
                 input_node_name = helper.node_name_from_input(enter_input_name)
                 if input_node_name in self.output_node_maps:
                     if self.output_node_maps[input_node_name].op == "Dequantize":
-                        dtype = dtypes.DType(self.output_node_maps[input_node_name].attr["T"].type)
-                    elif self._find_relu_node(self.node_name_mapping[original_node].node):
+                        dtype = dtypes.DType(
+                            self.output_node_maps[input_node_name].attr["T"].type
+                        )
+                    elif self._find_relu_node(
+                        self.node_name_mapping[original_node].node
+                    ):
                         dtype = dtypes.quint8
                     else:
                         dtype = dtypes.qint8
                 else:
                     dtype = (
                         dtypes.quint8
-                        if self._find_relu_node(self.node_name_mapping[original_node].node)
+                        if self._find_relu_node(
+                            self.node_name_mapping[original_node].node
+                        )
                         else dtypes.qint8
                     )
-                    if "FusedBatchNorm" in self.node_name_mapping[original_node].node.op:
+                    if (
+                        "FusedBatchNorm"
+                        in self.node_name_mapping[original_node].node.op
+                    ):
                         dtype = dtypes.qint8
-            quantize_input_name, min_input_name, max_input_name = self._eightbitize_input_to_node(
-                namespace_prefix, enter_input_name, reshape_dims_name, reduction_dims_name, dtype=dtype
+            quantize_input_name, min_input_name, max_input_name = (
+                self._eightbitize_input_to_node(
+                    namespace_prefix,
+                    enter_input_name,
+                    reshape_dims_name,
+                    reduction_dims_name,
+                    dtype=dtype,
+                )
             )
             input_names.append(quantize_input_name)
             min_max_names.append(min_input_name)
@@ -469,35 +585,51 @@ class QuantizeNodeBase:
                 all_input_names.append(original_input_name)
         return all_input_names
 
-    def _add_common_quantization_nodes(self, namespace_prefix, control_input_names=None, enter_node=None):
+    def _add_common_quantization_nodes(
+        self, namespace_prefix, control_input_names=None, enter_node=None
+    ):
         """Builds constant nodes needed for quantization of inputs."""
         reshape_dims_name = namespace_prefix + "_reshape_dims"
         reduction_dims_name = namespace_prefix + "_reduction_dims"
 
-        reshape_dims_node = helper.create_constant_node(reshape_dims_name, -1, dtypes.int32, [1])
+        reshape_dims_node = helper.create_constant_node(
+            reshape_dims_name, -1, dtypes.int32, [1]
+        )
 
         if enter_node:  # pragma: no cover
-            reshape_dims_enter_node = helper.create_node("Enter", reshape_dims_name + "_enter", [reshape_dims_name])
-            helper.set_attr_string(reshape_dims_enter_node, "frame_name", enter_node.attr["frame_name"].s)
+            reshape_dims_enter_node = helper.create_node(
+                "Enter", reshape_dims_name + "_enter", [reshape_dims_name]
+            )
+            helper.set_attr_string(
+                reshape_dims_enter_node, "frame_name", enter_node.attr["frame_name"].s
+            )
             helper.set_attr_dtype(reshape_dims_enter_node, "T", dtypes.int32)
             helper.set_attr_bool(reshape_dims_enter_node, "is_constant", True)
             helper.set_attr_int(
-                reshape_dims_enter_node, "parallel_iterations", enter_node.attr["parallel_iterations"].i
+                reshape_dims_enter_node,
+                "parallel_iterations",
+                enter_node.attr["parallel_iterations"].i,
             )
             self.add_output_graph_node(reshape_dims_enter_node)
 
         self.add_output_graph_node(reshape_dims_node)
-        reduction_dims_node = helper.create_constant_node(reduction_dims_name, 0, dtypes.int32, [1])
+        reduction_dims_node = helper.create_constant_node(
+            reduction_dims_name, 0, dtypes.int32, [1]
+        )
 
         if enter_node:  # pragma: no cover
             reduction_dims_enter_node = helper.create_node(
                 "Enter", reduction_dims_name + "_enter", [reduction_dims_name]
             )
-            helper.set_attr_string(reduction_dims_enter_node, "frame_name", enter_node.attr["frame_name"].s)
+            helper.set_attr_string(
+                reduction_dims_enter_node, "frame_name", enter_node.attr["frame_name"].s
+            )
             helper.set_attr_dtype(reduction_dims_enter_node, "T", dtypes.int32)
             helper.set_attr_bool(reduction_dims_enter_node, "is_constant", True)
             helper.set_attr_int(
-                reduction_dims_enter_node, "parallel_iterations", enter_node.attr["parallel_iterations"].i
+                reduction_dims_enter_node,
+                "parallel_iterations",
+                enter_node.attr["parallel_iterations"].i,
             )
             self.add_output_graph_node(reduction_dims_enter_node)
 
@@ -523,11 +655,17 @@ class QuantizeNodeBase:
         for node in graph.node:
             # each_node = self.node_details(node=node,  output=[])
             if node.name in self.node_name_mapping:
-                raise ValueError("Duplicate Node Found when _parse_graph, the node name is {}".format(node.name))
+                raise ValueError(
+                    "Duplicate Node Found when _parse_graph, the node name is {}".format(
+                        node.name
+                    )
+                )
             self.node_name_mapping[node.name] = self.node_details(node=node, output=[])
         for node_name in self.node_name_mapping:
             for each_input in self.node_name_mapping[node_name].node.input:
-                self.node_name_mapping[helper.node_name_from_input(each_input)].output.append(node_name)
+                self.node_name_mapping[
+                    helper.node_name_from_input(each_input)
+                ].output.append(node_name)
 
     def remove_redundant_quantization(self, old_graph):
         """Remove the redundant Quantize/QuantizeV2 nodes."""
@@ -545,7 +683,11 @@ class QuantizeNodeBase:
             dequantize_node_name = helper.node_name_from_input(node.input[0])
 
             assert dequantize_node_name in old_nodes_map, (
-                "Input node name '" + dequantize_node_name + "' not found in node '" + node.name + "'"
+                "Input node name '"
+                + dequantize_node_name
+                + "' not found in node '"
+                + node.name
+                + "'"
             )
 
             dequantize_node = old_nodes_map[dequantize_node_name]
@@ -565,7 +707,11 @@ class QuantizeNodeBase:
             is_min_right_type = min_node.op in ["Min", "Dequantize"]
             is_max_right_type = max_node.op in ["Max", "Dequantize"]
             if not is_min_right_type or not is_max_right_type:
-                self.logger.info("Not find expected types on inputs {}, {}.".format(min_node.op, max_node.op))
+                self.logger.info(
+                    "Not find expected types on inputs {}, {}.".format(
+                        min_node.op, max_node.op
+                    )
+                )
                 continue
             min_node_input_name = helper.node_name_from_input(min_node.input[0])
             max_node_input_name = helper.node_name_from_input(max_node.input[0])
@@ -579,17 +725,27 @@ class QuantizeNodeBase:
             else:
                 first_min_node_input = old_nodes_map[min_node_input_name]
                 if first_min_node_input.op == "Concat":
-                    second_min_node_name = helper.node_name_from_input(first_min_node_input.input[1])
+                    second_min_node_name = helper.node_name_from_input(
+                        first_min_node_input.input[1]
+                    )
                     second_min_node = old_nodes_map[second_min_node_name]
                     if second_min_node.op == "Min":
-                        second_min_node_input_name = helper.node_name_from_input(second_min_node.input[0])
-                        is_same_input = second_min_node_input_name == max_node_input_name
+                        second_min_node_input_name = helper.node_name_from_input(
+                            second_min_node.input[0]
+                        )
+                        is_same_input = (
+                            second_min_node_input_name == max_node_input_name
+                        )
             if not is_same_input:
-                self.logger.info("Different min/max inputs {}.".format(min_node_input_name))
+                self.logger.info(
+                    "Different min/max inputs {}.".format(min_node_input_name)
+                )
                 continue
             # We recognize this pattern, so mark the graph edges to be rewired to
             # route around it entirely, since we know it's a no-op.
-            dequantize_source_name = helper.node_name_from_input(dequantize_node.input[0])
+            dequantize_source_name = helper.node_name_from_input(
+                dequantize_node.input[0]
+            )
             node_tensor_name = helper.ensure_tensor_name_has_port(node.name)
             min_tensor_name = node.name + ":1"
             max_tensor_name = node.name + ":2"
@@ -616,10 +772,18 @@ class QuantizeNodeBase:
         return nodes_map
 
     def _add_quantize_down_nodes(
-        self, original_node, quantized_output_name, requantize_type=dtypes.quint8, is_relu6=False
+        self,
+        original_node,
+        quantized_output_name,
+        requantize_type=dtypes.quint8,
+        is_relu6=False,
     ):
         """Add quantize down nodes."""
-        quantized_outputs = [quantized_output_name, quantized_output_name + ":1", quantized_output_name + ":2"]
+        quantized_outputs = [
+            quantized_output_name,
+            quantized_output_name + ":1",
+            quantized_output_name + ":2",
+        ]
         if not self.fake_quant:
             # Add a RequantizationRange node for finding the min and max values.
             requant_range_node = helper.create_node(
@@ -642,7 +806,10 @@ class QuantizeNodeBase:
                 helper.set_attr_dtype(requant_range_node, "Tinput", dtypes.qint32)
 
             self.add_output_graph_node(requant_range_node)
-            min_max_inputs = [requant_range_node.name + ":0", requant_range_node.name + ":1"]
+            min_max_inputs = [
+                requant_range_node.name + ":0",
+                requant_range_node.name + ":1",
+            ]
         else:
             max_input_name = original_node.name + "_max"
             max_node = helper.create_constant_node(max_input_name, 1.0, dtypes.float32)
@@ -655,7 +822,11 @@ class QuantizeNodeBase:
             min_max_inputs = [min_input_name, max_input_name]
 
         requantize_node = helper.create_node(
-            "RequantizePerChannel" if self.per_channel or original_node.op == "DepthwiseConv2dNative" else "Requantize",
+            (
+                "RequantizePerChannel"
+                if self.per_channel or original_node.op == "DepthwiseConv2dNative"
+                else "Requantize"
+            ),
             original_node.name + "_eightbit_requantize",
             quantized_outputs + min_max_inputs,
         )
@@ -669,7 +840,12 @@ class QuantizeNodeBase:
         return requantize_node.name
 
     def _eightbitize_input_to_node(
-        self, namespace_prefix, original_input_name, reshape_dims_name, reduction_dims_name, dtype=dtypes.quint8
+        self,
+        namespace_prefix,
+        original_input_name,
+        reshape_dims_name,
+        reduction_dims_name,
+        dtype=dtypes.quint8,
     ):
         """Takes one float input to an op, and converts it to quantized form."""
         unique_input_name = helper.unique_node_name_from_input(original_input_name)
@@ -686,7 +862,9 @@ class QuantizeNodeBase:
             self.add_output_graph_node(max_node)
             quantize_input_name = namespace_prefix + "_quantize_" + unique_input_name
             quantize_input_node = helper.create_node(
-                "QuantizeV2", quantize_input_name, [original_input_name, min_input_name, max_input_name]
+                "QuantizeV2",
+                quantize_input_name,
+                [original_input_name, min_input_name, max_input_name],
             )
         else:
             reshape_input_name = namespace_prefix + "_reshape_" + unique_input_name
@@ -698,22 +876,32 @@ class QuantizeNodeBase:
             )
             helper.set_attr_dtype(reshape_input_node, "T", dtypes.float32)
             self.add_output_graph_node(reshape_input_node)
-            min_input_node = helper.create_node("Min", min_input_name, [reshape_input_name, reduction_dims_name])
+            min_input_node = helper.create_node(
+                "Min", min_input_name, [reshape_input_name, reduction_dims_name]
+            )
             helper.set_attr_dtype(min_input_node, "T", dtypes.float32)
             helper.set_attr_dtype(min_input_node, "Tidx", dtypes.int32)
             helper.set_attr_bool(min_input_node, "keep_dims", False)
             self.add_output_graph_node(min_input_node)
-            max_input_node = helper.create_node("Max", max_input_name, [reshape_input_name, reduction_dims_name])
+            max_input_node = helper.create_node(
+                "Max", max_input_name, [reshape_input_name, reduction_dims_name]
+            )
             helper.set_attr_dtype(max_input_node, "T", dtypes.float32)
             helper.set_attr_dtype(max_input_node, "Tidx", dtypes.int32)
             helper.set_attr_bool(max_input_node, "keep_dims", False)
             self.add_output_graph_node(max_input_node)
             quantize_input_node = helper.create_node(
-                "QuantizeV2", quantize_input_name, [original_input_name, min_input_name, max_input_name]
+                "QuantizeV2",
+                quantize_input_name,
+                [original_input_name, min_input_name, max_input_name],
             )
 
         helper.set_attr_dtype(quantize_input_node, "T", dtype)
-        helper.set_attr_string(quantize_input_node, "mode", b"MIN_FIRST" if self.is_asymmetric else b"SCALED")
+        helper.set_attr_string(
+            quantize_input_node,
+            "mode",
+            b"MIN_FIRST" if self.is_asymmetric else b"SCALED",
+        )
         if not self.is_asymmetric:
             helper.set_attr_string(quantize_input_node, "round_mode", b"HALF_TO_EVEN")
         # if FLAGS.model_name in ["wide_deep_large_ds"]:
@@ -727,10 +915,16 @@ class QuantizeNodeBase:
         self.add_output_graph_node(quantize_input_node)
         min_output_name = quantize_input_name + ":1"
         max_output_name = quantize_input_name + ":2"
-        self.quantized_node_dict[unique_input_name] = (quantize_input_name, min_output_name, max_output_name)
+        self.quantized_node_dict[unique_input_name] = (
+            quantize_input_name,
+            min_output_name,
+            max_output_name,
+        )
         return quantize_input_name, min_output_name, max_output_name
 
-    def _intel_cpu_quantize_weight_eightbit(self, parent, input_node, per_channel, enter_node=None):
+    def _intel_cpu_quantize_weight_eightbit(
+        self, parent, input_node, per_channel, enter_node=None
+    ):
         """Quantize weight node."""
         (
             qint8_const_node,

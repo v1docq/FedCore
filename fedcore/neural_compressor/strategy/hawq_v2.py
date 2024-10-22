@@ -18,9 +18,9 @@
 from collections import OrderedDict
 from copy import deepcopy
 
-from ..utils import logger
 from .strategy import TuneStrategy, strategy_registry
 from .utils.tuning_sampler import FallbackTuningSampler, OpTypeWiseTuningSampler
+from ..utils import logger
 
 
 @strategy_registry
@@ -39,10 +39,14 @@ class HAWQ_V2TuneStrategy(TuneStrategy):
             tune_config (dict): A dict containing the tuning configuration for quantization.
         """
         tuning_space = self.tuning_space
-        calib_size = tuning_space.root_item.get_option_by_name("calib_sampling_size").options[0]
+        calib_size = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options[0]
 
         # Initialize the tuning config for each op according to the quantization approach
-        op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = self.initial_tuning_cfg()
+        op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = (
+            self.initial_tuning_cfg()
+        )
         # Optype-wise tuning tuning items: the algorithm/scheme/granularity of activation(weight)
         early_stop_tuning = True
         stage1_cnt = 0
@@ -60,7 +64,9 @@ class HAWQ_V2TuneStrategy(TuneStrategy):
             op_tuning_cfg["calib_sampling_size"] = calib_size
             yield op_tuning_cfg
         # Start compute the hessian trace
-        logger.info("**************  Start compute the hessian trace  *****************")
+        logger.info(
+            "**************  Start compute the hessian trace  *****************"
+        )
         target_dtype = "fp32"
         hawq_v2_criterion = None
         strategy_kwargs = self.config.tuning_criterion.strategy_kwargs
@@ -75,7 +81,9 @@ class HAWQ_V2TuneStrategy(TuneStrategy):
             criterion=hawq_v2_criterion,
             enable_act=False,
         )
-        sorted_op_to_traces = dict(sorted(op_to_traces.items(), key=lambda item: item[1], reverse=True))
+        sorted_op_to_traces = dict(
+            sorted(op_to_traces.items(), key=lambda item: item[1], reverse=True)
+        )
         logger.info("**************  Hessian Trace  *****************")
         for op_name, trace in sorted_op_to_traces.items():
             logger.info(f"*** op: {op_name}, hessian trace : {trace}")
@@ -96,14 +104,18 @@ class HAWQ_V2TuneStrategy(TuneStrategy):
                     ordered_ops_tmp[op_name] = op_to_traces[op_trace_name]
 
         ordered_ops_tmp = sorted(
-            ordered_ops_tmp.keys(), key=lambda key: ordered_ops_tmp[key], reverse=self.higher_is_better
+            ordered_ops_tmp.keys(),
+            key=lambda key: ordered_ops_tmp[key],
+            reverse=self.higher_is_better,
         )
         # WA for add op type
         op_info_map = {}
         for op_info in list(initial_op_tuning_cfg.keys()):
             op_info_map[op_info[0]] = op_info  # op_name: (op_name, op_type)
         tmp_ordered_ops = [op_info_map[op_name] for op_name in ordered_ops_tmp]
-        op_dtypes = OrderedDict(zip(tmp_ordered_ops, [target_dtype] * len(ordered_ops_tmp)))
+        op_dtypes = OrderedDict(
+            zip(tmp_ordered_ops, [target_dtype] * len(ordered_ops_tmp))
+        )
 
         logger.info(f"Start to accumulate fallback to {target_dtype}.")
         initial_op_tuning_cfg = deepcopy(op_tuning_cfg)

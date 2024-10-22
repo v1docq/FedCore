@@ -101,7 +101,9 @@ class PytorchMxnetWrapDataset:  # pragma: no cover
 
     def __call__(self, transform=None, filter=None, *args, **kwargs):
         """Wrap the dataset for PyTorch and MXNet framework."""
-        return PytorchMxnetWrapFunction(self.datafunc, transform=transform, filter=filter, *args, **kwargs)
+        return PytorchMxnetWrapFunction(
+            self.datafunc, transform=transform, filter=filter, *args, **kwargs
+        )
 
 
 class PytorchMxnetWrapFunction:  # pragma: no cover
@@ -189,7 +191,9 @@ class Datasets(object):  # pragma: no cover
 
         x[i] is roughly equivalent to type(x).__getitem__(x, index)
         """
-        assert dataset_type in self.datasets.keys(), "dataset type only support {}".format(self.datasets.keys())
+        assert (
+            dataset_type in self.datasets.keys()
+        ), "dataset type only support {}".format(self.datasets.keys())
         return self.datasets[dataset_type]
 
 
@@ -320,7 +324,10 @@ def download_url(url, root, filename=None, md5=None):  # pragma: no cover
         except (urllib.error.URLError, IOError) as e:
             if url[:5] == "https":
                 url = url.replace("https:", "http:")
-                print("Failed download. Trying https -> http instead." " Downloading " + url + " to " + fpath)
+                print(
+                    "Failed download. Trying https -> http instead."
+                    " Downloading " + url + " to " + fpath
+                )
                 urllib.request.urlretrieve(url, fpath, reporthook=gen_bar_updater())
             else:
                 raise e
@@ -413,14 +420,18 @@ class CIFAR10(Dataset):  # pragma: no cover
         "md5": "5ff9c542aee3614f3951f8cda6e48888",
     }
 
-    def __init__(self, root, train=False, transform=None, filter=None, download=True):  # pragma: no cover
+    def __init__(
+        self, root, train=False, transform=None, filter=None, download=True
+    ):  # pragma: no cover
         """Initialize the attributes of class."""
         self.root = root
         if download:
             self.download()
 
         if not self._check_integrity():
-            raise RuntimeError("Dataset not found or corrupted. You can use download=True to download it")
+            raise RuntimeError(
+                "Dataset not found or corrupted. You can use download=True to download it"
+            )
         if train:
             downloaded_list = self.train_list
         else:
@@ -448,7 +459,8 @@ class CIFAR10(Dataset):  # pragma: no cover
         path = os.path.join(self.root, self.meta["filename"])
         if not check_integrity(path, self.meta["md5"]):
             raise RuntimeError(
-                "Dataset metadata file not found or corrupted." + " You can use download=True to download it"
+                "Dataset metadata file not found or corrupted."
+                + " You can use download=True to download it"
             )
         with open(path, "rb") as infile:
             data = pickle.load(infile, encoding="latin1")
@@ -525,7 +537,9 @@ class MXNetCIFAR10(CIFAR10):
         return (image, label)
 
 
-@dataset_registry(dataset_type="CIFAR10", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="CIFAR10", framework="tensorflow, tensorflow_itex", dataset_format=""
+)
 class TensorflowCIFAR10(CIFAR10):
     """The Tensorflow datasets for CIFAR10."""
 
@@ -620,7 +634,9 @@ class MXNetCIFAR100(CIFAR100):
         return (image, label)
 
 
-@dataset_registry(dataset_type="CIFAR100", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="CIFAR100", framework="tensorflow, tensorflow_itex", dataset_format=""
+)
 class TensorflowCIFAR100(CIFAR100):
     """The Tensorflow datasets for CIFAR100."""
 
@@ -681,7 +697,10 @@ class MNIST(Dataset):  # pragma: no cover
         "9 - nine",
     ]
     resource = [
-        ("https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz", "8a61469f7ea1b51cbae51d4f78837e45")
+        (
+            "https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz",
+            "8a61469f7ea1b51cbae51d4f78837e45",
+        )
     ]
 
     def __init__(self, root, train=False, transform=None, filter=None, download=True):
@@ -699,7 +718,9 @@ class MNIST(Dataset):  # pragma: no cover
         for file_name, checksum in self.resource:
             file_path = os.path.join(self.root, os.path.basename(file_name))
             if not os.path.exists(file_path):
-                raise RuntimeError("Dataset not found. You can use download=True to download it")
+                raise RuntimeError(
+                    "Dataset not found. You can use download=True to download it"
+                )
             with np.load(file_path, allow_pickle=True) as f:
                 if self.train:
                     self.data, self.targets = f["x_train"], f["y_train"]
@@ -770,7 +791,9 @@ class MXNetMNIST(MNIST):  # pragma: no cover
         return (image, label)
 
 
-@dataset_registry(dataset_type="MNIST", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="MNIST", framework="tensorflow, tensorflow_itex", dataset_format=""
+)
 class TensorflowMNIST(MNIST):  # pragma: no cover
     """The Tensorflow datasets for MNIST."""
 
@@ -818,7 +841,10 @@ class FashionMNIST(MNIST):  # pragma: no cover
     """
 
     resource = [
-        ("https://storage.googleapis.com/tensorflow/tf-keras-datasets/" + file_name, None)
+        (
+            "https://storage.googleapis.com/tensorflow/tf-keras-datasets/" + file_name,
+            None,
+        )
         for file_name in [
             "train-labels-idx1-ubyte.gz",
             "train-images-idx3-ubyte.gz",
@@ -827,7 +853,18 @@ class FashionMNIST(MNIST):  # pragma: no cover
         ]
     ]
 
-    classes = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"]
+    classes = [
+        "T-shirt/top",
+        "Trouser",
+        "Pullover",
+        "Dress",
+        "Coat",
+        "Sandal",
+        "Shirt",
+        "Sneaker",
+        "Bag",
+        "Ankle boot",
+    ]
 
     def read_data(self):
         """Read data from a file."""
@@ -882,7 +919,11 @@ class MXNetFashionMNIST(FashionMNIST):  # pragma: no cover
         return (image, label)
 
 
-@dataset_registry(dataset_type="FashionMNIST", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="FashionMNIST",
+    framework="tensorflow, tensorflow_itex",
+    dataset_format="",
+)
 class TensorflowFashionMNIST(FashionMNIST):  # pragma: no cover
     """The Tensorflow Dataset for FashionMNIST."""
 
@@ -1000,7 +1041,11 @@ class MXNetImageFolder(ImageFolder):  # pragma: no cover
         return (image, label)
 
 
-@dataset_registry(dataset_type="ImageFolder", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="ImageFolder",
+    framework="tensorflow, tensorflow_itex",
+    dataset_format="",
+)
 class Tensorflow(ImageFolder):  # pragma: no cover
     """The Tensorflow Dataset for image folder.
 
@@ -1044,7 +1089,11 @@ class Tensorflow(ImageFolder):  # pragma: no cover
             return (image, label)
 
 
-@dataset_registry(dataset_type="TFRecordDataset", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="TFRecordDataset",
+    framework="tensorflow, tensorflow_itex",
+    dataset_format="",
+)
 class TensorflowTFRecordDataset(IterableDataset):  # pragma: no cover
     """The Tensorflow TFRecord Dataset.
 
@@ -1064,14 +1113,22 @@ class TensorflowTFRecordDataset(IterableDataset):  # pragma: no cover
 
         file_names = gfile.Glob(root)
         ds = tf.data.Dataset.from_tensor_slices(file_names)
-        ds = ds.apply(parallel_interleave(tf.data.TFRecordDataset, cycle_length=len(file_names)))
+        ds = ds.apply(
+            parallel_interleave(tf.data.TFRecordDataset, cycle_length=len(file_names))
+        )
         if transform is not None:
             ds = ds.map(transform, num_parallel_calls=None)
-        ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)  # this number can be tuned
+        ds = ds.prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE
+        )  # this number can be tuned
         return ds
 
 
-@dataset_registry(dataset_type="ImageRecord", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="ImageRecord",
+    framework="tensorflow, tensorflow_itex",
+    dataset_format="",
+)
 class TensorflowImageRecord(IterableDataset):  # pragma: no cover
     """Tensorflow imageNet database in tf record format.
 
@@ -1092,31 +1149,43 @@ class TensorflowImageRecord(IterableDataset):  # pragma: no cover
 
     def __new__(cls, root, transform=None, filter=None):
         """Build a new object of TensorflowImageRecord class."""
-        from tensorflow.python.platform import gfile  # pylint: disable=no-name-in-module
+        from tensorflow.python.platform import (
+            gfile,
+        )  # pylint: disable=no-name-in-module
 
         glob_pattern = os.path.join(root, "*-*-of-*")
         file_names = gfile.Glob(glob_pattern)
         if not file_names:
-            raise ValueError("Found no files in --root matching: {}".format(glob_pattern))
+            raise ValueError(
+                "Found no files in --root matching: {}".format(glob_pattern)
+            )
 
         # pylint: disable=no-name-in-module
         from tensorflow.python.data.experimental import parallel_interleave
 
-        from fedcore.neural_compressor.data.transforms.imagenet_transform import ParseDecodeImagenet
+        from fedcore.neural_compressor.data.transforms.imagenet_transform import (
+            ParseDecodeImagenet,
+        )
 
         ds = tf.data.TFRecordDataset.list_files(file_names, shuffle=False)
-        ds = ds.apply(parallel_interleave(tf.data.TFRecordDataset, cycle_length=len(file_names)))
+        ds = ds.apply(
+            parallel_interleave(tf.data.TFRecordDataset, cycle_length=len(file_names))
+        )
 
         if transform is not None:
             transform.transform_list.insert(0, ParseDecodeImagenet())
         else:
             transform = ParseDecodeImagenet()
         ds = ds.map(transform, num_parallel_calls=None)
-        ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)  # this number can be tuned
+        ds = ds.prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE
+        )  # this number can be tuned
         return ds
 
 
-@dataset_registry(dataset_type="VOCRecord", framework="tensorflow, tensorflow_itex", dataset_format="")
+@dataset_registry(
+    dataset_type="VOCRecord", framework="tensorflow, tensorflow_itex", dataset_format=""
+)
 class TensorflowVOCRecord(IterableDataset):  # pragma: no cover
     """The Tensorflow PASCAL VOC 2012 database in tf record format.
 
@@ -1135,20 +1204,28 @@ class TensorflowVOCRecord(IterableDataset):  # pragma: no cover
 
     def __new__(cls, root, transform=None, filter=None):
         """Build a new object of TensorflowVOCRecord class."""
-        from tensorflow.python.platform import gfile  # pylint: disable=no-name-in-module
+        from tensorflow.python.platform import (
+            gfile,
+        )  # pylint: disable=no-name-in-module
 
         glob_pattern = os.path.join(root, "%s-*" % "val")
         file_names = gfile.Glob(glob_pattern)
         if not file_names:
-            raise ValueError("Found no files in --root matching: {}".format(glob_pattern))
+            raise ValueError(
+                "Found no files in --root matching: {}".format(glob_pattern)
+            )
 
         # pylint: disable=no-name-in-module
         from tensorflow.python.data.experimental import parallel_interleave
 
         ds = tf.data.TFRecordDataset.list_files(file_names, shuffle=False)
-        ds = ds.apply(parallel_interleave(tf.data.TFRecordDataset, cycle_length=len(file_names)))
+        ds = ds.apply(
+            parallel_interleave(tf.data.TFRecordDataset, cycle_length=len(file_names))
+        )
 
         if transform is not None:
             ds = ds.map(transform, num_parallel_calls=None)
-        ds = ds.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)  # this number can be tuned
+        ds = ds.prefetch(
+            buffer_size=tf.data.experimental.AUTOTUNE
+        )  # this number can be tuned
         return ds

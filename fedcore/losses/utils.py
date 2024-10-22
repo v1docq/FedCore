@@ -1,11 +1,12 @@
 from fedot.core.data.data import InputData
 
-from fedcore.repository.constanst_repository import CROSS_ENTROPY, MULTI_CLASS_CROSS_ENTROPY, MSE
+from fedcore.repository.constanst_repository import CROSS_ENTROPY, MSE
+
 
 def _get_loss_metric(input_data: InputData):
-    if input_data.task.task_type.value == 'classification':
+    if input_data.task.task_type.value == "classification":
         loss_fn = CROSS_ENTROPY() if input_data.num_classes == 2 else CROSS_ENTROPY()
-    elif input_data.task.task_type.value == 'regression':
+    elif input_data.task.task_type.value == "regression":
         loss_fn = MSE()
     else:
         loss_fn = None

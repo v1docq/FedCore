@@ -15,8 +15,6 @@
 
 import os
 
-import habana_frameworks.torch.core as htcore
-import habana_frameworks.torch.hpex
 import torch
 from torch.nn import functional as F
 
@@ -48,7 +46,9 @@ def fp8_linear_forward(input, weight, bias):
             input_scale_inv = torch.reciprocal(input_scale)
         else:
             input_scale, input_scale_inv = None, None
-        input = torch.ops.hpu.cast_to_fp8_v2(input, input_scale, False, False, DATA_TYPE)[0]
+        input = torch.ops.hpu.cast_to_fp8_v2(
+            input, input_scale, False, False, DATA_TYPE
+        )[0]
     else:
         # skip cast for input
         input_scale, input_scale_inv = None, None
@@ -60,7 +60,9 @@ def fp8_linear_forward(input, weight, bias):
             weight_scale_inv = torch.reciprocal(weight_scale)
         else:
             weight_scale, weight_scale_inv = None, None
-        weight = torch.ops.hpu.cast_to_fp8_v2(weight, weight_scale, False, False, DATA_TYPE)[0]
+        weight = torch.ops.hpu.cast_to_fp8_v2(
+            weight, weight_scale, False, False, DATA_TYPE
+        )[0]
     else:
         # skip cast for weight
         weight_scale, weight_scale_inv = None, None
@@ -90,7 +92,9 @@ def fp8_matmul(input1, input2):
             input1_scale_inv = torch.reciprocal(input1_scale)
         else:
             input1_scale, input1_scale_inv = None, None
-        input1 = torch.ops.hpu.cast_to_fp8_v2(input1, input1_scale, False, False, DATA_TYPE)[0]
+        input1 = torch.ops.hpu.cast_to_fp8_v2(
+            input1, input1_scale, False, False, DATA_TYPE
+        )[0]
     else:
         # skip cast for input1
         input1_scale, input1_scale_inv = None, None
@@ -102,7 +106,9 @@ def fp8_matmul(input1, input2):
             input2_scale_inv = torch.reciprocal(input2_scale)
         else:
             input2_scale, input2_scale_inv = None, None
-        input2 = torch.ops.hpu.cast_to_fp8_v2(input2, input2_scale, False, False, DATA_TYPE)[0]
+        input2 = torch.ops.hpu.cast_to_fp8_v2(
+            input2, input2_scale, False, False, DATA_TYPE
+        )[0]
     else:
         # skip cast for input2
         input2_scale, input2_scale_inv = None, None

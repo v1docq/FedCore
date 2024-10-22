@@ -21,7 +21,6 @@ from deprecated import deprecated
 from fedcore.neural_compressor.conf.config import Conf, NASConfig
 from fedcore.neural_compressor.utils import logger
 from fedcore.neural_compressor.utils.utility import LazyImport
-
 from .nas import NASBase
 from .nas_utils import nas_registry
 
@@ -78,7 +77,6 @@ class DyNAS(NASBase):
         # model_arch_proposition intrinsically contained in
         # pymoo.minimize API of search_manager.run_search method,
         # don't have to implement it explicitly.
-        pass
 
     def init_cfg(self, conf_fname_or_obj):
         """Initialize the configuration."""
@@ -90,7 +88,9 @@ class DyNAS(NASBase):
             conf_fname_or_obj.validate()
             self.conf = conf_fname_or_obj.usr_cfg
         else:  # pragma: no cover
-            raise NotImplementedError("Please provide a str path to the config file or an object of NASConfig.")
+            raise NotImplementedError(
+                "Please provide a str path to the config file or an object of NASConfig."
+            )
         # self.init_search_cfg(self.conf.nas)
         assert "dynas" in self.conf.nas, "Must specify dynas section."
         dynas_config = self.conf.nas.dynas

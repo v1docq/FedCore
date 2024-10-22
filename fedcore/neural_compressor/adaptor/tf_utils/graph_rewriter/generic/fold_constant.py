@@ -21,9 +21,11 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.platform import tf_logging
 
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer, GraphRewriterHelper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphAnalyzer,
+    GraphRewriterHelper,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
-
 from ..graph_base import GraphRewriterBase
 
 
@@ -76,11 +78,15 @@ class GraphFoldConstantOptimizer(GraphRewriterBase):
                 for index, input in enumerate(end_node.input):
                     # broadcast if needed
                     input_value = self._fold_value(input)
-                    input_type = input_value.dtype
+                    input_value.dtype
                     if can_broadcast(fold_value, input_value):
                         fold_value = fold_value * input_value
                     else:
-                        raise ValueError("input {} of node {} can't be broadcast".format(input.name, end_node.name))
+                        raise ValueError(
+                            "input {} of node {} can't be broadcast".format(
+                                input.name, end_node.name
+                            )
+                        )
                 return fold_value.astype(first_type)
             elif end_node.op == "Add" or end_node.op == "AddV2":
                 first_value = self._fold_value(list(end_node.input)[0])
@@ -92,7 +98,11 @@ class GraphFoldConstantOptimizer(GraphRewriterBase):
                     if can_broadcast(fold_value, input_value):
                         fold_value = fold_value + input_value
                     else:
-                        raise ValueError("input {} of node {} can't be broadcast".format(input.name, end_node.name))
+                        raise ValueError(
+                            "input {} of node {} can't be broadcast".format(
+                                input.name, end_node.name
+                            )
+                        )
                 return fold_value.astype(first_type)
             elif end_node.op == "Rsqrt":
                 return 1 / np.sqrt(self._fold_value(end_node.input[0]))
@@ -112,7 +122,11 @@ class GraphFoldConstantOptimizer(GraphRewriterBase):
                     if can_broadcast(fold_value, input_value):
                         fold_value = fold_value + (-1) ** index * input_value
                     else:
-                        raise ValueError("input {} of node {} can't be broadcast".format(input.name, end_node.name))
+                        raise ValueError(
+                            "input {} of node {} can't be broadcast".format(
+                                input.name, end_node.name
+                            )
+                        )
                 return fold_value.astype(first_type)
             else:
                 tf_logging.info(
@@ -175,7 +189,9 @@ class GraphFoldConstantOptimizer(GraphRewriterBase):
                     new_constant_node = GraphRewriterHelper.create_constant_node(
                         node_name + "_const", fold_value, fold_type
                     )
-                    self.graph_analyzer.replace_constant_graph_with_constant_node(new_constant_node, node_name)
+                    self.graph_analyzer.replace_constant_graph_with_constant_node(
+                        new_constant_node, node_name
+                    )
 
         output_graph_def = self.graph_analyzer.dump_graph()
 

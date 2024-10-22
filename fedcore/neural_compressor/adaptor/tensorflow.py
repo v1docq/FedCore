@@ -35,7 +35,6 @@ from ..utils.utility import (
     LazyImport,
     Statistics,
     dump_elapsed_time,
-    singleton,
     version1_eq_version2,
     version1_gte_version2,
     version1_lt_version2,
@@ -93,7 +92,9 @@ class TensorFlowAdaptor(Adaptor):
         self.device = self.framework_specific_info["device"]
         self.work_dir = os.path.abspath(self.framework_specific_info["workspace_path"])
         self.recipes = deep_get(self.framework_specific_info, "recipes", {})
-        self.performance_only = deep_get(self.framework_specific_info, "performance_only", False)
+        self.performance_only = deep_get(
+            self.framework_specific_info, "performance_only", False
+        )
         self.use_bf16 = deep_get(self.framework_specific_info, "use_bf16", False)
         self.backend = self.framework_specific_info["backend"]
         self.format = self.framework_specific_info["format"]
@@ -108,8 +109,12 @@ class TensorFlowAdaptor(Adaptor):
         self.smooth_quant_mul_ops = []
         self.dump_times = 0  # for tensorboard
 
-        cfg_yaml_name = "{}.yaml".format(self.__class__.__name__[: -len("Adaptor")].lower())
-        self.itex_mode = self.backend == "itex" or cfg_yaml_name == "tensorflow_itex.yaml"
+        cfg_yaml_name = "{}.yaml".format(
+            self.__class__.__name__[: -len("Adaptor")].lower()
+        )
+        self.itex_mode = (
+            self.backend == "itex" or cfg_yaml_name == "tensorflow_itex.yaml"
+        )
 
         if self.itex_mode:
             self._check_itex()
@@ -121,11 +126,12 @@ class TensorFlowAdaptor(Adaptor):
         )
 
         import tensorflow as tf
-        from pkg_resources import parse_version
 
         self.new_api = tf.version.VERSION in spr_base_verions
         self.qdq_enabled = self.itex_mode or self.format == "QDQ" or self.new_api
-        self.op_wise_sequences = self.query_handler.get_eightbit_patterns(self.qdq_enabled)
+        self.op_wise_sequences = self.query_handler.get_eightbit_patterns(
+            self.qdq_enabled
+        )
 
         self.fp32_results = []
         self.fp32_preds_as_label = False
@@ -139,7 +145,7 @@ class TensorFlowAdaptor(Adaptor):
 
     def _check_itex(self):
         try:
-            import intel_extension_for_tensorflow
+            pass
         except:
             raise ImportError(
                 "The Intel® Extension for TensorFlow is not installed. "
@@ -167,7 +173,16 @@ class TensorFlowAdaptor(Adaptor):
         self.hvd.init()
 
     @dump_elapsed_time(customized_msg="Model training")
-    def train(self, model, dataloader, optimizer_tuple, criterion_tuple, hooks, postprocess, **kwargs):
+    def train(
+        self,
+        model,
+        dataloader,
+        optimizer_tuple,
+        criterion_tuple,
+        hooks,
+        postprocess,
+        **kwargs,
+    ):
         """Model training API.
 
         Args:
@@ -198,7 +213,9 @@ class TensorFlowAdaptor(Adaptor):
         callbacks = kwargs["kwargs"].get("callbacks", None)
         execution_mode = kwargs["kwargs"].get("execution_mode", None)
         distributed = getattr(dataloader, "distributed", False)
-        from fedcore.neural_compressor.compression.distillation.criterions import TensorflowKnowledgeDistillationLoss
+        from fedcore.neural_compressor.compression.distillation.criterions import (
+            TensorflowKnowledgeDistillationLoss,
+        )
 
         if isinstance(criterion, TensorflowKnowledgeDistillationLoss):
             input_model = model._model
@@ -234,15 +251,21 @@ class TensorFlowAdaptor(Adaptor):
                 loss_value = hooks["on_after_compute_loss"](x, y_, loss_value)
             tape = self.hvd.DistributedGradientTape(tape) if distributed else tape
             # Get gradient
-            grads = tape.gradient(loss_value, input_model.trainable_variables)  # pylint: disable=no-member
+            grads = tape.gradient(
+                loss_value, input_model.trainable_variables
+            )  # pylint: disable=no-member
             # Optimize the model
-            optimizer.apply_gradients(zip(grads, input_model.trainable_variables))  # pylint: disable=no-member
+            optimizer.apply_gradients(
+                zip(grads, input_model.trainable_variables)
+            )  # pylint: disable=no-member
             if distributed and first_batch:
                 self.hvd.broadcast_variables(input_model.variables, root_rank=0)
                 self.hvd.broadcast_variables(optimizer.variables(), root_rank=0)
             return loss_value
 
-        training_step = training_step if execution_mode == "eager" else tf.function(training_step)
+        training_step = (
+            training_step if execution_mode == "eager" else tf.function(training_step)
+        )
         if start_epochs is not None and end_epochs is not None:
             epochs = end_epochs - start_epochs
         for epoch in range(epochs):
@@ -270,7 +293,9 @@ class TensorFlowAdaptor(Adaptor):
                         epoch + 1, self.hvd.allgather_object(self.hvd.rank())
                     )
                 )
-            logger.info("Epoch {:03d}: Loss: {:.3f}".format(epoch + 1, epoch_loss_avg.result()))
+            logger.info(
+                "Epoch {:03d}: Loss: {:.3f}".format(epoch + 1, epoch_loss_avg.result())
+            )
 
         hooks["on_train_end"]()  # on_train_end hook
         model._sess = None
@@ -280,7 +305,10 @@ class TensorFlowAdaptor(Adaptor):
                     # Update the input model with pruned weights manually due to keras API limitation.
                     input_model.save(model._model)
                 rank_list = self.hvd.allgather_object(self.hvd.rank())
-                logger.info(f"rank 0 has saved the pruned model to '{model._model}'," f"all ranks {rank_list} ready.")
+                logger.info(
+                    f"rank 0 has saved the pruned model to '{model._model}',"
+                    f"all ranks {rank_list} ready."
+                )
             else:
                 input_model.save(model._model)
         else:
@@ -382,7 +410,9 @@ class TensorFlowAdaptor(Adaptor):
 
                 shutil.rmtree(temp_dir, ignore_errors=True)
             # Create the writer using TF2.x APIs to handle eager executions
-            writer = tf.summary.create_file_writer(temp_dir)  # pylint: disable=no-member
+            writer = tf.summary.create_file_writer(
+                temp_dir
+            )  # pylint: disable=no-member
             with writer.as_default():
                 tf.summary.graph(model.graph)  # pylint: disable=no-member
 
@@ -409,12 +439,22 @@ class TensorFlowAdaptor(Adaptor):
                     if node.op.find("Sum") != -1:
                         out_min = -5
                         out_max = -4
-                    q_out_min = graph_info[node.input[out_min]].node.attr["value"].tensor.float_val[0]
-                    q_out_max = graph_info[node.input[out_max]].node.attr["value"].tensor.float_val[0]
+                    q_out_min = (
+                        graph_info[node.input[out_min]]
+                        .node.attr["value"]
+                        .tensor.float_val[0]
+                    )
+                    q_out_max = (
+                        graph_info[node.input[out_max]]
+                        .node.attr["value"]
+                        .tensor.float_val[0]
+                    )
                     q_node_scale[node.name] = (node.op, q_out_min, q_out_max)
                     int8_inspect_node_name.append(node.name)
                 # Inspect weights, bias. Need further optimize
-                if node.op == "Const" and graph_info[graph_info[node.name].outputs[0]].node.op in [
+                if node.op == "Const" and graph_info[
+                    graph_info[node.name].outputs[0]
+                ].node.op in [
                     "Conv2D",
                     "DepthwiseConv2dNative",
                     "MatMul",
@@ -422,7 +462,9 @@ class TensorFlowAdaptor(Adaptor):
                     "_MklFusedInstanceNorm",
                     "BiasAdd",
                 ]:
-                    const_value = tensor_util.MakeNdarray(node.attr.get("value").tensor).astype(np.float32)
+                    const_value = tensor_util.MakeNdarray(
+                        node.attr.get("value").tensor
+                    ).astype(np.float32)
                     self._log_histogram(writer, node.name, const_value)
 
             outputs.extend(fp32_inspect_node_name)
@@ -434,13 +476,20 @@ class TensorFlowAdaptor(Adaptor):
             for metric in metrics:
                 metric.reset()
             self.fp32_preds_as_label = any(
-                [hasattr(metric, "compare_label") and not metric.compare_label for metric in metrics]
+                [
+                    hasattr(metric, "compare_label") and not metric.compare_label
+                    for metric in metrics
+                ]
             )
 
         origin_output_tensor_names = model.output_tensor_names
         model.output_tensor_names = outputs
         input_tensor = model.input_tensor
-        output_tensor = model.output_tensor if len(model.output_tensor) > 1 else model.output_tensor[0]
+        output_tensor = (
+            model.output_tensor
+            if len(model.output_tensor) > 1
+            else model.output_tensor[0]
+        )
         logger.info("Start to evaluate the TensorFlow model.")
 
         def eval_func(dataloader):
@@ -449,7 +498,11 @@ class TensorFlowAdaptor(Adaptor):
                 # dataloader should keep the order and len of inputs same with input_tensor
                 if len(input_tensor) == 1:
                     feed_dict = {}
-                    if isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict):
+                    if (
+                        isinstance(inputs, dict)
+                        or isinstance(inputs, OrderedDict)
+                        or isinstance(inputs, UserDict)
+                    ):
                         for name in inputs:
                             for tensor in input_tensor:
                                 pos = tensor.name.rfind(":")
@@ -458,11 +511,19 @@ class TensorFlowAdaptor(Adaptor):
                                     feed_dict[tensor] = inputs[name]
                                     break
                     else:
-                        feed_dict = {input_tensor[0]: inputs}  # get raw tensor using index [0]
+                        feed_dict = {
+                            input_tensor[0]: inputs
+                        }  # get raw tensor using index [0]
                 else:
-                    assert len(input_tensor) == len(inputs), "inputs len must equal with input_tensor"
+                    assert len(input_tensor) == len(
+                        inputs
+                    ), "inputs len must equal with input_tensor"
                     feed_dict = {}
-                    if isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict):
+                    if (
+                        isinstance(inputs, dict)
+                        or isinstance(inputs, OrderedDict)
+                        or isinstance(inputs, UserDict)
+                    ):
                         for name in inputs:
                             for tensor in input_tensor:
                                 pos = tensor.name.rfind(":")
@@ -475,7 +536,12 @@ class TensorFlowAdaptor(Adaptor):
 
                 if model.iter_op:
                     predictions = iterator_sess_run(
-                        model.sess, model.iter_op, feed_dict, output_tensor, iteration, measurer
+                        model.sess,
+                        model.iter_op,
+                        feed_dict,
+                        output_tensor,
+                        iteration,
+                        measurer,
                     )
                 elif measurer is not None:
                     measurer.start()
@@ -485,15 +551,26 @@ class TensorFlowAdaptor(Adaptor):
                     predictions = model.sess.run(output_tensor, feed_dict)
 
                 if self.fp32_preds_as_label:
-                    self.fp32_results.append(predictions) if fp32_baseline else results.append(predictions)
+                    (
+                        self.fp32_results.append(predictions)
+                        if fp32_baseline
+                        else results.append(predictions)
+                    )
 
                 # Inspect node output, just get 1st iteration output tensors for now
                 if idx == 0 and tensorboard:
                     for index, node_name in enumerate(outputs):
                         tensor = predictions[index]
                         if node_name in int8_inspect_node_name:
-                            tensor = Dequantize(predictions[index], q_node_scale[node_name])
-                        self._log_histogram(writer, node_name + output_postfix, tensor.astype(np.float32), idx)
+                            tensor = Dequantize(
+                                predictions[index], q_node_scale[node_name]
+                            )
+                        self._log_histogram(
+                            writer,
+                            node_name + output_postfix,
+                            tensor.astype(np.float32),
+                            idx,
+                        )
                     writer.close()
                 if isinstance(predictions, list):
                     if len(origin_output_tensor_names) == 1:
@@ -516,7 +593,11 @@ class TensorFlowAdaptor(Adaptor):
             try:
                 results = eval_func(dataloader)
             except Exception:  # pragma: no cover
-                logger.warning("Fail to forward with batch size={}, set to {} now.".format(dataloader.batch_size, 1))
+                logger.warning(
+                    "Fail to forward with batch size={}, set to {} now.".format(
+                        dataloader.batch_size, 1
+                    )
+                )
                 dataloader.batch(1)
                 results = eval_func(dataloader)
         else:  # pragma: no cover
@@ -561,7 +642,11 @@ class TensorFlowAdaptor(Adaptor):
         bf16_ops = []
         dispatched_op_names = [j[0] for j in tuning_cfg["op"]]
 
-        invalid_op_names = [i for i in self.quantize_config["op_wise_config"] if i not in dispatched_op_names]
+        invalid_op_names = [
+            i
+            for i in self.quantize_config["op_wise_config"]
+            if i not in dispatched_op_names
+        ]
 
         for op_name in invalid_op_names:
             self.quantize_config["op_wise_config"].pop(op_name)
@@ -569,7 +654,10 @@ class TensorFlowAdaptor(Adaptor):
         for each_op_info in tuning_cfg["op"]:
             op_name = each_op_info[0]
 
-            if tuning_cfg["op"][each_op_info]["activation"]["dtype"] in ["fp32", "bf16"]:
+            if tuning_cfg["op"][each_op_info]["activation"]["dtype"] in [
+                "fp32",
+                "bf16",
+            ]:
                 if op_name in self.quantize_config["op_wise_config"]:
                     self.quantize_config["op_wise_config"].pop(op_name)
                 if tuning_cfg["op"][each_op_info]["activation"]["dtype"] == "fp32":
@@ -581,7 +669,10 @@ class TensorFlowAdaptor(Adaptor):
             is_perchannel = False
             bit = None
             if "weight" in tuning_cfg["op"][each_op_info]:
-                is_perchannel = tuning_cfg["op"][each_op_info]["weight"]["granularity"] == "per_channel"
+                is_perchannel = (
+                    tuning_cfg["op"][each_op_info]["weight"]["granularity"]
+                    == "per_channel"
+                )
                 # bit = tuning_cfg['op'][each_op_info]['weight']['bit']
             weight_bit = bit if bit else 7.0
 
@@ -589,8 +680,15 @@ class TensorFlowAdaptor(Adaptor):
 
             is_asymmetric = False
             if "activation" in tuning_cfg["op"][each_op_info]:
-                is_asymmetric = tuning_cfg["op"][each_op_info]["activation"]["scheme"] == "asym"
-            self.quantize_config["op_wise_config"][op_name] = (is_perchannel, algorithm, is_asymmetric, weight_bit)
+                is_asymmetric = (
+                    tuning_cfg["op"][each_op_info]["activation"]["scheme"] == "asym"
+                )
+            self.quantize_config["op_wise_config"][op_name] = (
+                is_perchannel,
+                algorithm,
+                is_asymmetric,
+                weight_bit,
+            )
         self.fp32_ops = fp32_ops
         self.bf16_ops = bf16_ops
 
@@ -624,7 +722,9 @@ class TensorFlowAdaptor(Adaptor):
 
             return self.convert(Model(qat_model), "QAT", "default")
 
-        assert q_func is None, "post-training quantization mode is not support calibration function for Tensorflow!"
+        assert (
+            q_func is None
+        ), "post-training quantization mode is not support calibration function for Tensorflow!"
         self._tuning_cfg_to_fw(tune_cfg)
         self.bf16_ops.extend(self.smooth_quant_mul_ops)
         logger.debug("Dump quantization configurations:")
@@ -641,7 +741,8 @@ class TensorFlowAdaptor(Adaptor):
                         if i != 0:  # pragma: no cover
                             logger.warning(
                                 "Reset `calibration.dataloader.batch_size` field "
-                                "to {}".format(calib_batch_size) + " to make sure the sampling_size is "
+                                "to {}".format(calib_batch_size)
+                                + " to make sure the sampling_size is "
                                 "divisible exactly by batch size"
                             )
                         break
@@ -667,7 +768,9 @@ class TensorFlowAdaptor(Adaptor):
 
                 batch_size = get_model_input_shape(model)
                 logger.warning(
-                    "Fail to forward with batch size={}, set to {} now.".format(data_loader.batch_size, batch_size)
+                    "Fail to forward with batch size={}, set to {} now.".format(
+                        data_loader.batch_size, batch_size
+                    )
                 )
                 data_loader.batch(batch_size)
                 self.quantize_config["calib_iteration"] = calib_sampling_size
@@ -686,13 +789,18 @@ class TensorFlowAdaptor(Adaptor):
                     use_bf16=self.use_bf16,
                 ).convert()
         else:  # pragma: no cover
-            if hasattr(data_loader, "batch_size") and calib_sampling_size % data_loader.batch_size != 0:
+            if (
+                hasattr(data_loader, "batch_size")
+                and calib_sampling_size % data_loader.batch_size != 0
+            ):
                 iter = self.quantize_config["calib_iteration"]
                 logger.warning(
                     "Please note that calibration sampling size {} "
                     "isn't divisible exactly by batch size {}. "
                     "So the real sampling size is {}.".format(
-                        calib_sampling_size, data_loader.batch_size, data_loader.batch_size * iter
+                        calib_sampling_size,
+                        data_loader.batch_size,
+                        data_loader.batch_size * iter,
                     )
                 )
             converted_model = GraphConverter(
@@ -710,7 +818,9 @@ class TensorFlowAdaptor(Adaptor):
                 use_bf16=self.use_bf16,
             ).convert()
         # just save framework_specific_info feature for recover
-        converted_model.q_config.update({"framework_specific_info": self.framework_specific_info})
+        converted_model.q_config.update(
+            {"framework_specific_info": self.framework_specific_info}
+        )
 
         self._dump_model_op_stats(converted_model.graph_def)
 
@@ -718,8 +828,12 @@ class TensorFlowAdaptor(Adaptor):
 
     def _dump_model_op_stats(self, model_graphdef):
         """Dump the whole model's OPs statistics information for analysis."""
-        fp32_op_list_uint8 = copy.deepcopy(self.query_handler.get_op_types_by_precision(precision="uint8"))
-        fp32_op_list_int8 = copy.deepcopy(self.query_handler.get_op_types_by_precision(precision="int8"))
+        fp32_op_list_uint8 = copy.deepcopy(
+            self.query_handler.get_op_types_by_precision(precision="uint8")
+        )
+        fp32_op_list_int8 = copy.deepcopy(
+            self.query_handler.get_op_types_by_precision(precision="int8")
+        )
         fp32_op_list = list(set(fp32_op_list_uint8).union(set(fp32_op_list_int8)))
 
         int8_op_prefix_list = [
@@ -749,7 +863,9 @@ class TensorFlowAdaptor(Adaptor):
         for i in model_graphdef.node:
             if i.op == "Const":
                 continue
-            possible_int8_res = [name for name in int8_op_prefix_list if i.op.find(name) != -1]
+            possible_int8_res = [
+                name for name in int8_op_prefix_list if i.op.find(name) != -1
+            ]
 
             if any(possible_int8_res):
                 origin_op_type = possible_int8_res[0].split("Quantized")[-1]
@@ -786,11 +902,19 @@ class TensorFlowAdaptor(Adaptor):
 
         field_names = ["Op Type", "Total", "INT8", "BF16", "FP32"]
         output_data = [
-            [op_type, sum(res[op_type].values()), res[op_type]["INT8"], res[op_type]["BF16"], res[op_type]["FP32"]]
+            [
+                op_type,
+                sum(res[op_type].values()),
+                res[op_type]["INT8"],
+                res[op_type]["BF16"],
+                res[op_type]["FP32"],
+            ]
             for op_type in fp32_op_list
         ]
 
-        Statistics(output_data, header="Mixed Precision Statistics", field_names=field_names).print_stat()
+        Statistics(
+            output_data, header="Mixed Precision Statistics", field_names=field_names
+        ).print_stat()
         self.optype_statistics = field_names, output_data
 
     def _query_bf16_ops(self, matched_nodes):
@@ -798,7 +922,9 @@ class TensorFlowAdaptor(Adaptor):
         self.bf16_op_details = OrderedDict()
 
         valid_precision = self.query_handler.get_mixed_precision_combination()
-        if ("bf16" in valid_precision and CpuInfo().bf16) or os.getenv("FORCE_BF16") == "1":
+        if ("bf16" in valid_precision and CpuInfo().bf16) or os.getenv(
+            "FORCE_BF16"
+        ) == "1":
             for details in matched_nodes:
                 node_op = details[-1][0]
                 node_name = details[0]
@@ -814,8 +940,14 @@ class TensorFlowAdaptor(Adaptor):
         Returns:
             OrderDict: op-wise configuration.
         """
-        bf16_common_config = {"weight": {"dtype": "bf16"}, "activation": {"dtype": "bf16"}}
-        fp32_common_config = {"weight": {"dtype": "fp32"}, "activation": {"dtype": "fp32"}}
+        bf16_common_config = {
+            "weight": {"dtype": "bf16"},
+            "activation": {"dtype": "bf16"},
+        }
+        fp32_common_config = {
+            "weight": {"dtype": "fp32"},
+            "activation": {"dtype": "fp32"},
+        }
         uint8_type = self.query_handler.get_op_types_by_precision(precision="uint8")
         int8_type = self.query_handler.get_op_types_by_precision(precision="int8")
         bf16_type = self.query_handler.get_op_types_by_precision(precision="bf16")
@@ -824,7 +956,11 @@ class TensorFlowAdaptor(Adaptor):
         valid_precision = self.query_handler.get_mixed_precision_combination()
         op_capability = self.query_handler.get_quantization_capability()
         conv_config = copy.deepcopy(op_capability["Conv2D"])
-        conv3d_config = copy.deepcopy(op_capability["Conv3D"]) if "Conv3D" in op_capability else None
+        conv3d_config = (
+            copy.deepcopy(op_capability["Conv3D"])
+            if "Conv3D" in op_capability
+            else None
+        )
         matmul_config = copy.deepcopy(op_capability["MatMul"])
         other_config = copy.deepcopy(op_capability["default"])
 
@@ -845,21 +981,28 @@ class TensorFlowAdaptor(Adaptor):
             patterns = details[-1]
             pat_length = len(patterns)
             pattern_info = {
-                "sequence": [[",".join(patterns[: pat_length - i]) for i in range(pat_length)][0]],
+                "sequence": [
+                    [",".join(patterns[: pat_length - i]) for i in range(pat_length)][0]
+                ],
                 "precision": ["int8"],
             }
             first_conv_or_matmul_node = []
             if (
                 node_op in tf_quantizable_op_type
                 and node_name not in self.exclude_node_names
-                and (node_name, self.unify_op_type_mapping[node_op]) not in self.quantizable_op_details
+                and (node_name, self.unify_op_type_mapping[node_op])
+                not in self.quantizable_op_details
             ):
                 if (
                     self.unify_op_type_mapping[node_op].find("conv2d") != -1
                     or self.unify_op_type_mapping[node_op].find("matmul") != -1
                 ) and len(first_conv_or_matmul_node) == 0:
-                    first_conv_or_matmul_node.append((node_name, self.unify_op_type_mapping[node_op]))
-                    self.recipes_ops["first_conv_or_matmul_quantization"] = first_conv_or_matmul_node
+                    first_conv_or_matmul_node.append(
+                        (node_name, self.unify_op_type_mapping[node_op])
+                    )
+                    self.recipes_ops["first_conv_or_matmul_quantization"] = (
+                        first_conv_or_matmul_node
+                    )
                 if exclude_first_quantizable_op and (
                     self.unify_op_type_mapping[node_op].find("conv2d") != -1
                     or self.unify_op_type_mapping[node_op].find("matmul") != -1
@@ -871,14 +1014,18 @@ class TensorFlowAdaptor(Adaptor):
                 if self.unify_op_type_mapping[node_op].find("conv2d") != -1:
                     conv2d_int8_config = copy.deepcopy(conv_config)
                     conv2d_int8_config["pattern"] = pattern_info
-                    self.quantizable_op_details[(node_name, self.unify_op_type_mapping[node_op])] = [
+                    self.quantizable_op_details[
+                        (node_name, self.unify_op_type_mapping[node_op])
+                    ] = [
                         conv2d_int8_config,
                         fp32_common_config,
                     ]
                 elif self.unify_op_type_mapping[node_op].find("conv3d") != -1:
                     conv3d_int8_config = copy.deepcopy(conv3d_config)
                     conv3d_int8_config["pattern"] = pattern_info
-                    self.quantizable_op_details[(node_name, self.unify_op_type_mapping[node_op])] = [
+                    self.quantizable_op_details[
+                        (node_name, self.unify_op_type_mapping[node_op])
+                    ] = [
                         conv3d_int8_config,
                         fp32_common_config,
                     ]
@@ -890,29 +1037,40 @@ class TensorFlowAdaptor(Adaptor):
                     # matmul_scheme = 'sym' if is_positive_input else 'asym'
                     matmul_scheme = ["asym"]
                     matmul_int8_config["activation"]["scheme"] = matmul_scheme
-                    self.quantizable_op_details[(node_name, self.unify_op_type_mapping[node_op])] = [
+                    self.quantizable_op_details[
+                        (node_name, self.unify_op_type_mapping[node_op])
+                    ] = [
                         matmul_int8_config,
                         fp32_common_config,
                     ]
                 else:
-                    self.quantizable_op_details[(node_name, self.unify_op_type_mapping[node_op])] = [
+                    self.quantizable_op_details[
+                        (node_name, self.unify_op_type_mapping[node_op])
+                    ] = [
                         copy.deepcopy(other_config),
                         fp32_common_config,
                     ]
                 if node_op in bf16_type and (
-                    ("bf16" in valid_precision and CpuInfo().bf16) or os.getenv("FORCE_BF16") == "1"
+                    ("bf16" in valid_precision and CpuInfo().bf16)
+                    or os.getenv("FORCE_BF16") == "1"
                 ):
-                    self.quantizable_op_details[(node_name, self.unify_op_type_mapping[node_op])].insert(
-                        1, bf16_common_config
-                    )
+                    self.quantizable_op_details[
+                        (node_name, self.unify_op_type_mapping[node_op])
+                    ].insert(1, bf16_common_config)
 
-                self.quantize_config["op_wise_config"][node_name] = (False, "minmax", False)
+                self.quantize_config["op_wise_config"][node_name] = (
+                    False,
+                    "minmax",
+                    False,
+                )
         return self.quantizable_op_details
 
     def _filter_unquantizable_concat(self, matched_nodes):
         """Filter out unquantizable ConcatV2 Ops based on the positive input rule."""
         target_concat_nodes = [i[0] for i in matched_nodes if i[-1][0] == "ConcatV2"]
-        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper
+        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+            GraphRewriterHelper,
+        )
         from fedcore.neural_compressor.adaptor.tf_utils.util import GraphAnalyzer
 
         g = GraphAnalyzer()
@@ -941,7 +1099,9 @@ class TensorFlowAdaptor(Adaptor):
     def _filter_unquantizable_concat_performance_only(self, matched_nodes):
         """OOB filter out unquantizable ConcatV2 OPs by checking the control flow rule."""
         target_concat_nodes = [i[0] for i in matched_nodes if i[-1][0] == "ConcatV2"]
-        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper
+        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+            GraphRewriterHelper,
+        )
         from fedcore.neural_compressor.adaptor.tf_utils.util import GraphAnalyzer
 
         g = GraphAnalyzer()
@@ -952,7 +1112,6 @@ class TensorFlowAdaptor(Adaptor):
             concat_node_name = i[0]
             if concat_node_name not in target_concat_nodes:
                 continue
-            input_positive_status = []
             control_flow = False
             for index in range(graph_info[concat_node_name].node.attr["N"].i):
                 each_input_name = GraphRewriterHelper.node_name_from_input(
@@ -976,8 +1135,12 @@ class TensorFlowAdaptor(Adaptor):
         if self.pre_optimized_model is None:
             from .tf_utils.graph_rewriter.generic.pre_optimize import PreOptimization
 
-            self.pre_optimizer_handle = PreOptimization(model, self.new_api, self.device)
-            self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(self.itex_mode)
+            self.pre_optimizer_handle = PreOptimization(
+                model, self.new_api, self.device
+            )
+            self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(
+                self.itex_mode
+            )
             model.graph_def = self.pre_optimized_model.graph_def
 
         self.exclude_node_names = self.pre_optimizer_handle.get_excluded_node_names()
@@ -987,16 +1150,24 @@ class TensorFlowAdaptor(Adaptor):
         matched_bf16_nodes = self.pre_optimizer_handle.get_matched_nodes(bf16_patterns)
         original_graph_node_name = [i.name for i in model.graph_def.node]
         matched_nodes = sorted(
-            matched_nodes, reverse=True, key=lambda i: (original_graph_node_name.index(i[0]), len(i[-1]))
+            matched_nodes,
+            reverse=True,
+            key=lambda i: (original_graph_node_name.index(i[0]), len(i[-1])),
         )
 
         def check_match(patterns, input_pattern):
             for i in patterns:
-                if input_pattern == [i for i in i.replace("+", " ").strip().split(" ") if i]:
+                if input_pattern == [
+                    i for i in i.replace("+", " ").strip().split(" ") if i
+                ]:
                     return True
             return False
 
-        if (self.new_api and self.performance_only) or self.itex_mode or os.getenv("TF_FORCE_CONCAT_OPTS") == "1":
+        if (
+            (self.new_api and self.performance_only)
+            or self.itex_mode
+            or os.getenv("TF_FORCE_CONCAT_OPTS") == "1"
+        ):
             self._filter_unquantizable_concat_performance_only(matched_nodes)
         else:
             self._filter_unquantizable_concat(matched_nodes)
@@ -1005,7 +1176,9 @@ class TensorFlowAdaptor(Adaptor):
             if i[-1][0] in self.query_handler.get_op_types()["int8"]:
                 continue
 
-            if not self.pre_optimizer_handle.has_positive_input(i[0]) and not check_match(
+            if not self.pre_optimizer_handle.has_positive_input(
+                i[0]
+            ) and not check_match(
                 self.query_handler.get_fuse_patterns()["int8"], i[-1]
             ):
                 matched_nodes.remove(i)
@@ -1022,7 +1195,10 @@ class TensorFlowAdaptor(Adaptor):
 
         self._query_quantizable_ops(matched_nodes)
         self._query_bf16_ops(matched_bf16_nodes)
-        capability = {"optypewise": self.get_optype_wise_ability(), "recipes_ops": self.recipes_ops}
+        capability = {
+            "optypewise": self.get_optype_wise_ability(),
+            "recipes_ops": self.recipes_ops,
+        }
         capability["opwise"] = copy.deepcopy(self.quantizable_op_details)
         capability["opwise"].update(self.bf16_op_details)
         logger.debug("Dump framework quantization capability:")
@@ -1059,41 +1235,67 @@ class TensorFlowAdaptor(Adaptor):
         from tensorflow.core.framework import attr_value_pb2
         from tensorflow.python.framework import dtypes, tensor_util
 
-        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+        from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+            GraphRewriterHelper as Helper,
+        )
 
         qint32_type = dtypes.qint32.as_datatype_enum
 
         for tensor_name, tensor_content in tensor_dict.items():
-            is_weight, is_biasadd, current_node_name, last_node_name = _get_fp32_op_name(model, tensor_name)
+            is_weight, is_biasadd, current_node_name, last_node_name = (
+                _get_fp32_op_name(model, tensor_name)
+            )
 
             if is_biasadd:
-                is_biasadd_dtype_is_fp32 = graph_info[current_node_name].node.attr["Tbias"] == attr_value_pb2.AttrValue(
-                    type=dtypes.float32.as_datatype_enum
-                )
+                is_biasadd_dtype_is_fp32 = graph_info[current_node_name].node.attr[
+                    "Tbias"
+                ] == attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum)
                 current_node = graph_info[current_node_name].node
                 bias_add_node = graph_info[current_node.input[2]].node
                 if is_biasadd_dtype_is_fp32:
                     bias_add_node.attr["value"].CopyFrom(
                         attr_value_pb2.AttrValue(
-                            tensor=tensor_util.make_tensor_proto(tensor_content, dtypes.float32, tensor_content.shape)
+                            tensor=tensor_util.make_tensor_proto(
+                                tensor_content, dtypes.float32, tensor_content.shape
+                            )
                         )
                     )
                 else:
                     last_node = graph_info[last_node_name].node
-                    min_input = graph_info[last_node.input[-2]].node.attr["value"].tensor.float_val[0]
-                    max_input = graph_info[last_node.input[-1]].node.attr["value"].tensor.float_val[0]
+                    min_input = (
+                        graph_info[last_node.input[-2]]
+                        .node.attr["value"]
+                        .tensor.float_val[0]
+                    )
+                    max_input = (
+                        graph_info[last_node.input[-1]]
+                        .node.attr["value"]
+                        .tensor.float_val[0]
+                    )
                     channel_size = tensor_content.shape[0]
                     max_filter_node = graph_info[current_node.input[6]].node
                     min_filter_node = graph_info[current_node.input[5]].node
                     if max_filter_node.attr["value"].tensor.float_val:
                         max_filter_tensor = []
                         min_filter_tensor = []
-                        max_filter_tensor.append((max_filter_node.attr["value"].tensor.float_val)[0])
-                        min_filter_tensor.append((min_filter_node.attr["value"].tensor.float_val)[0])
+                        max_filter_tensor.append(
+                            (max_filter_node.attr["value"].tensor.float_val)[0]
+                        )
+                        min_filter_tensor.append(
+                            (min_filter_node.attr["value"].tensor.float_val)[0]
+                        )
                     else:
-                        max_filter_tensor = tensor_util.MakeNdarray(min_filter_node.attr["value"].tensor)
-                        min_filter_tensor = tensor_util.MakeNdarray(min_filter_node.attr["value"].tensor)
-                    activation_range = 127.0 if current_node.attr["Tinput"].type == dtypes.qint8 else 255.0
+                        max_filter_tensor = tensor_util.MakeNdarray(
+                            min_filter_node.attr["value"].tensor
+                        )
+                        min_filter_tensor = tensor_util.MakeNdarray(
+                            min_filter_node.attr["value"].tensor
+                        )
+                    activation_range = (
+                        127.0
+                        if current_node.attr["Tinput"].type == dtypes.qint8
+                        else 255.0
+                    )
                     updated_bias = Helper.generate_int32_bias_for_conv(
                         tensor_content,
                         channel_size,
@@ -1104,41 +1306,64 @@ class TensorFlowAdaptor(Adaptor):
                         activation_range,
                     )
 
-                    bias_add_node.attr["dtype"].CopyFrom(attr_value_pb2.AttrValue(type=qint32_type))
+                    bias_add_node.attr["dtype"].CopyFrom(
+                        attr_value_pb2.AttrValue(type=qint32_type)
+                    )
                     bias_add_node.attr["value"].CopyFrom(
                         attr_value_pb2.AttrValue(
-                            tensor=tensor_util.make_tensor_proto(updated_bias, dtypes.int32, tensor_content.shape)
+                            tensor=tensor_util.make_tensor_proto(
+                                updated_bias, dtypes.int32, tensor_content.shape
+                            )
                         )
                     )
                     bias_add_node.attr["value"].tensor.dtype = qint32_type
-                    current_node.attr["Tbias"].CopyFrom(attr_value_pb2.AttrValue(type=qint32_type))
+                    current_node.attr["Tbias"].CopyFrom(
+                        attr_value_pb2.AttrValue(type=qint32_type)
+                    )
 
             if is_weight:
                 tmp_const_node = Helper.create_constant_node(
-                    current_node.name + "_weights_tmp", tensor_content.transpose(2, 3, 1, 0), dtypes.float32
+                    current_node.name + "_weights_tmp",
+                    tensor_content.transpose(2, 3, 1, 0),
+                    dtypes.float32,
                 )
                 min_filter_node = graph_info[current_node.input[5]].node
-                per_channel = True if min_filter_node.attr["value"].tensor.tensor_shape else False
+                per_channel = (
+                    True if min_filter_node.attr["value"].tensor.tensor_shape else False
+                )
                 from .tf_utils.quantize_graph_common import QuantizeGraphHelper
 
-                original_fp32_op = current_node.op.split("With")[0].split("Quantized")[-1]
+                original_fp32_op = current_node.op.split("With")[0].split("Quantized")[
+                    -1
+                ]
                 if original_fp32_op.find("Depthwise") != -1:
                     original_fp32_op = "DepthwiseConv2dNative"
-                qint8_const_node, min_node, max_node = QuantizeGraphHelper.generate_quantized_weight_node(
-                    original_fp32_op, tmp_const_node, per_channel
+                qint8_const_node, min_node, max_node = (
+                    QuantizeGraphHelper.generate_quantized_weight_node(
+                        original_fp32_op, tmp_const_node, per_channel
+                    )
                 )
                 g.add_node(qint8_const_node, [], [current_node.name])
                 g.add_node(min_node, [], [current_node.name])
                 g.add_node(max_node, [], [current_node.name])
-                g.replace_constant_graph_with_constant_node(qint8_const_node, tensor_name)
-                g.replace_constant_graph_with_constant_node(min_node, current_node.input[5])
-                g.replace_constant_graph_with_constant_node(max_node, current_node.input[6])
+                g.replace_constant_graph_with_constant_node(
+                    qint8_const_node, tensor_name
+                )
+                g.replace_constant_graph_with_constant_node(
+                    min_node, current_node.input[5]
+                )
+                g.replace_constant_graph_with_constant_node(
+                    max_node, current_node.input[6]
+                )
 
-    def inspect_weight_and_bias(self, node_list, graph_def, graph_info, graph_node_name_mapping):
+    def inspect_weight_and_bias(
+        self, node_list, graph_def, graph_info, graph_node_name_mapping
+    ):
         """Inspect the weights and biases."""
-        import tensorflow as tf
 
-        from fedcore.neural_compressor.adaptor.tf_utils.util import get_tensor_val_from_graph_node
+        from fedcore.neural_compressor.adaptor.tf_utils.util import (
+            get_tensor_val_from_graph_node,
+        )
         from fedcore.neural_compressor.utils.utility import dequantize_weight
 
         from .tf_utils.util import int8_node_name_reverse
@@ -1152,15 +1377,21 @@ class TensorFlowAdaptor(Adaptor):
                 node_name = int8_node_name_reverse(node)
             if node_name in node_set and ("Conv" in node.op or "Mul" in node.op):
                 inspect_nodes.append(node)
-        logger.debug(f"Start to inspect weight and bias for: {[node.name for node in inspect_nodes]}.")
+        logger.debug(
+            f"Start to inspect weight and bias for: {[node.name for node in inspect_nodes]}."
+        )
         for node in inspect_nodes:
             # inspect weights and bias
             node_name = node.name
             weight_node_name = node.input[1]
             weight_node = graph_node_name_mapping[weight_node_name]
-            if weight_node.op != "Const":  # skip the matmul whose two inputs are previous output
+            if (
+                weight_node.op != "Const"
+            ):  # skip the matmul whose two inputs are previous output
                 continue
-            weight_node_val = get_tensor_val_from_graph_node(graph_node_name_mapping, weight_node_name)
+            weight_node_val = get_tensor_val_from_graph_node(
+                graph_node_name_mapping, weight_node_name
+            )
             weight_node_val = weight_node_val.astype("float32")
             # dequantize the weight for quantized model
             if "Quantized" in node.op:
@@ -1169,16 +1400,28 @@ class TensorFlowAdaptor(Adaptor):
                 min_filter_node = weight_node_name_pre + "_min"
                 max_filter_node = weight_node_name_pre + "_max"
                 if graph_info[min_filter_node].node.attr["value"].tensor.float_val:
-                    min_filter_val = graph_info[min_filter_node].node.attr["value"].tensor.float_val
-                    max_filter_val = graph_info[max_filter_node].node.attr["value"].tensor.float_val
+                    min_filter_val = (
+                        graph_info[min_filter_node].node.attr["value"].tensor.float_val
+                    )
+                    max_filter_val = (
+                        graph_info[max_filter_node].node.attr["value"].tensor.float_val
+                    )
                 else:
-                    min_filter_val = get_tensor_val_from_graph_node(graph_node_name_mapping, min_filter_node)
-                    max_filter_val = get_tensor_val_from_graph_node(graph_node_name_mapping, max_filter_node)
-                weight_node_val = dequantize_weight(weight_node_val, min_filter_val, max_filter_val)
+                    min_filter_val = get_tensor_val_from_graph_node(
+                        graph_node_name_mapping, min_filter_node
+                    )
+                    max_filter_val = get_tensor_val_from_graph_node(
+                        graph_node_name_mapping, max_filter_node
+                    )
+                weight_node_val = dequantize_weight(
+                    weight_node_val, min_filter_val, max_filter_val
+                )
             weights_result[node_name] = {weight_node_name: weight_node_val}
         return weights_result
 
-    def fused_node_mapping(self, node_list, pattern_mapping, graph_info, graph_node_name_mapping):
+    def fused_node_mapping(
+        self, node_list, pattern_mapping, graph_info, graph_node_name_mapping
+    ):
         """Create the mapping between first node and last node in fused sequence.
 
         Args:
@@ -1206,16 +1449,24 @@ class TensorFlowAdaptor(Adaptor):
                     if graph_node_name_mapping[node_output_name].op == "Cast":
                         cast_node = graph_node_name_mapping[node_output_name]
                         node_output_name = graph_info[cast_node.name].outputs[0]
-                    if graph_node_name_mapping[node_output_name].op in [_next_node_op_type, "Cast"]:
+                    if graph_node_name_mapping[node_output_name].op in [
+                        _next_node_op_type,
+                        "Cast",
+                    ]:
                         _next_node_name = node_output_name
             fused_mapping[node_name] = _next_node_name
             fused_mapping_reverse[_next_node_name] = node_name
         return fused_mapping, fused_mapping_reverse
 
-    def _inspect_tensor_inference(self, inspect_node_dict, model, dataloader, iteration_list):
+    def _inspect_tensor_inference(
+        self, inspect_node_dict, model, dataloader, iteration_list
+    ):
         """Do inference for inspect activation."""
         out_tensor_lst = []
-        out_tensor_lst += [{n: [n + ":" + str(i) for i in range(3)]} for n in inspect_node_dict["qreq_node"]]
+        out_tensor_lst += [
+            {n: [n + ":" + str(i) for i in range(3)]}
+            for n in inspect_node_dict["qreq_node"]
+        ]
         out_tensor_lst += [{n: n + ":0"} for n in inspect_node_dict["qdq_node"]]
         out_tensor_lst += [{n: n + ":0"} for n in inspect_node_dict["f_node"]]
         out_cnt = len(out_tensor_lst)
@@ -1232,17 +1483,28 @@ class TensorFlowAdaptor(Adaptor):
             if len(input_tensor) == 1:
                 feed_dict = {input_tensor[0]: inputs}  # get raw tensor using index [0]
             else:
-                assert len(input_tensor) == len(inputs), "inputs len must equal with input_tensor"
+                assert len(input_tensor) == len(
+                    inputs
+                ), "inputs len must equal with input_tensor"
                 feed_dict = dict(zip(input_tensor, inputs))
             # TODO find an optimized method to avoid multiple runs
             for i, out_t in enumerate(out_tensor_lst):
-                logger.debug(f"Finished inspect {i}/{out_cnt} nodes, current inspect node {out_t.keys()}.")
+                logger.debug(
+                    f"Finished inspect {i}/{out_cnt} nodes, current inspect node {out_t.keys()}."
+                )
                 model_out.append(model.sess.run(out_t, feed_dict))
             activation_result.append(model_out)
         return activation_result
 
     def inspect_activation(
-        self, node_list, graph_def, graph_node_name_mapping, quantization_cfg, dataloader, iteration_list, graph_info
+        self,
+        node_list,
+        graph_def,
+        graph_node_name_mapping,
+        quantization_cfg,
+        dataloader,
+        iteration_list,
+        graph_info,
     ):
         """Inspect the activation."""
         from fedcore.neural_compressor.model import Model
@@ -1255,7 +1517,11 @@ class TensorFlowAdaptor(Adaptor):
             node = graph_node_name_mapping[node_name]
             if "Quantized" in node.op and "Dequantize" in node.op:
                 inspect_node_dict["qdq_node"].append(node.name)
-            elif "Quantized" in node.op or "_Quantized" in node.op or "Requantize" in node.op:
+            elif (
+                "Quantized" in node.op
+                or "_Quantized" in node.op
+                or "Requantize" in node.op
+            ):
                 inspect_node_dict["qreq_node"].append(node.name)
             else:
                 inspect_node_dict["f_node"].append(node_name)
@@ -1269,26 +1535,39 @@ class TensorFlowAdaptor(Adaptor):
                 pattern_mapping[node_name] = {"sequence": node_name}
         if inspect_node_dict["f_node"]:
             fuse_map, fuse_map_reverse = self.fused_node_mapping(
-                inspect_node_dict["f_node"], pattern_mapping, graph_info, graph_node_name_mapping
+                inspect_node_dict["f_node"],
+                pattern_mapping,
+                graph_info,
+                graph_node_name_mapping,
             )
-            inspect_node_dict["f_node"] = [fuse_map[n] for n in inspect_node_dict["f_node"]]
+            inspect_node_dict["f_node"] = [
+                fuse_map[n] for n in inspect_node_dict["f_node"]
+            ]
         # build model and do inference
         model = Model(graph_def)
-        activation_result = self._inspect_tensor_inference(inspect_node_dict, model, dataloader, iteration_list)
+        activation_result = self._inspect_tensor_inference(
+            inspect_node_dict, model, dataloader, iteration_list
+        )
         final_result = []
         int8_postfix = "_eightbit"
         for iter_res in activation_result:
             tmp_iter_result = {}
             for res in iter_res:
                 node_name, val = list(res.keys())[0], list(res.values())[0]
-                val = Dequantize(val[0], (node_name, val[1], val[2])) if len(val) == 3 else val
+                val = (
+                    Dequantize(val[0], (node_name, val[1], val[2]))
+                    if len(val) == 3
+                    else val
+                )
                 val = val.astype(np.float32)
                 index_postfix = node_name.find(int8_postfix)
                 if index_postfix != -1:
                     node_name = node_name[:index_postfix]
                     tmp_iter_result[node_name] = {node_name: val}
                 else:
-                    tmp_iter_result[fuse_map_reverse[node_name]] = {fuse_map_reverse[node_name]: val}
+                    tmp_iter_result[fuse_map_reverse[node_name]] = {
+                        fuse_map_reverse[node_name]: val
+                    }
             final_result.append(tmp_iter_result)
         return final_result
 
@@ -1344,7 +1623,10 @@ class TensorFlowAdaptor(Adaptor):
 
         from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
         from fedcore.neural_compressor.model.tensorflow_model import TensorflowBaseModel
-        from fedcore.neural_compressor.utils.utility import dump_data_to_local, load_data_from_pkl
+        from fedcore.neural_compressor.utils.utility import (
+            dump_data_to_local,
+            load_data_from_pkl,
+        )
 
         from .tf_utils.util import int8_node_name_reverse
 
@@ -1377,14 +1659,22 @@ class TensorFlowAdaptor(Adaptor):
         # inspect weight
         if inspect_type == "weight" or inspect_type == "all":
             logger.info("Start to inspect weight and bias.")
-            weights_result = self.inspect_weight_and_bias(node_list, model, graph_info, graph_node_name_mapping)
+            weights_result = self.inspect_weight_and_bias(
+                node_list, model, graph_info, graph_node_name_mapping
+            )
             inspect_result["weight"] = weights_result
 
         # inspect activation
         if inspect_type == "activation" or inspect_type == "all":
             logger.info("Start to inspect activation.")
             activation_result = self.inspect_activation(
-                node_list, model, graph_node_name_mapping, quantization_cfg, dataloader, iteration_list, graph_info
+                node_list,
+                model,
+                graph_node_name_mapping,
+                quantization_cfg,
+                dataloader,
+                iteration_list,
+                graph_info,
             )
             inspect_result["activation"] = activation_result
 
@@ -1430,20 +1720,27 @@ class TensorFlowAdaptor(Adaptor):
             # only support Quantizev2 input op Pad and Placeholder
             if (
                 node_name_mapping[node.input[0]].op == "Pad"
-                and node_name_mapping[node_name_mapping[node.input[0]].input[0]].op == "Placeholder"
+                and node_name_mapping[node_name_mapping[node.input[0]].input[0]].op
+                == "Placeholder"
             ) or node_name_mapping[node.input[0]].op == "Placeholder":
                 target_quantize_nodes.append(node)
-        assert len(target_quantize_nodes) == 1, "only support 1 QuantizeV2 from Placeholder"
+        assert (
+            len(target_quantize_nodes) == 1
+        ), "only support 1 QuantizeV2 from Placeholder"
         quantize_node = target_quantize_nodes[0]
 
         quantize_node_input = node_name_mapping[quantize_node.input[0]]
-        quantize_node_outputs = [node for node in graph_def.node if quantize_node.name in node.input]
+        quantize_node_outputs = [
+            node for node in graph_def.node if quantize_node.name in node.input
+        ]
 
         from .tf_utils.graph_util import GraphRewriterHelper
 
         if quantize_node_input.op == "Pad":
             pad_node_input = node_name_mapping[quantize_node_input.input[0]]
-            assert pad_node_input.op == "Placeholder", "only support Pad between QuantizeV2 and Placeholder"
+            assert (
+                pad_node_input.op == "Placeholder"
+            ), "only support Pad between QuantizeV2 and Placeholder"
             from tensorflow.python.framework import tensor_util
 
             paddings_tensor = tensor_util.MakeNdarray(
@@ -1454,12 +1751,16 @@ class TensorFlowAdaptor(Adaptor):
             for conv_node in quantize_node_outputs:
                 assert "Conv2D" in conv_node.op, "only support QuantizeV2 to Conv2D"
 
-                GraphRewriterHelper.set_attr_int_list(conv_node, "padding_list", paddings_tensor)
+                GraphRewriterHelper.set_attr_int_list(
+                    conv_node, "padding_list", paddings_tensor
+                )
             graph_def.node.remove(quantize_node_input)
 
         from tensorflow.python.framework import dtypes
 
-        GraphRewriterHelper.set_attr_dtype(node_name_mapping[quantize_node.input[0]], "dtype", dtypes.qint8)
+        GraphRewriterHelper.set_attr_dtype(
+            node_name_mapping[quantize_node.input[0]], "dtype", dtypes.qint8
+        )
 
         for conv_node in quantize_node_outputs:
             for index, conv_input in enumerate(conv_node.input):
@@ -1495,12 +1796,17 @@ class TensorFlowAdaptor(Adaptor):
         res = OrderedDict()
         for op in self.quantizable_op_details:
             if op[1] not in res:
-                res[op[1]] = {"activation": self.quantizable_op_details[op][0]["activation"]}
+                res[op[1]] = {
+                    "activation": self.quantizable_op_details[op][0]["activation"]
+                }
                 if "weight" in self.quantizable_op_details[op][0]:
                     res[op[1]]["weight"] = self.quantizable_op_details[op][0]["weight"]
         for op in self.bf16_op_details:
             if op[1] not in res:
-                res[op[1]] = {"activation": {"dtype": ["bf16"]}, "weight": {"dtype": ["bf16"]}}
+                res[op[1]] = {
+                    "activation": {"dtype": ["bf16"]},
+                    "weight": {"dtype": ["bf16"]},
+                }
         return res
 
     def _pre_hook_for_qat(self, dataloader=None):
@@ -1509,7 +1815,6 @@ class TensorFlowAdaptor(Adaptor):
 
     def _post_hook_for_qat(self):
         """Post hook for QAT."""
-        pass
 
     def _pre_eval_hook(self, model):
         """Pre evaluation hook."""
@@ -1518,11 +1823,9 @@ class TensorFlowAdaptor(Adaptor):
     # Add keyword arguments unpacking
     def _post_eval_hook(self, model, **kwargs):
         """Post evaluation hook."""
-        pass
 
     def save(self, model, path):
         """Save model to the path."""
-        pass
 
     # this function is used to convert keras QAT model to pb in old QAT implementation,
     # and it's not used in refactored QAT
@@ -1546,11 +1849,15 @@ class TensorFlowAdaptor(Adaptor):
                     activation = op_cap["activation"]
                     if "weight" in op_cap:
                         weight = op_cap["weight"]
-                        is_perchannel = True if weight["granularity"][0] == "per_channel" else False
+                        is_perchannel = (
+                            True if weight["granularity"][0] == "per_channel" else False
+                        )
                     algorithm = activation["algorithm"][0]
                     is_asymmetric = False
                     if "activation" in op_cap:
-                        is_asymmetric = True if activation["scheme"][0] == "asym" else False
+                        is_asymmetric = (
+                            True if activation["scheme"][0] == "asym" else False
+                        )
 
                     quantize_config["op_wise_config"][each_op_info[0]] = (
                         is_perchannel,
@@ -1602,10 +1909,15 @@ class TensorFlowAdaptor(Adaptor):
         ], "Only `Functional` or `Sequential` keras model is supported for QAT."
 
         from .tf_utils.quantize_graph.qat.quantize_config import global_config
-        from .tf_utils.quantize_graph.qat.quantize_helper import init_quantize_config, qat_clone_function
+        from .tf_utils.quantize_graph.qat.quantize_helper import (
+            init_quantize_config,
+            qat_clone_function,
+        )
 
-        config = init_quantize_config(model, quantize_recipe)
-        q_model = tf.keras.models.clone_model(model, input_tensors=None, clone_function=qat_clone_function)
+        init_quantize_config(model, quantize_recipe)
+        q_model = tf.keras.models.clone_model(
+            model, input_tensors=None, clone_function=qat_clone_function
+        )
         global_config.clear()
 
         return q_model
@@ -1625,7 +1937,9 @@ class TensorFlowAdaptor(Adaptor):
         from .tf_utils.graph_rewriter.generic.pre_optimize import PreOptimization
 
         self.pre_optimizer_handle = PreOptimization(model, self.new_api, self.device)
-        self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(self.itex_mode)
+        self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(
+            self.itex_mode
+        )
         model.graph_def = self.pre_optimized_model.graph_def
 
         from .tf_utils.graph_converter_without_calib import GraphConverterWithoutCalib
@@ -1655,7 +1969,9 @@ class TensorFlowAdaptor(Adaptor):
 
         def _add_output_op_name(opname):
             if opname.endswith("_dequantize"):
-                output_op_names.add(opname[: -len("_dequantize")])  # pylint: disable=no-member
+                output_op_names.add(
+                    opname[: -len("_dequantize")]
+                )  # pylint: disable=no-member
             elif opname.endswith("__dequant"):
                 pass
             else:
@@ -1687,7 +2003,14 @@ class TensorFlowAdaptor(Adaptor):
         return output_op_names
 
     def calculate_op_sensitivity(
-        self, model, dataloader, tune_cfg, output_op_names, confidence_batches, fallback=True, requantize_cfgs=None
+        self,
+        model,
+        dataloader,
+        tune_cfg,
+        output_op_names,
+        confidence_batches,
+        fallback=True,
+        requantize_cfgs=None,
     ):
         """Compute the op sensitivity.
 
@@ -1711,7 +2034,10 @@ class TensorFlowAdaptor(Adaptor):
         """
         from copy import deepcopy
 
-        fp32_op_cfg = {"activation": {"dtype": "fp32", "quant_mode": "fp32"}, "weight": {"dtype": "fp32"}}
+        fp32_op_cfg = {
+            "activation": {"dtype": "fp32", "quant_mode": "fp32"},
+            "weight": {"dtype": "fp32"},
+        }
 
         if fallback:
             ops_list = [
@@ -1724,13 +2050,20 @@ class TensorFlowAdaptor(Adaptor):
             ops_list = [
                 op
                 for op, config in tune_cfg["op"].items()
-                if config["activation"]["quant_mode"] == "fp32" and op in requantize_cfgs
+                if config["activation"]["quant_mode"] == "fp32"
+                and op in requantize_cfgs
             ]
             replace_cfgs = requantize_cfgs
 
         # Step2. compute mse
         mse_result = self._get_mse_order(
-            model, deepcopy(tune_cfg), replace_cfgs, ops_list, dataloader, output_op_names, confidence_batches
+            model,
+            deepcopy(tune_cfg),
+            replace_cfgs,
+            ops_list,
+            dataloader,
+            output_op_names,
+            confidence_batches,
         )
 
         # Step3. sort
@@ -1741,14 +2074,23 @@ class TensorFlowAdaptor(Adaptor):
         return mse_order
 
     def _get_mse_order(
-        self, fp32_model, tune_cfg, replace_cfgs, ops_lst, dataloader, output_op_names, confidence_batches
+        self,
+        fp32_model,
+        tune_cfg,
+        replace_cfgs,
+        ops_lst,
+        dataloader,
+        output_op_names,
+        confidence_batches,
     ):
         """Compute MSE."""
         op_cfg = tune_cfg["op"]
         mse_result = {}
         partial_dataloader = self._partial_dataloader(dataloader, confidence_batches)
 
-        fp32_output = self._inference_model_on_batches(fp32_model, tune_cfg, partial_dataloader, output_op_names)
+        fp32_output = self._inference_model_on_batches(
+            fp32_model, tune_cfg, partial_dataloader, output_op_names
+        )
 
         for op in ops_lst:
             # backup and set replace tuning config
@@ -1757,7 +2099,9 @@ class TensorFlowAdaptor(Adaptor):
 
             # quantize and inference the model
             q_model = self.quantize(tune_cfg, fp32_model, partial_dataloader)
-            q_output = self._inference_model_on_batches(q_model, tune_cfg, partial_dataloader, output_op_names)
+            q_output = self._inference_model_on_batches(
+                q_model, tune_cfg, partial_dataloader, output_op_names
+            )
 
             mse_result[op] = self._calculate_mse(fp32_output, q_output)
 
@@ -1769,9 +2113,13 @@ class TensorFlowAdaptor(Adaptor):
     def _partial_dataset_of(self, dataloader, confidence_batches):
         """Partial dataset."""
         from fedcore.neural_compressor.data.datasets.dummy_dataset import DummyDataset
-        from fedcore.neural_compressor.data.datasets.dummy_dataset import DummyDataset as DummyDataset_v2_x
+        from fedcore.neural_compressor.data.datasets.dummy_dataset import (
+            DummyDataset as DummyDataset_v2_x,
+        )
 
-        if isinstance(dataloader.dataset, DummyDataset) or isinstance(dataloader.dataset, DummyDataset_v2_x):
+        if isinstance(dataloader.dataset, DummyDataset) or isinstance(
+            dataloader.dataset, DummyDataset_v2_x
+        ):
             assert isinstance(confidence_batches, int)
             ds = copy.deepcopy(dataloader.dataset)
             ds.dataset = ds.dataset[:confidence_batches]
@@ -1870,33 +2218,51 @@ class TensorFlowAdaptor(Adaptor):
 
         if model.model_type == "llm_saved_model":
             return self.smooth_quant_LLM(
-                model, dataloader, calib_iter, alpha, folding, percentile, op_types, scales_per_op
+                model,
+                dataloader,
+                calib_iter,
+                alpha,
+                folding,
+                percentile,
+                op_types,
+                scales_per_op,
             )
 
         # Do a pre-optimization before smooth quant
         from .tf_utils.graph_rewriter.generic.pre_optimize import PreOptimization
 
         self.pre_optimizer_handle = PreOptimization(model, self.new_api, self.device)
-        self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(self.itex_mode)
+        self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(
+            self.itex_mode
+        )
         model.graph_def = self.pre_optimized_model.graph_def
 
         # Run calibration to get max values per channel
         from .tf_utils.smooth_quant_calibration import SmoothQuantCalibration
 
-        calibration = SmoothQuantCalibration(model, dataloader, calib_iter, op_types, percentile)
+        calibration = SmoothQuantCalibration(
+            model, dataloader, calib_iter, op_types, percentile
+        )
         max_vals_per_channel, sq_weight_node_names = calibration()
 
         # Get weight tensors and weight nodes based on the input tensor
-        from fedcore.neural_compressor.adaptor.tf_utils.util import get_weight_from_input_tensor
+        from fedcore.neural_compressor.adaptor.tf_utils.util import (
+            get_weight_from_input_tensor,
+        )
 
-        sq_weight_tensors, sq_weights_nodes = get_weight_from_input_tensor(model, max_vals_per_channel.keys(), op_types)
+        sq_weight_tensors, sq_weights_nodes = get_weight_from_input_tensor(
+            model, max_vals_per_channel.keys(), op_types
+        )
 
         # Calculate the smooth quant scaler and insert Mul op into the graph
         from .tf_utils.smooth_quant_scaler import SmoothQuantScaler
 
         scaler = SmoothQuantScaler(model, dataloader, alpha, scales_per_op)
         model, mul_list = scaler.transform(
-            max_vals_per_channel, sq_weight_tensors, sq_weights_nodes, sq_weight_node_names
+            max_vals_per_channel,
+            sq_weight_tensors,
+            sq_weights_nodes,
+            sq_weight_node_names,
         )
         self.smooth_quant_mul_ops.extend(mul_list)
         self.smooth_quant_model = model
@@ -1933,7 +2299,9 @@ class TensorFlowAdaptor(Adaptor):
         from .tf_utils.graph_rewriter.generic.pre_optimize import PreOptimization
 
         self.pre_optimizer_handle = PreOptimization(model, self.new_api, self.device)
-        self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(self.itex_mode)
+        self.pre_optimized_model = self.pre_optimizer_handle.get_optimized_model(
+            self.itex_mode
+        )
         model.graph_def = self.pre_optimized_model.graph_def
 
         # only support per-tensor MatMul now
@@ -1951,9 +2319,12 @@ class TensorFlowAdaptor(Adaptor):
             llm_temp_dir,
             model.weight_name_mapping,
         )
-        max_vals_per_channel, sq_target_node_names, sq_weight_tensor_dict, sq_graph_def = calibration(
-            model.input_node_names, model.output_node_names
-        )
+        (
+            max_vals_per_channel,
+            sq_target_node_names,
+            sq_weight_tensor_dict,
+            sq_graph_def,
+        ) = calibration(model.input_node_names, model.output_node_names)
 
         # Calculate the smooth quant scaler and insert Mul op into the graph
         from .tf_utils.smooth_quant_scaler import SmoothQuantScalerLLM
@@ -1996,7 +2367,9 @@ class Tensorflow_ITEXAdaptor(TensorFlowAdaptor):
         Returns:
             tf.compat.v1.GraphDef: the quantized model
         """
-        assert q_func is None, "quantization aware training mode is not support on tensorflow"
+        assert (
+            q_func is None
+        ), "quantization aware training mode is not support on tensorflow"
         self._tuning_cfg_to_fw(tune_cfg)
         logger.debug("Dump quantization configurations:")
         logger.debug(self.quantize_config)
@@ -2012,7 +2385,8 @@ class Tensorflow_ITEXAdaptor(TensorFlowAdaptor):
                         if i != 0:  # pragma: no cover
                             logger.warning(
                                 "Reset `calibration.dataloader.batch_size` field "
-                                "to {}".format(calib_batch_size) + " to make sure the sampling_size is "
+                                "to {}".format(calib_batch_size)
+                                + " to make sure the sampling_size is "
                                 "divisible exactly by batch size"
                             )
                         break
@@ -2039,7 +2413,9 @@ class Tensorflow_ITEXAdaptor(TensorFlowAdaptor):
 
                 batch_size = get_model_input_shape(model)
                 logger.warning(
-                    "Fail to forward with batch size={}, set to {} now.".format(data_loader.batch_size, batch_size)
+                    "Fail to forward with batch size={}, set to {} now.".format(
+                        data_loader.batch_size, batch_size
+                    )
                 )
                 data_loader.batch(batch_size)
                 self.quantize_config["calib_iteration"] = calib_sampling_size
@@ -2058,13 +2434,18 @@ class Tensorflow_ITEXAdaptor(TensorFlowAdaptor):
                     use_bf16=self.use_bf16,
                 ).convert()
         else:  # pragma: no cover
-            if hasattr(data_loader, "batch_size") and calib_sampling_size % data_loader.batch_size != 0:
+            if (
+                hasattr(data_loader, "batch_size")
+                and calib_sampling_size % data_loader.batch_size != 0
+            ):
                 iter = self.quantize_config["calib_iteration"]
                 logger.warning(
                     "Please note that calibration sampling size {} "
                     "isn't divisible exactly by batch size {}. "
                     "So the real sampling size is {}.".format(
-                        calib_sampling_size, data_loader.batch_size, data_loader.batch_size * iter
+                        calib_sampling_size,
+                        data_loader.batch_size,
+                        data_loader.batch_size * iter,
                     )
                 )
             converted_model = GraphConverter(
@@ -2091,7 +2472,13 @@ class Tensorflow_ITEXAdaptor(TensorFlowAdaptor):
 class TensorflowQuery(QueryBackendCapability):
     """Tensorflow Query Capability Class."""
 
-    def __init__(self, local_config_file=None, performance_only=False, itex_mode=False, quant_mode="static"):
+    def __init__(
+        self,
+        local_config_file=None,
+        performance_only=False,
+        itex_mode=False,
+        quant_mode="static",
+    ):
         """Initialization.
 
         Args:
@@ -2140,7 +2527,9 @@ class TensorflowQuery(QueryBackendCapability):
         fallback_list = []
         for sub_data in data:
             if "default" in sub_data["version"]["name"]:
-                assert config is None, "Only one default config " "is allowed in framework yaml file."
+                assert config is None, (
+                    "Only one default config " "is allowed in framework yaml file."
+                )
                 config = sub_data
 
             if self.version in sub_data["version"]["name"]:
@@ -2162,7 +2551,9 @@ class TensorflowQuery(QueryBackendCapability):
                     # TensorFlow 1.15.0-up1/up2/up3 release versions are abnoraml release naming
                     # convention. Replacing them with dot for version comparison.
                     sorted_list = [i.replace("-up", ".") for i in sorted_list]
-                    sorted_list = sorted(sorted_list, key=cmp_to_key(_compare), reverse=True)
+                    sorted_list = sorted(
+                        sorted_list, key=cmp_to_key(_compare), reverse=True
+                    )
                 else:
                     assert isinstance(sorted_list, str)
                     sorted_list = list(sorted_list.replace("-up", ".").split())
@@ -2195,14 +2586,18 @@ class TensorflowQuery(QueryBackendCapability):
                         "_MklFusedInstanceNorm",
                     ]
                     for op_type in remove_int8_ops:
-                        while op_type in self.cur_config["int8"][self.quant_mode].keys():
+                        while (
+                            op_type in self.cur_config["int8"][self.quant_mode].keys()
+                        ):
                             self.cur_config["int8"][self.quant_mode].pop(op_type, None)
 
             except Exception as e:
                 logger.info("Fail to parse {} due to {}.".format(self.cfg, str(e)))
                 self.cur_config = None
                 raise ValueError(
-                    "Please check if the format of {} follows Neural Compressor yaml schema.".format(self.cfg)
+                    "Please check if the format of {} follows Neural Compressor yaml schema.".format(
+                        self.cfg
+                    )
                 )
         self._update_cfg_with_usr_definition()
 
@@ -2211,7 +2606,9 @@ class TensorflowQuery(QueryBackendCapability):
         from fedcore.neural_compressor.conf.pythonic_config import tensorflow_config
 
         if tensorflow_config.precisions is not None:
-            self.cur_config["precisions"]["names"] = ",".join(tensorflow_config.precisions)
+            self.cur_config["precisions"]["names"] = ",".join(
+                tensorflow_config.precisions
+            )
 
     def get_version(self):
         """Get the current backend version information.
@@ -2377,7 +2774,11 @@ class TensorflowQuery(QueryBackendCapability):
             "Conv3DBackpropInputV2 + BiasAdd",
         ]
 
-        tf_int8_pattern_list = ["Conv2D + BiasAdd", "Conv2D + BiasAdd + Relu", "Conv2D + BiasAdd + Relu6"]
+        tf_int8_pattern_list = [
+            "Conv2D + BiasAdd",
+            "Conv2D + BiasAdd + Relu",
+            "Conv2D + BiasAdd + Relu6",
+        ]
         tf_uint8_pattern_list = [
             "Conv2D + BiasAdd + AddN + Relu",
             "Conv2D + BiasAdd + AddN + Relu6",
@@ -2454,7 +2855,12 @@ class TensorflowQuery(QueryBackendCapability):
             spr_uint8_pattern_list[index] = "Dequantize + " + pattern + " + QuantizeV2"
 
         if not self.performance_only:
-            remove_int8_ops = ["FusedBatchNorm", "FusedBatchNormV2", "FusedBatchNormV3", "_MklFusedInstanceNorm"]
+            remove_int8_ops = [
+                "FusedBatchNorm",
+                "FusedBatchNormV2",
+                "FusedBatchNormV3",
+                "_MklFusedInstanceNorm",
+            ]
             for op_type in remove_int8_ops:
                 patterns = [
                     f"Dequantize + {op_type} + Relu + QuantizeV2",
@@ -2495,7 +2901,9 @@ class TensorflowQuery(QueryBackendCapability):
             and value is a dict that describes all op types' quantization capability.
         """
         for op_type, _ in self.cur_config["int8"][self.quant_mode].items():
-            self.cur_config["int8"][self.quant_mode][op_type]["activation"]["quant_mode"] = self.quant_mode
+            self.cur_config["int8"][self.quant_mode][op_type]["activation"][
+                "quant_mode"
+            ] = self.quant_mode
         return self.cur_config["int8"][self.quant_mode]
 
     def get_op_types_by_precision(self, precision):
@@ -2513,7 +2921,9 @@ class TensorflowQuery(QueryBackendCapability):
 
         if precision == "int8":
             if tf.version.VERSION in spr_base_verions or self.itex_mode:
-                op_type_list = [key for key in self.cur_config["int8"][self.quant_mode].keys()]
+                op_type_list = [
+                    key for key in self.cur_config["int8"][self.quant_mode].keys()
+                ]
                 if not self.performance_only and not self.itex_mode:
                     remove_int8_ops = [
                         "FusedBatchNorm",
@@ -2525,25 +2935,36 @@ class TensorflowQuery(QueryBackendCapability):
                         while op_type in op_type_list:
                             op_type_list.remove(op_type)
                 return op_type_list
-            if version1_gte_version2(tf.version.VERSION, "2.1.0") or version1_eq_version2(
-                tf.version.VERSION, "1.15.0-up3"
-            ):
+            if version1_gte_version2(
+                tf.version.VERSION, "2.1.0"
+            ) or version1_eq_version2(tf.version.VERSION, "1.15.0-up3"):
                 return ["Conv2D", "MatMul", "ConcatV2", "MaxPool", "AvgPool"]
             return ["MatMul", "ConcatV2", "MaxPool", "AvgPool"]
         if precision == "uint8":
             if tf.version.VERSION in spr_base_verions:
-                return [key for key in self.cur_config["int8"][self.quant_mode].keys() if "Norm" not in key]
-            if version1_gte_version2(tf.version.VERSION, "2.1.0") or version1_eq_version2(
-                tf.version.VERSION, "1.15.0-up3"
-            ):
-                return ["Conv2D", "MatMul", "ConcatV2", "MaxPool", "AvgPool", "DepthwiseConv2dNative"]
+                return [
+                    key
+                    for key in self.cur_config["int8"][self.quant_mode].keys()
+                    if "Norm" not in key
+                ]
+            if version1_gte_version2(
+                tf.version.VERSION, "2.1.0"
+            ) or version1_eq_version2(tf.version.VERSION, "1.15.0-up3"):
+                return [
+                    "Conv2D",
+                    "MatMul",
+                    "ConcatV2",
+                    "MaxPool",
+                    "AvgPool",
+                    "DepthwiseConv2dNative",
+                ]
             return ["Conv2D", "MatMul", "ConcatV2", "MaxPool", "AvgPool"]
         if precision == "bf16":
             if tf.version.VERSION in spr_base_verions:
                 return self.cur_config[precision]
-            if version1_gte_version2(tf.version.VERSION, "2.1.0") or version1_eq_version2(
-                tf.version.VERSION, "1.15.0-up3"
-            ):
+            if version1_gte_version2(
+                tf.version.VERSION, "2.1.0"
+            ) or version1_eq_version2(tf.version.VERSION, "1.15.0-up3"):
                 return self.cur_config[precision]
             return []
 
@@ -2555,7 +2976,9 @@ class TensorflowQuery(QueryBackendCapability):
         """
         import tensorflow as tf
 
-        if version1_gte_version2(tf.version.VERSION, "2.1.0") or version1_eq_version2(tf.version.VERSION, "1.15.0-up3"):
+        if version1_gte_version2(tf.version.VERSION, "2.1.0") or version1_eq_version2(
+            tf.version.VERSION, "1.15.0-up3"
+        ):
             return ["int8", "uint8", "bf16", "fp32"]
         return ["uint8", "fp32"]
 
@@ -2579,10 +3002,16 @@ class TensorflowQuery(QueryBackendCapability):
             [dictionary]: key is the op type while value is the list of sequences start
                         with the op type same as key value.
         """
-        quantizable_op_types = self.get_op_types_by_precision("int8") + self.get_op_types_by_precision("uint8")
+        quantizable_op_types = self.get_op_types_by_precision(
+            "int8"
+        ) + self.get_op_types_by_precision("uint8")
         int8_patterns = [
             i.replace("+", " ").split()
-            for i in list(set(self.get_fuse_patterns()["int8"] + self.get_fuse_patterns()["uint8"]))
+            for i in list(
+                set(
+                    self.get_fuse_patterns()["int8"] + self.get_fuse_patterns()["uint8"]
+                )
+            )
         ]
         res = {}
         for i in quantizable_op_types:

@@ -62,7 +62,11 @@ FALLBACK_RECIPES_SET = {
 WOQ_TUNING_ALGOS = {
     "RTN_G32ASYM": {"algorithm": "RTN", "group_size": 32, "scheme": "asym"},
     "GPTQ_G32ASYM": {"algorithm": "GPTQ", "group_size": 32, "scheme": "asym"},
-    "GPTQ_G32ASYM_DISABLE_LAST_MATMUL": {"algorithm": "GPTQ", "group_size": 32, "scheme": "asym"},
+    "GPTQ_G32ASYM_DISABLE_LAST_MATMUL": {
+        "algorithm": "GPTQ",
+        "group_size": 32,
+        "scheme": "asym",
+    },
     "GPTQ_G128ASYM": {"algorithm": "GPTQ", "group_size": 128, "scheme": "asym"},
     "AWQ_G32ASYM": {"algorithm": "AWQ", "group_size": 32, "scheme": "asym"},
 }

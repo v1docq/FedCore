@@ -3,31 +3,43 @@ from torch import tensor
 
 from fedcore.models.network_modules.layers.conv_layers import Conv1d, ConvBlock
 from fedcore.models.network_modules.layers.linear_layers import *
-from fedcore.models.network_modules.layers.pooling_layers import AdaptiveWeightedAvgPool1d, \
-    attentional_pool_head, GACP1d, GAP1d, gwa_pool_head
+from fedcore.models.network_modules.layers.pooling_layers import (
+    AdaptiveWeightedAvgPool1d,
+    attentional_pool_head,
+    GACP1d,
+    GAP1d,
+    gwa_pool_head,
+)
 
 
-def create_pool_head(n_in, output_dim, seq_len=None, concat_pool=False,
-                     fc_dropout=0., batch_norm=False, y_range=None, **kwargs):
+def create_pool_head(
+    n_in,
+    output_dim,
+    seq_len=None,
+    concat_pool=False,
+    fc_dropout=0.0,
+    batch_norm=False,
+    y_range=None,
+    **kwargs,
+):
     if kwargs:
-        print(f'{kwargs}  not being used')
+        print(f"{kwargs}  not being used")
     if concat_pool:
         n_in *= 2
     layers = [GACP1d(1) if concat_pool else GAP1d(1)]
-    layers += [LinBnDrop(n_in, output_dim,
-                         batch_norm=batch_norm, p=fc_dropout)]
+    layers += [LinBnDrop(n_in, output_dim, batch_norm=batch_norm, p=fc_dropout)]
     if y_range:
         layers += [SigmoidRange(*y_range)]
     return nn.Sequential(*layers)
 
 
-def max_pool_head(n_in, output_dim, seq_len, fc_dropout=0., batch_norm=False,
-                  y_range=None, **kwargs):
+def max_pool_head(
+    n_in, output_dim, seq_len, fc_dropout=0.0, batch_norm=False, y_range=None, **kwargs
+):
     if kwargs:
-        print(f'{kwargs}  not being used')
+        print(f"{kwargs}  not being used")
     layers = [nn.MaxPool1d(seq_len, **kwargs), Reshape()]
-    layers += [LinBnDrop(n_in, output_dim,
-                         batch_norm=batch_norm, p=fc_dropout)]
+    layers += [LinBnDrop(n_in, output_dim, batch_norm=batch_norm, p=fc_dropout)]
     if y_range:
         layers += [SigmoidRange(*y_range)]
     return nn.Sequential(*layers)
@@ -36,17 +48,19 @@ def max_pool_head(n_in, output_dim, seq_len, fc_dropout=0., batch_norm=False,
 def create_pool_plus_head(
     *args,
     lin_ftrs=None,
-    fc_dropout=0.,
+    fc_dropout=0.0,
     concat_pool=True,
     batch_norm_final=False,
     lin_first=False,
-        y_range=None):
+    y_range=None,
+):
     nf = args[0]
     output_dim = args[1]
     if concat_pool:
         nf = nf * 2
-    lin_ftrs = [nf, 512, output_dim] if lin_ftrs is None else [
-        nf] + lin_ftrs + [output_dim]
+    lin_ftrs = (
+        [nf, 512, output_dim] if lin_ftrs is None else [nf] + lin_ftrs + [output_dim]
+    )
     ps = list(fc_dropout)
     if len(ps) == 1:
         ps = [ps[0] / 2] * (len(lin_ftrs) - 2) + ps
@@ -56,8 +70,7 @@ def create_pool_plus_head(
     if lin_first:
         layers.append(nn.Dropout(ps.pop(0)))
     for ni, no, p, actn in zip(lin_ftrs[:-1], lin_ftrs[1:], ps, actns):
-        layers += LinBnDrop(ni, no, batch_norm=True, p=p,
-                            act=actn, lin_first=lin_first)
+        layers += LinBnDrop(ni, no, batch_norm=True, p=p, act=actn, lin_first=lin_first)
     if lin_first:
         layers.append(nn.Linear(lin_ftrs[-2], output_dim))
     if batch_norm_final:
@@ -70,8 +83,7 @@ def create_pool_plus_head(
 def create_conv_head(*args, adaptive_size=None, y_range=None):
     nf = args[0]
     output_dim = args[1]
-    layers = [nn.AdaptiveAvgPool1d(
-        adaptive_size)] if adaptive_size is not None else []
+    layers = [nn.AdaptiveAvgPool1d(adaptive_size)] if adaptive_size is not None else []
     for i in range(2):
         if nf > 1:
             layers += [ConvBlock(nf, nf // 2, 1)]
@@ -85,47 +97,65 @@ def create_conv_head(*args, adaptive_size=None, y_range=None):
 
 
 def create_mlp_head(
-        nf,
-        output_dim,
-        seq_len=None,
-        flatten=True,
-        fc_dropout=0.,
-        batch_norm=False,
-        lin_first=False,
-        y_range=None):
+    nf,
+    output_dim,
+    seq_len=None,
+    flatten=True,
+    fc_dropout=0.0,
+    batch_norm=False,
+    lin_first=False,
+    y_range=None,
+):
     if flatten:
         nf *= seq_len
     layers = [Reshape()] if flatten else []
-    layers += [LinBnDrop(nf, output_dim, batch_norm=batch_norm,
-                         p=fc_dropout, lin_first=lin_first)]
+    layers += [
+        LinBnDrop(
+            nf, output_dim, batch_norm=batch_norm, p=fc_dropout, lin_first=lin_first
+        )
+    ]
     if y_range:
         layers += [SigmoidRange(*y_range)]
     return nn.Sequential(*layers)
 
 
-def create_fc_head(nf, output_dim, seq_len=None, flatten=True, lin_ftrs=None,
-                   y_range=None, fc_dropout=0., batch_norm=False,
-                   batch_norm_final=False, act=nn.ReLU(inplace=True)):
+def create_fc_head(
+    nf,
+    output_dim,
+    seq_len=None,
+    flatten=True,
+    lin_ftrs=None,
+    y_range=None,
+    fc_dropout=0.0,
+    batch_norm=False,
+    batch_norm_final=False,
+    act=nn.ReLU(inplace=True),
+):
     if flatten:
         nf *= seq_len
     layers = [Reshape()] if flatten else []
-    lin_ftrs = [nf, 512, output_dim] if lin_ftrs is None else [
-        nf] + lin_ftrs + [output_dim]
+    lin_ftrs = (
+        [nf, 512, output_dim] if lin_ftrs is None else [nf] + lin_ftrs + [output_dim]
+    )
     if not isinstance(fc_dropout, list):
         fc_dropout = [fc_dropout] * (len(lin_ftrs) - 1)
     actns = [act for _ in range(len(lin_ftrs) - 2)] + [None]
-    layers += [LinBnDrop(lin_ftrs[i],
-                         lin_ftrs[i + 1],
-                         batch_norm=batch_norm and (
-                             i != len(actns) - 1 or batch_norm_final),
-                         p=p,
-                         act=a) for i, (p, a) in enumerate(zip(fc_dropout + [0.], actns))]
+    layers += [
+        LinBnDrop(
+            lin_ftrs[i],
+            lin_ftrs[i + 1],
+            batch_norm=batch_norm and (i != len(actns) - 1 or batch_norm_final),
+            p=p,
+            act=a,
+        )
+        for i, (p, a) in enumerate(zip(fc_dropout + [0.0], actns))
+    ]
     if y_range is not None:
         layers.append(SigmoidRange(*y_range))
     return nn.Sequential(*layers)
 
 
-def create_rnn_head(*args, fc_dropout=0., batch_norm=False, y_range=None):
+def create_rnn_head(*args, fc_dropout=0.0, batch_norm=False, y_range=None):
     nf = args[0]
     output_dim = args[1]
     layers = [LastStep()]
@@ -136,12 +166,8 @@ def create_rnn_head(*args, fc_dropout=0., batch_norm=False, y_range=None):
 
 
 def imputation_head(
-        input_dim,
-        output_dim,
-        seq_len=None,
-        ks=1,
-        y_range=None,
-        fc_dropout=0.):
+    input_dim, output_dim, seq_len=None, ks=1, y_range=None, fc_dropout=0.0
+):
     layers = [nn.Dropout(fc_dropout), nn.Conv1d(output_dim, output_dim, ks)]
     if y_range is not None:
         y_range = (tensor(y_range[0]), tensor(y_range[1]))
@@ -153,16 +179,17 @@ class CreateConvLinNDHead(nn.Sequential):
     """Module to create a nd output head"""
 
     def __init__(
-            self,
-            n_in,
-            n_out,
-            seq_len,
-            d,
-            conv_first=True,
-            conv_batch_norm=False,
-            lin_batch_norm=False,
-            fc_dropout=0.,
-            **kwargs):
+        self,
+        n_in,
+        n_out,
+        seq_len,
+        d,
+        conv_first=True,
+        conv_batch_norm=False,
+        lin_batch_norm=False,
+        fc_dropout=0.0,
+        **kwargs,
+    ):
 
         assert d, "you cannot use an nd head when d is None or 0"
         if isinstance(d, list):
@@ -178,10 +205,14 @@ class CreateConvLinNDHead(nn.Sequential):
             shape = [d, n_out] if n_out > 1 else [d]
 
         conv = [BatchNorm(n_in, ndim=1)] if conv_batch_norm else []
-        conv.append(Conv1d(n_in, n_out, 1, padding=0,
-                           bias=not conv_batch_norm, **kwargs))
-        l = [Transpose(-1, -2), BatchNorm(seq_len, ndim=1),
-             Transpose(-1, -2)] if lin_batch_norm else []
+        conv.append(
+            Conv1d(n_in, n_out, 1, padding=0, bias=not conv_batch_norm, **kwargs)
+        )
+        l = (
+            [Transpose(-1, -2), BatchNorm(seq_len, ndim=1), Transpose(-1, -2)]
+            if lin_batch_norm
+            else []
+        )
         if fc_dropout != 0:
             l.append(nn.Dropout(fc_dropout))
         lin = [nn.Linear(seq_len, fd, bias=not lin_batch_norm)]
@@ -197,14 +228,15 @@ class LinNDHead(nn.Sequential):
     """Module to create a nd output head with linear layers"""
 
     def __init__(
-            self,
-            n_in,
-            n_out,
-            seq_len=None,
-            d=None,
-            flatten=False,
-            use_batch_norm=False,
-            fc_dropout=0.):
+        self,
+        n_in,
+        n_out,
+        seq_len=None,
+        d=None,
+        flatten=False,
+        use_batch_norm=False,
+        fc_dropout=0.0,
+    ):
 
         if seq_len is None:
             seq_len = 1
@@ -230,8 +262,7 @@ class LinNDHead(nn.Sequential):
             layers += [nn.Dropout(fc_dropout)]
         if d is None:
             if not flatten or seq_len == 1:
-                layers += [nn.AdaptiveAvgPool1d(1),
-                           Squeeze(-1), nn.Linear(n_in, n_out)]
+                layers += [nn.AdaptiveAvgPool1d(1), Squeeze(-1), nn.Linear(n_in, n_out)]
                 if n_out == 1:
                     layers += [Squeeze(-1)]
             else:
@@ -254,14 +285,15 @@ class RocketNDHead(nn.Sequential):
     """Module to create a nd output head with linear layers for the rocket family of models"""
 
     def __init__(
-            self,
-            n_in,
-            n_out,
-            seq_len=None,
-            d=None,
-            use_batch_norm=False,
-            fc_dropout=0.,
-            zero_init=True):
+        self,
+        n_in,
+        n_out,
+        seq_len=None,
+        d=None,
+        use_batch_norm=False,
+        fc_dropout=0.0,
+        zero_init=True,
+    ):
 
         if d is None:
             fd = 1
@@ -300,14 +332,15 @@ class Xresnet1dNDHead(nn.Sequential):
     """Module to create a nd output head with linear layers for the xresnet family of models"""
 
     def __init__(
-            self,
-            n_in,
-            n_out,
-            seq_len=None,
-            d=None,
-            use_batch_norm=False,
-            fc_dropout=0.,
-            zero_init=True):
+        self,
+        n_in,
+        n_out,
+        seq_len=None,
+        d=None,
+        use_batch_norm=False,
+        fc_dropout=0.0,
+        zero_init=True,
+    ):
 
         if d is None:
             fd = 1
@@ -345,16 +378,11 @@ class Xresnet1dNDHead(nn.Sequential):
 class CreateConv3dHead(nn.Sequential):
     """Module to create a nd output head with a convolutional layer"""
 
-    def __init__(
-            self,
-            n_in,
-            n_out,
-            seq_len,
-            d,
-            use_batch_norm=False,
-            **kwargs):
+    def __init__(self, n_in, n_out, seq_len, d, use_batch_norm=False, **kwargs):
         assert d, "you cannot use an 3d head when d is None or 0"
-        assert d == seq_len, 'You can only use this head when learn.dls.len == learn.dls.d'
+        assert (
+            d == seq_len
+        ), "You can only use this head when learn.dls.len == learn.dls.d"
         layers = [nn.BatchNorm1d(n_in)] if use_batch_norm else []
         layers += [Conv(n_in, n_out, 1, **kwargs), Transpose(-1, -2)]
         if n_out == 1:
@@ -363,17 +391,18 @@ class CreateConv3dHead(nn.Sequential):
 
 
 def universal_pool_head(
-        n_in,
-        output_dim,
-        seq_len,
-        mult=2,
-        pool_n_layers=2,
-        pool_ln=True,
-        pool_dropout=0.5,
-        pool_act=nn.ReLU(),
-        zero_init=True,
-        batch_norm=True,
-        fc_dropout=0.):
+    n_in,
+    output_dim,
+    seq_len,
+    mult=2,
+    pool_n_layers=2,
+    pool_ln=True,
+    pool_dropout=0.5,
+    pool_act=nn.ReLU(),
+    zero_init=True,
+    batch_norm=True,
+    fc_dropout=0.0,
+):
     return nn.Sequential(
         AdaptiveWeightedAvgPool1d(
             n_in,
@@ -382,13 +411,11 @@ def universal_pool_head(
             mult=mult,
             ln=pool_ln,
             dropout=pool_dropout,
-            act=pool_act),
+            act=pool_act,
+        ),
         Reshape(),
-        LinBnDrop(
-            n_in,
-            output_dim,
-            p=fc_dropout,
-            batch_norm=batch_norm))
+        LinBnDrop(n_in, output_dim, p=fc_dropout, batch_norm=batch_norm),
+    )
 
 
 pool_head = create_pool_head
@@ -423,4 +450,5 @@ heads = [
     conv_3d_head,
     attentional_pool_head,
     universal_pool_head,
-    gwa_pool_head]
+    gwa_pool_head,
+]

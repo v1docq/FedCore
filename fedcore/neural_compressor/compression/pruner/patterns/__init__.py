@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os.path import dirname, basename, isfile, join
 import glob
+from os.path import dirname, basename, isfile, join
 
 from .base import PATTERNS
 
@@ -46,7 +46,9 @@ def get_pattern(config, modules, framework="pytorch"):
     Raises:
         AssertionError: Currently only support patterns which have been registered in PATTERNS.
     """
-    assert framework in FRAMEWORK.keys(), f"does not support {framework}, currently only support {FRAMEWORK.keys()}"
+    assert (
+        framework in FRAMEWORK.keys()
+    ), f"does not support {framework}, currently only support {FRAMEWORK.keys()}"
 
     name = config.pattern
     name = name.split("_")[-1]

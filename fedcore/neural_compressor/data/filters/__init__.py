@@ -16,10 +16,11 @@
 # limitations under the License.
 """Built-in filter."""
 
-from .coco_filter import LabelBalanceCOCORecordFilter
-from .filter import FILTERS, Filter, filter_registry
-from os.path import dirname, basename, isfile, join
 import glob
+from os.path import dirname, basename, isfile, join
+
+from fedcore.neural_compressor.data.filters.coco_filter import LabelBalanceCOCORecordFilter
+from fedcore.neural_compressor.data.filters.filter import FILTERS, Filter, filter_registry
 
 modules = glob.glob(join(dirname(__file__), "*.py"))
 

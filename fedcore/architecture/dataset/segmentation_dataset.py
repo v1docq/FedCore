@@ -13,8 +13,8 @@ from transformers import SegformerFeatureExtractor
 class SegmentationDataset(data.Dataset):
     def __init__(self, directory, annotations, transforms: callable = None):
         super(SegmentationDataset, self).__init__()
-        self.img_files = glob.glob(os.path.join(directory, 'images', '*.png'))
-        self.mask_files = glob.glob(os.path.join(directory, 'labels', '*.png'))
+        self.img_files = glob.glob(os.path.join(directory, "images", "*.png"))
+        self.mask_files = glob.glob(os.path.join(directory, "labels", "*.png"))
         self.transforms = transforms
 
     def __getitem__(self, index):
@@ -36,11 +36,13 @@ class SegmentationDataset(data.Dataset):
 class SemanticSegmentationDataset(Dataset):
     """Image (semantic) segmentation dataset."""
 
-    def __init__(self,
-                 root_dir,
-                 annotations,
-                 feature_extractor=SegformerFeatureExtractor(reduce_labels=True),
-                 train=True):
+    def __init__(
+        self,
+        root_dir,
+        annotations,
+        feature_extractor=SegformerFeatureExtractor(reduce_labels=True),
+        train=True,
+    ):
         """
         Args:
             root_dir (string): Root directory of the dataset containing the images + annotations.
@@ -61,8 +63,9 @@ class SemanticSegmentationDataset(Dataset):
             for img_path in self.images
         ]
 
-        assert len(self.images) == len(self.annotations), \
-            "There must be as many images as there are segmentation maps"
+        assert len(self.images) == len(
+            self.annotations
+        ), "There must be as many images as there are segmentation maps"
 
     def __len__(self):
         return len(self.images)
@@ -95,9 +98,7 @@ class SemanticSegmentationDataset(Dataset):
         return encoded_inputs
 
 
-def init_segmentation_dataloaders(root_dir: str,
-                                  batch_size: int,
-                                  num_workers: int):
+def init_segmentation_dataloaders(root_dir: str, batch_size: int, num_workers: int):
     feature_extractor = SegformerFeatureExtractor(reduce_labels=True)
 
     train_dataset = SemanticSegmentationDataset(
@@ -110,6 +111,8 @@ def init_segmentation_dataloaders(root_dir: str,
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
     )
-    valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, num_workers=num_workers)
+    valid_dataloader = DataLoader(
+        valid_dataset, batch_size=batch_size, num_workers=num_workers
+    )
 
     return train_dataloader, valid_dataloader

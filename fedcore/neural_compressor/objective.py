@@ -146,7 +146,6 @@ class Accuracy(Objective):
 
     def start(self):
         """The interface start the measuring."""
-        pass
 
     def end(self, acc):
         """The interface end the measuring."""
@@ -204,7 +203,6 @@ class ModelSize(Objective):
 
     def start(self):
         """Start to calculate the model size."""
-        pass
 
     def end(self):
         """Get the actual model size."""
@@ -323,30 +321,50 @@ class MultiObjective:
             else:
                 # use metric_criterion to replace acc_criterion
                 acc_target = [
-                    b_acc * (1 - float(self.acc_goal)) if higher_is_better else b_acc * (1 + float(self.acc_goal))
+                    (
+                        b_acc * (1 - float(self.acc_goal))
+                        if higher_is_better
+                        else b_acc * (1 + float(self.acc_goal))
+                    )
                     for b_acc, higher_is_better in zip(base_acc, self.metric_criterion)
                 ]
         else:
             if len(base_acc) == 1:
                 acc_target = [
-                    base_acc[0] - float(self.acc_goal) if self.higher_is_better else base_acc[0] + float(self.acc_goal)
+                    (
+                        base_acc[0] - float(self.acc_goal)
+                        if self.higher_is_better
+                        else base_acc[0] + float(self.acc_goal)
+                    )
                 ]
             else:
                 # use metric_criterion to replace acc_criterion
                 acc_target = [
-                    b_acc - float(self.acc_goal) if higher_is_better else b_acc + float(self.acc_goal)
+                    (
+                        b_acc - float(self.acc_goal)
+                        if higher_is_better
+                        else b_acc + float(self.acc_goal)
+                    )
                     for b_acc, higher_is_better in zip(base_acc, self.metric_criterion)
                 ]
 
-        if last_measure == 0 or all([(x <= y) ^ z for x, y, z in zip(perf, last_measure, self.obj_criterion)]):
+        if last_measure == 0 or all(
+            [(x <= y) ^ z for x, y, z in zip(perf, last_measure, self.obj_criterion)]
+        ):
             if len(base_acc) == 1:
-                return acc[0] >= acc_target[0] if self.higher_is_better else acc[0] < acc_target[0]
+                return (
+                    acc[0] >= acc_target[0]
+                    if self.higher_is_better
+                    else acc[0] < acc_target[0]
+                )
             else:
                 # use metric_criterion to replace acc_criterion
                 return all(
                     [
                         sub_acc >= target if higher_is_better else sub_acc < target
-                        for sub_acc, target, higher_is_better in zip(acc, acc_target, self.metric_criterion)
+                        for sub_acc, target, higher_is_better in zip(
+                            acc, acc_target, self.metric_criterion
+                        )
                     ]
                 )
         else:
@@ -372,18 +390,30 @@ class MultiObjective:
             else:
                 # use metric_criterion to replace acc_criterion
                 acc_target = [
-                    b_acc * (1 - float(self.acc_goal)) if higher_is_better else b_acc * (1 + float(self.acc_goal))
+                    (
+                        b_acc * (1 - float(self.acc_goal))
+                        if higher_is_better
+                        else b_acc * (1 + float(self.acc_goal))
+                    )
                     for b_acc, higher_is_better in zip(base_acc, self.metric_criterion)
                 ]
         else:
             if len(base_acc) == 1:
                 acc_target = [
-                    base_acc[0] - float(self.acc_goal) if self.higher_is_better else base_acc[0] + float(self.acc_goal)
+                    (
+                        base_acc[0] - float(self.acc_goal)
+                        if self.higher_is_better
+                        else base_acc[0] + float(self.acc_goal)
+                    )
                 ]
             else:
                 # use metric_criterion to replace acc_criterion
                 acc_target = [
-                    b_acc - float(self.acc_goal) if higher_is_better else b_acc + float(self.acc_goal)
+                    (
+                        b_acc - float(self.acc_goal)
+                        if higher_is_better
+                        else b_acc + float(self.acc_goal)
+                    )
                     for b_acc, higher_is_better in zip(base_acc, self.metric_criterion)
                 ]
         return acc_target
@@ -399,9 +429,15 @@ class MultiObjective:
             last_acc = [np.mean(np.array(last_acc) * self.metric_weight)]
         if not self._accuracy_target:
             self.accuracy_target = self._get_accuracy_target()
-        all_higher = all([_last > _target for _last, _target in zip(last_acc, self.accuracy_target)])
-        all_lower = all([_last < _target for _last, _target in zip(last_acc, self.accuracy_target)])
-        got_better_result = (all_higher and self.higher_is_better) or (all_lower and not self.higher_is_better)
+        all_higher = all(
+            [_last > _target for _last, _target in zip(last_acc, self.accuracy_target)]
+        )
+        all_lower = all(
+            [_last < _target for _last, _target in zip(last_acc, self.accuracy_target)]
+        )
+        got_better_result = (all_higher and self.higher_is_better) or (
+            all_lower and not self.higher_is_better
+        )
         return got_better_result
 
     def accuracy_meet_req(self, last_result: Tuple[float, List[float]]) -> bool:
@@ -422,9 +458,15 @@ class MultiObjective:
             last_acc = [np.mean(np.array(last_acc) * self.metric_weight)]
         if not self._accuracy_target:
             self.accuracy_target = self._get_accuracy_target()
-        all_higher = all([_last > _target for _last, _target in zip(last_acc, self.accuracy_target)])
-        all_lower = all([_last < _target for _last, _target in zip(last_acc, self.accuracy_target)])
-        check_result = (all_higher and self.higher_is_better) or (all_lower and not self.higher_is_better)
+        all_higher = all(
+            [_last > _target for _last, _target in zip(last_acc, self.accuracy_target)]
+        )
+        all_lower = all(
+            [_last < _target for _last, _target in zip(last_acc, self.accuracy_target)]
+        )
+        check_result = (all_higher and self.higher_is_better) or (
+            all_lower and not self.higher_is_better
+        )
         return check_result
 
     def evaluate(self, eval_func, model):
@@ -498,11 +540,17 @@ class MultiObjective:
         acc_data = [i[0] for i in tune_data]
         obj_data = [i[1] for i in tune_data]
 
-        idx = self.representation.index("Accuracy") if "Accuracy" in self.representation else None
+        idx = (
+            self.representation.index("Accuracy")
+            if "Accuracy" in self.representation
+            else None
+        )
         if isinstance(base_acc, list) and len(base_acc) > 1 and idx is not None:
             if self.metric_weight is not None:
                 for i in range(len(obj_data)):
-                    obj_data[i][idx] = np.mean(np.array(obj_data[i][idx]) * self.metric_weight)
+                    obj_data[i][idx] = np.mean(
+                        np.array(obj_data[i][idx]) * self.metric_weight
+                    )
                 base_obj[idx] = np.mean(np.array(base_obj[idx]) * self.metric_weight)
                 assert obj_criterion[idx] == self.higher_is_better, (
                     "Accuracy criterion and "
@@ -550,25 +598,43 @@ class MultiObjective:
                 ]
             else:
                 acc_target = [
-                    base_acc[0] - float(self.acc_goal) if self.higher_is_better else base_acc[0] + float(self.acc_goal)
+                    (
+                        base_acc[0] - float(self.acc_goal)
+                        if self.higher_is_better
+                        else base_acc[0] + float(self.acc_goal)
+                    )
                 ]
-            acc_mask = acc_data >= acc_target if self.higher_is_better else acc_data < acc_target
+            acc_mask = (
+                acc_data >= acc_target
+                if self.higher_is_better
+                else acc_data < acc_target
+            )
         else:
             if self.relative:
                 acc_target = [
-                    b_acc * (1 - float(self.acc_goal)) if higher_is_better else b_acc * (1 + float(self.acc_goal))
+                    (
+                        b_acc * (1 - float(self.acc_goal))
+                        if higher_is_better
+                        else b_acc * (1 + float(self.acc_goal))
+                    )
                     for b_acc, higher_is_better in zip(base_acc, self.metric_criterion)
                 ]
             else:
                 acc_target = [
-                    b_acc - float(self.acc_goal) if higher_is_better else b_acc + float(self.acc_goal)
+                    (
+                        b_acc - float(self.acc_goal)
+                        if higher_is_better
+                        else b_acc + float(self.acc_goal)
+                    )
                     for b_acc, higher_is_better in zip(base_acc, self.metric_criterion)
                 ]
             acc_mask = np.all(
                 [
                     [
                         item >= target if higher_is_better else item < target
-                        for item, target, higher_is_better in zip(acc_item, acc_target, self.metric_criterion)
+                        for item, target, higher_is_better in zip(
+                            acc_item, acc_target, self.metric_criterion
+                        )
                     ]
                     for acc_item in acc_data
                 ],
@@ -580,12 +646,16 @@ class MultiObjective:
         # normalize data
         if idx is not None and not self.relative:
             if not isinstance(higher_is_better, list):
-                obj_data[:, idx] = base_obj[idx] - 1 / (obj_data[:, idx] / base_obj[idx])
+                obj_data[:, idx] = base_obj[idx] - 1 / (
+                    obj_data[:, idx] / base_obj[idx]
+                )
             else:
                 for i in range(len(higher_is_better)):
                     if higher_is_better[i]:
                         k = i - len(higher_is_better)
-                        obj_data[:, k] = base_obj[k] - 1 / (obj_data[:, k] / base_obj[k])
+                        obj_data[:, k] = base_obj[k] - 1 / (
+                            obj_data[:, k] / base_obj[k]
+                        )
 
         min_val = np.min(obj_data, axis=0)
         max_val = np.max(obj_data, axis=0)
@@ -593,7 +663,9 @@ class MultiObjective:
 
         # convert higher-is-better to lower-is-better
         obj_criterion = np.array(obj_criterion)
-        obj_data[:, obj_criterion] = max_val[obj_criterion] + min_val[obj_criterion] - obj_data[:, obj_criterion]
+        obj_data[:, obj_criterion] = (
+            max_val[obj_criterion] + min_val[obj_criterion] - obj_data[:, obj_criterion]
+        )
 
         obj_data[:, zero_mask] = (obj_data[:, zero_mask] - min_val[zero_mask]) / (
             max_val[zero_mask] - min_val[zero_mask]

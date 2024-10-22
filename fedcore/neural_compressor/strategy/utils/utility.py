@@ -136,13 +136,17 @@ def build_slave_faker_model():
 
     class FakerModel:
         def __call__(self, *args, **kwargs):
-            logger.warning("Slave node has no quantized model, please handle it yourself.")
+            logger.warning(
+                "Slave node has no quantized model, please handle it yourself."
+            )
 
         def __getitem__(self, key):
             return self.__getattr__(str(key))
 
         def __getattr__(self, name):
-            logger.warning("Slave node has no quantized model, please handle it yourself.")
+            logger.warning(
+                "Slave node has no quantized model, please handle it yourself."
+            )
             return self
 
     return FakerModel()

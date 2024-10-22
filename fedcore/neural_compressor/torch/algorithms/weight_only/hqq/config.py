@@ -56,9 +56,15 @@ class QTensorConfig:
         )
 
 
-default_weight_quant_config = QTensorConfig(nbits=4, channel_wise=True, group_size=128, optimize=True, round_zero=True)
-default_scale_quant_config = QTensorConfig(nbits=8, channel_wise=True, group_size=64, optimize=False, round_zero=None)
-default_zero_quant_config = QTensorConfig(nbits=8, channel_wise=False, group_size=None, optimize=False, round_zero=None)
+default_weight_quant_config = QTensorConfig(
+    nbits=4, channel_wise=True, group_size=128, optimize=True, round_zero=True
+)
+default_scale_quant_config = QTensorConfig(
+    nbits=8, channel_wise=True, group_size=64, optimize=False, round_zero=None
+)
+default_zero_quant_config = QTensorConfig(
+    nbits=8, channel_wise=False, group_size=None, optimize=False, round_zero=None
+)
 
 
 class HQQModuleConfig(
@@ -77,7 +83,10 @@ class HQQModuleConfig(
 
     def __repr__(self) -> str:
         return (
-            f"HQQModuleConfig(\n" f"    weight={self.weight},\n" f"    scale={self.scale},\n" f"    zero={self.zero}\n)"
+            f"HQQModuleConfig(\n"
+            f"    weight={self.weight},\n"
+            f"    scale={self.scale},\n"
+            f"    zero={self.zero}\n)"
         )
 
 

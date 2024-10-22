@@ -22,8 +22,15 @@ from onnxruntime.quantization import quantize
 from fedcore.neural_compressor.common import Logger
 from fedcore.neural_compressor.common.utils import AWQ, GPTQ, RTN, SMOOTH_QUANT
 from fedcore.neural_compressor.onnxrt.algorithms import Smoother
-from fedcore.neural_compressor.onnxrt.quantization.calibrate import CalibrationDataReader
-from fedcore.neural_compressor.onnxrt.quantization.config import AWQConfig, GPTQConfig, RTNConfig, SmoohQuantConfig
+from fedcore.neural_compressor.onnxrt.quantization.calibrate import (
+    CalibrationDataReader,
+)
+from fedcore.neural_compressor.onnxrt.quantization.config import (
+    AWQConfig,
+    GPTQConfig,
+    RTNConfig,
+    SmoohQuantConfig,
+)
 from fedcore.neural_compressor.onnxrt.utils.utility import register_algo
 
 logger = Logger().get_logger()
@@ -75,7 +82,9 @@ def smooth_quant_entry(
         calibration_data_reader.rewind()
 
         # exclude Mul operations which are inserted during smooth operation
-        excluded_nodes = [i.name for i in smoothed_model.graph.node if i.name.endswith("_smooth_mul")]
+        excluded_nodes = [
+            i.name for i in smoothed_model.graph.node if i.name.endswith("_smooth_mul")
+        ]
         quant_config.calibration_data_reader = calibration_data_reader
         quant_config.nodes_to_exclude.extend(excluded_nodes)
         quant_config.convert_to_ort_config()
@@ -92,7 +101,9 @@ def smooth_quant_entry(
 
 ###################### RTN Algo Entry ##################################
 @register_algo(name=RTN)
-def rtn_quantize_entry(model: Union[Path, str], quant_config: RTNConfig, *args, **kwargs) -> onnx.ModelProto:
+def rtn_quantize_entry(
+    model: Union[Path, str], quant_config: RTNConfig, *args, **kwargs
+) -> onnx.ModelProto:
     """The main entry to apply rtn quantization."""
     from fedcore.neural_compressor.onnxrt.algorithms import apply_rtn_on_model
 
@@ -107,7 +118,11 @@ def rtn_quantize_entry(model: Union[Path, str], quant_config: RTNConfig, *args, 
 ###################### GPTQ Algo Entry ##################################
 @register_algo(name=GPTQ)
 def gptq_quantize_entry(
-    model: Union[Path, str], quant_config: GPTQConfig, calibration_data_reader: CalibrationDataReader, *args, **kwargs
+    model: Union[Path, str],
+    quant_config: GPTQConfig,
+    calibration_data_reader: CalibrationDataReader,
+    *args,
+    **kwargs
 ) -> onnx.ModelProto:
     """The main entry to apply gptq quantization."""
     assert calibration_data_reader is not None, "Please provide calibration_data_reader"
@@ -131,7 +146,11 @@ def gptq_quantize_entry(
 ###################### AWQ Algo Entry ##################################
 @register_algo(name=AWQ)
 def awq_quantize_entry(
-    model: Union[Path, str], quant_config: AWQConfig, calibration_data_reader: CalibrationDataReader, *args, **kwargs
+    model: Union[Path, str],
+    quant_config: AWQConfig,
+    calibration_data_reader: CalibrationDataReader,
+    *args,
+    **kwargs
 ) -> onnx.ModelProto:
     """The main entry to apply awq quantization."""
     assert calibration_data_reader is not None, "Please provide calibration_data_reader"

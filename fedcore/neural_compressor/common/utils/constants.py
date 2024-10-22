@@ -39,7 +39,9 @@ FP8_QUANT = "fp8_quant"
 # options
 import datetime
 
-DEFAULT_WORKSPACE = "./nc_workspace/{}/".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+DEFAULT_WORKSPACE = "./nc_workspace/{}/".format(
+    datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+)
 
 from typing import Callable, Union
 

@@ -32,15 +32,28 @@ def _convert_hqq_module_config(config) -> HQQModuleConfig:
     scale_quant_group_size = config.scale_quant_group_size
 
     weight_qconfig = QTensorConfig(
-        nbits=nbits, channel_wise=True, group_size=group_size, optimize=True, round_zero=True if nbits == 4 else False
+        nbits=nbits,
+        channel_wise=True,
+        group_size=group_size,
+        optimize=True,
+        round_zero=True if nbits == 4 else False,
     )
     zero_qconfig = None
     if quant_zero:
-        zero_qconfig = QTensorConfig(nbits=8, channel_wise=False, group_size=None, optimize=False)
+        zero_qconfig = QTensorConfig(
+            nbits=8, channel_wise=False, group_size=None, optimize=False
+        )
     scale_qconfig = None
     if quant_scale:
-        scale_qconfig = QTensorConfig(nbits=8, channel_wise=True, group_size=scale_quant_group_size, optimize=False)
-    hqq_module_config = HQQModuleConfig(weight=weight_qconfig, scale=scale_qconfig, zero=zero_qconfig)
+        scale_qconfig = QTensorConfig(
+            nbits=8,
+            channel_wise=True,
+            group_size=scale_quant_group_size,
+            optimize=False,
+        )
+    hqq_module_config = HQQModuleConfig(
+        weight=weight_qconfig, scale=scale_qconfig, zero=zero_qconfig
+    )
     logger.debug(hqq_module_config)
     return hqq_module_config
 
@@ -56,7 +69,9 @@ def _parse_hqq_configs_mapping(configs_mapping):
 
 
 @torch.no_grad()
-def hqq_quantize(model: torch.nn.Module, configs_mapping, *args, **kwargs) -> torch.nn.Module:
+def hqq_quantize(
+    model: torch.nn.Module, configs_mapping, *args, **kwargs
+) -> torch.nn.Module:
     qconfig_mapping = _parse_hqq_configs_mapping(configs_mapping)
     hqq_quantizer = HQQuantizer(qconfig_mapping)
     q_model = hqq_quantizer.prepare(model)

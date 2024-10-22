@@ -33,7 +33,8 @@ def init_quantize_config(model, quantize_recipe=None):
                                  should be quantized.
     """
     assert "quantize_config" not in global_config, (
-        "quantize_config has been unexpectedly " "created. Please check your QAT workflow"
+        "quantize_config has been unexpectedly "
+        "created. Please check your QAT workflow"
     )
 
     config = QuantizeConfig()

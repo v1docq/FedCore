@@ -16,7 +16,12 @@
 # limitations under the License.
 """ArgMax operator."""
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
 
 
 @op_registry(op_types="ArgMax")
@@ -30,7 +35,9 @@ class ArgMaxOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
         return True
 
     def convert(self, convert_format):

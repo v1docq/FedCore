@@ -19,9 +19,15 @@
 import tensorflow as tf
 from tensorflow.python.framework import dtypes
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.graph_base import GraphRewriterBase
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.graph_base import (
+    GraphRewriterBase,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.tensorflow.utils import SPR_BASE_VERSIONS
 
 
@@ -30,7 +36,10 @@ class FuseGeluOptimizer(GraphRewriterBase):  # pragma: no cover
 
     def do_transformation(self):
         """Execute the fusion from small ops to Gelu."""
-        if not (tf.version.VERSION in ("1.15.0-up2", "1.15.0-up3") or tf.version.VERSION in SPR_BASE_VERSIONS):
+        if not (
+            tf.version.VERSION in ("1.15.0-up2", "1.15.0-up3")
+            or tf.version.VERSION in SPR_BASE_VERSIONS
+        ):
             return self.model
 
         cur_graph = GraphAnalyzer()
@@ -41,7 +50,16 @@ class FuseGeluOptimizer(GraphRewriterBase):  # pragma: no cover
         # https://github.com/IntelAI/models/blob/master/models/language_modeling/tensorflow/
         # bert_large/inference/generic_ops.py#L105
         target_nodes = cur_graph.query_fusion_pattern_nodes(
-            [["Pow"], ["Mul"], ["AddV2"], ["Mul"], ["Tanh"], ["AddV2"], ["Mul"], ["Mul"]]
+            [
+                ["Pow"],
+                ["Mul"],
+                ["AddV2"],
+                ["Mul"],
+                ["Tanh"],
+                ["AddV2"],
+                ["Mul"],
+                ["Mul"],
+            ]
         )
 
         if not target_nodes:
@@ -73,7 +91,9 @@ class FuseGeluOptimizer(GraphRewriterBase):  # pragma: no cover
 
                 if graph_info[node_name].node.op == "Const":
                     pow_const_node_name = i
-                    pow_value = graph_info[node_name].node.attr["value"].tensor.float_val[0]
+                    pow_value = (
+                        graph_info[node_name].node.attr["value"].tensor.float_val[0]
+                    )
                     break
 
             if pow_value != 3:
@@ -128,7 +148,10 @@ class FuseGeluOptimizer(GraphRewriterBase):  # pragma: no cover
             rest_mul_const_node_name = None
             for i in rest_mul_node.input:
                 i = Helper.node_name_from_input(i)
-                if graph_info[i].node.op == "Const" and graph_info[i].node.attr["value"].tensor.float_val[0] == 0.5:
+                if (
+                    graph_info[i].node.op == "Const"
+                    and graph_info[i].node.attr["value"].tensor.float_val[0] == 0.5
+                ):
                     rest_mul_const_node_name = i
                     rest_mul_valid = True
                     break
@@ -170,7 +193,9 @@ class FuseGeluOptimizer(GraphRewriterBase):  # pragma: no cover
             mul2_node = graph_info[node_combination[5]].node
 
             sqrt_input_name = Helper.node_name_from_input(sqrt_node.input[0])
-            sqrt_value = graph_info[sqrt_input_name].node.attr["value"].tensor.float_val[0]
+            sqrt_value = (
+                graph_info[sqrt_input_name].node.attr["value"].tensor.float_val[0]
+            )
 
             if sqrt_value != 2:
                 continue

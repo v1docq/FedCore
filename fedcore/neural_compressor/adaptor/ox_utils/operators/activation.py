@@ -18,8 +18,16 @@
 
 import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg, ms_domain
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    attribute_to_kwarg,
+    ms_domain,
+)
 
 
 @op_registry(op_types="LeakyRelu, Sigmoid")
@@ -47,7 +55,9 @@ class ActivationOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
 
         children = self.quantizer.model.get_children(node)
         if len(children) == 0 or not node.name.endswith("_quant"):
@@ -72,7 +82,11 @@ class ActivationOperator(Operator):
         kwargs["domain"] = ms_domain
 
         qlinear_activation_node = onnx.helper.make_node(
-            "QLinear" + node.op_type, inputs, [qlinear_activation_output], node.name, **kwargs
+            "QLinear" + node.op_type,
+            inputs,
+            [qlinear_activation_output],
+            node.name,
+            **kwargs
         )
 
         self.quantizer.new_nodes.append(qlinear_activation_node)
@@ -100,7 +114,9 @@ class RemovableActivationOperator(Operator):
         if node.output[0] in [i.name for i in self.quantizer.model.model.graph.output]:
             self.quantizer.dequantize_tensor(node, node.input[0])
         else:
-            self.quantizer.model.replace_input_of_all_nodes(node.output[0], node.input[0])
+            self.quantizer.model.replace_input_of_all_nodes(
+                node.output[0], node.input[0]
+            )
             self.quantizer.remove_nodes.append(node)
 
 
@@ -119,13 +135,19 @@ class QActivationOperator(QOperator):
         inits = []
         # input dq
         in_dq = onnx.helper.make_node(
-            "DequantizeLinear", node.input[:3], [node.name + "_in_dequant"], node.name + "_in_dequant"
+            "DequantizeLinear",
+            node.input[:3],
+            [node.name + "_in_dequant"],
+            node.name + "_in_dequant",
         )
         inputs = [node.name + "_in_dequant"]
         add_nodes.append(in_dq)
         # output q
         out_q = onnx.helper.make_node(
-            "QuantizeLinear", [node.name + "_out", node.input[3], node.input[4]], node.output, node.name + "_out_quant"
+            "QuantizeLinear",
+            [node.name + "_out", node.input[3], node.input[4]],
+            node.output,
+            node.name + "_out_quant",
         )
         outputs = [node.name + "_out"]
         add_nodes.append(out_q)
@@ -135,7 +157,11 @@ class QActivationOperator(QOperator):
             kwargs.update(attribute_to_kwarg(attribute))
 
         activation_node = onnx.helper.make_node(
-            node.op_type.split("QLinear")[-1], inputs, outputs, node.name + "_convert", **kwargs
+            node.op_type.split("QLinear")[-1],
+            inputs,
+            outputs,
+            node.name + "_convert",
+            **kwargs
         )
         add_nodes.append(activation_node)
         return True, add_nodes, inits

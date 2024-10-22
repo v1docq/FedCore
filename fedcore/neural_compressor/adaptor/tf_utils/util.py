@@ -24,7 +24,12 @@ import numpy as np
 import tensorflow as tf
 from google.protobuf import text_format
 from pkg_resources import parse_version
-from tensorflow.core.framework import attr_value_pb2, graph_pb2, node_def_pb2, variable_pb2
+from tensorflow.core.framework import (
+    attr_value_pb2,
+    graph_pb2,
+    node_def_pb2,
+    variable_pb2,
+)
 from tensorflow.core.protobuf import config_pb2, meta_graph_pb2
 from tensorflow.python.eager import context, wrap_function
 from tensorflow.python.framework import convert_to_constants
@@ -66,12 +71,16 @@ def version1_eq_version2(version1, version2):
 
 def version1_gte_version2(version1, version2):
     """Check if version1 is greater than or equal to version2."""
-    return parse_version(version1) > parse_version(version2) or parse_version(version1) == parse_version(version2)
+    return parse_version(version1) > parse_version(version2) or parse_version(
+        version1
+    ) == parse_version(version2)
 
 
 def version1_lte_version2(version1, version2):
     """Check if version1 is less than or equal to version2."""
-    return parse_version(version1) < parse_version(version2) or parse_version(version1) == parse_version(version2)
+    return parse_version(version1) < parse_version(version2) or parse_version(
+        version1
+    ) == parse_version(version2)
 
 
 def disable_random(seed=1):
@@ -117,7 +126,9 @@ def write_graph(out_graph_def, out_graph_file):
     :param out_graph_file: path to output graph file.
     :return: None.
     """
-    assert isinstance(out_graph_def, tf.compat.v1.GraphDef), "out_graph_def is not instance of TensorFlow GraphDef."
+    assert isinstance(
+        out_graph_def, tf.compat.v1.GraphDef
+    ), "out_graph_def is not instance of TensorFlow GraphDef."
 
     assert out_graph_file and os.path.exists(
         os.path.dirname(out_graph_file)
@@ -198,7 +209,9 @@ def is_saved_model_format(model_path):
     """
     file_list = [os.path.splitext(i)[-1] for i in os.listdir(model_path)]
     # TF 2.11.0 added a new fingerprint.pb to the SavedModel directory.
-    return bool(file_list.count(".pb") in [1, 2, 3] and ("variables") in os.listdir(model_path))
+    return bool(
+        file_list.count(".pb") in [1, 2, 3] and ("variables") in os.listdir(model_path)
+    )
 
 
 def get_estimator_graph(estimator, input_fn):
@@ -212,8 +225,12 @@ def get_estimator_graph(estimator, input_fn):
         graph
     """
     with tf.Graph().as_default() as g:
-        features, input_hooks = estimator._get_features_from_input_fn(input_fn, tf.estimator.ModeKeys.PREDICT)
-        estimator_spec = estimator._call_model_fn(features, None, tf.estimator.ModeKeys.PREDICT, estimator.config)
+        features, input_hooks = estimator._get_features_from_input_fn(
+            input_fn, tf.estimator.ModeKeys.PREDICT
+        )
+        estimator_spec = estimator._call_model_fn(
+            features, None, tf.estimator.ModeKeys.PREDICT, estimator.config
+        )
 
         outputs = (
             [tensor.name for tensor in estimator_spec.predictions.values()]
@@ -232,7 +249,9 @@ def get_estimator_graph(estimator, input_fn):
             if "MakeIterator" in [node.op for node in g.as_graph_def().node]:
                 output_nodes.append("MakeIterator")
 
-            graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(sess, g.as_graph_def(), output_nodes)
+            graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
+                sess, g.as_graph_def(), output_nodes
+            )
 
         graph = tf.Graph()
         with graph.as_default():
@@ -264,7 +283,9 @@ def get_tensor_by_name(graph, name, try_cnt=3):
     raise ValueError("can not find tensor by name")
 
 
-def iterator_sess_run(sess, iter_op, feed_dict, output_tensor, iteration=-1, measurer=None):
+def iterator_sess_run(
+    sess, iter_op, feed_dict, output_tensor, iteration=-1, measurer=None
+):
     """Run the graph that have iterator integrated in the graph.
 
     Args:
@@ -380,15 +401,22 @@ def strip_unused_nodes(graph_def, input_node_names, output_node_names):
             placeholder_node.name = node.name
 
             if "dtype" in node.attr:
-                placeholder_node.attr["dtype"].CopyFrom(attr_value_pb2.AttrValue(type=node.attr["dtype"].type))
+                placeholder_node.attr["dtype"].CopyFrom(
+                    attr_value_pb2.AttrValue(type=node.attr["dtype"].type)
+                )
             elif node.op in type_attr.keys():
                 placeholder_node.attr["dtype"].CopyFrom(
                     attr_value_pb2.AttrValue(type=node.attr[type_attr[node.op]].type)
                 )
             else:
-                raise KeyError("%s op's type attribute is not found," "you should add it to type_attr dict" % node.op)
+                raise KeyError(
+                    "%s op's type attribute is not found,"
+                    "you should add it to type_attr dict" % node.op
+                )
             if "_output_shapes" in node.attr:
-                placeholder_node.attr["_output_shapes"].CopyFrom(node.attr["_output_shapes"])
+                placeholder_node.attr["_output_shapes"].CopyFrom(
+                    node.attr["_output_shapes"]
+                )
             if "shape" in node.attr:
                 placeholder_node.attr["shape"].CopyFrom(node.attr["shape"])
 
@@ -396,7 +424,9 @@ def strip_unused_nodes(graph_def, input_node_names, output_node_names):
 
             cur_graph.replace_const_node(placeholder_node, [node_name], original_output)
 
-    return tf.compat.v1.graph_util.extract_sub_graph(cur_graph.dump_graph(), output_node_names)
+    return tf.compat.v1.graph_util.extract_sub_graph(
+        cur_graph.dump_graph(), output_node_names
+    )
 
 
 def strip_equivalent_nodes(graph_def, output_node_names):
@@ -409,10 +439,19 @@ def strip_equivalent_nodes(graph_def, output_node_names):
         if len(input_tensor_list_1) != len(input_tensor_list_2):
             return False
         const_num = 0
-        for input_tensor_1, input_tensor_2 in zip(input_tensor_list_1, input_tensor_list_2):
-            input_node_1 = stripped_graph_info[GraphRewriterHelper.node_name_from_input(input_tensor_1)].node
-            input_node_2 = stripped_graph_info[GraphRewriterHelper.node_name_from_input(input_tensor_2)].node
-            if input_node_1.op in ["Const", "HostConst"] and input_node_2.op in ["Const", "HostConst"]:
+        for input_tensor_1, input_tensor_2 in zip(
+            input_tensor_list_1, input_tensor_list_2
+        ):
+            input_node_1 = stripped_graph_info[
+                GraphRewriterHelper.node_name_from_input(input_tensor_1)
+            ].node
+            input_node_2 = stripped_graph_info[
+                GraphRewriterHelper.node_name_from_input(input_tensor_2)
+            ].node
+            if input_node_1.op in ["Const", "HostConst"] and input_node_2.op in [
+                "Const",
+                "HostConst",
+            ]:
                 if input_node_1.attr != input_node_2.attr:
                     return False
                 const_num += 1
@@ -429,7 +468,10 @@ def strip_equivalent_nodes(graph_def, output_node_names):
     for idx_1 in range(len_nodes - 1):
         node_name_1 = stripped_graph_node_names[idx_1]
         node_1 = stripped_graph_info[node_name_1].node
-        if node_1.op in ["Const", "HostConst", "MatMul", "TensorArrayV3"] or node_name_1 in nodes_to_remove:
+        if (
+            node_1.op in ["Const", "HostConst", "MatMul", "TensorArrayV3"]
+            or node_name_1 in nodes_to_remove
+        ):
             continue
         for idx_2 in range(idx_1 + 1, len_nodes):
             node_name_2 = stripped_graph_node_names[idx_2]
@@ -444,9 +486,18 @@ def strip_equivalent_nodes(graph_def, output_node_names):
             ):
                 for ouput_node_name in stripped_graph_info[node_name_2].outputs:
                     output_node = stripped_graph_info[ouput_node_name].node
-                    for idx_output_node_input, output_node_input_name in enumerate(output_node.input):
-                        if GraphRewriterHelper.node_name_from_input(output_node_input_name) == node_name_2:
-                            new_input = output_node_input_name.replace(node_name_2, node_name_1)
+                    for idx_output_node_input, output_node_input_name in enumerate(
+                        output_node.input
+                    ):
+                        if (
+                            GraphRewriterHelper.node_name_from_input(
+                                output_node_input_name
+                            )
+                            == node_name_2
+                        ):
+                            new_input = output_node_input_name.replace(
+                                node_name_2, node_name_1
+                            )
                             output_node.input[idx_output_node_input] = new_input
                             logger.debug(
                                 "Replacing {} node '{}' with equivalent node '{}': "
@@ -460,13 +511,16 @@ def strip_equivalent_nodes(graph_def, output_node_names):
                                     new_input,
                                 )
                             )
-                            replaced_nodes_type[node_1.op] = replaced_nodes_type.get(node_1.op, 0) + 1
+                            replaced_nodes_type[node_1.op] = (
+                                replaced_nodes_type.get(node_1.op, 0) + 1
+                            )
                             nodes_to_remove.append(node_name_2)
     for node_to_remove in nodes_to_remove:
         stripped_graph.remove_node(node_to_remove)
     return (
         tf.compat.v1.graph_util.extract_sub_graph(
-            stripped_graph.dump_graph(), list(set(stripped_graph_node_names).intersection(output_node_names))
+            stripped_graph.dump_graph(),
+            list(set(stripped_graph_node_names).intersection(output_node_names)),
         ),
         replaced_nodes_type,
     )
@@ -534,7 +588,9 @@ def tf_diagnosis_helper(fp32_model, quan_model, tune_cfg, save_path):
         fp32_node_mapping[node.name] = node
     for node in quan_model.graph_def.node:
         qnode_mapping[node.name] = node
-    supported_op_lst = set(["Conv2D", "MatMul", "ConcatV2", "MaxPool", "AvgPool", "DepthwiseConv2dNative"])
+    supported_op_lst = set(
+        ["Conv2D", "MatMul", "ConcatV2", "MaxPool", "AvgPool", "DepthwiseConv2dNative"]
+    )
     fp32_node_lst = set()
     for node in fp32_model.graph_def.node:
         if node.op in supported_op_lst:
@@ -546,12 +602,16 @@ def tf_diagnosis_helper(fp32_model, quan_model, tune_cfg, save_path):
         node_name = int8_node_name_reverse(node)
         if "Quantized" in node.op:
             int8_node_lst.add(node_name)
-        elif node.attr["value"].tensor.dtype == tf.dtypes.bfloat16.as_datatype_enum:  # pragma: no cover
+        elif (
+            node.attr["value"].tensor.dtype == tf.dtypes.bfloat16.as_datatype_enum
+        ):  # pragma: no cover
             bf16_node_lst.add(node.name)
         else:
             continue
     inspect_node_lst = fp32_node_lst.intersection(bf16_node_lst.union(int8_node_lst))
-    activation_min_max, updated_cfg = _parse_config(quan_model.q_config, tune_cfg, inspect_node_lst)
+    activation_min_max, updated_cfg = _parse_config(
+        quan_model.q_config, tune_cfg, inspect_node_lst
+    )
     dump_data_to_local(activation_min_max, save_path, "activation_min_max.pkl")
     dump_data_to_local(updated_cfg, save_path, "cfg.pkl")
 
@@ -577,7 +637,11 @@ def generate_feed_dict(input_tensor, inputs):
     """Generate feed dict helper function."""
     if len(input_tensor) == 1:
         feed_dict = {}
-        if isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict):
+        if (
+            isinstance(inputs, dict)
+            or isinstance(inputs, OrderedDict)
+            or isinstance(inputs, UserDict)
+        ):
             for name in inputs:
                 for tensor in input_tensor:
                     pos = tensor.name.rfind(":")
@@ -588,9 +652,15 @@ def generate_feed_dict(input_tensor, inputs):
         else:
             feed_dict = {input_tensor[0]: inputs}  # get raw tensor using index [0]
     else:
-        assert len(input_tensor) == len(inputs), "inputs len must equal with input_tensor"
+        assert len(input_tensor) == len(
+            inputs
+        ), "inputs len must equal with input_tensor"
         feed_dict = {}
-        if isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict):
+        if (
+            isinstance(inputs, dict)
+            or isinstance(inputs, OrderedDict)
+            or isinstance(inputs, UserDict)
+        ):
             for name in inputs:
                 for tensor in input_tensor:
                     pos = tensor.name.rfind(":")
@@ -603,7 +673,11 @@ def generate_feed_dict(input_tensor, inputs):
             # we should check and pair them
             def check_shape(tensor, data):
                 # scalar or 1 dim default True
-                if tensor.shape is None or len(tensor.shape.dims) == 1 or not hasattr(data, "shape"):
+                if (
+                    tensor.shape is None
+                    or len(tensor.shape.dims) == 1
+                    or not hasattr(data, "shape")
+                ):
                     return True
                 tensor_shape = tuple(tensor.shape)
                 data_shape = tuple(data.shape)
@@ -665,7 +739,9 @@ def get_weight_from_input_tensor(model, input_tensor_names, op_types):
             if len(curr_node.input) >= 2:
                 weight_name = curr_node.input[1]
                 weight_node = graph_info[weight_name].node
-                weight_tensor = tensor_util.MakeNdarray(weight_node.attr["value"].tensor)
+                weight_tensor = tensor_util.MakeNdarray(
+                    weight_node.attr["value"].tensor
+                )
                 curr_weight_tensors[weight_name] = weight_tensor
                 curr_weights_nodes[weight_name] = weight_node
         # {input node -> {xxx_q_proj_matmul: value1, xxx_v_proj_matmul: value2, ...}, ...}
@@ -700,7 +776,12 @@ def apply_inlining(func):
 
     # Clear the initializer_name for the variables collections, since they are not
     # needed after saved to saved_model.
-    for name in ["variables", "model_variables", "trainable_variables", "local_variables"]:
+    for name in [
+        "variables",
+        "model_variables",
+        "trainable_variables",
+        "local_variables",
+    ]:
         raw_list = []
         for raw in meta_graph.collection_def["variables"].bytes_list.value:
             variable = variable_pb2.VariableDef()
@@ -765,7 +846,9 @@ def construct_function_from_graph_def(func, graph_def, frozen_func=None):
     return new_func
 
 
-def parse_saved_model(model, freeze=False, input_tensor_names=[], output_tensor_names=[]):
+def parse_saved_model(
+    model, freeze=False, input_tensor_names=[], output_tensor_names=[]
+):
     """Parse a input saved_model.
 
     Args:
@@ -786,7 +869,9 @@ def parse_saved_model(model, freeze=False, input_tensor_names=[], output_tensor_
     else:
         _saved_model = model
 
-    func = _saved_model.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+    func = _saved_model.signatures[
+        signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
+    ]
 
     if freeze:
         frozen_func = convert_to_constants.convert_variables_to_constants_v2(func)
@@ -796,12 +881,16 @@ def parse_saved_model(model, freeze=False, input_tensor_names=[], output_tensor_
 
     if len(input_tensor_names) == 0:
         # skip all inputs for ReadVariableOp
-        input_tensor_names = [i.name.split(":")[0] for i in frozen_func.inputs if "unknown" not in i.name]
+        input_tensor_names = [
+            i.name.split(":")[0] for i in frozen_func.inputs if "unknown" not in i.name
+        ]
     if len(output_tensor_names) == 0:
         output_tensor_names = [i.name.split(":")[0] for i in frozen_func.outputs]
 
     frozen_graph_def = frozen_func.graph.as_graph_def()
-    grappler_meta_graph_def = saver.export_meta_graph(graph_def=frozen_graph_def, graph=frozen_func.graph)
+    grappler_meta_graph_def = saver.export_meta_graph(
+        graph_def=frozen_graph_def, graph=frozen_func.graph
+    )
 
     # Add a collection 'train_op' so that Grappler knows the outputs.
     fetch_collection = meta_graph_pb2.CollectionDef()
@@ -812,8 +901,17 @@ def parse_saved_model(model, freeze=False, input_tensor_names=[], output_tensor_
     grappler_session_config = config_pb2.ConfigProto()
     rewrite_options = grappler_session_config.graph_options.rewrite_options
     rewrite_options.min_graph_nodes = -1
-    graph_def = tf_optimizer.OptimizeGraph(grappler_session_config, grappler_meta_graph_def, graph_id=b"tf_graph")
-    return graph_def, _saved_model, func, frozen_func, input_tensor_names, output_tensor_names
+    graph_def = tf_optimizer.OptimizeGraph(
+        grappler_session_config, grappler_meta_graph_def, graph_id=b"tf_graph"
+    )
+    return (
+        graph_def,
+        _saved_model,
+        func,
+        frozen_func,
+        input_tensor_names,
+        output_tensor_names,
+    )
 
 
 def reconstruct_saved_model(graph_def, func, frozen_func, trackable, path):

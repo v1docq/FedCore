@@ -101,7 +101,7 @@ def rtn_quantize(
             group_dim = weight_config[name]["group_dim"]
             use_full_range = weight_config[name]["use_full_range"]
             use_mse_search = weight_config[name]["use_mse_search"]
-            use_layer_wise = weight_config[name]["use_layer_wise"]
+            weight_config[name]["use_layer_wise"]
             export_compressed_model = weight_config[name]["export_compressed_model"]
             if export_compressed_model:
                 use_optimum_format = kwargs.get("use_optimum_format", True)
@@ -111,13 +111,16 @@ def rtn_quantize(
                 "double_quant_dtype": weight_config[name]["double_quant_dtype"],
                 "double_quant_bits": weight_config[name]["double_quant_bits"],
                 "double_quant_scheme": weight_config[name]["double_quant_scheme"],
-                "double_quant_group_size": weight_config[name]["double_quant_group_size"],
+                "double_quant_group_size": weight_config[name][
+                    "double_quant_group_size"
+                ],
             }
             if dtype != "int" and "int" in dtype:
                 bits = int(dtype.lstrip("int"))
                 dtype = "int"
         log_msg = (
-            f"RTN quantization config: bits={bits}, group_size={group_size}, " + f"scheme={scheme}, quantile={quantile}"
+            f"RTN quantization config: bits={bits}, group_size={group_size}, "
+            + f"scheme={scheme}, quantile={quantile}"
         )
         if dtype != "int":
             log_msg += f", dtype={dtype}"

@@ -12,9 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fedcore.neural_compressor.tensorflow.utils.model import Model, framework_specific_info
-from fedcore.neural_compressor.tensorflow.utils.data import BaseDataLoader, DummyDataset, DummyDatasetV2
-from fedcore.neural_compressor.tensorflow.utils.constants import SPR_BASE_VERSIONS, DEFAULT_SQ_ALPHA_ARGS
+from fedcore.neural_compressor.tensorflow.utils.constants import (
+    SPR_BASE_VERSIONS,
+    DEFAULT_SQ_ALPHA_ARGS,
+)
+from fedcore.neural_compressor.tensorflow.utils.data import (
+    BaseDataLoader,
+    DummyDataset,
+    DummyDatasetV2,
+)
+from fedcore.neural_compressor.tensorflow.utils.model import (
+    Model,
+    framework_specific_info,
+)
 from fedcore.neural_compressor.tensorflow.utils.model_wrappers import (
     get_tf_model_type,
     BaseModel,

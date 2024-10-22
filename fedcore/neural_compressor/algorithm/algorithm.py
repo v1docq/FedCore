@@ -18,7 +18,6 @@
 
 from abc import abstractmethod
 
-from fedcore.neural_compressor.utils.create_obj_from_config import get_algorithm
 
 # {location: {algorithm_type: cls}}
 registry_algorithms = {}
@@ -37,7 +36,10 @@ def algorithm_registry(algorithm_type, location):
     """
 
     def decorator_algorithm(cls):
-        if location in registry_algorithms and algorithm_type in registry_algorithms[location]:
+        if (
+            location in registry_algorithms
+            and algorithm_type in registry_algorithms[location]
+        ):
             raise ValueError("Cannot have two algorithms with the same name")
 
         if location not in registry_algorithms:
@@ -67,7 +69,9 @@ class ALGORITHMS(object):
             for key in self.algorithms[location]:
                 if key == algorithm_type:
                     result = self.algorithms[location][key]
-        assert result, "algorithm type only support {}".format(self.support_algorithms())
+        assert result, "algorithm type only support {}".format(
+            self.support_algorithms()
+        )
         return result
 
     @classmethod
@@ -124,7 +128,13 @@ class AlgorithmScheduler(object):
         assert self._adaptor, "set adaptor for algorithm"
         assert self._calib_iter, "set calibration iteration for algorithm"
         for algo in self._exec_algorithms.get(location, []):
-            self._q_model = algo(self._origin_model, self._q_model, self._adaptor, self._dataloader, self._calib_iter)
+            self._q_model = algo(
+                self._origin_model,
+                self._q_model,
+                self._adaptor,
+                self._dataloader,
+                self._calib_iter,
+            )
         return self._q_model
 
     @property

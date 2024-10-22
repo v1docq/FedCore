@@ -81,7 +81,9 @@ class COCOWrapper(coco.COCO):
         if detection_type not in supported_detection_types:
             raise ValueError(
                 "Unsupported detection type: {}. "
-                "Supported values are: {}".format(detection_type, supported_detection_types)
+                "Supported values are: {}".format(
+                    detection_type, supported_detection_types
+                )
             )
         self._detection_type = detection_type
         coco.COCO.__init__(self)
@@ -186,14 +188,20 @@ class COCOEvalWrapper(cocoeval.COCOeval):
         if agnostic_mode:
             self.params.useCats = 0
         if iou_thrs == "0.5:0.05:0.95":
-            self.params.iouThrs = np.linspace(0.5, 0.95, int(np.round((0.95 - 0.5) / 0.05)) + 1, endpoint=True)
+            self.params.iouThrs = np.linspace(
+                0.5, 0.95, int(np.round((0.95 - 0.5) / 0.05)) + 1, endpoint=True
+            )
         elif isinstance(iou_thrs, float):
             self.params.iouThrs = [iou_thrs]
 
         if map_points == 101:
-            self.params.recThrs = np.linspace(0.0, 1.00, int(np.round((1.00 - 0.0) / 0.01)) + 1, endpoint=True)
+            self.params.recThrs = np.linspace(
+                0.0, 1.00, int(np.round((1.00 - 0.0) / 0.01)) + 1, endpoint=True
+            )
         if map_points == 11:
-            self.params.recThrs = np.linspace(0.0, 1.00, int(np.round((1.00 - 0.0) / 0.1)) + 1, endpoint=True)
+            self.params.recThrs = np.linspace(
+                0.0, 1.00, int(np.round((1.00 - 0.0) / 0.1)) + 1, endpoint=True
+            )
         if map_points == 0:
             self.params.recThrs = [-1]
 
@@ -235,7 +243,9 @@ class COCOEvalWrapper(cocoeval.COCOeval):
         K = len(p.catIds) if p.useCats else 1
         A = len(p.areaRng)
         M = len(p.maxDets)
-        precision = -np.ones((T, R, K, A, M))  # -1 for the precision of absent categories
+        precision = -np.ones(
+            (T, R, K, A, M)
+        )  # -1 for the precision of absent categories
         recall = -np.ones((T, K, A, M))
         scores = -np.ones((T, R, K, A, M))
 
@@ -250,7 +260,9 @@ class COCOEvalWrapper(cocoeval.COCOeval):
         # get inds to evaluate
         k_list = [n for n, k in enumerate(p.catIds) if k in setK]
         m_list = [m for n, m in enumerate(p.maxDets) if m in setM]
-        a_list = [n for n, a in enumerate(map(lambda x: tuple(x), p.areaRng)) if a in setA]
+        a_list = [
+            n for n, a in enumerate(map(lambda x: tuple(x), p.areaRng)) if a in setA
+        ]
         i_list = [n for n, i in enumerate(p.imgIds) if i in setI]
         I0 = len(_pe.imgIds)
         A0 = len(_pe.areaRng)
@@ -271,8 +283,12 @@ class COCOEvalWrapper(cocoeval.COCOeval):
                     inds = np.argsort(-dtScores, kind="mergesort")
                     dtScoresSorted = dtScores[inds]
 
-                    dtm = np.concatenate([e["dtMatches"][:, 0:maxDet] for e in E], axis=1)[:, inds]
-                    dtIg = np.concatenate([e["dtIgnore"][:, 0:maxDet] for e in E], axis=1)[:, inds]
+                    dtm = np.concatenate(
+                        [e["dtMatches"][:, 0:maxDet] for e in E], axis=1
+                    )[:, inds]
+                    dtIg = np.concatenate(
+                        [e["dtIgnore"][:, 0:maxDet] for e in E], axis=1
+                    )[:, inds]
                     gtIg = np.concatenate([e["gtIgnore"] for e in E])
                     npig = np.count_nonzero(gtIg == 0)
                     if npig == 0:
@@ -302,7 +318,10 @@ class COCOEvalWrapper(cocoeval.COCOeval):
                             # where X axis (recall) changes value
                             change_point = np.where(rc[1:] != rc[:-1])[0]
                             # and sum (\Delta recall) * recall
-                            res = np.sum((rc[change_point + 1] - rc[change_point]) * pr[change_point + 1])
+                            res = np.sum(
+                                (rc[change_point + 1] - rc[change_point])
+                                * pr[change_point + 1]
+                            )
                             precision[t, :, k, a, m] = np.array([res])
                         else:
                             q = np.zeros((R,))
@@ -351,7 +370,9 @@ class COCOEvalWrapper(cocoeval.COCOeval):
         print("DONE (t={:0.2f}s).".format(toc - tic))
 
     def ComputeMetrics(
-        self, include_metrics_per_category: bool = False, all_metrics_per_category: bool = False
+        self,
+        include_metrics_per_category: bool = False,
+        all_metrics_per_category: bool = False,
     ):  # pragma: no cover
         """Compute detection metrics.
 
@@ -426,36 +447,46 @@ class COCOEvalWrapper(cocoeval.COCOeval):
             category = self.GetCategory(category_id)["name"]
             # Kept for backward compatilbility
             # pylint: disable=no-member
-            per_category_ap["PerformanceByCategory/mAP/{}".format(category)] = self.category_stats[0][category_index]
+            per_category_ap["PerformanceByCategory/mAP/{}".format(category)] = (
+                self.category_stats[0][category_index]
+            )
             if all_metrics_per_category:
-                per_category_ap["Precision mAP ByCategory/{}".format(category)] = self.category_stats[0][category_index]
-                per_category_ap["Precision mAP@.50IOU ByCategory/{}".format(category)] = self.category_stats[1][
-                    category_index
-                ]
-                per_category_ap["Precision mAP@.75IOU ByCategory/{}".format(category)] = self.category_stats[2][
-                    category_index
-                ]
-                per_category_ap["Precision mAP (small) ByCategory/{}".format(category)] = self.category_stats[3][
-                    category_index
-                ]
-                per_category_ap["Precision mAP (medium) ByCategory/{}".format(category)] = self.category_stats[4][
-                    category_index
-                ]
-                per_category_ap["Precision mAP (large) ByCategory/{}".format(category)] = self.category_stats[5][
-                    category_index
-                ]
-                per_category_ap["Recall AR@1 ByCategory/{}".format(category)] = self.category_stats[6][category_index]
-                per_category_ap["Recall AR@10 ByCategory/{}".format(category)] = self.category_stats[7][category_index]
-                per_category_ap["Recall AR@100 ByCategory/{}".format(category)] = self.category_stats[8][category_index]
-                per_category_ap["Recall AR@100 (small) ByCategory/{}".format(category)] = self.category_stats[9][
-                    category_index
-                ]
-                per_category_ap["Recall AR@100 (medium) ByCategory/{}".format(category)] = self.category_stats[10][
-                    category_index
-                ]
-                per_category_ap["Recall AR@100 (large) ByCategory/{}".format(category)] = self.category_stats[11][
-                    category_index
-                ]
+                per_category_ap["Precision mAP ByCategory/{}".format(category)] = (
+                    self.category_stats[0][category_index]
+                )
+                per_category_ap[
+                    "Precision mAP@.50IOU ByCategory/{}".format(category)
+                ] = self.category_stats[1][category_index]
+                per_category_ap[
+                    "Precision mAP@.75IOU ByCategory/{}".format(category)
+                ] = self.category_stats[2][category_index]
+                per_category_ap[
+                    "Precision mAP (small) ByCategory/{}".format(category)
+                ] = self.category_stats[3][category_index]
+                per_category_ap[
+                    "Precision mAP (medium) ByCategory/{}".format(category)
+                ] = self.category_stats[4][category_index]
+                per_category_ap[
+                    "Precision mAP (large) ByCategory/{}".format(category)
+                ] = self.category_stats[5][category_index]
+                per_category_ap["Recall AR@1 ByCategory/{}".format(category)] = (
+                    self.category_stats[6][category_index]
+                )
+                per_category_ap["Recall AR@10 ByCategory/{}".format(category)] = (
+                    self.category_stats[7][category_index]
+                )
+                per_category_ap["Recall AR@100 ByCategory/{}".format(category)] = (
+                    self.category_stats[8][category_index]
+                )
+                per_category_ap[
+                    "Recall AR@100 (small) ByCategory/{}".format(category)
+                ] = self.category_stats[9][category_index]
+                per_category_ap[
+                    "Recall AR@100 (medium) ByCategory/{}".format(category)
+                ] = self.category_stats[10][category_index]
+                per_category_ap[
+                    "Recall AR@100 (large) ByCategory/{}".format(category)
+                ] = self.category_stats[11][category_index]
 
         return summary_metrics, per_category_ap
 
@@ -473,7 +504,12 @@ def _ConvertBoxToCOCOFormat(box):
     Returns:
       A list of floats, in COCO format, representing [xmin, ymin, width, height]
     """
-    return [float(box[1]), float(box[0]), float(box[3] - box[1]), float(box[2] - box[0])]
+    return [
+        float(box[1]),
+        float(box[0]),
+        float(box[3] - box[1]),
+        float(box[2] - box[0]),
+    ]
 
 
 def _RleCompress(masks):
@@ -607,7 +643,10 @@ def ExportSingleImageDetectionBoxesToCoco(
         lists do not have the correct shapes or (3) if image_ids are not integers.
     """
     if len(detection_classes.shape) != 1 or len(detection_scores.shape) != 1:
-        raise ValueError("All entries in detection_classes and detection_scores" "expected to be of rank 1.")
+        raise ValueError(
+            "All entries in detection_classes and detection_scores"
+            "expected to be of rank 1."
+        )
     if len(detection_boxes.shape) != 2:
         raise ValueError("All entries in detection_boxes expected to be of " "rank 2.")
     if detection_boxes.shape[1] != 4:
@@ -619,7 +658,12 @@ def ExportSingleImageDetectionBoxesToCoco(
             "detection_scores and detection_boxes should have "
             "compatible shapes (i.e., agree on the 0th dimension). "
             "Classes shape: %d. Boxes shape: %d. "
-            "Scores shape: %d" % (detection_classes.shape[0], detection_boxes.shape[0], detection_scores.shape[0])
+            "Scores shape: %d"
+            % (
+                detection_classes.shape[0],
+                detection_boxes.shape[0],
+                detection_scores.shape[0],
+            )
         )
     detections_list = []
     for i in range(num_boxes):
@@ -670,7 +714,10 @@ def ExportSingleImageDetectionMasksToCoco(
         lists do not have the correct shapes or (3) if image_ids are not integers.
     """
     if len(detection_classes.shape) != 1 or len(detection_scores.shape) != 1:
-        raise ValueError("All entries in detection_classes and detection_scores" "expected to be of rank 1.")
+        raise ValueError(
+            "All entries in detection_classes and detection_scores"
+            "expected to be of rank 1."
+        )
     num_boxes = detection_classes.shape[0]
     if not num_boxes == len(detection_masks) == detection_scores.shape[0]:
         raise ValueError(
@@ -678,7 +725,12 @@ def ExportSingleImageDetectionMasksToCoco(
             "detection_scores and detection_masks should have "
             "compatible lengths and shapes "
             "Classes length: %d.  Masks length: %d. "
-            "Scores length: %d" % (detection_classes.shape[0], len(detection_masks), detection_scores.shape[0])
+            "Scores length: %d"
+            % (
+                detection_classes.shape[0],
+                len(detection_masks),
+                detection_scores.shape[0],
+            )
         )
     detections_list = []
     for i in range(num_boxes):

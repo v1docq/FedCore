@@ -17,11 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .model import Model
-from .dataloader import DataLoader, _generate_common_dataloader
-from .postprocess import Postprocess
-from .metric import Metric
 from .criterion import Criterions
+from .dataloader import DataLoader, _generate_common_dataloader
+from .metric import Metric
+from .model import Model
 from .optimizer import Optimizers
+from .postprocess import Postprocess
 
-__all__ = ["Model", "DataLoader", "Postprocess", "Metric", "_generate_common_dataloader"]
+__all__ = [
+    "Model",
+    "DataLoader",
+    "Postprocess",
+    "Metric",
+    "_generate_common_dataloader",
+]

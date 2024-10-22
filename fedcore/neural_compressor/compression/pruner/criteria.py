@@ -36,7 +36,9 @@ def get_criterion(config, modules, pattern, masks=None):
     """Get registered criterion class."""
     name = config["criterion_type"]
     if name not in CRITERIA.keys():
-        assert False, f"criteria does not support {name}, currently only support {CRITERIA.keys()}"
+        assert (
+            False
+        ), f"criteria does not support {name}, currently only support {CRITERIA.keys()}"
     if masks is not None:
         return CRITERIA[name](modules, config, pattern, masks)
     return CRITERIA[name](modules, config, pattern)
@@ -63,15 +65,12 @@ class PruningCriterion:
 
     def on_step_begin(self):
         """Calculate and store the pruning scores of pruning modules at the beginning of a step."""
-        pass
 
     def on_before_optimizer_step(self):
         """Calculate and store the pruning scores of pruning modules before the optimizer step."""
-        pass
 
     def on_after_optimizer_step(self):
         """Calculate and store the pruning scores of pruning modules after the optimizer step."""
-        pass
 
 
 @register_criterion("magnitude")
@@ -123,7 +122,9 @@ class GradientCriterion(PruningCriterion):
     def __init__(self, modules, config, pattern):
         """Initialize a gradient pruning criterion."""
         super(GradientCriterion, self).__init__(modules, config, pattern)
-        assert self.config.end_step > 0, "please set end_step > 0 for gradient based criterion"
+        assert (
+            self.config.end_step > 0
+        ), "please set end_step > 0 for gradient based criterion"
 
     def on_before_optimizer_step(self):
         """Calculate and store the pruning scores based on gradient criterion."""
@@ -157,7 +158,9 @@ class SnipCriterion(PruningCriterion):
     def __init__(self, modules, config, pattern):
         """Initializes a snip pruning criterion."""
         super(SnipCriterion, self).__init__(modules, config, pattern)
-        assert self.config.end_step > 0, "please set end_step > 0 for gradient based criterion"
+        assert (
+            self.config.end_step > 0
+        ), "please set end_step > 0 for gradient based criterion"
 
     def on_before_optimizer_step(self):
         """Calculate and store the pruning scores based on snip criterion."""
@@ -169,7 +172,9 @@ class SnipCriterion(PruningCriterion):
                 grad = safe_get_grad(param)
                 # self.scores[key] = torch.abs(p * p.grad)
                 if hasattr(self.pattern, "reduce_score"):
-                    self.scores[key] = self.pattern.reduce_score(torch.abs(data * grad), key)
+                    self.scores[key] = self.pattern.reduce_score(
+                        torch.abs(data * grad), key
+                    )
                 else:
                     self.scores[key] = torch.abs(data * grad)
 
@@ -194,7 +199,9 @@ class SnipMomentumCriterion(PruningCriterion):
     def __init__(self, modules, config, pattern):
         """Initialize a snip_momentum pruning criterion."""
         super(SnipMomentumCriterion, self).__init__(modules, config, pattern)
-        assert self.config.end_step > 0, "please set end_step > 0 for gradient based criterion"
+        assert (
+            self.config.end_step > 0
+        ), "please set end_step > 0 for gradient based criterion"
         for key in modules.keys():
             param = modules[key].weight
             # p = modules[key].weight
@@ -208,7 +215,9 @@ class SnipMomentumCriterion(PruningCriterion):
                     torch.zeros(param_shape, dtype=dtype).to(param.device), key
                 )
             else:
-                self.scores[key] = torch.zeros(param_shape, dtype=dtype).to(param.device)
+                self.scores[key] = torch.zeros(param_shape, dtype=dtype).to(
+                    param.device
+                )
 
         self.alpha = 0.9
         self.beta = 1.0
@@ -250,7 +259,9 @@ class BlockMaskCriterion(PruningCriterion):
     def __init__(self, modules, config, pattern, masks, alpha=0.9, beta=1.0):
         """Initialize a block_mask pruning criterion."""
         super(BlockMaskCriterion, self).__init__(modules, config, pattern)
-        assert self.config.end_step > 0, "please set end_step > 0 for gradient based criterion"
+        assert (
+            self.config.end_step > 0
+        ), "please set end_step > 0 for gradient based criterion"
         for key in masks.keys():
             mask = masks[key]
             dtype = torch.float32
@@ -291,7 +302,9 @@ class RetrainFreeCriterion(PruningCriterion):
     def __init__(self, modules, config, pattern, masks):
         """Initialize a block_mask pruning criterion."""
         super(RetrainFreeCriterion, self).__init__(modules, config, pattern)
-        assert self.config.end_step > 0, "please set end_step > 0 for gradient based criterion"
+        assert (
+            self.config.end_step > 0
+        ), "please set end_step > 0 for gradient based criterion"
         self.collected_grads = {}
         for key in self.modules.keys():
             for name, param in self.modules[key].named_parameters():
@@ -312,6 +325,10 @@ class RetrainFreeCriterion(PruningCriterion):
             for key in masks.keys():
                 mask_grad = masks[key].grad.clone()
                 if self.low_memory_usage:
-                    mask_grad = mask_grad.bfloat16() if mask_grad.device.type == "cpu" else mask_grad.half()
+                    mask_grad = (
+                        mask_grad.bfloat16()
+                        if mask_grad.device.type == "cpu"
+                        else mask_grad.half()
+                    )
                 self.collected_grads[key].append(mask_grad.cpu())
                 self.scores[key] += mask_grad.pow(2)

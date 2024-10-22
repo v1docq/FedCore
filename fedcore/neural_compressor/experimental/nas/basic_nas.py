@@ -24,10 +24,13 @@ from deprecated import deprecated
 from fedcore.neural_compressor.adaptor import FRAMEWORKS
 from fedcore.neural_compressor.conf.config import Conf, NASConfig
 from fedcore.neural_compressor.experimental.component import Component
-from fedcore.neural_compressor.utils.create_obj_from_config import create_dataloader, create_eval_func, create_train_func
-
-from .nas import NASBase
-from .nas_utils import nas_registry
+from fedcore.neural_compressor.utils.create_obj_from_config import (
+    create_dataloader,
+    create_eval_func,
+    create_train_func,
+)
+from fedcore.neural_compressor.experimental.nas.nas import NASBase
+from fedcore.neural_compressor.experimental.nas.nas_utils import nas_registry
 
 
 @deprecated(version="2.0")
@@ -66,7 +69,9 @@ class BasicNAS(NASBase, Component):
         Returns:
             Evaluated metrics of the model.
         """
-        assert self._train_func is not None and self._eval_func is not None, "train_func and eval_func must be set."
+        assert (
+            self._train_func is not None and self._eval_func is not None
+        ), "train_func and eval_func must be set."
         self._train_func(model)
         return self._eval_func(model)
 
@@ -77,13 +82,17 @@ class BasicNAS(NASBase, Component):
                 self.conf = Conf(conf_fname_or_obj)
             else:  # pragma: no cover
                 raise FileNotFoundError(
-                    "{} is not a file, please provide a NAS config file path.".format(conf_fname_or_obj)
+                    "{} is not a file, please provide a NAS config file path.".format(
+                        conf_fname_or_obj
+                    )
                 )
         elif isinstance(conf_fname_or_obj, NASConfig):
             conf_fname_or_obj.validate()
             self.conf = conf_fname_or_obj
         else:  # pragma: no cover
-            raise NotImplementedError("Please provide a str path to the config file or an object of NASConfig.")
+            raise NotImplementedError(
+                "Please provide a str path to the config file or an object of NASConfig."
+            )
         self._init_with_conf()
         assert self.cfg.nas is not None, "nas section must be set"
         # search related config
@@ -100,7 +109,9 @@ class BasicNAS(NASBase, Component):
         }
 
         if self.framework == "tensorflow" or self.framework == "tensorflow_itex":
-            framework_specific_info.update({"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs})
+            framework_specific_info.update(
+                {"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs}
+            )
 
         self.adaptor = FRAMEWORKS[self.framework](framework_specific_info)
 
@@ -113,7 +124,9 @@ class BasicNAS(NASBase, Component):
                 "dataloader to component."
             )
 
-            self._train_dataloader = create_dataloader(self.framework, train_dataloader_cfg)
+            self._train_dataloader = create_dataloader(
+                self.framework, train_dataloader_cfg
+            )
         if self._eval_dataloader is None and self._eval_func is None:
             eval_dataloader_cfg = self.cfg.evaluation.accuracy.dataloader
             assert eval_dataloader_cfg is not None, (
@@ -121,15 +134,23 @@ class BasicNAS(NASBase, Component):
                 "dataloader field of evaluation field in yaml file. Or manually pass "
                 "dataloader to component."
             )
-            self._eval_dataloader = create_dataloader(self.framework, eval_dataloader_cfg)
+            self._eval_dataloader = create_dataloader(
+                self.framework, eval_dataloader_cfg
+            )
 
         # create functions
         if self._train_func is None:
             self._train_func = create_train_func(
-                self.framework, self._train_dataloader, self.adaptor, self.cfg.train, hooks=self.hooks
+                self.framework,
+                self._train_dataloader,
+                self.adaptor,
+                self.cfg.train,
+                hooks=self.hooks,
             )
         if self._eval_func is None:
-            metric = [self._metric] if self._metric else self.cfg.evaluation.accuracy.metric
+            metric = (
+                [self._metric] if self._metric else self.cfg.evaluation.accuracy.metric
+            )
             self._eval_func = create_eval_func(
                 self.framework,
                 self._eval_dataloader,

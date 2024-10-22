@@ -49,7 +49,9 @@ from fedcore.neural_compressor.utils.utility import LazyImport
 tf = LazyImport("tensorflow")
 
 
-def _get_ngrams_with_counter(segment: Sequence[str], max_order: List[int]) -> collections.Counter:
+def _get_ngrams_with_counter(
+    segment: Sequence[str], max_order: List[int]
+) -> collections.Counter:
     """Extract all n-grams up to a given maximum order from an input segment.
 
     Args:
@@ -104,7 +106,8 @@ def compute_bleu(
         translation_ngram_counts = _get_ngrams_with_counter(translations, max_order)
 
         overlap = dict(
-            (ngram, min(count, translation_ngram_counts[ngram])) for ngram, count in ref_ngram_counts.items()
+            (ngram, min(count, translation_ngram_counts[ngram]))
+            for ngram, count in ref_ngram_counts.items()
         )
 
         for ngram in overlap:
@@ -119,7 +122,9 @@ def compute_bleu(
         if possible_matches_by_order[i] > 0:
             precisions[i] = float(matches_by_order[i]) / possible_matches_by_order[i]
             if matches_by_order[i] > 0:
-                precisions[i] = float(matches_by_order[i]) / possible_matches_by_order[i]
+                precisions[i] = (
+                    float(matches_by_order[i]) / possible_matches_by_order[i]
+                )
             else:
                 smooth *= 2
                 precisions[i] = 1.0 / (smooth * possible_matches_by_order[i])

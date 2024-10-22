@@ -30,7 +30,11 @@ def deep_get(dictionary, keys, default=None):
     Returns:
         item: the item of the deep dot keys
     """
-    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+    return reduce(
+        lambda d, key: d.get(key, default) if isinstance(d, dict) else default,
+        keys.split("."),
+        dictionary,
+    )
 
 
 def deep_set(dictionary, keys, value):
@@ -75,7 +79,11 @@ class DotDict(dict):
             value = DotDict(value)
         if isinstance(value, list) and len(value) == 1 and isinstance(value[0], dict):
             value = DotDict(value[0])
-        if isinstance(value, list) and len(value) > 1 and all(isinstance(v, dict) for v in value):
+        if (
+            isinstance(value, list)
+            and len(value) > 1
+            and all(isinstance(v, dict) for v in value)
+        ):
             value = DotDict({k: v for d in value for k, v in d.items()})
         super(DotDict, self).__setitem__(key, value)
 

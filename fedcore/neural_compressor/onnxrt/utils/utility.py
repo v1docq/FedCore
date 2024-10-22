@@ -86,7 +86,11 @@ def find_by_name(name, item_list):
     """Helper function to find item by name in a list."""
     items = []
     for item in item_list:
-        assert hasattr(item, "name"), "{} should have a 'name' attribute defined".format(item)  # pragma: no cover
+        assert hasattr(
+            item, "name"
+        ), "{} should have a 'name' attribute defined".format(
+            item
+        )  # pragma: no cover
         if item.name == name:
             items.append(item)
     if len(items) > 0:
@@ -189,9 +193,15 @@ def _quantize_data_with_scale_zero(data, qType, scheme, scale, zero_point):
         # signed byte type
         quantized_data = (data.astype(np.float32) / scale).round().astype("b")
     elif qType == onnx.onnx_pb.TensorProto.UINT8 and scheme == "asym":
-        quantized_data = ((data.astype(np.float32) / scale).round() + zero_point).astype("B")
+        quantized_data = (
+            (data.astype(np.float32) / scale).round() + zero_point
+        ).astype("B")
     else:
-        raise ValueError("Unexpected combination of data type {} and scheme {}.".format(qType, scheme))
+        raise ValueError(
+            "Unexpected combination of data type {} and scheme {}.".format(
+                qType, scheme
+            )
+        )
     return quantized_data
 
 
@@ -202,17 +212,28 @@ def _calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme):
             max_range = np.maximum(abs(rmin), abs(rmax))
             scale = np.ones(rmax.shape, dtype="float32")
             scale[max_range > 0] = np.array(
-                [float(i) / quantize_range for i in (max_range[max_range > 0] * 2.0).flatten().tolist()],
+                [
+                    float(i) / quantize_range
+                    for i in (max_range[max_range > 0] * 2.0).flatten().tolist()
+                ],
                 dtype="float32",
             )
         else:
             scale = np.ones(rmax.shape, dtype="float32")
             scale[rmin != rmax] = np.array(
-                [float(i) / quantize_range for i in (rmax - rmin)[rmin != rmax].flatten().tolist()], dtype="float32"
+                [
+                    float(i) / quantize_range
+                    for i in (rmax - rmin)[rmin != rmax].flatten().tolist()
+                ],
+                dtype="float32",
             )
 
         if scheme == "sym" and qType == onnx.onnx_pb.TensorProto.INT8:
-            zero_point = np.zeros(scale.shape, dtype="int8") if isinstance(scale, np.ndarray) else 0
+            zero_point = (
+                np.zeros(scale.shape, dtype="int8")
+                if isinstance(scale, np.ndarray)
+                else 0
+            )
         elif isinstance(scale, np.ndarray) and (scale == 1).all():
             zero_point = (
                 np.zeros(scale.shape, dtype="int8")
@@ -220,10 +241,14 @@ def _calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme):
                 else np.zeros(scale.shape, dtype="uint8")
             )
         elif qType == onnx.onnx_pb.TensorProto.UINT8:
-            zero_point = np.maximum(0, np.minimum(255, ((0 - float(rmin)) / scale).round()).round()).astype("uint8")
+            zero_point = np.maximum(
+                0, np.minimum(255, ((0 - float(rmin)) / scale).round()).round()
+            ).astype("uint8")
         else:
             zero_point = (
-                (-64 - rmin) / float(scale) if quantize_range == 128 else (-127 - rmin) / float(scale)
+                (-64 - rmin) / float(scale)
+                if quantize_range == 128
+                else (-127 - rmin) / float(scale)
             ).round()
 
     else:
@@ -240,7 +265,9 @@ def _calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme):
             zero_point = np.uint8(round(max(0, min(255, zero_point))))
         else:
             zero_point = (
-                round((-64 - float(rmin)) / scale) if quantize_range == 128 else round((-127 - float(rmin)) / scale)
+                round((-64 - float(rmin)) / scale)
+                if quantize_range == 128
+                else round((-127 - float(rmin)) / scale)
             )
     return scale, zero_point
 
@@ -269,5 +296,7 @@ def quantize_data(data, quantize_range, qType, scheme):
     rmax = max(max(data), 0)
 
     scale, zero_point = _calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme)
-    quantized_data = _quantize_data_with_scale_zero(data, qType, scheme, scale, zero_point)
+    quantized_data = _quantize_data_with_scale_zero(
+        data, qType, scheme, scale, zero_point
+    )
     return rmin, rmax, zero_point, scale, quantized_data

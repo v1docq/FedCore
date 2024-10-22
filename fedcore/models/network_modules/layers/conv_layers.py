@@ -18,11 +18,7 @@ class Conv2dSame(Module):
     Conv2d with padding='same'
     """
 
-    def __init__(
-        self, ni, nf, ks=(
-            3, 3), stride=(
-            1, 1), dilation=(
-                1, 1), **kwargs):
+    def __init__(self, ni, nf, ks=(3, 3), stride=(1, 1), dilation=(1, 1), **kwargs):
         if isinstance(ks, Integral):
             ks = (ks, ks)
         if isinstance(stride, Integral):
@@ -31,7 +27,8 @@ class Conv2dSame(Module):
             dilation = (dilation, dilation)
         self.ks, self.stride, self.dilation = ks, stride, dilation
         self.conv2d_same = nn.Conv2d(
-            ni, nf, ks, stride=stride, dilation=dilation, **kwargs)
+            ni, nf, ks, stride=stride, dilation=dilation, **kwargs
+        )
         self.weight = self.conv2d_same.weight
         self.bias = self.conv2d_same.bias
         self.pad = Pad2d
@@ -39,45 +36,53 @@ class Conv2dSame(Module):
     def forward(self, x):
         # stride=self.stride not used in padding calculation!
         self.padding = same_padding2d(
-            x.shape[-2], x.shape[-1], self.ks, dilation=self.dilation)
+            x.shape[-2], x.shape[-1], self.ks, dilation=self.dilation
+        )
         return self.conv2d_same(self.pad(self.padding)(x))
 
 
 @delegates(nn.Conv2d.__init__)
 def Conv2d(
-        ni,
-        nf,
-        kernel_size=None,
-        ks=None,
-        stride=1,
-        padding='same',
-        dilation=1,
-        init='auto',
-        bias_std=0.01,
-        **kwargs):
+    ni,
+    nf,
+    kernel_size=None,
+    ks=None,
+    stride=1,
+    padding="same",
+    dilation=1,
+    init="auto",
+    bias_std=0.01,
+    **kwargs,
+):
     """conv1d layer with padding='same', 'valid', or any integer (defaults to 'same')"""
-    assert not (
-        kernel_size and ks), 'use kernel_size or ks but not both simultaneously'
-    assert kernel_size is not None or ks is not None, 'you need to pass a ks'
+    assert not (kernel_size and ks), "use kernel_size or ks but not both simultaneously"
+    assert kernel_size is not None or ks is not None, "you need to pass a ks"
     kernel_size = kernel_size or ks
-    if padding == 'same':
-        conv = Conv2dSame(ni, nf, kernel_size, stride=stride,
-                          dilation=dilation, **kwargs)
-    elif padding == 'valid':
-        conv = nn.Conv2d(ni, nf, kernel_size, stride=stride,
-                         padding=0, dilation=dilation, **kwargs)
+    if padding == "same":
+        conv = Conv2dSame(
+            ni, nf, kernel_size, stride=stride, dilation=dilation, **kwargs
+        )
+    elif padding == "valid":
+        conv = nn.Conv2d(
+            ni, nf, kernel_size, stride=stride, padding=0, dilation=dilation, **kwargs
+        )
     else:
-        conv = nn.Conv2d(ni, nf, kernel_size, stride=stride,
-                         padding=padding, dilation=dilation, **kwargs)
+        conv = nn.Conv2d(
+            ni,
+            nf,
+            kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            **kwargs,
+        )
     init_linear(conv, None, init=init, bias_std=bias_std)
     return conv
 
 
 class CausalConv1d(torch.nn.Conv1d):
     def __init__(self, ni, nf, ks, stride=1, dilation=1, groups=1, bias=True):
-        super(
-            CausalConv1d,
-            self).__init__(
+        super(CausalConv1d, self).__init__(
             ni,
             nf,
             kernel_size=ks,
@@ -85,72 +90,72 @@ class CausalConv1d(torch.nn.Conv1d):
             padding=0,
             dilation=dilation,
             groups=groups,
-            bias=bias)
+            bias=bias,
+        )
         self.__padding = (ks - 1) * dilation
 
     def forward(self, input):
-        return super(
-            CausalConv1d, self).forward(
-            F.pad(
-                input, (self.__padding, 0)))
+        return super(CausalConv1d, self).forward(F.pad(input, (self.__padding, 0)))
 
 
 @delegates(nn.Conv1d.__init__)
 def Conv1d(
-        ni,
-        nf,
-        kernel_size=None,
-        ks=None,
-        stride=1,
-        padding='same',
-        dilation=1,
-        init='auto',
-        bias_std=0.01,
-        **kwargs):
+    ni,
+    nf,
+    kernel_size=None,
+    ks=None,
+    stride=1,
+    padding="same",
+    dilation=1,
+    init="auto",
+    bias_std=0.01,
+    **kwargs,
+):
     """conv1d layer with padding='same', 'causal', 'valid', or any integer (defaults to 'same')"""
-    assert not (
-        kernel_size and ks), 'use kernel_size or ks but not both simultaneously'
-    assert kernel_size is not None or ks is not None, 'you need to pass a ks'
+    assert not (kernel_size and ks), "use kernel_size or ks but not both simultaneously"
+    assert kernel_size is not None or ks is not None, "you need to pass a ks"
     kernel_size = kernel_size or ks
-    if padding == 'same':
+    if padding == "same":
         if kernel_size % 2 == 1:
             conv = nn.Conv1d(
                 ni,
                 nf,
                 kernel_size,
                 stride=stride,
-                padding=kernel_size //
-                2 *
-                dilation,
+                padding=kernel_size // 2 * dilation,
                 dilation=dilation,
-                **kwargs)
+                **kwargs,
+            )
         else:
-            conv = SameConv1d(ni, nf, kernel_size,
-                              stride=stride, dilation=dilation, **kwargs)
-    elif padding == 'causal':
-        conv = CausalConv1d(ni, nf, kernel_size,
-                            stride=stride, dilation=dilation, **kwargs)
-    elif padding == 'valid':
-        conv = nn.Conv1d(ni, nf, kernel_size, stride=stride,
-                         padding=0, dilation=dilation, **kwargs)
+            conv = SameConv1d(
+                ni, nf, kernel_size, stride=stride, dilation=dilation, **kwargs
+            )
+    elif padding == "causal":
+        conv = CausalConv1d(
+            ni, nf, kernel_size, stride=stride, dilation=dilation, **kwargs
+        )
+    elif padding == "valid":
+        conv = nn.Conv1d(
+            ni, nf, kernel_size, stride=stride, padding=0, dilation=dilation, **kwargs
+        )
     else:
-        conv = nn.Conv1d(ni, nf, kernel_size, stride=stride,
-                         padding=padding, dilation=dilation, **kwargs)
+        conv = nn.Conv1d(
+            ni,
+            nf,
+            kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            **kwargs,
+        )
     init_linear(conv, None, init=init, bias_std=bias_std)
     return conv
 
 
 class SeparableConv1d(Module):
     def __init__(
-            self,
-            ni,
-            nf,
-            ks,
-            stride=1,
-            padding='same',
-            dilation=1,
-            bias=True,
-            bias_std=0.01):
+        self, ni, nf, ks, stride=1, padding="same", dilation=1, bias=True, bias_std=0.01
+    ):
         self.depthwise_conv = Conv1d(
             ni,
             ni,
@@ -159,9 +164,11 @@ class SeparableConv1d(Module):
             padding=padding,
             dilation=dilation,
             groups=ni,
-            bias=bias)
+            bias=bias,
+        )
         self.pointwise_conv = nn.Conv1d(
-            ni, nf, 1, stride=1, padding=0, dilation=1, groups=1, bias=bias)
+            ni, nf, 1, stride=1, padding=0, dilation=1, groups=1, bias=bias
+        )
         if bias:
             if bias_std != 0:
                 normal_(self.depthwise_conv.bias, 0, bias_std)
@@ -179,43 +186,48 @@ class SeparableConv1d(Module):
 def SEModule1d(ni, reduction=16, act=nn.ReLU, act_kwargs={}):
     """Squeeze and excitation module for 1d"""
     nf = math.ceil(ni // reduction / 8) * 8
-    assert nf != 0, 'nf cannot be 0'
+    assert nf != 0, "nf cannot be 0"
     return SequentialEx(
-        nn.AdaptiveAvgPool1d(1), ConvBlock(
-            ni, nf, ks=1, norm=None, act=act, act_kwargs=act_kwargs), ConvBlock(
-            nf, ni, ks=1, norm=None, act=nn.Sigmoid), ProdLayer())
+        nn.AdaptiveAvgPool1d(1),
+        ConvBlock(ni, nf, ks=1, norm=None, act=act, act_kwargs=act_kwargs),
+        ConvBlock(nf, ni, ks=1, norm=None, act=nn.Sigmoid),
+        ProdLayer(),
+    )
 
 
 class ConvBlock(nn.Sequential):
     """Create a sequence of conv1d (`ni` to `nf`), activation (if `act_cls`) and `norm_type` layers."""
 
     def __init__(
-            self,
-            ni,
-            nf,
-            kernel_size=None,
-            ks=3,
-            stride=1,
-            padding='same',
-            bias=None,
-            bias_std=0.01,
-            norm='Batch',
-            zero_norm=False,
-            batch_norm_1st=True,
-            act=nn.ReLU,
-            act_kwargs={},
-            init='auto',
-            dropout=0.,
-            xtra=None,
-            coord=False,
-            separable=False,
-            **kwargs):
+        self,
+        ni,
+        nf,
+        kernel_size=None,
+        ks=3,
+        stride=1,
+        padding="same",
+        bias=None,
+        bias_std=0.01,
+        norm="Batch",
+        zero_norm=False,
+        batch_norm_1st=True,
+        act=nn.ReLU,
+        act_kwargs={},
+        init="auto",
+        dropout=0.0,
+        xtra=None,
+        coord=False,
+        separable=False,
+        **kwargs,
+    ):
         kernel_size = kernel_size or ks
         ndim = 1
         layers = [AddCoords1d()] if coord else []
-        norm_type = getattr(
-            NormType,
-            f"{snake2camel(norm)}{'Zero' if zero_norm else ''}") if norm is not None else None
+        norm_type = (
+            getattr(NormType, f"{snake2camel(norm)}{'Zero' if zero_norm else ''}")
+            if norm is not None
+            else None
+        )
         batch_norm = norm_type in (NormType.Batch, NormType.BatchZero)
         inn = norm_type in (NormType.Instance, NormType.InstanceZero)
         if bias is None:
@@ -228,10 +240,18 @@ class ConvBlock(nn.Sequential):
                 bias=bias,
                 stride=stride,
                 padding=padding,
-                **kwargs)
+                **kwargs,
+            )
         else:
-            conv = Conv1d(ni + coord, nf, ks=kernel_size, bias=bias,
-                          stride=stride, padding=padding, **kwargs)
+            conv = Conv1d(
+                ni + coord,
+                nf,
+                ks=kernel_size,
+                bias=bias,
+                stride=stride,
+                padding=padding,
+                **kwargs,
+            )
         act = None if act is None else act(**act_kwargs)
         if not separable:
             init_linear(conv, act, init=init, bias_std=bias_std)
@@ -244,11 +264,9 @@ class ConvBlock(nn.Sequential):
         if act is not None:
             act_batch_norm.append(act)
         if batch_norm:
-            act_batch_norm.append(
-                BatchNorm(nf, norm_type=norm_type, ndim=ndim))
+            act_batch_norm.append(BatchNorm(nf, norm_type=norm_type, ndim=ndim))
         if inn:
-            act_batch_norm.append(InstanceNorm(
-                nf, norm_type=norm_type, ndim=ndim))
+            act_batch_norm.append(InstanceNorm(nf, norm_type=norm_type, ndim=ndim))
         if batch_norm_1st:
             act_batch_norm.reverse()
         if dropout:
@@ -263,18 +281,15 @@ class MultiConv1d(Module):
     """Module that applies multiple convolutions with different kernel sizes"""
 
     def __init__(
-            self,
-            ni,
-            nf=None,
-            kss=[
-                1,
-                3,
-                5,
-                7],
-            keep_original=False,
-            separable=False,
-            dim=1,
-            **kwargs):
+        self,
+        ni,
+        nf=None,
+        kss=[1, 3, 5, 7],
+        keep_original=False,
+        separable=False,
+        dim=1,
+        **kwargs,
+    ):
         kss = list(kss)
         n_layers = len(kss)
         if ni == nf:

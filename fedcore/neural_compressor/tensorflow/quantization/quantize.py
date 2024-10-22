@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Callable, Dict, Tuple, Union
+from typing import Callable, Dict, Tuple, Union
 
 import tensorflow as tf
 
 from fedcore.neural_compressor.common import logger
-from fedcore.neural_compressor.common.base_config import BaseConfig, ComposableConfig, config_registry
-from fedcore.neural_compressor.common.utils import STATIC_QUANT, log_quant_execution
-from fedcore.neural_compressor.tensorflow.utils import BaseModel, KerasModel, Model, algos_mapping
+from fedcore.neural_compressor.common.base_config import (
+    BaseConfig,
+    ComposableConfig,
+    config_registry,
+)
+from fedcore.neural_compressor.common.utils import log_quant_execution
+from fedcore.neural_compressor.tensorflow.utils import (
+    BaseModel,
+    KerasModel,
+    Model,
+    algos_mapping,
+)
 
 
 def need_apply(configs_mapping: Dict[Tuple[str, callable], BaseConfig], algo_name):
@@ -48,8 +57,12 @@ def quantize_model(
     framework_name = "keras" if isinstance(q_model, KerasModel) else "tensorflow"
     registered_configs = config_registry.get_cls_configs()
     if isinstance(quant_config, dict):
-        quant_config = ComposableConfig.from_dict(quant_config, config_registry=registered_configs[framework_name])
-        logger.info(f"Parsed a config dict to construct the quantization config: {quant_config}.")
+        quant_config = ComposableConfig.from_dict(
+            quant_config, config_registry=registered_configs[framework_name]
+        )
+        logger.info(
+            f"Parsed a config dict to construct the quantization config: {quant_config}."
+        )
     else:
         assert isinstance(
             quant_config, BaseConfig
@@ -63,5 +76,7 @@ def quantize_model(
     for algo_name, algo_func in algos_mapping.items():
         if need_apply(configs_mapping, algo_name):
             logger.info(f"Start to apply {algo_name} on the model.")
-            q_model = algo_func(q_model, configs_mapping, calib_dataloader, calib_iteration)
+            q_model = algo_func(
+                q_model, configs_mapping, calib_dataloader, calib_iteration
+            )
     return q_model

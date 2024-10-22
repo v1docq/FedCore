@@ -28,7 +28,14 @@ from .utility import get_module, quant_tensor, set_module
 class TEQuantizer:
     """Weight-only quantization, Trainable Equivalent Transformation (TEQ): linear wrapper to apply scale to input."""
 
-    def __init__(self, model, weight_config={}, absorb_to_layer={}, folding=True, example_inputs=None):
+    def __init__(
+        self,
+        model,
+        weight_config={},
+        absorb_to_layer={},
+        folding=True,
+        example_inputs=None,
+    ):
         """
         :param model: the model for quantization
         :param weight_config (dict, optional): contains all info required by RTN. Defaults to {}.
@@ -77,7 +84,9 @@ class TEQuantizer:
                 alpha = torch.nn.Parameter(max_value)
                 alpha = alpha.to(self.device)
             else:
-                alpha = torch.nn.Parameter(torch.ones(module.weight.shape[1], device=self.device))
+                alpha = torch.nn.Parameter(
+                    torch.ones(module.weight.shape[1], device=self.device)
+                )
 
             self.trained_alphas[layer_norm] = alpha
             for layer_name in self.absorb_to_layer[layer_norm]:
@@ -90,23 +99,35 @@ class TEQuantizer:
 
                 module = get_module(self.model, layer_name)
                 wrapper_module = TEQLinearFakeQuant(
-                    orig_layer=module, alpha=alpha, num_bits=num_bits, group_size=group_size, scheme=scheme
+                    orig_layer=module,
+                    alpha=alpha,
+                    num_bits=num_bits,
+                    group_size=group_size,
+                    scheme=scheme,
                 )
                 set_module(self.model, layer_name, wrapper_module)
 
         for n, m in self.model.named_modules():
             if isinstance(m, torch.nn.Linear) and "orig_layer" not in n:
                 if self.weight_config.get(n) is None:  # pragma: no cover
-                    logger.info(f"out of absorbed layer {n} not in weight config, skip.")
+                    logger.info(
+                        f"out of absorbed layer {n} not in weight config, skip."
+                    )
                     continue
                 num_bits = self.weight_config[layer_name]["bits"]
                 group_size = self.weight_config[layer_name]["group_size"]
                 scheme = self.weight_config[layer_name]["scheme"]
 
-                alpha = torch.nn.Parameter(torch.ones(m.weight.shape[1], device=self.device))
+                alpha = torch.nn.Parameter(
+                    torch.ones(m.weight.shape[1], device=self.device)
+                )
                 alpha.requires_grad_(False)
                 wrapper_module = TEQLinearFakeQuant(
-                    orig_layer=m, alpha=alpha, num_bits=num_bits, group_size=group_size, scheme=scheme
+                    orig_layer=m,
+                    alpha=alpha,
+                    num_bits=num_bits,
+                    group_size=group_size,
+                    scheme=scheme,
                 )
                 set_module(self.model, n, wrapper_module)
 
@@ -136,9 +157,14 @@ class TEQuantizer:
                 layer.bias *= scale
             else:  # pragma: no cover
                 layer.affine = True
-                weight = torch.ones(layer.num_features, device=self.device, dtype=self.dtype) * scale
+                weight = (
+                    torch.ones(layer.num_features, device=self.device, dtype=self.dtype)
+                    * scale
+                )
                 layer.weight = torch.nn.Parameter(weight, requires_grad=False)
-                bias = torch.zeros(layer.num_features, device=self.device, dtype=self.dtype)
+                bias = torch.zeros(
+                    layer.num_features, device=self.device, dtype=self.dtype
+                )
                 layer.bias = torch.nn.Parameter(bias, requires_grad=False)
         elif isinstance(layer, torch.nn.LayerNorm):
             if layer.elementwise_affine:
@@ -146,9 +172,16 @@ class TEQuantizer:
                 layer.bias *= scale
             else:  # pragma: no cover
                 layer.elementwise_affine = True
-                weight = torch.ones(layer.num_features, device=self.device, dtype=self.dtype) * scale
-                layer.weight = torch.nn.Parameter(torch.ones(weight, requires_grad=False))
-                bias = torch.zeros(layer.num_features, device=self.device, dtype=self.dtype)
+                weight = (
+                    torch.ones(layer.num_features, device=self.device, dtype=self.dtype)
+                    * scale
+                )
+                layer.weight = torch.nn.Parameter(
+                    torch.ones(weight, requires_grad=False)
+                )
+                bias = torch.zeros(
+                    layer.num_features, device=self.device, dtype=self.dtype
+                )
                 layer.bias = torch.nn.Parameter(bias, requires_grad=False)
 
         elif isinstance(layer, torch.nn.Conv2d):  # pragma: no cover
@@ -164,7 +197,10 @@ class TEQuantizer:
             scale = scale.view(scale.shape[0], 1)
             layer.weight *= scale
 
-        elif layer.__class__.__name__ == "LlamaRMSNorm" or layer.__class__.__name__ == "T5LayerNorm":  ##quite tricky
+        elif (
+            layer.__class__.__name__ == "LlamaRMSNorm"
+            or layer.__class__.__name__ == "T5LayerNorm"
+        ):  ##quite tricky
             layer.weight *= scale
 
         else:  # pragma: no cover
@@ -231,12 +267,15 @@ class TEQuantizer:
         trained_alphas_list = []
         for item in self.trained_alphas.items():
             trained_alphas_list.append(item[1])
-        optimizer = torch.optim.Adam(trained_alphas_list, lr=lr, weight_decay=weight_decay, betas=betas)
+        optimizer = torch.optim.Adam(
+            trained_alphas_list, lr=lr, weight_decay=weight_decay, betas=betas
+        )
 
         lr_scheduler = transformers.get_scheduler(  # pylint: disable=E1111
             name=lr_scheduler_type,
             optimizer=optimizer,
-            num_warmup_steps=int(train_steps * warmup_ratio) // gradient_accumulation_steps,
+            num_warmup_steps=int(train_steps * warmup_ratio)
+            // gradient_accumulation_steps,
             num_training_steps=train_steps // gradient_accumulation_steps,
         )
 
@@ -260,7 +299,11 @@ class TEQuantizer:
                 global_steps += 1
 
                 if global_steps % logging_steps == 0:
-                    logger.info("steps: {}, loss: {}".format(global_steps, loss.detach().cpu().item()))
+                    logger.info(
+                        "steps: {}, loss: {}".format(
+                            global_steps, loss.detach().cpu().item()
+                        )
+                    )
 
                 if global_steps % gradient_accumulation_steps == 0:
                     optimizer.step()
@@ -286,7 +329,12 @@ class TEQuantizer:
             group_size = self.weight_config[n]["group_size"]
             scheme = self.weight_config[n]["scheme"]
             if isinstance(m, torch.nn.Linear):  # pragma: no cover
-                quant_tensor(m.weight.data, num_bits=num_bits, group_size=group_size, scheme=scheme)
+                quant_tensor(
+                    m.weight.data,
+                    num_bits=num_bits,
+                    group_size=group_size,
+                    scheme=scheme,
+                )
 
     def save(self, save_scale_file="", save_state_dict_file=""):
         """
@@ -302,14 +350,22 @@ class TEQuantizer:
 
 
 def teq_quantize(
-    model, weight_config={}, absorb_to_layer={}, folding=True, dataloader=None, calib_func=None, example_inputs=None
+    model,
+    weight_config={},
+    absorb_to_layer={},
+    folding=True,
+    dataloader=None,
+    calib_func=None,
+    example_inputs=None,
 ):
     """Run TEQ weight-only quantization."""
     assert isinstance(model, torch.nn.Module), "only support torch module"
     logger.info("TEQ quantizing start.")
     if example_inputs is None:
         if dataloader is None:  # pragma: no cover
-            assert False, "Please provide dataloader or example_inputs for TEQ algorithm."
+            assert (
+                False
+            ), "Please provide dataloader or example_inputs for TEQ algorithm."
         try:
             for idx, (input, label) in enumerate(dataloader):
                 example_inputs = input
@@ -319,7 +375,9 @@ def teq_quantize(
                 example_inputs = input
                 break
 
-    teq_quantizer = TEQuantizer(model, weight_config, absorb_to_layer, folding, example_inputs)
+    teq_quantizer = TEQuantizer(
+        model, weight_config, absorb_to_layer, folding, example_inputs
+    )
 
     # 1. wrapper tuning scale to model
     teq_quantizer.add_tuning_scale()

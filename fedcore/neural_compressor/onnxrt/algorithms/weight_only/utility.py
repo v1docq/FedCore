@@ -26,7 +26,10 @@ import onnx
 import onnxruntime as ort
 from packaging.version import Version
 
-from fedcore.neural_compressor.onnxrt.utils.utility import ONNXRT1161_VERSION, dtype_mapping
+from fedcore.neural_compressor.onnxrt.utils.utility import (
+    ONNXRT1161_VERSION,
+    dtype_mapping,
+)
 
 __all__ = [
     "make_matmul_weight_only_node",
@@ -129,7 +132,11 @@ def make_matmul_weight_only_node(
                         )
 
             zp_tensor = onnx.helper.make_tensor(
-                name=node.input[1] + "_zp", data_type=2, dims=packed_zp.shape, vals=packed_zp.tobytes(), raw=True
+                name=node.input[1] + "_zp",
+                data_type=2,
+                dims=packed_zp.shape,
+                vals=packed_zp.tobytes(),
+                raw=True,
             )
             input_names.append(zp_tensor.name)
             new_inits.append(zp_tensor)
@@ -159,13 +166,17 @@ def make_matmul_weight_only_node(
                 packed[i][4] = zero_point[i]
 
             packed[i][offset:] = np.bitwise_or(
-                q_weight[i][: group_size // 2], np.left_shift(q_weight[i][group_size // 2 :], num_bits)
+                q_weight[i][: group_size // 2],
+                np.left_shift(q_weight[i][group_size // 2 :], num_bits),
             )
         packed = packed.reshape(-1)
 
         # build shape tensor
         shape_tensor = onnx.helper.make_tensor(
-            name=node.input[1] + "_shape", data_type=7, dims=(2,), vals=np.array(weight_shape, dtype="int64")
+            name=node.input[1] + "_shape",
+            data_type=7,
+            dims=(2,),
+            vals=np.array(weight_shape, dtype="int64"),
         )
         new_inits.append(shape_tensor)
         input_names.append(shape_tensor.name)
@@ -208,7 +219,9 @@ def prepare_inputs(model, data_reader, providers):
     from importlib.util import find_spec
 
     so = ort.SessionOptions()
-    if sys.version_info < (3, 11) and find_spec("onnxruntime_extensions"):  # pragma: no cover
+    if sys.version_info < (3, 11) and find_spec(
+        "onnxruntime_extensions"
+    ):  # pragma: no cover
         from onnxruntime_extensions import get_library_path
 
         so.register_custom_ops_library(get_library_path())
@@ -224,9 +237,11 @@ def prepare_inputs(model, data_reader, providers):
     session = (
         ort.InferenceSession(model.model.SerializeToString(), so, providers=providers)
         if not model.is_large_model
-        else ort.InferenceSession(model.model_path + "_augment.onnx", so, providers=providers)
+        else ort.InferenceSession(
+            model.model_path + "_augment.onnx", so, providers=providers
+        )
     )
-    inputs_names = [i.name for i in session.get_inputs()]
+    [i.name for i in session.get_inputs()]
     del session
 
     inputs_list = []
@@ -299,20 +314,30 @@ def quant_tensor(
         max_range = np.maximum(np.abs(rmin), np.abs(rmax))
         scale = np.ones(rmax.shape)
         scale[max_range > 0] = np.array(
-            [float(i) / (maxq - minq) for i in (max_range[max_range > 0] * 2.0).flatten().tolist()]
+            [
+                float(i) / (maxq - minq)
+                for i in (max_range[max_range > 0] * 2.0).flatten().tolist()
+            ]
         )
         zero_point = (
-            np.zeros(scale.shape) if dtype == "int" else np.ones(rmax.shape, dtype="uint8") * (1 << (num_bits - 1))
+            np.zeros(scale.shape)
+            if dtype == "int"
+            else np.ones(rmax.shape, dtype="uint8") * (1 << (num_bits - 1))
         )
     else:
         scale = np.ones(rmax.shape)
         scale[rmin != rmax] = np.array(
-            [float(i) / (maxq - minq) for i in (rmax - rmin)[rmin != rmax].flatten().tolist()]
+            [
+                float(i) / (maxq - minq)
+                for i in (rmax - rmin)[rmin != rmax].flatten().tolist()
+            ]
         )
         zero_point = (
             ((np.zeros(scale.shape) - rmin) / scale).round()
             if dtype == "int"
-            else np.maximum(0, np.minimum(maxq, ((np.zeros(scale.shape) - rmin) / scale).round())).astype("uint8")
+            else np.maximum(
+                0, np.minimum(maxq, ((np.zeros(scale.shape) - rmin) / scale).round())
+            ).astype("uint8")
         )
     return np.clip((data / scale + zero_point).round(), minq, maxq), scale, zero_point
 

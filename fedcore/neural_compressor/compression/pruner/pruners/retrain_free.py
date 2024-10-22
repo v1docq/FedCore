@@ -63,9 +63,16 @@ class PytorchRetrainFreePruner(PytorchBasePruner):
         self.pruner_masks = [self.masks]
         self._rewrite_forward(self.pruner_masks)
         self.scheduler = get_scheduler(self.config)
-        self.criterion = get_criterion(modules=self.modules, config=self.config, pattern=self.pattern, masks=self.masks)
+        self.criterion = get_criterion(
+            modules=self.modules,
+            config=self.config,
+            pattern=self.pattern,
+            masks=self.masks,
+        )
         self.reg = get_reg(self.config, self.modules, self.pattern)
-        logger.warning("Retrain-free pruner fixed the weights, please DO NOT turn on gradient update.")
+        logger.warning(
+            "Retrain-free pruner fixed the weights, please DO NOT turn on gradient update."
+        )
         assert (
             "channel" in self.pattern.pattern
         ), "retrain-free pruner only supports large patterns like channel-wise pruning."
@@ -73,8 +80,13 @@ class PytorchRetrainFreePruner(PytorchBasePruner):
     def _rewrite_forward(self, pruner_masks):
         def forward(self, input):
             block_mask = pruner_masks[0][self.mask_name]
-            block_mask.requires_grad_(True)  # Makesure that the gradient of block mask is always avilible
-            block_size = [self.weight.shape[0] // block_mask.shape[0], self.weight.shape[1] // block_mask.shape[1]]
+            block_mask.requires_grad_(
+                True
+            )  # Makesure that the gradient of block mask is always avilible
+            block_size = [
+                self.weight.shape[0] // block_mask.shape[0],
+                self.weight.shape[1] // block_mask.shape[1],
+            ]
             mask = (
                 block_mask.repeat_interleave(block_size[0], dim=0)
                 .repeat_interleave(block_size[1], dim=-1)
@@ -129,7 +141,9 @@ class PytorchRetrainFreePruner(PytorchBasePruner):
         if self.criterion.scores == {}:
             return
         # the order of the following three lines can't not be exchanged
-        self.masks = self.pattern.get_masks(self.criterion.scores, current_target_sparsity_ratio, self.masks)
+        self.masks = self.pattern.get_masks(
+            self.criterion.scores, current_target_sparsity_ratio, self.masks
+        )
         self.masks = self.rearrange_masks(self.masks)
         self.pruner_masks[0] = self.masks
 
@@ -164,7 +178,9 @@ class PytorchRetrainFreePruner(PytorchBasePruner):
                 num_pruned = torch.sum(block_mask == 0.0).data.item()
                 if not num_pruned or not self.criterion.collected_grads[key]:
                     continue
-                grads = torch.stack(self.criterion.collected_grads[key], dim=0).squeeze()
+                grads = torch.stack(
+                    self.criterion.collected_grads[key], dim=0
+                ).squeeze()
                 # self.criterion.collected_grads[key] = [] # clear grads after each pruning step
                 grads = grads.permute(1, 0).contiguous()
                 grads_sq = grads.pow(2).sum(dim=1)
@@ -182,7 +198,9 @@ class PytorchRetrainFreePruner(PytorchBasePruner):
 
                 new_mask = torch.ones(len(indices)).to(block_mask.device)
                 new_mask[masked_indices] = 0
-                new_mask = new_mask * torch.ones_like(block_mask, device=block_mask.device, dtype=block_mask.dtype)
+                new_mask = new_mask * torch.ones_like(
+                    block_mask, device=block_mask.device, dtype=block_mask.dtype
+                )
                 block_mask.data = new_mask.data
         return masks
 

@@ -55,4 +55,6 @@ class QuantizeLayerBatchNormalization(QuantizeLayerBase):  # pragma: no cover
         """
         self.layer = layer
         if self._quantizable_bn():
-            self.quantize_config.add_quantize_recipe({self.layer.name: {"quantize": True}})
+            self.quantize_config.add_quantize_recipe(
+                {self.layer.name: {"quantize": True}}
+            )

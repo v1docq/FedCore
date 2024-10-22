@@ -43,7 +43,9 @@ def delete_assign(graph_def: Any) -> Any:
     return graph_def
 
 
-def create_tf_config(tf_module: Any, intra_num_of_threads: int, inter_num_of_threads: int) -> Any:
+def create_tf_config(
+    tf_module: Any, intra_num_of_threads: int, inter_num_of_threads: int
+) -> Any:
     """Create tensorflow config.
 
     Args:

@@ -73,7 +73,9 @@ class BaseSearchSpace(object):
         """Initialize."""
         if bound:
             if not isinstance(bound, (list, tuple)):  # pragma: no cover
-                raise TypeError("bound should be list or tuple, not {}".format(type(bound)))
+                raise TypeError(
+                    "bound should be list or tuple, not {}".format(type(bound))
+                )
             if len(bound) != 2:  # pragma: no cover
                 raise ValueError("bound should only contain two elements, [start, end)")
             if bound[1] <= bound[0]:  # pragma: no cover
@@ -94,7 +96,6 @@ class BaseSearchSpace(object):
 
     def get_value(self):
         """Get one value from the search space."""
-        pass
 
 
 @register_searchspace("discrete")
@@ -132,7 +133,9 @@ class DiscreteSearchSpace(BaseSearchSpace):
         """
         if idx is not None:
             if not isinstance(idx, int):
-                raise TypeError("The type of idx should be int, not {}".format(type(idx)))
+                raise TypeError(
+                    "The type of idx should be int, not {}".format(type(idx))
+                )
             if idx < 0:
                 return self.get_all()
             value = self.get_nth_value(idx)

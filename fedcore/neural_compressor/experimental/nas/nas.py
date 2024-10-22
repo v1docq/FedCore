@@ -33,7 +33,11 @@ from fedcore.neural_compressor.conf.pythonic_config import Config
 from fedcore.neural_compressor.utils.utility import LazyImport, logger
 
 from .nas_utils import NASMethods, find_pareto_front
-from .search_algorithms import BayesianOptimizationSearcher, GridSearcher, RandomSearcher
+from .search_algorithms import (
+    BayesianOptimizationSearcher,
+    GridSearcher,
+    RandomSearcher,
+)
 
 torch = LazyImport("torch")
 
@@ -63,10 +67,15 @@ class NAS(object):
         else:  # pragma: no cover
             raise NotImplementedError("Please provide a str path to the config file.")
         assert self.conf.usr_cfg.nas is not None, "nas section must be set"
-        if isinstance(self.conf.usr_cfg.nas.approach, str) and self.conf.usr_cfg.nas.approach.lower() in NASMethods:
+        if (
+            isinstance(self.conf.usr_cfg.nas.approach, str)
+            and self.conf.usr_cfg.nas.approach.lower() in NASMethods
+        ):
             method = self.conf.usr_cfg.nas.approach.lower()
         else:
-            logger.warning("NAS approach not set in config, use default NAS approach, i.e. Basic.")
+            logger.warning(
+                "NAS approach not set in config, use default NAS approach, i.e. Basic."
+            )
             method = "basic"
         if isinstance(self.conf, NASConfig):
             return NASMethods[method](self.conf, *args, **kwargs)
@@ -133,30 +142,56 @@ class NASBase(object):
             logger.info("Model architecture {} proposed.".format(model_arch_paras))
             model = self._model_builder(model_arch_paras)
             model_paras = self.count_model_parameters(model)
-            logger.info("***** Number of model parameters: {:.2f}M *****".format(model_paras / 10**6))
+            logger.info(
+                "***** Number of model parameters: {:.2f}M *****".format(
+                    model_paras / 10**6
+                )
+            )
             self.model_paras_num[tuple(model_arch_paras.values())] = model_paras
             if tuple(model_arch_paras.values()) in self.search_results:
-                logger.info("Skip evaluated model architecture {}.".format(model_arch_paras))
+                logger.info(
+                    "Skip evaluated model architecture {}.".format(model_arch_paras)
+                )
                 continue
             if tuple(model_arch_paras.values()) in self.resumed_search_results:
-                logger.info("Find previous results of model architecture: {}.".format(model_arch_paras))
+                logger.info(
+                    "Find previous results of model architecture: {}.".format(
+                        model_arch_paras
+                    )
+                )
                 metrics = self.resumed_search_results[tuple(model_arch_paras.values())]
             else:
-                logger.info("Assessing model architecture: {}.".format(model_arch_paras))
+                logger.info(
+                    "Assessing model architecture: {}.".format(model_arch_paras)
+                )
                 metrics = self.estimate(model)
-            logger.info("Metrics of model architecture {} is {}.".format(model_arch_paras, metrics))
+            logger.info(
+                "Metrics of model architecture {} is {}.".format(
+                    model_arch_paras, metrics
+                )
+            )
             self.search_results[tuple(model_arch_paras.values())] = metrics
             self._search_algorithm.get_feedback(sum(self.metrics_conversion(metrics)))
-            self.dump_search_results(os.path.join(save_path, "Trial_{}_results.txt".format(i + 1)))
+            self.dump_search_results(
+                os.path.join(save_path, "Trial_{}_results.txt".format(i + 1))
+            )
 
         for model_arch_vec in self.resumed_search_results:
             if model_arch_vec not in self.search_results:
-                self.search_results[model_arch_vec] = self.resumed_search_results[model_arch_vec]
+                self.search_results[model_arch_vec] = self.resumed_search_results[
+                    model_arch_vec
+                ]
                 model = self._model_builder(self.params_vec2params_dict(model_arch_vec))
-                self.model_paras_num[model_arch_vec] = self.count_model_parameters(model)
+                self.model_paras_num[model_arch_vec] = self.count_model_parameters(
+                    model
+                )
         self.dump_search_results(os.path.join(save_path, "Final_results.txt"))
         self.find_best_model_archs()
-        logger.info("{fix} Found {n} best model architectures {fix}".format(n=len(self.best_model_archs), fix="=" * 30))
+        logger.info(
+            "{fix} Found {n} best model architectures {fix}".format(
+                n=len(self.best_model_archs), fix="=" * 30
+            )
+        )
         for i, model_arch in enumerate(self.best_model_archs):
             logger.info("Best model architecture {}: {}".format(i + 1, model_arch))
         return self.best_model_archs
@@ -178,7 +213,9 @@ class NASBase(object):
         if isinstance(model, torch.nn.Module):
             return sum(p.numel() for p in model.parameters())
         else:
-            raise NotImplementedError("Only support torch model now.")  # pragma: no cover
+            raise NotImplementedError(
+                "Only support torch model now."
+            )  # pragma: no cover
 
     def load_search_results(self, path):
         """Load previous search results if exist."""
@@ -186,30 +223,53 @@ class NASBase(object):
         lastest_results_record = os.path.join(path, "lastest_results.npy")
         if not os.path.exists(path) or not os.path.exists(lastest_results_record):
             return
-        self.resumed_search_results = np.load(lastest_results_record, allow_pickle=True).item()
+        self.resumed_search_results = np.load(
+            lastest_results_record, allow_pickle=True
+        ).item()
         os.makedirs(os.path.join(path, "previous_results"), exist_ok=True)
         for f in os.listdir(path):
             if os.path.isfile(os.path.join(path, f)):
-                shutil.move(os.path.join(path, f), os.path.join(path, "previous_results", f))
+                shutil.move(
+                    os.path.join(path, f), os.path.join(path, "previous_results", f)
+                )
         logger.info("Loaded previous results.")
 
     def dump_search_results(self, path):
         """Save search results."""
-        lastest_results_record = os.path.join(os.path.dirname(path), "lastest_results.npy")
+        lastest_results_record = os.path.join(
+            os.path.dirname(path), "lastest_results.npy"
+        )
         np.save(lastest_results_record, self.search_results, allow_pickle=True)
         write_contents = "=" * 30 + " All Search Results " + "=" * 30 + "\n\n"
         for model_arch_vec in self.search_results:
-            tmp = ",".join(["{}_{}".format(k, v) for k, v in zip(self.search_space_keys, model_arch_vec)])
-            write_contents += "{}: {} Paras: {}M\n".format(
-                tmp, self.search_results[model_arch_vec], self.model_paras_num[model_arch_vec] / 10**6
+            tmp = ",".join(
+                [
+                    "{}_{}".format(k, v)
+                    for k, v in zip(self.search_space_keys, model_arch_vec)
+                ]
             )
-        write_contents += "\n\n\n" + "=" * 30 + " Best Search Results " + "=" * 30 + "\n\n"
+            write_contents += "{}: {} Paras: {}M\n".format(
+                tmp,
+                self.search_results[model_arch_vec],
+                self.model_paras_num[model_arch_vec] / 10**6,
+            )
+        write_contents += (
+            "\n\n\n" + "=" * 30 + " Best Search Results " + "=" * 30 + "\n\n"
+        )
         self.find_best_model_archs()
         for i, model_arch in enumerate(self.best_model_archs):
             model_arch_vec = tuple(model_arch.values())
-            tmp = ",".join(["{}_{}".format(k, v) for k, v in zip(self.search_space_keys, model_arch_vec)])
+            tmp = ",".join(
+                [
+                    "{}_{}".format(k, v)
+                    for k, v in zip(self.search_space_keys, model_arch_vec)
+                ]
+            )
             write_contents += "{}. {}: {} Paras: {}M\n".format(
-                i + 1, tmp, self.search_results[model_arch_vec], self.model_paras_num[model_arch_vec] / 10**6
+                i + 1,
+                tmp,
+                self.search_results[model_arch_vec],
+                self.model_paras_num[model_arch_vec] / 10**6,
             )
         with open(path, mode="w") as f:
             f.write(write_contents)
@@ -234,9 +294,13 @@ class NASBase(object):
         """
         assert len(self.search_results) > 0, "Zero result in search_results."
         model_arches = list(self.search_results.keys())
-        metrics = [self.metrics_conversion(self.search_results[ma]) for ma in model_arches]
+        metrics = [
+            self.metrics_conversion(self.search_results[ma]) for ma in model_arches
+        ]
         pareto_front_indices = find_pareto_front(metrics)
-        self.best_model_archs = [self.params_vec2params_dict(model_arches[i]) for i in pareto_front_indices]
+        self.best_model_archs = [
+            self.params_vec2params_dict(model_arches[i]) for i in pareto_front_indices
+        ]
 
     def metrics_conversion(self, metrics):
         """Convert the metrics to specific format.
@@ -262,7 +326,8 @@ class NASBase(object):
                 + "set it to all True for every metric entry by default."
             )
         converted_metrics = [
-            metric if higher_is_better else -metric for metric, higher_is_better in zip(metrics, self.higher_is_better)
+            metric if higher_is_better else -metric
+            for metric, higher_is_better in zip(metrics, self.higher_is_better)
         ]
         return converted_metrics
 
@@ -275,35 +340,51 @@ class NASBase(object):
         else:
             logger.warning(
                 "Use user provided search space {}, instead of search space "
-                "defined in the config, i.e. {}.".format(self._search_space, self.search_cfg.search_space)
+                "defined in the config, i.e. {}.".format(
+                    self._search_space, self.search_cfg.search_space
+                )
             )
         assert (
             isinstance(self._search_space, dict) and len(self._search_space) > 0
         ), "Must provide a dict as search_space for NAS."
         self.search_space_keys = sorted(self.search_space.keys())
         for k in self.search_space_keys:
-            assert isinstance(self.search_space[k], (list, tuple)), "Value of key '{}' must be a list or tuple".format(
-                k
-            )
+            assert isinstance(
+                self.search_space[k], (list, tuple)
+            ), "Value of key '{}' must be a list or tuple".format(k)
 
         self.metrics = self.search_cfg.metrics if self.search_cfg.metrics else None
-        self.higher_is_better = self.search_cfg.higher_is_better if self.search_cfg.higher_is_better else None
+        self.higher_is_better = (
+            self.search_cfg.higher_is_better
+            if self.search_cfg.higher_is_better
+            else None
+        )
         self.seed = self.search_cfg.seed
         self.max_trials = (
             self.search_cfg.max_trials if self.search_cfg.max_trials is not None else 3
         )  # set default 3 for max_trials
-        self.search_algorithm_type = self.search_cfg.search_algorithm if self.search_cfg.search_algorithm else None
+        self.search_algorithm_type = (
+            self.search_cfg.search_algorithm
+            if self.search_cfg.search_algorithm
+            else None
+        )
         if not self.search_algorithm_type:
-            self._search_algorithm = BayesianOptimizationSearcher(self.search_space, self.seed)
+            self._search_algorithm = BayesianOptimizationSearcher(
+                self.search_space, self.seed
+            )
         elif self.search_algorithm_type.lower() == "grid":
             self._search_algorithm = GridSearcher(self.search_space)
         elif self.search_algorithm_type.lower() == "random":
             self._search_algorithm = RandomSearcher(self.search_space, self.seed)
         elif self.search_algorithm_type.lower() == "bo":
-            self._search_algorithm = BayesianOptimizationSearcher(self.search_space, self.seed)
+            self._search_algorithm = BayesianOptimizationSearcher(
+                self.search_space, self.seed
+            )
         else:  # pragma: no cover
             logger.warning(
-                "Please be aware that '{}' is not a built-in search algorithm.".format(self.search_algorithm_type)
+                "Please be aware that '{}' is not a built-in search algorithm.".format(
+                    self.search_algorithm_type
+                )
             )
 
     @property

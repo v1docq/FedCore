@@ -20,7 +20,9 @@ from tensorflow.core.framework import graph_pb2
 from tensorflow.python.platform import gfile
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
 
 from .quantize_graph_base import QuantizeGraphBase
@@ -97,11 +99,19 @@ class QuantizeGraphForIntel(QuantizeGraphBase):
         op_wise_config_name_list = list(self.op_wise_config.keys())
         all_node_length = len(self.op_wise_config)
         for _, node in enumerate(self.input_graph.node):
-            if node in self.input_graph.node and node.op in self.transformers and node.name in self.op_wise_config:
+            if (
+                node in self.input_graph.node
+                and node.op in self.transformers
+                and node.name in self.op_wise_config
+            ):
                 count += 1
                 if count == all_node_length:
                     remove_redundant_quant_flag = True
-                self.input_graph, quantizable_node_names, exclude_node_names = self.transformers[node.op](
+                (
+                    self.input_graph,
+                    quantizable_node_names,
+                    exclude_node_names,
+                ) = self.transformers[node.op](
                     input_graph=self.input_graph,
                     patterns=self.op_wise_seq[node.op],
                     remove_redundant_quant_flag=remove_redundant_quant_flag,
@@ -117,7 +127,9 @@ class QuantizeGraphForIntel(QuantizeGraphBase):
                 ).apply_the_transform()
                 if quantizable_node_names:
                     if node.op in ("ConcatV2", "MaxPool", "MaxPool3D", "AvgPool"):
-                        self.all_quantizable_node.extend([[i] for i in quantizable_node_names])
+                        self.all_quantizable_node.extend(
+                            [[i] for i in quantizable_node_names]
+                        )
                     else:
                         self.all_quantizable_node.append(quantizable_node_names)
                 if exclude_node_names:

@@ -7,6 +7,7 @@ Taken from:
 https://github.com/xiaolai-sqlai/mobilenetv3/blob/master/mobilenetv3.py
 
 """
+
 import torch
 import torch.nn as nn
 from torch.nn import init
@@ -25,7 +26,7 @@ class SeModule(nn.Module):
             nn.BatchNorm2d(expand_size),
             nn.ReLU(inplace=True),
             nn.Conv2d(expand_size, in_size, kernel_size=1, bias=False),
-            nn.Hardsigmoid()
+            nn.Hardsigmoid(),
         )
 
     def forward(self, x):
@@ -43,8 +44,15 @@ class Block(nn.Module):
         self.bn1 = nn.BatchNorm2d(expand_size)
         self.act1 = act(inplace=True)
 
-        self.conv2 = nn.Conv2d(expand_size, expand_size, kernel_size=kernel_size, stride=stride,
-                               padding=kernel_size // 2, groups=expand_size, bias=False)
+        self.conv2 = nn.Conv2d(
+            expand_size,
+            expand_size,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=kernel_size // 2,
+            groups=expand_size,
+            bias=False,
+        )
         self.bn2 = nn.BatchNorm2d(expand_size)
         self.act2 = act(inplace=True)
         self.se = SeModule(expand_size) if se else nn.Identity()
@@ -57,23 +65,37 @@ class Block(nn.Module):
         if stride == 1 and in_size != out_size:
             self.skip = nn.Sequential(
                 nn.Conv2d(in_size, out_size, kernel_size=1, bias=False),
-                nn.BatchNorm2d(out_size)
+                nn.BatchNorm2d(out_size),
             )
 
         if stride == 2 and in_size != out_size:
             self.skip = nn.Sequential(
-                nn.Conv2d(in_channels=in_size, out_channels=in_size, kernel_size=3, groups=in_size, stride=2, padding=1,
-                          bias=False),
+                nn.Conv2d(
+                    in_channels=in_size,
+                    out_channels=in_size,
+                    kernel_size=3,
+                    groups=in_size,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                ),
                 nn.BatchNorm2d(in_size),
                 nn.Conv2d(in_size, out_size, kernel_size=1, bias=True),
-                nn.BatchNorm2d(out_size)
+                nn.BatchNorm2d(out_size),
             )
 
         if stride == 2 and in_size == out_size:
             self.skip = nn.Sequential(
-                nn.Conv2d(in_channels=in_size, out_channels=out_size, kernel_size=3, groups=in_size, stride=2,
-                          padding=1, bias=False),
-                nn.BatchNorm2d(out_size)
+                nn.Conv2d(
+                    in_channels=in_size,
+                    out_channels=out_size,
+                    kernel_size=3,
+                    groups=in_size,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                ),
+                nn.BatchNorm2d(out_size),
             )
 
     def forward(self, x):
@@ -92,7 +114,9 @@ class Block(nn.Module):
 class MobileNetV3Small(nn.Module):
     def __init__(self, input_dim, num_classes=1000, act=nn.Hardswish):
         super(MobileNetV3Small, self).__init__()
-        self.conv1 = nn.Conv2d(input_dim, 16, kernel_size=3, stride=2, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(
+            input_dim, 16, kernel_size=3, stride=2, padding=1, bias=False
+        )
         self.bn1 = nn.BatchNorm2d(16)
         self.hs1 = act(inplace=True)
 
@@ -125,7 +149,7 @@ class MobileNetV3Small(nn.Module):
     def init_params(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                init.kaiming_normal_(m.weight, mode='fan_out')
+                init.kaiming_normal_(m.weight, mode="fan_out")
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
             elif isinstance(m, nn.BatchNorm2d):
@@ -150,7 +174,9 @@ class MobileNetV3Small(nn.Module):
 class MobileNetV3Large(nn.Module):
     def __init__(self, input_dim, num_classes=1000, act=nn.Hardswish):
         super(MobileNetV3Large, self).__init__()
-        self.conv1 = nn.Conv2d(input_dim, 16, kernel_size=3, stride=2, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(
+            input_dim, 16, kernel_size=3, stride=2, padding=1, bias=False
+        )
         self.bn1 = nn.BatchNorm2d(16)
         self.hs1 = act(inplace=True)
 
@@ -188,7 +214,7 @@ class MobileNetV3Large(nn.Module):
     def init_params(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                init.kaiming_normal_(m.weight, mode='fan_out')
+                init.kaiming_normal_(m.weight, mode="fan_out")
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
             elif isinstance(m, nn.BatchNorm2d):
@@ -212,15 +238,14 @@ class MobileNetV3Large(nn.Module):
 
 class MobileNet(BaseNeuralModel):
     def __init__(
-            self,
-            input_dim: int = 3,
-            output_dim: int = 2,
-            model_name: str = 'MobileNetV3Small',
-            **kwargs):
+        self,
+        input_dim: int = 3,
+        output_dim: int = 2,
+        model_name: str = "MobileNetV3Small",
+        **kwargs
+    ):
         self.model = MOBILENET_MODELS[model_name.lower()](
-            input_dim=input_dim,
-            num_classes=output_dim,
-            **kwargs
+            input_dim=input_dim, num_classes=output_dim, **kwargs
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -229,6 +254,6 @@ class MobileNet(BaseNeuralModel):
 
 
 MOBILENET_MODELS = {
-    'mobilenetv3small': MobileNetV3Small,
-    'mobilenetv3large': MobileNetV3Large,
+    "mobilenetv3small": MobileNetV3Small,
+    "mobilenetv3large": MobileNetV3Large,
 }

@@ -7,7 +7,11 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.layers import PrunedResNet, Bottleneck, BasicBlock
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.repository.constanst_repository import CROSS_ENTROPY, MULTI_CLASS_CROSS_ENTROPY, MSE
+from fedcore.repository.constanst_repository import (
+    CROSS_ENTROPY,
+    MULTI_CLASS_CROSS_ENTROPY,
+    MSE,
+)
 
 from torch.nn import Dropout
 from torch.nn import Identity
@@ -44,11 +48,11 @@ def pruned_resnet152(**kwargs: Any) -> PrunedResNet:
 
 
 CLF_MODELS = {
-    'ResNet18': resnet18,
-    'ResNet34': resnet34,
-    'ResNet50': resnet50,
-    'ResNet101': resnet101,
-    'ResNet152': resnet152,
+    "ResNet18": resnet18,
+    "ResNet34": resnet34,
+    "ResNet50": resnet50,
+    "ResNet101": resnet101,
+    "ResNet152": resnet152,
 }
 
 PRUNED_MODELS = {
@@ -61,20 +65,19 @@ PRUNED_MODELS = {
 
 
 class ResNet:
-    def __init__(self,
-                 input_dim,
-                 output_dim,
-                 model_name: str = 'ResNet18'):
+    def __init__(self, input_dim, output_dim, model_name: str = "ResNet18"):
         model_list = {**CLF_MODELS}
         self.model = model_list[model_name](num_classes=output_dim)
 
         if input_dim != 3:
-            self.model.conv1 = nn.Conv2d(in_channels=input_dim,
-                                         out_channels=64,
-                                         kernel_size=7,
-                                         stride=2,
-                                         padding=3,
-                                         bias=False)
+            self.model.conv1 = nn.Conv2d(
+                in_channels=input_dim,
+                out_channels=64,
+                kernel_size=7,
+                stride=2,
+                padding=3,
+                bias=False,
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Implements the forward method of the model and returns predictions."""
@@ -100,10 +103,10 @@ class ObjectDetector(Module):
             Linear(64, 32),
             ReLU(),
             Linear(32, 4),
-            Sigmoid()
+            Sigmoid(),
         )
 
-        # build the classifier head that predicts the 
+        # build the classifier head that predicts the
         # class labels
         self.classifier = Sequential(
             Linear(baseModel.fc.in_features, 512),
@@ -112,14 +115,14 @@ class ObjectDetector(Module):
             Linear(512, 512),
             ReLU(),
             Dropout(),
-            Linear(512, 9)
+            Linear(512, 9),
         )
 
         # set classifier of our base model to produce
         # outputs from last convolutional block
         self.baseModel.fc = Identity()
 
-    # we take the output of the base model and pass it through our heads 
+    # we take the output of the base model and pass it through our heads
     def forward(self, x):
         # pass the inputs through the base model and then obtain
         # predictions from two different branches of the network
@@ -134,22 +137,26 @@ class ObjectDetector(Module):
 class ResNetModel(BaseNeuralModel):
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
-        self.epochs = params.get('epochs', 25)
-        self.batch_size = params.get('batch_size', 10)
-        self.model_name = params.get('model_name', 'ResNet18')
-        self.input_dim = params.get('input_dim', 1)
-        self.output_dim = params.get('output_dim', 10)
+        self.epochs = params.get("epochs", 25)
+        self.batch_size = params.get("batch_size", 10)
+        self.model_name = params.get("model_name", "ResNet18")
+        self.input_dim = params.get("input_dim", 1)
+        self.output_dim = params.get("output_dim", 10)
 
     def _init_model(self, input_data):
-        self.model = ResNet(input_dim=self.input_dim,
-                            output_dim=self.output_dim,
-                            model_name=self.model_name)
-        self.model_for_inference = ResNet(input_dim=self.input_dim,
-                                          output_dim=self.output_dim,
-                                          model_name=self.model_name).model
+        self.model = ResNet(
+            input_dim=self.input_dim,
+            output_dim=self.output_dim,
+            model_name=self.model_name,
+        )
+        self.model_for_inference = ResNet(
+            input_dim=self.input_dim,
+            output_dim=self.output_dim,
+            model_name=self.model_name,
+        ).model
         self.model = self.model.model
         optimizer = optim.Adam(self.model.parameters(), lr=0.001)
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             if input_data.shape[0] == 2:
                 loss_fn = CROSS_ENTROPY()
             else:

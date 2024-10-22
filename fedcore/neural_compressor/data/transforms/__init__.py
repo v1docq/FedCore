@@ -17,6 +17,18 @@
 # ==============================================================================
 """Neural Compressor Built-in transforms for multiple framework backends."""
 
+import glob
+from os.path import dirname, basename, isfile, join
+
+from .coco_transform import ParseDecodeCocoTransform
+from .imagenet_transform import (
+    LabelShift,
+    BilinearImagenetTransform,
+    TensorflowResizeCropImagenetTransform,
+)
+from .imagenet_transform import TensorflowShiftRescale
+from .postprocess import Postprocess
+from .transform import TFSquadV1PostTransform, TFSquadV1ModelZooPostTransform
 from .transform import (
     TRANSFORMS,
     BaseTransform,
@@ -27,13 +39,6 @@ from .transform import (
     RescaleTFTransform,
     NormalizeTFTransform,
 )
-from .transform import TFSquadV1PostTransform, TFSquadV1ModelZooPostTransform
-from .coco_transform import ParseDecodeCocoTransform
-from .postprocess import Postprocess
-from .imagenet_transform import LabelShift, BilinearImagenetTransform, TensorflowResizeCropImagenetTransform
-from .imagenet_transform import TensorflowShiftRescale
-from os.path import dirname, basename, isfile, join
-import glob
 
 modules = glob.glob(join(dirname(__file__), "*.py"))
 

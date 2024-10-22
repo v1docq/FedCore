@@ -17,31 +17,50 @@ from torchvision import transforms
 
 from fedcore.architecture.utils.paths import PROJECT_PATH
 
-IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".ppm", ".bmp",
-                  ".pgm", ".tif", ".tiff", ".webp")
-TRANSFORM_IMG = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(256),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225])
-])
+IMG_EXTENSIONS = (
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".ppm",
+    ".bmp",
+    ".pgm",
+    ".tif",
+    ".tiff",
+    ".webp",
+)
+TRANSFORM_IMG = transforms.Compose(
+    [
+        transforms.Resize(256),
+        transforms.CenterCrop(256),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+)
 BATCH_SIZE = 32
 
 
 class TorchVisionDataset(Dataset):
     def __init__(self, path, transform=TRANSFORM_IMG):
         # directory containing the images
-        self.train_dir, self.val_dir = os.path.join(PROJECT_PATH, path, 'train'), os.path.join(PROJECT_PATH,
-                                                                                               path, 'validation')
+        self.train_dir, self.val_dir = os.path.join(
+            PROJECT_PATH, path, "train"
+        ), os.path.join(PROJECT_PATH, path, "validation")
         # transform to be applied on images
         self.transform = transform
 
     def get_dataloader(self):
-        train_data = torchvision.datasets.ImageFolder(root=self.train_dir, transform=TRANSFORM_IMG)
-        train_data_loader = data.DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-        test_data = torchvision.datasets.ImageFolder(root=self.val_dir, transform=TRANSFORM_IMG)
-        test_data_loader = data.DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+        train_data = torchvision.datasets.ImageFolder(
+            root=self.train_dir, transform=TRANSFORM_IMG
+        )
+        train_data_loader = data.DataLoader(
+            train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4
+        )
+        test_data = torchvision.datasets.ImageFolder(
+            root=self.val_dir, transform=TRANSFORM_IMG
+        )
+        test_data_loader = data.DataLoader(
+            test_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4
+        )
         return train_data_loader, test_data_loader
 
 
@@ -55,15 +74,17 @@ class CustomDatasetForImages(Dataset):
         self.labels_mask = pd.read_csv(annotations_file_dir)
         # transform to be applied on images
         self.transform = transform
-        self.labels = os.listdir(os.path.join(self.directory, 'labels'))
-        self.images_path = os.path.join(self.directory, 'images')
-        self.labels_path = os.path.join(self.directory, 'labels')
+        self.labels = os.listdir(os.path.join(self.directory, "labels"))
+        self.images_path = os.path.join(self.directory, "images")
+        self.labels_path = os.path.join(self.directory, "labels")
 
     # getting the length
     def __len__(self):
         return len(self.labels)
 
-    def bbox_converter(self, center_X, center_y, width, height, image_width, image_height):
+    def bbox_converter(
+        self, center_X, center_y, width, height, image_width, image_height
+    ):
         x1 = int((center_X - width / 2) * image_width)
         x2 = int((center_X + width / 2) * image_width)
         x2 = x2 - x1
@@ -75,7 +96,9 @@ class CustomDatasetForImages(Dataset):
     # getting the data items
     def __getitem__(self, idx):
         # defining the image path
-        image_path = os.path.join(self.images_path, self.labels[idx]).replace('.txt', '.png')
+        image_path = os.path.join(self.images_path, self.labels[idx]).replace(
+            ".txt", ".png"
+        )
         label_path = os.path.join(self.labels_path, self.labels[idx])
         # reading the images
         image = read_image(image_path)
@@ -95,11 +118,11 @@ class CustomDatasetForImages(Dataset):
             image = self.transform(image)
 
         target = {
-            'boxes': torch.tensor(boxes, dtype=torch.float32),
-            'labels': torch.tensor(labels, dtype=torch.int64),
-            'image_id': torch.tensor([idx]),
-            'area': torch.tensor(area, dtype=torch.float32),
-            'iscrowd': torch.zeros(annotation.shape[0], dtype=torch.int64),
+            "boxes": torch.tensor(boxes, dtype=torch.float32),
+            "labels": torch.tensor(labels, dtype=torch.int64),
+            "image_id": torch.tensor([idx]),
+            "area": torch.tensor(area, dtype=torch.float32),
+            "iscrowd": torch.zeros(annotation.shape[0], dtype=torch.int64),
         }
         # returning the image and label
         return image[np.newaxis, :, :, :], target
@@ -122,8 +145,8 @@ class PredictionNumpyDataset(Dataset):
     """
 
     def __init__(
-            self,
-            images: np.ndarray,
+        self,
+        images: np.ndarray,
     ) -> None:
         self.images = torch.from_numpy(images).float()
 
@@ -156,9 +179,9 @@ class PredictionFolderDataset(Dataset):
     """
 
     def __init__(
-            self,
-            image_folder: str,
-            transform: Callable,
+        self,
+        image_folder: str,
+        transform: Callable,
     ) -> None:
         self.root = image_folder
         self.images = []
@@ -180,8 +203,7 @@ class PredictionFolderDataset(Dataset):
 
         """
 
-        image = Image.open(os.path.join(
-            self.root, self.images[idx])).convert('RGB')
+        image = Image.open(os.path.join(self.root, self.images[idx])).convert("RGB")
         image = self.transform(image)
         return image, self.images[idx]
 

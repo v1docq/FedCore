@@ -16,7 +16,12 @@
 # limitations under the License.
 
 from fedcore.neural_compressor.common.utils import DEFAULT_WORKSPACE
-from fedcore.neural_compressor.tensorflow.utils.model_wrappers import BaseModel, KerasModel, TensorflowModel, get_tf_model_type
+from fedcore.neural_compressor.tensorflow.utils.model_wrappers import (
+    BaseModel,
+    KerasModel,
+    TensorflowModel,
+    get_tf_model_type,
+)
 
 framework_specific_info = {
     "device": "cpu",
@@ -97,5 +102,8 @@ class Model(object):
         framework_specific_info["use_bf16"] = conf.use_bf16 if conf.use_bf16 else False
 
         for item in ["scale_propagation_max_pooling", "scale_propagation_concat"]:
-            if framework_specific_info["recipes"] and item not in framework_specific_info["recipes"]:
+            if (
+                framework_specific_info["recipes"]
+                and item not in framework_specific_info["recipes"]
+            ):
                 framework_specific_info["recipes"].update({item: True})

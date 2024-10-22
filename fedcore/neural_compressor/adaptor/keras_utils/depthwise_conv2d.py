@@ -19,15 +19,18 @@ import json
 
 import tensorflow as tf
 from tensorflow import quantization
-from tensorflow.keras import activations, constraints, initializers, regularizers
 
 from fedcore.neural_compressor.adaptor.tf_utils.util import version1_gte_version2
 
 if version1_gte_version2(tf.__version__, "2.13.0"):
-    from keras.src.layers.convolutional.base_depthwise_conv import DepthwiseConv  # pylint: disable=E0401
+    from keras.src.layers.convolutional.base_depthwise_conv import (
+        DepthwiseConv,
+    )  # pylint: disable=E0401
     from keras.src.utils import conv_utils, tf_utils  # pylint: disable=E0401
 else:
-    from keras.layers.convolutional.base_depthwise_conv import DepthwiseConv  # pylint: disable=E0401
+    from keras.layers.convolutional.base_depthwise_conv import (
+        DepthwiseConv,
+    )  # pylint: disable=E0401
     from keras.utils import conv_utils, tf_utils  # pylint: disable=E0401
 
 
@@ -78,7 +81,12 @@ class QDepthwiseConv2D(DepthwiseConv):
     def call(self, inputs):
         # add the Q/DQ here
         kernel, _, _ = quantization.quantize(
-            self.depthwise_kernel, self.min_value, self.max_value, tf.qint8, axis=3, mode="SCALED"
+            self.depthwise_kernel,
+            self.min_value,
+            self.max_value,
+            tf.qint8,
+            axis=3,
+            mode="SCALED",
         )
         kernel = quantization.dequantize(
             kernel,
@@ -97,7 +105,9 @@ class QDepthwiseConv2D(DepthwiseConv):
         )
 
         if self.use_bias:
-            outputs = tf.keras.backend.bias_add(outputs, self.bias, data_format=self.data_format)
+            outputs = tf.keras.backend.bias_add(
+                outputs, self.bias, data_format=self.data_format
+            )
 
         if self.activation is not None:
             return self.activation(outputs)

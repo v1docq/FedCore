@@ -51,12 +51,16 @@ def version1_eq_version2(version1, version2):
 
 def version1_gte_version2(version1, version2):
     """Check whether version1 is greater than version2 or is equal to it."""
-    return parse_version(version1) > parse_version(version2) or parse_version(version1) == parse_version(version2)
+    return parse_version(version1) > parse_version(version2) or parse_version(
+        version1
+    ) == parse_version(version2)
 
 
 def version1_lte_version2(version1, version2):
     """Check whether version1 is less than version2 or is equal to it."""
-    return parse_version(version1) < parse_version(version2) or parse_version(version1) == parse_version(version2)
+    return parse_version(version1) < parse_version(version2) or parse_version(
+        version1
+    ) == parse_version(version2)
 
 
 def register_algo(name):
@@ -91,13 +95,17 @@ def deep_get(dictionary, keys, default=None):
     Returns:
         item: the item of the deep dot keys
     """
-    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+    return reduce(
+        lambda d, key: d.get(key, default) if isinstance(d, dict) else default,
+        keys.split("."),
+        dictionary,
+    )
 
 
 def itex_installed():
     """Check if the Intel® Extension for TensorFlow has been installed."""
     try:
-        import intel_extension_for_tensorflow
+        pass
 
         return True
     except:
@@ -118,7 +126,10 @@ def dump_elapsed_time(customized_msg=""):
             end = time.time()
             logging.getLogger("neural_compressor").info(
                 "%s elapsed time: %s ms"
-                % (customized_msg if customized_msg else func.__qualname__, round((end - start) * 1000, 2))
+                % (
+                    customized_msg if customized_msg else func.__qualname__,
+                    round((end - start) * 1000, 2),
+                )
             )
             return res
 
@@ -135,7 +146,13 @@ def combine_histogram(old_hist, arr):
     (old_hist, old_hist_edges, old_min, old_max, old_th) = old_hist
     if new_th <= old_th:
         hist, _ = np.histogram(arr, bins=len(old_hist), range=(-old_th, old_th))
-        return (old_hist + hist, old_hist_edges, min(old_min, new_min), max(old_max, new_max), old_th)
+        return (
+            old_hist + hist,
+            old_hist_edges,
+            min(old_min, new_min),
+            max(old_max, new_max),
+            old_th,
+        )
     else:
         old_num_bins = len(old_hist)
         old_step = 2 * old_th / old_num_bins
@@ -149,7 +166,11 @@ def combine_histogram(old_hist, arr):
 
 def get_all_fp32_data(data):
     """Get all the fp32 data."""
-    return [float(i) for i in data.replace("[", " ").replace("]", " ").split(" ") if i.strip() and len(i) < 32]
+    return [
+        float(i)
+        for i in data.replace("[", " ").replace("]", " ").split(" ")
+        if i.strip() and len(i) < 32
+    ]
 
 
 def get_tensor_histogram(tensor_data, bins=2048):
@@ -175,7 +196,9 @@ def dequantize_weight(weight_tensor, min_filter_tensor, max_filter_tensor):
     """Dequantize the weight with min-max filter tensors."""
     weight_channel = weight_tensor.shape[-1]
     if len(min_filter_tensor) == 1:
-        weight_tensor = weight_tensor * ((max_filter_tensor[0] - min_filter_tensor[0]) / 127.0)
+        weight_tensor = weight_tensor * (
+            (max_filter_tensor[0] - min_filter_tensor[0]) / 127.0
+        )
     else:
         # TODO to calculate the de-quantized result in a parallel way
         for i in range(weight_channel):
@@ -269,12 +292,17 @@ class CpuInfo(object):
             if max_extension_support >= 7:
                 ecx = cpuid._run_asm(
                     b"\x31\xC9",  # xor ecx, ecx
-                    b"\xB8\x07\x00\x00\x00" b"\x0f\xa2" b"\x89\xC8" b"\xC3",  # mov eax, 7  # cpuid  # mov ax, cx  # ret
+                    b"\xB8\x07\x00\x00\x00"
+                    b"\x0f\xa2"
+                    b"\x89\xC8"
+                    b"\xC3",  # mov eax, 7  # cpuid  # mov ax, cx  # ret
                 )
                 self._vnni = bool(ecx & (1 << 11))
                 eax = cpuid._run_asm(
                     b"\xB9\x01\x00\x00\x00",  # mov ecx, 1
-                    b"\xB8\x07\x00\x00\x00" b"\x0f\xa2" b"\xC3",  # mov eax, 7  # cpuid  # ret
+                    b"\xB8\x07\x00\x00\x00"
+                    b"\x0f\xa2"
+                    b"\xC3",  # mov eax, 7  # cpuid  # ret
                 )
                 self._bf16 = bool(eax & (1 << 5))
         if "arch" in info and "ARM" in info["arch"]:  # pragma: no cover

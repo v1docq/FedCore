@@ -14,12 +14,22 @@
 
 
 import copy
-import inspect
 import uuid
-from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Sized, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Sized,
+    Tuple,
+    Union,
+)
 
 from fedcore.neural_compressor.common import Logger
-from fedcore.neural_compressor.common.base_config import BaseConfig, ComposableConfig
+from fedcore.neural_compressor.common.base_config import BaseConfig
 from fedcore.neural_compressor.common.utils import TuningLogger
 
 logger = Logger().get_logger()
@@ -82,7 +92,9 @@ class Evaluator:
             result = self._update_the_objective_score(eval_pair, eval_result, result)
         return result
 
-    def _update_the_objective_score(self, eval_pair, eval_result, overall_result) -> float:
+    def _update_the_objective_score(
+        self, eval_pair, eval_result, overall_result
+    ) -> float:
         # TODO update the result according to the weight and algo_name
         return overall_result + eval_result * eval_pair[self.WEIGHT]
 
@@ -94,12 +106,16 @@ class Evaluator:
             {
                 self.EVAL_FN: user_eval_fn_pair[self.EVAL_FN],
                 self.WEIGHT: user_eval_fn_pair.get(self.WEIGHT, 1.0),
-                self.FN_NAME: user_eval_fn_pair.get(self.FN_NAME, user_eval_fn_pair[self.EVAL_FN].__name__),
+                self.FN_NAME: user_eval_fn_pair.get(
+                    self.FN_NAME, user_eval_fn_pair[self.EVAL_FN].__name__
+                ),
             }
             for user_eval_fn_pair in user_eval_fns
         ]
 
-    def set_eval_fn_registry(self, eval_fns: Optional[Union[Callable, Dict, List[Dict]]] = None) -> None:
+    def set_eval_fn_registry(
+        self, eval_fns: Optional[Union[Callable, Dict, List[Dict]]] = None
+    ) -> None:
         # About the eval_fns format, refer the class docstring for details.
         if eval_fns is None:
             return
@@ -114,13 +130,17 @@ class Evaluator:
         elif isinstance(eval_fns, List):
             assert all([isinstance(eval_fn_pair, Dict) for eval_fn_pair in eval_fns])
         else:
-            raise NotImplementedError(f"The eval_fns should be a dict or a list of dict, but got {type(eval_fns)}.")
+            raise NotImplementedError(
+                f"The eval_fns should be a dict or a list of dict, but got {type(eval_fns)}."
+            )
         self._set_eval_fn_registry(eval_fns)
 
     def self_check(self) -> None:
         # check the number of evaluation functions
         num_eval_fns = self.get_number_of_eval_functions()
-        assert num_eval_fns > 0, "Please ensure that you register at least one evaluation metric for auto-tune."
+        assert (
+            num_eval_fns > 0
+        ), "Please ensure that you register at least one evaluation metric for auto-tune."
         logger.info("There are %d evaluations functions.", num_eval_fns)
 
 
@@ -164,11 +184,15 @@ class ConfigSet:
         elif isinstance(fwk_configs, List):
             config_list = cls._from_list_of_configs(fwk_configs)
         else:
-            raise NotImplementedError(f"Unsupported type {type(fwk_configs)} for fwk_configs.")
+            raise NotImplementedError(
+                f"Unsupported type {type(fwk_configs)} for fwk_configs."
+            )
         return config_list
 
     @classmethod
-    def from_fwk_configs(cls, fwk_configs: Union[BaseConfig, List[BaseConfig]]) -> "ConfigSet":
+    def from_fwk_configs(
+        cls, fwk_configs: Union[BaseConfig, List[BaseConfig]]
+    ) -> "ConfigSet":
         """Create a ConfigSet object from a single config or a list of configs.
 
         Args:
@@ -217,7 +241,9 @@ default_sampler = SequentialSampler
 
 
 class ConfigLoader:
-    def __init__(self, config_set: ConfigSet, sampler: Sampler = default_sampler) -> None:
+    def __init__(
+        self, config_set: ConfigSet, sampler: Sampler = default_sampler
+    ) -> None:
         self.config_set = ConfigSet.from_fwk_configs(config_set)
         self._sampler = sampler(self.config_set)
 
@@ -264,7 +290,11 @@ class TuningConfig:
     """
 
     def __init__(
-        self, config_set=None, max_trials=100, sampler: Sampler = default_sampler, tolerable_loss=0.01
+        self,
+        config_set=None,
+        max_trials=100,
+        sampler: Sampler = default_sampler,
+        tolerable_loss=0.01,
     ) -> None:
         """Init a TuneCriterion object."""
         self.config_set = config_set
@@ -279,7 +309,12 @@ class _TrialRecord:
         unique_id = str(uuid.uuid4())
         return unique_id
 
-    def __init__(self, trial_index: int, trial_result: Union[int, float], quant_config: BaseConfig):
+    def __init__(
+        self,
+        trial_index: int,
+        trial_result: Union[int, float],
+        quant_config: BaseConfig,
+    ):
         # The unique id to refer to one trial
         self.trial_id = _TrialRecord._generate_unique_id()
         self.trial_index = trial_index
@@ -294,7 +329,12 @@ class TuningMonitor:
         self.tuning_history: List[_TrialRecord] = []
         self.baseline = None
 
-    def add_trial_result(self, trial_index: int, trial_result: Union[int, float], quant_config: BaseConfig) -> None:
+    def add_trial_result(
+        self,
+        trial_index: int,
+        trial_result: Union[int, float],
+        quant_config: BaseConfig,
+    ) -> None:
         self.trial_cnt += 1
         trial_record = _TrialRecord(trial_index, trial_result, quant_config)
         self.tuning_history.append(trial_record)
@@ -328,14 +368,19 @@ class TuningMonitor:
         meet_accuracy_goal = (
             False
             if self.baseline is None
-            else self.tuning_history[-1].trial_result >= (self.baseline * (1 - self.tuning_config.tolerable_loss))
+            else self.tuning_history[-1].trial_result
+            >= (self.baseline * (1 - self.tuning_config.tolerable_loss))
         )
         # [-1] is the last element representing the latest trail record.
         return reach_max_trials or meet_accuracy_goal
 
 
-def init_tuning(tuning_config: TuningConfig) -> Tuple[ConfigLoader, TuningLogger, TuningMonitor]:
-    config_loader = ConfigLoader(config_set=tuning_config.config_set, sampler=tuning_config.sampler)
+def init_tuning(
+    tuning_config: TuningConfig,
+) -> Tuple[ConfigLoader, TuningLogger, TuningMonitor]:
+    config_loader = ConfigLoader(
+        config_set=tuning_config.config_set, sampler=tuning_config.sampler
+    )
     tuning_logger = TuningLogger()
     tuning_monitor = TuningMonitor(tuning_config)
     return config_loader, tuning_logger, tuning_monitor

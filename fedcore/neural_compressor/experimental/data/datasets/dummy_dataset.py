@@ -22,7 +22,6 @@ import logging
 import numpy as np
 
 from fedcore.neural_compressor.utils.utility import LazyImport
-
 from .dataset import Dataset, dataset_registry
 
 mx = LazyImport("mxnet")
@@ -47,7 +46,16 @@ class DummyDataset(Dataset):
     (TODO) construct dummy data from real dataset or iteration of data.
     """
 
-    def __init__(self, shape, low=-128.0, high=127.0, dtype="float32", label=True, transform=None, filter=None):
+    def __init__(
+        self,
+        shape,
+        low=-128.0,
+        high=127.0,
+        dtype="float32",
+        label=True,
+        transform=None,
+        filter=None,
+    ):
         """Initialize `DummyDataset` class.
 
         Args:
@@ -115,22 +123,30 @@ class DummyDataset(Dataset):
                 low = [low]
             else:
                 assert (
-                    isinstance(low, list) and len(low) == 1 and isinstance(low[0], float)
+                    isinstance(low, list)
+                    and len(low) == 1
+                    and isinstance(low[0], float)
                 ), "low should be float or list of float with length 1"
 
             if isinstance(high, float):
                 high = [high]
             else:
                 assert (
-                    isinstance(high, list) and len(high) == 1 and isinstance(high[0], float)
+                    isinstance(high, list)
+                    and len(high) == 1
+                    and isinstance(high[0], float)
                 ), "high should be float or list of float with length 1"
 
             if isinstance(dtype, str):
-                assert dtype in dtype_map.keys(), "dtype only support {}".format(dtype_map.keys())
+                assert dtype in dtype_map.keys(), "dtype only support {}".format(
+                    dtype_map.keys()
+                )
                 dtype = [dtype]
             else:
                 assert (
-                    isinstance(dtype, list) and len(dtype) == 1 and dtype[0] in dtype_map.keys()
+                    isinstance(dtype, list)
+                    and len(dtype) == 1
+                    and dtype[0] in dtype_map.keys()
                 ), "dtype should be str or list of str in supported dtypes"
 
         self.dataset = []

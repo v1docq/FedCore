@@ -21,9 +21,10 @@ import numpy as np
 from tensorflow.python.framework import dtypes
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
-
 from ..graph_base import GraphRewriterBase
 
 
@@ -61,7 +62,9 @@ class ExpandDimsOptimizer(GraphRewriterBase):
                 weight_value = np.array(Helper.values_from_const(weight_node))
                 new_weight_value = np.expand_dims(weight_value, axis=dims)
                 cur_graph.remove_node(weight_node.name)
-                new_weight_node = Helper.create_constant_node(weight_node.name, new_weight_value, dtypes.float32)
+                new_weight_node = Helper.create_constant_node(
+                    weight_node.name, new_weight_value, dtypes.float32
+                )
 
                 for output in graph_info[node_combination[0]].outputs:
                     successor_node = graph_info[output].node

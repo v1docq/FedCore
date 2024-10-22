@@ -21,7 +21,9 @@ import re
 from tensorflow.core.framework import node_def_pb2
 from tensorflow.python.framework import dtypes
 
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper as helper
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
 
 from .quantize_graph_base import QuantizeNodeBase
 
@@ -44,9 +46,19 @@ class FuseNodeStartWithConcatV2(QuantizeNodeBase):
         max_names = []
         for original_input_name in original_inputs:
             original_input_node = self.node_name_mapping[original_input_name].node
-            input_data_type = dtypes.quint8 if self._find_relu_node(original_input_node) else dtypes.qint8
-            quantize_input_name, min_input_name, max_input_name = self._eightbitize_input_to_node(
-                namespace_prefix, original_input_name, reshape_dims_name, reduction_dims_name, dtype=input_data_type
+            input_data_type = (
+                dtypes.quint8
+                if self._find_relu_node(original_input_node)
+                else dtypes.qint8
+            )
+            quantize_input_name, min_input_name, max_input_name = (
+                self._eightbitize_input_to_node(
+                    namespace_prefix,
+                    original_input_name,
+                    reshape_dims_name,
+                    reduction_dims_name,
+                    dtype=input_data_type,
+                )
             )
             input_names.append(quantize_input_name)
             min_names.append(min_input_name)
@@ -55,11 +67,15 @@ class FuseNodeStartWithConcatV2(QuantizeNodeBase):
         all_input_names.append(shape_input_name)
         all_input_names.extend(min_names)
         all_input_names.extend(max_names)
-        quantized_concat_node = helper.create_node("QuantizedConcatV2", quantized_concat_name, all_input_names)
+        quantized_concat_node = helper.create_node(
+            "QuantizedConcatV2", quantized_concat_name, all_input_names
+        )
         helper.set_attr_int(quantized_concat_node, "N", len(original_inputs))
         helper.set_attr_dtype(quantized_concat_node, "T", input_data_type)
         self.add_output_graph_node(quantized_concat_node)
-        self._intel_cpu_add_dequantize_result_node(quantized_concat_name, original_node.name, input_data_type)
+        self._intel_cpu_add_dequantize_result_node(
+            quantized_concat_name, original_node.name, input_data_type
+        )
 
     def _quantizable_concat(self, node):
         """Check if the ConcatV2 is quantizable."""

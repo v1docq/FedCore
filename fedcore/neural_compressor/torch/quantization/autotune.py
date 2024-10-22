@@ -17,11 +17,21 @@ from typing import Dict, List, Optional, Union
 
 import torch
 
-from fedcore.neural_compressor.common.base_config import BaseConfig, get_all_config_set_from_config_registry
-from fedcore.neural_compressor.common.base_tuning import TuningConfig, evaluator, init_tuning
+from fedcore.neural_compressor.common.base_config import (
+    BaseConfig,
+    get_all_config_set_from_config_registry,
+)
+from fedcore.neural_compressor.common.base_tuning import (
+    TuningConfig,
+    evaluator,
+    init_tuning,
+)
 from fedcore.neural_compressor.common.utils import dump_elapsed_time
 from fedcore.neural_compressor.torch.quantization import quantize
-from fedcore.neural_compressor.torch.quantization.config import FRAMEWORK_NAME, RTNConfig
+from fedcore.neural_compressor.torch.quantization.config import (
+    FRAMEWORK_NAME,
+    RTNConfig,
+)
 from fedcore.neural_compressor.torch.utils import constants, logger
 
 __all__ = [
@@ -33,7 +43,10 @@ __all__ = [
 
 def get_rtn_double_quant_config_set() -> List[RTNConfig]:
     rtn_double_quant_config_set = []
-    for double_quant_type, double_quant_config in constants.DOUBLE_QUANT_CONFIGS.items():
+    for (
+        double_quant_type,
+        double_quant_config,
+    ) in constants.DOUBLE_QUANT_CONFIGS.items():
         rtn_double_quant_config_set.append(RTNConfig.from_dict(double_quant_config))
     return rtn_double_quant_config_set
 
@@ -54,7 +67,9 @@ def autotune(
     best_quant_model = None
     evaluator.set_eval_fn_registry(eval_fns)
     evaluator.self_check()
-    config_loader, tuning_logger, tuning_monitor = init_tuning(tuning_config=tune_config)
+    config_loader, tuning_logger, tuning_monitor = init_tuning(
+        tuning_config=tune_config
+    )
     baseline: float = evaluator.evaluate(model)
     tuning_monitor.set_baseline(baseline)
     tuning_logger.tuning_start()
@@ -63,7 +78,13 @@ def autotune(
         tuning_logger.quantization_start()
         logger.info(quant_config.to_dict())
         # !!! Make sure to use deepcopy only when inplace is set to `True`.
-        q_model = quantize(deepcopy(model), quant_config=quant_config, run_fn=run_fn, run_args=run_args, inplace=True)
+        q_model = quantize(
+            deepcopy(model),
+            quant_config=quant_config,
+            run_fn=run_fn,
+            run_args=run_args,
+            inplace=True,
+        )
         tuning_logger.quantization_end()
         tuning_logger.evaluation_start()
         eval_result: float = evaluator.evaluate(q_model)
@@ -74,7 +95,13 @@ def autotune(
             logger.info("Stopped tuning.")
             best_quant_config: BaseConfig = tuning_monitor.get_best_quant_config()
             # !!! Make sure to use deepcopy only when inplace is set to `True`.
-            quantize(deepcopy(model), quant_config=best_quant_config, run_fn=run_fn, run_args=run_args, inplace=True)
+            quantize(
+                deepcopy(model),
+                quant_config=best_quant_config,
+                run_fn=run_fn,
+                run_args=run_args,
+                inplace=True,
+            )
             best_quant_model = model  # quantize model inplace
             break
     tuning_logger.tuning_end()

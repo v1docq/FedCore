@@ -64,7 +64,6 @@ class Pruning:
 
     def prepare(self):
         """Align with old API's calling pipeline."""
-        pass
 
     def get_sparsity_ratio(self):
         """Functions that calculate a modules/layers sparsity.
@@ -96,10 +95,16 @@ class Pruning:
         for n, param in self.model.named_parameters():
             param_cnt += param.numel()
         blockwise_over_matmul_gemm_conv = float(pattern_sparsity_cnt) / linear_conv_cnt
-        elementwise_over_matmul_gemm_conv = float(element_sparsity_cnt) / linear_conv_cnt
+        elementwise_over_matmul_gemm_conv = (
+            float(element_sparsity_cnt) / linear_conv_cnt
+        )
         elementwise_over_all = float(element_sparsity_cnt) / param_cnt
 
-        return elementwise_over_matmul_gemm_conv, elementwise_over_all, blockwise_over_matmul_gemm_conv
+        return (
+            elementwise_over_matmul_gemm_conv,
+            elementwise_over_all,
+            blockwise_over_matmul_gemm_conv,
+        )
 
     def _generate_pruners(self):
         """Functions that obtain Pruner objects."""

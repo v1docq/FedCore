@@ -21,9 +21,10 @@ import numpy as np
 from tensorflow.python.framework import dtypes
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
-
 from ..graph_base import GraphRewriterBase
 
 
@@ -43,14 +44,20 @@ class FetchWeightFromReshapeOptimizer(GraphRewriterBase):
         cur_graph.graph = self.model
 
         graph_info = cur_graph.parse_graph()
-        target_nodes = cur_graph.query_fusion_pattern_nodes([["Pack"], ["Reshape"], ["Conv2D"]])
+        target_nodes = cur_graph.query_fusion_pattern_nodes(
+            [["Pack"], ["Reshape"], ["Conv2D"]]
+        )
 
         for i, node_combination in enumerate(target_nodes):
             pack_node = graph_info[node_combination[0]].node
             reshape_node = graph_info[node_combination[1]].node
             shape_node = graph_info[reshape_node.input[1]].node
             conv_node = graph_info[node_combination[2]].node
-            if not (pack_node.op == "Pack" and reshape_node.op == "Reshape" and conv_node.op == "Conv2D"):
+            if not (
+                pack_node.op == "Pack"
+                and reshape_node.op == "Reshape"
+                and conv_node.op == "Conv2D"
+            ):
                 continue
             reshape_outputs_length = len(graph_info[node_combination[1]].outputs)
             unpack_values = []
@@ -73,7 +80,10 @@ class FetchWeightFromReshapeOptimizer(GraphRewriterBase):
                 successor_node = graph_info[output].node
                 replace_index = None
                 for index, value in enumerate(successor_node.input):
-                    if value == reshape_node.name or value == reshape_node.name + "/weight" + "_" + str(i - 1):
+                    if (
+                        value == reshape_node.name
+                        or value == reshape_node.name + "/weight" + "_" + str(i - 1)
+                    ):
                         replace_index = index
                         break
                 # weight->conv2d

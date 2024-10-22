@@ -56,9 +56,13 @@ class MSE_V2TuneStrategy(TuneStrategy):
 
         tuning_space = self.tuning_space
         initial_op_tuning_cfg = {}
-        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         for calib_sampling_size in calib_sampling_size_lst:
-            op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = self.initial_tuning_cfg()
+            op_item_dtype_dict, quant_mode_wise_items, initial_op_tuning_cfg = (
+                self.initial_tuning_cfg()
+            )
             quant_ops = quant_mode_wise_items.get("static", [])
             quant_ops += quant_mode_wise_items.get("dynamic", [])
             # Optype-wise tuning
@@ -83,14 +87,18 @@ class MSE_V2TuneStrategy(TuneStrategy):
                 if item in tuning_space.query_items_by_quant_mode("dynamic")
             ]
             if static_dynamic_items:
-                logger.info("Fallback all ops that support both dynamic and static to dynamic.")
+                logger.info(
+                    "Fallback all ops that support both dynamic and static to dynamic."
+                )
             else:
                 logger.info("No op support both dynamic and static")
 
             new_op_tuning_cfg = deepcopy(self.cur_best_tuning_cfg)
             for item in static_dynamic_items:
-                new_op_tuning_cfg[item.name] = self.initial_dynamic_cfg_based_on_static_cfg(
-                    new_op_tuning_cfg[item.name]
+                new_op_tuning_cfg[item.name] = (
+                    self.initial_dynamic_cfg_based_on_static_cfg(
+                        new_op_tuning_cfg[item.name]
+                    )
                 )
             new_op_tuning_cfg["calib_sampling_size"] = calib_sampling_size
             yield new_op_tuning_cfg
@@ -103,7 +111,9 @@ class MSE_V2TuneStrategy(TuneStrategy):
             #     1) calculate the sensitivity of fp32 ops in the current state
             #     2) re-quantize the op with lower sensitivity accumulatively
             tune_cfg = deepcopy(self.cur_best_tuning_cfg)
-            requantize_cfg = deepcopy(self._tune_cfg_converter(self.cur_best_tuning_cfg))
+            requantize_cfg = deepcopy(
+                self._tune_cfg_converter(self.cur_best_tuning_cfg)
+            )
             self.output_op_names = self.adaptor.get_output_op_names(self.last_qmodel)
             confidence_batches = 2
             strategy_kwargs = self.config.tuning_criterion.strategy_kwargs
@@ -114,13 +124,19 @@ class MSE_V2TuneStrategy(TuneStrategy):
             quant_ops_in_tune_cfg = self._collect_ops_by_quant_mode(
                 tune_cfg, "dynamic"
             ) + self._collect_ops_by_quant_mode(tune_cfg, "static")
-            op_quant_cfgs = {op_info: tune_cfg_backup[op_info] for op_info in quant_ops_in_tune_cfg}
+            op_quant_cfgs = {
+                op_info: tune_cfg_backup[op_info] for op_info in quant_ops_in_tune_cfg
+            }
             fallback_records = []
             self.re_quant = True
             for target_dtype in PRECISION_LIST:
                 tune_cfg = deepcopy(tune_cfg_backup)
-                target_type_op_lst = set(tuning_space.query_items_by_quant_mode(target_dtype))
-                fallback_items_lst = [item for item in quant_ops if item in target_type_op_lst]
+                target_type_op_lst = set(
+                    tuning_space.query_items_by_quant_mode(target_dtype)
+                )
+                fallback_items_lst = [
+                    item for item in quant_ops if item in target_type_op_lst
+                ]
                 if fallback_items_lst:
                     logger.info(f"Start to fallback op to {target_dtype}.")
                 else:
@@ -140,7 +156,9 @@ class MSE_V2TuneStrategy(TuneStrategy):
                     if not ops_lst:
                         logger.debug(" Try to fallback to next data type.")
                         break
-                    logger.debug(f"*** The op sensitivity analysis took {time() - start:.2f}s.")
+                    logger.debug(
+                        f"*** The op sensitivity analysis took {time() - start:.2f}s."
+                    )
                     select_op_info = ops_lst[0]
                     logger.debug(f"*** ops_lst({len(ops_lst)}): {ops_lst} ")
                     logger.info(
@@ -148,22 +166,33 @@ class MSE_V2TuneStrategy(TuneStrategy):
                         fallback it to {target_dtype}."
                     )
                     tune_cfg[select_op_info] = OpTuningConfig(
-                        select_op_info[0], select_op_info[1], target_dtype, self.tuning_space
+                        select_op_info[0],
+                        select_op_info[1],
+                        target_dtype,
+                        self.tuning_space,
                     )
                     # Record the fallback history
                     if not fallback_records:
                         fallback_records = [[select_op_info]]
                     else:
                         fallback_records.append(fallback_records[-1] + [select_op_info])
-                    logger.debug(f"*** The fallback ops record: \n{self._tuning_record_msg(fallback_records)}")
+                    logger.debug(
+                        f"*** The fallback ops record: \n{self._tuning_record_msg(fallback_records)}"
+                    )
                     yield tune_cfg
 
-            logger.info("*** The accuracy meeting the accuracy requirements, stop fallback ops.")
+            logger.info(
+                "*** The accuracy meeting the accuracy requirements, stop fallback ops."
+            )
             while self.objectives.compare(self.last_tune_result, self.baseline):
                 if len(fallback_records) == 0 or len(fallback_records[-1]) <= 1:
-                    logger.info("*** Stop re-quant due to no int8 op or only 1 int8 op left.")
+                    logger.info(
+                        "*** Stop re-quant due to no int8 op or only 1 int8 op left."
+                    )
                     break
-                logger.info("*** Start to re-quant the fallback op in the previous stage.")
+                logger.info(
+                    "*** Start to re-quant the fallback op in the previous stage."
+                )
                 # Track the current fallback ops
                 tmp_fallback_ops = fallback_records[-1] if fallback_records else []
                 start = time()
@@ -176,7 +205,9 @@ class MSE_V2TuneStrategy(TuneStrategy):
                     fallback=False,
                     requantize_cfgs=requantize_cfg["op"],
                 )
-                logger.debug(f"*** The op sensitivity analysis took {time() - start:.2f}s.")
+                logger.debug(
+                    f"*** The op sensitivity analysis took {time() - start:.2f}s."
+                )
                 if not ops_lst:
                     logger.warning("No op to be requantized")
                     break
@@ -195,11 +226,17 @@ class MSE_V2TuneStrategy(TuneStrategy):
                         )
                         tune_cfg[select_op_info] = op_quant_cfgs[select_op_info]
                         fallback_records.append(new_fallback_ops)
-                        logger.debug(f"*** The fallback ops record: \n{self._tuning_record_msg(fallback_records)}")
+                        logger.debug(
+                            f"*** The fallback ops record: \n{self._tuning_record_msg(fallback_records)}"
+                        )
                         yield tune_cfg
                         break
                     else:
-                        logger.debug(f"*** Skip re-quant {select_op_info}, due the config has been evaluated.")
+                        logger.debug(
+                            f"*** Skip re-quant {select_op_info}, due the config has been evaluated."
+                        )
                         continue
             self.re_quant = False
-            logger.info("*** The accuracy not meeting the accuracy requirements, stop re-quantize ops.")
+            logger.info(
+                "*** The accuracy not meeting the accuracy requirements, stop re-quantize ops."
+            )

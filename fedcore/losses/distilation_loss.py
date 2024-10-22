@@ -4,21 +4,21 @@ from fedcore.losses.losses_impl import f_divergence, alpha_divergence
 
 
 class DistilationLoss(torch.nn.modules.loss._Loss):
-    def __init__(self, size_average=None, reduce=None, reduction: str = 'mean'):
+    def __init__(self, size_average=None, reduce=None, reduction: str = "mean"):
         self.reduction = reduction
         self.reduce = reduce
         self.size = size_average
 
     def reduce(self, loss):
-        if self.reduction == 'mean':
+        if self.reduction == "mean":
             return loss.mean()
-        elif self.reduction == 'sum':
+        elif self.reduction == "sum":
             return loss.sum()
         return loss
 
 
 class CrossEntropyLossSoft(DistilationLoss):
-    """ inplace distillation for image classification """
+    """inplace distillation for image classification"""
 
     def forward(self, output, target):
         output_log_prob = torch.nn.functional.log_softmax(output, dim=1)
@@ -29,9 +29,9 @@ class CrossEntropyLossSoft(DistilationLoss):
 
 
 class FdivTopKLossSoft(DistilationLoss):
-    """ inplace distillation for image classification
-            output: output logits of the student network
-            target: output logits of the teacher network
+    """inplace distillation for image classification
+    output: output logits of the student network
+    target: output logits of the teacher network
     """
 
     def forward(self, output, target, T=1.0):
@@ -44,7 +44,7 @@ class FdivTopKLossSoft(DistilationLoss):
         density_ratio = target_prob / output_prob
         # _, indices = torch.topk(density_ratio, k, dim=1, largest=True)
         # one_hot_w = torch.zeros_like(target).scatter(1, indices, 1)
-        one_hot_w = torch.ge(density_ratio, 1.).float()
+        one_hot_w = torch.ge(density_ratio, 1.0).float()
 
         ##probablity
         # _, indices = torch.topk(target_prob, k, dim=1, largest=True)
@@ -58,9 +58,9 @@ class FdivTopKLossSoft(DistilationLoss):
 
 
 class HardThresLossSoft(DistilationLoss):
-    """ inplace distillation for image classification
-            output: output logits of the student network
-            target: output logits of the teacher network
+    """inplace distillation for image classification
+    output: output logits of the student network
+    target: output logits of the teacher network
     """
 
     def forward(self, output, target, eps=0.1):
@@ -70,17 +70,19 @@ class HardThresLossSoft(DistilationLoss):
         target_prob = torch.nn.functional.softmax(target, dim=1)
         one_hot = torch.ge(target_prob, eps).float()
         n_class = output.size(1)
-        noise_labels = torch.sum(target_prob * (1. - one_hot), 1, keepdim=True) / (
-                n_class - torch.sum(one_hot, 1, keepdim=True))
-        target_prob = one_hot * target_prob + (1. - one_hot) * noise_labels
+        noise_labels = torch.sum(target_prob * (1.0 - one_hot), 1, keepdim=True) / (
+            n_class - torch.sum(one_hot, 1, keepdim=True)
+        )
+        target_prob = one_hot * target_prob + (1.0 - one_hot) * noise_labels
 
         loss = -torch.sum(target_prob * output_log_prob, dim=1)
         return self.reduce(loss)
 
+
 class TopkLossSoft(DistilationLoss):
-    """ inplace distillation for image classification
-            output: output logits of the student network
-            target: output logits of the teacher network
+    """inplace distillation for image classification
+    output: output logits of the student network
+    target: output logits of the teacher network
     """
 
     def forward(self, output, target, k=5):
@@ -90,28 +92,30 @@ class TopkLossSoft(DistilationLoss):
         topk_vals, topk_idxs = torch.topk(target_prob, k, dim=1, largest=True)
         one_hot = torch.zeros_like(target).scatter(1, topk_idxs, 1)  # topk, one hot
         n_class = output.size(1)
-        noise_labels = torch.sum(target_prob * (1. - one_hot), 1, keepdim=True) / (n_class - k)
-        target_prob = one_hot * target_prob + (1. - one_hot) * noise_labels
+        noise_labels = torch.sum(target_prob * (1.0 - one_hot), 1, keepdim=True) / (
+            n_class - k
+        )
+        target_prob = one_hot * target_prob + (1.0 - one_hot) * noise_labels
 
         loss = -torch.sum(target_prob * output_log_prob, dim=1)
         return self.reduce(loss)
 
 
 class KLLossSoft(DistilationLoss):
-    """ inplace distillation for image classification
-            output: output logits of the student network
-            target: output logits of the teacher network
-            T: temperature
-            KL(p||q) = Ep \log p - \Ep log q
+    """inplace distillation for image classification
+    output: output logits of the student network
+    target: output logits of the teacher network
+    T: temperature
+    KL(p||q) = Ep \log p - \Ep log q
     """
 
-    def forward(self, output, soft_logits, target=None, temperature=1., alpha=0.9):
+    def forward(self, output, soft_logits, target=None, temperature=1.0, alpha=0.9):
         output, soft_logits = output / temperature, soft_logits / temperature
         soft_target_prob = torch.nn.functional.softmax(soft_logits, dim=1)
         output_log_prob = torch.nn.functional.log_softmax(output, dim=1)
         kd_loss = -torch.sum(soft_target_prob * output_log_prob, dim=1)
         if target is not None:
-            n_class = output.size(1)
+            output.size(1)
 
             if target.dtype == torch.int64:
                 target = torch.zeros_like(output).scatter(1, target.view(-1, 1), 1)
@@ -127,14 +131,14 @@ class KLLossSoft(DistilationLoss):
 
 
 class ReverseKLLossSoft(DistilationLoss):
-    """ inplace distillation for image classification
-            output: output logits of the student network
-            target: output logits of the teacher network
-            T: temperature
-            KL(q||p) = Eq(\log q - \log p)
+    """inplace distillation for image classification
+    output: output logits of the student network
+    target: output logits of the teacher network
+    T: temperature
+    KL(q||p) = Eq(\log q - \log p)
     """
 
-    def forward(self, output, target, T=1.):
+    def forward(self, output, target, T=1.0):
         output, target = output / T, target / T
         output_prob = torch.nn.functional.softmax(output, dim=1)
         target_log_prob = torch.nn.functional.log_softmax(target, dim=1)
@@ -150,8 +154,16 @@ class AdaptiveLossSoft(DistilationLoss):
         self.alpha_max = alpha_max
         self.iw_clip = iw_clip
 
-    def forward(self, output, target, alpha_min=None, alpha_max=None, mode_seeking_weight=None, p_normalize=False,
-                reduction=True):
+    def forward(
+        self,
+        output,
+        target,
+        alpha_min=None,
+        alpha_max=None,
+        mode_seeking_weight=None,
+        p_normalize=False,
+        reduction=True,
+    ):
         alpha_min = alpha_min or self.alpha_min
         alpha_max = alpha_max or self.alpha_max
 
@@ -159,17 +171,21 @@ class AdaptiveLossSoft(DistilationLoss):
         # loss_right = alpha_divergence(output, target, alpha_max, iw_clip=self.iw_clip)
         # loss = torch.max(loss_left, loss_right)
         if mode_seeking_weight is None:
-            loss_left, grad_loss_left = f_divergence(output, target, alpha_min, iw_clip=self.iw_clip,
-                                                     p_normalize=p_normalize)
-            loss_right, grad_loss_right = f_divergence(output, target, alpha_max, iw_clip=self.iw_clip,
-                                                       p_normalize=p_normalize)
+            loss_left, grad_loss_left = f_divergence(
+                output, target, alpha_min, iw_clip=self.iw_clip, p_normalize=p_normalize
+            )
+            loss_right, grad_loss_right = f_divergence(
+                output, target, alpha_max, iw_clip=self.iw_clip, p_normalize=p_normalize
+            )
 
             # change max -> min
             ind = torch.gt(loss_left, loss_right).float()
             loss = ind * grad_loss_left + (1.0 - ind) * grad_loss_right
 
         else:
-            alpha = alpha_min * mode_seeking_weight + alpha_max * (1.0 - mode_seeking_weight)
+            alpha = alpha_min * mode_seeking_weight + alpha_max * (
+                1.0 - mode_seeking_weight
+            )
             _, loss = f_divergence(output, target, alpha, iw_clip=self.iw_clip)
             # loss = mode_seeking_weight * grad_loss_left + (1.0 - mode_seeking_weight) * grad_loss_right
 
@@ -179,15 +195,15 @@ class AdaptiveLossSoft(DistilationLoss):
 
 
 class AlphaDivergenceLossSoft(torch.nn.modules.loss._Loss):
-    """ alpha divergence
-            output: output logits of the student network
-            target: output logits of the teacher network
-            T: temperature
-            D_a(q||p) = 1/(a(a-1)) * E_q[p^a q^-a -1] = 1/(a(a-1)) (\sum p^a q^1-a - 1)
+    """alpha divergence
+    output: output logits of the student network
+    target: output logits of the teacher network
+    T: temperature
+    D_a(q||p) = 1/(a(a-1)) * E_q[p^a q^-a -1] = 1/(a(a-1)) (\sum p^a q^1-a - 1)
     """
 
     def forward(self, output, target, alpha):
-        loss = alpha_divergence(output, target, alpha, reduction='none')
+        loss = alpha_divergence(output, target, alpha, reduction="none")
         return self.reduce(loss)
 
 
@@ -199,19 +215,19 @@ class EntropyAlphaDivergence(DistilationLoss):
         # alpha = (ent - torch.min(ent)) / (torch.max(ent) - torch.min(ent))
         alpha = 1.0 - torch.max(prob, 1).values
         # alpha = torch.max(prob, 1).values
-        loss = alpha_divergence(output, target, alpha, reduction='none')
+        loss = alpha_divergence(output, target, alpha, reduction="none")
 
         thr = torch.gt(torch.max(prob, 1).values, 0.8).float()
-        forward_kl = alpha_divergence(output, target, 0.0, reduction='none')
-        reverse_kl = alpha_divergence(output, target, 1.0, reduction='none')
+        forward_kl = alpha_divergence(output, target, 0.0, reduction="none")
+        reverse_kl = alpha_divergence(output, target, 1.0, reduction="none")
         loss = thr * forward_kl + (1.0 - thr) * reverse_kl
         return self.reduce(loss)
 
 
-'''
+"""
     idea: cross entropy loss doesn't satisfy triangle inequality
           we might want to use a symmetric divergence
-'''
+"""
 
 
 class JSDLossSoft(torch.nn.modules.loss._Loss):
@@ -223,7 +239,7 @@ class JSDLossSoft(torch.nn.modules.loss._Loss):
         output_prob = torch.nn.functional.softmax(output, dim=1)
         target_prob = torch.nn.functional.softmax(target, dim=1)
 
-        M = (output_prob + target_prob) / 2.
+        M = (output_prob + target_prob) / 2.0
         # student network
         kl_qm = output_prob * (output_prob.log() - M.log())
         kl_pm = target_prob * (target_prob.log() - M.log())
@@ -243,12 +259,13 @@ class JSDLossSmooth(torch.nn.modules.loss._Loss):
         one_hot = torch.zeros_like(output).scatter(1, target.view(-1, 1), 1)
         target_prob = one_hot * (1 - self.eps) + self.eps / n_class
 
-        M = (output_prob + target_prob) / 2.
+        M = (output_prob + target_prob) / 2.0
         # student network
         kl_qm = output_prob * (output_prob.log() - M.log())
         kl_pm = target_prob * (target_prob.log() - M.log())
         loss = torch.sum(0.5 * (kl_qm + kl_pm), dim=1)
         return self.reduce(loss)
+
 
 class CrossEntropyLossSmooth(torch.nn.modules.loss._Loss):
     def __init__(self, label_smoothing=0.1):
@@ -266,7 +283,6 @@ class CrossEntropyLossSmooth(torch.nn.modules.loss._Loss):
         output_log_prob = output_log_prob.unsqueeze(2)
         loss = -torch.bmm(target, output_log_prob)
         return loss if not reduction else self.reduce(loss)
-
 
 
 class CrossEntropyEma(torch.nn.modules.loss._Loss):
@@ -289,7 +305,9 @@ class CrossEntropyEma(torch.nn.modules.loss._Loss):
         loss_model = self._forward(output, target)
         if ema_output is not None:
             loss_ema = self._forward(ema_output, target)
-            loss_model_ema = self._forward(output, torch.nn.functional.softmax(ema_output, dim=1))
+            loss_model_ema = self._forward(
+                output, torch.nn.functional.softmax(ema_output, dim=1)
+            )
             indicators = torch.ge(loss_model, loss_ema).float() * beta
             loss = (1.0 - indicators) * loss_model + indicators * loss_model_ema
         else:

@@ -49,10 +49,14 @@ class SwitchOptimizer(GraphRewriterBase):
             pred_node = graph_info[switch_node.input[1]].node
             if (
                 pred_node.op == "Const"
-                and tensor_util.MakeNdarray(graph_info[pred_node.name].node.attr["value"].tensor)
+                and tensor_util.MakeNdarray(
+                    graph_info[pred_node.name].node.attr["value"].tensor
+                )
             ) or (
                 pred_node.op == "PlaceholderWithDefault"
-                and tensor_util.MakeNdarray(graph_info[pred_node.input[0]].node.attr["value"].tensor)
+                and tensor_util.MakeNdarray(
+                    graph_info[pred_node.input[0]].node.attr["value"].tensor
+                )
             ):
                 condition = []
                 for output in graph_info[node_combination[0]].outputs:
@@ -77,8 +81,13 @@ class SwitchOptimizer(GraphRewriterBase):
                         break
                     successor_node.input[replace_index] = switch_node.input[0]
                     switch_node_outputs = list(graph_info[node_combination[0]].outputs)
-                    if switch_node_outputs.index(output) == len(switch_node_outputs) - 1:
-                        cur_graph.remove_node_with_single_input_output(node_combination[0])
+                    if (
+                        switch_node_outputs.index(output)
+                        == len(switch_node_outputs) - 1
+                    ):
+                        cur_graph.remove_node_with_single_input_output(
+                            node_combination[0]
+                        )
             else:
                 continue
 

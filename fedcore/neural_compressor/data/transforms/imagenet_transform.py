@@ -42,7 +42,11 @@ tf = LazyImport("tensorflow")
 cv2 = LazyImport("cv2")
 
 
-@transform_registry(transform_type="QuantizedInput", process="preprocess", framework="tensorflow, tensorflow_itex")
+@transform_registry(
+    transform_type="QuantizedInput",
+    process="preprocess",
+    framework="tensorflow, tensorflow_itex",
+)
 class QuantizedInput(BaseTransform):  # pragma: no cover
     """Convert the dtype of input to quantize it.
 
@@ -57,7 +61,9 @@ class QuantizedInput(BaseTransform):  # pragma: no cover
     def __init__(self, dtype, scale=None):
         """Initialize `QuantizedInput` class."""
         self.dtype_map = {"uint8": tf.uint8, "int8": tf.int8}
-        assert dtype in self.dtype_map.keys(), "only support cast dtype {}".format(self.dtype_map.keys())
+        assert dtype in self.dtype_map.keys(), "only support cast dtype {}".format(
+            self.dtype_map.keys()
+        )
         self.dtype = dtype
         self.scale = scale
 
@@ -124,8 +130,12 @@ class ParseDecodeImagenet:  # pragma: no cover
         """Parse features in example."""
         # Dense features in Example proto.
         feature_map = {
-            "image/encoded": tf.io.FixedLenFeature([], dtype=tf.string, default_value=""),
-            "image/class/label": tf.io.FixedLenFeature([1], dtype=tf.int64, default_value=-1),
+            "image/encoded": tf.io.FixedLenFeature(
+                [], dtype=tf.string, default_value=""
+            ),
+            "image/class/label": tf.io.FixedLenFeature(
+                [1], dtype=tf.int64, default_value=-1
+            ),
         }
 
         sparse_float32 = tf.io.VarLenFeature(dtype=tf.float32)
@@ -145,11 +155,15 @@ class ParseDecodeImagenet:  # pragma: no cover
         features = tf.io.parse_single_example(serialized=sample, features=feature_map)
         label = tf.cast(features["image/class/label"], dtype=tf.int32)
         image = features["image/encoded"]
-        image = tf.image.decode_jpeg(image, channels=3, fancy_upscaling=False, dct_method="INTEGER_FAST")
+        image = tf.image.decode_jpeg(
+            image, channels=3, fancy_upscaling=False, dct_method="INTEGER_FAST"
+        )
         return (image, label)
 
 
-@transform_registry(transform_type="ParseDecodeImagenet", process="preprocess", framework="tensorflow")
+@transform_registry(
+    transform_type="ParseDecodeImagenet", process="preprocess", framework="tensorflow"
+)
 class ParseDecodeImagenetTransform(BaseTransform):  # pragma: no cover
     """Imagenet decoding will be performed automatically from Neural Compressor v1.4.
 
@@ -166,7 +180,9 @@ class ParseDecodeImagenetTransform(BaseTransform):  # pragma: no cover
         return sample
 
 
-@transform_registry(transform_type="TransposeLastChannel", process="preprocess", framework="tensorflow")
+@transform_registry(
+    transform_type="TransposeLastChannel", process="preprocess", framework="tensorflow"
+)
 class TensorflowTransposeLastChannel(BaseTransform):
     """Transpose NHWC to NCHW.
 
@@ -180,7 +196,9 @@ class TensorflowTransposeLastChannel(BaseTransform):
         return (image, label)
 
 
-@transform_registry(transform_type="ShiftRescale", process="postprocess", framework="tensorflow")
+@transform_registry(
+    transform_type="ShiftRescale", process="postprocess", framework="tensorflow"
+)
 class TensorflowShiftRescale(BaseTransform):
     """Label shift by 1 and rescale.
 
@@ -195,7 +213,9 @@ class TensorflowShiftRescale(BaseTransform):
         return (image, label)
 
 
-@transform_registry(transform_type="ResizeCropImagenet", process="preprocess", framework="tensorflow")
+@transform_registry(
+    transform_type="ResizeCropImagenet", process="preprocess", framework="tensorflow"
+)
 class TensorflowResizeCropImagenetTransform(BaseTransform):  # pragma: no cover
     """Combination of a series of transforms which is applicable to images in Imagenet.
 
@@ -274,12 +294,24 @@ class TensorflowResizeCropImagenetTransform(BaseTransform):  # pragma: no cover
             # 'RGB'->'BGR'
             image = image[..., ::-1]
         image = tf.expand_dims(image, 0)
-        image = tf.image.resize(image, [new_height, new_width], method=self.resize_method)
+        image = tf.image.resize(
+            image, [new_height, new_width], method=self.resize_method
+        )
         image = tf.squeeze(image)
         shape = tf.shape(input=image)
         if self.random_crop:
-            y0 = tf.random.uniform(shape=[], minval=0, maxval=(shape[0] - self.height + 1), dtype=tf.dtypes.int32)
-            x0 = tf.random.uniform(shape=[], minval=0, maxval=(shape[1] - self.width + 1), dtype=tf.dtypes.int32)
+            y0 = tf.random.uniform(
+                shape=[],
+                minval=0,
+                maxval=(shape[0] - self.height + 1),
+                dtype=tf.dtypes.int32,
+            )
+            x0 = tf.random.uniform(
+                shape=[],
+                minval=0,
+                maxval=(shape[1] - self.width + 1),
+                dtype=tf.dtypes.int32,
+            )
         else:
             y0 = (shape[0] - self.height) // 2
             x0 = (shape[1] - self.width) // 2
@@ -293,7 +325,9 @@ class TensorflowResizeCropImagenetTransform(BaseTransform):  # pragma: no cover
         return (image, label)
 
 
-@transform_registry(transform_type="BilinearImagenet", process="preprocess", framework="tensorflow")
+@transform_registry(
+    transform_type="BilinearImagenet", process="preprocess", framework="tensorflow"
+)
 class BilinearImagenetTransform(BaseTransform):  # pragma: no cover
     """Combination of a series of transforms which is applicable to images in Imagenet.
 
@@ -308,7 +342,14 @@ class BilinearImagenetTransform(BaseTransform):  # pragma: no cover
         tuple of processed image and label
     """
 
-    def __init__(self, height, width, central_fraction=0.875, mean_value=[0.0, 0.0, 0.0], scale=1.0):
+    def __init__(
+        self,
+        height,
+        width,
+        central_fraction=0.875,
+        mean_value=[0.0, 0.0, 0.0],
+        scale=1.0,
+    ):
         """Initialize `BilinearImagenetTransform` class."""
         self.height = height
         self.width = width
@@ -329,7 +370,9 @@ class BilinearImagenetTransform(BaseTransform):  # pragma: no cover
         if self.height and self.width:
             # Resize the image to the specified height and width.
             image = tf.expand_dims(image, 0)
-            image = tf.image.resize(image, [self.height, self.width], method=tf.image.ResizeMethod.BILINEAR)
+            image = tf.image.resize(
+                image, [self.height, self.width], method=tf.image.ResizeMethod.BILINEAR
+            )
             image = tf.squeeze(image, [0])
 
         image = tf.subtract(image, 0.5)
@@ -340,7 +383,9 @@ class BilinearImagenetTransform(BaseTransform):  # pragma: no cover
 
 
 @transform_registry(
-    transform_type="BilinearImagenet", process="preprocess", framework="onnxrt_qlinearops, onnxrt_integerops"
+    transform_type="BilinearImagenet",
+    process="preprocess",
+    framework="onnxrt_qlinearops, onnxrt_integerops",
 )
 class OnnxBilinearImagenetTransform(BaseTransform):  # pragma: no cover
     """Combination of a series of transforms which is applicable to images in Imagenet.
@@ -356,7 +401,14 @@ class OnnxBilinearImagenetTransform(BaseTransform):  # pragma: no cover
         tuple of processed image and label
     """
 
-    def __init__(self, height, width, central_fraction=0.875, mean_value=[0.0, 0.0, 0.0], scale=1.0):
+    def __init__(
+        self,
+        height,
+        width,
+        central_fraction=0.875,
+        mean_value=[0.0, 0.0, 0.0],
+        scale=1.0,
+    ):
         """Initialize `OnnxBilinearImagenetTransform` class."""
         self.height = height
         self.width = width
@@ -370,7 +422,7 @@ class OnnxBilinearImagenetTransform(BaseTransform):  # pragma: no cover
         if isinstance(image, np.ndarray):
             image = image.astype("float32") / 255.0
         img_shape = image.shape
-        depth = img_shape[2]
+        img_shape[2]
         img_hd = float(img_shape[0])
         bbox_h_start = int((img_hd - img_hd * self.central_fraction) / 2)
         img_wd = float(img_shape[1])
@@ -379,10 +431,15 @@ class OnnxBilinearImagenetTransform(BaseTransform):  # pragma: no cover
         bbox_h_size = img_shape[0] - bbox_h_start * 2
         bbox_w_size = img_shape[1] - bbox_w_start * 2
 
-        image = image[bbox_h_start : bbox_h_start + bbox_h_size, bbox_w_start : bbox_w_start + bbox_w_size]
+        image = image[
+            bbox_h_start : bbox_h_start + bbox_h_size,
+            bbox_w_start : bbox_w_start + bbox_w_size,
+        ]
 
         if self.height and self.width:
-            image = cv2.resize(image, (self.width, self.height), interpolation=cv2.INTER_LINEAR)
+            image = cv2.resize(
+                image, (self.width, self.height), interpolation=cv2.INTER_LINEAR
+            )
 
         image = np.subtract(image, 0.5)
         image = np.multiply(image, 2.0)
@@ -393,7 +450,9 @@ class OnnxBilinearImagenetTransform(BaseTransform):  # pragma: no cover
 
 
 @transform_registry(
-    transform_type="ResizeCropImagenet", process="preprocess", framework="onnxrt_qlinearops, onnxrt_integerops"
+    transform_type="ResizeCropImagenet",
+    process="preprocess",
+    framework="onnxrt_qlinearops, onnxrt_integerops",
 )
 class ONNXResizeCropImagenetTransform(BaseTransform):  # pragma: no cover
     """Combination of a series of transforms which is applicable to images in Imagenet.
@@ -438,7 +497,9 @@ class ONNXResizeCropImagenetTransform(BaseTransform):  # pragma: no cover
         # TODO Support optional resize_method, data_format, subpixels for ONNX
         image, label = sample
         height, width = image.shape[0], image.shape[1]
-        scale = self.resize_side / width if height > width else self.resize_side / height
+        scale = (
+            self.resize_side / width if height > width else self.resize_side / height
+        )
         new_height = int(height * scale)
         new_width = int(width * scale)
         image = cv2.resize(image, (new_height, new_width))
@@ -460,7 +521,9 @@ class ONNXResizeCropImagenetTransform(BaseTransform):  # pragma: no cover
 
 
 @transform_registry(
-    transform_type="ResizeWithAspectRatio", process="preprocess", framework="onnxrt_qlinearops, onnxrt_integerops"
+    transform_type="ResizeWithAspectRatio",
+    process="preprocess",
+    framework="onnxrt_qlinearops, onnxrt_integerops",
 )
 class ResizeWithAspectRatio(BaseTransform):  # pragma: no cover
     """Resize the image with aspect ratio.

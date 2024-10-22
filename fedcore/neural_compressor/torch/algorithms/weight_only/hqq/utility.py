@@ -47,7 +47,9 @@ def see_cuda_memory_usage(message, force=False):  # pragma: no cover
     )
     vm_stats = psutil.virtual_memory()
     used_GB = round(((vm_stats.total - vm_stats.available) / (1024**3)), 2)
-    logger.info(f"CPU Virtual Memory:  used = {used_GB} GB, percent = {vm_stats.percent}%")
+    logger.info(
+        f"CPU Virtual Memory:  used = {used_GB} GB, percent = {vm_stats.percent}%"
+    )
 
     # get the peak memory to report correct data, so reset the counter for the next call
     torch.cuda.reset_peak_memory_stats()
@@ -67,7 +69,10 @@ def dump_elapsed_time(customized_msg=""):
             end = time.time()
             logger.info(
                 "%s elapsed time: %s ms"
-                % (customized_msg if customized_msg else func.__qualname__, round((end - start) * 1000, 2))
+                % (
+                    customized_msg if customized_msg else func.__qualname__,
+                    round((end - start) * 1000, 2),
+                )
             )
             return res
 

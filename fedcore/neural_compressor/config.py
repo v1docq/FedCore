@@ -18,12 +18,14 @@
 import datetime
 import logging
 
-from schema import And, Optional, Or, Schema
+from schema import And, Optional, Schema
 
 from .utils import alias_param
 
 logger = logging.getLogger("neural_compressor")
-default_workspace = "./nc_workspace/{}/".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+default_workspace = "./nc_workspace/{}/".format(
+    datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+)
 
 QUANTMAPPING = {
     "auto": "post_training_auto_quant",
@@ -36,8 +38,12 @@ QUANTMAPPING = {
 ops_schema = Schema(
     {
         Optional("weight", default=None): {
-            Optional("granularity"): And(list, lambda s: all(i in ["per_channel", "per_tensor"] for i in s)),
-            Optional("scheme"): And(list, lambda s: all(i in ["asym", "sym", "asym_float"] for i in s)),
+            Optional("granularity"): And(
+                list, lambda s: all(i in ["per_channel", "per_tensor"] for i in s)
+            ),
+            Optional("scheme"): And(
+                list, lambda s: all(i in ["asym", "sym", "asym_float"] for i in s)
+            ),
             Optional("dtype"): And(
                 list,
                 lambda s: all(
@@ -62,17 +68,31 @@ ops_schema = Schema(
                 list,  # TODO: allow AWQ+GPTQ algo
                 lambda s: all(i in ["minmax", "RTN", "AWQ", "GPTQ", "TEQ"] for i in s),
             ),
-            Optional("bits"): And(list, lambda s: all(0 < i <= 8 and type(i) == int for i in s)),
-            Optional("group_size"): And(list, lambda s: all(i >= -1 and i != 0 and type(i) == int for i in s)),
+            Optional("bits"): And(
+                list, lambda s: all(0 < i <= 8 and type(i) == int for i in s)
+            ),
+            Optional("group_size"): And(
+                list, lambda s: all(i >= -1 and i != 0 and type(i) == int for i in s)
+            ),
         },
         Optional("activation", default=None): {
-            Optional("granularity"): And(list, lambda s: all(i in ["per_channel", "per_tensor"] for i in s)),
-            Optional("scheme"): And(list, lambda s: all(i in ["asym", "sym"] for i in s)),
+            Optional("granularity"): And(
+                list, lambda s: all(i in ["per_channel", "per_tensor"] for i in s)
+            ),
+            Optional("scheme"): And(
+                list, lambda s: all(i in ["asym", "sym"] for i in s)
+            ),
             Optional("dtype"): And(
-                list, lambda s: all(i in ["int8", "uint8", "fp32", "bf16", "fp16", "None"] for i in s)
+                list,
+                lambda s: all(
+                    i in ["int8", "uint8", "fp32", "bf16", "fp16", "None"] for i in s
+                ),
             ),
             Optional("algorithm"): And(
-                list, lambda s: all(i in ["minmax", "kl", "placeholder", "percentile"] for i in s)
+                list,
+                lambda s: all(
+                    i in ["minmax", "kl", "placeholder", "percentile"] for i in s
+                ),
             ),
         },
     }
@@ -95,17 +115,23 @@ def _check_value(name, src, supported_type, supported_value=[]):
             name, str(supported_type), [type(i) for i in src]
         )
     elif not isinstance(src, list) and not isinstance(src, supported_type):
-        assert False, "Type of {} should be {} but not {}".format(name, str(supported_type), type(src))
+        assert False, "Type of {} should be {} but not {}".format(
+            name, str(supported_type), type(src)
+        )
 
     if len(supported_value) > 0:
         if isinstance(src, str) and src not in supported_value:
-            assert False, "{} is not in supported {}: {}. Skip setting it.".format(src, name, str(supported_value))
+            assert False, "{} is not in supported {}: {}. Skip setting it.".format(
+                src, name, str(supported_value)
+            )
         elif (
             isinstance(src, list)
             and all([isinstance(i, str) for i in src])
             and any([i not in supported_value for i in src])
         ):
-            assert False, "{} is not in supported {}: {}. Skip setting it.".format(src, name, str(supported_value))
+            assert False, "{} is not in supported {}: {}. Skip setting it.".format(
+                src, name, str(supported_value)
+            )
 
     return True
 
@@ -158,7 +184,11 @@ class DotDict(dict):
             value = DotDict(value)
         if isinstance(value, list) and len(value) == 1 and isinstance(value[0], dict):
             value = DotDict(value[0])
-        if isinstance(value, list) and len(value) > 1 and all(isinstance(v, dict) for v in value):
+        if (
+            isinstance(value, list)
+            and len(value) > 1
+            and all(isinstance(v, dict) for v in value)
+        ):
             value = DotDict({k: v for d in value for k, v in d.items()})
         super(DotDict, self).__setitem__(key, value)
 
@@ -206,7 +236,13 @@ class Options:
         set_tensorboard(True)
     """
 
-    def __init__(self, random_seed=1978, workspace=default_workspace, resume_from=None, tensorboard=False):
+    def __init__(
+        self,
+        random_seed=1978,
+        workspace=default_workspace,
+        resume_from=None,
+        tensorboard=False,
+    ):
         """Init an Option object."""
         self.random_seed = random_seed
         self.workspace = workspace
@@ -353,7 +389,15 @@ class BenchmarkConfig:
             "backend",
             backend,
             str,
-            ["default", "itex", "ipex", "onnxrt_trt_ep", "onnxrt_cuda_ep", "onnxrt_dnnl_ep", "onnxrt_dml_ep"],
+            [
+                "default",
+                "itex",
+                "ipex",
+                "onnxrt_trt_ep",
+                "onnxrt_cuda_ep",
+                "onnxrt_dnnl_ep",
+                "onnxrt_dml_ep",
+            ],
         ):
             self._backend = backend
 
@@ -419,7 +463,9 @@ class BenchmarkConfig:
     @cores_per_instance.setter
     def cores_per_instance(self, cores_per_instance):
         """Set cores_per_instance."""
-        if cores_per_instance is None or _check_value("cores_per_instance", cores_per_instance, int):
+        if cores_per_instance is None or _check_value(
+            "cores_per_instance", cores_per_instance, int
+        ):
             self._cores_per_instance = cores_per_instance
 
     @property
@@ -441,7 +487,9 @@ class BenchmarkConfig:
     @inter_num_of_threads.setter
     def inter_num_of_threads(self, inter_num_of_threads):
         """Set inter_num_of_threads."""
-        if inter_num_of_threads is None or _check_value("inter_num_of_threads", inter_num_of_threads, int):
+        if inter_num_of_threads is None or _check_value(
+            "inter_num_of_threads", inter_num_of_threads, int
+        ):
             self._inter_num_of_threads = inter_num_of_threads
 
     @property
@@ -452,7 +500,9 @@ class BenchmarkConfig:
     @intra_num_of_threads.setter
     def intra_num_of_threads(self, intra_num_of_threads):
         """Get intra_num_of_threads."""
-        if intra_num_of_threads is None or _check_value("intra_num_of_threads", intra_num_of_threads, int):
+        if intra_num_of_threads is None or _check_value(
+            "intra_num_of_threads", intra_num_of_threads, int
+        ):
             self._intra_num_of_threads = intra_num_of_threads
 
     @property
@@ -521,7 +571,9 @@ class AccuracyCriterion:
         )
     """
 
-    def __init__(self, higher_is_better=True, criterion="relative", tolerable_loss=0.01):
+    def __init__(
+        self, higher_is_better=True, criterion="relative", tolerable_loss=0.01
+    ):
         """Init an AccuracyCriterion object."""
         self.higher_is_better = higher_is_better
         self.criterion = criterion
@@ -625,7 +677,14 @@ class TuningCriterion:
         )
     """
 
-    def __init__(self, strategy="basic", strategy_kwargs=None, timeout=0, max_trials=100, objective="performance"):
+    def __init__(
+        self,
+        strategy="basic",
+        strategy_kwargs=None,
+        timeout=0,
+        max_trials=100,
+        objective="performance",
+    ):
         """Init a TuningCriterion object."""
         self.strategy = strategy
         self.timeout = timeout
@@ -678,11 +737,21 @@ class TuningCriterion:
         """
         if isinstance(objective, list):
             for val in objective:
-                assert _check_value("objective", val, str, ["performance", "accuracy", "modelsize", "footprint"])
+                assert _check_value(
+                    "objective",
+                    val,
+                    str,
+                    ["performance", "accuracy", "modelsize", "footprint"],
+                )
             self._objective = objective
             return
 
-        if _check_value("objective", objective, str, ["performance", "accuracy", "modelsize", "footprint"]):
+        if _check_value(
+            "objective",
+            objective,
+            str,
+            ["performance", "accuracy", "modelsize", "footprint"],
+        ):
             self._objective = [objective]
             return
 
@@ -690,9 +759,16 @@ class TuningCriterion:
             if "weight" in objective.keys() and isinstance(objective["weight"], list):
                 assert len(objective["objective"]) == len(objective["weight"])
             for k, v in objective.items():
-                _check_value("objective", k, str, ["objective", "weight", "higher_is_better"])
+                _check_value(
+                    "objective", k, str, ["objective", "weight", "higher_is_better"]
+                )
                 if k == "objective":
-                    _check_value("objective", v, str, ["performance", "accuracy", "modelsize", "footprint"])
+                    _check_value(
+                        "objective",
+                        v,
+                        str,
+                        ["performance", "accuracy", "modelsize", "footprint"],
+                    )
             self._objective = objective
 
     @property
@@ -707,7 +783,17 @@ class TuningCriterion:
             "strategy",
             strategy,
             str,
-            ["basic", "mse", "bayesian", "random", "exhaustive", "sigopt", "tpe", "mse_v2", "hawq_v2"],
+            [
+                "basic",
+                "mse",
+                "bayesian",
+                "random",
+                "exhaustive",
+                "sigopt",
+                "tpe",
+                "mse_v2",
+                "hawq_v2",
+            ],
         ):
             self._strategy = strategy
 
@@ -847,7 +933,12 @@ class _BaseQuantizationConfig:
     @domain.setter
     def domain(self, domain):
         """Set domain."""
-        if _check_value("domain", domain, str, ["auto", "cv", "object_detection", "nlp", "recommendation_system"]):
+        if _check_value(
+            "domain",
+            domain,
+            str,
+            ["auto", "cv", "object_detection", "nlp", "recommendation_system"],
+        ):
             self._domain = domain
 
     @property
@@ -891,11 +982,19 @@ class _BaseQuantizationConfig:
                             smooth_quant_args = {"alpha": numpy.arange(0.1, 0.5, 0.05).tolist()}
                         """
                         if isinstance(v, str):
-                            assert v == "auto", "the alpha of sq only supports float, list and 'auto'"
-                        elif isinstance(v, float) or isinstance(v, int) or isinstance(v, list):
+                            assert (
+                                v == "auto"
+                            ), "the alpha of sq only supports float, list and 'auto'"
+                        elif (
+                            isinstance(v, float)
+                            or isinstance(v, int)
+                            or isinstance(v, list)
+                        ):
                             continue
                         else:
-                            logger.warning("Ignore the alpha as it's not a list, int or float.")
+                            logger.warning(
+                                "Ignore the alpha as it's not a list, int or float."
+                            )
                         if isinstance(val[k], list):
                             assert all(
                                 [vv >= 0.0 and vv <= 1.0 for vv in val[k]]
@@ -1059,7 +1158,9 @@ class _BaseQuantizationConfig:
 
     @excluded_precisions.setter
     def excluded_precisions(self, excluded_precisions):
-        if _check_value("excluded_precisions", excluded_precisions, str, ["bf16", "fp16"]):
+        if _check_value(
+            "excluded_precisions", excluded_precisions, str, ["bf16", "fp16"]
+        ):
             self._excluded_precisions = excluded_precisions
             self._use_bf16 = "bf16" not in excluded_precisions
 
@@ -1094,7 +1195,9 @@ class _BaseQuantizationConfig:
                 ops_schema.validate(v)
             self._op_name_dict = op_name_dict
         else:
-            assert False, "Type of op_name_dict should be dict but not {}, ".format(type(op_name_dict))
+            assert False, "Type of op_name_dict should be dict but not {}, ".format(
+                type(op_name_dict)
+            )
 
     @property
     def op_type_dict(self):
@@ -1110,7 +1213,9 @@ class _BaseQuantizationConfig:
                 ops_schema.validate(v)
             self._op_type_dict = op_type_dict
         else:
-            assert False, "Type of op_type_dict should be dict but not {}".format(type(op_type_dict))
+            assert False, "Type of op_type_dict should be dict but not {}".format(
+                type(op_type_dict)
+            )
 
     @property
     def calibration_sampling_size(self):
@@ -1138,7 +1243,9 @@ class _BaseQuantizationConfig:
 
     @quant_format.setter
     def quant_format(self, quant_format):
-        if _check_value("quant_format", quant_format, str, ["default", "QDQ", "QOperator"]):
+        if _check_value(
+            "quant_format", quant_format, str, ["default", "QDQ", "QOperator"]
+        ):
             self._quant_format = quant_format
 
     @property
@@ -1151,7 +1258,15 @@ class _BaseQuantizationConfig:
             "backend",
             backend,
             str,
-            ["default", "itex", "ipex", "onnxrt_trt_ep", "onnxrt_cuda_ep", "onnxrt_dnnl_ep", "onnxrt_dml_ep"],
+            [
+                "default",
+                "itex",
+                "ipex",
+                "onnxrt_trt_ep",
+                "onnxrt_cuda_ep",
+                "onnxrt_dnnl_ep",
+                "onnxrt_dml_ep",
+            ],
         ):
             self._backend = backend
 
@@ -1351,7 +1466,9 @@ class PostTrainingQuantConfig(_BaseQuantizationConfig):
             approach = "static"
         if "dynamic" in approach:
             approach = "dynamic"
-        if _check_value("approach", approach, str, ["static", "dynamic", "auto", "weight_only"]):
+        if _check_value(
+            "approach", approach, str, ["static", "dynamic", "auto", "weight_only"]
+        ):
             self._approach = QUANTMAPPING[approach]
 
     @property
@@ -1629,7 +1746,13 @@ class HPOConfig:
     """
 
     def __init__(
-        self, search_space, searcher="xgb", higher_is_better=True, loss_type="reg", min_train_samples=10, seed=42
+        self,
+        search_space,
+        searcher="xgb",
+        higher_is_better=True,
+        loss_type="reg",
+        min_train_samples=10,
+        seed=42,
     ):
         """Init an HPOConfig object."""
         self.search_space = search_space
@@ -1668,7 +1791,9 @@ class KnowledgeDistillationLossConfig:
         model = compression_manager.model
     """
 
-    def __init__(self, temperature=1.0, loss_types=["CE", "CE"], loss_weights=[0.5, 0.5]):
+    def __init__(
+        self, temperature=1.0, loss_types=["CE", "CE"], loss_weights=[0.5, 0.5]
+    ):
         """Init a KnowledgeDistillationLossConfig object."""
         self.config = DotDict(
             {
@@ -1730,7 +1855,9 @@ class IntermediateLayersKnowledgeDistillationLossConfig:
         model = compression_manager.model
     """
 
-    def __init__(self, layer_mappings=[], loss_types=[], loss_weights=[], add_origin_loss=False):
+    def __init__(
+        self, layer_mappings=[], loss_types=[], loss_weights=[], add_origin_loss=False
+    ):
         """Init an IntermediateLayersKnowledgeDistillationLossConfig object."""
         self.config = DotDict(
             {
@@ -1786,7 +1913,14 @@ class SelfKnowledgeDistillationLossConfig:
         model = compression_manager.model
     """
 
-    def __init__(self, layer_mappings=[], temperature=1.0, loss_types=[], loss_weights=[], add_origin_loss=False):
+    def __init__(
+        self,
+        layer_mappings=[],
+        temperature=1.0,
+        loss_types=[],
+        loss_weights=[],
+        add_origin_loss=False,
+    ):
         """Init a SelfKnowledgeDistillationLossConfig object."""
         self.config = DotDict(
             {
@@ -1827,7 +1961,12 @@ class DistillationConfig:
         model = compression_manager.model
     """
 
-    def __init__(self, teacher_model=None, criterion=criterion, optimizer={"SGD": {"learning_rate": 0.0001}}):
+    def __init__(
+        self,
+        teacher_model=None,
+        criterion=criterion,
+        optimizer={"SGD": {"learning_rate": 0.0001}},
+    ):
         """Init a DistillationConfig object."""
         self.criterion = criterion
         self.optimizer = optimizer
@@ -1964,7 +2103,10 @@ class MixedPrecisionConfig(object):
     def precisions(self, precision):
         """Set precision."""
         if isinstance(precision, str):
-            assert precision in ["fp16", "bf16"], "Only support 'fp16' and 'bf16' for mix precision."
+            assert precision in [
+                "fp16",
+                "bf16",
+            ], "Only support 'fp16' and 'bf16' for mix precision."
             self._precisions = [precision]
         elif isinstance(precision, list):
             assert all([i in ["fp16", "bf16"] for i in precision]), (
@@ -2038,7 +2180,15 @@ class MixedPrecisionConfig(object):
             "backend",
             backend,
             str,
-            ["default", "itex", "ipex", "onnxrt_trt_ep", "onnxrt_cuda_ep", "onnxrt_dnnl_ep", "onnxrt_dml_ep"],
+            [
+                "default",
+                "itex",
+                "ipex",
+                "onnxrt_trt_ep",
+                "onnxrt_cuda_ep",
+                "onnxrt_dnnl_ep",
+                "onnxrt_dml_ep",
+            ],
         ):
             self._backend = backend
 
@@ -2082,7 +2232,9 @@ class MixedPrecisionConfig(object):
     @excluded_precisions.setter
     def excluded_precisions(self, excluded_precisions):
         """Set excluded precisions."""
-        if _check_value("excluded_precisions", excluded_precisions, str, ["bf16", "fp16"]):
+        if _check_value(
+            "excluded_precisions", excluded_precisions, str, ["bf16", "fp16"]
+        ):
             self._excluded_precisions = excluded_precisions
             self._use_bf16 = "bf16" not in excluded_precisions
 
@@ -2101,7 +2253,9 @@ class MixedPrecisionConfig(object):
                 ops_schema.validate(v)
             self._op_name_dict = op_name_dict
         else:
-            assert False, "Type of op_name_dict should be dict but not {}, ".format(type(op_name_dict))
+            assert False, "Type of op_name_dict should be dict but not {}, ".format(
+                type(op_name_dict)
+            )
 
     @property
     def op_type_dict(self):
@@ -2118,7 +2272,9 @@ class MixedPrecisionConfig(object):
                 ops_schema.validate(v)
             self._op_type_dict = op_type_dict
         else:
-            assert False, "Type of op_type_dict should be dict but not {}".format(type(op_type_dict))
+            assert False, "Type of op_type_dict should be dict but not {}".format(
+                type(op_type_dict)
+            )
 
     @property
     def example_inputs(self):
@@ -2241,7 +2397,6 @@ class ONNXQlinear2QDQConfig:
 
     def __init__(self):
         """Init an ONNXQlinear2QDQConfig object."""
-        pass
 
 
 class Torch2ONNXConfig(ExportConfig):
@@ -2418,7 +2573,9 @@ class MXNet:
         if not isinstance(precisions, list):
             precisions = [precisions]
         for pr in precisions:
-            _check_value("precisions", pr, str, ["int8", "uint8", "fp32", "bf16", "fp16"])
+            _check_value(
+                "precisions", pr, str, ["int8", "uint8", "fp32", "bf16", "fp16"]
+            )
         self._precisions = precisions
 
 
@@ -2517,7 +2674,9 @@ class _Config:
         self._keras = keras
         if diagnosis is None:
             diagnosis = False
-            if (quantization is not None and quantization.diagnosis) or (benchmark is not None and benchmark.diagnosis):
+            if (quantization is not None and quantization.diagnosis) or (
+                benchmark is not None and benchmark.diagnosis
+            ):
                 diagnosis = True
         if diagnosis:
             tuning_criterion.max_trials = 1

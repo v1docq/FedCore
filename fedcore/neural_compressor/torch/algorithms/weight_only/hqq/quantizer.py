@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Optional
 
 import torch
 
 from fedcore.neural_compressor.torch.utils import logger
 
 from .auto_accelerator import auto_detect_accelerator
-from .config import ConfigMappingType, default_hqq_module_config, hqq_global_option
+from .config import ConfigMappingType, hqq_global_option
 from .core import HQQLinear
 
 
@@ -43,7 +43,11 @@ def _replace_with_custom_fn_if_matches_filter(
         else:
             new_fqn = f"{cur_fqn}.{name}"
         if filter_fn(child, new_fqn, config_mapping):
-            new_child = replacement_fn(child.to(auto_detect_accelerator().current_device()), new_fqn, config_mapping)
+            new_child = replacement_fn(
+                child.to(auto_detect_accelerator().current_device()),
+                new_fqn,
+                config_mapping,
+            )
             logger.debug("Quantize linear module %s.", new_fqn)
             setattr(model, name, new_child)
         elif not _has_child(child):  # TODO: merge it into `filter_fn`
@@ -67,11 +71,15 @@ def patch_hqq_moduile(mod, config):
     return new_mod
 
 
-def filter_fn(mod: torch.nn.Module, name: str, config_mapping: ConfigMappingType) -> bool:
+def filter_fn(
+    mod: torch.nn.Module, name: str, config_mapping: ConfigMappingType
+) -> bool:
     return isinstance(mod, torch.nn.Linear) and name in config_mapping
 
 
-def replacement_fn(mod: torch.nn.Module, name: str, config_mapping: ConfigMappingType) -> torch.nn.Module:
+def replacement_fn(
+    mod: torch.nn.Module, name: str, config_mapping: ConfigMappingType
+) -> torch.nn.Module:
     config = config_mapping.get(name, None)
     logger.debug("Replace module %s", name)
     return patch_hqq_moduile(mod, config)
@@ -81,10 +89,14 @@ class EagerModeQuantizer:
     def __init__(self, config_mapping) -> None:
         self.config_mapping = config_mapping
 
-    def prepare(self, model: torch.nn.Module, inplace=True) -> Optional[torch.nn.Module]:
+    def prepare(
+        self, model: torch.nn.Module, inplace=True
+    ) -> Optional[torch.nn.Module]:
         pass
 
-    def convert(self, model: torch.nn.Module, inplace=True) -> Optional[torch.nn.Module]:
+    def convert(
+        self, model: torch.nn.Module, inplace=True
+    ) -> Optional[torch.nn.Module]:
         pass
 
     def save(self):
@@ -95,9 +107,14 @@ class HQQuantizer(EagerModeQuantizer):
     def __init__(self, config_mapping: ConfigMappingType) -> None:
         super().__init__(config_mapping)
 
-    def prepare(self, model: torch.nn.Module, inplace=True) -> Optional[torch.nn.Module]:
+    def prepare(
+        self, model: torch.nn.Module, inplace=True
+    ) -> Optional[torch.nn.Module]:
         _replace_with_custom_fn_if_matches_filter(
-            model, replacement_fn=replacement_fn, filter_fn=filter_fn, config_mapping=self.config_mapping
+            model,
+            replacement_fn=replacement_fn,
+            filter_fn=filter_fn,
+            config_mapping=self.config_mapping,
         )
         return model
 

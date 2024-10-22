@@ -155,7 +155,11 @@ class TFSlimNetsFactory(object):
             input_shape (_type_): input tensor shape.
             arg_scope (_type_): slim arg scope that needed.
         """
-        net_info = {"model": model_func, "input_shape": input_shape, "arg_scope": arg_scope}
+        net_info = {
+            "model": model_func,
+            "input_shape": input_shape,
+            "arg_scope": arg_scope,
+        }
         net = {name: {**net_info, **kwargs}}
         self.networks_map.update(net)
         self.default_slim_models.append(name)

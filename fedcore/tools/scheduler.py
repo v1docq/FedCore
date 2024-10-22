@@ -1,14 +1,12 @@
 import torch
-import logging
 import math
-import numpy as np
 import abc
 from abc import ABC
 from typing import Any, Dict, Optional
 
 
 class Scheduler(ABC):
-    """ Parameter Scheduler Base Class
+    """Parameter Scheduler Base Class
     A scheduler base class that can be used to schedule any optimizer parameter groups.
 
     Unlike the builtin PyTorch schedulers, this is intended to be consistently called
@@ -27,16 +25,16 @@ class Scheduler(ABC):
     """
 
     def __init__(
-            self,
-            optimizer: torch.optim.Optimizer,
-            param_group_field: str,
-            t_in_epochs: bool = True,
-            noise_range_t=None,
-            noise_type='normal',
-            noise_pct=0.67,
-            noise_std=1.0,
-            noise_seed=None,
-            initialize: bool = True,
+        self,
+        optimizer: torch.optim.Optimizer,
+        param_group_field: str,
+        t_in_epochs: bool = True,
+        noise_range_t=None,
+        noise_type="normal",
+        noise_pct=0.67,
+        noise_std=1.0,
+        noise_seed=None,
+        initialize: bool = True,
     ) -> None:
         self.optimizer = optimizer
         self.param_group_field = param_group_field
@@ -44,13 +42,22 @@ class Scheduler(ABC):
         if initialize:
             for i, group in enumerate(self.optimizer.param_groups):
                 if param_group_field not in group:
-                    raise KeyError(f"{param_group_field} missing from param_groups[{i}]")
-                group.setdefault(self._initial_param_group_field, group[param_group_field])
+                    raise KeyError(
+                        f"{param_group_field} missing from param_groups[{i}]"
+                    )
+                group.setdefault(
+                    self._initial_param_group_field, group[param_group_field]
+                )
         else:
             for i, group in enumerate(self.optimizer.param_groups):
                 if self._initial_param_group_field not in group:
-                    raise KeyError(f"{self._initial_param_group_field} missing from param_groups[{i}]")
-        self.base_values = [group[self._initial_param_group_field] for group in self.optimizer.param_groups]
+                    raise KeyError(
+                        f"{self._initial_param_group_field} missing from param_groups[{i}]"
+                    )
+        self.base_values = [
+            group[self._initial_param_group_field]
+            for group in self.optimizer.param_groups
+        ]
         self.metric = None  # any point to having this for all?
         self.t_in_epochs = t_in_epochs
         self.noise_range_t = noise_range_t
@@ -61,7 +68,9 @@ class Scheduler(ABC):
         self.update_groups(self.base_values)
 
     def state_dict(self) -> Dict[str, Any]:
-        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+        return {
+            key: value for key, value in self.__dict__.items() if key != "optimizer"
+        }
 
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         self.__dict__.update(state_dict)
@@ -71,7 +80,9 @@ class Scheduler(ABC):
         pass
 
     def _get_values(self, t: int, on_epoch: bool = True) -> Optional[float]:
-        proceed = (on_epoch and self.t_in_epochs) or (not on_epoch and not self.t_in_epochs)
+        proceed = (on_epoch and self.t_in_epochs) or (
+            not on_epoch and not self.t_in_epochs
+        )
         if not proceed:
             return None
         return self._get_lr(t)
@@ -94,8 +105,8 @@ class Scheduler(ABC):
         if not isinstance(values, (list, tuple)):
             values = [values] * len(self.optimizer.param_groups)
         for param_group, value in zip(self.optimizer.param_groups, values):
-            if 'lr_scale' in param_group:
-                param_group[self.param_group_field] = value * param_group['lr_scale']
+            if "lr_scale" in param_group:
+                param_group[self.param_group_field] = value * param_group["lr_scale"]
             else:
                 param_group[self.param_group_field] = value
 
@@ -118,7 +129,7 @@ class Scheduler(ABC):
     def _calculate_noise(self, t) -> float:
         g = torch.Generator()
         g.manual_seed(self.noise_seed + t)
-        if self.noise_type == 'normal':
+        if self.noise_type == "normal":
             while True:
                 # resample if noise out of percent limit, brute force but shouldn't spin much
                 noise = torch.randn(1, generator=g).item()
@@ -128,24 +139,24 @@ class Scheduler(ABC):
             noise = 2 * (torch.rand(1, generator=g).item() - 0.5) * self.noise_pct
         return noise
 
+
 class StepLRScheduler(Scheduler):
-    """
-    """
+    """ """
 
     def __init__(
-            self,
-            optimizer: torch.optim.Optimizer,
-            decay_t: float,
-            decay_rate: float = 1.,
-            warmup_t=0,
-            warmup_lr_init=0,
-            warmup_prefix=True,
-            t_in_epochs=True,
-            noise_range_t=None,
-            noise_pct=0.67,
-            noise_std=1.0,
-            noise_seed=42,
-            initialize=True,
+        self,
+        optimizer: torch.optim.Optimizer,
+        decay_t: float,
+        decay_rate: float = 1.0,
+        warmup_t=0,
+        warmup_lr_init=0,
+        warmup_prefix=True,
+        t_in_epochs=True,
+        noise_range_t=None,
+        noise_pct=0.67,
+        noise_std=1.0,
+        noise_seed=42,
+        initialize=True,
     ) -> None:
         super().__init__(
             optimizer,
@@ -164,7 +175,9 @@ class StepLRScheduler(Scheduler):
         self.warmup_lr_init = warmup_lr_init
         self.warmup_prefix = warmup_prefix
         if self.warmup_t:
-            self.warmup_steps = [(v - warmup_lr_init) / self.warmup_t for v in self.base_values]
+            self.warmup_steps = [
+                (v - warmup_lr_init) / self.warmup_t for v in self.base_values
+            ]
             super().update_groups(self.warmup_lr_init)
         else:
             self.warmup_steps = [1 for _ in self.base_values]
@@ -175,27 +188,36 @@ class StepLRScheduler(Scheduler):
         else:
             if self.warmup_prefix:
                 t = t - self.warmup_t
-            lrs = [v * (self.decay_rate ** (t // self.decay_t)) for v in self.base_values]
+            lrs = [
+                v * (self.decay_rate ** (t // self.decay_t)) for v in self.base_values
+            ]
         return lrs
 
+
 class LinearLRScheduler(Scheduler):
-    def __init__(self,
-                 optimizer: torch.optim.Optimizer,
-                 t_initial: int,
-                 lr_min_rate: float,
-                 warmup_t=0,
-                 warmup_lr_init=0.,
-                 t_in_epochs=True,
-                 noise_range_t=None,
-                 noise_pct=0.67,
-                 noise_std=1.0,
-                 noise_seed=42,
-                 initialize=True,
-                 ) -> None:
+    def __init__(
+        self,
+        optimizer: torch.optim.Optimizer,
+        t_initial: int,
+        lr_min_rate: float,
+        warmup_t=0,
+        warmup_lr_init=0.0,
+        t_in_epochs=True,
+        noise_range_t=None,
+        noise_pct=0.67,
+        noise_std=1.0,
+        noise_seed=42,
+        initialize=True,
+    ) -> None:
         super().__init__(
-            optimizer, param_group_field="lr",
-            noise_range_t=noise_range_t, noise_pct=noise_pct, noise_std=noise_std, noise_seed=noise_seed,
-            initialize=initialize)
+            optimizer,
+            param_group_field="lr",
+            noise_range_t=noise_range_t,
+            noise_pct=noise_pct,
+            noise_std=noise_std,
+            noise_seed=noise_seed,
+            initialize=initialize,
+        )
 
         self.t_initial = t_initial
         self.lr_min_rate = lr_min_rate
@@ -203,7 +225,9 @@ class LinearLRScheduler(Scheduler):
         self.warmup_lr_init = warmup_lr_init
         self.t_in_epochs = t_in_epochs
         if self.warmup_t:
-            self.warmup_steps = [(v - warmup_lr_init) / self.warmup_t for v in self.base_values]
+            self.warmup_steps = [
+                (v - warmup_lr_init) / self.warmup_t for v in self.base_values
+            ]
             super().update_groups(self.warmup_lr_init)
         else:
             self.warmup_steps = [1 for _ in self.base_values]
@@ -214,7 +238,10 @@ class LinearLRScheduler(Scheduler):
         else:
             t = t - self.warmup_t
             total_t = self.t_initial - self.warmup_t
-            lrs = [v - ((v - v * self.lr_min_rate) * (t / total_t)) for v in self.base_values]
+            lrs = [
+                v - ((v - v * self.lr_min_rate) * (t / total_t))
+                for v in self.base_values
+            ]
         return lrs
 
     def get_epoch_values(self, epoch: int):
@@ -229,6 +256,7 @@ class LinearLRScheduler(Scheduler):
         else:
             return None
 
+
 class CosineLRScheduler(Scheduler):
     """
     Cosine decay with restarts.
@@ -241,23 +269,23 @@ class CosineLRScheduler(Scheduler):
     """
 
     def __init__(
-            self,
-            optimizer: torch.optim.Optimizer,
-            t_initial: int,
-            lr_min: float = 0.,
-            cycle_mul: float = 1.,
-            cycle_decay: float = 1.,
-            cycle_limit: int = 1,
-            warmup_t=0,
-            warmup_lr_init=0,
-            warmup_prefix=False,
-            t_in_epochs=True,
-            noise_range_t=None,
-            noise_pct=0.67,
-            noise_std=1.0,
-            noise_seed=42,
-            k_decay=1.0,
-            initialize=True,
+        self,
+        optimizer: torch.optim.Optimizer,
+        t_initial: int,
+        lr_min: float = 0.0,
+        cycle_mul: float = 1.0,
+        cycle_decay: float = 1.0,
+        cycle_limit: int = 1,
+        warmup_t=0,
+        warmup_lr_init=0,
+        warmup_prefix=False,
+        t_in_epochs=True,
+        noise_range_t=None,
+        noise_pct=0.67,
+        noise_std=1.0,
+        noise_seed=42,
+        k_decay=1.0,
+        initialize=True,
     ) -> None:
         super().__init__(
             optimizer,
@@ -275,7 +303,8 @@ class CosineLRScheduler(Scheduler):
         if t_initial == 1 and cycle_mul == 1 and cycle_decay == 1:
             print(
                 "Cosine annealing scheduler will have no effect on the learning "
-                "rate since t_initial = t_mul = eta_mul = 1.")
+                "rate since t_initial = t_mul = eta_mul = 1."
+            )
         self.t_initial = t_initial
         self.lr_min = lr_min
         self.cycle_mul = cycle_mul
@@ -286,7 +315,9 @@ class CosineLRScheduler(Scheduler):
         self.warmup_prefix = warmup_prefix
         self.k_decay = k_decay
         if self.warmup_t:
-            self.warmup_steps = [(v - warmup_lr_init) / self.warmup_t for v in self.base_values]
+            self.warmup_steps = [
+                (v - warmup_lr_init) / self.warmup_t for v in self.base_values
+            ]
             super().update_groups(self.warmup_lr_init)
         else:
             self.warmup_steps = [1 for _ in self.base_values]
@@ -299,21 +330,30 @@ class CosineLRScheduler(Scheduler):
                 t = t - self.warmup_t
 
             if self.cycle_mul != 1:
-                i = math.floor(math.log(1 - t / self.t_initial * (1 - self.cycle_mul), self.cycle_mul))
-                t_i = self.cycle_mul ** i * self.t_initial
-                t_curr = t - (1 - self.cycle_mul ** i) / (1 - self.cycle_mul) * self.t_initial
+                i = math.floor(
+                    math.log(
+                        1 - t / self.t_initial * (1 - self.cycle_mul), self.cycle_mul
+                    )
+                )
+                t_i = self.cycle_mul**i * self.t_initial
+                t_curr = (
+                    t - (1 - self.cycle_mul**i) / (1 - self.cycle_mul) * self.t_initial
+                )
             else:
                 i = t // self.t_initial
                 t_i = self.t_initial
                 t_curr = t - (self.t_initial * i)
 
-            gamma = self.cycle_decay ** i
+            gamma = self.cycle_decay**i
             lr_max_values = [v * gamma for v in self.base_values]
             k = self.k_decay
 
             if i < self.cycle_limit:
                 lrs = [
-                    self.lr_min + 0.5 * (lr_max - self.lr_min) * (1 + math.cos(math.pi * t_curr ** k / t_i ** k))
+                    self.lr_min
+                    + 0.5
+                    * (lr_max - self.lr_min)
+                    * (1 + math.cos(math.pi * t_curr**k / t_i**k))
                     for lr_max in lr_max_values
                 ]
             else:
@@ -326,7 +366,13 @@ class CosineLRScheduler(Scheduler):
         if self.cycle_mul == 1.0:
             return self.t_initial * cycles
         else:
-            return int(math.floor(-self.t_initial * (self.cycle_mul ** cycles - 1) / (1 - self.cycle_mul)))
+            return int(
+                math.floor(
+                    -self.t_initial
+                    * (self.cycle_mul**cycles - 1)
+                    / (1 - self.cycle_mul)
+                )
+            )
 
 
 def build_scheduler(config, optimizer, n_iter_per_epoch):
@@ -335,7 +381,7 @@ def build_scheduler(config, optimizer, n_iter_per_epoch):
     decay_steps = int(config.TRAIN.LR_SCHEDULER.DECAY_EPOCHS * n_iter_per_epoch)
 
     lr_scheduler = None
-    if config.TRAIN.LR_SCHEDULER.NAME == 'cosine':
+    if config.TRAIN.LR_SCHEDULER.NAME == "cosine":
         lr_scheduler = CosineLRScheduler(
             optimizer,
             t_initial=num_steps,
@@ -346,7 +392,7 @@ def build_scheduler(config, optimizer, n_iter_per_epoch):
             cycle_limit=1,
             t_in_epochs=False,
         )
-    elif config.TRAIN.LR_SCHEDULER.NAME == 'linear':
+    elif config.TRAIN.LR_SCHEDULER.NAME == "linear":
         lr_scheduler = LinearLRScheduler(
             optimizer,
             t_initial=num_steps,
@@ -355,7 +401,7 @@ def build_scheduler(config, optimizer, n_iter_per_epoch):
             warmup_t=warmup_steps,
             t_in_epochs=False,
         )
-    elif config.TRAIN.LR_SCHEDULER.NAME == 'step':
+    elif config.TRAIN.LR_SCHEDULER.NAME == "step":
         lr_scheduler = StepLRScheduler(
             optimizer,
             decay_t=decay_steps,

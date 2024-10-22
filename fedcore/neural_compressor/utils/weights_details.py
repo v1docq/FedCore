@@ -33,7 +33,9 @@ class WeightsDetails:
             optimized_tensor_data,
         )
         self.input_stats: WeightsStatistics = WeightsStatistics(input_tensor_data)
-        self.optimized_stats: WeightsStatistics = WeightsStatistics(optimized_tensor_data)
+        self.optimized_stats: WeightsStatistics = WeightsStatistics(
+            optimized_tensor_data
+        )
 
     def serialize(self) -> Dict[str, Any]:
         """Serialize Weights details."""

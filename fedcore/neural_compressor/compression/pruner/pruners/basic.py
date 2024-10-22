@@ -17,15 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# from ..utils import logger
+from fedcore.neural_compressor.compression.pruner.criteria import get_criterion
+from fedcore.neural_compressor.compression.pruner.patterns import get_pattern
+from fedcore.neural_compressor.compression.pruner.pruners.base import KerasBasePruner, PytorchBasePruner, \
+    register_pruner
+from fedcore.neural_compressor.compression.pruner.regs import get_reg
+from fedcore.neural_compressor.compression.pruner.schedulers import get_scheduler
+from fedcore.neural_compressor.compression.pruner.tf_criteria import get_tf_criterion
 from fedcore.neural_compressor.utils.logger import Logger
-
-from ..criteria import get_criterion
-from ..patterns import get_pattern
-from ..regs import get_reg
-from ..schedulers import get_scheduler
-from ..tf_criteria import get_tf_criterion
-from .base import KerasBasePruner, PytorchBasePruner, register_pruner
 
 logger = Logger().get_logger()
 
@@ -61,8 +60,12 @@ class PytorchBasicPruner(PytorchBasePruner):
         self.reg = get_reg(self.config, self.modules, self.pattern)
         # if switch off progressive but use per-channel pruning, give a warn
         if "channel" in self.pattern.pattern:
-            logger.info("UserWarning: use per-channel pruning pattern without progressive pruning!")
-            logger.info("Instead, enabling progressive pruning would be a better choice.")
+            logger.info(
+                "UserWarning: use per-channel pruning pattern without progressive pruning!"
+            )
+            logger.info(
+                "Instead, enabling progressive pruning would be a better choice."
+            )
         else:
             pass
 
@@ -104,7 +107,9 @@ class PytorchBasicPruner(PytorchBasePruner):
         self.completed_pruned_cnt += 1
         if self.criterion.scores == {}:
             return
-        self.masks = self.pattern.get_masks(self.criterion.scores, current_target_sparsity_ratio, self.masks)
+        self.masks = self.pattern.get_masks(
+            self.criterion.scores, current_target_sparsity_ratio, self.masks
+        )
         self.mask_weights()
 
         self.current_sparsity_ratio = self.pattern.get_sparsity_ratio(self.masks)
@@ -152,8 +157,12 @@ class KerasBasicPruner(KerasBasePruner):
         self.reg = get_reg(self.config, self.modules, self.pattern)
         # if switch off progressive but use per-channel pruning, give a warn
         if "channel" in self.pattern.pattern:
-            logger.info("UserWarning: use per-channel pruning pattern without progressive pruning!")
-            logger.info("Instead, enabling progressive pruning would be a better choice.")
+            logger.info(
+                "UserWarning: use per-channel pruning pattern without progressive pruning!"
+            )
+            logger.info(
+                "Instead, enabling progressive pruning would be a better choice."
+            )
         else:
             pass
 
@@ -195,7 +204,9 @@ class KerasBasicPruner(KerasBasePruner):
         self.completed_pruned_cnt += 1
         if self.criterion.scores == {}:
             return
-        self.masks = self.pattern.get_masks(self.criterion.scores, current_target_sparsity_ratio, self.masks)
+        self.masks = self.pattern.get_masks(
+            self.criterion.scores, current_target_sparsity_ratio, self.masks
+        )
         self.mask_weights()
 
         self.current_sparsity_ratio = self.pattern.get_sparsity_ratio(self.masks)

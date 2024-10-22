@@ -38,7 +38,7 @@ def register_neural_insights_workload(
         String with Neural Insight workload UUID if registered else None
     """
     try:
-        import os
+        pass
 
         from neural_insights import NeuralInsights
         from neural_insights.utils.consts import WORKDIR_LOCATION, WorkloadModes

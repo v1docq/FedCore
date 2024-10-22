@@ -20,9 +20,10 @@ import re
 
 from tensorflow.core.framework import attr_value_pb2, graph_pb2, node_def_pb2
 from tensorflow.python.framework import dtypes, tensor_util
-from tensorflow.python.platform import tf_logging
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.quantize_graph_common import QuantizeGraphHelper as helper
+from fedcore.neural_compressor.tensorflow.quantization.utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 
@@ -124,7 +125,9 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
             # Mul1 (Rsqrt, Constant_gamma)
             if scale_op.op == "Mul":
                 rsqrt_op = node_from_map(input_node_map, scale_op.input[0])
-                gamma_op, gamma_reshape_op = bypass_reshape(input_node_map, scale_op.input[1])
+                gamma_op, gamma_reshape_op = bypass_reshape(
+                    input_node_map, scale_op.input[1]
+                )
                 if rsqrt_op.op != "Rsqrt":
                     continue
                 if gamma_op.op != "Const":
@@ -133,7 +136,9 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
                 continue
 
             # Sub (Constant_beta, Mul2)
-            beta_op, beta_reshape_op = bypass_reshape(input_node_map, bias_mean_sub_op.input[0])
+            beta_op, beta_reshape_op = bypass_reshape(
+                input_node_map, bias_mean_sub_op.input[0]
+            )
             mean_scale_mul_op = node_from_map(input_node_map, bias_mean_sub_op.input[1])
             if mean_scale_mul_op.op != "Mul":
                 continue
@@ -144,16 +149,23 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
             if scale_op != node_from_map(input_node_map, mean_scale_mul_op.input[1]):
                 continue
 
-            mean_op, mean_reshape_op = bypass_reshape(input_node_map, mean_scale_mul_op.input[0])
+            mean_op, mean_reshape_op = bypass_reshape(
+                input_node_map, mean_scale_mul_op.input[0]
+            )
             if mean_op.op != "Mean":
                 continue
 
             # Add (variance-mean0, Constant_epsilon)
             variance_epsilon_add_op = node_from_map(input_node_map, rsqrt_op.input[0])
-            if variance_epsilon_add_op.op != "Add" and variance_epsilon_add_op.op != "AddV2":
+            if (
+                variance_epsilon_add_op.op != "Add"
+                and variance_epsilon_add_op.op != "AddV2"
+            ):
                 continue
 
-            variance_op, variance_reshape_op = bypass_reshape(input_node_map, variance_epsilon_add_op.input[0])
+            variance_op, variance_reshape_op = bypass_reshape(
+                input_node_map, variance_epsilon_add_op.input[0]
+            )
             epsilon_op = node_from_map(input_node_map, variance_epsilon_add_op.input[1])
             if epsilon_op.op != "Const":
                 continue
@@ -163,7 +175,9 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
             epsilon = values_from_const(epsilon_op)
 
             # Mean (SquaredDifference, Constant_r_indices0)
-            squared_diff_op, squared_reshape_op = bypass_reshape(input_node_map, variance_op.input[0])
+            squared_diff_op, squared_reshape_op = bypass_reshape(
+                input_node_map, variance_op.input[0]
+            )
             r_indices0_op = node_from_map(input_node_map, variance_op.input[1])
             if squared_diff_op.op != "SquaredDifference":
                 continue
@@ -225,7 +239,10 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
                 gamma_op.attr["value"].CopyFrom(
                     attr_value_pb2.AttrValue(
                         tensor=tensor_util.make_tensor_proto(
-                            1, beta_value.dtype.type, beta_value.shape, allow_broadcast=True
+                            1,
+                            beta_value.dtype.type,
+                            beta_value.shape,
+                            allow_broadcast=True,
                         )
                     )
                 )
@@ -235,13 +252,19 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
             new_fused_instancenorm_op.op = "_MklFusedInstanceNorm"
             new_fused_instancenorm_op.name = node.name
             new_fused_instancenorm_op.attr["T"].CopyFrom(node.attr["T"])
-            new_fused_instancenorm_op.attr["epsilon"].CopyFrom(attr_value_pb2.AttrValue(f=epsilon.tolist()))
+            new_fused_instancenorm_op.attr["epsilon"].CopyFrom(
+                attr_value_pb2.AttrValue(f=epsilon.tolist())
+            )
             list_value = attr_value_pb2.AttrValue.ListValue(i=r_indices1.flatten())
-            new_fused_instancenorm_op.attr["reduction_axes"].CopyFrom(attr_value_pb2.AttrValue(list=list_value))
+            new_fused_instancenorm_op.attr["reduction_axes"].CopyFrom(
+                attr_value_pb2.AttrValue(list=list_value)
+            )
 
             # Mean and variance values will be computed at runtime for fp32 & bf16 input.
             # Pass a "dummy" node for mean and variance.
-            mean_variance_dim = tensor_util.MakeNdarray(gamma_op.attr["value"].tensor).shape[-1]
+            mean_variance_dim = tensor_util.MakeNdarray(
+                gamma_op.attr["value"].tensor
+            ).shape[-1]
             dummy_mean_node = helper.create_constant_node(
                 node.name + "_dummy_mean", [0.0] * mean_variance_dim, dtypes.float32
             )
@@ -249,7 +272,13 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
                 node.name + "_dummy_variance", [1.0] * mean_variance_dim, dtypes.float32
             )
             new_fused_instancenorm_op.input.extend(
-                [input_data_op.name, gamma_op.name, beta_op.name, dummy_mean_node.name, dummy_variance_node.name]
+                [
+                    input_data_op.name,
+                    gamma_op.name,
+                    beta_op.name,
+                    dummy_mean_node.name,
+                    dummy_variance_node.name,
+                ]
             )
             new_ops.append(dummy_mean_node)
             new_ops.append(dummy_variance_node)
@@ -263,7 +292,10 @@ class FuseDecomposedINOptimizer:  # pragma: no cover
             new_node.CopyFrom(node)
             retained_input = []
             for input_node in new_node.input:
-                if not input_node.startswith("^") or input_node[1:] not in nodes_to_skip:
+                if (
+                    not input_node.startswith("^")
+                    or input_node[1:] not in nodes_to_skip
+                ):
                     retained_input.append(input_node)
             new_node.input[:] = retained_input
             result_graph_def.node.append(new_node)
@@ -315,7 +347,10 @@ def values_from_const(node_def):
         ValueError: If the node isn't a Const.
     """
     if node_def.op != "Const":
-        raise ValueError("Can not extract constant value from a node that is not Const. Got:\n" f"{node_def}")
+        raise ValueError(
+            "Can not extract constant value from a node that is not Const. Got:\n"
+            f"{node_def}"
+        )
     input_tensor = node_def.attr["value"].tensor
     tensor_value = tensor_util.MakeNdarray(input_tensor)
     return tensor_value
@@ -323,13 +358,19 @@ def values_from_const(node_def):
 
 def valid_reshape_inputs(reshape_in0_ndef, reshape_in1_ndef):
     """Check if the inputs of the Reshape are valid."""
-    if reshape_in0_ndef.op != "Const" or reshape_in1_ndef.op != "Const" or get_const_dim_count(reshape_in0_ndef) != 1:
+    if (
+        reshape_in0_ndef.op != "Const"
+        or reshape_in1_ndef.op != "Const"
+        or get_const_dim_count(reshape_in0_ndef) != 1
+    ):
         return False
     input0_vec_size = values_from_const(reshape_in0_ndef).shape[0]
     const_value = values_from_const(reshape_in1_ndef)
     shape_ndims = const_value.ndim
     if shape_ndims != 1:
-        raise ValueError("Num of dims of the shape must be 1, got {}.".format(shape_ndims))
+        raise ValueError(
+            "Num of dims of the shape must be 1, got {}.".format(shape_ndims)
+        )
     for value in const_value.tolist()[:-1]:
         if value != 1:
             return False

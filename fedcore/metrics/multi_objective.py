@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, Sequence, Tuple, Optional
+from typing import List, Sequence, Tuple, Optional
 from typing import Optional
 
 from fedot.core.operations.operation_parameters import OperationParameters
@@ -11,20 +11,28 @@ from golem.core.tuning.optuna_tuner import OptunaTuner
 from golem.visualisation.opt_viz_extra import OptHistoryExtraVisualizer
 from matplotlib import pyplot as plt
 
-from fedcore.repository.constanst_repository import FEDOT_GENETIC_MULTI_STRATEGY, FEDOT_EVO_MULTI_STRATEGY, \
-    InferenceMetricsEnum, CVMetricsEnum
+from fedcore.repository.constanst_repository import (
+    FEDOT_GENETIC_MULTI_STRATEGY,
+    FEDOT_EVO_MULTI_STRATEGY,
+    InferenceMetricsEnum,
+    CVMetricsEnum,
+)
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
 
-def visualise_pareto(front: Sequence[Individual],
-                     objectives_numbers: Tuple[int, int] = (0, 1),
-                     objectives_names: Sequence[str] = ('ROC-AUC', 'Complexity'),
-                     file_name: str = 'result_pareto.png', show: bool = False, save: bool = True,
-                     folder: str = '../../tmp/pareto',
-                     generation_num: int = None,
-                     individuals: Sequence[Individual] = None,
-                     minmax_x: List[float] = None,
-                     minmax_y: List[float] = None):
+def visualise_pareto(
+    front: Sequence[Individual],
+    objectives_numbers: Tuple[int, int] = (0, 1),
+    objectives_names: Sequence[str] = ("ROC-AUC", "Complexity"),
+    file_name: str = "result_pareto.png",
+    show: bool = False,
+    save: bool = True,
+    folder: str = "../../tmp/pareto",
+    generation_num: int = None,
+    individuals: Sequence[Individual] = None,
+    minmax_x: List[float] = None,
+    minmax_y: List[float] = None,
+):
     pareto_obj_first, pareto_obj_second = [], []
     for ind in front:
         fit_first = ind.fitness.values[objectives_numbers[0]]
@@ -41,15 +49,15 @@ def visualise_pareto(front: Sequence[Individual],
             obj_first.append(abs(fit_first))
             fit_second = ind.fitness.values[objectives_numbers[1]]
             obj_second.append(abs(fit_second))
-        ax.scatter(obj_first, obj_second, c='green')
+        ax.scatter(obj_first, obj_second, c="green")
 
-    ax.scatter(pareto_obj_first, pareto_obj_second, c='red')
-    plt.plot(pareto_obj_first, pareto_obj_second, color='r')
+    ax.scatter(pareto_obj_first, pareto_obj_second, c="red")
+    plt.plot(pareto_obj_first, pareto_obj_second, color="r")
 
     if generation_num is not None:
-        ax.set_title(f'Pareto frontier, Generation: {generation_num}', fontsize=15)
+        ax.set_title(f"Pareto frontier, Generation: {generation_num}", fontsize=15)
     else:
-        ax.set_title('Pareto frontier', fontsize=15)
+        ax.set_title("Pareto frontier", fontsize=15)
     plt.xlabel(objectives_names[0], fontsize=15)
     plt.ylabel(objectives_names[1], fontsize=15)
 
@@ -60,38 +68,44 @@ def visualise_pareto(front: Sequence[Individual],
     fig.set_figwidth(8)
     fig.set_figheight(8)
     if save:
-        if not os.path.isdir('../../tmp'):
-            os.mkdir('../../tmp')
-        if not os.path.isdir(f'{folder}'):
-            os.mkdir(f'{folder}')
+        if not os.path.isdir("../../tmp"):
+            os.mkdir("../../tmp")
+        if not os.path.isdir(f"{folder}"):
+            os.mkdir(f"{folder}")
 
-        path = f'{folder}/{file_name}'
-        plt.savefig(path, bbox_inches='tight')
+        path = f"{folder}/{file_name}"
+        plt.savefig(path, bbox_inches="tight")
     if show:
         plt.show()
 
     plt.cla()
     plt.clf()
-    plt.close('all')
+    plt.close("all")
 
 
 class MultiobjectiveCompression:
     def __init__(self, params: Optional[OperationParameters] = {}):
 
-        self.multiobj_strategy = params.get('evo_strategy', 'spea2')
-        self.genetic_scheme_type = params.get('genetic_strategy', 'parameter_free')
-        self.task = params.get('task', 'pruning')
-        self.with_composition = params.get('with_composition', False)
+        self.multiobj_strategy = params.get("evo_strategy", "spea2")
+        self.genetic_scheme_type = params.get("genetic_strategy", "parameter_free")
+        self.task = params.get("task", "pruning")
+        self.with_composition = params.get("with_composition", False)
 
         self.multiobj_strategy = FEDOT_EVO_MULTI_STRATEGY[self.multiobj_strategy]
-        self.genetic_scheme_type = FEDOT_GENETIC_MULTI_STRATEGY[self.genetic_scheme_type]
+        self.genetic_scheme_type = FEDOT_GENETIC_MULTI_STRATEGY[
+            self.genetic_scheme_type
+        ]
 
-        self.pipeline_compressed_node = list(default_fedcore_availiable_operation(self.task))[0]
-        self.pipeline_compressed = PipelineBuilder().add_node(self.pipeline_compressed_node).build()
+        self.pipeline_compressed_node = list(
+            default_fedcore_availiable_operation(self.task)
+        )[0]
+        self.pipeline_compressed = (
+            PipelineBuilder().add_node(self.pipeline_compressed_node).build()
+        )
 
         quality_metric = CVMetricsEnum.cv_clf_metric
         latency_metric = InferenceMetricsEnum.latency
-        throughput_metric = InferenceMetricsEnum.throughput
+        InferenceMetricsEnum.throughput
 
         self.metrics = [quality_metric, latency_metric]
         self.timeout = 10
@@ -179,7 +193,9 @@ class MultiobjectiveCompression:
                 .build(input_data)
             )
             pipeline_pareto_front = tuner.tune(self.pipeline_compressed)
-        visualise_pareto(front=pipeline_pareto_front,
-                         objectives_numbers=(0, 1),
-                         objectives_names=('Accuracy', 'Latency'))
+        visualise_pareto(
+            front=pipeline_pareto_front,
+            objectives_numbers=(0, 1),
+            objectives_names=("Accuracy", "Latency"),
+        )
         return pipeline_pareto_front

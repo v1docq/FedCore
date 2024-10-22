@@ -24,7 +24,11 @@ class onnxrt:
 
     graph_optimization = DotDict({"level": None, "gemm2matmul": True})
     qdq_setting = DotDict(
-        {"OpTypesToExcludeOutputQuantizatioin": [], "AddQDQPairToWeight": False, "DedicatedQDQPair": False}
+        {
+            "OpTypesToExcludeOutputQuantizatioin": [],
+            "AddQDQPairToWeight": False,
+            "DedicatedQDQPair": False,
+        }
     )
 
 

@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Intel® Neural Compressor: An open-source Python library supporting popular model compression techniques."""
-from .version import __version__
-
 # we need to set a global 'NA' backend, or Model can't be used
 from .config import (
     DistillationConfig,
@@ -26,7 +24,13 @@ from .config import (
     MixedPrecisionConfig,
 )
 from .contrib import *
-from .model import *
 from .metric import *
+from .model import *
 from .utils import options
-from .utils.utility import set_random_seed, set_tensorboard, set_workspace, set_resume_from
+from .utils.utility import (
+    set_random_seed,
+    set_tensorboard,
+    set_workspace,
+    set_resume_from,
+)
+from .version import __version__

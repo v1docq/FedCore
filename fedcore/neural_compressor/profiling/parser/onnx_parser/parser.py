@@ -48,7 +48,9 @@ class OnnxProfilingParser(ProfilingParser):
             # Iterate over each node in the JSON data and update the summarized data
             for node in data:
                 category = node.get("cat")  # Get the category of the node
-                op_name = node.get("args", {}).get("op_name")  # Get the operation name of the node
+                op_name = node.get("args", {}).get(
+                    "op_name"
+                )  # Get the operation name of the node
                 dur = int(node.get("dur") or 0)  # Get the duration of the node
 
                 # Skip nodes with missing or invalid values
@@ -64,7 +66,9 @@ class OnnxProfilingParser(ProfilingParser):
                     summarized[op_name]["accelerator_execution_time"] += dur
                 summarized[op_name]["op_defined"] += 1
                 summarized[op_name]["op_run"] += (
-                    0 if not (dur or node.get("args", {}).get("thread_scheduling_stats")) else 1
+                    0
+                    if not (dur or node.get("args", {}).get("thread_scheduling_stats"))
+                    else 1
                 )
 
         for node in summarized.values():

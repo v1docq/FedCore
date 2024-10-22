@@ -13,11 +13,19 @@
 # limitations under the License.
 
 from copy import deepcopy
-from typing import Any, Callable, Dict, Tuple
+from typing import Callable, Dict, Tuple
 
 import torch
 
-from fedcore.neural_compressor.common.utils import AWQ, FP8_QUANT, GPTQ, HQQ, RTN, STATIC_QUANT, TEQ
+from fedcore.neural_compressor.common.utils import (
+    AWQ,
+    FP8_QUANT,
+    GPTQ,
+    HQQ,
+    RTN,
+    STATIC_QUANT,
+    TEQ,
+)
 from fedcore.neural_compressor.torch.quantization import (
     AWQConfig,
     GPTQConfig,
@@ -33,7 +41,10 @@ from fedcore.neural_compressor.torch.utils import logger, register_algo
 @register_algo(RTN)
 @torch.no_grad()
 def rtn_entry(
-    model: torch.nn.Module, configs_mapping: Dict[Tuple[str, callable], RTNConfig], *args, **kwargs
+    model: torch.nn.Module,
+    configs_mapping: Dict[Tuple[str, callable], RTNConfig],
+    *args,
+    **kwargs
 ) -> torch.nn.Module:
     """The main entry to apply rtn quantization."""
     from fedcore.neural_compressor.torch.algorithms.weight_only import rtn_quantize
@@ -54,7 +65,9 @@ def rtn_entry(
             "use_double_quant": quant_config.use_double_quant,
             "double_quant_dtype": quant_config.double_quant_dtype,
             "double_quant_bits": quant_config.double_quant_bits,
-            "double_quant_scheme": "sym" if quant_config.double_quant_use_sym else "asym",
+            "double_quant_scheme": (
+                "sym" if quant_config.double_quant_use_sym else "asym"
+            ),
             "double_quant_group_size": quant_config.double_quant_group_size,
         }
 
@@ -66,7 +79,10 @@ def rtn_entry(
 @register_algo(GPTQ)
 @torch.no_grad()
 def gptq_entry(
-    model: torch.nn.Module, configs_mapping: Dict[Tuple[str, callable], GPTQConfig], *args, **kwargs
+    model: torch.nn.Module,
+    configs_mapping: Dict[Tuple[str, callable], GPTQConfig],
+    *args,
+    **kwargs
 ) -> torch.nn.Module:
     logger.info("Quantize model with the GPTQ algorithm.")
     from fedcore.neural_compressor.torch.algorithms.weight_only import gptq_quantize
@@ -100,7 +116,9 @@ def gptq_entry(
     kwargs.pop("example_inputs")
 
     logger.warning("lm_head in transformer model is skipped by GPTQ")
-    model, quantization_perm = gptq_quantize(model=model, weight_config=weight_config, *args, **kwargs)
+    model, quantization_perm = gptq_quantize(
+        model=model, weight_config=weight_config, *args, **kwargs
+    )
     # Assign the gptq config as an attribute of model
     model._gptq_quantization_perm = quantization_perm
     return model
@@ -110,7 +128,10 @@ def gptq_entry(
 @register_algo(name=STATIC_QUANT)
 @torch.no_grad()
 def static_quant_entry(
-    model: torch.nn.Module, configs_mapping: Dict[Tuple[str, callable], StaticQuantConfig], *args, **kwargs
+    model: torch.nn.Module,
+    configs_mapping: Dict[Tuple[str, callable], StaticQuantConfig],
+    *args,
+    **kwargs
 ) -> torch.nn.Module:
     logger.info("Quantize model with the static quant algorithm.")
     from fedcore.neural_compressor.torch.algorithms.static_quant import static_quantize
@@ -138,7 +159,9 @@ def static_quant_entry(
     run_fn = kwargs.get("run_fn", None)
     example_inputs = kwargs.get("example_inputs", None)
     inplace = kwargs.get("inplace", True)
-    assert example_inputs is not None, "Please provide example_inputs for static quantization."
+    assert (
+        example_inputs is not None
+    ), "Please provide example_inputs for static quantization."
     q_model = static_quantize(
         model=model,
         tune_cfg=quant_config_mapping,
@@ -154,7 +177,10 @@ def static_quant_entry(
 @register_algo(name=AWQ)
 @torch.no_grad()
 def awq_quantize_entry(
-    model: torch.nn.Module, configs_mapping: Dict[Tuple[str, callable], AWQConfig], *args, **kwargs
+    model: torch.nn.Module,
+    configs_mapping: Dict[Tuple[str, callable], AWQConfig],
+    *args,
+    **kwargs
 ) -> torch.nn.Module:
     logger.info("Quantize model with the AWQ algorithm.")
     from fedcore.neural_compressor.torch.algorithms.weight_only import awq_quantize
@@ -193,7 +219,9 @@ def awq_quantize_entry(
 
     calib_func = kwargs.get("run_fn", None)
     example_inputs = kwargs.get("example_inputs", None)
-    assert example_inputs is not None, "Please provide example_inputs for AWQ quantization."
+    assert (
+        example_inputs is not None
+    ), "Please provide example_inputs for AWQ quantization."
     model = awq_quantize(
         model,
         bits=-1,  # no quantize for op not in weight_config
@@ -213,7 +241,10 @@ def awq_quantize_entry(
 ###################### TEQ Algo Entry ##################################
 @register_algo(name=TEQ)
 def teq_quantize_entry(
-    model: torch.nn.Module, configs_mapping: Dict[Tuple[str, callable], TEQConfig], *args, **kwargs
+    model: torch.nn.Module,
+    configs_mapping: Dict[Tuple[str, callable], TEQConfig],
+    *args,
+    **kwargs
 ) -> torch.nn.Module:
     from fedcore.neural_compressor.torch.algorithms.weight_only import teq_quantize
 
@@ -221,7 +252,9 @@ def teq_quantize_entry(
     weight_config = {}
     absorb_to_layer = {}
     example_inputs = kwargs.get("example_inputs", None)
-    assert example_inputs is not None, "Please provide example_inputs for TEQ quantization."
+    assert (
+        example_inputs is not None
+    ), "Please provide example_inputs for TEQ quantization."
     calib_func = kwargs.get("run_fn", None)
     folding = True
     for (op_name, op_type), quant_config in configs_mapping.items():
@@ -241,7 +274,9 @@ def teq_quantize_entry(
                 "use_double_quant": quant_config.use_double_quant,
                 "double_quant_dtype": quant_config.double_quant_dtype,
                 "double_quant_bits": quant_config.double_quant_bits,
-                "double_quant_scheme": "sym" if quant_config.double_quant_use_sym else "asym",
+                "double_quant_scheme": (
+                    "sym" if quant_config.double_quant_use_sym else "asym"
+                ),
                 "double_quant_group_size": quant_config.double_quant_group_size,
             }
             absorb_to_layer = quant_config.absorb_to_layer
@@ -264,7 +299,10 @@ def teq_quantize_entry(
 @register_algo(name=HQQ)
 @torch.no_grad()
 def hqq_entry(
-    model: torch.nn.Module, configs_mapping: Dict[Tuple[str, Callable], HQQConfig], *args, **kwargs
+    model: torch.nn.Module,
+    configs_mapping: Dict[Tuple[str, Callable], HQQConfig],
+    *args,
+    **kwargs
 ) -> torch.nn.Module:
     from fedcore.neural_compressor.torch.algorithms.weight_only import hqq_quantize
 
@@ -280,5 +318,9 @@ if is_hpex_available():
     from fedcore.neural_compressor.torch.algorithms.habana_fp8 import quantize
 
     @register_algo(FP8_QUANT)
-    def fp8_quant_entry(model, qconfig_mapping, run_fn=None, run_args=None, inplace=True):
-        return quantize(model, qconfig_mapping, run_fn=run_fn, run_args=run_args, inplace=inplace)
+    def fp8_quant_entry(
+        model, qconfig_mapping, run_fn=None, run_args=None, inplace=True
+    ):
+        return quantize(
+            model, qconfig_mapping, run_fn=run_fn, run_args=run_args, inplace=inplace
+        )

@@ -17,13 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 
 from deprecated import deprecated
 
 from ..conf.dotdict import DotDict, deep_set
 from ..model import BaseModel
-from ..model.model import get_model_fwk_name
 from ..utils import logger
 from .benchmark import Benchmark
 from .common import Model as NCModel
@@ -34,7 +32,14 @@ from .model_conversion import ModelConversion
 from .pruning import Pruning
 from .quantization import Quantization
 
-SUPPORTED_COMPONENTS = [Quantization, Pruning, Graph_Optimization, ModelConversion, Benchmark, Component]
+SUPPORTED_COMPONENTS = [
+    Quantization,
+    Pruning,
+    Graph_Optimization,
+    ModelConversion,
+    Benchmark,
+    Component,
+]
 
 
 @deprecated(version="2.0")
@@ -114,7 +119,12 @@ class Scheduler(object):
             kwargs (named arguments):     Reserved for interface extension.
         """
         for item in args:
-            assert any([isinstance(item, supported_component) for supported_component in SUPPORTED_COMPONENTS])
+            assert any(
+                [
+                    isinstance(item, supported_component)
+                    for supported_component in SUPPORTED_COMPONENTS
+                ]
+            )
             self.components.append(item)
 
     def __call__(self):
@@ -126,14 +136,24 @@ class Scheduler(object):
         Returns:
             optimized model: best optimized model generated, otherwise return None
         """
-        assert self.model, "Scheduler class's model property should be set " "before invoking this __call__() function"
+        assert self.model, (
+            "Scheduler class's model property should be set "
+            "before invoking this __call__() function"
+        )
         model = self.model
         assert len(self.components) > 0
         logger.info("Start sequential pipeline execution.")
         for i, component in enumerate(self.components):
             # print appropriate ordinal number representation (1st, 2nd, 3rd) for each step
-            ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4])
-            logger.info("The {} step being executing is {}.".format(ordinal(i), repr(component).upper()))
+            ordinal = lambda n: "%d%s" % (
+                n,
+                "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10 :: 4],
+            )
+            logger.info(
+                "The {} step being executing is {}.".format(
+                    ordinal(i), repr(component).upper()
+                )
+            )
 
             component.model = model
             if self._train_func is not None:
@@ -159,13 +179,17 @@ class Scheduler(object):
             It syncs input components configuration and creates dataloaders/functions
             accordingly.
         """
-        assert len(args) > 1, "Combine requires at least 2 components. Please check your inputs."
+        assert (
+            len(args) > 1
+        ), "Combine requires at least 2 components. Please check your inputs."
         # check if input components are good for combine
         self._combination_sanity_check(*args)
         # create component for the combination
         combination = []
         for arg in args:
-            combination += [arg.__class__.__name__] if arg.combination is None else arg.combination
+            combination += (
+                [arg.__class__.__name__] if arg.combination is None else arg.combination
+            )
         new_component = Component(combination=combination)
         self._combine_components(*args, dist_component=new_component)
 
@@ -177,10 +201,17 @@ class Scheduler(object):
         checked_components = []
         for component in args:
             component_class = component.__class__.__name__
-            if component_class in TEMP_SUPPORTED_COMPONENTS and component_class not in checked_components:
+            if (
+                component_class in TEMP_SUPPORTED_COMPONENTS
+                and component_class not in checked_components
+            ):
                 checked_components.append(component_class)
             else:
-                logger.error("The combination of {} is not supported.".format(checked_components + [component_class]))
+                logger.error(
+                    "The combination of {} is not supported.".format(
+                        checked_components + [component_class]
+                    )
+                )
 
     def _combine_components(self, *args, dist_component=None):
         """Actual implementation of combine().
@@ -214,16 +245,19 @@ class Scheduler(object):
                     framework, combine_component.framework
                 )
             )
-            assert (
-                combine_component.cfg.device == device
-            ), "Combined components should have " "same device. Detect different device: {} and {} are used.".format(
-                device, combine_component.cfg.device
+            assert combine_component.cfg.device == device, (
+                "Combined components should have "
+                "same device. Detect different device: {} and {} are used.".format(
+                    device, combine_component.cfg.device
+                )
             )
 
             # sync configs
             component_name = combine_component.__class__.__name__.lower()
             component_cfg = getattr(combine_component.cfg, component_name, None)
-            assert combine_component is not None, "Please ensure field {} is configured " "in input yaml".format(
+            assert (
+                combine_component is not None
+            ), "Please ensure field {} is configured " "in input yaml".format(
                 component_name
             )
 
@@ -236,7 +270,9 @@ class Scheduler(object):
             component_tuning_cfg = combine_component.cfg.get("tuning", DotDict())
             component_model_cfg = combine_component.cfg.get("model", DotDict())
             component_quantization_cfg = (
-                combine_component.cfg.get("quantization", DotDict()) if component_name == "quantization" else DotDict()
+                combine_component.cfg.get("quantization", DotDict())
+                if component_name == "quantization"
+                else DotDict()
             )
 
             combine_component._model = self._model
@@ -256,10 +292,16 @@ class Scheduler(object):
             # If distillation is combined, set training configs
             if has_distillation:
                 if isinstance(combine_component, Distillation):
-                    component_train_cfg.criterion = combine_component.train_cfg.criterion
-                    component_train_cfg.optimizer = combine_component.train_cfg.optimizer
+                    component_train_cfg.criterion = (
+                        combine_component.train_cfg.criterion
+                    )
+                    component_train_cfg.optimizer = (
+                        combine_component.train_cfg.optimizer
+                    )
                     dist_component.criterion = combine_component.train_cfg.criterion
-                    dist_component.on_after_compute_loss = combine_component.on_after_compute_loss
+                    dist_component.on_after_compute_loss = (
+                        combine_component.on_after_compute_loss
+                    )
                     dist_component.teacher_model = combine_component.teacher_model
                     self._sync_config(train_cfg, component_train_cfg)
                 # Only sync train_cfg of distillation because criterion should include only one element
@@ -310,12 +352,18 @@ class Scheduler(object):
                 dist_config[key] = src_config[key]
             # check the same keys in dist and src whether is valid
             for key in src_config.keys() & dist_config.keys():
-                if isinstance(dist_config[key], dict) and isinstance(src_config[key], dict):
+                if isinstance(dist_config[key], dict) and isinstance(
+                    src_config[key], dict
+                ):
                     self._sync_config(dist_config[key], src_config[key])
                 elif dist_config[key] != src_config[key]:
                     logger.warning(
-                        "Find different value {} and {} on key {}.".format(dist_config[key], src_config[key], key)
-                        + " Use first key-value ({}: {}) pair as default".format(key, dist_config[key])
+                        "Find different value {} and {} on key {}.".format(
+                            dist_config[key], src_config[key], key
+                        )
+                        + " Use first key-value ({}: {}) pair as default".format(
+                            key, dist_config[key]
+                        )
                     )
         # update src config to dist if dist is empty.
         elif not dist_config and src_config:

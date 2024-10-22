@@ -17,7 +17,10 @@
 """Strip Equivalent Nodes Graph Rewriter."""
 
 from fedcore.neural_compressor.common import logger
-from fedcore.neural_compressor.tensorflow.quantization.utils.utility import fix_ref_type_of_graph_def, strip_equivalent_nodes
+from fedcore.neural_compressor.tensorflow.quantization.utils.utility import (
+    fix_ref_type_of_graph_def,
+    strip_equivalent_nodes,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase
@@ -39,12 +42,16 @@ class StripEquivalentNodesOptimizer(GraphRewriterBase):
         replaced_nodes_type = True
         all_replaced_nodes_type = {}
         while replaced_nodes_type:
-            self.model, replaced_nodes_type = strip_equivalent_nodes(self.model, self.output_node_names)
+            self.model, replaced_nodes_type = strip_equivalent_nodes(
+                self.model, self.output_node_names
+            )
             for k, v in replaced_nodes_type.items():
                 all_replaced_nodes_type[k] = all_replaced_nodes_type.get(k, 0) + v
             iter_num += 1
             logger.debug(
                 f"StripEquivalentNodes[Iter-{iter_num}]-Replaced equivalent node types are {replaced_nodes_type}"
             )
-        logger.warning("All replaced equivalent node types are {}".format(all_replaced_nodes_type))
+        logger.warning(
+            "All replaced equivalent node types are {}".format(all_replaced_nodes_type)
+        )
         return self.model

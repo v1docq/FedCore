@@ -20,7 +20,9 @@ from tensorflow.core.framework import attr_value_pb2, node_def_pb2
 from tensorflow.python.framework import dtypes, tensor_util
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 
 from ..graph_base import GraphRewriterBase
 
@@ -55,13 +57,19 @@ class ScaleProPagationTransformer(GraphRewriterBase):
         new_node = node_def_pb2.NodeDef()
         new_node.op = "Const"
         new_node.name = new_const_node_name
-        new_node.attr["dtype"].CopyFrom(attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum))
+        new_node.attr["dtype"].CopyFrom(
+            attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum)
+        )
         new_node.attr["value"].CopyFrom(
-            attr_value_pb2.AttrValue(tensor=tensor_util.make_tensor_proto(float(value), dtypes.float32, []))
+            attr_value_pb2.AttrValue(
+                tensor=tensor_util.make_tensor_proto(float(value), dtypes.float32, [])
+            )
         )
         output_node_name = self.graph_info[old_const_node_name].outputs[0]
         self.cur_graph.replace_const_node(
-            new_node, [Helper.node_name_from_input(output_node_name)], old_const_node_name
+            new_node,
+            [Helper.node_name_from_input(output_node_name)],
+            old_const_node_name,
         )
         self.cur_graph.remove_node(old_const_node_name)
 
@@ -88,7 +96,10 @@ class ScaleProPagationTransformer(GraphRewriterBase):
                 continue
 
             if pre_node.op == "QuantizeV2":
-                pre_min_index, pre_max_index = quantize_v2_min_index, quantize_v2_max_index
+                pre_min_index, pre_max_index = (
+                    quantize_v2_min_index,
+                    quantize_v2_max_index,
+                )
             else:
                 pre_min_index, pre_max_index = requntize_min_index, requntize_max_index
 
@@ -105,10 +116,14 @@ class ScaleProPagationTransformer(GraphRewriterBase):
             requantize_min_value = (requantize_min.attr["value"].tensor.float_val)[0]
             requantize_max_value = (requantize_max.attr["value"].tensor.float_val)[0]
             self._create_new_const_node(
-                pre_node_name + "_cac_requantize_min_value", requantize_min_value, pre_node.input[pre_min_index]
+                pre_node_name + "_cac_requantize_min_value",
+                requantize_min_value,
+                pre_node.input[pre_min_index],
             )
             self._create_new_const_node(
-                pre_node_name + "_cac_requantize_max_value", requantize_max_value, pre_node.input[pre_max_index]
+                pre_node_name + "_cac_requantize_max_value",
+                requantize_max_value,
+                pre_node.input[pre_max_index],
             )
 
     def do_transformation(self):

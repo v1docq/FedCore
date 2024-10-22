@@ -16,10 +16,14 @@
 
 from typing import Optional
 
-from fedcore.neural_compressor.data.dataloaders.tensorflow_dataloader import TensorflowDataLoader
+from fedcore.neural_compressor.data.dataloaders.tensorflow_dataloader import (
+    TensorflowDataLoader,
+)
 from fedcore.neural_compressor.model.tensorflow_model import TensorflowBaseModel
 from fedcore.neural_compressor.profiling.profiler.profiler import Profiler
-from fedcore.neural_compressor.profiling.profiler.tensorflow_profiler.profiler import Profiler as FrozenPbProfiler
+from fedcore.neural_compressor.profiling.profiler.tensorflow_profiler.profiler import (
+    Profiler as FrozenPbProfiler,
+)
 
 
 class ProfilerFactory:
@@ -49,5 +53,7 @@ class ProfilerFactory:
 
         profiler = framework_profilers.get(model.model_type, None)
         if profiler is None:
-            raise Exception(f"Profiling for '{model.model_type}' model type is not supported.")
+            raise Exception(
+                f"Profiling for '{model.model_type}' model type is not supported."
+            )
         return profiler(model, dataloader, log_file)
