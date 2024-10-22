@@ -16,7 +16,7 @@ LONG_DESC_TYPE = 'text/x-rst'
 README = Path(HERE, 'README.rst').read_text(encoding='utf-8')
 EXCLUDED_PACKAGES = ['tests*', 'examples']
 URL = 'https://github.com/v1docq/FedCore'
-REQUIRES_PYTHON = '>=3.8'
+REQUIRES_PYTHON = '>=3.9'
 LICENSE = 'BSD 3-Clause'
 KEYWORDS = 'federated learning, machine learning, deep learning, pruning, quantization, distributed learning'
 
@@ -53,7 +53,6 @@ setuptools.setup(
     install_requires=_get_requirements('requirements.txt'),
     classifiers=[
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
     ],
