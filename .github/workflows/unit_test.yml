@@ -24,8 +24,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
     # if OS == linux do the following
     if: runner.os == 'Linux'
-      - name: Install Pre-Dependencies
-        run: apt install libopenmpi-dev
+      - name: Install OpenMPI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev
 
     - name: Install dependencies
       run: |
