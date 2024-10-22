@@ -94,6 +94,7 @@ class FedCore(Fedot):
         self.original_model = None
 
         # map Fedot params to FedCore params
+        self.need_fedot = kwargs.pop('need_fedot', True)
         self.config_dict = kwargs
         self.config_dict['history_dir'] = prefix
         self.config_dict['available_operations'] = kwargs.get('available_operations',
@@ -160,9 +161,10 @@ class FedCore(Fedot):
                                   task=self.cv_task)
         self.train_data = input_preproc.check_input_data(manually_done)
         self.solver = self.__init_solver()
-        fedcore_training = FEDOT_ASSUMPTIONS['training'].build()
-        pretrained_model = fedcore_training.fit(self.train_data)
-        self.train_data.target = pretrained_model.predict
+        if self.need_fedot:
+            fedcore_training = FEDOT_ASSUMPTIONS['training'].build()
+            pretrained_model = fedcore_training.fit(self.train_data)
+            self.train_data.target = pretrained_model.predict
         self.solver.fit(self.train_data)
         self.optimised_model = self.solver.root_node.fitted_operation.optimised_model
         # self.original_model = self.solver.root_node.fitted_operation.model

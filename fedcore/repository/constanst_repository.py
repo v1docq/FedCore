@@ -26,6 +26,7 @@ from fedcore.architecture.dataset.segmentation_dataset import SegmentationDatase
 from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset
 from fedcore.metrics.api_metric import calculate_regression_metric, calculate_forecasting_metric, \
     calculate_classification_metric, calculate_computational_metric
+from fedcore.models.network_impl.layers import DecomposedConv2d, DecomposedEmbedding, DecomposedLinear
 
 from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
     HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
@@ -262,6 +263,13 @@ class ModelCompressionConstant(Enum):
     PRUNING_LAYERS_IMPL = (torchvision.ops.misc.Conv2dNormActivation,
                            torch.nn.modules.container.Sequential,
                            torch.nn.modules.conv.Conv2d)
+    
+    DECOMPOSED_LAYERS = {
+        'Linear': DecomposedLinear,
+        'Conv2d' : DecomposedConv2d,
+        'Embedding': DecomposedEmbedding
+    }
+    
 
 
 class TorchLossesConstant(Enum):
@@ -343,6 +351,7 @@ FEDCORE_GRAPH_VALIDATION = FedotOperationConstant.FEDCORE_GRAPH_VALIDATION.value
 ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
 FORWARD_MODE = ModelCompressionConstant.FORWARD_MODE.value
+DECOMPOSED_LAYERS = ModelCompressionConstant.DECOMPOSED_LAYERS.value
 HOER_LOSS = ModelCompressionConstant.HOER_LOSS.value
 ORTOGONAL_LOSS = ModelCompressionConstant.ORTOGONAL_LOSS.value
 MODELS_FROM_LENGTH = ModelCompressionConstant.MODELS_FROM_LENGTH.value
