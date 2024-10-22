@@ -36,7 +36,7 @@ jobs:
           repository_url: https://upload.pypi.org/legacy/
       - name: Deploy source code
         if: github.event_name == 'release'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: source-code-${{ matrix.python-version }}
           path: .
