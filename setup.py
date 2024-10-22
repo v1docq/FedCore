@@ -8,7 +8,7 @@ HERE = Path(__file__).parent.resolve()
 
 # The text of the README file
 NAME = 'fedcore'
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 AUTHOR = 'Ilia Revin'
 AUTHOR_EMAIL = 'revine@inbox.ru'
 SHORT_DESCRIPTION = 'Federated learning core library'
