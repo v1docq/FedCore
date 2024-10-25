@@ -1,6 +1,10 @@
 import os
 from copy import deepcopy
-from typing import Optional, Callable
+from datetime import datetime
+from functools import reduce
+from operator import iadd
+from pathlib import Path
+from typing import Callable, Optional
 
 import numpy as np
 import torch
@@ -11,15 +15,11 @@ from fedot.core.repository.dataset_types import DataTypesEnum
 from pymonad.either import Either
 from torch import Tensor
 from tqdm import tqdm
-from functools import reduce
-from operator import iadd
 
+from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.data.data import CompressionInputData
 from fedcore.losses.utils import _get_loss_metric
 from fedcore.repository.constanst_repository import default_device
-
-from pathlib import Path
-from datetime import datetime
 
 
 def now_for_file():
@@ -59,8 +59,9 @@ class BaseNeuralModel:
         self.is_operation = self.params.get('is_operation', False) ###
         self.save_each = self.params.get('save_each', None)
         self.checkpoint_folder = self.params.get('checkpoint_folder', None) ###
-        self._batch_handler = self.params.get('batch_hadler', lambda x: x)
-
+        self.batch_limit = self.params.get('batch_limit', None)
+        self.calib_batch_limit = self.params.get('calib_batch_limit', None)
+        
         self.label_encoder = None
         self.is_regression_task = False
         self.model = None
@@ -100,7 +101,11 @@ class BaseNeuralModel:
         loss_sum = 0
         total_iterations = 0
         losses = None
-        for batch in tqdm(train_loader):
+        train_loader = DataLoaderHandler.check_convert(dataloader=train_loader,
+                                                       mode=None,
+                                                       max_batches=self.batch_limit,
+                                                       enumerate=False)
+        for batch in tqdm(train_loader, desc='Batch #'):
             self.optimizer.zero_grad()
             total_iterations += 1
             inputs, targets = self._batch_handler(batch)
@@ -187,7 +192,9 @@ class BaseNeuralModel:
     def _predict_model(self, x_test: CompressionInputData, output_mode: str = 'default'):
         self.model.eval()
         prediction = []
-        for batch in tqdm(x_test.calib_dataloader):
+        dataloader = DataLoaderHandler.check_convert(x_test.calib_dataloader,
+                                                     max_batches=self.calib_batch_limit)
+        for batch in tqdm(dataloader): ###TODO why calib_dataloader???
             inputs, targets = batch
             x_test = inputs.to(self.device)
             prediction.append(self.model(x_test))
