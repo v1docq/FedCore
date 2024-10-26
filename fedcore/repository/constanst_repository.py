@@ -1,37 +1,65 @@
+from enum import Enum
+
 import torch
 import torch_pruning as tp
-from enum import Enum
+import torchvision
+from fastai.torch_core import _has_mps
+from fastcore.basics import defaults
+from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+from fedot.core.pipelines.verification_rules import (
+    has_correct_data_connections,
+    has_correct_data_sources,
+    has_final_operation_as_model,
+    has_no_conflicts_during_multitask,
+    has_no_conflicts_with_data_flow,
+    has_primary_nodes,
+)
+from fedot.core.repository.metrics_repository import QualityMetricsEnum
+from fedot.core.repository.tasks import (
+    Task,
+    TaskParams,
+    TaskTypesEnum,
+    TsForecastingParams,
+)
 from golem.core.dag.verification_rules import (
     has_no_cycle,
     has_no_isolated_nodes,
-    has_one_root
+    has_one_root,
 )
-from fedot.core.pipelines.verification_rules import has_final_operation_as_model, \
-    has_correct_data_connections, has_primary_nodes, has_no_conflicts_with_data_flow,\
-    has_no_conflicts_during_multitask, has_correct_data_sources
-from fastai.torch_core import _has_mps
-from fastcore.basics import defaults
 from golem.core.optimisers.genetic.operators.inheritance import GeneticSchemeTypesEnum
 from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
-import torchvision
-from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-from fedot.core.repository.metrics_repository import QualityMetricsEnum
-from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
 
 from fedcore.architecture.dataset.object_detection_datasets import YOLODataset
 from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
-from fedcore.architecture.dataset.segmentation_dataset import SegmentationDataset
-from fedcore.architecture.dataset.segmentation_dataset import SemanticSegmentationDataset
-from fedcore.metrics.api_metric import calculate_regression_metric, calculate_forecasting_metric, \
-    calculate_classification_metric, calculate_computational_metric
-from fedcore.models.network_impl.layers import DecomposedConv2d, DecomposedEmbedding, DecomposedLinear
-
-from fedcore.models.network_modules.losses import CenterLoss, CenterPlusLoss, ExpWeightedLoss, FocalLoss, \
-    HuberLoss, LogCoshLoss, MaskedLossWrapper, RMSELoss, SMAPELoss, TweedieLoss
-
-from fedot.core.repository.tasks import Task, TaskTypesEnum, TaskParams
+from fedcore.architecture.dataset.segmentation_dataset import (
+    SegmentationDataset,
+    SemanticSegmentationDataset,
+)
+from fedcore.metrics.api_metric import (
+    calculate_classification_metric,
+    calculate_computational_metric,
+    calculate_forecasting_metric,
+    calculate_regression_metric,
+)
+from fedcore.models.network_impl.layers import (
+    DecomposedConv2d,
+    DecomposedEmbedding,
+    DecomposedLinear,
+)
+from fedcore.models.network_modules.losses import (
+    CenterLoss,
+    CenterPlusLoss,
+    ExpWeightedLoss,
+    FocalLoss,
+    HuberLoss,
+    LogCoshLoss,
+    MaskedLossWrapper,
+    RMSELoss,
+    SMAPELoss,
+    TweedieLoss,
+)
 
 
 def default_device(device_type: str = 'CPU'):
@@ -264,12 +292,11 @@ class ModelCompressionConstant(Enum):
                            torch.nn.modules.container.Sequential,
                            torch.nn.modules.conv.Conv2d)
     
-    DECOMPOSED_LAYERS = {
-        'Linear': DecomposedLinear,
-        'Conv2d' : DecomposedConv2d,
-        'Embedding': DecomposedEmbedding
+    DECOMPOSABLE_LAYERS = {
+        torch.nn.Linear: DecomposedLinear,
+        torch.nn.Conv2d : DecomposedConv2d,
+        torch.nn.Embedding: DecomposedEmbedding
     }
-    
 
 
 class TorchLossesConstant(Enum):
@@ -351,7 +378,7 @@ FEDCORE_GRAPH_VALIDATION = FedotOperationConstant.FEDCORE_GRAPH_VALIDATION.value
 ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
 FORWARD_MODE = ModelCompressionConstant.FORWARD_MODE.value
-DECOMPOSED_LAYERS = ModelCompressionConstant.DECOMPOSED_LAYERS.value
+DECOMPOSABLE_LAYERS = ModelCompressionConstant.DECOMPOSABLE_LAYERS.value
 HOER_LOSS = ModelCompressionConstant.HOER_LOSS.value
 ORTOGONAL_LOSS = ModelCompressionConstant.ORTOGONAL_LOSS.value
 MODELS_FROM_LENGTH = ModelCompressionConstant.MODELS_FROM_LENGTH.value
