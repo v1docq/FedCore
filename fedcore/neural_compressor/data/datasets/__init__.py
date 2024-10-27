@@ -17,7 +17,13 @@
 """Built-in datasets class for multiple framework backends."""
 
 from .coco_dataset import COCORecordDataset
-from .dataset import Datasets, Dataset, IterableDataset, dataset_registry, TensorflowImageRecord
+from .dataset import (
+    Datasets,
+    Dataset,
+    IterableDataset,
+    dataset_registry,
+    TensorflowImageRecord,
+)
 from os.path import dirname, basename, isfile, join
 import glob
 
@@ -28,4 +34,11 @@ for f in modules:
         __import__(basename(f)[:-3], globals(), locals(), level=1)
 
 
-__all__ = ["Datasets", "Dataset", "IterableDataset", "dataset_registry", "TensorflowImageRecord", "COCORecordDataset"]
+__all__ = [
+    "Datasets",
+    "Dataset",
+    "IterableDataset",
+    "dataset_registry",
+    "TensorflowImageRecord",
+    "COCORecordDataset",
+]

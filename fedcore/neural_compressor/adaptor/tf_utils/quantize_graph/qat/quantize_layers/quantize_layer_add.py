@@ -49,7 +49,9 @@ class QuantizeLayerAdd(QuantizeLayerBase):  # pragma: no cover
         if len(input_layer) == 1:
             logger.warning(
                 "The layer 'Add' should have more than one input. "
-                "You input a model with layer {} which has only one input".format(self.layer.name)
+                "You input a model with layer {} which has only one input".format(
+                    self.layer.name
+                )
             )
             return False
 
@@ -71,8 +73,13 @@ class QuantizeLayerAdd(QuantizeLayerBase):  # pragma: no cover
             fused_conv_index = None
             for i, input_layer in enumerate(input_layers):
                 # Check that the input is a Conv pattern
-                if "Conv" in input_layer.__class__.__name__ or self._find_patterns(input_layer):
-                    if hasattr(input_layer, "outbound_nodes") and len(getattr(input_layer, "outbound_nodes")) == 1:
+                if "Conv" in input_layer.__class__.__name__ or self._find_patterns(
+                    input_layer
+                ):
+                    if (
+                        hasattr(input_layer, "outbound_nodes")
+                        and len(getattr(input_layer, "outbound_nodes")) == 1
+                    ):
                         fused_conv_index = i
                         break
 
@@ -80,4 +87,6 @@ class QuantizeLayerAdd(QuantizeLayerBase):  # pragma: no cover
             if fused_conv_index:
                 del input_indexes[fused_conv_index]
 
-            self.quantize_config.add_quantize_recipe({self.layer.name: {"quantize": True, "index": input_indexes}})
+            self.quantize_config.add_quantize_recipe(
+                {self.layer.name: {"quantize": True, "index": input_indexes}}
+            )

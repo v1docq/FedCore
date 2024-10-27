@@ -16,7 +16,12 @@
 # limitations under the License.
 """Direct8Bit Operator."""
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    QOperator,
+    op_registry,
+    qop_registry,
+)
 
 
 @op_registry(
@@ -48,11 +53,15 @@ class Direct8BitOperator(Operator):
     def convert_check(self, convert_format):
         """Check if conversion can be done."""
         node = self.node
-        assert convert_format in ["static"], "convert format for {} should be in ['static']".format(node.op_type)
+        assert convert_format in [
+            "static"
+        ], "convert format for {} should be in ['static']".format(node.op_type)
 
         parents = self.quantizer.model.get_parents(node)
         children = self.quantizer.model.get_children(node)
-        if (len(children) == 0 and len(parents) == 0) or not node.name.endswith("_quant"):
+        if (len(children) == 0 and len(parents) == 0) or not node.name.endswith(
+            "_quant"
+        ):
             return False
         return True
 
@@ -73,13 +82,17 @@ class Direct8BitOperator(Operator):
             for child in children:
                 if child.op_type == "QuantizeLinear":
                     self.quantizer.remove_nodes.append(child)
-                    self.quantizer.model.replace_input_of_all_nodes(child.output[0], node.output[0] + "_quantized")
+                    self.quantizer.model.replace_input_of_all_nodes(
+                        child.output[0], node.output[0] + "_quantized"
+                    )
             node.output[0] = node.output[0] + "_quantized"
 
     def cast(self):  # pragma: no cover
         """Cast node."""
         node = self.node
-        if node.input[0] not in [i.tensor_name for i in self.quantizer.new_value_info.values()]:
+        if node.input[0] not in [
+            i.tensor_name for i in self.quantizer.new_value_info.values()
+        ]:
             return
         self.quantizer.cast_inputs(self.node, self.dtype, [0])
         self.quantizer.cast_outputs(self.node, self.dtype)

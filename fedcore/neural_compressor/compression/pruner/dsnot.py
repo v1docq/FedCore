@@ -120,8 +120,12 @@ def DSnoT(
                     dim=1,
                 )
 
-                initial_prune_indices = torch.cat((initial_prune_indices, tmp_indices), dim=1)
-                initial_res_indices = torch.cat((initial_res_indices, tmp_res_indices), dim=1)
+                initial_prune_indices = torch.cat(
+                    (initial_prune_indices, tmp_indices), dim=1
+                )
+                initial_res_indices = torch.cat(
+                    (initial_res_indices, tmp_res_indices), dim=1
+                )
                 weight_mask.scatter_(1, tmp_indices, True)
 
         metric_for_regrowing = DSnoT_metric.clone()
@@ -137,7 +141,9 @@ def DSnoT(
                 pow_of_var_regrowing,
             )
 
-        _, regrowing_indices_block = torch.sort(metric_for_regrowing, dim=1, stable=True)
+        _, regrowing_indices_block = torch.sort(
+            metric_for_regrowing, dim=1, stable=True
+        )
 
         indice_indice_list_for_regrowing = torch.zeros(
             (reconstruction_error.shape[0], 2),
@@ -162,7 +168,9 @@ def DSnoT(
             cycle_time += 1
 
             # regrowing
-            indice_of_indice_indice_list_for_regrowing = (reconstruction_error > 0).int().to(torch.int64)
+            indice_of_indice_indice_list_for_regrowing = (
+                (reconstruction_error > 0).int().to(torch.int64)
+            )
             indice_indice_for_regrowing = torch.gather(
                 indice_indice_list_for_regrowing,
                 1,
@@ -176,16 +184,22 @@ def DSnoT(
             regrowing_metric = DSnoT_metric.gather(1, regrowing_indice.to(torch.int64))
             recover_block_start_indice = regrowing_indice - regrowing_indice % prune_m
             recover_block_indices = (
-                torch.arange(0, prune_m, device=recover_block_start_indice.device).repeat(
-                    recover_block_start_indice.shape[1], 1
-                )
+                torch.arange(
+                    0, prune_m, device=recover_block_start_indice.device
+                ).repeat(recover_block_start_indice.shape[1], 1)
                 + recover_block_start_indice
             )
-            pruning_block = torch.gather(initial_metric, 1, recover_block_indices.to(torch.int64))
-            pruning_wanda_metric, pruning_indice = torch.topk(pruning_block, 1, dim=1, largest=False)
+            pruning_block = torch.gather(
+                initial_metric, 1, recover_block_indices.to(torch.int64)
+            )
+            pruning_wanda_metric, pruning_indice = torch.topk(
+                pruning_block, 1, dim=1, largest=False
+            )
             pruning_indice += recover_block_start_indice
             pruning_metric = DSnoT_metric.gather(1, pruning_indice.to(torch.int64))
-            reconstruction_error_after = reconstruction_error + pruning_metric - regrowing_metric
+            reconstruction_error_after = (
+                reconstruction_error + pruning_metric - regrowing_metric
+            )
             update_mask = (
                 update_mask
                 & (initialize_error_sign == torch.sign(reconstruction_error_after))
@@ -208,7 +222,9 @@ def DSnoT(
                 1,
                 indice_of_indice_indice_list_for_regrowing,
                 indice_indice_for_regrowing
-                + update_num_for_regrowing.gather(1, indice_of_indice_indice_list_for_regrowing),
+                + update_num_for_regrowing.gather(
+                    1, indice_of_indice_indice_list_for_regrowing
+                ),
             )
     else:
         _, sorted_initial_indice = torch.sort(initial_metric, dim=-1, stable=True)
@@ -223,7 +239,9 @@ def DSnoT(
 
         weight_mask.scatter_(1, initial_prune_indices, True)
         metric_for_regrowing = DSnoT_metric.clone()
-        wanda_metric = torch.abs(W) * torch.sqrt(wrapped_layer.scaler_row.reshape((1, -1)))
+        wanda_metric = torch.abs(W) * torch.sqrt(
+            wrapped_layer.scaler_row.reshape((1, -1))
+        )
         metric_for_regrowing.scatter_(1, initial_res_indices, 0)
         reconstruction_error = torch.sum(metric_for_regrowing, dim=1, keepdim=True)
         initialize_error_sign = torch.sign(reconstruction_error)
@@ -233,15 +251,21 @@ def DSnoT(
                 pow_of_var_regrowing,
             )
 
-        _, regrowing_indices_block = torch.sort(metric_for_regrowing, dim=1, stable=True)
+        _, regrowing_indices_block = torch.sort(
+            metric_for_regrowing, dim=1, stable=True
+        )
         wanda_metric.scatter_(1, initial_prune_indices, float("inf"))
         wanda_res_indices, _ = torch.split(
             torch.sort(wanda_metric, dim=1, stable=True)[1],
             split_size_or_sections=[res_sparsity_num, sparsity_num],
             dim=1,
         )
-        reorder_indice_of_pruning_indice = return_reorder_indice(torch.gather(DSnoT_metric, 1, wanda_res_indices))
-        pruning_indices_block = torch.gather(wanda_res_indices, 1, reorder_indice_of_pruning_indice)
+        reorder_indice_of_pruning_indice = return_reorder_indice(
+            torch.gather(DSnoT_metric, 1, wanda_res_indices)
+        )
+        pruning_indices_block = torch.gather(
+            wanda_res_indices, 1, reorder_indice_of_pruning_indice
+        )
 
         indice_indice_list_for_regrowing = torch.zeros(
             (reconstruction_error.shape[0], 2),
@@ -279,7 +303,9 @@ def DSnoT(
             cycle_time += 1
 
             # regrowing
-            indice_of_indice_indice_list_for_regrowing = (reconstruction_error > 0).int().to(torch.int64)
+            indice_of_indice_indice_list_for_regrowing = (
+                (reconstruction_error > 0).int().to(torch.int64)
+            )
 
             indice_indice_for_regrowing = torch.gather(
                 indice_indice_list_for_regrowing,
@@ -299,11 +325,15 @@ def DSnoT(
                 1,
                 indice_of_indice_indice_list_for_regrowing,
                 indice_indice_for_regrowing
-                + update_num_for_regrowing.gather(1, indice_of_indice_indice_list_for_regrowing),
+                + update_num_for_regrowing.gather(
+                    1, indice_of_indice_indice_list_for_regrowing
+                ),
             )
 
             # pruning
-            indice_of_indice_indice_list_for_pruning = (reconstruction_error < 0).int().to(torch.int64)
+            indice_of_indice_indice_list_for_pruning = (
+                (reconstruction_error < 0).int().to(torch.int64)
+            )
 
             indice_indice_for_pruning = torch.gather(
                 indice_indice_list_for_pruning,
@@ -322,14 +352,21 @@ def DSnoT(
             indice_indice_list_for_pruning.scatter_(
                 1,
                 indice_of_indice_indice_list_for_pruning,
-                indice_indice_for_pruning + update_num_for_pruning.gather(1, indice_of_indice_indice_list_for_pruning),
+                indice_indice_for_pruning
+                + update_num_for_pruning.gather(
+                    1, indice_of_indice_indice_list_for_pruning
+                ),
             )
 
             # change mask
-            reconstruction_error_after = reconstruction_error + pruning_metric - regrowing_metric
+            reconstruction_error_after = (
+                reconstruction_error + pruning_metric - regrowing_metric
+            )
 
             if without_same_sign:
-                update_mask = update_mask & (abs(reconstruction_error) > update_threshold)
+                update_mask = update_mask & (
+                    abs(reconstruction_error) > update_threshold
+                )
             else:
                 update_mask = (
                     update_mask

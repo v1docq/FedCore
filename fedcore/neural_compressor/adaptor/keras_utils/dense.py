@@ -19,7 +19,6 @@ import json
 
 import tensorflow as tf
 from tensorflow import quantization
-from tensorflow.keras import activations, backend, constraints, initializers, regularizers
 from tensorflow.keras.layers import Dense
 
 

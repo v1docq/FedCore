@@ -16,7 +16,6 @@
 # limitations under the License.
 # pylint:disable=import-error
 
-from collections import OrderedDict
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import torch
@@ -175,7 +174,9 @@ class RTNConfig(BaseConfig):
             double_quant_group_size=[32, -1, 1, 4, 8, 16, 64, 128, 256, 512, 1024],
         )
         operators = [torch.nn.Linear]
-        supported_configs.append(OperatorConfig(config=linear_rtn_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=linear_rtn_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -192,7 +193,10 @@ class RTNConfig(BaseConfig):
     @classmethod
     def get_config_set_for_tuning(cls) -> Union[None, "RTNConfig", List["RTNConfig"]]:
         return RTNConfig(
-            dtype=["int4", "nf4"], use_sym=[True, False], group_size=[32, 128], use_mse_search=[False, True]
+            dtype=["int4", "nf4"],
+            use_sym=[True, False],
+            group_size=[32, 128],
+            use_mse_search=[False, True],
         )
 
 
@@ -208,7 +212,9 @@ def get_default_rtn_config() -> RTNConfig:
 def get_default_double_quant_config(type="BNB_NF4"):
     from fedcore.neural_compressor.torch.utils.constants import DOUBLE_QUANT_CONFIGS
 
-    assert type in DOUBLE_QUANT_CONFIGS, "Supported double quant configs: {}".format(list(DOUBLE_QUANT_CONFIGS.keys()))
+    assert type in DOUBLE_QUANT_CONFIGS, "Supported double quant configs: {}".format(
+        list(DOUBLE_QUANT_CONFIGS.keys())
+    )
     return RTNConfig.from_dict(DOUBLE_QUANT_CONFIGS[type])
 
 
@@ -325,7 +331,9 @@ class GPTQConfig(BaseConfig):
         # TODO(Yi)
         linear_gptq_config = GPTQConfig()
         operators = [torch.nn.Linear]
-        supported_configs.append(OperatorConfig(config=linear_gptq_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=linear_gptq_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -458,7 +466,9 @@ class AWQConfig(BaseConfig):
         # TODO(Yi)
         linear_awq_config = AWQConfig()
         operators = [torch.nn.Linear, torch.nn.functional.linear]
-        supported_configs.append(OperatorConfig(config=linear_awq_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=linear_awq_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -587,7 +597,9 @@ class TEQConfig(BaseConfig):
         # TODO(Yi)
         linear_teq_config = TEQConfig()
         operators = [torch.nn.Linear, torch.nn.functional.linear]
-        supported_configs.append(OperatorConfig(config=linear_teq_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=linear_teq_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -664,18 +676,28 @@ class StaticQuantConfig(BaseConfig):
         # TODO(Yi)
         linear_static_config = StaticQuantConfig()
         operators = [torch.nn.Linear]
-        supported_configs.append(OperatorConfig(config=linear_static_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=linear_static_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
-    def get_model_info(model: torch.nn.Module, example_inputs) -> List[Tuple[str, Callable]]:
-        from fedcore.neural_compressor.torch.algorithms.static_quant import get_quantizable_ops_recursively
+    def get_model_info(
+        model: torch.nn.Module, example_inputs
+    ) -> List[Tuple[str, Callable]]:
+        from fedcore.neural_compressor.torch.algorithms.static_quant import (
+            get_quantizable_ops_recursively,
+        )
 
-        model_info, _, _, _ = get_quantizable_ops_recursively(model, example_inputs=example_inputs)
+        model_info, _, _, _ = get_quantizable_ops_recursively(
+            model, example_inputs=example_inputs
+        )
         return model_info
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "StaticQuantConfig", List["StaticQuantConfig"]]:
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "StaticQuantConfig", List["StaticQuantConfig"]]:
         return StaticQuantConfig(act_sym=[True, False], act_algo=["kl", "minmax"])
 
 
@@ -769,7 +791,9 @@ class SmoothQuantConfig(BaseConfig):
         # TODO(Yi)
         linear_sq_config = SmoothQuantConfig()
         operators = [torch.nn.Linear]
-        supported_configs.append(OperatorConfig(config=linear_sq_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=linear_sq_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @staticmethod
@@ -784,7 +808,9 @@ class SmoothQuantConfig(BaseConfig):
         return filter_result
 
     @classmethod
-    def get_config_set_for_tuning(cls) -> Union[None, "SmoothQuantConfig", List["SmoothQuantConfig"]]:
+    def get_config_set_for_tuning(
+        cls,
+    ) -> Union[None, "SmoothQuantConfig", List["SmoothQuantConfig"]]:
         # TODO fwk owner needs to update it.
         return SmoothQuantConfig(alpha=[0.1, 0.5])
 
@@ -851,7 +877,9 @@ class HQQConfig(BaseConfig):
         supported_configs = []
         linear_hqq_config = HQQConfig()
         operators = [torch.nn.Linear]
-        supported_configs.append(OperatorConfig(config=linear_hqq_config, operators=operators))
+        supported_configs.append(
+            OperatorConfig(config=linear_hqq_config, operators=operators)
+        )
         cls.supported_configs = supported_configs
 
     @classmethod
@@ -919,7 +947,9 @@ if is_hpex_available():
             from fedcore.neural_compressor.torch.algorithms.habana_fp8 import white_list
 
             operators = white_list
-            supported_configs.append(OperatorConfig(config=fp8_config, operators=operators))
+            supported_configs.append(
+                OperatorConfig(config=fp8_config, operators=operators)
+            )
             cls.supported_configs = supported_configs
 
         @staticmethod
@@ -935,7 +965,9 @@ if is_hpex_available():
             return filter_result
 
         @classmethod
-        def get_config_set_for_tuning(cls) -> Union[None, "FP8QConfig", List["FP8QConfig"]]:
+        def get_config_set_for_tuning(
+            cls,
+        ) -> Union[None, "FP8QConfig", List["FP8QConfig"]]:
             # TODO fwk owner needs to update it.
             return FP8QConfig(act_dtype=[torch.float8_e4m3fn])
 

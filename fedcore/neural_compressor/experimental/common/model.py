@@ -19,7 +19,6 @@ from deprecated import deprecated
 
 from fedcore.neural_compressor.model.model import MODELS, get_model_fwk_name
 from fedcore.neural_compressor.model.tensorflow_model import get_model_type
-from fedcore.neural_compressor.utils import logger
 
 BACKEND = "default"
 

@@ -17,7 +17,6 @@
 # ==============================================================================
 """Intel Neural Compressor built-in Optimizers on multiple framework backends."""
 
-from abc import abstractmethod
 
 from fedcore.neural_compressor.utils.utility import LazyImport, singleton
 
@@ -68,18 +67,26 @@ class Optimizers(object):
 
     def __init__(self, framework):
         """Initialize `Optimizers` class."""
-        assert framework in ("tensorflow", "pytorch", "pytorch_fx"), "framework support tensorflow pytorch"
+        assert framework in (
+            "tensorflow",
+            "pytorch",
+            "pytorch_fx",
+        ), "framework support tensorflow pytorch"
         self.optimizers = framework_optimizers[framework]().optimizers
 
     def __getitem__(self, optimizer_type):
         """Return the specific type of optimizer object according to the given optimizer_type."""
-        assert optimizer_type in self.optimizers.keys(), "only support optimizers in {}".format(self.optimizers.keys())
+        assert (
+            optimizer_type in self.optimizers.keys()
+        ), "only support optimizers in {}".format(self.optimizers.keys())
 
         return self.optimizers[optimizer_type]
 
     def register(self, name, optimizer_cls):
         """Allow registration of non-built-in optimizers."""
-        assert name not in self.optimizers.keys(), "registered optimizer name already exists."
+        assert (
+            name not in self.optimizers.keys()
+        ), "registered optimizer name already exists."
         self.optimizers.update({name: optimizer_cls})
 
 
@@ -98,7 +105,10 @@ def optimizer_registry(optimizer_type, framework):
 
     def decorator_optimizer(cls):
         for fw in [fwk.strip() for fwk in framework.split(",")]:
-            assert fw in ["tensorflow", "pytorch"], "The framework support tensorflow pytorch"
+            assert fw in [
+                "tensorflow",
+                "pytorch",
+            ], "The framework support tensorflow pytorch"
 
             if optimizer_type in registry_optimizers[fw].keys():
                 raise ValueError("Cannot have two optimizers with the same name")
@@ -118,11 +128,17 @@ class TensorFlowSGD(object):
 
     def __init__(self, param_dict):
         """Initialize `TensorFlowSGD` class."""
-        assert isinstance(param_dict, dict), "This optimizer constructor parameter must be a dict"
+        assert isinstance(
+            param_dict, dict
+        ), "This optimizer constructor parameter must be a dict"
         self._param_dict = param_dict
 
     def _mapping(self):
-        _param_map = {"learning_rate": "learning_rate", "momentum": "momentum", "nesterov": "nesterov"}
+        _param_map = {
+            "learning_rate": "learning_rate",
+            "momentum": "momentum",
+            "nesterov": "nesterov",
+        }
         _dict = {}
         for key in self._param_dict:
             if key in _param_map:
@@ -144,7 +160,9 @@ class TensorFlowAdamW(object):
 
     def __init__(self, param_dict):
         """Initialize `TensorFlowAdamW` class."""
-        assert isinstance(param_dict, dict), "This optimizer constructor parameter must be a dict"
+        assert isinstance(
+            param_dict, dict
+        ), "This optimizer constructor parameter must be a dict"
         self._param_dict = param_dict
 
     def _mapping(self):
@@ -177,7 +195,9 @@ class TensorFlowAdam(object):
 
     def __init__(self, param_dict):
         """Initialize `TensorFlowAdam` class."""
-        assert isinstance(param_dict, dict), "This optimizer constructor parameter must be a dict"
+        assert isinstance(
+            param_dict, dict
+        ), "This optimizer constructor parameter must be a dict"
         self._param_dict = param_dict
 
     def _mapping(self):
@@ -209,7 +229,9 @@ class PyTorchSGD(object):
 
     def __init__(self, param_dict):
         """Initialize `PyTorchSGD` class."""
-        assert isinstance(param_dict, dict), "This optimizer constructor parameter must be a dict"
+        assert isinstance(
+            param_dict, dict
+        ), "This optimizer constructor parameter must be a dict"
         self._param_dict = param_dict
 
     def _mapping(self):

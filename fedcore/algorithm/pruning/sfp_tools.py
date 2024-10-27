@@ -1,12 +1,10 @@
 from collections import OrderedDict
-from typing import Dict, Optional, Tuple, List, Union, Callable
+from typing import Dict, Optional, Tuple, List, Union
 
 import torch
 from torch import Tensor
 from torch.linalg import vector_norm
 from torch.nn import Conv2d
-from torchvision.models import ResNet
-
 
 
 def percentage_filter_zeroing(conv: Conv2d, pruning_ratio: float) -> None:
@@ -40,12 +38,12 @@ def energy_filter_zeroing(conv: Conv2d, energy_threshold: float) -> None:
     assert 0 < energy_threshold <= 1, "energy_threshold must be in the range (0, 1]"
     filter_norms = vector_norm(conv.weight, dim=(1, 2, 3))
     sorted_filter_norms, indices = filter_norms.sort()
-    sum = (filter_norms ** 2).sum()
+    sum = (filter_norms**2).sum()
     threshold = energy_threshold * sum
     for index, filter_norm in zip(indices, sorted_filter_norms):
         with torch.no_grad():
             conv.weight[index] = 0
-        sum -= filter_norm ** 2
+        sum -= filter_norm**2
         if sum < threshold:
             break
 
@@ -58,9 +56,9 @@ def _check_nonzero_filters(weight: Tensor) -> Tensor:
 
 
 def _prune_filters(
-        weight: Tensor,
-        saving_filters: Optional[Tensor] = None,
-        saving_channels: Optional[Tensor] = None,
+    weight: Tensor,
+    saving_filters: Optional[Tensor] = None,
+    saving_channels: Optional[Tensor] = None,
 ) -> Tensor:
     """Prune filters and channels of convolutional layer.
 
@@ -86,10 +84,10 @@ def _prune_batchnorm(bn: Dict, saving_channels: Tensor) -> Dict[str, Tensor]:
         saving_channels: Indexes of channels to be saved.
             If ``None`` all channels to be saved.
     """
-    bn['weight'] = bn['weight'][saving_channels].clone()
-    bn['bias'] = bn['bias'][saving_channels].clone()
-    bn['running_mean'] = bn['running_mean'][saving_channels].clone()
-    bn['running_var'] = bn['running_var'][saving_channels].clone()
+    bn["weight"] = bn["weight"][saving_channels].clone()
+    bn["bias"] = bn["bias"][saving_channels].clone()
+    bn["running_mean"] = bn["running_mean"][saving_channels].clone()
+    bn["running_var"] = bn["running_var"][saving_channels].clone()
     return bn
 
 
@@ -114,7 +112,7 @@ def _parse_sd(state_dict: OrderedDict) -> OrderedDict:
     """Parses state_dict to nested dictionaries."""
     parsed_sd = OrderedDict()
     for k, v in state_dict.items():
-        _parse_param(k.split('.'), v, parsed_sd)
+        _parse_param(k.split("."), v, parsed_sd)
     return parsed_sd
 
 
@@ -132,7 +130,7 @@ def _collect_sd(parsed_state_dict: OrderedDict) -> OrderedDict:
     state_dict = OrderedDict()
     keys, values = _collect_param(parsed_state_dict)
     for k, v in zip(keys, values):
-        key = '.'.join(k)
+        key = ".".join(k)
         state_dict[key] = v
     return state_dict
 
@@ -158,50 +156,47 @@ def _prune_resnet_block(block: Dict, input_channels: Tensor) -> Tensor:
     channels = input_channels
     downsample_channels = input_channels
     keys = list(block.keys())
-    if 'downsample' in keys:
-        filters = _check_nonzero_filters(block['downsample']['0']['weight'])
-        block['downsample']['0']['weight'] = _prune_filters(
-            weight=block['downsample']['0']['weight'],
+    if "downsample" in keys:
+        filters = _check_nonzero_filters(block["downsample"]["0"]["weight"])
+        block["downsample"]["0"]["weight"] = _prune_filters(
+            weight=block["downsample"]["0"]["weight"],
             saving_filters=filters,
-            saving_channels=downsample_channels
+            saving_channels=downsample_channels,
         )
         downsample_channels = filters
-        block['downsample']['1'] = _prune_batchnorm(
-            bn=block['downsample']['1'],
-            saving_channels=downsample_channels
+        block["downsample"]["1"] = _prune_batchnorm(
+            bn=block["downsample"]["1"], saving_channels=downsample_channels
         )
-        keys.remove('downsample')
+        keys.remove("downsample")
     final_conv = keys[-2]
     final_bn = keys[-1]
     keys = keys[:-2]
     for key in keys:
-        if key.startswith('conv'):
-            filters = _check_nonzero_filters(block[key]['weight'])
-            block[key]['weight'] = _prune_filters(
-                weight=block[key]['weight'],
+        if key.startswith("conv"):
+            filters = _check_nonzero_filters(block[key]["weight"])
+            block[key]["weight"] = _prune_filters(
+                weight=block[key]["weight"],
                 saving_filters=filters,
-                saving_channels=channels
+                saving_channels=channels,
             )
             channels = filters
-        elif key.startswith('bn'):
-            block[key] = _prune_batchnorm(
-                bn=block[key], saving_channels=channels)
-    filters = _check_nonzero_filters(block[final_conv]['weight'])
+        elif key.startswith("bn"):
+            block[key] = _prune_batchnorm(bn=block[key], saving_channels=channels)
+    filters = _check_nonzero_filters(block[final_conv]["weight"])
     filters = _index_union(filters, downsample_channels)
-    block[final_conv]['weight'] = _prune_filters(
-        weight=block[final_conv]['weight'],
+    block[final_conv]["weight"] = _prune_filters(
+        weight=block[final_conv]["weight"],
         saving_filters=filters,
         saving_channels=channels,
     )
     channels = filters
-    block[final_bn] = _prune_batchnorm(
-        bn=block[final_bn], saving_channels=channels)
-    block['indices'] = _indexes_of_tensor_values(channels, downsample_channels)
+    block[final_bn] = _prune_batchnorm(bn=block[final_bn], saving_channels=channels)
+    block["indices"] = _indexes_of_tensor_values(channels, downsample_channels)
     return channels
 
 
 def prune_resnet_state_dict(
-        state_dict: OrderedDict,
+    state_dict: OrderedDict,
 ) -> OrderedDict:
     """Prune state_dict of ResNet
 
@@ -212,38 +207,38 @@ def prune_resnet_state_dict(
         Tuple(state_dict, input_channels, output_channels).
     """
     sd = _parse_sd(state_dict)
-    filters = _check_nonzero_filters(sd['conv1']['weight'])
-    sd['conv1']['weight'] = _prune_filters(
-        weight=sd['conv1']['weight'], saving_filters=filters
+    filters = _check_nonzero_filters(sd["conv1"]["weight"])
+    sd["conv1"]["weight"] = _prune_filters(
+        weight=sd["conv1"]["weight"], saving_filters=filters
     )
     channels = filters
-    sd['bn1'] = _prune_batchnorm(bn=sd['bn1'], saving_channels=channels)
+    sd["bn1"] = _prune_batchnorm(bn=sd["bn1"], saving_channels=channels)
 
-    for layer in ['layer1', 'layer2', 'layer3', 'layer4']:
+    for layer in ["layer1", "layer2", "layer3", "layer4"]:
         for block in sd[layer].values():
-            channels = _prune_resnet_block(
-                block=block, input_channels=channels)
-    sd['fc']['weight'] = sd['fc']['weight'][:, channels].clone()
+            channels = _prune_resnet_block(block=block, input_channels=channels)
+    sd["fc"]["weight"] = sd["fc"]["weight"][:, channels].clone()
     sd = _collect_sd(sd)
     return sd
 
 
 def sizes_from_state_dict(state_dict: OrderedDict) -> Dict:
     sd = _parse_sd(state_dict)
-    sizes = {'conv1': sd['conv1']['weight'].shape}
-    for layer in ['layer1', 'layer2', 'layer3', 'layer4']:
+    sizes = {"conv1": sd["conv1"]["weight"].shape}
+    for layer in ["layer1", "layer2", "layer3", "layer4"]:
         sizes[layer] = {}
         for i, block in enumerate(sd[layer].values()):
             sizes[layer][i] = {}
             for k, v in block.items():
-                if k.startswith('conv'):
-                    sizes[layer][i][k] = v['weight'].shape
-                elif k == 'downsample':
-                    sizes[layer][k] = v['0']['weight'].shape
-                elif k == 'indices':
+                if k.startswith("conv"):
+                    sizes[layer][i][k] = v["weight"].shape
+                elif k == "downsample":
+                    sizes[layer][k] = v["0"]["weight"].shape
+                elif k == "indices":
                     sizes[layer][i][k] = v.shape
-    sizes['fc'] = sd['fc']['weight'].shape
+    sizes["fc"] = sd["fc"]["weight"].shape
     return sizes
+
 
 #
 # def prune_resnet(model: ResNet) -> PrunedResNet:

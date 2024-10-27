@@ -16,11 +16,9 @@
 # limitations under the License.
 """Class for PyTorch model."""
 
-import copy
 import inspect
 import os
-import sys
-from collections import OrderedDict, UserDict
+from collections import OrderedDict
 
 from fedcore.neural_compressor import config as cfg
 from fedcore.neural_compressor.model.base_model import BaseModel
@@ -122,7 +120,9 @@ class PyTorchBaseModel(torch.nn.Module, BaseModel):
 
     def register_forward_pre_hook(self):
         """Register forward pre hook."""
-        self.handles.append(self._model.register_forward_pre_hook(self.generate_forward_pre_hook()))
+        self.handles.append(
+            self._model.register_forward_pre_hook(self.generate_forward_pre_hook())
+        )
 
     def remove_hooks(self):
         """Remove hooks."""
@@ -132,7 +132,9 @@ class PyTorchBaseModel(torch.nn.Module, BaseModel):
     def generate_forward_pre_hook(self):
         """Generate forward pre hook."""
         # skip input argument 'self' in forward
-        self.input_args = OrderedDict().fromkeys(inspect.getfullargspec(self._model.forward).args[1:], None)
+        self.input_args = OrderedDict().fromkeys(
+            inspect.getfullargspec(self._model.forward).args[1:], None
+        )
 
         # a wrapper is needed to insert self into the actual hook
         def actual_forward_pre_hook(module, input):
@@ -142,7 +144,8 @@ class PyTorchBaseModel(torch.nn.Module, BaseModel):
             # update arguments
             if "input" in values:
                 for single_input, single_arg in zip(
-                    values["input"], list(self.input_args.keys())[: len(values["input"])]
+                    values["input"],
+                    list(self.input_args.keys())[: len(values["input"])],
                 ):
                     self.input_args[single_arg] = single_input
             elif "args" in values:
@@ -236,13 +239,20 @@ class PyTorchBaseModel(torch.nn.Module, BaseModel):
         if isinstance(input_tensor, str):
             for name, tensor in self._model.named_parameters():
                 if name == input_tensor:
-                    assert tensor.grad is not None, "Please call backward() before get_gradient"
+                    assert (
+                        tensor.grad is not None
+                    ), "Please call backward() before get_gradient"
                     return np.array(tensor.grad.cpu())
         elif isinstance(input_tensor, torch.Tensor):
-            assert input_tensor.grad is not None, "Please call backward() before get_gradient"
+            assert (
+                input_tensor.grad is not None
+            ), "Please call backward() before get_gradient"
             return np.array(input_tensor.grad.cpu())
         else:  # pragma: no cover
-            logger.error("Expect str or torch.Tensor in get_gradient, " "but get {}.".format(type(input_tensor)))
+            logger.error(
+                "Expect str or torch.Tensor in get_gradient, "
+                "but get {}.".format(type(input_tensor))
+            )
 
     def report_sparsity(self):
         """Get sparsity of the model.
@@ -252,11 +262,15 @@ class PyTorchBaseModel(torch.nn.Module, BaseModel):
             total_sparsity (float): total sparsity of model.
         """
         if isinstance(self._model, torch.jit._script.RecursiveScriptModule):
-            logger.info("INC IPEX don't support compute sparsity for model in TorchScript format now.")
+            logger.info(
+                "INC IPEX don't support compute sparsity for model in TorchScript format now."
+            )
             return [0.0]
         import pandas as pd
 
-        df = pd.DataFrame(columns=["Name", "Shape", "NNZ (dense)", "NNZ (sparse)", "Sparsity(%)"])
+        df = pd.DataFrame(
+            columns=["Name", "Shape", "NNZ (dense)", "NNZ (sparse)", "Sparsity(%)"]
+        )
         pd.set_option("display.precision", 2)
         # TODO: need to specify modules(Conv2d, Linear, etc.) instead of dims
         param_dims = [2, 4]
@@ -274,7 +288,9 @@ class PyTorchBaseModel(torch.nn.Module, BaseModel):
                 and param.dim() in param_dims
                 and any(type in name for type in ["weight", "bias", "_packed_params"])
             ):
-                param_size, sparse_param_size, dense_param_size = compute_sparsity(param.detach().cpu().numpy())
+                param_size, sparse_param_size, dense_param_size = compute_sparsity(
+                    param.detach().cpu().numpy()
+                )
                 density = dense_param_size / param_size
                 params_size += param_size
                 sparse_params_size += sparse_param_size
@@ -316,8 +332,12 @@ class PyTorchModel(PyTorchBaseModel):
         from fedcore.neural_compressor.utils.pytorch import load
 
         workspace_path = path
-        weights_file = os.path.join(os.path.abspath(os.path.expanduser(workspace_path)), "best_model.pt")
-        assert os.path.exists(weights_file), "weight file %s didn't exist" % weights_file
+        weights_file = os.path.join(
+            os.path.abspath(os.path.expanduser(workspace_path)), "best_model.pt"
+        )
+        assert os.path.exists(weights_file), (
+            "weight file %s didn't exist" % weights_file
+        )
         self._model = load(weights_file, self._model)
 
     def save(self, root=None):
@@ -347,14 +367,17 @@ class PyTorchModel(PyTorchBaseModel):
                             _get_path,
                             get_named_children,
                             load_value,
-                            set_module_tensor_to_device,
                         )
 
                         modules = get_named_children(self._model)
                         for name, module in modules:
                             state_dict = None
-                            if os.path.exists(os.path.join(LWQ_WORKSPACE, f"{name}.pt")):
-                                state_dict = torch.load(os.path.join(LWQ_WORKSPACE, f"{name}.pt"))
+                            if os.path.exists(
+                                os.path.join(LWQ_WORKSPACE, f"{name}.pt")
+                            ):
+                                state_dict = torch.load(
+                                    os.path.join(LWQ_WORKSPACE, f"{name}.pt")
+                                )
                             model_path = _get_path(
                                 # self.q_config["recipe_cfgs"]["layer_wise_quant_args"].get("model_path")
                                 self._model.path
@@ -364,15 +387,21 @@ class PyTorchModel(PyTorchBaseModel):
                                 if state_dict:
                                     value = state_dict[n]
                                 else:
-                                    value = load_value(self._model, param_name, model_path)
+                                    value = load_value(
+                                        self._model, param_name, model_path
+                                    )
                                 # set_module_tensor_to_device(self._model, param_name, "cpu", value)
-                                torch.save(value, os.path.join(root, f"{param_name}.pt"))
+                                torch.save(
+                                    value, os.path.join(root, f"{param_name}.pt")
+                                )
                         # stat_dict = self._model.state_dict()
                         return
                 else:
                     stat_dict["best_configure"] = self.q_config
             torch.save(stat_dict, os.path.join(root, "best_model.pt"))
-            logger.info("Save config file and weights of quantized model to {}.".format(root))
+            logger.info(
+                "Save config file and weights of quantized model to {}.".format(root)
+            )
         except IOError as e:  # pragma: no cover
             logger.error("Fail to save configure file and weights due to {}.".format(e))
 
@@ -418,7 +447,10 @@ class PyTorchModel(PyTorchBaseModel):
                 "but the torch version found is {}".format(Version("1.12.0"), version)
             )
 
-        from fedcore.neural_compressor.experimental.export import torch_to_fp32_onnx, torch_to_int8_onnx
+        from fedcore.neural_compressor.experimental.export import (
+            torch_to_fp32_onnx,
+            torch_to_int8_onnx,
+        )
 
         if conf.dtype == "int8":
             torch_to_int8_onnx(
@@ -448,7 +480,9 @@ class PyTorchModel(PyTorchBaseModel):
                 verbose=True,
             )
         else:  # pragma: no cover
-            assert False, "Not allowed dtype: {}, please use 'fp32' or 'int8'.".format(conf.dtype)
+            assert False, "Not allowed dtype: {}, please use 'fp32' or 'int8'.".format(
+                conf.dtype
+            )
 
     def export_compressed_model(
         self,
@@ -483,7 +517,11 @@ class PyTorchModel(PyTorchBaseModel):
                 5. zeros is always needed even for sym.
         """
         from ..adaptor.torch_utils.model_wrapper import WeightOnlyLinear
-        from ..adaptor.torch_utils.util import collect_weight_info, fetch_module, set_module
+        from ..adaptor.torch_utils.util import (
+            collect_weight_info,
+            fetch_module,
+            set_module,
+        )
         from ..adaptor.torch_utils.weight_only import quant_weight_w_scale, rtn_quantize
 
         if qweight_config_path is not None:
@@ -532,8 +570,14 @@ class PyTorchModel(PyTorchBaseModel):
                     fp32_weight = m.weight.data
                     gptq_perm = None
                 gptq_scale = torch.tensor(gptq_conf["scale"], dtype=torch.float32)
-                gptq_zp = None if scheme == "sym" else torch.tensor(gptq_conf["zero"], dtype=torch.int32)
-                int_weight = quant_weight_w_scale(fp32_weight, gptq_scale, gptq_zp, group_size)
+                gptq_zp = (
+                    None
+                    if scheme == "sym"
+                    else torch.tensor(gptq_conf["zero"], dtype=torch.int32)
+                )
+                int_weight = quant_weight_w_scale(
+                    fp32_weight, gptq_scale, gptq_zp, group_size
+                )
                 int_weight = int_weight.type(torch.int32)
                 if "perm" in gptq_conf:
                     invperm = torch.argsort(gptq_perm)
@@ -613,8 +657,12 @@ class IPEXModel(PyTorchBaseModel):  # pragma: no cover
     def workspace_path(self, path):
         """Set workspace path."""
         self._workspace_path = path
-        tune_cfg_file = os.path.join(os.path.abspath(os.path.expanduser(path)), "best_configure.json")
-        assert os.path.exists(tune_cfg_file), "tune configure file %s didn't exist" % tune_cfg_file
+        tune_cfg_file = os.path.join(
+            os.path.abspath(os.path.expanduser(path)), "best_configure.json"
+        )
+        assert os.path.exists(tune_cfg_file), (
+            "tune configure file %s didn't exist" % tune_cfg_file
+        )
 
         with open(tune_cfg_file, "r") as f:
             self.tune_cfg = json.load(f)

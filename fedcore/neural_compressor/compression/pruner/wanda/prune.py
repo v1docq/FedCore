@@ -18,7 +18,14 @@ import transformers
 
 from fedcore.neural_compressor.adaptor.torch_utils.util import get_hidden_states
 
-from .utils import find_layers, get_module_list, get_tensor_sparsity_ratio, logger, nn, torch
+from .utils import (
+    find_layers,
+    get_module_list,
+    get_tensor_sparsity_ratio,
+    logger,
+    nn,
+    torch,
+)
 from .wrapper import WrappedGPT
 
 
@@ -29,7 +36,7 @@ def prepare_calibration_input(model, dataloader, device):
     layers = get_module_list(model)
 
     if hasattr(model, "hf_device_map") and "model.embed_tokens" in model.hf_device_map:
-        device = model.hf_device_map["model.embed_tokens"]
+        model.hf_device_map["model.embed_tokens"]
 
     inps = []
     others = []
@@ -64,7 +71,9 @@ def prepare_calibration_input(model, dataloader, device):
 def return_given_alpha(alpha, sort_res, W_metric, tmp_metric, sum_before):
     thres_cumsum = sum_before * alpha
     sort_mask = tmp_metric <= thres_cumsum.reshape((-1, 1))
-    thres = torch.gather(sort_res[0], dim=1, index=sort_mask.sum(dim=1, keepdims=True) - 1)
+    thres = torch.gather(
+        sort_res[0], dim=1, index=sort_mask.sum(dim=1, keepdims=True) - 1
+    )
     W_mask = W_metric <= thres
     cur_sparsity = torch.sum(W_mask == 1.0).data.item() / W_mask.numel()
     return W_mask, cur_sparsity
@@ -103,7 +112,9 @@ def prune_wanda(
         low_mem_usage = False
         if "cuda" in str(device):  # pragma: no cover
             current_gpu_index = str(device)
-            total_memory = torch.cuda.get_device_properties(current_gpu_index).total_memory
+            total_memory = torch.cuda.get_device_properties(
+                current_gpu_index
+            ).total_memory
             used_memory = torch.cuda.memory_allocated(current_gpu_index)
             free_space = total_memory - used_memory
             total_params = sum(p.numel() for p in model.parameters())
@@ -174,13 +185,19 @@ def prune_wanda(
                 wrapped_layers[name].scaler_row.unsqueeze(0)
             )
 
-            W_mask = torch.zeros_like(W_metric) == 1  ## initialize a mask to be all False
+            W_mask = (
+                torch.zeros_like(W_metric) == 1
+            )  ## initialize a mask to be all False
             if prune_n != 0:  # pragma: no cover
                 # structured n:m sparsity
                 for ii in range(W_metric.shape[1]):
                     if ii % prune_m == 0:
                         tmp = W_metric[:, ii : (ii + prune_m)].float()
-                        W_mask.scatter_(1, ii + torch.topk(tmp, prune_n, dim=1, largest=False)[1], True)
+                        W_mask.scatter_(
+                            1,
+                            ii + torch.topk(tmp, prune_n, dim=1, largest=False)[1],
+                            True,
+                        )
             else:
                 sort_res = torch.sort(W_metric, dim=-1, stable=True)
 
@@ -191,8 +208,12 @@ def prune_wanda(
 
                     alpha = 0.4
                     alpha_hist = [0.0, 0.8]
-                    W_mask, cur_sparsity = return_given_alpha(alpha, sort_res, W_metric, tmp_metric, sum_before)
-                    while (abs(cur_sparsity - sparsity_ratio) > 0.001) and (alpha_hist[1] - alpha_hist[0] >= 0.001):
+                    W_mask, cur_sparsity = return_given_alpha(
+                        alpha, sort_res, W_metric, tmp_metric, sum_before
+                    )
+                    while (abs(cur_sparsity - sparsity_ratio) > 0.001) and (
+                        alpha_hist[1] - alpha_hist[0] >= 0.001
+                    ):
                         if cur_sparsity > sparsity_ratio:
                             alpha_new = (alpha + alpha_hist[0]) / 2.0
                             alpha_hist[1] = alpha
@@ -201,7 +222,9 @@ def prune_wanda(
                             alpha_hist[0] = alpha
 
                         alpha = alpha_new
-                        W_mask, cur_sparsity = return_given_alpha(alpha, sort_res, W_metric, tmp_metric, sum_before)
+                        W_mask, cur_sparsity = return_given_alpha(
+                            alpha, sort_res, W_metric, tmp_metric, sum_before
+                        )
                     logger.info(f"alpha found {alpha} sparsity {cur_sparsity:.6f}")
                 else:  # pragma: no cover
                     # unstructured pruning
@@ -218,7 +241,9 @@ def prune_wanda(
             else:
                 subset[name].weight.data[W_mask] = 0  ## set weights to zero
             ratio = get_tensor_sparsity_ratio(subset[name].weight.data)
-            logger.info(f"finish pruning layer {i} name {name}, sparsity ratio: {ratio}")
+            logger.info(
+                f"finish pruning layer {i} name {name}, sparsity ratio: {ratio}"
+            )
 
         for j in range(nsamples):
             with torch.no_grad():

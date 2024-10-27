@@ -36,10 +36,15 @@ def ipex_mixed_precision(model, example_inputs=None, device="cpu"):
     with torch.no_grad(), autocast():
         if isinstance(example_inputs, dict):
             try:
-                mp_model = torch.jit.trace(mp_model, example_kwarg_inputs=example_inputs)
+                mp_model = torch.jit.trace(
+                    mp_model, example_kwarg_inputs=example_inputs
+                )
             except:
                 mp_model = torch.jit.trace(
-                    mp_model, example_kwarg_inputs=example_inputs, strict=False, check_trace=False
+                    mp_model,
+                    example_kwarg_inputs=example_inputs,
+                    strict=False,
+                    check_trace=False,
                 )
         else:
             try:

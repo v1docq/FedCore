@@ -109,12 +109,16 @@ def evaluate(dataset, predictions):
             for qa in paragraph["qas"]:
                 total += 1
                 if qa["id"] not in predictions:
-                    message = "Unanswered question " + qa["id"] + " will receive score 0."
+                    message = (
+                        "Unanswered question " + qa["id"] + " will receive score 0."
+                    )
                     print(message, file=sys.stderr)
                     continue
                 ground_truths = list(map(lambda x: x["text"], qa["answers"]))
                 prediction = predictions[qa["id"]]
-                exact_match += metric_max_over_ground_truths(exact_match_score, prediction, ground_truths)
+                exact_match += metric_max_over_ground_truths(
+                    exact_match_score, prediction, ground_truths
+                )
                 f1 += metric_max_over_ground_truths(f1_score, prediction, ground_truths)
 
     exact_match = 100.0 * exact_match / total

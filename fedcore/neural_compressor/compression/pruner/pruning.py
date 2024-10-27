@@ -18,7 +18,6 @@
 # limitations under the License.
 
 import gc
-from typing import Optional
 
 from fedcore.neural_compressor.compression.pruner.pruners import get_pruner
 from fedcore.neural_compressor.compression.pruner.utils import (
@@ -91,7 +90,9 @@ class BasePruning:
                 modules = pa_obj.obtain_mha_module(modules)
                 modules = pa_obj.from_layer_name_to_object(modules)
                 if len(modules) == 0:
-                    logger.warning("one pruner hooks no mha modules, please have a check")
+                    logger.warning(
+                        "one pruner hooks no mha modules, please have a check"
+                    )
                 pruners.append(get_pruner(info, modules))
             else:
                 # original pruning types, e.g NxM or N:M
@@ -176,10 +177,14 @@ class SparseGPTPruning(BasePruning):
         if device is None:
             self.dev = model.device
         elif isinstance(device, str):
-            assert "cpu" in device or "cuda" in device, "Only 'cpu' and 'cuda' are supported."
+            assert (
+                "cpu" in device or "cuda" in device
+            ), "Only 'cpu' and 'cuda' are supported."
             self.dev = torch.device(device)
         else:
-            assert isinstance(device, torch.device), "Only 'str' and 'torch.device' are supported."
+            assert isinstance(
+                device, torch.device
+            ), "Only 'str' and 'torch.device' are supported."
             self.dev = device
 
         self._layers = []
@@ -207,27 +212,37 @@ class SparseGPTPruning(BasePruning):
         layers = self._layers
         self._model = self._model.cpu()
         inputs, positional_inputs, other_input_infos = collect_layer_inputs(
-            model=self._model, layers=layers, layer_idx=0, layer_inputs=self._dataloader, device=self.dev
+            model=self._model,
+            layers=layers,
+            layer_idx=0,
+            layer_inputs=self._dataloader,
+            device=self.dev,
         )
         for i in tqdm(range(len(layers))):
             layer = layers[i].to(self.dev)
             layer_index_str = "." + str(i) + "."
             handles_list = []
             for pruner in self.pruners:
-                layer_op_names = [key for key in pruner.modules.keys() if layer_index_str in key]
+                layer_op_names = [
+                    key for key in pruner.modules.keys() if layer_index_str in key
+                ]
                 if bool(layer_op_names):
                     handles_list.append(pruner.register_gpt_hook(layer_op_names))
             prune_flag = bool(handles_list)
             if prune_flag:
                 for j in range(len(inputs)):
-                    other_infos = self.gather_single_batch_from_dict(other_input_infos, j)
+                    other_infos = self.gather_single_batch_from_dict(
+                        other_input_infos, j
+                    )
                     with torch.no_grad():
                         layer(inputs[j], *positional_inputs, **other_infos)[0]
                 for handles in handles_list:
                     for h in handles:
                         h.remove()
                 for pruner in self.pruners:
-                    layer_op_names = [key for key in pruner.modules.keys() if layer_index_str in key]
+                    layer_op_names = [
+                        key for key in pruner.modules.keys() if layer_index_str in key
+                    ]
                     pruner.fasterprune(layer_op_names)
             for j in range(len(inputs)):
                 # the weights of current layer have been pruned, get the latest outputs as the inputs for next layer
@@ -261,7 +276,9 @@ class SparseGPTPruning(BasePruning):
 
 @register_pruning("retrain_free_pruning")
 class RetrainFreePruning(BasePruning):
-    def __init__(self, config, model, dataloader=None, loss_func=None, framework="pytorch"):
+    def __init__(
+        self, config, model, dataloader=None, loss_func=None, framework="pytorch"
+    ):
         """Initialize."""
         super().__init__(config, model)
         self._dataloader = dataloader

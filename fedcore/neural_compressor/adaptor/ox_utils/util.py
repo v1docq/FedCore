@@ -172,7 +172,9 @@ def _get_qrange_for_qType(qType, reduce_range=False):
 def split_shared_bias(model):
     """Split shared tensor."""
     for input_name, node_list in model.input_name_to_nodes.items():
-        if len(node_list) > 1 and input_name in [i.name for i in model.model.graph.initializer]:
+        if len(node_list) > 1 and input_name in [
+            i.name for i in model.model.graph.initializer
+        ]:
             for node in node_list[1:]:
                 if node.op_type not in ["Conv", "FusedConv"]:
                     continue
@@ -221,7 +223,9 @@ def cast_tensor(tensor, dtype, is_large_model=False):  # pragma: no cover
         is_large_model (bool): if is large model, make tensor with raw=True
     """
     if not isinstance(tensor, onnx_proto.TensorProto):
-        raise ValueError("Expected input type is an ONNX TensorProto but got %s" % type(tensor))
+        raise ValueError(
+            "Expected input type is an ONNX TensorProto but got %s" % type(tensor)
+        )
 
     new_tensor = None
     if tensor.data_type == onnx_proto.TensorProto.FLOAT:
@@ -237,14 +241,26 @@ def cast_tensor(tensor, dtype, is_large_model=False):  # pragma: no cover
             new_tensor = helper.make_tensor(
                 name=tensor.name + "_init_cast",
                 data_type=dtype_mapping[dtype],
-                dims=numpy_helper.to_array(tensor).shape if len(numpy_helper.to_array(tensor).shape) != 0 else [],
-                vals=new_val if len(numpy_helper.to_array(tensor).shape) != 0 else [numpy_helper.to_array(tensor)],
+                dims=(
+                    numpy_helper.to_array(tensor).shape
+                    if len(numpy_helper.to_array(tensor).shape) != 0
+                    else []
+                ),
+                vals=(
+                    new_val
+                    if len(numpy_helper.to_array(tensor).shape) != 0
+                    else [numpy_helper.to_array(tensor)]
+                ),
             )
         else:
             new_tensor = helper.make_tensor(
                 name=tensor.name + "_init_cast",
                 data_type=dtype_mapping[dtype],
-                dims=numpy_helper.to_array(tensor).shape if len(numpy_helper.to_array(tensor).shape) != 0 else [],
+                dims=(
+                    numpy_helper.to_array(tensor).shape
+                    if len(numpy_helper.to_array(tensor).shape) != 0
+                    else []
+                ),
                 vals=new_val.tostring(),
                 raw=True,
             )
@@ -295,9 +311,15 @@ def quantize_data_with_scale_zero(data, qType, scheme, scale, zero_point):
         # signed byte type
         quantized_data = (data.astype(np.float32) / scale).round().astype("b")
     elif qType == onnx_proto.TensorProto.UINT8 and scheme == "asym":
-        quantized_data = ((data.astype(np.float32) / scale).round() + zero_point).astype("B")
+        quantized_data = (
+            (data.astype(np.float32) / scale).round() + zero_point
+        ).astype("B")
     else:
-        raise ValueError("Unexpected combination of data type {} and scheme {}.".format(qType, scheme))
+        raise ValueError(
+            "Unexpected combination of data type {} and scheme {}.".format(
+                qType, scheme
+            )
+        )
     return quantized_data
 
 
@@ -308,17 +330,28 @@ def calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme):
             max_range = np.maximum(abs(rmin), abs(rmax))
             scale = np.ones(rmax.shape, dtype="float32")
             scale[max_range > 0] = np.array(
-                [float(i) / quantize_range for i in (max_range[max_range > 0] * 2.0).flatten().tolist()],
+                [
+                    float(i) / quantize_range
+                    for i in (max_range[max_range > 0] * 2.0).flatten().tolist()
+                ],
                 dtype="float32",
             )
         else:
             scale = np.ones(rmax.shape, dtype="float32")
             scale[rmin != rmax] = np.array(
-                [float(i) / quantize_range for i in (rmax - rmin)[rmin != rmax].flatten().tolist()], dtype="float32"
+                [
+                    float(i) / quantize_range
+                    for i in (rmax - rmin)[rmin != rmax].flatten().tolist()
+                ],
+                dtype="float32",
             )
 
         if scheme == "sym" and qType == onnx_proto.TensorProto.INT8:
-            zero_point = np.zeros(scale.shape, dtype="int8") if isinstance(scale, np.ndarray) else 0
+            zero_point = (
+                np.zeros(scale.shape, dtype="int8")
+                if isinstance(scale, np.ndarray)
+                else 0
+            )
         elif isinstance(scale, np.ndarray) and (scale == 1).all():
             zero_point = (
                 np.zeros(scale.shape, dtype="int8")
@@ -326,10 +359,14 @@ def calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme):
                 else np.zeros(scale.shape, dtype="uint8")
             )
         elif qType == onnx_proto.TensorProto.UINT8:
-            zero_point = np.maximum(0, np.minimum(255, ((0 - float(rmin)) / scale).round()).round()).astype("uint8")
+            zero_point = np.maximum(
+                0, np.minimum(255, ((0 - float(rmin)) / scale).round()).round()
+            ).astype("uint8")
         else:
             zero_point = (
-                (-64 - rmin) / float(scale) if quantize_range == 128 else (-127 - rmin) / float(scale)
+                (-64 - rmin) / float(scale)
+                if quantize_range == 128
+                else (-127 - rmin) / float(scale)
             ).round()
 
     else:
@@ -346,7 +383,9 @@ def calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme):
             zero_point = np.uint8(round(max(0, min(255, zero_point))))
         else:
             zero_point = (
-                round((-64 - float(rmin)) / scale) if quantize_range == 128 else round((-127 - float(rmin)) / scale)
+                round((-64 - float(rmin)) / scale)
+                if quantize_range == 128
+                else round((-127 - float(rmin)) / scale)
             )
     return scale, zero_point
 
@@ -375,7 +414,9 @@ def quantize_data(data, quantize_range, qType, scheme):
     rmax = max(max(data), 0)
 
     scale, zero_point = calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme)
-    quantized_data = quantize_data_with_scale_zero(data, qType, scheme, scale, zero_point)
+    quantized_data = quantize_data_with_scale_zero(
+        data, qType, scheme, scale, zero_point
+    )
     return rmin, rmax, zero_point, scale, quantized_data
 
 
@@ -385,16 +426,34 @@ def quantize_data_per_channel(data, axis, quantize_range, qType, scheme):
     rmax = None
     for i in range(len(data.shape)):
         if i != axis:
-            rmin = np.min(data, axis=i, keepdims=True) if rmin is None else np.min(rmin, axis=i, keepdims=True)
-            rmax = np.max(data, axis=i, keepdims=True) if rmax is None else np.max(rmax, axis=i, keepdims=True)
+            rmin = (
+                np.min(data, axis=i, keepdims=True)
+                if rmin is None
+                else np.min(rmin, axis=i, keepdims=True)
+            )
+            rmax = (
+                np.max(data, axis=i, keepdims=True)
+                if rmax is None
+                else np.max(rmax, axis=i, keepdims=True)
+            )
     rmin = np.minimum(rmin, 0)
     rmax = np.maximum(rmax, 0)
     scale, zero_point = calculate_scale_zp(rmin, rmax, quantize_range, qType, scheme)
-    quantized_data = quantize_data_with_scale_zero(data, qType, scheme, scale, zero_point)
-    return rmin.reshape(-1, 1), rmax.reshape(-1, 1), zero_point.reshape(-1, 1), scale.reshape(-1, 1), quantized_data
+    quantized_data = quantize_data_with_scale_zero(
+        data, qType, scheme, scale, zero_point
+    )
+    return (
+        rmin.reshape(-1, 1),
+        rmax.reshape(-1, 1),
+        zero_point.reshape(-1, 1),
+        scale.reshape(-1, 1),
+        quantized_data,
+    )
 
 
-def dequantize_data_with_scale_zero(tensor_value, scale_value, zo_value):  # pragma: no cover
+def dequantize_data_with_scale_zero(
+    tensor_value, scale_value, zo_value
+):  # pragma: no cover
     """Dequantize tensor with scale and zero point."""
     return (tensor_value.astype(np.float32) - zo_value.astype(np.float32)) * scale_value
 
@@ -412,7 +471,9 @@ def dequantize_data(tensor_value, scale_value, zo_value, axis=0):  # pragma: no 
             per_channel_zero_value = zo_value.take(i)
             new_per_channel_tensor_values.append(
                 dequantize_data_with_scale_zero(
-                    per_channel_tensor_value, per_channel_scale_value, per_channel_zero_value
+                    per_channel_tensor_value,
+                    per_channel_scale_value,
+                    per_channel_zero_value,
                 )
             )
         # combine per_channel_data into one
@@ -420,8 +481,12 @@ def dequantize_data(tensor_value, scale_value, zo_value, axis=0):  # pragma: no 
         reshape_dims[0] = 1  # only one per channel for reshape
         new_tensor_value = new_per_channel_tensor_values[0].reshape(reshape_dims)
         for i in range(1, channel_count):
-            new_per_channel_tensor_value = new_per_channel_tensor_values[i].reshape(reshape_dims)
-            new_tensor_value = np.concatenate((new_tensor_value, new_per_channel_tensor_value), 0)
+            new_per_channel_tensor_value = new_per_channel_tensor_values[i].reshape(
+                reshape_dims
+            )
+            new_tensor_value = np.concatenate(
+                (new_tensor_value, new_per_channel_tensor_value), 0
+            )
         return new_tensor_value
 
 
@@ -568,7 +633,8 @@ def attribute_to_kwarg(attribute):
         value = attribute_mapping[attribute.type]
     else:  # pragma: no cover
         raise ValueError(
-            "attribute {} has no type specified " "or unsupported type {}.".format(attribute.name, attribute.type)
+            "attribute {} has no type specified "
+            "or unsupported type {}.".format(attribute.name, attribute.type)
         )
     return {attribute.name: value}
 
@@ -577,7 +643,11 @@ def find_by_name(name, item_list):
     """Helper function to find item by name in a list."""
     items = []
     for item in item_list:
-        assert hasattr(item, "name"), "{} should have a 'name' attribute defined".format(item)  # pragma: no cover
+        assert hasattr(
+            item, "name"
+        ), "{} should have a 'name' attribute defined".format(
+            item
+        )  # pragma: no cover
         if item.name == name:
             items.append(item)
     if len(items) > 0:
@@ -626,11 +696,26 @@ def to_numpy(data):
         return data
 
 
-def infer_shapes(in_mp, int_max=2**31 - 1, auto_merge=False, guess_output_rank=False, verbose=0, base_dir=""):
+def infer_shapes(
+    in_mp,
+    int_max=2**31 - 1,
+    auto_merge=False,
+    guess_output_rank=False,
+    verbose=0,
+    base_dir="",
+):
     """Symbolic shape inference."""
 
     class SymbolicShapeInference(symbolic_shape_infer.SymbolicShapeInference):
-        def __init__(self, int_max, auto_merge, guess_output_rank, verbose, prefix="", base_dir=""):
+        def __init__(
+            self,
+            int_max,
+            auto_merge,
+            guess_output_rank,
+            verbose,
+            prefix="",
+            base_dir="",
+        ):
             super().__init__(int_max, auto_merge, guess_output_rank, verbose, prefix)
             self.base_dir = base_dir
 
@@ -640,7 +725,9 @@ def infer_shapes(in_mp, int_max=2**31 - 1, auto_merge=False, guess_output_rank=F
             return (
                 self.sympy_data_[name]
                 if name in self.sympy_data_
-                else numpy_helper.to_array(self.initializers_[name], base_dir=self.base_dir)
+                else numpy_helper.to_array(
+                    self.initializers_[name], base_dir=self.base_dir
+                )
             )
 
     onnx_opset = symbolic_shape_infer.get_opset(in_mp)
@@ -656,6 +743,10 @@ def infer_shapes(in_mp, int_max=2**31 - 1, auto_merge=False, guess_output_rank=F
         all_shapes_inferred = symbolic_shape_inference._infer_impl()
     symbolic_shape_inference._update_output_from_vi()
     if not all_shapes_inferred:
-        onnx.save_model(symbolic_shape_inference.out_mp_, "sym_shape_infer_temp.onnx", save_as_external_data=True)
+        onnx.save_model(
+            symbolic_shape_inference.out_mp_,
+            "sym_shape_infer_temp.onnx",
+            save_as_external_data=True,
+        )
         raise Exception("Incomplete symbolic shape inference")
     return symbolic_shape_inference.out_mp_

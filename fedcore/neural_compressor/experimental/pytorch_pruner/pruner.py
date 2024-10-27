@@ -66,7 +66,9 @@ def get_pruner(modules, config):
     """
     name = config["prune_type"]
     if name not in PRUNERS.keys():
-        assert False, f"does not support {name}, currently only support {PRUNERS.keys()}"
+        assert (
+            False
+        ), f"does not support {name}, currently only support {PRUNERS.keys()}"
     return PRUNERS[name](modules, config)
 
 
@@ -119,12 +121,16 @@ class Pruner:
         self.end_step = self.config["end_step"]
         self.update_frequency_on_step = self.config["update_frequency_on_step"]
         ##this is different with original code
-        self.total_prune_cnt = (self.end_step - self.start_step + 1) // self.update_frequency_on_step
+        self.total_prune_cnt = (
+            self.end_step - self.start_step + 1
+        ) // self.update_frequency_on_step
         self.completed_pruned_cnt = 0
         self.masks = {}
         for key in self.modules.keys():
             module = self.modules[key]
-            self.masks[key] = torch.ones(module.weight.shape).to(module.weight.device)  ##TODO support bias or others
+            self.masks[key] = torch.ones(module.weight.shape).to(
+                module.weight.device
+            )  ##TODO support bias or others
 
         self.target_sparsity_ratio = self.config["target_sparsity"]
 
@@ -132,7 +138,6 @@ class Pruner:
 
     def on_epoch_begin(self, epoch):
         """Functions called in the beginning of each epoch."""
-        pass
 
     def mask_weights(self):
         """Functions called when masks are applied on corresponding modules' weights.
@@ -159,7 +164,10 @@ class Pruner:
             return
 
         current_target_sparsity_ratio = self.scheduler.update_sparsity_ratio(
-            self.target_sparsity_ratio, self.completed_pruned_cnt, self.total_prune_cnt, self.masks
+            self.target_sparsity_ratio,
+            self.completed_pruned_cnt,
+            self.total_prune_cnt,
+            self.masks,
         )
         logger.info(f"current target ratio is {current_target_sparsity_ratio}")
         self.update_scores()
@@ -167,7 +175,10 @@ class Pruner:
         if self.scores == {}:
             return
         self.masks = self.pattern.get_masks(
-            self.scores, current_target_sparsity_ratio, self.masks, self.max_sparsity_ratio_per_layer
+            self.scores,
+            current_target_sparsity_ratio,
+            self.masks,
+            self.max_sparsity_ratio_per_layer,
         )
         self.mask_weights()
 
@@ -176,15 +187,12 @@ class Pruner:
 
     def on_step_end(self):
         """Functions called in the end of each step."""
-        pass
 
     def on_epoch_end(self):
         """Functions called in the end of each epoch."""
-        pass
 
     def on_before_optimizer_step(self):
         """Functions called before the optimizer.step()."""
-        pass
 
     def on_after_optimizer_step(self):
         """Functions called after the optimizer.step().
@@ -195,19 +203,15 @@ class Pruner:
 
     def on_train_begin(self, dataloader=None):
         """Functions called in the beginning of training."""
-        pass
 
     def on_train_end(self):
         """Functions called in the end of each training."""
-        pass
 
     def on_before_eval(self):
         """Functions called in the beginning of evaluation."""
-        pass
 
     def on_after_eval(self):
         """Functions called in the end of evaluation."""
-        pass
 
     def check_is_pruned_step(self, step):
         """Decide whether the current step should execute a pruning process."""
@@ -219,7 +223,6 @@ class Pruner:
 
     def update_scores(self):
         """Update self.scores."""
-        pass
 
 
 @deprecated(version="2.0")
@@ -270,7 +273,9 @@ class SnipPruner(Pruner):
     def __init__(self, modules, config):
         """Initialize."""
         super(SnipPruner, self).__init__(modules, config)
-        assert self.config.end_step > 0, "gradient based criteria does not work on step 0"
+        assert (
+            self.config.end_step > 0
+        ), "gradient based criteria does not work on step 0"
         self.scores = {}
 
     def on_after_optimizer_step(self):
@@ -304,7 +309,9 @@ class SnipMomentumPruner(Pruner):
     def __init__(self, modules, config):
         """Initialize."""
         super(SnipMomentumPruner, self).__init__(modules, config)
-        assert self.config.end_step > 0, "gradient based criteria does not work on step 0"
+        assert (
+            self.config.end_step > 0
+        ), "gradient based criteria does not work on step 0"
         # self.scores = {}
         for key in modules.keys():
             p = modules[key].weight
@@ -342,7 +349,9 @@ class PatternLockPruner(Pruner):
     def __init__(self, modules, config):
         """Initialize."""
         super(PatternLockPruner, self).__init__(modules, config)
-        assert self.config.end_step == self.config.start_step, "pattern_lock pruner only supports one shot mode"
+        assert (
+            self.config.end_step == self.config.start_step
+        ), "pattern_lock pruner only supports one shot mode"
 
     def on_step_begin(self, local_step):
         """Functions called on the beginning of each step."""

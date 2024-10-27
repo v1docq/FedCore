@@ -42,7 +42,10 @@ def check_model(model):
             has_qlinearop = True
         elif node.op_type in ["Gather"]:
             input_data = find_by_name(node.input[0], model.graph.initializer)
-            if input_data is not None and numpy_helper.to_array(input_data).dtype in ["int8", "uint8"]:
+            if input_data is not None and numpy_helper.to_array(input_data).dtype in [
+                "int8",
+                "uint8",
+            ]:
                 has_qlinearop = True
     if has_integerop:
         logger.info("This model has Integer ops, these ops will be skipped.")
@@ -77,7 +80,9 @@ def onnx_qlinear_to_qdq(
                 children = []
                 for out in node.output:
                     children.extend(input_name_to_nodes[node.output[0]])
-                converter = QOPERATORS[node.op_type](node, children, model.graph.initializer)
+                converter = QOPERATORS[node.op_type](
+                    node, children, model.graph.initializer
+                )
                 done, add_node, init = converter.convert()
                 if done:
                     add_nodes.extend(add_node)

@@ -37,7 +37,9 @@ SEARCHERS = {}
 
 def prepare_hpo(config):
     assert isinstance(config, HPOConfig), f"config should be {HPOConfig.__name__}"
-    assert config.searcher in SEARCHERS.keys(), f"current only support search algorithms: {SEARCHERS.keys()}"
+    assert (
+        config.searcher in SEARCHERS.keys()
+    ), f"current only support search algorithms: {SEARCHERS.keys()}"
     if config.searcher == "xgb":
         return SEARCHERS[config.searcher](
             config.search_space,
@@ -79,7 +81,9 @@ class Searcher(object):
     """
 
     def __init__(self, search_space):
-        assert isinstance(search_space, dict) and search_space, "Expect search_space to be a dict."
+        assert (
+            isinstance(search_space, dict) and search_space
+        ), "Expect search_space to be a dict."
         self.search_space = search_space
         self.search_space_keys = sorted(search_space.keys())
         self.search_space_pool = self._create_search_space_pool()
@@ -105,11 +109,12 @@ class Searcher(object):
 
     def suggest(self):
         """Suggest the model hyperparameter."""
-        raise NotImplementedError("Depends on specific search algorithm.")  # pragma: no cover
+        raise NotImplementedError(
+            "Depends on specific search algorithm."
+        )  # pragma: no cover
 
     def get_feedback(self, metric):
         """Get metric feedback for the search algorithm."""
-        pass
 
     def params_vec2params_dict(self, para_vec):
         """Convert the parameters vector to parameters dictionary.
@@ -141,7 +146,9 @@ class GridSearcher(Searcher):
 
         for space in self.search_space_pool:
             if space.type == "continuous":
-                raise TypeError("GridSearcher not support continuous datatype, please use other algorithm.")
+                raise TypeError(
+                    "GridSearcher not support continuous datatype, please use other algorithm."
+                )
 
         self.idx = [0] * len(self.search_space_pool)
 
@@ -233,15 +240,17 @@ class BayesianOptimizationSearcher(Searcher):
     def get_feedback(self, metric):
         """Get metric feedback and register this metric."""
         assert self.last_param_indices is not None, (
-            "Need run suggest first " + "to get parameters and the input metric is corresponding to this parameters."
+            "Need run suggest first "
+            + "to get parameters and the input metric is corresponding to this parameters."
         )
         try:
             self.bo_agent._space.register(self.last_param_indices, metric)
         except KeyError:  # pragma: no cover
             logger.debug("Find registered params, skip it.")
-            pass
         if self.best is None or self.best[1] < metric:
-            param = self.params_vec2params_dict(self.indices2params_vec(self.last_param_indices))
+            param = self.params_vec2params_dict(
+                self.indices2params_vec(self.last_param_indices)
+            )
             self.best = (param, metric)
         self.last_param_indices = None
 
@@ -274,7 +283,14 @@ class XgbSearcher(Searcher):
         search_space (dict): A dictionary for defining the search space.
     """
 
-    def __init__(self, search_space, higher_is_better=True, loss_type="reg", min_train_samples=10, seed=42):
+    def __init__(
+        self,
+        search_space,
+        higher_is_better=True,
+        loss_type="reg",
+        min_train_samples=10,
+        seed=42,
+    ):
         """Initialize the attributes."""
         super().__init__(search_space)
 
@@ -312,9 +328,15 @@ class XgbSearcher(Searcher):
                 objective="rank:pairwise",
             )
         else:  # pragma: no cover
-            raise RuntimeError("Invalid loss type: {}, only support reg and rank".format(loss_type))
+            raise RuntimeError(
+                "Invalid loss type: {}, only support reg and rank".format(loss_type)
+            )
         self.optimizer = SimulatedAnnealingOptimizer(
-            generate_func=self._generate_new_points, T0=100, Tf=0, alpha=0.9, higher_is_better=self.higher_is_better
+            generate_func=self._generate_new_points,
+            T0=100,
+            Tf=0,
+            alpha=0.9,
+            higher_is_better=self.higher_is_better,
         )
 
     def _generate_new_points(self, points):
@@ -343,7 +365,8 @@ class XgbSearcher(Searcher):
     def get_feedback(self, metric):
         """Get metric feedback and register this metric."""
         assert self.last_params is not None, (
-            "Need run suggest first " + "to get parameters and the input metric is corresponding to this parameters."
+            "Need run suggest first "
+            + "to get parameters and the input metric is corresponding to this parameters."
         )
         if self.best is None or self.best[1] < metric:
             self.best = (self.params_vec2params_dict(self.last_params), metric)

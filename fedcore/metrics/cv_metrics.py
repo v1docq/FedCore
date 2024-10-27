@@ -25,9 +25,13 @@ class CompressionMetric(Metric):
         return predict, reference_data
 
     @classmethod
-    def get_value(cls, pipeline: Pipeline, reference_data: InputData,
-                  validation_blocks: Optional[int] = None) -> float:
-        """ Get metric value based on pipeline, reference data, and number of validation blocks.
+    def get_value(
+        cls,
+        pipeline: Pipeline,
+        reference_data: InputData,
+        validation_blocks: Optional[int] = None,
+    ) -> float:
+        """Get metric value based on pipeline, reference data, and number of validation blocks.
         Args:
             pipeline: a :class:`Pipeline` instance for evaluation.
             reference_data: :class:`InputData` for evaluation.
@@ -37,31 +41,31 @@ class CompressionMetric(Metric):
         metric = cls.default_value
         metric = cls.metric(pipeline, reference_data.features.calib_dataloader)
         if cls.need_to_minimize:
-            metric = - metric
+            metric = -metric
         return metric
 
 
 class IntermediateAttention(CompressionMetric):
     @classmethod
-    def metric(cls,
-               student_attentions,
-               teacher_attentions,
-               weights,
-               student_teacher_attention_mapping):
+    def metric(
+        cls,
+        student_attentions,
+        teacher_attentions,
+        weights,
+        student_teacher_attention_mapping,
+    ):
         loss = 0
         for i in range(len(student_attentions)):
-            loss += weights[i] * nn.KLDivLoss(reduction='batchmean')(student_attentions[i],
-                                                                     teacher_attentions[
-                                                                         student_teacher_attention_mapping[i]])
+            loss += weights[i] * nn.KLDivLoss(reduction="batchmean")(
+                student_attentions[i],
+                teacher_attentions[student_teacher_attention_mapping[i]],
+            )
         return loss
 
 
 class IntermediateFeatures(CompressionMetric):
     @classmethod
-    def metric(cls,
-               student_feats,
-               teacher_feats,
-               weights):
+    def metric(cls, student_feats, teacher_feats, weights):
         loss = 0
         for i in range(len(student_feats)):
             loss += weights[i] * nn.MSELoss()(student_feats[i], teacher_feats[i])
@@ -93,7 +97,7 @@ class Latency(CompressionMetric):
 
 
 class CV_quality_metric(CompressionMetric):
-    default_clf_metric = 'accuracy'
+    default_clf_metric = "accuracy"
     need_to_minimize = True
 
     def __repr__(self):

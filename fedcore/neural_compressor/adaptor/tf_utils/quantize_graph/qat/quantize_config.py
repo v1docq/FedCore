@@ -123,7 +123,12 @@ layer_wise_config = {
         "AveragePooling2D",
         "GlobalAveragePooling2D",
     },
-    "possible_quantize_layers": {"Multiply", "Concatenate", "Add", "BatchNormalization"},
+    "possible_quantize_layers": {
+        "Multiply",
+        "Concatenate",
+        "Add",
+        "BatchNormalization",
+    },
     "weighted_layers": {"Conv2D", "Dense", "DepthwiseConv2D"},
     "multiple_inputs_layers": {"Multiply", "Concatenate", "Add"},
 }

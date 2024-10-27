@@ -16,9 +16,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import transformers
 
-from fedcore.neural_compressor.utils import logger
 from fedcore.neural_compressor.utils.utility import LazyImport
 
 torch = LazyImport("torch")
@@ -42,7 +40,13 @@ def find_layers(module, op_types=["Linear", "Conv1D"], name=""):
             return {name: module}
     res = {}
     for name1, child in module.named_children():
-        res.update(find_layers(child, op_types=op_types, name=name + "." + name1 if name != "" else name1))
+        res.update(
+            find_layers(
+                child,
+                op_types=op_types,
+                name=name + "." + name1 if name != "" else name1,
+            )
+        )
     return res
 
 
@@ -52,7 +56,9 @@ def get_module_list(model):
         if hasattr(type(module), "__name__") and "ModuleList" in type(module).__name__:
             module_list = module
             break
-    assert module_list is not None, "cannot find any transformers layers, please check the model."
+    assert (
+        module_list is not None
+    ), "cannot find any transformers layers, please check the model."
     return module_list
 
 

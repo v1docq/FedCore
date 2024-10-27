@@ -24,10 +24,14 @@ from tensorflow.keras import activations, constraints, initializers, regularizer
 from fedcore.neural_compressor.tensorflow.utils import version1_gte_version2
 
 if version1_gte_version2(tf.__version__, "2.13.0"):
-    from keras.src.layers.convolutional.base_separable_conv import SeparableConv  # pylint: disable=E0401
+    from keras.src.layers.convolutional.base_separable_conv import (
+        SeparableConv,
+    )  # pylint: disable=E0401
     from keras.src.utils import conv_utils  # pylint: disable=E0401
 else:
-    from keras.layers.convolutional.base_separable_conv import SeparableConv  # pylint: disable=E0401
+    from keras.layers.convolutional.base_separable_conv import (
+        SeparableConv,
+    )  # pylint: disable=E0401
     from keras.utils import conv_utils  # pylint: disable=E0401
 
 
@@ -91,7 +95,12 @@ class QSeparableConv2D(SeparableConv):
             strides = (1, 1) + self.strides
         # (TODO) it's ugly that we can't get the point_wise min/max here
         depthwise_kernel, _, _ = quantization.quantize(
-            self.depthwise_kernel, self.min_value, self.max_value, tf.qint8, axis=3, mode="SCALED"
+            self.depthwise_kernel,
+            self.min_value,
+            self.max_value,
+            tf.qint8,
+            axis=3,
+            mode="SCALED",
         )
         depthwise_kernel = quantization.dequantize(
             depthwise_kernel,
@@ -112,7 +121,9 @@ class QSeparableConv2D(SeparableConv):
         )
 
         if self.use_bias:
-            outputs = tf.keras.backend.bias_add(outputs, self.bias, data_format=self.data_format)
+            outputs = tf.keras.backend.bias_add(
+                outputs, self.bias, data_format=self.data_format
+            )
 
         if self.activation is not None:
             return self.activation(outputs)

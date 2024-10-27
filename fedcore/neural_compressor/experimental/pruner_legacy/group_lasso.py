@@ -22,7 +22,7 @@ import numpy as np
 from deprecated import deprecated
 
 from .magnitude import BasicMagnitudePruner
-from .pruner import Pruner, pruner_registry
+from .pruner import pruner_registry
 
 
 @deprecated(version="2.0")

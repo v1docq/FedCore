@@ -95,7 +95,9 @@ class ModelConversion:  # pragma: no cover
         Returns:
             converted quantized model
         """
-        assert self._model, '"model" property need to be set before __call_() gets invoked'
+        assert (
+            self._model
+        ), '"model" property need to be set before __call_() gets invoked'
 
         framework_specific_info = {}
         cfg = self.conf.usr_cfg
@@ -117,24 +119,39 @@ class ModelConversion:  # pragma: no cover
 
         # when eval_func is None but metric or _eval_dataloader is set by yaml or code,
         # it means Neural Compressor will create the eval_func from these info.
-        metric_cfg = [self._metric] if self._metric else deep_get(cfg, "evaluation.accuracy.metric")
+        metric_cfg = (
+            [self._metric]
+            if self._metric
+            else deep_get(cfg, "evaluation.accuracy.metric")
+        )
         postprocess_cfg = deep_get(cfg, "evaluation.accuracy.postprocess")
         if self._eval_func is None and metric_cfg:
             eval_dataloader_cfg = deep_get(cfg, "evaluation.accuracy.dataloader")
             if self._eval_dataloader is None and eval_dataloader_cfg:
-                self._eval_dataloader = create_dataloader(self.framework, eval_dataloader_cfg)
+                self._eval_dataloader = create_dataloader(
+                    self.framework, eval_dataloader_cfg
+                )
             assert self._eval_dataloader, (
                 'either "eval_dataloader" property or evaluation'
                 ".accuracy.dataloader field in yaml should be set when metric is set"
             )
 
             self._eval_func = create_eval_func(
-                self.framework, self.eval_dataloader, self.adaptor, metric_cfg, postprocess_cfg, fp32_baseline=True
+                self.framework,
+                self.eval_dataloader,
+                self.adaptor,
+                metric_cfg,
+                postprocess_cfg,
+                fp32_baseline=True,
             )
         if self._eval_func:
             baseline_score = self._eval_func(self._model)
             qmodel_score = self._eval_func(q_model)
-            logger.info("The score of Quantization-Aware Training model is {}.".format(str(baseline_score)))
+            logger.info(
+                "The score of Quantization-Aware Training model is {}.".format(
+                    str(baseline_score)
+                )
+            )
             logger.info("Converted model score is {}.".format(str(qmodel_score)))
 
         return q_model
@@ -176,7 +193,8 @@ class ModelConversion:  # pragma: no cover
     def source(self, _source):
         """Set source."""
         assert _source.lower() == "qat", (
-            "Model conversion now only supports TensorFlow " "QAT model to default quantized model"
+            "Model conversion now only supports TensorFlow "
+            "QAT model to default quantized model"
         )
         self._source = _source.lower()
 
@@ -189,7 +207,8 @@ class ModelConversion:  # pragma: no cover
     def destination(self, _destination):
         """Set destination."""
         assert _destination.lower() == "default", (
-            "Model conversion now only supports " "TensorFlow QAT model to default quantized model"
+            "Model conversion now only supports "
+            "TensorFlow QAT model to default quantized model"
         )
         self._destination = _destination.lower()
 
@@ -251,7 +270,9 @@ class ModelConversion:  # pragma: no cover
         else:
             self._model = user_model
 
-        assert self.framework == "tensorflow", "Model conversion only supports Tensorflow at current stage."
+        assert (
+            self.framework == "tensorflow"
+        ), "Model conversion only supports Tensorflow at current stage."
 
         if not self.conf:
             self._gen_yaml()
@@ -303,7 +324,9 @@ class ModelConversion:  # pragma: no cover
             metrics.register(user_metric.name, user_metric.metric_cls)
         else:
             for i in ["reset", "update", "result"]:
-                assert hasattr(user_metric, i), "Please realise {} function" "in user defined metric".format(i)
+                assert hasattr(
+                    user_metric, i
+                ), "Please realise {} function" "in user defined metric".format(i)
             self._metric = user_metric
 
     @property
@@ -337,7 +360,11 @@ class ModelConversion:  # pragma: no cover
                 "Override the value of `postprocess` field defined in yaml file"
                 " as user defines the value of `postprocess` attribute by code."
             )
-        deep_set(self.conf.usr_cfg, "evaluation.accuracy.postprocess.transform", postprocess_cfg)
+        deep_set(
+            self.conf.usr_cfg,
+            "evaluation.accuracy.postprocess.transform",
+            postprocess_cfg,
+        )
         from .data import TRANSFORMS
 
         postprocesses = TRANSFORMS(self.framework, "postprocess")

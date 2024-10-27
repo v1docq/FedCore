@@ -77,7 +77,6 @@ class PerformanceEvaluator:
     def throughput_eval(self, num_iterations=30):
         self.model.eval()
         thr_list = []
-
         for batch, _ in tqdm(
             self._preloaded_batches_gen(self.n_batches), desc="batches", unit="batch"
         ):
@@ -100,7 +99,6 @@ class PerformanceEvaluator:
     def latency_eval(self, max_samples=None):
         self.model.eval()
         lat_list = []
-
         for batch, _ in tqdm(
             self._preloaded_batches_gen(max_samples or self.batch_size)
         ):

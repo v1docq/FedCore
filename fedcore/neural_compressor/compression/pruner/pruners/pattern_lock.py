@@ -20,7 +20,7 @@
 from fedcore.neural_compressor.utils.logger import Logger
 
 from ..patterns import get_pattern
-from .base import KerasBasePruner, PytorchBasePruner, register_pruner
+from .base import PytorchBasePruner, register_pruner
 
 logger = Logger().get_logger()
 
@@ -45,7 +45,9 @@ class PytorchPatternLockPruner(PytorchBasePruner):
         """Initialize."""
         super().__init__(config, modules)
         self.pattern = get_pattern(self.config, modules)
-        assert self.config.end_step == self.config.start_step, "pattern_lock pruner only supports one shot mode"
+        assert (
+            self.config.end_step == self.config.start_step
+        ), "pattern_lock pruner only supports one shot mode"
 
     def update_masks(self, local_step):
         """Update the masks at a given local step."""

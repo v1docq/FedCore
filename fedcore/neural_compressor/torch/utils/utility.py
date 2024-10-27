@@ -91,13 +91,17 @@ def set_module(model, op_name, new_module):
     else:
         second_last_module = fetch_module(model, ".".join(name_list[:-1]))
         if second_last_module is None:
-            logger.warning(f"Setting skipped as the {op_name} is not present in the model.")
+            logger.warning(
+                f"Setting skipped as the {op_name} is not present in the model."
+            )
             return None
         else:
             setattr(second_last_module, name_list[-1], new_module)
 
 
-def get_model_info(model: torch.nn.Module, white_module_list: List[Callable]) -> List[Tuple[str, Callable]]:
+def get_model_info(
+    model: torch.nn.Module, white_module_list: List[Callable]
+) -> List[Tuple[str, Callable]]:
     module_dict = dict(model.named_modules())
     filter_result = []
     filter_result_set = set()
@@ -116,7 +120,7 @@ def get_double_quant_config(double_quant_type):
 
     if double_quant_type is None:
         return {}
-    assert double_quant_type in DOUBLE_QUANT_CONFIGS, "Supported double quant configs: {}".format(
-        list(DOUBLE_QUANT_CONFIGS.keys())
-    )
+    assert (
+        double_quant_type in DOUBLE_QUANT_CONFIGS
+    ), "Supported double quant configs: {}".format(list(DOUBLE_QUANT_CONFIGS.keys()))
     return DOUBLE_QUANT_CONFIGS[double_quant_type]

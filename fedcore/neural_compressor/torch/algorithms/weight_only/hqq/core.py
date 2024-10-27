@@ -23,11 +23,15 @@ from typing import Any, Dict, Tuple
 
 import torch
 
-from fedcore.neural_compressor.torch.utils import logger
 
 from .auto_accelerator import auto_detect_accelerator
 from .bitpack import Packer
-from .config import HQQModuleConfig, QTensorConfig, default_hqq_module_config, hqq_global_option
+from .config import (
+    HQQModuleConfig,
+    QTensorConfig,
+    default_hqq_module_config,
+    hqq_global_option,
+)
 from .optimizer import optimize_weights_proximal
 from .qtensor import QTensor, QTensorMetaInfo
 from .utility import dump_elapsed_time, is_divisible
@@ -100,7 +104,11 @@ class HQQTensorHandle:
 
         # Reshape for grouping
         if (group_size is not None) and channel_wise:
-            W = W.reshape([-1, group_size]) if (axis == 1) else W.reshape([group_size, -1])
+            W = (
+                W.reshape([-1, group_size])
+                if (axis == 1)
+                else W.reshape([group_size, -1])
+            )
 
         # Get min/max values
         if not channel_wise:
@@ -116,7 +124,9 @@ class HQQTensorHandle:
 
         # Note: here we work with the inverse of the scale to avoid division and quantize instead via W*scale + zero,
         # the scale is inverted later on.
-        scale = (max_v / (_max - _min)).clamp(max=2e4)  # clamp to avoid half-precision problems
+        scale = (max_v / (_max - _min)).clamp(
+            max=2e4
+        )  # clamp to avoid half-precision problems
         zero = -_min * scale
 
         # Round zero as in: https://github.com/casper-hansen/AutoAWQ/blob/main/awq/quantize/quantizer.py#L42C9-L42C14
@@ -125,7 +135,9 @@ class HQQTensorHandle:
 
         # Fine-tune weights
         if optimize:
-            scale, zero = cls.optimize_weights(tensor=W, scale=scale, zero=zero, min_max=min_max, axis=axis)
+            scale, zero = cls.optimize_weights(
+                tensor=W, scale=scale, zero=zero, min_max=min_max, axis=axis
+            )
 
         # Quantize
         scale, zero = (
@@ -166,7 +178,11 @@ class HQQTensorHandle:
             if hqq_global_option.use_half:
                 W_r = W_r.half()
             if (meta["group_size"] is not None) and (meta["nbits"] == 3):
-                W_r = W_r[: meta["group_size"]] if (meta["axis"] == 0) else W_r[:, : meta["group_size"]]
+                W_r = (
+                    W_r[: meta["group_size"]]
+                    if (meta["axis"] == 0)
+                    else W_r[:, : meta["group_size"]]
+                )
         else:
             if hqq_global_option.use_half:
                 W_r = W_q.half()
@@ -207,7 +223,9 @@ class HQQLinear(torch.nn.Linear):
         self.in_features, self.out_features = W.t().shape
 
         # Quantize weight
-        q_weight = HQQTensorHandle.quantize(float_tensor=W, tensor_quant_config=weight_quant_config)
+        q_weight = HQQTensorHandle.quantize(
+            float_tensor=W, tensor_quant_config=weight_quant_config
+        )
         self.q_weight = q_weight
 
         # * The dequantization process only happens in the first forward pass.

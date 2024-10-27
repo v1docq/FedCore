@@ -13,17 +13,25 @@ from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import FEDOT_TASK
 
 
-def get_compression_input(model, train_dataloader, calib_dataloader, task='classification', num_classes=None, train_loss=None):
+
+def get_compression_input(
+    model,
+    train_dataloader,
+    calib_dataloader,
+    task="classification",
+    num_classes=None,
+    train_loss=None,
+):
     input_data = CompressionInputData(
-                features=np.zeros((2, 2)),
-                train_dataloader=train_dataloader,
-                calib_dataloader=calib_dataloader,
-                task=FEDOT_TASK[task],
-                num_classes=num_classes or len(train_dataloader.dataset.classes),
-                target=model
+        features=np.zeros((2, 2)),
+        train_dataloader=train_dataloader,
+        calib_dataloader=calib_dataloader,
+        task=FEDOT_TASK[task],
+        num_classes=num_classes or len(train_dataloader.dataset.classes),
+        target=model,
     )
     input_data.supplementary_data.is_auto_preprocessed = True
-    input_data.supplementary_data.col_type_ids = {'loss': train_loss}
+    input_data.supplementary_data.col_type_ids = {"loss": train_loss}
     return input_data
 
 
@@ -43,9 +51,9 @@ def check_multivariate_data(data: pd.DataFrame) -> tuple:
         return isinstance(data.iloc[0, 0], pd.Series), data.values
 
 
-def init_input_data(X: pd.DataFrame,
-                    y: Optional[np.ndarray],
-                    task: str = 'classification') -> InputData:
+def init_input_data(
+    X: pd.DataFrame, y: Optional[np.ndarray], task: str = "classification"
+) -> InputData:
     """
     Initializes a Fedot InputData object from input features and target.
 
@@ -60,34 +68,39 @@ def init_input_data(X: pd.DataFrame,
     """
 
     is_multivariate_data, features = check_multivariate_data(X)
-    task_dict = {'classification': Task(TaskTypesEnum.classification),
-                 'regression': Task(TaskTypesEnum.regression)}
+    task_dict = {
+        "classification": Task(TaskTypesEnum.classification),
+        "regression": Task(TaskTypesEnum.regression),
+    }
 
-    if y is not None and isinstance(
-            y[0], np.str_) and task == 'classification':
+    if y is not None and isinstance(y[0], np.str_) and task == "classification":
         label_encoder = LabelEncoder()
         y = label_encoder.fit_transform(y)
-    elif y is not None and isinstance(y[0], np.str_) and task == 'regression':
+    elif y is not None and isinstance(y[0], np.str_) and task == "regression":
         y = y.astype(float)
 
     data_type = DataTypesEnum.image if is_multivariate_data else DataTypesEnum.table
-    input_data = InputData(idx=np.arange(len(X)),
-                           features=np.array(features.tolist()).astype(float),
-                           target=y.reshape(-1, 1) if y is not None else y,
-                           task=task_dict[task],
-                           data_type=data_type)
+    input_data = InputData(
+        idx=np.arange(len(X)),
+        features=np.array(features.tolist()).astype(float),
+        target=y.reshape(-1, 1) if y is not None else y,
+        task=task_dict[task],
+        data_type=data_type,
+    )
 
     if input_data.target is not None:
-        if task == 'regression':
+        if task == "regression":
             input_data.target = input_data.target.squeeze()
-        elif task == 'classification':
+        elif task == "classification":
             input_data.target[input_data.target == -1] = 0
 
     # Replace NaN and infinite values with 0 in features
     input_data.features = np.where(
-        np.isnan(input_data.features), 0, input_data.features)
+        np.isnan(input_data.features), 0, input_data.features
+    )
     input_data.features = np.where(
-        np.isinf(input_data.features), 0, input_data.features)
+        np.isinf(input_data.features), 0, input_data.features
+    )
 
     return input_data
 

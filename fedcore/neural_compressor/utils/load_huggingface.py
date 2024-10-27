@@ -113,16 +113,26 @@ class OptimizedModel:
                 r"best_configure",
             ]
             if keys_to_ignore_on_load_unexpected is None:
-                model_class._keys_to_ignore_on_load_unexpected = quantized_keys_to_ignore_on_load
+                model_class._keys_to_ignore_on_load_unexpected = (
+                    quantized_keys_to_ignore_on_load
+                )
             else:
-                model_class._keys_to_ignore_on_load_unexpected.extend(quantized_keys_to_ignore_on_load)
+                model_class._keys_to_ignore_on_load_unexpected.extend(
+                    quantized_keys_to_ignore_on_load
+                )
             missing_keys_to_ignore_on_load = [r"weight", r"bias"]
             if keys_to_ignore_on_load_missing is None:
-                model_class._keys_to_ignore_on_load_missing = missing_keys_to_ignore_on_load
+                model_class._keys_to_ignore_on_load_missing = (
+                    missing_keys_to_ignore_on_load
+                )
             else:  # pragma: no cover
-                model_class._keys_to_ignore_on_load_missing.extend(missing_keys_to_ignore_on_load)
+                model_class._keys_to_ignore_on_load_missing.extend(
+                    missing_keys_to_ignore_on_load
+                )
 
-            if not os.path.isdir(model_name_or_path) and not os.path.isfile(model_name_or_path):  # pragma: no cover
+            if not os.path.isdir(model_name_or_path) and not os.path.isfile(
+                model_name_or_path
+            ):  # pragma: no cover
                 from transformers.utils import cached_file
 
                 try:
@@ -168,17 +178,23 @@ class OptimizedModel:
                 **kwargs,
             )
 
-            model_class._keys_to_ignore_on_load_unexpected = keys_to_ignore_on_load_unexpected
+            model_class._keys_to_ignore_on_load_unexpected = (
+                keys_to_ignore_on_load_unexpected
+            )
             model_class._keys_to_ignore_on_load_missing = keys_to_ignore_on_load_missing
 
-            if not os.path.isdir(model_name_or_path) and not os.path.isfile(model_name_or_path):  # pragma: no cover
+            if not os.path.isdir(model_name_or_path) and not os.path.isfile(
+                model_name_or_path
+            ):  # pragma: no cover
                 # pylint: disable=E0611
                 from packaging.version import Version
 
                 if Version(transformers.__version__) < Version("4.22.0"):
                     from transformers.file_utils import cached_path, hf_bucket_url
 
-                    weights_file = hf_bucket_url(model_name_or_path, filename=WEIGHTS_NAME, revision=revision)
+                    weights_file = hf_bucket_url(
+                        model_name_or_path, filename=WEIGHTS_NAME, revision=revision
+                    )
                     try:
                         # Load from URL or cache if already cached
                         resolved_weights_file = cached_path(
@@ -251,7 +267,10 @@ class OptimizedModel:
 
                 q_model = load(resolved_weights_file, model)
             else:
-                weights_file = os.path.join(os.path.abspath(os.path.expanduser(model_name_or_path)), WEIGHTS_NAME)
+                weights_file = os.path.join(
+                    os.path.abspath(os.path.expanduser(model_name_or_path)),
+                    WEIGHTS_NAME,
+                )
                 q_model = load(weights_file, model)
 
             del model

@@ -34,7 +34,9 @@ def adaptor_registry(cls):
     Args:
         cls (class): The class of register.
     """
-    assert cls.__name__.endswith("Adaptor"), "The name of subclass of Adaptor should end with 'Adaptor' substring."
+    assert cls.__name__.endswith(
+        "Adaptor"
+    ), "The name of subclass of Adaptor should end with 'Adaptor' substring."
     if cls.__name__[: -len("Adaptor")].lower() in FRAMEWORKS:
         raise ValueError("Cannot have two frameworks with the same name.")
     FRAMEWORKS[cls.__name__[: -len("Adaptor")].lower()] = cls
@@ -61,7 +63,14 @@ class Adaptor(object):
 
     @abstractmethod
     def evaluate(
-        self, model, dataloader, postprocess=None, metric=None, measurer=None, iteration=-1, tensorboard=False
+        self,
+        model,
+        dataloader,
+        postprocess=None,
+        metric=None,
+        measurer=None,
+        iteration=-1,
+        tensorboard=False,
     ):
         """The function is used to run evaluation on validation dataset.
 
@@ -99,7 +108,13 @@ class Adaptor(object):
 
     @abstractmethod
     def inspect_tensor(
-        self, model, dataloader, op_list=[], iteration_list=[], inspect_type="activation", save_to_disk=False
+        self,
+        model,
+        dataloader,
+        op_list=[],
+        iteration_list=[],
+        inspect_type="activation",
+        save_to_disk=False,
     ):
         """The function is used by tune strategy class for dumping tensor info.
 

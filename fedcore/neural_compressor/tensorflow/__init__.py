@@ -12,11 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fedcore.neural_compressor.tensorflow.utils import register_algo, Model
-from fedcore.neural_compressor.tensorflow.quantization import (
-    quantize_model,
-    StaticQuantConfig,
-    SmoothQuantConfig,
-    get_default_sq_config,
-    get_default_static_quant_config,
-)

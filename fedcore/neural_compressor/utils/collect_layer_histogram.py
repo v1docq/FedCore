@@ -29,7 +29,9 @@ class LayerHistogramCollector(object):
     quantization using KL divergence.
     """
 
-    def __init__(self, num_bins=8001, layer_tensor=None, include_layer=None, logger=None):
+    def __init__(
+        self, num_bins=8001, layer_tensor=None, include_layer=None, logger=None
+    ):
         """Init a LayerHistogramCollector object.
 
         Args:
@@ -56,12 +58,18 @@ class LayerHistogramCollector(object):
                 continue
             for arr in self.layer_tensor[name]:
                 if self.logger:
-                    self.logger.debug("Collect layer {} histogram of shape {}.".format(name, arr.shape))
+                    self.logger.debug(
+                        "Collect layer {} histogram of shape {}.".format(
+                            name, arr.shape
+                        )
+                    )
                 min_range = np.min(arr)
                 max_range = np.max(arr)
                 th = max(abs(min_range), abs(max_range))
                 if name in self.hist_dict:
                     self.hist_dict[name] = combine_histogram(self.hist_dict[name], arr)
                 else:
-                    hist, hist_edges = np.histogram(arr, bins=self.num_bins, range=(-th, th))
+                    hist, hist_edges = np.histogram(
+                        arr, bins=self.num_bins, range=(-th, th)
+                    )
                     self.hist_dict[name] = (hist, hist_edges, min_range, max_range, th)

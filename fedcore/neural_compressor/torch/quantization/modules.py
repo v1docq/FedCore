@@ -17,7 +17,6 @@
 """Torch.nn.Module Class Definition."""
 # Note: Do not import this file unless you have already imported torch,
 # since the model classes inherit torch.nn.Module.
-import math
 
 import torch
 import torch.nn as nn

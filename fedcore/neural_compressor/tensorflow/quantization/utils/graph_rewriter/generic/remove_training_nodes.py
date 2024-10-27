@@ -16,7 +16,9 @@
 # limitations under the License.
 """Remove training nodes Graph Rewriter."""
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase
@@ -25,7 +27,12 @@ from ..graph_base import GraphRewriterBase
 class RemoveTrainingNodesOptimizer(GraphRewriterBase):
     """Remove training nodes optimizer."""
 
-    def __init__(self, model, protected_nodes=[], types_to_splice=["Identity", "CheckNumerics", "StopGradient"]):
+    def __init__(
+        self,
+        model,
+        protected_nodes=[],
+        types_to_splice=["Identity", "CheckNumerics", "StopGradient"],
+    ):
         """Initilizaiton."""
         super().__init__(model)
         self.protected_nodes = protected_nodes
@@ -51,7 +58,10 @@ class RemoveTrainingNodesOptimizer(GraphRewriterBase):
                     node_names_with_control_input.add(node_name)
 
         for node_name, v in graph_info.items():
-            if v.node.op in self.types_to_splice and v.node.name not in self.protected_nodes:
+            if (
+                v.node.op in self.types_to_splice
+                and v.node.name not in self.protected_nodes
+            ):
                 # We don't want to remove nodes that have control edge inputs, because
                 # they might be involved in subtle dependency issues that removing them
                 # will jeopardize.
@@ -59,7 +69,11 @@ class RemoveTrainingNodesOptimizer(GraphRewriterBase):
                     names_to_splice[node_name] = v.node.input[0]
 
         # We also don't want to remove nodes which are used as control edge inputs.
-        names_to_splice = {name: value for name, value in names_to_splice.items() if name not in control_input_names}
+        names_to_splice = {
+            name: value
+            for name, value in names_to_splice.items()
+            if name not in control_input_names
+        }
         for k, _ in names_to_splice.items():
             graph_handle.remove_node_with_single_input_output(k)
 

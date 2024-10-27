@@ -273,7 +273,9 @@ def prepare_dataloader(nc_model, ctx, data_x):
     dataloader = data_x
     if isinstance(dataloader, mx.io.DataIter):
         dataloader = DataIterLoader(dataloader)
-    assert isiterable(dataloader), "Dataloader must be iterable (mx.gluon.data.DataLoader-like)"
+    assert isiterable(
+        dataloader
+    ), "Dataloader must be iterable (mx.gluon.data.DataLoader-like)"
 
     model_x = nc_model.model
     if isinstance(model_x, mx.gluon.HybridBlock):
@@ -289,7 +291,10 @@ def prepare_dataloader(nc_model, ctx, data_x):
             else:
                 break
         inputs, _ = model_x._cached_graph
-        input_desc = [mx.io.DataDesc(name=i.name, shape=d.shape, dtype=d.dtype) for i, d in zip(inputs, data)]
+        input_desc = [
+            mx.io.DataDesc(name=i.name, shape=d.shape, dtype=d.dtype)
+            for i, d in zip(inputs, data)
+        ]
     elif isinstance(model_x, tuple) and isinstance(model_x[0], mx.symbol.Symbol):
         assert hasattr(
             data_x, "provide_data"
@@ -351,10 +356,9 @@ def _dequantize_sym_name(sym_name, check_list=None):
     elif sym_name.startswith(QUANTIZED_NODE_PREFIX):
         op_type = OpType.QUANTIZED
         name = sym_name[len(QUANTIZED_NODE_PREFIX) :]
-        assert (
-            check_list is None or name in check_list
-        ), "name of the quantized symbol must be in the following format: " '"{}_<fp32_sym_name>". Symbol: {}'.format(
-            QUANTIZED_NODE_PREFIX, name
+        assert check_list is None or name in check_list, (
+            "name of the quantized symbol must be in the following format: "
+            '"{}_<fp32_sym_name>". Symbol: {}'.format(QUANTIZED_NODE_PREFIX, name)
         )
     return (name, op_type)
 
@@ -373,11 +377,17 @@ def query_quantizable_nodes(sym_model, ctx, dataloader):
     assert isinstance(dataloader, DataLoaderWrap)
 
     symnet = sym_model[0]
-    nodes_ops = {n["name"]: n["op"].lower() for n in json.loads(symnet.tojson())["nodes"]}
+    nodes_ops = {
+        n["name"]: n["op"].lower() for n in json.loads(symnet.tojson())["nodes"]
+    }
 
-    qmodel, calib_tensors = quantize_sym_model(sym_model, ctx, {"quantized_dtype": "auto", "quantize_mode": "smart"})
+    qmodel, calib_tensors = quantize_sym_model(
+        sym_model, ctx, {"quantized_dtype": "auto", "quantize_mode": "smart"}
+    )
     qsymnet = qmodel[0]
-    qnodes_ops = {n["name"]: n["op"].lower() for n in json.loads(qsymnet.tojson())["nodes"]}
+    qnodes_ops = {
+        n["name"]: n["op"].lower() for n in json.loads(qsymnet.tojson())["nodes"]
+    }
 
     # collect fp32 tensors
     collector = NameCollector()
@@ -405,14 +415,18 @@ def query_quantizable_nodes(sym_model, ctx, dataloader):
         node_name = sym_name if node_name == "" else node_name
         assert qnodes_ops[qsym.name] not in QUANTIZE_OP_NAMES or (
             op_type == OpType.QUANTIZE
-        ), 'Quantize node was not recognised properly. Node name: "{}"'.format(node_name)
+        ), 'Quantize node was not recognised properly. Node name: "{}"'.format(
+            node_name
+        )
         if node_name in calib_nodes:
             if op_type == OpType.QUANTIZE:
                 quantizable[node_name] = QUANTIZE_OP_NAME
             elif op_type == OpType.QUANTIZED:
                 quantizable[node_name] = nodes_ops[node_name]
 
-    quantizable_nodes = [{"name": name, "type": op} for (name, op) in quantizable.items()]
+    quantizable_nodes = [
+        {"name": name, "type": op} for (name, op) in quantizable.items()
+    ]
     op_nodes = {k: v for k, v in nodes_ops.items() if v not in NULL_OP_NAMES}
     return quantizable_nodes, tensor_to_node, op_nodes
 
@@ -457,8 +471,9 @@ def _tensor_to_node(tensor, nodes):
         node = re.sub(pattern, "", tensor)
         if node in nodes and node not in mapping:
             mapping.append(node)
-            assert len(mapping) == 1, "Tensor matched to more than one node. " "Tensor: {}, matched: {}".format(
-                tensor, mapping
+            assert len(mapping) == 1, (
+                "Tensor matched to more than one node. "
+                "Tensor: {}, matched: {}".format(tensor, mapping)
             )
     return mapping[0] if len(mapping) > 0 else ""
 
@@ -487,15 +502,22 @@ def _qtensor_to_tensor(qtensor, tensors):
         tensor = re.sub(pattern, repl, qtensor)
         if tensor in tensors and tensor not in mapping:
             mapping.append(tensor)
-            assert (
-                len(mapping) == 1
-            ), "Quantized tensor matched more than one fp32 tensor. " "Quantized tensor: {}, matched: {}".format(
-                qtensor, mapping
+            assert len(mapping) == 1, (
+                "Quantized tensor matched more than one fp32 tensor. "
+                "Quantized tensor: {}, matched: {}".format(qtensor, mapping)
             )
     return mapping[0] if len(mapping) > 0 else ""
 
 
-def run_forward(sym_model, ctx, dataloader, b_filter, collector=None, pre_batch=None, post_batch=None):
+def run_forward(
+    sym_model,
+    ctx,
+    dataloader,
+    b_filter,
+    collector=None,
+    pre_batch=None,
+    post_batch=None,
+):
     """Run forward propagation on the model.
 
     Args:
@@ -510,17 +532,23 @@ def run_forward(sym_model, ctx, dataloader, b_filter, collector=None, pre_batch=
         int: batch count.
     """
     assert isinstance(dataloader, DataLoaderWrap)
-    assert collector is None or (hasattr(collector, "collect_gluon") and hasattr(collector, "collect_module"))
+    assert collector is None or (
+        hasattr(collector, "collect_gluon") and hasattr(collector, "collect_module")
+    )
 
     if check_mx_version("2.0.0"):
         sym_block = make_symbol_block(sym_model, ctx, dataloader.input_desc)
         if collector is not None:
             sym_block.register_op_hook(collector.collect_gluon, monitor_all=True)
-        return _gluon_forward(sym_block, ctx, dataloader, b_filter, pre_batch, post_batch)
+        return _gluon_forward(
+            sym_block, ctx, dataloader, b_filter, pre_batch, post_batch
+        )
     else:
         mod = make_module(sym_model, ctx, dataloader.input_desc)
         if collector is not None:
-            mod._exec_group.execs[0].set_monitor_callback(collector.collect_module, monitor_all=True)
+            mod._exec_group.execs[0].set_monitor_callback(
+                collector.collect_module, monitor_all=True
+            )
     return _module_forward(mod, dataloader, b_filter, pre_batch, post_batch)
 
 
@@ -542,11 +570,15 @@ def make_symbol_block(sym_model, ctx, input_desc):
     param_dict = args
     param_dict.update(auxs)
     if check_mx_version("2.0.0"):
-        sym_block.load_dict(param_dict, cast_dtype=True, dtype_source="saved", allow_missing=True)
+        sym_block.load_dict(
+            param_dict, cast_dtype=True, dtype_source="saved", allow_missing=True
+        )
     else:
         # params = {'arg:' + name: param for name, param in args.items()}
         # params.update({'aux:' + name: param for name, param in auxs.items()})
-        sym_block.collect_params().load_dict(param_dict, ctx=ctx, cast_dtype=True, dtype_source="saved")
+        sym_block.collect_params().load_dict(
+            param_dict, ctx=ctx, cast_dtype=True, dtype_source="saved"
+        )
     return sym_block
 
 
@@ -585,7 +617,12 @@ def make_module(sym_model, ctx, input_desc):
     assert isinstance(sym_model, tuple) and isinstance(sym_model[0], mx.symbol.Symbol)
 
     symnet, args, auxs = sym_model
-    mod = mx.module.module.Module(symbol=symnet, data_names=[d.name for d in input_desc], label_names=None, context=ctx)
+    mod = mx.module.module.Module(
+        symbol=symnet,
+        data_names=[d.name for d in input_desc],
+        label_names=None,
+        context=ctx,
+    )
     mod.bind(input_desc, for_training=False)
     mod.set_params(args, auxs, allow_missing=True)
     return mod
@@ -643,7 +680,11 @@ def parse_tune_config(tune_cfg, quantizable_nodes):
             calib_minmax_nodes.add(op["name"])
     assert len(calib_kl_nodes & calib_minmax_nodes) == 0
 
-    quant_cfg = {"excluded_symbols": excluded_symbols, "quantized_dtype": "auto", "quantize_mode": "smart"}
+    quant_cfg = {
+        "excluded_symbols": excluded_symbols,
+        "quantized_dtype": "auto",
+        "quantize_mode": "smart",
+    }
     if check_mx_version("1.7.0"):
         quant_cfg["quantize_granularity"] = "tensor-wise"
 
@@ -675,7 +716,9 @@ def distribute_calib_tensors(calib_tensors, calib_cfg, tensor_to_node):
     kl_tensors = {}
     minmax_tensors = {}
     for cl in calib_tensors:
-        assert cl in tensor_to_node, "`calib_tensors` entry matched no node. Entry: {}".format(cl)
+        assert (
+            cl in tensor_to_node
+        ), "`calib_tensors` entry matched no node. Entry: {}".format(cl)
         node = tensor_to_node[cl]
         if node in calib_cfg["calib_kl_nodes"]:
             kl_tensors[cl] = node
@@ -684,10 +727,9 @@ def distribute_calib_tensors(calib_tensors, calib_cfg, tensor_to_node):
 
     kl_tensors = set(kl_tensors.keys())
     minmax_tensors = set(minmax_tensors.keys())
-    assert (
-        len(kl_tensors & minmax_tensors) == 0
-    ), "same `calib_tensors` entries matched both kl " "and minmax nodes. Entries: {}".format(
-        kl_tensors & minmax_tensors
+    assert len(kl_tensors & minmax_tensors) == 0, (
+        "same `calib_tensors` entries matched both kl "
+        "and minmax nodes. Entries: {}".format(kl_tensors & minmax_tensors)
     )
 
     # `rest` are the nodes that require calibration because of some node being excluded
@@ -716,22 +758,32 @@ def calib_model(qsym_model, calib_data, calib_cfg):
 
     qsymnet, qargs, auxs = qsym_model
     if check_mx_version("2.0.0"):
-        return mx.contrib.quantization.calib_graph(qsymnet, qargs, auxs, calib_data, calib_cfg["calib_mode"])
+        return mx.contrib.quantization.calib_graph(
+            qsymnet, qargs, auxs, calib_data, calib_cfg["calib_mode"]
+        )
     else:
         return mx.contrib.quantization.calib_graph(
-            qsymnet, qargs, auxs, calib_data, calib_cfg["calib_mode"], quantized_dtype=calib_cfg["quantized_dtype"]
+            qsymnet,
+            qargs,
+            auxs,
+            calib_data,
+            calib_cfg["calib_mode"],
+            quantized_dtype=calib_cfg["quantized_dtype"],
         )
 
 
 def amp_convert(sym_model, input_desc, amp_cfg):
     """Convert model to support amp."""
     assert check_mx_version("2.0.0"), (
-        "AMP is supported since MXNet 2.0. This error is due to " "an error in the configuration file."
+        "AMP is supported since MXNet 2.0. This error is due to "
+        "an error in the configuration file."
     )
     from mxnet import amp
 
     input_dtypes = {i.name: i.dtype for i in input_desc}
-    return amp.convert_model(*sym_model, input_dtypes, **amp_cfg, cast_params_offline=True)
+    return amp.convert_model(
+        *sym_model, input_dtypes, **amp_cfg, cast_params_offline=True
+    )
 
 
 class DataLoaderWrap:
@@ -787,11 +839,9 @@ class CollectorBase:
 
     def pre_batch(self, m, b):
         """Function to call prior to batch inference."""
-        pass
 
     def post_batch(self, m, b, o):
         """Function to call after batch inference."""
-        pass
 
 
 class CalibCollector(CollectorBase):
@@ -820,16 +870,23 @@ class CalibCollector(CollectorBase):
         # minmax (always)
         if name in self.min_max_dict:
             cur_min_max = self.min_max_dict[name]
-            self.min_max_dict[name] = (min(cur_min_max[0], min_range), max(cur_min_max[1], max_range))
+            self.min_max_dict[name] = (
+                min(cur_min_max[0], min_range),
+                max(cur_min_max[1], max_range),
+            )
         else:
             self.min_max_dict[name] = (min_range, max_range)
 
         if alg == "kl":  # histogram only when kl is specified
             arr = arr.asnumpy()
             if name in self.hist_dict:
-                self.hist_dict[name] = self._combine_histogram(self.hist_dict[name], arr, min_range, max_range, th)
+                self.hist_dict[name] = self._combine_histogram(
+                    self.hist_dict[name], arr, min_range, max_range, th
+                )
             else:
-                hist, hist_edges = np.histogram(arr, bins=self.num_bins, range=(-th, th))
+                hist, hist_edges = np.histogram(
+                    arr, bins=self.num_bins, range=(-th, th)
+                )
                 self.hist_dict[name] = (hist, hist_edges, min_range, max_range, th)
 
     @staticmethod
@@ -840,7 +897,9 @@ class CalibCollector(CollectorBase):
                 old_hist, arr, new_min, new_max, new_th
             )
         else:
-            return mx.contrib.quantization.combine_histogram(old_hist, arr, new_min, new_max, new_th)
+            return mx.contrib.quantization.combine_histogram(
+                old_hist, arr, new_min, new_max, new_th
+            )
 
     def calc_kl_th_dict(self, quantized_dtype):
         """Calculation kl thresholds."""
@@ -850,7 +909,9 @@ class CalibCollector(CollectorBase):
                     self.hist_dict, quantized_dtype
                 )
             else:
-                return mx.contrib.quantization._get_optimal_thresholds(self.hist_dict, quantized_dtype)
+                return mx.contrib.quantization._get_optimal_thresholds(
+                    self.hist_dict, quantized_dtype
+                )
         return {}
 
 
@@ -885,7 +946,10 @@ class TensorCollector(CollectorBase):
 
         node = self.tensor_to_node[name]
         if node in self.include_nodes:
-            self.tensors_dicts[-1].setdefault(node, {})[name] = (is_quantized, arr.copy())
+            self.tensors_dicts[-1].setdefault(node, {})[name] = (
+                is_quantized,
+                arr.copy(),
+            )
 
     def pre_batch(self, m, b):
         """Preprocess."""

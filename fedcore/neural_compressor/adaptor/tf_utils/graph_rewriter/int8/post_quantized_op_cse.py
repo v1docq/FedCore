@@ -22,7 +22,9 @@ from tensorflow.core.framework import graph_pb2
 from tensorflow.python.framework import tensor_util
 
 from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.adaptor.tf_utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.adaptor.tf_utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.utils.utility import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase
@@ -62,7 +64,9 @@ class PostCseOptimizer(GraphRewriterBase):
 
         for _, v in graph_info.items():
             if "_class" in v.node.attr:
-                loc_attr_node.append(v.node.attr["_class"].list.s[0].decode().split(":@")[-1])
+                loc_attr_node.append(
+                    v.node.attr["_class"].list.s[0].decode().split(":@")[-1]
+                )
         for node_name, i in graph_info.items():
             if node_name in loc_attr_node or i.node.op not in ("QuantizeV2", "Const"):
                 continue
@@ -84,14 +88,17 @@ class PostCseOptimizer(GraphRewriterBase):
             for j in v[1:]:
                 if node_type == "Const" and j in graph_info:
                     output_op_types = [
-                        graph_info[out_name].node.op in self.control_op_types for out_name in graph_info[j].outputs
+                        graph_info[out_name].node.op in self.control_op_types
+                        for out_name in graph_info[j].outputs
                     ]
                     if any(output_op_types):
                         continue
 
                     for next_node in list(graph_info[j].outputs):
                         matched_index = 0
-                        for index, origin_input in enumerate(graph_info[next_node].node.input):
+                        for index, origin_input in enumerate(
+                            graph_info[next_node].node.input
+                        ):
                             if origin_input == j:
                                 matched_index = index
                                 break
@@ -108,7 +115,10 @@ class PostCseOptimizer(GraphRewriterBase):
                     next_node = graph_info[j].outputs[0]
                     quantize_v2_output_names = (j, j + ":1", j + ":2")
 
-                    replace_index = [list(graph_info[next_node].node.input).index(i) for i in quantize_v2_output_names]
+                    replace_index = [
+                        list(graph_info[next_node].node.input).index(i)
+                        for i in quantize_v2_output_names
+                    ]
 
                     graph_info[next_node].node.input[replace_index[0]] = v[0]
 

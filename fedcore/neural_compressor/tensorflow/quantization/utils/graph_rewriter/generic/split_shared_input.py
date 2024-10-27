@@ -18,8 +18,12 @@
 
 from tensorflow.core.framework import node_def_pb2
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 from fedcore.neural_compressor.tensorflow.utils import dump_elapsed_time
 
 from ..graph_base import GraphRewriterBase
@@ -44,7 +48,10 @@ class SplitSharedInputOptimizer(GraphRewriterBase):
             for _, input_node_name in enumerate(node.input):
                 if input_node_name.startswith("^"):
                     continue
-                if graph_info[Helper.node_name_from_input(input_node_name)].node.op == "Const":
+                if (
+                    graph_info[Helper.node_name_from_input(input_node_name)].node.op
+                    == "Const"
+                ):
                     # is shared and current node is not the first one
                     # sharing the input
                     if input_node_name in input_map:
@@ -52,8 +59,14 @@ class SplitSharedInputOptimizer(GraphRewriterBase):
                         input_map[input_node_name].append(node.name)
                         new_input_node = node_def_pb2.NodeDef()
                         new_input_node.CopyFrom(graph_info[input_node_name].node)
-                        new_input_node.name = input_node_name + "_nc_share_" + str(len(input_map[input_node_name]))
-                        cur_graph.replace_const_node(new_input_node, [node.name], input_node_name, False)
+                        new_input_node.name = (
+                            input_node_name
+                            + "_nc_share_"
+                            + str(len(input_map[input_node_name]))
+                        )
+                        cur_graph.replace_const_node(
+                            new_input_node, [node.name], input_node_name, False
+                        )
                     else:
                         input_map[input_node_name] = [node.name]
 

@@ -20,12 +20,12 @@ import os
 import pickle
 import random
 import sys
-import tempfile
 
 import numpy as np
-import yaml
 from deprecated import deprecated
 
+from .common import Model as NCModel
+from .strategy import EXP_STRATEGIES
 from ..conf.config import Graph_Optimization_Conf
 from ..conf.dotdict import DotDict, deep_get, deep_set
 from ..model import BaseModel
@@ -33,8 +33,6 @@ from ..model.model import get_model_fwk_name
 from ..utils import logger
 from ..utils.create_obj_from_config import create_dataloader
 from ..utils.utility import CpuInfo, time_limit
-from .common import Model as NCModel
-from .strategy import EXP_STRATEGIES
 
 
 @deprecated(version="2.0")
@@ -116,7 +114,9 @@ class Graph_Optimization:
         Returns:
             converted model: best converted model found, otherwise return None
         """
-        assert isinstance(self._model, BaseModel), "need set your Model for quantization...."
+        assert isinstance(
+            self._model, BaseModel
+        ), "need set your Model for quantization...."
 
         cfg = self.conf.usr_cfg
         if self.framework == "tensorflow":
@@ -128,11 +128,16 @@ class Graph_Optimization:
             if (
                 "bf16" in self._precisions
                 or (cfg.mixed_precision and "bf16" in cfg.mixed_precision.precisions)
-                or (cfg.graph_optimization and "bf16" in cfg.graph_optimization.precisions)
+                or (
+                    cfg.graph_optimization
+                    and "bf16" in cfg.graph_optimization.precisions
+                )
             ):
                 cfg.use_bf16 = True
         else:
-            logger.warning("Only TensorFlow graph optimization is supported at current stage.")
+            logger.warning(
+                "Only TensorFlow graph optimization is supported at current stage."
+            )
             sys.exit(0)
 
         # when eval_func is set, will be directly used and eval_dataloader can be None
@@ -142,11 +147,15 @@ class Graph_Optimization:
                 if eval_dataloader_cfg is None:
                     self._eval_func = None
                 else:
-                    self._eval_dataloader = create_dataloader(self.framework, eval_dataloader_cfg)
+                    self._eval_dataloader = create_dataloader(
+                        self.framework, eval_dataloader_cfg
+                    )
 
         strategy = cfg.tuning.strategy.name.lower()
 
-        assert strategy in EXP_STRATEGIES, "Tuning strategy {} is NOT supported".format(strategy)
+        assert strategy in EXP_STRATEGIES, "Tuning strategy {} is NOT supported".format(
+            strategy
+        )
 
         _resume = None
         # check if interrupted tuning procedure exists. if yes, it will resume the
@@ -157,14 +166,20 @@ class Graph_Optimization:
             else None
         )
         if self.resume_file:
-            assert os.path.exists(self.resume_file), "The specified resume file {} doesn't exist!".format(
+            assert os.path.exists(
                 self.resume_file
-            )
+            ), "The specified resume file {} doesn't exist!".format(self.resume_file)
             with open(self.resume_file, "rb") as f:
                 _resume = pickle.load(f).__dict__
 
         self.strategy = EXP_STRATEGIES[strategy](
-            self._model, self.conf, None, None, self._eval_dataloader, self._eval_func, _resume
+            self._model,
+            self.conf,
+            None,
+            None,
+            self._eval_dataloader,
+            self._eval_func,
+            _resume,
         )
 
         try:
@@ -173,7 +188,9 @@ class Graph_Optimization:
         except KeyboardInterrupt:
             pass
         except Exception as e:
-            logger.info("Unexpected exception {} happened during turing.".format(repr(e)))
+            logger.info(
+                "Unexpected exception {} happened during turing.".format(repr(e))
+            )
         finally:
             if self.strategy.best_qmodel:
                 logger.info(
@@ -187,7 +204,10 @@ class Graph_Optimization:
                     "Not found any converted model which meet accuracy goal. Exit."
                 )
 
-            logger.info("Graph optimization is done. Please invoke model.save() to save " "optimized model to disk.")
+            logger.info(
+                "Graph optimization is done. Please invoke model.save() to save "
+                "optimized model to disk."
+            )
 
             return self.strategy.best_qmodel
 
@@ -202,7 +222,9 @@ class Graph_Optimization:
     def set_config_by_model(self, model_obj):
         """Set model config."""
         if model_obj.framework() != "tensorflow":
-            logger.warning("Only TensorFlow graph optimization is supported at current stage.")
+            logger.warning(
+                "Only TensorFlow graph optimization is supported at current stage."
+            )
             sys.exit(0)
         self.conf.usr_cfg.model.framework = model_obj.framework()
 
@@ -213,15 +235,22 @@ class Graph_Optimization:
                     "the hardware doesn't support bf16 instruction."
                 )
             else:
-                logger.warning("Graph optimization exits due to the hardware " "doesn't support bf16 instruction.")
+                logger.warning(
+                    "Graph optimization exits due to the hardware "
+                    "doesn't support bf16 instruction."
+                )
                 sys.exit(0)
 
         self.conf.usr_cfg.graph_optimization.precisions = (
-            self._precisions if isinstance(self._precisions, list) else [self._precisions]
+            self._precisions
+            if isinstance(self._precisions, list)
+            else [self._precisions]
         )
         self.conf.usr_cfg.model.inputs = self._input
         if isinstance(self._output, str) and "," in self._output:
-            self.conf.usr_cfg.model.outputs = [s.strip() for s in self._output.split(",")]
+            self.conf.usr_cfg.model.outputs = [
+                s.strip() for s in self._output.split(",")
+            ]
         else:
             self.conf.usr_cfg.model.outputs = self._output
 
@@ -235,7 +264,9 @@ class Graph_Optimization:
         if isinstance(customized_precisions, list):
             self._precisions = sorted([i.strip() for i in customized_precisions])
         elif isinstance(customized_precisions, str):
-            self._precisions = sorted([i.strip() for i in customized_precisions.split(",")])
+            self._precisions = sorted(
+                [i.strip() for i in customized_precisions.split(",")]
+            )
 
     @property
     def input(self):
@@ -366,7 +397,9 @@ class Graph_Optimization:
             metric_cfg = {name: {**user_metric.kwargs}}
         else:
             for i in ["reset", "update", "result"]:
-                assert hasattr(user_metric, i), "Please realise {} function" "in user defined metric".format(i)
+                assert hasattr(
+                    user_metric, i
+                ), "Please realise {} function" "in user defined metric".format(i)
             metric_cls = type(user_metric).__name__
             name = "user_" + metric_cls
             metric_cfg = {name: id(user_metric)}
@@ -408,7 +441,11 @@ class Graph_Optimization:
                 "Override the value of `postprocess` field defined in yaml file"
                 " as user defines the value of `postprocess` attribute by code."
             )
-        deep_set(self.conf.usr_cfg, "evaluation.accuracy.postprocess.transform", postprocess_cfg)
+        deep_set(
+            self.conf.usr_cfg,
+            "evaluation.accuracy.postprocess.transform",
+            postprocess_cfg,
+        )
         from fedcore.neural_compressor.data import TRANSFORMS
 
         postprocesses = TRANSFORMS(self.framework, "postprocess")

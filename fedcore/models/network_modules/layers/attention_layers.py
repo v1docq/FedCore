@@ -17,27 +17,23 @@ class ScaledDotProductAttention(Module):
     """
 
     def __init__(
-            self,
-            d_model,
-            n_heads,
-            attn_dropout=0.,
-            res_attention=False,
-            lsa=False):
+        self, d_model, n_heads, attn_dropout=0.0, res_attention=False, lsa=False
+    ):
         self.attn_dropout = nn.Dropout(attn_dropout)
         self.res_attention = res_attention
         head_dim = d_model // n_heads
-        self.scale = nn.Parameter(torch.tensor(
-            head_dim ** -0.5), requires_grad=lsa)
+        self.scale = nn.Parameter(torch.tensor(head_dim**-0.5), requires_grad=lsa)
         self.lsa = lsa
 
     def forward(
-            self,
-            q: Tensor,
-            k: Tensor,
-            v: Tensor,
-            prev: Optional[Tensor] = None,
-            key_padding_mask: Optional[Tensor] = None,
-            attn_mask: Optional[Tensor] = None):
+        self,
+        q: Tensor,
+        k: Tensor,
+        v: Tensor,
+        prev: Optional[Tensor] = None,
+        key_padding_mask: Optional[Tensor] = None,
+        attn_mask: Optional[Tensor] = None,
+    ):
         """
         Method for forward pass of scaled dot-product attention.
 
@@ -77,7 +73,8 @@ class ScaledDotProductAttention(Module):
         # mask with shape [bs x q_len] (only when max_w_len == q_len)
         if key_padding_mask is not None:
             attn_scores.masked_fill_(
-                key_padding_mask.unsqueeze(1).unsqueeze(2), -np.inf)
+                key_padding_mask.unsqueeze(1).unsqueeze(2), -np.inf
+            )
 
         # normalize the attention weights
         # attn_weights   : [bs x n_heads x max_q_len x q_len]
@@ -95,15 +92,18 @@ class ScaledDotProductAttention(Module):
 
 
 class MultiHeadAttention(Module):
-    def __init__(self, d_model,
-                 n_heads,
-                 d_k=None,
-                 d_v=None,
-                 res_attention=False,
-                 attn_dropout=0.,
-                 proj_dropout=0.,
-                 qkv_bias=True,
-                 lsa=False):
+    def __init__(
+        self,
+        d_model,
+        n_heads,
+        d_k=None,
+        d_v=None,
+        res_attention=False,
+        attn_dropout=0.0,
+        proj_dropout=0.0,
+        qkv_bias=True,
+        lsa=False,
+    ):
         """Multi Head Attention Layer
 
         Args:
@@ -137,20 +137,23 @@ class MultiHeadAttention(Module):
             n_heads,
             attn_dropout=attn_dropout,
             res_attention=self.res_attention,
-            lsa=lsa)
+            lsa=lsa,
+        )
 
         # Poject output
         self.to_out = nn.Sequential(
-            nn.Linear(n_heads * d_v, d_model), nn.Dropout(proj_dropout))
+            nn.Linear(n_heads * d_v, d_model), nn.Dropout(proj_dropout)
+        )
 
     def forward(
-            self,
-            Q: Tensor,
-            K: Optional[Tensor] = None,
-            V: Optional[Tensor] = None,
-            prev: Optional[Tensor] = None,
-            key_padding_mask: Optional[Tensor] = None,
-            attn_mask: Optional[Tensor] = None):
+        self,
+        Q: Tensor,
+        K: Optional[Tensor] = None,
+        V: Optional[Tensor] = None,
+        prev: Optional[Tensor] = None,
+        key_padding_mask: Optional[Tensor] = None,
+        attn_mask: Optional[Tensor] = None,
+    ):
 
         bs = Q.size(0)
         if K is None:
@@ -159,11 +162,9 @@ class MultiHeadAttention(Module):
             V = Q
 
         # Linear (+ split in multiple heads)
-        q_s = self.W_Q(Q).view(bs, -1, self.n_heads, self.d_k).transpose(1,
-                                                                         2)
+        q_s = self.W_Q(Q).view(bs, -1, self.n_heads, self.d_k).transpose(1, 2)
         # q_s    : [bs x n_heads x max_q_len x d_k]
-        k_s = self.W_K(K).view(bs, -1, self.n_heads, self.d_k).permute(0, 2, 3,
-                                                                       1)
+        k_s = self.W_K(K).view(bs, -1, self.n_heads, self.d_k).permute(0, 2, 3, 1)
         # k_s    : [bs x n_heads x d_k x q_len] - transpose(1,2) + transpose(2,3)
         # v_s    : [bs x n_heads x q_len x d_v]
         v_s = self.W_V(V).view(bs, -1, self.n_heads, self.d_v).transpose(1, 2)
@@ -171,18 +172,25 @@ class MultiHeadAttention(Module):
         # Apply Scaled Dot-Product Attention (multiple heads)
         if self.res_attention:
             output, attn_weights, attn_scores = self.sdp_attn(
-                q_s, k_s, v_s, prev=prev, key_padding_mask=key_padding_mask, attn_mask=attn_mask)
+                q_s,
+                k_s,
+                v_s,
+                prev=prev,
+                key_padding_mask=key_padding_mask,
+                attn_mask=attn_mask,
+            )
         else:
             output, attn_weights = self.sdp_attn(
-                q_s, k_s, v_s, key_padding_mask=key_padding_mask, attn_mask=attn_mask)
+                q_s, k_s, v_s, key_padding_mask=key_padding_mask, attn_mask=attn_mask
+            )
         # output: [bs x n_heads x q_len x d_v],
         # attn: [bs x n_heads x q_len x q_len],
         # scores: [bs x n_heads x max_q_len x q_len]
 
         # back to the original inputs dimensions
-        output = output.transpose(
-            1, 2).contiguous().view(
-            bs, -1, self.n_heads * self.d_v)
+        output = (
+            output.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * self.d_v)
+        )
         # output: [bs x q_len x n_heads * d_v]
         output = self.to_out(output)
 

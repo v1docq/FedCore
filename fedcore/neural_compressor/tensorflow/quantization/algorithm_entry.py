@@ -17,8 +17,16 @@ from typing import Callable
 
 from fedcore.neural_compressor.common.utils import SMOOTH_QUANT, STATIC_QUANT
 from fedcore.neural_compressor.tensorflow.algorithms import KerasAdaptor
-from fedcore.neural_compressor.tensorflow.quantization.config import SmoothQuantConfig, StaticQuantConfig
-from fedcore.neural_compressor.tensorflow.utils import BaseModel, KerasModel, framework_specific_info, register_algo
+from fedcore.neural_compressor.tensorflow.quantization.config import (
+    SmoothQuantConfig,
+    StaticQuantConfig,
+)
+from fedcore.neural_compressor.tensorflow.utils import (
+    BaseModel,
+    KerasModel,
+    framework_specific_info,
+    register_algo,
+)
 
 
 @register_algo(name=STATIC_QUANT)
@@ -40,7 +48,9 @@ def static_quantize_entry(
         q_model: the quantized model.
     """
     keras_adaptor = KerasAdaptor(framework_specific_info)
-    q_model = keras_adaptor.quantize(quant_config, model, calib_dataloader, calib_iteration)
+    q_model = keras_adaptor.quantize(
+        quant_config, model, calib_dataloader, calib_iteration
+    )
     return q_model
 
 
@@ -51,7 +61,9 @@ def smooth_quant_entry(
     calib_dataloader: Callable = None,
     calib_iteration: int = 100,
 ):
-    assert not isinstance(model, KerasModel), "INC don't support smooth quantization for Keras models now."
+    assert not isinstance(
+        model, KerasModel
+    ), "INC don't support smooth quantization for Keras models now."
 
     from fedcore.neural_compressor.tensorflow.algorithms import SmoothQuant
 

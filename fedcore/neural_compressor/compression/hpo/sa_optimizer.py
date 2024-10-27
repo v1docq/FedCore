@@ -52,11 +52,15 @@ class SimulatedAnnealingOptimizer(object):
         self.iter = iter
         self.early_stop = early_stop
         self.log_interval = log_interval
-        self.best = (float("-inf"), None) if self.higher_is_better else (float("inf"), None)
+        self.best = (
+            (float("-inf"), None) if self.higher_is_better else (float("inf"), None)
+        )
         self.history = {"T": [], "F": []}
 
     def _metrospolis(self, f, f_new):
-        if (not self.higher_is_better and f_new <= f) or (self.higher_is_better and f_new >= f):
+        if (not self.higher_is_better and f_new <= f) or (
+            self.higher_is_better and f_new >= f
+        ):
             return 1
         else:
             if self.higher_is_better:
@@ -70,7 +74,9 @@ class SimulatedAnnealingOptimizer(object):
 
     def _generate_new_points(self, points):
         new_points = np.array(points)
-        new_points += self.T * (np.random.random(new_points.shape) - np.random.random(new_points.shape))
+        new_points += self.T * (
+            np.random.random(new_points.shape) - np.random.random(new_points.shape)
+        )
         return new_points
 
     def gen_next_params(self, func, points):
@@ -78,7 +84,9 @@ class SimulatedAnnealingOptimizer(object):
         count = 0
         last_modify = 0
         self.T = self.T0
-        self.best = (float("-inf"), None) if self.higher_is_better else (float("inf"), None)
+        self.best = (
+            (float("-inf"), None) if self.higher_is_better else (float("inf"), None)
+        )
         scores = func(points)
 
         self.history = {"T": [], "F": [], "P": []}

@@ -23,7 +23,9 @@ from .filter import Filter, filter_registry
 tf = LazyImport("tensorflow")
 
 
-@filter_registry(filter_type="LabelBalanceCOCORecord", framework="tensorflow, tensorflow_itex")
+@filter_registry(
+    filter_type="LabelBalanceCOCORecord", framework="tensorflow, tensorflow_itex"
+)
 class LabelBalanceCOCORecordFilter(Filter):
     """The label balance filter for COCO Record."""
 

@@ -64,7 +64,9 @@ def get_reg(config, modules, pattern):
     if reg_type is None:
         return BaseReg(config, modules, pattern)
     if reg_type not in REGS.keys():
-        assert False, f"regularizator does not support {reg_type}, currently only support {REGS.keys()}"
+        assert (
+            False
+        ), f"regularizator does not support {reg_type}, currently only support {REGS.keys()}"
     return REGS[reg_type](config, modules, pattern, config["reg_coeff"])
 
 
@@ -87,11 +89,9 @@ class BaseReg:
 
     def on_before_optimizer_step(self):
         """Implement before optimizer.step()."""
-        pass
 
     def on_after_optimizer_step(self):
         """Implement after optimizer.step()."""
-        pass
 
 
 @register_reg("group_lasso")

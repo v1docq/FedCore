@@ -16,9 +16,7 @@
 # limitations under the License.
 """Build SmoothQuant algorithm class."""
 
-import numpy as np
 
-from ..utils import logger
 from .algorithm import Algorithm, algorithm_registry
 
 

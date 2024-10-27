@@ -16,10 +16,11 @@
 # limitations under the License.
 """Normalization Operator."""
 
-import onnx
 
-from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import Operator, QOperator, op_registry, qop_registry
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg, ms_domain
+from fedcore.neural_compressor.adaptor.ox_utils.operators.ops import (
+    Operator,
+    op_registry,
+)
 
 
 @op_registry(op_types="BatchNormalization")

@@ -41,11 +41,15 @@ class BiasCorrection(GraphTransformBase):
     with this we don't change the min/max value, and correct the weight
     """
 
-    def __init__(self, input_graph, fp32_graph, method="weight_empirical", new_api=False):
+    def __init__(
+        self, input_graph, fp32_graph, method="weight_empirical", new_api=False
+    ):
         """Initialization."""
         # only support weight_empirical now
         self.bias_correct_map = {"weight_empirical": self._weight_empirical}
-        assert method in self.bias_correct_map, "only support weight empirical correction method"
+        assert (
+            method in self.bias_correct_map
+        ), "only support weight empirical correction method"
 
         super(BiasCorrection, self).__init__(input_graph)
         self.fp32_graph = fp32_graph
@@ -71,12 +75,16 @@ class BiasCorrection(GraphTransformBase):
                 if "QuantizedConv2D" not in node_op:
                     continue
 
-            int8_filter = self.node_mapping[self.get_node_name_from_input(node.input[1])]
+            int8_filter = self.node_mapping[
+                self.get_node_name_from_input(node.input[1])
+            ]
 
             int8_value = tensor_util.MakeNdarray(int8_filter.attr["value"].tensor)
             tr_int8_value = int8_value.transpose([3, 0, 1, 2])
 
-            fp32_filter_name = self.get_node_name_from_input(node.input[1]).split("_qint8_const")[0]
+            fp32_filter_name = self.get_node_name_from_input(node.input[1]).split(
+                "_qint8_const"
+            )[0]
             fp32_filter = self.fp32_node_mapping[fp32_filter_name]
 
             fp32_value = tensor_util.MakeNdarray(fp32_filter.attr["value"].tensor)
@@ -99,11 +107,19 @@ class BiasCorrection(GraphTransformBase):
             if channel_size == 1:
                 max_filter_tensor = []
                 min_filter_tensor = []
-                max_filter_tensor.append((max_filter_node.attr["value"].tensor.float_val)[0])
-                min_filter_tensor.append((min_filter_node.attr["value"].tensor.float_val)[0])
+                max_filter_tensor.append(
+                    (max_filter_node.attr["value"].tensor.float_val)[0]
+                )
+                min_filter_tensor.append(
+                    (min_filter_node.attr["value"].tensor.float_val)[0]
+                )
             else:
-                max_filter_tensor = tensor_util.MakeNdarray(max_filter_node.attr["value"].tensor)
-                min_filter_tensor = tensor_util.MakeNdarray(min_filter_node.attr["value"].tensor)
+                max_filter_tensor = tensor_util.MakeNdarray(
+                    max_filter_node.attr["value"].tensor
+                )
+                min_filter_tensor = tensor_util.MakeNdarray(
+                    min_filter_node.attr["value"].tensor
+                )
 
             tr_quantized_fp32_value = np.zeros_like(tr_fp32_value)
             tr_corrected_int8_value = np.zeros_like(tr_int8_value)
@@ -111,13 +127,18 @@ class BiasCorrection(GraphTransformBase):
             for i in range(channel_size):
                 scale = max(abs(max_filter_tensor[i]), abs(min_filter_tensor[i])) / 127
                 tr_quantized_fp32_value[i] = tr_int8_value[i].astype(np.float64) * scale
-                delta_mean = np.mean((tr_fp32_value[i] - tr_quantized_fp32_value[i]).flatten())
+                delta_mean = np.mean(
+                    (tr_fp32_value[i] - tr_quantized_fp32_value[i]).flatten()
+                )
                 var_ratio = (
-                    np.std(tr_fp32_value[i].flatten()) / np.std(tr_quantized_fp32_value[i].flatten())
+                    np.std(tr_fp32_value[i].flatten())
+                    / np.std(tr_quantized_fp32_value[i].flatten())
                     if np.std(tr_quantized_fp32_value[i].flatten()) != 0
                     else 1
                 )
-                tr_corrected_int8_value[i] = (var_ratio / scale) * (tr_fp32_value[i] + delta_mean)
+                tr_corrected_int8_value[i] = (var_ratio / scale) * (
+                    tr_fp32_value[i] + delta_mean
+                )
 
             correct_int8_value = tr_int8_value.transpose([1, 2, 3, 0])
             assert (
@@ -127,7 +148,9 @@ class BiasCorrection(GraphTransformBase):
             if np.sum(bias) != 0:
                 int8_filter.attr["value"].CopyFrom(
                     attr_value_pb2.AttrValue(
-                        tensor=tensor_util.make_tensor_proto(correct_int8_value, dtypes.qint8, int8_value.shape)
+                        tensor=tensor_util.make_tensor_proto(
+                            correct_int8_value, dtypes.qint8, int8_value.shape
+                        )
                     )
                 )
         return self.input_graph

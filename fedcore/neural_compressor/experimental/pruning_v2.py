@@ -28,10 +28,13 @@ from ..compression.pruner.utils import (
 )
 from ..conf.config import PruningConf
 from ..conf.pythonic_config import Config
-from ..config import WeightPruningConfig
 from ..model import BaseModel
 from ..utils import logger
-from ..utils.create_obj_from_config import create_dataloader, create_eval_func, create_train_func
+from ..utils.create_obj_from_config import (
+    create_dataloader,
+    create_eval_func,
+    create_train_func,
+)
 from ..utils.utility import GLOBAL_STATE, MODE, LazyImport
 from .component import Component
 from .pruner_legacy import PRUNERS
@@ -76,7 +79,9 @@ class Pruning(Component):
         #     self.conf = conf_fname_or_obj
         else:
             # yaml file
-            raise NotImplementedError("Only WeightPruningConfig config is supported currently.")
+            raise NotImplementedError(
+                "Only WeightPruningConfig config is supported currently."
+            )
         self.pruners_info = process_config(self.conf)
         # self.model = None # here skip
         # align with old Component based API
@@ -124,16 +129,25 @@ class Pruning(Component):
         linear_conv_cnt = 0
         param_cnt = 0
         for name, module in self._model.model.named_modules():
-            if type(module).__name__ in ["Linear"] or re.search(r"Conv.d", type(module).__name__) is not None:
+            if (
+                type(module).__name__ in ["Linear"]
+                or re.search(r"Conv.d", type(module).__name__) is not None
+            ):
                 linear_conv_cnt += module.weight.numel()
 
         for n, param in self._model.model.named_parameters():
             param_cnt += param.numel()
 
-        blockwise_over_matmul_gemm_conv = float(pattern_sparsity_cnt) / linear_conv_cnt if linear_conv_cnt != 0 else 0
-        elementwise_over_matmul_gemm_conv = float(element_sparsity_cnt) / linear_conv_cnt if linear_conv_cnt != 0 else 0
+        blockwise_over_matmul_gemm_conv = (
+            float(pattern_sparsity_cnt) / linear_conv_cnt if linear_conv_cnt != 0 else 0
+        )
+        elementwise_over_matmul_gemm_conv = (
+            float(element_sparsity_cnt) / linear_conv_cnt if linear_conv_cnt != 0 else 0
+        )
 
-        elementwise_over_all = float(element_sparsity_cnt) / param_cnt if param_cnt != 0 else 0
+        elementwise_over_all = (
+            float(element_sparsity_cnt) / param_cnt if param_cnt != 0 else 0
+        )
 
         logger.info(
             f"elementwise_over_matmul_gemm_conv:{elementwise_over_matmul_gemm_conv},"
@@ -141,7 +155,11 @@ class Pruning(Component):
             f"blockwise_over_matmul_gemm_conv:{blockwise_over_matmul_gemm_conv}"
         )
 
-        return elementwise_over_matmul_gemm_conv, elementwise_over_all, blockwise_over_matmul_gemm_conv
+        return (
+            elementwise_over_matmul_gemm_conv,
+            elementwise_over_all,
+            blockwise_over_matmul_gemm_conv,
+        )
 
     def _on_train_begin(self, dataloader=None):
         """Implement at the beginning of training process.
@@ -211,11 +229,12 @@ class Pruning(Component):
     def prepare(self):
         """Functions prepare for generate_hooks, generate_pruners."""
         # self.generate_hooks()
-        pass
 
     def pre_process(self):
         """Functions called before pruning begins, usually set up pruners."""
-        assert isinstance(self._model, BaseModel), "need set neural_compressor Model for pruning...."
+        assert isinstance(
+            self._model, BaseModel
+        ), "need set neural_compressor Model for pruning...."
 
         GLOBAL_STATE.STATE = MODE.PRUNING
         framework_specific_info = {
@@ -228,7 +247,9 @@ class Pruning(Component):
         }
 
         if self.framework == "tensorflow":
-            framework_specific_info.update({"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs})
+            framework_specific_info.update(
+                {"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs}
+            )
 
         self.adaptor = FRAMEWORKS[self.framework](framework_specific_info)
 
@@ -241,7 +262,9 @@ class Pruning(Component):
                 "in yaml file should be configured as train_dataloader property is NOT set!"
             )
             train_dataloader_cfg.distributed = self.train_distributed
-            self._train_dataloader = create_dataloader(self.framework, train_dataloader_cfg)
+            self._train_dataloader = create_dataloader(
+                self.framework, train_dataloader_cfg
+            )
 
         if self._eval_dataloader is None and self._eval_func is None:
             eval_dataloader_cfg = self.cfg.evaluation.accuracy.dataloader
@@ -250,7 +273,9 @@ class Pruning(Component):
                 "in yaml file should be configured as eval_dataloader property is NOT set!"
             )
             eval_dataloader_cfg.distributed = self.evaluation_distributed
-            self._eval_dataloader = create_dataloader(self.framework, eval_dataloader_cfg)
+            self._eval_dataloader = create_dataloader(
+                self.framework, eval_dataloader_cfg
+            )
 
         if self._train_func is None:
             # train section of pruning section in yaml file should be configured.
@@ -271,7 +296,8 @@ class Pruning(Component):
             # eval section in yaml file should be configured.
             eval_cfg = self.cfg.evaluation
             assert eval_cfg, (
-                "eval field of pruning section in yaml file must " "be configured for pruning if eval_func is NOT set."
+                "eval field of pruning section in yaml file must "
+                "be configured for pruning if eval_func is NOT set."
             )
             self._eval_func = create_eval_func(
                 self.framework,
@@ -291,14 +317,22 @@ class Pruning(Component):
         """
         logger.info("Start to get the baseline model's score before pruning.")
         self.baseline_score = self._eval_func(
-            self._model if getattr(self._eval_func, "builtin", None) else self._model.model
+            self._model
+            if getattr(self._eval_func, "builtin", None)
+            else self._model.model
         )
         logger.info("Baseline model's score is {}.".format(str(self.baseline_score)))
         logger.info("Model pruning begins.")
-        self._train_func(self._model if getattr(self._train_func, "builtin", None) else self._model.model)
+        self._train_func(
+            self._model
+            if getattr(self._train_func, "builtin", None)
+            else self._model.model
+        )
         logger.info("Model pruning is done. Start to evaluate the pruned model.")
         self.last_score = self._eval_func(
-            self._model if getattr(self._eval_func, "builtin", None) else self._model.model
+            self._model
+            if getattr(self._eval_func, "builtin", None)
+            else self._model.model
         )
         logger.info("Pruned model score is {}.".format(str(self.last_score)))
         return self._model
@@ -332,13 +366,21 @@ class Pruning(Component):
             for info in self.pruners_info:
                 pruner = generate_pruner_config(info)
                 if info.prune_type == "magnitude":
-                    self.pruners.append(PRUNERS["BasicMagnitude"](self._model, pruner, None))
+                    self.pruners.append(
+                        PRUNERS["BasicMagnitude"](self._model, pruner, None)
+                    )
                 elif info.prune_type == "pattern_lock":
-                    self.pruners.append(PRUNERS["PatternLock"](self._model, pruner, None))
+                    self.pruners.append(
+                        PRUNERS["PatternLock"](self._model, pruner, None)
+                    )
                 elif info.prune_type == "gradient_sensitivity":
-                    self.pruners.append(PRUNERS["GradientSensitivity"](self._model, pruner, None))
+                    self.pruners.append(
+                        PRUNERS["GradientSensitivity"](self._model, pruner, None)
+                    )
                 elif info.prune_type == "group_lasso":
-                    self.pruners.append(PRUNERS["GroupLasso"](self._model, pruner, None))
+                    self.pruners.append(
+                        PRUNERS["GroupLasso"](self._model, pruner, None)
+                    )
                 else:
                     ##print(pruner.prune_type)
                     assert False, "now only support {}".format(PRUNERS.keys())

@@ -16,7 +16,6 @@
 # limitations under the License.
 """Base Operator."""
 
-from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg
 from fedcore.neural_compressor.utils.utility import LazyImport
 
 onnx = LazyImport("onnx")
@@ -82,7 +81,10 @@ class Operator(object):
         if self.node.name in self.quantizer.config:
             self.dtype = self.quantizer.config[self.node.name]
         self.disable_qdq_for_node_output = (
-            True if onnx_node.op_type in onnx_quantizer.op_types_to_exclude_output_quantization else False
+            True
+            if onnx_node.op_type
+            in onnx_quantizer.op_types_to_exclude_output_quantization
+            else False
         )
         self.per_channel = False
         self.algorithm = "minmax"
@@ -91,15 +93,31 @@ class Operator(object):
         self.activation_dtype = None
         self.activation_scheme = "asym"
         if self.node.name in self.quantizer.config:
-            if self.quantizer.config[self.node.name] not in self.quantizer.fallback_list:
+            if (
+                self.quantizer.config[self.node.name]
+                not in self.quantizer.fallback_list
+            ):
                 if "weight" in self.quantizer.config[self.node.name].keys():
-                    self.per_channel = self.quantizer.config[self.node.name]["weight"]["granularity"] == "per_channel"
-                    self.algorithm = self.quantizer.config[self.node.name]["weight"]["algorithm"]
-                    self.weight_scheme = self.quantizer.config[self.node.name]["weight"]["scheme"]
-                    self.weight_dtype = self.quantizer.config[self.node.name]["weight"]["dtype"]
+                    self.per_channel = (
+                        self.quantizer.config[self.node.name]["weight"]["granularity"]
+                        == "per_channel"
+                    )
+                    self.algorithm = self.quantizer.config[self.node.name]["weight"][
+                        "algorithm"
+                    ]
+                    self.weight_scheme = self.quantizer.config[self.node.name][
+                        "weight"
+                    ]["scheme"]
+                    self.weight_dtype = self.quantizer.config[self.node.name]["weight"][
+                        "dtype"
+                    ]
                 if "activation" in self.quantizer.config[self.node.name].keys():
-                    self.activation_dtype = self.quantizer.config[self.node.name]["activation"]["dtype"]
-                    self.activation_scheme = self.quantizer.config[self.node.name]["activation"]["scheme"]
+                    self.activation_dtype = self.quantizer.config[self.node.name][
+                        "activation"
+                    ]["dtype"]
+                    self.activation_scheme = self.quantizer.config[self.node.name][
+                        "activation"
+                    ]["scheme"]
 
     def quantize_check(self):
         """Check if quantizaion can be done."""

@@ -93,7 +93,6 @@ def dowload_hf_model(repo_id, cache_dir=None, repo_type=None, revision=None):
     """Download hugging face model from hf hub."""
     from huggingface_hub.constants import DEFAULT_REVISION, HUGGINGFACE_HUB_CACHE
     from huggingface_hub.file_download import REGEX_COMMIT_HASH, repo_folder_name
-    from huggingface_hub.utils import EntryNotFoundError
 
     if cache_dir is None:
         cache_dir = HUGGINGFACE_HUB_CACHE
@@ -101,7 +100,9 @@ def dowload_hf_model(repo_id, cache_dir=None, repo_type=None, revision=None):
         revision = DEFAULT_REVISION
     if repo_type is None:
         repo_type = "model"
-    storage_folder = os.path.join(cache_dir, repo_folder_name(repo_id=repo_id, repo_type=repo_type))
+    storage_folder = os.path.join(
+        cache_dir, repo_folder_name(repo_id=repo_id, repo_type=repo_type)
+    )
     commit_hash = None
     if REGEX_COMMIT_HASH.match(revision):
         commit_hash = revision
@@ -173,10 +174,14 @@ def load_layer_wise_quantized_model(path):  # pragma: no cover
     return model
 
 
-def load_tensor_from_shard(pretrained_model_name_or_path, tensor_name, prefix=None):  # pragma: no cover
+def load_tensor_from_shard(
+    pretrained_model_name_or_path, tensor_name, prefix=None
+):  # pragma: no cover
     """Load tensor from shard."""
     path = _get_path(pretrained_model_name_or_path)
-    idx_dict = json.load(open(os.path.join(path, "pytorch_model.bin.index.json"), "r"))["weight_map"]
+    idx_dict = json.load(open(os.path.join(path, "pytorch_model.bin.index.json"), "r"))[
+        "weight_map"
+    ]
     if tensor_name not in idx_dict.keys():
         if tensor_name.replace(f"{prefix}.", "") in idx_dict.keys():
             tensor_name = tensor_name.replace(f"{prefix}.", "")
@@ -238,7 +243,9 @@ def load_module(model, module_name, path, device="cpu"):
         set_module_tensor_to_device(model, param_name, device, value)
 
 
-def register_weight_hooks(model, path, device="cpu", clean_weight=True, saved_path=None):
+def register_weight_hooks(
+    model, path, device="cpu", clean_weight=True, saved_path=None
+):
     if saved_path:
         os.makedirs(saved_path, exist_ok=True)
 
@@ -291,6 +298,8 @@ def clean_module_weight(module):
                 param_cls = type(submodule._parameters[n])
                 kwargs = submodule._parameters[n].__dict__
                 new_value = torch.zeros(old_value.shape, device="meta")
-                new_value = param_cls(new_value, requires_grad=old_value.requires_grad, **kwargs).to("meta")
+                new_value = param_cls(
+                    new_value, requires_grad=old_value.requires_grad, **kwargs
+                ).to("meta")
                 submodule._parameters[n] = new_value
     gc.collect()

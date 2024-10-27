@@ -18,8 +18,7 @@ from packaging.version import Version
 
 # pylint:disable=import-error
 try:
-    import deepspeed
-    import habana_frameworks.torch.hpex
+    pass
 
     _hpex_available = True
 except:
@@ -47,7 +46,9 @@ def get_ipex_version():
         try:
             ipex_version = ipex.__version__.split("+")[0]
         except ValueError as e:  # pragma: no cover
-            assert False, "Got an unknown version of intel_extension_for_pytorch: {}".format(e)
+            assert (
+                False
+            ), "Got an unknown version of intel_extension_for_pytorch: {}".format(e)
         version = Version(ipex_version)
         return version
     else:

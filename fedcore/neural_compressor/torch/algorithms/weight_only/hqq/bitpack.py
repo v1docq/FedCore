@@ -23,7 +23,6 @@
 import numpy as np
 import torch
 
-from .utility import is_divisible
 
 __all__ = ["Packer"]
 
@@ -52,7 +51,9 @@ class BitPack:
     @staticmethod
     def unpack_4bit_u8(W_q):  # uint8/2 > uint8
         _step = W_q.shape[0]
-        tmp = torch.empty([2 * _step, W_q.shape[1]], dtype=torch.uint8, device=W_q.device)
+        tmp = torch.empty(
+            [2 * _step, W_q.shape[1]], dtype=torch.uint8, device=W_q.device
+        )
         tmp[:_step] = (W_q & 0b11110000) >> 4
         tmp[_step:] = W_q & 0b00001111
         return tmp
@@ -63,13 +64,20 @@ class BitPack:
     def pack_2bit_u8(W_q):  # uint8 > uint8/4
         W_q = W_q.to(torch.uint8)
         _step = int(len(W_q) / 4)
-        return W_q[:_step] << 6 | W_q[_step : 2 * _step] << 4 | W_q[2 * _step : 3 * _step] << 2 | W_q[3 * _step :]
+        return (
+            W_q[:_step] << 6
+            | W_q[_step : 2 * _step] << 4
+            | W_q[2 * _step : 3 * _step] << 2
+            | W_q[3 * _step :]
+        )
 
     # A bit faster than the _cat version
     @staticmethod
     def unpack_2bit_u8(W_q):
         _step = W_q.shape[0]
-        tmp = torch.empty([4 * _step, W_q.shape[1]], dtype=torch.uint8, device=W_q.device)
+        tmp = torch.empty(
+            [4 * _step, W_q.shape[1]], dtype=torch.uint8, device=W_q.device
+        )
         tmp[:_step] = (W_q & 0b11000000) >> 6
         tmp[_step : 2 * _step] = (W_q & 0b00110000) >> 4
         tmp[2 * _step : 3 * _step] = (W_q & 0b00001100) >> 2
@@ -81,7 +89,9 @@ class BitPack:
     @staticmethod
     def pack_3bit_32(W_q_in):
         W_q = torch.zeros(
-            [int(10 * np.ceil(W_q_in.shape[0] / 10.0)), W_q_in.shape[1]], device=W_q_in.device, dtype=torch.int32
+            [int(10 * np.ceil(W_q_in.shape[0] / 10.0)), W_q_in.shape[1]],
+            device=W_q_in.device,
+            dtype=torch.int32,
         )
         W_q[: len(W_q_in)] = W_q_in
         _step = int(len(W_q) / 10)
@@ -103,7 +113,9 @@ class BitPack:
     @staticmethod
     def unpack_3bit_32(W_q):
         _step = W_q.shape[0]
-        tmp = torch.empty([10 * _step, W_q.shape[1]], dtype=torch.uint8, device=W_q.device)
+        tmp = torch.empty(
+            [10 * _step, W_q.shape[1]], dtype=torch.uint8, device=W_q.device
+        )
         tmp[:_step] = (W_q & 0b00111000000000000000000000000000) >> 27
         tmp[1 * _step : 2 * _step] = (W_q & 0b00000111000000000000000000000000) >> 24
         tmp[2 * _step : 3 * _step] = (W_q & 0b00000000111000000000000000000000) >> 21

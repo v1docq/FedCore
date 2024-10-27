@@ -17,8 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..utils import logger, nn, safe_get_data, safe_get_grad, safe_get_shape, tf, torch
-from .base import ProgressivePatternUtils, PytorchBasePattern, SparsityInfo, register_pattern
+from ..utils import logger, nn, safe_get_data, safe_get_shape, torch
+from .base import (
+    ProgressivePatternUtils,
+    PytorchBasePattern,
+    SparsityInfo,
+    register_pattern,
+)
 
 
 @register_pattern("ptN:M")
@@ -59,7 +64,9 @@ class PytorchPatternNInM(PytorchBasePattern):
             shape = data.shape
             if shape[1] % block_size[1] != 0:
                 self.invalid_layers.append(key)
-                logger.warning(f"{key} shape {shape} cannot be divided by {self.pattern}")
+                logger.warning(
+                    f"{key} shape {shape} cannot be divided by {self.pattern}"
+                )
 
     def get_reduced_masks_from_data(self, data, key):
         """Obtain the unpruned weights and reshape according to the block_size.
@@ -134,7 +141,11 @@ class PytorchPatternNInM(PytorchBasePattern):
         sparsity_ratio = float(zero_cnt) / total_cnt * self.N / self.M
 
         if return_dict:
-            return {"sparsity_ratio": sparsity_ratio, "zero_cnt": zero_cnt, "total_cnt": total_cnt}
+            return {
+                "sparsity_ratio": sparsity_ratio,
+                "zero_cnt": zero_cnt,
+                "total_cnt": total_cnt,
+            }
         else:
             return sparsity_ratio
 
@@ -151,7 +162,9 @@ class PytorchPatternNInM(PytorchBasePattern):
 
         if len(data.shape) == 2:
             return data
-        elif len(data.shape) == 4:  # TODO: need to verify whether it's ok for transposed conv
+        elif (
+            len(data.shape) == 4
+        ):  # TODO: need to verify whether it's ok for transposed conv
             data = data.permute(0, 2, 3, 1)  # cout,k,k,cin
             data = data.reshape(data.shape[0], -1)
         elif len(data.shape) == 3:
@@ -178,7 +191,9 @@ class PytorchPatternNInM(PytorchBasePattern):
             return data
 
         elif len(orig_shape) == 4:
-            data = data.reshape(orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1])
+            data = data.reshape(
+                orig_shape[0], orig_shape[2], orig_shape[3], orig_shape[1]
+            )
             data = data.permute(0, 3, 1, 2)
         elif len(orig_shape) == 3:
             data = data.reshape(orig_shape[0], orig_shape[2], orig_shape[1])
@@ -231,7 +246,9 @@ class PytorchPatternNInM(PytorchBasePattern):
                 continue
             current_score = scores[key]
             new_scores[key] = current_score
-            current_score = self.reshape_reduced_to_orig(current_score, key, self.modules[key].weight.shape)
+            current_score = self.reshape_reduced_to_orig(
+                current_score, key, self.modules[key].weight.shape
+            )
             mask = self.get_least_ninm_mask_from_data(current_score)
             least_ninm_masks[key] = mask
         return new_scores, least_ninm_masks
@@ -289,7 +306,13 @@ class PytorchPatternNInM(PytorchBasePattern):
         mask = torch.where(mask <= 0, zero, one)
         return mask
 
-    def get_masks_global(self, scores, cur_target_sparsity_ratio, pre_masks, keep_exact_sparsity_ratio=True):
+    def get_masks_global(
+        self,
+        scores,
+        cur_target_sparsity_ratio,
+        pre_masks,
+        keep_exact_sparsity_ratio=True,
+    ):
         """Generate masks for layers.
 
         Gather all layer's scores together and calculate a common threshold.
@@ -312,7 +335,9 @@ class PytorchPatternNInM(PytorchBasePattern):
         if k_blockwise <= 0:
             return masks
         new_scores, least_ninm_masks = self.reduce_scores(scores)
-        global_scores = torch.cat([torch.flatten(v) for v in new_scores.values()])  # block_wise
+        global_scores = torch.cat(
+            [torch.flatten(v) for v in new_scores.values()]
+        )  # block_wise
         residual_k = k_blockwise
         not_exceed_layers = [key for key in new_scores.keys()]
 
@@ -322,12 +347,16 @@ class PytorchPatternNInM(PytorchBasePattern):
             threshold, _ = torch.kthvalue(global_scores, residual_k)
             for key in not_exceed_layers:
                 score = new_scores[key]
-                mask = self.get_ele_mask_per_threshold(score, threshold, (self.N, self.M), least_ninm_masks[key])
+                mask = self.get_ele_mask_per_threshold(
+                    score, threshold, (self.N, self.M), least_ninm_masks[key]
+                )
                 info = self.get_sparsity_ratio({key: mask}, return_dict=True)
                 zero_cnt = info["zero_cnt"]
                 total_cnt = info["total_cnt"]
                 current_sparsity_ratio = float(zero_cnt) / total_cnt
-                key_new_sparsity = SparsityInfo(zero_cnt, total_cnt, current_sparsity_ratio)
+                key_new_sparsity = SparsityInfo(
+                    zero_cnt, total_cnt, current_sparsity_ratio
+                )
                 need_adjust, adjust_ratio = self.adjust_ratio(
                     masks,
                     key,
@@ -339,7 +368,9 @@ class PytorchPatternNInM(PytorchBasePattern):
 
                 if need_adjust:
                     self.keep_mask_layers[key] = True
-                    masks[key] = self.get_single_mask_per_target_ratio(new_scores[key], adjust_ratio)
+                    masks[key] = self.get_single_mask_per_target_ratio(
+                        new_scores[key], adjust_ratio
+                    )
                     masks[key] = masks[key].repeat_interleave(self.M, dim=-1)
                     # both zero will be zero
                     masks[key] = masks[key] + least_ninm_masks[key]
@@ -347,18 +378,29 @@ class PytorchPatternNInM(PytorchBasePattern):
                     one = torch.tensor([1.0]).to(score.device)
                     masks[key] = torch.where(masks[key] <= 0, zero, one)
                     if keep_exact_sparsity_ratio:
-                        zero_cnt = self.get_sparsity_ratio({key: masks[key]}, return_dict=True)["zero_cnt"]
+                        zero_cnt = self.get_sparsity_ratio(
+                            {key: masks[key]}, return_dict=True
+                        )["zero_cnt"]
                         residual_k -= zero_cnt
                 else:
                     masks[key] = mask
                 masks[key] = masks[key].bool()
             if not keep_exact_sparsity_ratio:  # pragma: no cover
                 break
-            new_not_exceed_layers = [key for key in new_scores.keys() if not self.keep_mask_layers.get(key, False)]
-            if not_exceed_layers == new_not_exceed_layers or len(new_not_exceed_layers) == 0:
+            new_not_exceed_layers = [
+                key
+                for key in new_scores.keys()
+                if not self.keep_mask_layers.get(key, False)
+            ]
+            if (
+                not_exceed_layers == new_not_exceed_layers
+                or len(new_not_exceed_layers) == 0
+            ):
                 break
             not_exceed_layers = new_not_exceed_layers
-            global_scores = torch.cat([torch.flatten(new_scores[key]) for key in not_exceed_layers])
+            global_scores = torch.cat(
+                [torch.flatten(new_scores[key]) for key in not_exceed_layers]
+            )
 
         for key in masks.keys():
             if key in self.invalid_layers:
@@ -399,8 +441,12 @@ class PytorchPatternNInM(PytorchBasePattern):
             pattern_lock_masks[key] = mask
         return pattern_lock_masks
 
-    def update_progressive_masks(self, pre_masks, cur_masks, scores, progressive_step, progressive_configs):
-        assert progressive_configs["progressive_type"] == "scores", "N:M progressive pruning only supports 'scores'."
+    def update_progressive_masks(
+        self, pre_masks, cur_masks, scores, progressive_step, progressive_configs
+    ):
+        assert (
+            progressive_configs["progressive_type"] == "scores"
+        ), "N:M progressive pruning only supports 'scores'."
         # we only have to handle global score or local score
         # need to reshape score, if store reduced score for ninm pattern
         return ProgressivePatternUtils.update_progressive_masks_scores_order(
@@ -454,8 +500,13 @@ class PytorchPatternNInM(PytorchBasePattern):
                 d = Hinv1[i, i]
 
                 if N != 0 and i % M == 0:
-                    tmp = W1[:, i : (i + M)] ** 2 / (torch.diag(Hinv1)[i : (i + M)].reshape((1, -1))) ** 2
-                    mask1.scatter_(1, i + torch.topk(tmp, N, dim=1, largest=False)[1], True)
+                    tmp = (
+                        W1[:, i : (i + M)] ** 2
+                        / (torch.diag(Hinv1)[i : (i + M)].reshape((1, -1))) ** 2
+                    )
+                    mask1.scatter_(
+                        1, i + torch.topk(tmp, N, dim=1, largest=False)[1], True
+                    )
 
                 q = w.clone()
                 q[mask1[:, i]] = 0
@@ -476,6 +527,8 @@ class PytorchPatternNInM(PytorchBasePattern):
 
         if isinstance(module, transformers.Conv1D):
             W = W.t()
-        module.weight.data = W.reshape(module.weight.shape).to(dtype=module.weight.data.dtype)
+        module.weight.data = W.reshape(module.weight.shape).to(
+            dtype=module.weight.data.dtype
+        )
         if torch.cuda.is_available():
             torch.cuda.empty_cache()

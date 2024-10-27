@@ -12,31 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fedcore.neural_compressor.torch.quantization.quantize import quantize
-from fedcore.neural_compressor.torch.quantization.config import (
-    RTNConfig,
-    get_default_rtn_config,
-    get_default_double_quant_config,
-    GPTQConfig,
-    get_default_gptq_config,
-    AWQConfig,
-    get_default_awq_config,
-    StaticQuantConfig,
-    get_default_static_config,
-    SmoothQuantConfig,
-    get_default_sq_config,
-    TEQConfig,
-    get_default_teq_config,
-    HQQConfig,
-    get_default_hqq_config,
-)
 
-from fedcore.neural_compressor.torch.quantization.autotune import (
-    autotune,
-    TuningConfig,
-    get_all_config_set,
-    get_rtn_double_quant_config_set,
-)
 
 ### Quantization Function Registration ###
-import neural_compressor.torch.quantization.algorithm_entry

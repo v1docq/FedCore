@@ -311,7 +311,6 @@ class FedCore(Fedot):
             path (str): path to the model
 
         """
-        pass
 
     def load_data(self, path: str = None, supplementary_data: dict = None):
         pretrained_scenario = all(

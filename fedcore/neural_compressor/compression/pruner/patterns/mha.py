@@ -54,6 +54,8 @@ class PatternMHA(PytorchBasePattern):
         zero = torch.tensor([0.0]).to(threshold.device)
         one = torch.tensor([1.0]).to(threshold.device)
         for mha_name, mha_score in scores.items():
-            head_masks[mha_name] = torch.where(mha_score <= threshold, zero, one).permute(1, 0)
+            head_masks[mha_name] = torch.where(
+                mha_score <= threshold, zero, one
+            ).permute(1, 0)
             head_masks[mha_name] = head_masks[mha_name].bool()
         return head_masks

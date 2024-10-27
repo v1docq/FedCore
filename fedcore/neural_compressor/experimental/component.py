@@ -23,12 +23,16 @@ import importlib
 
 from deprecated import deprecated
 
+from .common import Model
 from ..adaptor import FRAMEWORKS
 from ..model.model import get_model_fwk_name
 from ..utils import logger
-from ..utils.create_obj_from_config import create_dataloader, create_eval_func, create_train_func
+from ..utils.create_obj_from_config import (
+    create_dataloader,
+    create_eval_func,
+    create_train_func,
+)
 from ..utils.utility import required_libs
-from .common import Model
 
 
 @deprecated(version="2.0")
@@ -115,7 +119,8 @@ class Component(object):
                     except Exception as e:
                         logger.error("{}.".format(e))
                         raise RuntimeError(
-                            "{} is not correctly installed. " "Please check your environment".format(lib)
+                            "{} is not correctly installed. "
+                            "Please check your environment".format(lib)
                         )
 
     def prepare(self):
@@ -133,7 +138,12 @@ class Component(object):
                     framework_specific_info["approach"] = self.cfg.quantization.approach
 
                 if "tensorflow" in self.framework:
-                    framework_specific_info.update({"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs})
+                    framework_specific_info.update(
+                        {
+                            "inputs": self.cfg.model.inputs,
+                            "outputs": self.cfg.model.outputs,
+                        }
+                    )
                 self.adaptor = FRAMEWORKS[self.framework](framework_specific_info)
                 self.adaptor.model = self.model
             self.register_hook("on_train_begin", self.adaptor._pre_hook_for_qat)
@@ -155,7 +165,9 @@ class Component(object):
                 framework_specific_info["approach"] = self.cfg.quantization.approach
 
             if "tensorflow" in self.framework:
-                framework_specific_info.update({"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs})
+                framework_specific_info.update(
+                    {"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs}
+                )
             self.adaptor = FRAMEWORKS[self.framework](framework_specific_info)
             self.adaptor.model = self.model
         self.register_hook("on_train_begin", self.adaptor._pre_hook_for_qat)
@@ -180,7 +192,9 @@ class Component(object):
                 framework_specific_info["approach"] = self.cfg.quantization.approach
 
             if "tensorflow" in self.framework:
-                framework_specific_info.update({"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs})
+                framework_specific_info.update(
+                    {"inputs": self.cfg.model.inputs, "outputs": self.cfg.model.outputs}
+                )
 
             self.adaptor = FRAMEWORKS[self.framework](framework_specific_info)
             self.adaptor.model = self.model
@@ -194,7 +208,9 @@ class Component(object):
                 "dataloader to component."
             )
 
-            self._train_dataloader = create_dataloader(self.framework, train_dataloader_cfg)
+            self._train_dataloader = create_dataloader(
+                self.framework, train_dataloader_cfg
+            )
         if self._eval_dataloader is None and self._eval_func is None:
             if self._eval_dataloader is None:
                 eval_dataloader_cfg = self.cfg.evaluation.accuracy.dataloader
@@ -203,15 +219,23 @@ class Component(object):
                     "dataloader field of evaluation field in yaml file. Or manually pass "
                     "dataloader to component."
                 )
-                self._eval_dataloader = create_dataloader(self.framework, eval_dataloader_cfg)
+                self._eval_dataloader = create_dataloader(
+                    self.framework, eval_dataloader_cfg
+                )
 
         # create functions
         if self._train_func is None:
             self._train_func = create_train_func(
-                self.framework, self._train_dataloader, self.adaptor, self.cfg.train, hooks=self.hooks
+                self.framework,
+                self._train_dataloader,
+                self.adaptor,
+                self.cfg.train,
+                hooks=self.hooks,
             )
         if self._eval_func is None:
-            metric = [self._metric] if self._metric else self.cfg.evaluation.accuracy.metric
+            metric = (
+                [self._metric] if self._metric else self.cfg.evaluation.accuracy.metric
+            )
             self._eval_func = create_eval_func(
                 self.framework,
                 self._eval_dataloader,
@@ -235,14 +259,20 @@ class Component(object):
         # TODO: consider strategy sync during combination
         if self._train_func is not None:
             modified_model = self._train_func(
-                self._model if getattr(self._train_func, "builtin", None) else self._model.model
+                self._model
+                if getattr(self._train_func, "builtin", None)
+                else self._model.model
             )
             # for the cases that model is changed not inplaced during training, for example,
             # oneshot with torch_fx QAT interfaces. Needs to reset model afterwards.
             if modified_model is not None:
                 self._model.model = modified_model
         if self._eval_func is not None:
-            score = self._eval_func(self._model if getattr(self._eval_func, "builtin", None) else self._model.model)
+            score = self._eval_func(
+                self._model
+                if getattr(self._eval_func, "builtin", None)
+                else self._model.model
+            )
             logger.info("Evaluated model score is {}.".format(str(score)))
         return self._model
 
@@ -251,7 +281,6 @@ class Component(object):
 
         For derived classes(Pruning, Quantization, etc.), an override function is required.
         """
-        pass
 
     def on_train_begin(self, dataloader=None):
         """Be called before the beginning of epochs."""
@@ -292,16 +321,22 @@ class Component(object):
         """Be called on the beginning of batches."""
         return self.on_step_begin(batch_id)
 
-    def on_after_compute_loss(self, input, student_output, student_loss, teacher_output=None):
+    def on_after_compute_loss(
+        self, input, student_output, student_loss, teacher_output=None
+    ):
         """Be called on the end of loss computation."""
         loss = student_loss
         for on_after_compute_loss_hook in self.hooks_dict["on_after_compute_loss"]:
-            loss = on_after_compute_loss_hook(input, student_output, loss, teacher_output)
+            loss = on_after_compute_loss_hook(
+                input, student_output, loss, teacher_output
+            )
         return loss
 
     def on_before_optimizer_step(self):
         """Be called before optimizer step."""
-        for on_before_optimizer_step_hook in self.hooks_dict["on_before_optimizer_step"]:
+        for on_before_optimizer_step_hook in self.hooks_dict[
+            "on_before_optimizer_step"
+        ]:
             on_before_optimizer_step_hook()
 
     def on_after_optimizer_step(self):
@@ -445,7 +480,9 @@ class Component(object):
         """
         from .common import _generate_common_dataloader
 
-        self._train_dataloader = _generate_common_dataloader(dataloader, self.framework, self._train_distributed)
+        self._train_dataloader = _generate_common_dataloader(
+            dataloader, self.framework, self._train_distributed
+        )
 
     @property
     def eval_dataloader(self):
@@ -480,7 +517,9 @@ class Component(object):
         """
         from .common import _generate_common_dataloader
 
-        self._eval_dataloader = _generate_common_dataloader(dataloader, self.framework, self._evaluation_distributed)
+        self._eval_dataloader = _generate_common_dataloader(
+            dataloader, self.framework, self._evaluation_distributed
+        )
 
     @property
     def model(self):
@@ -514,7 +553,10 @@ class Component(object):
             if self.framework == "tensorflow":
                 from ..model.tensorflow_model import get_model_type
 
-                if get_model_type(user_model) == "keras" and self.cfg.model.backend == "itex":
+                if (
+                    get_model_type(user_model) == "keras"
+                    and self.cfg.model.backend == "itex"
+                ):
                     self.framework = "keras"
             if self.framework == "pytorch":
                 if self.cfg.model.backend == "default":
@@ -526,7 +568,9 @@ class Component(object):
         if not isinstance(user_model, BaseModel):
             logger.warning("Force convert framework model to neural_compressor model.")
             if "tensorflow" in self.framework or self.framework == "keras":
-                self._model = Model(user_model, framework=self.framework, device=self.cfg.device)
+                self._model = Model(
+                    user_model, framework=self.framework, device=self.cfg.device
+                )
             else:
                 self._model = Model(user_model, framework=self.framework)
         else:
@@ -535,7 +579,9 @@ class Component(object):
                 from fedcore.neural_compressor.model.torch_model import IPEXModel
 
                 if not isinstance(user_model, IPEXModel):
-                    self._model = Model(user_model.model, framework=self.cfg.model.framework)
+                    self._model = Model(
+                        user_model.model, framework=self.cfg.model.framework
+                    )
                     return
 
             self._model = user_model

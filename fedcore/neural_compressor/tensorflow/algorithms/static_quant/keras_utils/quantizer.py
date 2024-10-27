@@ -104,7 +104,15 @@ class Quantize(Layer):
 
 
 class DeQuantize(Layer):
-    def __init__(self, min_range, max_range, mode="SCALED", narrow_range=False, axis=None, **kwargs):
+    def __init__(
+        self,
+        min_range,
+        max_range,
+        mode="SCALED",
+        narrow_range=False,
+        axis=None,
+        **kwargs
+    ):
         super(DeQuantize, self).__init__(**kwargs)
         self.min_range = min_range
         self.max_range = max_range

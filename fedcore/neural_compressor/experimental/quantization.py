@@ -93,18 +93,24 @@ class Quantization(Component):
                         )
                     )
                 else:
-                    if deep_get(cfg, "evaluation.accuracy.iteration") == -1 and "dummy_v2" in deep_get(
+                    if deep_get(
+                        cfg, "evaluation.accuracy.iteration"
+                    ) == -1 and "dummy_v2" in deep_get(
                         cfg, "evaluation.accuracy.dataloader.dataset", {}
                     ):
                         deep_set(cfg, "evaluation.accuracy.iteration", 10)
 
-                    self._eval_dataloader = create_dataloader(self.framework, eval_dataloader_cfg)
+                    self._eval_dataloader = create_dataloader(
+                        self.framework, eval_dataloader_cfg
+                    )
         if os.environ.get("PERFORMANCE_ONLY") in ["0", "1"]:
             performance_only = bool(int(os.environ.get("PERFORMANCE_ONLY")))
             deep_set(cfg, "tuning.exit_policy.performance_only", performance_only)
             logger.info(
                 "Get environ 'PERFORMANCE_ONLY={}',"
-                " force setting 'tuning.exit_policy.performance_only = True'.".format(performance_only)
+                " force setting 'tuning.exit_policy.performance_only = True'.".format(
+                    performance_only
+                )
             )
 
     def _create_calib_dataloader(self, cfg):
@@ -112,10 +118,18 @@ class Quantization(Component):
         approach_cfg = deep_get(cfg, "quantization.approach")
 
         if self._calib_dataloader is None and self._calib_func is None:
-            if approach_cfg in ["post_training_static_quant", "post_training_auto_quant"]:
-                calib_dataloader_cfg = deep_get(cfg, "quantization.calibration.dataloader")
+            if approach_cfg in [
+                "post_training_static_quant",
+                "post_training_auto_quant",
+            ]:
+                calib_dataloader_cfg = deep_get(
+                    cfg, "quantization.calibration.dataloader"
+                )
 
-                if approach_cfg == "post_training_auto_quant" and calib_dataloader_cfg is None:
+                if (
+                    approach_cfg == "post_training_auto_quant"
+                    and calib_dataloader_cfg is None
+                ):
                     logger.error(
                         "dataloader is required for 'post_training_auto_quant'. "
                         "use 'post_training_dynamic_quant' instead if no dataloader provided."
@@ -126,7 +140,10 @@ class Quantization(Component):
                 )
 
                 if deep_get(calib_dataloader_cfg, "shuffle"):
-                    logger.warning("Reset `shuffle` field to False when post_training_static_quant" " is selected.")
+                    logger.warning(
+                        "Reset `shuffle` field to False when post_training_static_quant"
+                        " is selected."
+                    )
                     deep_set(calib_dataloader_cfg, "shuffle", False)
             elif approach_cfg == "quant_aware_training":
                 calib_dataloader_cfg = deep_get(cfg, "quantization.train.dataloader")
@@ -138,26 +155,41 @@ class Quantization(Component):
                 calib_dataloader_cfg = None
 
             if calib_dataloader_cfg:
-                self._calib_dataloader = create_dataloader(self.framework, calib_dataloader_cfg)
+                self._calib_dataloader = create_dataloader(
+                    self.framework, calib_dataloader_cfg
+                )
 
     def pre_process(self):
         """Prepare dataloaders, qfuncs for Component."""
         cfg = self.conf.usr_cfg
-        assert isinstance(self._model, BaseModel), "need set your Model for quantization...."
+        assert isinstance(
+            self._model, BaseModel
+        ), "need set your Model for quantization...."
 
         self._create_eval_dataloader(cfg)
         self._create_calib_dataloader(cfg)
         strategy = cfg.tuning.strategy.name.lower()
         if cfg.quantization.quant_level == 0:
             strategy = "conservative"
-            logger.info("On the premise that the accuracy meets the conditions, improve the performance.")
+            logger.info(
+                "On the premise that the accuracy meets the conditions, improve the performance."
+            )
 
         if strategy == "mse_v2":
-            if not (self.framework.startswith("tensorflow") or self.framework == "pytorch_fx"):
+            if not (
+                self.framework.startswith("tensorflow")
+                or self.framework == "pytorch_fx"
+            ):
                 strategy = "basic"
-                logger.warning(f"MSE_v2 does not support {self.framework} now, use basic instead.")
-                logger.warning("Only tensorflow, pytorch_fx is supported by MSE_v2 currently.")
-        assert strategy in EXP_STRATEGIES, "Tuning strategy {} is NOT supported".format(strategy)
+                logger.warning(
+                    f"MSE_v2 does not support {self.framework} now, use basic instead."
+                )
+                logger.warning(
+                    "Only tensorflow, pytorch_fx is supported by MSE_v2 currently."
+                )
+        assert strategy in EXP_STRATEGIES, "Tuning strategy {} is NOT supported".format(
+            strategy
+        )
 
         _resume = None
         # check if interrupted tuning procedure exists. if yes, it will resume the
@@ -168,9 +200,9 @@ class Quantization(Component):
             else None
         )
         if self.resume_file:
-            assert os.path.exists(self.resume_file), "The specified resume file {} doesn't exist!".format(
+            assert os.path.exists(
                 self.resume_file
-            )
+            ), "The specified resume file {} doesn't exist!".format(self.resume_file)
             with open(self.resume_file, "rb") as f:
                 _resume = pickle.load(f).__dict__
 
@@ -186,7 +218,9 @@ class Quantization(Component):
         )
 
         if getattr(self._calib_dataloader, "distributed", False):
-            self.register_hook("on_train_begin", self.strategy.adaptor._pre_hook_for_hvd)
+            self.register_hook(
+                "on_train_begin", self.strategy.adaptor._pre_hook_for_hvd
+            )
 
     def execute(self):
         """Quantization execute routine based on strategy design."""
@@ -198,7 +232,9 @@ class Quantization(Component):
         except KeyboardInterrupt:
             pass
         except Exception as e:
-            logger.error("Unexpected exception {} happened during tuning.".format(repr(e)))
+            logger.error(
+                "Unexpected exception {} happened during tuning.".format(repr(e))
+            )
             import traceback
 
             traceback.print_exc()
@@ -342,7 +378,9 @@ class Quantization(Component):
             metric_cfg = {name: {**user_metric.kwargs}}
         else:
             for i in ["reset", "update", "result"]:
-                assert hasattr(user_metric, i), "Please realise {} function" "in user defined metric".format(i)
+                assert hasattr(
+                    user_metric, i
+                ), "Please realise {} function" "in user defined metric".format(i)
             metric_cls = type(user_metric).__name__
             name = "user_" + metric_cls
             metric_cfg = {name: id(user_metric)}
@@ -381,7 +419,9 @@ class Quantization(Component):
 
         objective_cls = type(user_objective)
         name = user_objective.__class__.__name__
-        objective_cfg = name if deep_get(self.conf.usr_cfg, "tuning.objective") else [name]
+        objective_cfg = (
+            name if deep_get(self.conf.usr_cfg, "tuning.objective") else [name]
+        )
         deep_set(self.conf.usr_cfg, user_obj_cfg, objective_cfg)
         self.conf.usr_cfg = DotDict(self.conf.usr_cfg)
         objective_custom_registry(name, objective_cls)
@@ -418,7 +458,11 @@ class Quantization(Component):
                 "Override the value of `postprocess` field defined in yaml file"
                 " as user defines the value of `postprocess` attribute by code."
             )
-        deep_set(self.conf.usr_cfg, "evaluation.accuracy.postprocess.transform", postprocess_cfg)
+        deep_set(
+            self.conf.usr_cfg,
+            "evaluation.accuracy.postprocess.transform",
+            postprocess_cfg,
+        )
         from fedcore.neural_compressor.data import TRANSFORMS
 
         postprocesses = TRANSFORMS(self.framework, "postprocess")

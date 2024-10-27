@@ -10,11 +10,18 @@ import numpy as np
 import pandas as pd
 from fedot.core.data.data import InputData
 from golem.core.dag.graph import Graph
-from sklearn.metrics import (accuracy_score, f1_score,
-                             log_loss, mean_absolute_error,
-                             mean_absolute_percentage_error,
-                             mean_squared_error, mean_squared_log_error,
-                             precision_score, r2_score, roc_auc_score)
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    log_loss,
+    mean_absolute_error,
+    mean_absolute_percentage_error,
+    mean_squared_error,
+    mean_squared_log_error,
+    precision_score,
+    r2_score,
+    roc_auc_score,
+)
 from sktime.performance_metrics.forecasting import mean_absolute_scaled_error
 
 
@@ -58,22 +65,22 @@ class ClassificationMetricCounter(MetricCounter):
     def compute(self) -> Dict[str, float]:
         """Compute accuracy, precision, recall, f1, roc auc metrics.
 
-         Returns:
-              Dictionary: `{metric: score}`.
+        Returns:
+             Dictionary: `{metric: score}`.
         """
         precision, recall, f1, _ = precision_recall_fscore_support(
-            self.y_true, self.y_pred, average='macro'
+            self.y_true, self.y_pred, average="macro"
         )
 
         scores = {
-            'accuracy': accuracy_score(self.y_true, self.y_pred),
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
+            "accuracy": accuracy_score(self.y_true, self.y_pred),
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
         }
         if self.class_metrics:
             f1s = f1_score(self.y_true, self.y_pred, average=None)
-            scores.update({f'f1_for_class_{i}': s for i, s in enumerate(f1s)})
+            scores.update({f"f1_for_class_{i}": s for i, s in enumerate(f1s)})
         return scores
 
 
@@ -101,21 +108,29 @@ class SegmentationMetricCounter(MetricCounter):
     def compute(self) -> Dict[str, float]:
         """Compute average metrics.
 
-         Returns:
-              Dictionary: `{metric: score}`.
+        Returns:
+             Dictionary: `{metric: score}`.
         """
         iou = torch.cat(self.iou).T
         dice = torch.cat(self.dice).T
 
         scores = {
-            'iou': iou[1:][iou[1:] >= 0].mean().item(),
-            'dice': dice[1:][dice[1:] >= 0].mean().item()
+            "iou": iou[1:][iou[1:] >= 0].mean().item(),
+            "dice": dice[1:][dice[1:] >= 0].mean().item(),
         }
         if self.class_metrics:
             scores.update(
-                {f'iou_for_class_{i}': s[s >= 0].mean().item() for i, s in enumerate(iou)})
+                {
+                    f"iou_for_class_{i}": s[s >= 0].mean().item()
+                    for i, s in enumerate(iou)
+                }
+            )
             scores.update(
-                {f'dice_for_class_{i}': s[s >= 0].mean().item() for i, s in enumerate(dice)})
+                {
+                    f"dice_for_class_{i}": s[s >= 0].mean().item()
+                    for i, s in enumerate(dice)
+                }
+            )
         return scores
 
 
@@ -132,9 +147,9 @@ class ObjectDetectionMetricCounter(MetricCounter):
         self.class_metrics = class_metrics
 
     def update(
-            self,
-            predictions: List[Dict[str, torch.Tensor]],
-            targets: List[Dict[str, torch.Tensor]]
+        self,
+        predictions: List[Dict[str, torch.Tensor]],
+        targets: List[Dict[str, torch.Tensor]],
     ) -> None:
         """Accumulates predictions and targets."""
         self.map.update(preds=predictions, target=targets)
@@ -142,18 +157,23 @@ class ObjectDetectionMetricCounter(MetricCounter):
     def compute(self) -> Dict[str, float]:
         """Compute MAP, MAR metrics.
 
-         Returns:
-              Dictionary: `{metric: score}`.
+        Returns:
+             Dictionary: `{metric: score}`.
         """
 
         scores = self.map.compute()
         if self.class_metrics:
-            scores.update({f'map_for_class_{i}': s for i,
-                                                       s in enumerate(scores['map_per_class'])})
-            scores.update({f'mar_100_for_class_{i}': s for i,
-                                                           s in enumerate(scores['mar_100_per_class'])})
-        del scores['map_per_class']
-        del scores['mar_100_per_class']
+            scores.update(
+                {f"map_for_class_{i}": s for i, s in enumerate(scores["map_per_class"])}
+            )
+            scores.update(
+                {
+                    f"mar_100_for_class_{i}": s
+                    for i, s in enumerate(scores["mar_100_per_class"])
+                }
+            )
+        del scores["map_per_class"]
+        del scores["mar_100_per_class"]
         return scores
 
 
@@ -184,10 +204,10 @@ class LossesAverager(MetricCounter):
 
 
 def iou_score(
-        outputs: torch.Tensor,
-        masks: torch.Tensor,
-        threshold: float = 0.5,
-        smooth: float = 1e-10
+    outputs: torch.Tensor,
+    masks: torch.Tensor,
+    threshold: float = 0.5,
+    smooth: float = 1e-10,
 ) -> torch.Tensor:
     """Computes intersection over union (masks) on batch.
 
@@ -209,10 +229,10 @@ def iou_score(
 
 
 def dice_score(
-        outputs: torch.Tensor,
-        masks: torch.Tensor,
-        threshold: float = 0.5,
-        smooth: float = 1e-10
+    outputs: torch.Tensor,
+    masks: torch.Tensor,
+    threshold: float = 0.5,
+    smooth: float = 1e-10,
 ) -> torch.Tensor:
     """Computes dice coefficient (masks) on batch.
 
@@ -233,13 +253,11 @@ def dice_score(
     return dice
 
 
-
 class ParetoMetrics:
-    def pareto_metric_list(self,
-                           costs: Union[list,
-                                        np.ndarray],
-                           maximise: bool = True) -> np.ndarray:
-        """ Calculates the pareto front for a list of costs.
+    def pareto_metric_list(
+        self, costs: Union[list, np.ndarray], maximise: bool = True
+    ) -> np.ndarray:
+        """Calculates the pareto front for a list of costs.
 
         Args:
             costs: list of costs. An (n_points, n_costs) array.
@@ -254,21 +272,24 @@ class ParetoMetrics:
             if is_efficient[i]:
                 if maximise:
                     is_efficient[is_efficient] = np.any(
-                        costs[is_efficient] >= c, axis=1)  # Remove dominated points
+                        costs[is_efficient] >= c, axis=1
+                    )  # Remove dominated points
                 else:
                     is_efficient[is_efficient] = np.any(
-                        costs[is_efficient] <= c, axis=1)  # Remove dominated points
+                        costs[is_efficient] <= c, axis=1
+                    )  # Remove dominated points
         return is_efficient
 
 
 class QualityMetric:
-    def __init__(self,
-                 target,
-                 predicted_labels,
-                 predicted_probs=None,
-                 metric_list: list = (
-                         'f1', 'roc_auc', 'accuracy', 'logloss', 'precision'),
-                 default_value: float = 0.0):
+    def __init__(
+        self,
+        target,
+        predicted_labels,
+        predicted_probs=None,
+        metric_list: list = ("f1", "roc_auc", "accuracy", "logloss", "precision"),
+        default_value: float = 0.0,
+    ):
         self.predicted_probs = predicted_probs
         labels_as_matrix = len(predicted_labels.shape) >= 2
         labels_as_one_dim = min(predicted_labels.shape) == 1
@@ -285,7 +306,7 @@ class QualityMetric:
 
     @staticmethod
     def _get_least_frequent_val(array: np.ndarray):
-        """ Returns the least frequent value in a flattened numpy array. """
+        """Returns the least frequent value in a flattened numpy array."""
         unique_vals, count = np.unique(np.ravel(array), return_counts=True)
         least_frequent_idx = np.argmin(count)
         least_frequent_val = unique_vals[least_frequent_idx]
@@ -295,41 +316,45 @@ class QualityMetric:
 class RMSE(QualityMetric):
     def metric(self) -> float:
         return mean_squared_error(
-            y_true=self.target,
-            y_pred=self.predicted_labels,
-            squared=False)
+            y_true=self.target, y_pred=self.predicted_labels, squared=False
+        )
 
 
 class SMAPE(QualityMetric):
     def metric(self):
-        return 1 / len(self.predicted_labels) \
-               * np.sum(2 * np.abs(self.target - self.predicted_labels) / (np.abs(self.predicted_labels)
-                                                                           + np.abs(self.target)) * 100)
+        return (
+            1
+            / len(self.predicted_labels)
+            * np.sum(
+                2
+                * np.abs(self.target - self.predicted_labels)
+                / (np.abs(self.predicted_labels) + np.abs(self.target))
+                * 100
+            )
+        )
 
 
 class MSE(QualityMetric):
     def metric(self) -> float:
         return mean_squared_error(
-            y_true=self.target,
-            y_pred=self.predicted_labels,
-            squared=True)
+            y_true=self.target, y_pred=self.predicted_labels, squared=True
+        )
 
 
 class MSLE(QualityMetric):
     def metric(self) -> float:
-        return mean_squared_log_error(
-            y_true=self.target,
-            y_pred=self.predicted_labels)
+        return mean_squared_log_error(y_true=self.target, y_pred=self.predicted_labels)
 
 
 class MAPE(QualityMetric):
     def metric(self) -> float:
         return mean_absolute_percentage_error(
-            y_true=self.target, y_pred=self.predicted_labels)
+            y_true=self.target, y_pred=self.predicted_labels
+        )
 
 
 class F1(QualityMetric):
-    output_mode = 'labels'
+    output_mode = "labels"
 
     def metric(self) -> float:
         n_classes = len(np.unique(self.target))
@@ -338,25 +363,23 @@ class F1(QualityMetric):
         try:
             if n_classes > 2 or n_classes_pred > 2:
                 return f1_score(
-                    y_true=self.target,
-                    y_pred=self.predicted_labels,
-                    average='weighted')
+                    y_true=self.target, y_pred=self.predicted_labels, average="weighted"
+                )
             else:
                 pos_label = QualityMetric._get_least_frequent_val(self.target)
                 return f1_score(
                     y_true=self.target,
                     y_pred=self.predicted_labels,
-                    average='binary',
-                    pos_label=pos_label)
+                    average="binary",
+                    pos_label=pos_label,
+                )
         except ValueError:
             return self.default_value
 
 
 class MAE(QualityMetric):
     def metric(self) -> float:
-        return mean_absolute_error(
-            y_true=self.target,
-            y_pred=self.predicted_labels)
+        return mean_absolute_error(y_true=self.target, y_pred=self.predicted_labels)
 
 
 class R2(QualityMetric):
@@ -376,7 +399,7 @@ class ROCAUC(QualityMetric):
 
         if n_classes > 2:
             target = pd.get_dummies(self.target)
-            additional_params = {'multi_class': 'ovr', 'average': 'macro'}
+            additional_params = {"multi_class": "ovr", "average": "macro"}
             if self.predicted_probs is None:
                 prediction = pd.get_dummies(self.predicted_labels)
             else:
@@ -390,26 +413,26 @@ class ROCAUC(QualityMetric):
             y_score=prediction,
             y_true=target,
             labels=np.unique(target),
-            **additional_params)
+            **additional_params,
+        )
         score = round(score, 3)
 
         return score
 
 
 class Precision(QualityMetric):
-    output_mode = 'labels'
+    output_mode = "labels"
 
     def metric(self) -> float:
         n_classes = np.unique(self.target)
         if n_classes.shape[0] >= 2:
-            additional_params = {'average': 'macro'}
+            additional_params = {"average": "macro"}
         else:
             additional_params = {}
 
         score = precision_score(
-            y_pred=self.predicted_labels,
-            y_true=self.target,
-            **additional_params)
+            y_pred=self.predicted_labels, y_true=self.target, **additional_params
+        )
         score = round(score, 3)
         return score
 
@@ -420,7 +443,7 @@ class Logloss(QualityMetric):
 
 
 class Accuracy(QualityMetric):
-    output_mode = 'labels'
+    output_mode = "labels"
 
     def metric(self) -> float:
         return accuracy_score(y_true=self.target, y_pred=self.predicted_labels)
@@ -431,8 +454,7 @@ def mase(A, F, y_train):
 
 
 def smape(a, f, _=None):
-    return 1 / len(a) * np.sum(2 * np.abs(f - a) /
-                               (np.abs(a) + np.abs(f)) * 100)
+    return 1 / len(a) * np.sum(2 * np.abs(f - a) / (np.abs(a) + np.abs(f)) * 100)
 
 
 def mape(A, F):

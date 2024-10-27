@@ -36,7 +36,8 @@ from ..adaptor.torch_utils import util
 from . import logger
 
 yaml.SafeLoader.add_constructor(
-    "tag:yaml.org,2002:python/tuple", lambda loader, node: tuple(loader.construct_sequence(node))
+    "tag:yaml.org,2002:python/tuple",
+    lambda loader, node: tuple(loader.construct_sequence(node)),
 )
 
 
@@ -88,7 +89,9 @@ def _set_sub_module_scale_zeropoint(model, tune_cfg, prefix=""):
             for key_name in tune_cfg["get_attr"].keys():
                 node_name, node_target = key_name.split("--")
                 if op_name == node_name:
-                    setattr(model, node_target, torch.tensor(tune_cfg["get_attr"][key_name]))
+                    setattr(
+                        model, node_target, torch.tensor(tune_cfg["get_attr"][key_name])
+                    )
         else:
             _set_sub_module_scale_zeropoint(module, tune_cfg, op_name)
 
@@ -126,7 +129,11 @@ def _set_activation_scale_zeropoint(q_model, tune_cfg):
         # get scale and zero_point of getattr ops.
         if not tune_cfg["fx_sub_module_list"]:
             for node_target in tune_cfg["get_attr"].keys():
-                setattr(q_model, node_target, torch.tensor(tune_cfg["get_attr"][node_target]))
+                setattr(
+                    q_model,
+                    node_target,
+                    torch.tensor(tune_cfg["get_attr"][node_target]),
+                )
         else:
             _set_sub_module_scale_zeropoint(q_model, tune_cfg)
 
@@ -134,7 +141,9 @@ def _set_activation_scale_zeropoint(q_model, tune_cfg):
 def _load_int8_orchestration(model, tune_cfg, stat_dict, example_inputs, **kwargs):
     q_cfgs = torch.quantization.QConfig(
         activation=torch.quantization.FakeQuantize.with_args(
-            dtype=torch.quint8, qscheme=torch.per_tensor_affine, reduce_range=tune_cfg["reduce_range"]
+            dtype=torch.quint8,
+            qscheme=torch.per_tensor_affine,
+            reduce_range=tune_cfg["reduce_range"],
         ),
         weight=torch.quantization.default_weight_fake_quant,
     )
@@ -161,13 +170,17 @@ def _load_int8_orchestration(model, tune_cfg, stat_dict, example_inputs, **kwarg
                     fx_op_cfgs,
                     example_inputs=example_inputs,
                     prepare_custom_config=(
-                        kwargs.get("prepare_custom_config_dict", None) if kwargs is not None else None
+                        kwargs.get("prepare_custom_config_dict", None)
+                        if kwargs is not None
+                        else None
                     ),
                 )
                 model = convert_fx(
                     model,
                     convert_custom_config=(
-                        kwargs.get("convert_custom_config_dict", None) if kwargs is not None else None
+                        kwargs.get("convert_custom_config_dict", None)
+                        if kwargs is not None
+                        else None
                     ),
                 )
             else:
@@ -175,19 +188,30 @@ def _load_int8_orchestration(model, tune_cfg, stat_dict, example_inputs, **kwarg
                     model,
                     fx_op_cfgs,
                     prepare_custom_config_dict=(
-                        kwargs.get("prepare_custom_config_dict", None) if kwargs is not None else None
+                        kwargs.get("prepare_custom_config_dict", None)
+                        if kwargs is not None
+                        else None
                     ),
                 )
                 model = convert_fx(
                     model,
                     convert_custom_config_dict=(
-                        kwargs.get("convert_custom_config_dict", None) if kwargs is not None else None
+                        kwargs.get("convert_custom_config_dict", None)
+                        if kwargs is not None
+                        else None
                     ),
                 )
         else:
-            logger.info("Fx trace of the entire model failed. " + "We will conduct auto quantization")
-            PyTorch_FXAdaptor.prepare_sub_graph(tune_cfg["sub_module_list"], fx_op_cfgs, model, prefix="", is_qat=True)
-            PyTorch_FXAdaptor.convert_sub_graph(tune_cfg["sub_module_list"], model, prefix="")
+            logger.info(
+                "Fx trace of the entire model failed. "
+                + "We will conduct auto quantization"
+            )
+            PyTorch_FXAdaptor.prepare_sub_graph(
+                tune_cfg["sub_module_list"], fx_op_cfgs, model, prefix="", is_qat=True
+            )
+            PyTorch_FXAdaptor.convert_sub_graph(
+                tune_cfg["sub_module_list"], model, prefix=""
+            )
     else:
         model.training = True
         model.qconfig = q_cfgs
@@ -213,9 +237,13 @@ def load_weight_only(checkpoint_dir, model, layer_wise=False):
     import neural_compressor  # for eval(config['module_type'])
     from fedcore.neural_compressor.adaptor.torch_utils.model_wrapper import MulLinear
 
-    weights_file = os.path.join(os.path.abspath(os.path.expanduser(checkpoint_dir)), "best_model.pt")
+    weights_file = os.path.join(
+        os.path.abspath(os.path.expanduser(checkpoint_dir)), "best_model.pt"
+    )
     # for weight only quantized model.
-    weights_only_config_file = os.path.join(os.path.abspath(os.path.expanduser(checkpoint_dir)), "qconfig.json")
+    weights_only_config_file = os.path.join(
+        os.path.abspath(os.path.expanduser(checkpoint_dir)), "qconfig.json"
+    )
     with open(weights_only_config_file, "r") as f:
         weight_only_config = json.load(f)
     for op_name, config in weight_only_config.items():
@@ -227,7 +255,10 @@ def load_weight_only(checkpoint_dir, model, layer_wise=False):
             new_module = MulLinear(module)
             util.set_module(model, op_name, new_module)
     if layer_wise or (hasattr(model, "device") and str(model.device)) == "meta":
-        from ..adaptor.torch_utils.layer_wise_quant.utils import get_named_children, set_module_tensor_to_device
+        from ..adaptor.torch_utils.layer_wise_quant.utils import (
+            get_named_children,
+            set_module_tensor_to_device,
+        )
 
         # state_dict = torch.load(weights_file)
         modules = get_named_children(model)
@@ -235,7 +266,10 @@ def load_weight_only(checkpoint_dir, model, layer_wise=False):
             for n, p in module.named_parameters():
                 param_name = name + "." + n
                 value = torch.load(
-                    os.path.join(os.path.abspath(os.path.expanduser(checkpoint_dir)), f"{param_name}.pt")
+                    os.path.join(
+                        os.path.abspath(os.path.expanduser(checkpoint_dir)),
+                        f"{param_name}.pt",
+                    )
                 )
                 set_module_tensor_to_device(model, param_name, "cpu", value)
     else:
@@ -269,21 +303,31 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
             weights_file = checkpoint_dir
             try:
                 stat_dict = torch.jit.load(weights_file)
-                logger.info("torch.jit.load is used to recovery the int8 model quantized by INC IPEX backend")
+                logger.info(
+                    "torch.jit.load is used to recovery the int8 model quantized by INC IPEX backend"
+                )
             except:
                 stat_dict = torch.load(weights_file)
         elif os.path.isdir(checkpoint_dir):
             try:
-                weights_file = os.path.join(os.path.abspath(os.path.expanduser(checkpoint_dir)), "best_model.pt")
+                weights_file = os.path.join(
+                    os.path.abspath(os.path.expanduser(checkpoint_dir)), "best_model.pt"
+                )
                 try:
                     stat_dict = torch.jit.load(weights_file)
-                    logger.info("torch.jit.load is used to recovery the int8 model quantized by INC IPEX backend")
+                    logger.info(
+                        "torch.jit.load is used to recovery the int8 model quantized by INC IPEX backend"
+                    )
                 except:
                     stat_dict = torch.load(weights_file)
             except:
-                tune_cfg_file = os.path.join(os.path.abspath(os.path.expanduser(checkpoint_dir)), "best_configure.yaml")
+                tune_cfg_file = os.path.join(
+                    os.path.abspath(os.path.expanduser(checkpoint_dir)),
+                    "best_configure.yaml",
+                )
                 weights_file = os.path.join(
-                    os.path.abspath(os.path.expanduser(checkpoint_dir)), "best_model_weights.pt"
+                    os.path.abspath(os.path.expanduser(checkpoint_dir)),
+                    "best_model_weights.pt",
                 )
                 stat_dict = torch.load(weights_file)
                 with open(tune_cfg_file, "r") as f:
@@ -297,11 +341,14 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
 
         if not isinstance(stat_dict, torch.jit._script.RecursiveScriptModule):
             assert "best_configure" in stat_dict, (
-                "No best_configure found in the model file, " "please use the int8 model file generated by INC."
+                "No best_configure found in the model file, "
+                "please use the int8 model file generated by INC."
             )
             tune_cfg = stat_dict.pop("best_configure")
     else:
-        assert history_cfg is not None, "Need chieckpoint_dir or history_cfg to rebuild int8 model"
+        assert (
+            history_cfg is not None
+        ), "Need chieckpoint_dir or history_cfg to rebuild int8 model"
         tune_cfg = history_cfg
         stat_dict = None
 
@@ -315,7 +362,9 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
         return q_model
 
     if "is_oneshot" in tune_cfg and tune_cfg["is_oneshot"]:
-        return _load_int8_orchestration(model, tune_cfg, stat_dict, example_inputs, **kwargs)
+        return _load_int8_orchestration(
+            model, tune_cfg, stat_dict, example_inputs, **kwargs
+        )
 
     model.eval()
     approach_quant_mode = None
@@ -331,14 +380,25 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
         and not recipe_cfgs["smooth_quant_args"]["folding"]
         and approach_quant_mode != "dynamic"
     ):
-        from ..adaptor.torch_utils.model_wrapper import _wrapper_qdq_linear, _wrapper_sq_linear
+        from ..adaptor.torch_utils.model_wrapper import (
+            _wrapper_qdq_linear,
+            _wrapper_sq_linear,
+        )
 
-        model = _wrapper_sq_linear(model, recipe_cfgs["smoothquant_op_info"]["sq_linear"])
-        model = _wrapper_qdq_linear(model, recipe_cfgs["smoothquant_op_info"]["qdq_linear"])
+        model = _wrapper_sq_linear(
+            model, recipe_cfgs["smoothquant_op_info"]["sq_linear"]
+        )
+        model = _wrapper_qdq_linear(
+            model, recipe_cfgs["smoothquant_op_info"]["qdq_linear"]
+        )
         model.load_state_dict(stat_dict)
         return model
 
-    if recipe_cfgs and recipe_cfgs.get("layer_wise_quant", False) and approach_quant_mode != "dynamic":
+    if (
+        recipe_cfgs
+        and recipe_cfgs.get("layer_wise_quant", False)
+        and approach_quant_mode != "dynamic"
+    ):
         from ..adaptor.torch_utils.model_wrapper import _wrap_lwq_layer
 
         op_cfgs = _cfg_to_qconfig(tune_cfg, tune_cfg["approach"])
@@ -357,21 +417,29 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
         elif version.release < Version("1.8.0").release:  # pragma: no cover
             q_mapping = tq.quantization_mappings.get_static_quant_module_mappings()
         else:
-            q_mapping = tq.quantization_mappings.get_default_static_quant_module_mappings()
+            q_mapping = (
+                tq.quantization_mappings.get_default_static_quant_module_mappings()
+            )
     else:
         if version.release < Version("1.7.0").release:  # pragma: no cover
             q_mapping = tq.default_mappings.DEFAULT_DYNAMIC_MODULE_MAPPING
         elif version.release < Version("1.8.0").release:  # pragma: no cover
             q_mapping = tq.quantization_mappings.get_dynamic_quant_module_mappings()
         else:
-            q_mapping = tq.quantization_mappings.get_default_dynamic_quant_module_mappings()
+            q_mapping = (
+                tq.quantization_mappings.get_default_dynamic_quant_module_mappings()
+            )
 
     if tune_cfg["framework"] == "pytorch_fx":  # pragma: no cover
         # For torch.fx approach
         assert (
             version.release >= Version("1.8.0").release
         ), "Please use PyTroch 1.8 or higher version with pytorch_fx backend"
-        from torch.quantization.quantize_fx import convert_fx, prepare_fx, prepare_qat_fx
+        from torch.quantization.quantize_fx import (
+            convert_fx,
+            prepare_fx,
+            prepare_qat_fx,
+        )
 
         if kwargs is None:
             kwargs = {}
@@ -394,7 +462,9 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
                     )
                 else:
                     model = prepare_qat_fx(  # pylint: disable=E1120,E1123
-                        model, fx_op_cfgs, prepare_custom_config_dict=prepare_custom_config_dict
+                        model,
+                        fx_op_cfgs,
+                        prepare_custom_config_dict=prepare_custom_config_dict,
                     )
             else:
                 if version.release > Version("1.12.1").release:  # pragma: no cover
@@ -407,11 +477,15 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
                     )
                 else:
                     model = prepare_fx(  # pylint: disable=E1120,E1123
-                        model, fx_op_cfgs, prepare_custom_config_dict=prepare_custom_config_dict
+                        model,
+                        fx_op_cfgs,
+                        prepare_custom_config_dict=prepare_custom_config_dict,
                     )
             if version.release > Version("1.12.1").release:  # pragma: no cover
                 # pylint: disable=E1123
-                model = convert_fx(model, convert_custom_config=convert_custom_config_dict)
+                model = convert_fx(
+                    model, convert_custom_config=convert_custom_config_dict
+                )
             else:
                 model = convert_fx(  # pylint: disable=E1123
                     model, convert_custom_config_dict=convert_custom_config_dict
@@ -423,11 +497,20 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
             if tune_cfg["approach"] == "quant_aware_training":
                 model.train()
                 PyTorch_FXAdaptor.prepare_sub_graph(
-                    sub_module_list, fx_op_cfgs, model, prefix="", is_qat=True, example_inputs=example_inputs
+                    sub_module_list,
+                    fx_op_cfgs,
+                    model,
+                    prefix="",
+                    is_qat=True,
+                    example_inputs=example_inputs,
                 )
             else:
                 PyTorch_FXAdaptor.prepare_sub_graph(
-                    sub_module_list, fx_op_cfgs, model, prefix="", example_inputs=example_inputs
+                    sub_module_list,
+                    fx_op_cfgs,
+                    model,
+                    prefix="",
+                    example_inputs=example_inputs,
                 )
             PyTorch_FXAdaptor.convert_sub_graph(sub_module_list, model, prefix="")
     else:
@@ -452,7 +535,9 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
             add_observer_(model)
         model = convert(model, mapping=q_mapping, inplace=True)
 
-    bf16_ops_list = tune_cfg["bf16_ops_list"] if "bf16_ops_list" in tune_cfg.keys() else []
+    bf16_ops_list = (
+        tune_cfg["bf16_ops_list"] if "bf16_ops_list" in tune_cfg.keys() else []
+    )
     if len(bf16_ops_list) > 0 and (version >= Version("1.11.0-rc1")):
         from ..adaptor.torch_utils.bf16_convert import Convert
 
@@ -467,7 +552,9 @@ def load(checkpoint_dir=None, model=None, layer_wise=False, history_cfg=None, **
         except:
             # set strict=False to avoid loading linked tensors, ignore missing_keys.
             mismatch_log = model.load_state_dict(stat_dict, strict=False)
-            assert len(mismatch_log.unexpected_keys) == 0, "Loading state_dict failed: {}".format(mismatch_log)
+            assert (
+                len(mismatch_log.unexpected_keys) == 0
+            ), "Loading state_dict failed: {}".format(mismatch_log)
     util.get_embedding_contiguous(model)
     return model
 
@@ -489,13 +576,21 @@ def recover_model_from_json(model, json_file_path, example_inputs):
     from torch.ao.quantization.observer import MinMaxObserver
 
     if ipex.__version__ >= "2.1.100":
-        qconfig = ipex.quantization.get_smooth_quant_qconfig_mapping(alpha=0.5, act_observer=MinMaxObserver)
+        qconfig = ipex.quantization.get_smooth_quant_qconfig_mapping(
+            alpha=0.5, act_observer=MinMaxObserver
+        )
     else:
-        qconfig = ipex.quantization.get_smooth_quant_qconfig_mapping(alpha=0.5, act_observer=MinMaxObserver())
+        qconfig = ipex.quantization.get_smooth_quant_qconfig_mapping(
+            alpha=0.5, act_observer=MinMaxObserver()
+        )
     if isinstance(example_inputs, dict):
-        model = ipex.quantization.prepare(model, qconfig, example_kwarg_inputs=example_inputs, inplace=True)
+        model = ipex.quantization.prepare(
+            model, qconfig, example_kwarg_inputs=example_inputs, inplace=True
+        )
     else:
-        model = ipex.quantization.prepare(model, qconfig, example_inputs=example_inputs, inplace=True)
+        model = ipex.quantization.prepare(
+            model, qconfig, example_inputs=example_inputs, inplace=True
+        )
     model.load_qconf_summary(qconf_summary=json_file_path)
     model = ipex.quantization.convert(model, inplace=True)
     with torch.no_grad():
@@ -509,7 +604,12 @@ def recover_model_from_json(model, json_file_path, example_inputs):
         except:
             if isinstance(example_inputs, dict):
                 # pylint: disable=E1120,E1123
-                model = torch.jit.trace(model, example_kwarg_inputs=example_inputs, strict=False, check_trace=False)
+                model = torch.jit.trace(
+                    model,
+                    example_kwarg_inputs=example_inputs,
+                    strict=False,
+                    check_trace=False,
+                )
             else:
                 model = torch.jit.trace(model, example_inputs, strict=False)
             model = torch.jit.freeze(model.eval())

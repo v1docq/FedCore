@@ -122,7 +122,9 @@ class SigOptTuneStrategy(TuneStrategy):
                     import subprocess
                     import sys
 
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "sigopt"])
+                    subprocess.check_call(
+                        [sys.executable, "-m", "pip", "install", "sigopt"]
+                    )
                     import sigopt  # pylint: disable=import-error
                 except:
                     assert False, "Unable to import sigopt from the local environment."
@@ -144,7 +146,10 @@ class SigOptTuneStrategy(TuneStrategy):
         try:
             assert self.project_id is not None
             logger.warning(
-                "Project id is {}, " "Please check whether it is created in the sigopt account.".format(self.project_id)
+                "Project id is {}, "
+                "Please check whether it is created in the sigopt account.".format(
+                    self.project_id
+                )
             )
         except AssertionError:
             logger.error(
@@ -167,29 +172,46 @@ class SigOptTuneStrategy(TuneStrategy):
     def params_to_tune_configs(self, params):
         """Get the parameters of the tuning strategy."""
         op_tuning_cfg = {}
-        calib_sampling_size_lst = self.tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+        calib_sampling_size_lst = self.tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         for op_name_type, configs in self.op_configs.items():
             if len(configs) == 1:
                 op_tuning_cfg[op_name_type] = configs[0]
             else:
-                op_tuning_cfg[op_name_type] = configs[min(len(configs) - 1, int(params[op_name_type[0]]))]
-        calib_sampling_size = calib_sampling_size_lst[min(len(configs) - 1, int(params["calib_sampling_size"]))]
+                op_tuning_cfg[op_name_type] = configs[
+                    min(len(configs) - 1, int(params[op_name_type[0]]))
+                ]
+        calib_sampling_size = calib_sampling_size_lst[
+            min(len(configs) - 1, int(params["calib_sampling_size"]))
+        ]
         op_tuning_cfg["calib_sampling_size"] = calib_sampling_size
         return op_tuning_cfg
 
     def next_tune_cfg(self):
         """Yielding the tuning config to traverse by concreting strategies according to last tuning result."""
-        while self.experiment.progress.observation_count < self.experiment.observation_budget:
-            suggestion = self.conn.experiments(self.experiment.id).suggestions().create()
+        while (
+            self.experiment.progress.observation_count
+            < self.experiment.observation_budget
+        ):
+            suggestion = (
+                self.conn.experiments(self.experiment.id).suggestions().create()
+            )
             yield self.params_to_tune_configs(suggestion.assignments)
             values = [
                 dict(name="accuracy", value=self.last_tune_result[0]),
                 dict(name="latency", value=self.last_tune_result[1]),
             ]
             obs = (
-                self.conn.experiments(self.experiment.id).observations().create(suggestion=suggestion.id, values=values)
+                self.conn.experiments(self.experiment.id)
+                .observations()
+                .create(suggestion=suggestion.id, values=values)
             )
-            logger.debug("`suggestion_id` is {}, `observation_id` is {}.".format(suggestion.id, obs.id))
+            logger.debug(
+                "`suggestion_id` is {}, `observation_id` is {}.".format(
+                    suggestion.id, obs.id
+                )
+            )
             self.experiment = self.conn.experiments(self.experiment.id).fetch()
 
     def get_acc_target(self, base_acc):
@@ -221,13 +243,18 @@ class SigOptTuneStrategy(TuneStrategy):
             else "n/a"
         )
         logger.info("FP32 baseline is: {}".format(baseline_msg))
-        self.experiment = self.create_exp(acc_target=self.get_acc_target(self.baseline[0]))
+        self.experiment = self.create_exp(
+            acc_target=self.get_acc_target(self.baseline[0])
+        )
         trials_count = 0
         for tune_cfg in self.next_tune_cfg():
             # add tune_cfg here as quantize use tune_cfg
             trials_count += 1
             tuning_history = self._find_tuning_history(tune_cfg)
-            if tuning_history and trials_count < self.config.tuning_criterion.max_trials:
+            if (
+                tuning_history
+                and trials_count < self.config.tuning_criterion.max_trials
+            ):
                 self.last_tune_result = tuning_history["last_tune_result"]
                 self.best_tune_result = tuning_history["best_tune_result"]
                 logger.warn("Find evaluated tuning config, skip.")
@@ -235,12 +262,18 @@ class SigOptTuneStrategy(TuneStrategy):
 
             logger.debug("Dump current tuning configuration:")
             logger.debug(tune_cfg)
-            self.last_qmodel = self.adaptor.quantize(tune_cfg, self.model, self.calib_dataloader, self.q_func)
+            self.last_qmodel = self.adaptor.quantize(
+                tune_cfg, self.model, self.calib_dataloader, self.q_func
+            )
             assert self.last_qmodel
             # Return the last quantized model as a result. if performance only.
             if self._not_tuning:
                 self.best_qmodel = self.last_qmodel
-                self._add_tuning_history(copy.deepcopy(tune_cfg), (-1, [0]), q_config=self.last_qmodel.q_config)
+                self._add_tuning_history(
+                    copy.deepcopy(tune_cfg),
+                    (-1, [0]),
+                    q_config=self.last_qmodel.q_config,
+                )
                 return
             self.last_tune_cfg = copy.deepcopy(tune_cfg)
             self.last_tune_result = self._evaluate(self.last_qmodel)
@@ -258,15 +291,18 @@ class SigOptTuneStrategy(TuneStrategy):
     def create_exp(self, acc_target):
         """Set the config for the experiment."""
         params = []
-        from copy import deepcopy
 
         tuning_space = self.tuning_space
         initial_op_tuning_cfg = {}
         for item in tuning_space.root_item.options:
             if item.item_type == "op":
                 op_name, op_type = item.name
-                initial_op_tuning_cfg[item.name] = OpTuningConfig(op_name, op_type, "fp32", tuning_space)
-        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name("calib_sampling_size").options
+                initial_op_tuning_cfg[item.name] = OpTuningConfig(
+                    op_name, op_type, "fp32", tuning_space
+                )
+        calib_sampling_size_lst = tuning_space.root_item.get_option_by_name(
+            "calib_sampling_size"
+        ).options
         # step1. collect the ops that support static and dynamic
         quant_mode_wise_items = OrderedDict()
         query_order = ["static", "dynamic", "bf16", "fp16", "fp32"]
@@ -286,19 +322,34 @@ class SigOptTuneStrategy(TuneStrategy):
         for quant_mode, quant_mode_items in quant_mode_wise_items.items():
             initial_op_quant_mode(quant_mode_items, quant_mode, op_item_dtype_dict)
 
-        op_wise_pool = OpWiseTuningSampler(tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg)
+        op_wise_pool = OpWiseTuningSampler(
+            tuning_space, [], [], op_item_dtype_dict, initial_op_tuning_cfg
+        )
         self.op_configs = op_wise_pool.get_opwise_candidate()
         for op, configs in self.op_configs.items():
             if len(configs) > 1:
-                params.append(dict(name=op[0], type="int", bounds=dict(min=0, max=len(configs) - 1)))
+                params.append(
+                    dict(
+                        name=op[0], type="int", bounds=dict(min=0, max=len(configs) - 1)
+                    )
+                )
         params.append(
-            dict(name="calib_sampling_size", type="int", bounds=dict(min=0, max=len(calib_sampling_size_lst) - 1))
+            dict(
+                name="calib_sampling_size",
+                type="int",
+                bounds=dict(min=0, max=len(calib_sampling_size_lst) - 1),
+            )
         )
         experiment = self.conn.experiments().create(
             name=self.experiment_name,
             parameters=params,
             metrics=[
-                dict(name="accuracy", objective="maximize", strategy="constraint", threshold=acc_target),
+                dict(
+                    name="accuracy",
+                    objective="maximize",
+                    strategy="constraint",
+                    threshold=acc_target,
+                ),
                 dict(name="latency", objective="minimize", strategy="optimize"),
             ],
             parallel_bandwidth=1,
@@ -307,6 +358,10 @@ class SigOptTuneStrategy(TuneStrategy):
             project=self.project_id,
         )
 
-        logger.debug("Create experiment at https://app.sigopt.com/experiment/{}".format(experiment.id))
+        logger.debug(
+            "Create experiment at https://app.sigopt.com/experiment/{}".format(
+                experiment.id
+            )
+        )
 
         return experiment

@@ -20,24 +20,31 @@ import copy
 import logging
 import os
 import tempfile
-import time
 from collections import OrderedDict, UserDict
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.core.framework import attr_value_pb2, graph_pb2
-from tensorflow.python.framework import dtypes, tensor_util
+from tensorflow.core.framework import attr_value_pb2
+from tensorflow.python.framework import dtypes
 from tensorflow.python.saved_model import load, tag_constants
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
-from fedcore.neural_compressor.tensorflow.quantization.utils.quantize_graph_common import QuantizeGraphHelper
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.quantize_graph_common import (
+    QuantizeGraphHelper,
+)
 from fedcore.neural_compressor.tensorflow.quantization.utils.utility import (
     iterator_sess_run,
     parse_saved_model,
     reconstruct_saved_model,
 )
-from fedcore.neural_compressor.tensorflow.utils import CaptureOutputToFile, TensorflowLLMModel
+from fedcore.neural_compressor.tensorflow.utils import (
+    CaptureOutputToFile,
+    TensorflowLLMModel,
+)
 
 logger = logging.getLogger("neural_compressor")
 debug = bool(logger.level == logging.DEBUG)
@@ -64,7 +71,9 @@ class SmoothQuantCalibration:
         self.percentile = percentile
         self._sq_input_node_names = []
         self._sq_output_tensor_dict = {}
-        self._sq_weight_node_names = {}  # mapping from its weight node name to the concrete output node name
+        self._sq_weight_node_names = (
+            {}
+        )  # mapping from its weight node name to the concrete output node name
 
     def _inference_for_calibration(self, model):
         """Run the calibration on the input graph.
@@ -87,19 +96,27 @@ class SmoothQuantCalibration:
             sess.run(init_table_op)
 
         logger.info("Start sampling on calibration dataset for Smooth Quantization.")
-        if hasattr(self.dataloader, "__len__") and len(self.dataloader) == 0:  # pragma: no cover
+        if (
+            hasattr(self.dataloader, "__len__") and len(self.dataloader) == 0
+        ):  # pragma: no cover
             feed_dict = {}
             for output_idx, output in enumerate(
                 sess.run(output_tensor, feed_dict)
                 if iter_op == []
-                else iterator_sess_run(sess, iter_op, feed_dict, output_tensor, self.iterations)
+                else iterator_sess_run(
+                    sess, iter_op, feed_dict, output_tensor, self.iterations
+                )
             ):
-                self._sq_output_tensor_dict.setdefault(self._sq_input_node_names[output_idx], []).append(output)
+                self._sq_output_tensor_dict.setdefault(
+                    self._sq_input_node_names[output_idx], []
+                ).append(output)
         for idx, (inputs, labels) in enumerate(self.dataloader):
             if len(input_tensor) == 1:
                 feed_dict = {}
                 if (
-                    isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict)
+                    isinstance(inputs, dict)
+                    or isinstance(inputs, OrderedDict)
+                    or isinstance(inputs, UserDict)
                 ):  # pragma: no cover
                     for name in inputs:
                         for tensor in input_tensor:
@@ -109,11 +126,19 @@ class SmoothQuantCalibration:
                                 feed_dict[tensor] = inputs[name]
                                 break
                 else:
-                    feed_dict = {input_tensor[0]: inputs}  # get raw tensor using index [0]
+                    feed_dict = {
+                        input_tensor[0]: inputs
+                    }  # get raw tensor using index [0]
             else:  # pragma: no cover
-                assert len(input_tensor) == len(inputs), "inputs len must equal with input_tensor"
+                assert len(input_tensor) == len(
+                    inputs
+                ), "inputs len must equal with input_tensor"
                 feed_dict = {}
-                if isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict):
+                if (
+                    isinstance(inputs, dict)
+                    or isinstance(inputs, OrderedDict)
+                    or isinstance(inputs, UserDict)
+                ):
                     for name in inputs:
                         for tensor in input_tensor:
                             pos = tensor.name.rfind(":")
@@ -157,9 +182,13 @@ class SmoothQuantCalibration:
             for output_idx, output in enumerate(
                 sess.run(output_tensor, feed_dict)
                 if iter_op == []
-                else iterator_sess_run(sess, iter_op, feed_dict, output_tensor, self.iterations)
+                else iterator_sess_run(
+                    sess, iter_op, feed_dict, output_tensor, self.iterations
+                )
             ):
-                self._sq_output_tensor_dict.setdefault(self._sq_input_node_names[output_idx], []).append(output)
+                self._sq_output_tensor_dict.setdefault(
+                    self._sq_input_node_names[output_idx], []
+                ).append(output)
             if idx + 1 == self.iterations:
                 break
         os.environ["ITEX_REMAPPER"] = "1"
@@ -167,7 +196,9 @@ class SmoothQuantCalibration:
     def _generate_calibration_data(self):
         """Generate the calibration data."""
         sorted_graph = QuantizeGraphHelper().get_sorted_graph(
-            self.model.graph_def, self.model.input_node_names, self.model.output_node_names
+            self.model.graph_def,
+            self.model.input_node_names,
+            self.model.output_node_names,
         )
 
         for node in sorted_graph.node:
@@ -248,7 +279,16 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
         weight_name_mapping (): A function that convert weight tensor name in autotrackable to node name in graph_def
     """
 
-    def __init__(self, model_path, dataloader, iterations, op_types, percentile, temp_path, weight_name_mapping):
+    def __init__(
+        self,
+        model_path,
+        dataloader,
+        iterations,
+        op_types,
+        percentile,
+        temp_path,
+        weight_name_mapping,
+    ):
         """Initializes a SmoothQuantCalibrationLLM object."""
         self.func = None
         self.graph_def = None
@@ -312,7 +352,9 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
                 refresh_pre_node_name = graph_info[pre_node_name].node.input[0]
                 # Check the Conv2D could be fused with previous Pad or not.
                 # If so, we need to update the pre-node name correspondingly.
-                refresh_pre_node = graph_info[Helper.node_name_from_input(refresh_pre_node_name)].node
+                refresh_pre_node = graph_info[
+                    Helper.node_name_from_input(refresh_pre_node_name)
+                ].node
                 if refresh_pre_node.op == "Pad" and top_node.op in ("Conv2D", "Conv3D"):
                     insert_node_pairs.append([refresh_pre_node_name, post_node_name])
                     refresh_pre_node_name = refresh_pre_node.input[0]
@@ -323,7 +365,9 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
             for node_pair_names in insert_node_pairs:
                 for index, each_node_name in enumerate(node_pair_names):
                     name_with_sig = each_node_name
-                    node_name_prefix = name_with_sig.replace(":", "__port__").replace("^", "__hat__")
+                    node_name_prefix = name_with_sig.replace(":", "__port__").replace(
+                        "^", "__hat__"
+                    )
                     print_node = Helper.create_node(
                         "Print",
                         node_name_prefix + "_print__{}".format(index),
@@ -334,7 +378,9 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
                         msg = ";{}__print__:".format(each_node_name)
                         # workaround for swish_f32, attribute T is not in the op definition
                         if "swish_f32" in graph_info[pre_node_name].node.name:
-                            src_dt = attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum)
+                            src_dt = attr_value_pb2.AttrValue(
+                                type=dtypes.float32.as_datatype_enum
+                            )
                         else:
                             src_dt = graph_info[pre_node_name].node.attr["T"]
                     else:
@@ -347,8 +393,12 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
                     print_node.attr["summarize"].i = 102400000
 
                     attr_u = [dtypes.as_dtype(src_dt.type).as_datatype_enum]
-                    print_node.attr["U"].list.CopyFrom(attr_value_pb2.AttrValue.ListValue(type=attr_u))
-                    post_node_names = graph_info[Helper.node_name_from_input(each_node_name)].outputs
+                    print_node.attr["U"].list.CopyFrom(
+                        attr_value_pb2.AttrValue.ListValue(type=attr_u)
+                    )
+                    post_node_names = graph_info[
+                        Helper.node_name_from_input(each_node_name)
+                    ].outputs
                     if post_node_names:
                         for post_node_name in post_node_names:
                             post_node = graph_info[post_node_name].node
@@ -357,17 +407,25 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
                             if (
                                 post_node.op == "FusedBatchNormV3"
                                 and "_print_identity"
-                                not in graph_info[Helper.node_name_from_input(post_node.name)].node.input[0]
+                                not in graph_info[
+                                    Helper.node_name_from_input(post_node.name)
+                                ].node.input[0]
                             ):
                                 identity_node = Helper.create_node(
                                     "Identity",
                                     post_node.name + "_print_identity",
-                                    [graph_info[Helper.node_name_from_input(post_node.name)].node.input[0]],
+                                    [
+                                        graph_info[
+                                            Helper.node_name_from_input(post_node.name)
+                                        ].node.input[0]
+                                    ],
                                 )
                                 identity_node.attr["T"].CopyFrom(src_dt)
                                 cur_graph.add_node(
                                     identity_node,
-                                    graph_info[Helper.node_name_from_input(post_node.name)].node.input[0],
+                                    graph_info[
+                                        Helper.node_name_from_input(post_node.name)
+                                    ].node.input[0],
                                     [post_node.name],
                                 )
                                 identity_node.input.append("^" + print_node.name)
@@ -380,7 +438,9 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
                             "Identity", print_node.name + "_identity", [print_node.name]
                         )
                         identity_node1.attr["T"].CopyFrom(src_dt)
-                        cur_graph.add_node(print_node, each_node_name, [identity_node1.name])
+                        cur_graph.add_node(
+                            print_node, each_node_name, [identity_node1.name]
+                        )
                         cur_graph.add_node(identity_node1, print_node.name, [])
                         output_names.append(identity_node1.name)
 
@@ -404,7 +464,9 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
             if len(input_tensor_names) == 1:
                 feed_dict[input_tensor_names[0]] = inputs
             else:
-                assert len(input_tensor_names) == len(inputs), "inputs len must equal with input_tensor"
+                assert len(input_tensor_names) == len(
+                    inputs
+                ), "inputs len must equal with input_tensor"
                 for i, input_tensor_name in enumerate(input_tensor_names):
                     feed_dict[input_tensor_name] = inputs[i]
 
@@ -421,7 +483,13 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
         """
         logger.info("Start sampling on calibration dataset for Smooth Quantization.")
         # reconstruct graph_def that inserted print node to saved_model
-        reconstruct_saved_model(sampling_graph_def, self.func, self.frozen_func, self._saved_model, self.temp_path)
+        reconstruct_saved_model(
+            sampling_graph_def,
+            self.func,
+            self.frozen_func,
+            self._saved_model,
+            self.temp_path,
+        )
         model = TensorflowLLMModel(self.temp_path)
 
         input_tensor_names = model.input_tensor_names
@@ -432,7 +500,9 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
             if len(input_tensor_names) == 1:
                 feed_dict[input_tensor_names[0]] = inputs
             else:
-                assert len(input_tensor_names) == len(inputs), "inputs len must equal with input_tensor"
+                assert len(input_tensor_names) == len(
+                    inputs
+                ), "inputs len must equal with input_tensor"
                 for i, input_tensor_name in enumerate(input_tensor_names):
                     feed_dict[input_tensor_name] = inputs[i]
 
@@ -494,10 +564,19 @@ class SmoothQuantCalibrationLLM(SmoothQuantCalibration):
             sq_target_node_names (dict): A dictionary mapping from weight names to target node names.
             sq_weight_tensor_dict (dict): A dictionary containing tensor of weights.
         """
-        self.graph_def, self._saved_model, self.func, self.frozen_func, _, _ = parse_saved_model(self.model)
+        self.graph_def, self._saved_model, self.func, self.frozen_func, _, _ = (
+            parse_saved_model(self.model)
+        )
         self._generate_calibration_data(input_node_names, output_node_names)
         max_vals_per_channel = {}
         for activation_name, output_tensor in self._sq_output_tensor_dict.items():
-            max_val_per_channel = self._get_maxval_per_channel(output_tensor, percentile=self.percentile)
+            max_val_per_channel = self._get_maxval_per_channel(
+                output_tensor, percentile=self.percentile
+            )
             max_vals_per_channel[activation_name] = max_val_per_channel
-        return max_vals_per_channel, self._sq_target_node_names, self._sq_weight_tensor_dict, self.graph_def
+        return (
+            max_vals_per_channel,
+            self._sq_target_node_names,
+            self._sq_weight_tensor_dict,
+            self.graph_def,
+        )

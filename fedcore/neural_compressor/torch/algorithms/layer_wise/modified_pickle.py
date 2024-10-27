@@ -42,7 +42,12 @@ import codecs
 import io
 import re
 import sys
-from copyreg import _extension_cache, _extension_registry, _inverted_registry, dispatch_table
+from copyreg import (
+    _extension_cache,
+    _extension_registry,
+    _inverted_registry,
+    dispatch_table,
+)
 from functools import partial
 from itertools import islice
 from struct import pack, unpack
@@ -51,7 +56,17 @@ from types import FunctionType
 
 import _compat_pickle
 
-__all__ = ["PickleError", "PicklingError", "UnpicklingError", "Pickler", "Unpickler", "dump", "dumps", "load", "loads"]
+__all__ = [
+    "PickleError",
+    "PicklingError",
+    "UnpicklingError",
+    "Pickler",
+    "Unpickler",
+    "dump",
+    "dumps",
+    "load",
+    "loads",
+]
 
 try:
     from _pickle import PickleBuffer
@@ -90,14 +105,12 @@ DEFAULT_PROTOCOL = 4
 class PickleError(Exception):
     """A common base class for the other pickling exceptions."""
 
-    pass
 
 
 class PicklingError(PickleError):
     """This exception is raised when an unpicklable object is passed to the
     dump() method."""
 
-    pass
 
 
 class UnpicklingError(PickleError):
@@ -109,7 +122,6 @@ class UnpicklingError(PickleError):
     and IndexError.
     """
 
-    pass
 
 
 # An instance of _Stop is raised by Unpickler.load_stop() in response to
@@ -328,7 +340,9 @@ class _Unframer:  # pragma: no cover
 
     def load_frame(self, frame_size):
         if self.current_frame and self.current_frame.read() != b"":
-            raise UnpicklingError("beginning of a new frame before end of current frame")
+            raise UnpicklingError(
+                "beginning of a new frame before end of current frame"
+            )
         self.current_frame = io.BytesIO(self.file_read(frame_size))
 
 
@@ -338,12 +352,16 @@ class _Unframer:  # pragma: no cover
 def _getattribute(obj, name):  # pragma: no cover
     for subpath in name.split("."):
         if subpath == "<locals>":
-            raise AttributeError("Can't get local attribute {!r} on {!r}".format(name, obj))
+            raise AttributeError(
+                "Can't get local attribute {!r} on {!r}".format(name, obj)
+            )
         try:
             parent = obj
             obj = getattr(obj, subpath)
         except AttributeError:
-            raise AttributeError("Can't get attribute {!r} on {!r}".format(name, obj)) from None
+            raise AttributeError(
+                "Can't get attribute {!r} on {!r}".format(name, obj)
+            ) from None
     return obj, parent
 
 
@@ -355,7 +373,9 @@ def whichmodule(obj, name):  # pragma: no cover
     # Protect the iteration by using a list copy of sys.modules against dynamic
     # modules that trigger imports of other modules upon calls to getattr.
     for module_name, module in sys.modules.copy().items():
-        if module_name == "__main__" or module_name == "__mp_main__" or module is None:  # bpo-42406
+        if (
+            module_name == "__main__" or module_name == "__mp_main__" or module is None
+        ):  # bpo-42406
             continue
         try:
             if _getattribute(module, name)[0] is obj:
@@ -492,7 +512,10 @@ class _Pickler:  # pragma: no cover
         # Check whether Pickler was initialized correctly. This is
         # only needed to mimic the behavior of _pickle.Pickler.dump().
         if not hasattr(self, "_file_write"):
-            raise PicklingError("Pickler.__init__() was not called by " "%s.__init__()" % (self.__class__.__name__,))
+            raise PicklingError(
+                "Pickler.__init__() was not called by "
+                "%s.__init__()" % (self.__class__.__name__,)
+            )
         if self.proto >= 2:
             self.write(PROTO + pack("<B", self.proto))
         if self.proto >= 4:
@@ -594,7 +617,9 @@ class _Pickler:  # pragma: no cover
                     if reduce is not None:
                         rv = reduce()
                     else:
-                        raise PicklingError("Can't pickle %r object: %r" % (t.__name__, obj))
+                        raise PicklingError(
+                            "Can't pickle %r object: %r" % (t.__name__, obj)
+                        )
 
         # Check for string returned by reduce(), meaning "save as global"
         if isinstance(rv, str):
@@ -608,7 +633,9 @@ class _Pickler:  # pragma: no cover
         # Assert that it returned an appropriately sized tuple
         l = len(rv)
         if not (2 <= l <= 6):
-            raise PicklingError("Tuple returned by %s must have " "two to six elements" % reduce)
+            raise PicklingError(
+                "Tuple returned by %s must have " "two to six elements" % reduce
+            )
 
         # Save the reduce() output and finally memoize the object
         self.save_reduce(obj=obj, *rv)
@@ -626,9 +653,20 @@ class _Pickler:  # pragma: no cover
             try:
                 self.write(PERSID + str(pid).encode("ascii") + b"\n")
             except UnicodeEncodeError:
-                raise PicklingError("persistent IDs in protocol 0 must be ASCII strings")
+                raise PicklingError(
+                    "persistent IDs in protocol 0 must be ASCII strings"
+                )
 
-    def save_reduce(self, func, args, state=None, listitems=None, dictitems=None, state_setter=None, obj=None):
+    def save_reduce(
+        self,
+        func,
+        args,
+        state=None,
+        listitems=None,
+        dictitems=None,
+        state_setter=None,
+        obj=None,
+    ):
         # This API is called by some subclasses
 
         if not isinstance(args, tuple):
@@ -643,9 +681,13 @@ class _Pickler:  # pragma: no cover
         if self.proto >= 2 and func_name == "__newobj_ex__":
             cls, args, kwargs = args
             if not hasattr(cls, "__new__"):
-                raise PicklingError("args[0] from {} args has no __new__".format(func_name))
+                raise PicklingError(
+                    "args[0] from {} args has no __new__".format(func_name)
+                )
             if obj is not None and cls is not obj.__class__:
-                raise PicklingError("args[0] from {} args has the wrong class".format(func_name))
+                raise PicklingError(
+                    "args[0] from {} args has the wrong class".format(func_name)
+                )
             if self.proto >= 4:
                 save(cls)
                 save(args)
@@ -834,10 +876,15 @@ class _Pickler:  # pragma: no cover
 
         def save_picklebuffer(self, obj):
             if self.proto < 5:
-                raise PicklingError("PickleBuffer can only pickled with " "protocol >= 5")
+                raise PicklingError(
+                    "PickleBuffer can only pickled with " "protocol >= 5"
+                )
             with obj.raw() as m:
                 if not m.contiguous:
-                    raise PicklingError("PickleBuffer can not be pickled when " "pointing to a non-contiguous buffer")
+                    raise PicklingError(
+                        "PickleBuffer can not be pickled when "
+                        "pointing to a non-contiguous buffer"
+                    )
                 in_band = True
                 if self._buffer_callback is not None:
                     in_band = bool(self._buffer_callback(obj))
@@ -1065,7 +1112,7 @@ class _Pickler:  # pragma: no cover
 
     def save_global(self, obj, name=None):
         write = self.write
-        memo = self.memo
+        self.memo
 
         if name is None:
             name = getattr(obj, "__qualname__", None)
@@ -1078,10 +1125,15 @@ class _Pickler:  # pragma: no cover
             module = sys.modules[module_name]
             obj2, parent = _getattribute(module, name)
         except (ImportError, KeyError, AttributeError):
-            raise PicklingError("Can't pickle %r: it's not found as %s.%s" % (obj, module_name, name)) from None
+            raise PicklingError(
+                "Can't pickle %r: it's not found as %s.%s" % (obj, module_name, name)
+            ) from None
         else:
             if obj2 is not obj:
-                raise PicklingError("Can't pickle %r: it's not the same object as %s.%s" % (obj, module_name, name))
+                raise PicklingError(
+                    "Can't pickle %r: it's not the same object as %s.%s"
+                    % (obj, module_name, name)
+                )
 
         if self.proto >= 2:
             code = _extension_registry.get((module_name, name))
@@ -1105,7 +1157,13 @@ class _Pickler:  # pragma: no cover
         elif parent is not module:
             self.save_reduce(getattr, (parent, lastname))
         elif self.proto >= 3:
-            write(GLOBAL + bytes(module_name, "utf-8") + b"\n" + bytes(name, "utf-8") + b"\n")
+            write(
+                GLOBAL
+                + bytes(module_name, "utf-8")
+                + b"\n"
+                + bytes(name, "utf-8")
+                + b"\n"
+            )
         else:
             if self.fix_imports:
                 r_name_mapping = _compat_pickle.REVERSE_NAME_MAPPING
@@ -1115,10 +1173,17 @@ class _Pickler:  # pragma: no cover
                 elif module_name in r_import_mapping:
                     module_name = r_import_mapping[module_name]
             try:
-                write(GLOBAL + bytes(module_name, "ascii") + b"\n" + bytes(name, "ascii") + b"\n")
+                write(
+                    GLOBAL
+                    + bytes(module_name, "ascii")
+                    + b"\n"
+                    + bytes(name, "ascii")
+                    + b"\n"
+                )
             except UnicodeEncodeError:
                 raise PicklingError(
-                    "can't pickle global identifier '%s.%s' using " "pickle protocol %i" % (module, name, self.proto)
+                    "can't pickle global identifier '%s.%s' using "
+                    "pickle protocol %i" % (module, name, self.proto)
                 ) from None
 
         self.memoize(obj)
@@ -1140,7 +1205,9 @@ class _Pickler:  # pragma: no cover
 
 
 class _Unpickler:  # pragma: no cover
-    def __init__(self, file, *, fix_imports=True, encoding="ASCII", errors="strict", buffers=None):
+    def __init__(
+        self, file, *, fix_imports=True, encoding="ASCII", errors="strict", buffers=None
+    ):
         """This takes a binary file for reading a pickle data stream.
 
         The protocol version of the pickle is detected automatically, so
@@ -1197,7 +1264,8 @@ class _Unpickler:  # pragma: no cover
 
         if not hasattr(self, "_file_read"):
             raise UnpicklingError(
-                "Unpickler.__init__() was not called by " "%s.__init__()" % (self.__class__.__name__,)
+                "Unpickler.__init__() was not called by "
+                "%s.__init__()" % (self.__class__.__name__,)
             )
         self.tensor_name = tensor_name
         self._unframer = _Unframer(self._file_read, self._file_readline)
@@ -1373,7 +1441,9 @@ class _Unpickler:  # pragma: no cover
     def load_binbytes(self):
         (len,) = unpack("<I", self.read(4))
         if len > maxsize:
-            raise UnpicklingError("BINBYTES exceeds system's maximum size " "of %d bytes" % maxsize)
+            raise UnpicklingError(
+                "BINBYTES exceeds system's maximum size " "of %d bytes" % maxsize
+            )
         self.append(self.read(len))
 
     dispatch[BINBYTES[0]] = load_binbytes
@@ -1386,7 +1456,9 @@ class _Unpickler:  # pragma: no cover
     def load_binunicode(self):
         (len,) = unpack("<I", self.read(4))
         if len > maxsize:
-            raise UnpicklingError("BINUNICODE exceeds system's maximum size " "of %d bytes" % maxsize)
+            raise UnpicklingError(
+                "BINUNICODE exceeds system's maximum size " "of %d bytes" % maxsize
+            )
         self.append(str(self.read(len), "utf-8", "surrogatepass"))
 
     dispatch[BINUNICODE[0]] = load_binunicode
@@ -1394,7 +1466,9 @@ class _Unpickler:  # pragma: no cover
     def load_binunicode8(self):
         (len,) = unpack("<Q", self.read(8))
         if len > maxsize:
-            raise UnpicklingError("BINUNICODE8 exceeds system's maximum size " "of %d bytes" % maxsize)
+            raise UnpicklingError(
+                "BINUNICODE8 exceeds system's maximum size " "of %d bytes" % maxsize
+            )
         self.append(str(self.read(len), "utf-8", "surrogatepass"))
 
     dispatch[BINUNICODE8[0]] = load_binunicode8
@@ -1402,7 +1476,9 @@ class _Unpickler:  # pragma: no cover
     def load_binbytes8(self):
         (len,) = unpack("<Q", self.read(8))
         if len > maxsize:
-            raise UnpicklingError("BINBYTES8 exceeds system's maximum size " "of %d bytes" % maxsize)
+            raise UnpicklingError(
+                "BINBYTES8 exceeds system's maximum size " "of %d bytes" % maxsize
+            )
         self.append(self.read(len))
 
     dispatch[BINBYTES8[0]] = load_binbytes8
@@ -1410,7 +1486,9 @@ class _Unpickler:  # pragma: no cover
     def load_bytearray8(self):
         (len,) = unpack("<Q", self.read(8))
         if len > maxsize:
-            raise UnpicklingError("BYTEARRAY8 exceeds system's maximum size " "of %d bytes" % maxsize)
+            raise UnpicklingError(
+                "BYTEARRAY8 exceeds system's maximum size " "of %d bytes" % maxsize
+            )
         b = bytearray(len)
         self.readinto(b)
         self.append(b)
@@ -1419,7 +1497,10 @@ class _Unpickler:  # pragma: no cover
 
     def load_next_buffer(self):
         if self._buffers is None:
-            raise UnpicklingError("pickle stream refers to out-of-band data " "but no *buffers* argument was given")
+            raise UnpicklingError(
+                "pickle stream refers to out-of-band data "
+                "but no *buffers* argument was given"
+            )
         try:
             buf = next(self._buffers)
         except StopIteration:
@@ -1525,7 +1606,10 @@ class _Unpickler:  # pragma: no cover
             try:
                 value = klass(*args)
             except TypeError as err:
-                raise TypeError("in constructor for %s: %s" % (klass.__name__, str(err)), sys.exc_info()[2])
+                raise TypeError(
+                    "in constructor for %s: %s" % (klass.__name__, str(err)),
+                    sys.exc_info()[2],
+                )
         else:
             value = klass.__new__(klass)
         self.append(value)
@@ -1805,27 +1889,43 @@ class _Unpickler:  # pragma: no cover
 # Shorthands
 
 
-def _dump(obj, file, protocol=None, *, fix_imports=True, buffer_callback=None):  # pragma: no cover
-    _Pickler(file, protocol, fix_imports=fix_imports, buffer_callback=buffer_callback).dump(obj)
+def _dump(
+    obj, file, protocol=None, *, fix_imports=True, buffer_callback=None
+):  # pragma: no cover
+    _Pickler(
+        file, protocol, fix_imports=fix_imports, buffer_callback=buffer_callback
+    ).dump(obj)
 
 
-def _dumps(obj, protocol=None, *, fix_imports=True, buffer_callback=None):  # pragma: no cover
+def _dumps(
+    obj, protocol=None, *, fix_imports=True, buffer_callback=None
+):  # pragma: no cover
     f = io.BytesIO()
-    _Pickler(f, protocol, fix_imports=fix_imports, buffer_callback=buffer_callback).dump(obj)
+    _Pickler(
+        f, protocol, fix_imports=fix_imports, buffer_callback=buffer_callback
+    ).dump(obj)
     res = f.getvalue()
     assert isinstance(res, bytes_types)
     return res
 
 
-def _load(file, *, fix_imports=True, encoding="ASCII", errors="strict", buffers=None):  # pragma: no cover
-    return _Unpickler(file, fix_imports=fix_imports, buffers=buffers, encoding=encoding, errors=errors).load()
+def _load(
+    file, *, fix_imports=True, encoding="ASCII", errors="strict", buffers=None
+):  # pragma: no cover
+    return _Unpickler(
+        file, fix_imports=fix_imports, buffers=buffers, encoding=encoding, errors=errors
+    ).load()
 
 
-def _loads(s, *, fix_imports=True, encoding="ASCII", errors="strict", buffers=None):  # pragma: no cover
+def _loads(
+    s, *, fix_imports=True, encoding="ASCII", errors="strict", buffers=None
+):  # pragma: no cover
     if isinstance(s, str):
         raise TypeError("Can't load pickle from unicode string")
     file = io.BytesIO(s)
-    return _Unpickler(file, fix_imports=fix_imports, buffers=buffers, encoding=encoding, errors=errors).load()
+    return _Unpickler(
+        file, fix_imports=fix_imports, buffers=buffers, encoding=encoding, errors=errors
+    ).load()
 
 
 # Use the faster _pickle if possible
@@ -1844,9 +1944,13 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="display contents of the pickle files")
-    parser.add_argument("pickle_file", type=argparse.FileType("br"), nargs="*", help="the pickle file")
+    parser.add_argument(
+        "pickle_file", type=argparse.FileType("br"), nargs="*", help="the pickle file"
+    )
     parser.add_argument("-t", "--test", action="store_true", help="run self-test suite")
-    parser.add_argument("-v", action="store_true", help="run verbosely; only affects self-test run")
+    parser.add_argument(
+        "-v", action="store_true", help="run verbosely; only affects self-test run"
+    )
     args = parser.parse_args()
     if args.test:
         _test()

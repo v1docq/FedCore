@@ -1,6 +1,6 @@
 import torch
-from torch import nn
 from torch import Tensor
+from torch import nn
 
 from fedcore.models.network_modules.layers.linear_layers import FlattenHead
 from fedcore.models.network_modules.layers.special import _TSTiEncoder, RevIN
@@ -8,38 +8,38 @@ from fedcore.models.network_modules.layers.special import _TSTiEncoder, RevIN
 
 class _PatchTST_backbone(nn.Module):
     def __init__(
-            self,
-            input_dim,
-            seq_len,
-            pred_dim,
-            patch_len,
-            stride,
-            n_layers=3,
-            d_model=128,
-            n_heads=16,
-            d_k=None,
-            d_v=None,
-            d_ff=256,
-            norm='BatchNorm',
-            attn_dropout=0.,
-            dropout=0.,
-            act="GELU",
-            res_attention=True,
-            pre_norm=False,
-            store_attn=False,
-            padding_patch=True,
-            individual=False,
-            revin=True,
-            affine=True,
-            subtract_last=False,
-            preprocess_to_lagged=False):
+        self,
+        input_dim,
+        seq_len,
+        pred_dim,
+        patch_len,
+        stride,
+        n_layers=3,
+        d_model=128,
+        n_heads=16,
+        d_k=None,
+        d_v=None,
+        d_ff=256,
+        norm="BatchNorm",
+        attn_dropout=0.0,
+        dropout=0.0,
+        act="GELU",
+        res_attention=True,
+        pre_norm=False,
+        store_attn=False,
+        padding_patch=True,
+        individual=False,
+        revin=True,
+        affine=True,
+        subtract_last=False,
+        preprocess_to_lagged=False,
+    ):
 
         super().__init__()
 
         # RevIn
         self.revin = revin
-        self.revin_layer = RevIN(
-            input_dim, affine=affine, subtract_last=subtract_last)
+        self.revin_layer = RevIN(input_dim, affine=affine, subtract_last=subtract_last)
 
         # Patching
         self.patch_len = patch_len
@@ -48,7 +48,8 @@ class _PatchTST_backbone(nn.Module):
         patch_num = int((seq_len - patch_len) / stride + 1) + 1
         self.patch_num = patch_num
         self.padding_patch_layer = nn.ReplicationPad1d(
-            (stride, 0))  # original padding at the end
+            (stride, 0)
+        )  # original padding at the end
         self.preprocess_to_lagged = preprocess_to_lagged
 
         # Unfold
@@ -71,14 +72,14 @@ class _PatchTST_backbone(nn.Module):
             act=act,
             res_attention=res_attention,
             pre_norm=pre_norm,
-            store_attn=store_attn)
+            store_attn=store_attn,
+        )
 
         # Head
         self.head_nf = d_model * patch_num
         self.n_vars = input_dim
         self.individual = individual
-        self.head = FlattenHead(
-            self.individual, self.n_vars, self.head_nf, pred_dim)
+        self.head = FlattenHead(self.individual, self.n_vars, self.head_nf, pred_dim)
 
     def forward(self, z: Tensor):
         """

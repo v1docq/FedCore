@@ -17,7 +17,9 @@ from collections import OrderedDict, UserDict
 from pathlib import Path
 from typing import Optional
 
-from fedcore.neural_compressor.data.dataloaders.tensorflow_dataloader import TensorflowDataLoader
+from fedcore.neural_compressor.data.dataloaders.tensorflow_dataloader import (
+    TensorflowDataLoader,
+)
 from fedcore.neural_compressor.model.tensorflow_model import TensorflowBaseModel
 from fedcore.neural_compressor.profiling.profiler.profiler import Profiler as Parent
 
@@ -78,12 +80,20 @@ class Profiler(Parent):
         profiler = model_analyzer.Profiler()
 
         input_tensor = self.model.input_tensor
-        output_tensor = self.model.output_tensor if len(self.model.output_tensor) > 1 else self.model.output_tensor[0]
+        output_tensor = (
+            self.model.output_tensor
+            if len(self.model.output_tensor) > 1
+            else self.model.output_tensor[0]
+        )
         for idx, (inputs, labels) in enumerate(self.dataloader):
             # dataloader should keep the order and len of inputs same with input_tensor
             if len(input_tensor) == 1:
                 feed_dict = {}
-                if isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict):
+                if (
+                    isinstance(inputs, dict)
+                    or isinstance(inputs, OrderedDict)
+                    or isinstance(inputs, UserDict)
+                ):
                     for name in inputs:
                         for tensor in input_tensor:
                             pos = tensor.name.rfind(":")
@@ -92,11 +102,19 @@ class Profiler(Parent):
                                 feed_dict[tensor] = inputs[name]
                                 break
                 else:
-                    feed_dict = {input_tensor[0]: inputs}  # get raw tensor using index [0]
+                    feed_dict = {
+                        input_tensor[0]: inputs
+                    }  # get raw tensor using index [0]
             else:
-                assert len(input_tensor) == len(inputs), "inputs len must equal with input_tensor"
+                assert len(input_tensor) == len(
+                    inputs
+                ), "inputs len must equal with input_tensor"
                 feed_dict = {}
-                if isinstance(inputs, dict) or isinstance(inputs, OrderedDict) or isinstance(inputs, UserDict):
+                if (
+                    isinstance(inputs, dict)
+                    or isinstance(inputs, OrderedDict)
+                    or isinstance(inputs, UserDict)
+                ):
                     for name in inputs:
                         for tensor in input_tensor:
                             pos = tensor.name.rfind(":")

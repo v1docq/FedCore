@@ -18,9 +18,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
-from copy import deepcopy
-from typing import OrderedDict
 
 from ...utils import logger
 from ...utils.utility import LazyImport
@@ -48,8 +45,40 @@ NF4 = [
     0.7229568362236023,
     1.0,
 ]
-FP4_BNB = [-12.0, -8.0, -6.0, -4.0, -3.0, -2.0, -0.0625, 0, 0.0625, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0]
-FP4_E2M1 = [-6.0, -4.0, -3.0, -2.0, -1.5, -1.0, -0.0625, 0, 0.0625, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0]
+FP4_BNB = [
+    -12.0,
+    -8.0,
+    -6.0,
+    -4.0,
+    -3.0,
+    -2.0,
+    -0.0625,
+    0,
+    0.0625,
+    2.0,
+    3.0,
+    4.0,
+    6.0,
+    8.0,
+    12.0,
+]
+FP4_E2M1 = [
+    -6.0,
+    -4.0,
+    -3.0,
+    -2.0,
+    -1.5,
+    -1.0,
+    -0.0625,
+    0,
+    0.0625,
+    1.0,
+    1.5,
+    2.0,
+    3.0,
+    4.0,
+    6.0,
+]
 
 # the order is the same as float list, bit value range is [-7, 7]
 # 1111 = -1, 1110 = -2, 1101= -3, ...
@@ -58,8 +87,18 @@ NF4_BIT = [7, 1, 2, 3, 4, 5, 6, 0, -8, -7, -6, -5, -4, -3, -2, -1]
 FP4_BNB_BIT = [-5, -6, -3, -4, -1, -2, -7, 0, 1, 6, 7, 4, 5, 2, 3]
 FP4_E2M1_BIT = [-1, -2, -3, -4, -5, -6, -7, 0, 1, 2, 3, 4, 5, 6, 7]
 
-FLOAT_MAPPING = {"nf4": NF4, "fp4": FP4_BNB, "fp4_e2m1_bnb": FP4_BNB, "fp4_e2m1": FP4_E2M1}
-INT_MAPPING = {"nf4": NF4_BIT, "fp4": FP4_BNB_BIT, "fp4_e2m1_bnb": FP4_BNB_BIT, "fp4_e2m1": FP4_E2M1_BIT}
+FLOAT_MAPPING = {
+    "nf4": NF4,
+    "fp4": FP4_BNB,
+    "fp4_e2m1_bnb": FP4_BNB,
+    "fp4_e2m1": FP4_E2M1,
+}
+INT_MAPPING = {
+    "nf4": NF4_BIT,
+    "fp4": FP4_BNB_BIT,
+    "fp4_e2m1_bnb": FP4_BNB_BIT,
+    "fp4_e2m1": FP4_E2M1_BIT,
+}
 
 
 def quantize_4bit(tensor, quantile=1.0, data_type="nf4", return_int=False):
@@ -81,7 +120,9 @@ def quantize_4bit(tensor, quantile=1.0, data_type="nf4", return_int=False):
     scale = tensor.abs().max(1)[0] * quantile / max(allow_data)
     scale.unsqueeze_(dim=-1)
     tensor.div_(scale)
-    mid_data = [(allow_data[i] + allow_data[i + 1]) / 2 for i in range(len(allow_data) - 1)]
+    mid_data = [
+        (allow_data[i] + allow_data[i + 1]) / 2 for i in range(len(allow_data) - 1)
+    ]
     q_tensor = torch.zeros_like(tensor)
     for i in range(len(allow_data)):
         data = allow_data_bit[i] if return_int else allow_data[i]
@@ -90,7 +131,9 @@ def quantize_4bit(tensor, quantile=1.0, data_type="nf4", return_int=False):
         elif i == len(allow_data) - 1:
             q_tensor += torch.where(tensor > mid_data[i - 1], data, 0)
         else:
-            q_tensor += torch.where((mid_data[i - 1] < tensor) & (tensor <= mid_data[i]), data, 0)
+            q_tensor += torch.where(
+                (mid_data[i - 1] < tensor) & (tensor <= mid_data[i]), data, 0
+            )
     tensor.copy_(q_tensor)
     if return_int:
         return tensor.type(torch.int8), scale.type(torch.float), None
@@ -133,7 +176,9 @@ def qdq_weight_asym(weight, num_bits=4, quantile=1.0, return_int=False):
     return weight.mul_(scale)
 
 
-def qdq_weight_sym(weight, num_bits=4, quantile=1.0, return_int=False, full_range=False):
+def qdq_weight_sym(
+    weight, num_bits=4, quantile=1.0, return_int=False, full_range=False
+):
     """Quant and dequant tensor with sym schema.
 
     Args:
@@ -180,7 +225,15 @@ def qdq_weight_sym(weight, num_bits=4, quantile=1.0, return_int=False, full_rang
     return weight.mul_(scale)
 
 
-def qdq_weight_actor(weight, num_bits, scheme, quantile=1.0, data_type="int", return_int=False, full_range=False):
+def qdq_weight_actor(
+    weight,
+    num_bits,
+    scheme,
+    quantile=1.0,
+    data_type="int",
+    return_int=False,
+    full_range=False,
+):
     """Quant and dequant tensor per channel.
 
     Args:
@@ -197,7 +250,9 @@ def qdq_weight_actor(weight, num_bits, scheme, quantile=1.0, data_type="int", re
     """
     assert num_bits > 0, "num_bits should be larger than 0"
     if "int" not in data_type and num_bits == 4:
-        return quantize_4bit(weight, quantile=quantile, data_type=data_type, return_int=return_int)
+        return quantize_4bit(
+            weight, quantile=quantile, data_type=data_type, return_int=return_int
+        )
     if scheme == "sym":
         return qdq_weight_sym(weight, num_bits, quantile, return_int, full_range)
     else:
@@ -205,7 +260,14 @@ def qdq_weight_actor(weight, num_bits, scheme, quantile=1.0, data_type="int", re
 
 
 def quant_weight(
-    weight, num_bits=4, group_size=-1, scheme="asym", quantile=1.0, data_type="int", return_int=False, full_range=False
+    weight,
+    num_bits=4,
+    group_size=-1,
+    scheme="asym",
+    quantile=1.0,
+    data_type="int",
+    return_int=False,
+    full_range=False,
 ):
     """Quant and dequant tensor with group size. It is an in-place op.
 
@@ -256,7 +318,12 @@ def quant_weight(
             return weight, scale, zp
         else:
             qdq_weight_actor(
-                weight, num_bits, scheme=scheme, data_type=data_type, quantile=quantile, full_range=full_range
+                weight,
+                num_bits,
+                scheme=scheme,
+                data_type=data_type,
+                quantile=quantile,
+                full_range=full_range,
             )
             return weight.reshape(orig_shape)
     else:
@@ -278,7 +345,12 @@ def quant_weight(
                 zp1 = zp1.reshape(orig_shape[0], -1)
         else:
             weight1 = qdq_weight_actor(
-                weight1, num_bits, scheme=scheme, quantile=quantile, data_type=data_type, full_range=full_range
+                weight1,
+                num_bits,
+                scheme=scheme,
+                quantile=quantile,
+                data_type=data_type,
+                full_range=full_range,
             )
         weight1 = weight1.reshape(orig_shape[0], split_index)
         weight2 = weight[:, split_index:]
@@ -301,13 +373,25 @@ def quant_weight(
             return weight, scale, zp
         else:
             weight2 = qdq_weight_actor(
-                weight2, num_bits, scheme=scheme, data_type=data_type, quantile=quantile, full_range=full_range
+                weight2,
+                num_bits,
+                scheme=scheme,
+                data_type=data_type,
+                quantile=quantile,
+                full_range=full_range,
             )
             weight.copy_(torch.cat([weight1, weight2], dim=1))
             return weight
 
 
-def search_clip(m, num_bits=4, group_size=32, scheme="asym", data_type="int", enable_full_range=False):
+def search_clip(
+    m,
+    num_bits=4,
+    group_size=32,
+    scheme="asym",
+    data_type="int",
+    enable_full_range=False,
+):
     """Search best clip range of each linears in current block.
 
     Args:
@@ -433,9 +517,13 @@ def rtn_quantize(
             # contiguous is not an in-place op and returns Tensor instead of Parameter, so set it back to m.weight.data.
             # transpose should be executed on Parameter level because Param.data.t_() is not an in-place op.
             # Parameter.T is an in-place op while Tensor.T is not.
-            m.weight.data = m.weight.t_().data.contiguous() if group_dim == 0 else m.weight.data
+            m.weight.data = (
+                m.weight.t_().data.contiguous() if group_dim == 0 else m.weight.data
+            )
             if enable_mse_search:
-                quantile = search_clip(m, num_bits, group_size, scheme, data_type, enable_full_range)
+                quantile = search_clip(
+                    m, num_bits, group_size, scheme, data_type, enable_full_range
+                )
             if return_int:
                 from .model_wrapper import WeightOnlyLinear
 
@@ -504,13 +592,24 @@ def gptq_quantize(
     # TODO: unify weight_config keys, add docstring, and support default config
     assert isinstance(model, torch.nn.Module), "only support torch module"
     if layer_wise:
-        assert model_path is not None, "model_path should not be None when use layer_wise mode"
+        assert (
+            model_path is not None
+        ), "model_path should not be None when use layer_wise mode"
     from .gptq import GPTQuantizer
 
     gptq_quantizer = GPTQuantizer(
-        model, weight_config, dataloader, nsamples, use_max_length, pad_max_length, device, layer_wise=layer_wise
+        model,
+        weight_config,
+        dataloader,
+        nsamples,
+        use_max_length,
+        pad_max_length,
+        device,
+        layer_wise=layer_wise,
     )
-    fp32_modified_model, gptq_config = gptq_quantizer.execute_quantization(model_path=model_path)
+    fp32_modified_model, gptq_config = gptq_quantizer.execute_quantization(
+        model_path=model_path
+    )
     logger.info("GPTQ quantizing done.")
     return fp32_modified_model, gptq_config
 
@@ -594,14 +693,22 @@ def awq_quantize(
 
 
 def teq_quantize(
-    model, weight_config={}, absorb_to_layer={}, extra_config={}, dataloader=None, calib_func=None, example_inputs=None
+    model,
+    weight_config={},
+    absorb_to_layer={},
+    extra_config={},
+    dataloader=None,
+    calib_func=None,
+    example_inputs=None,
 ):
     """Run weight-only quantization with."""
     assert isinstance(model, torch.nn.Module), "only support torch module"
     logger.info("TEQ quantizing start.")
     if example_inputs is None:
         if dataloader is None:  # pragma: no cover
-            assert False, "Please provide dataloader or example_inputs for TEQ algorithm."
+            assert (
+                False
+            ), "Please provide dataloader or example_inputs for TEQ algorithm."
         try:
             for idx, (input, label) in enumerate(dataloader):
                 example_inputs = input
@@ -613,7 +720,9 @@ def teq_quantize(
 
     from .teq import TEQuantizer
 
-    teq_quantizer = TEQuantizer(model, weight_config, absorb_to_layer, extra_config, example_inputs)
+    teq_quantizer = TEQuantizer(
+        model, weight_config, absorb_to_layer, extra_config, example_inputs
+    )
 
     # 1. wrapper tuning scale to model
     teq_quantizer.add_tuning_scale()
@@ -655,15 +764,23 @@ def quant_weight_w_scale(weight, scale, zp, group_size=-1):
     if zp is not None:
         zp = zp.to(device)
     if group_size == -1:
-        return weight.div_(scale).round_() if zp is None else weight.div_(scale).add_(zp).round_()
+        return (
+            weight.div_(scale).round_()
+            if zp is None
+            else weight.div_(scale).add_(zp).round_()
+        )
     int_weight = torch.zeros(weight.shape).to(device)
     leng = weight.shape[1] // group_size
     tail_flag = False if weight.shape[1] % group_size == 0 else True
     for i in range(leng):
-        int_weight_tmp = weight[:, i * group_size : (i + 1) * group_size].div_(scale[:, i].unsqueeze(1))
+        int_weight_tmp = weight[:, i * group_size : (i + 1) * group_size].div_(
+            scale[:, i].unsqueeze(1)
+        )
         if zp is not None:
             int_weight_tmp.add_(zp[:, i].unsqueeze(1))
-        int_weight[:, i * group_size : (i + 1) * group_size].copy_(int_weight_tmp.round_())
+        int_weight[:, i * group_size : (i + 1) * group_size].copy_(
+            int_weight_tmp.round_()
+        )
     if tail_flag:
         int_weight_tmp = weight[:, leng * group_size :].div_(scale[:, -1].unsqueeze(1))
         if zp is not None:

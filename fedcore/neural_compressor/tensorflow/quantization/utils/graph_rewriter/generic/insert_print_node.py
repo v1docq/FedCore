@@ -21,10 +21,15 @@ from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import tensor_util as tu
 
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.graph_base import GraphRewriterBase
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphAnalyzer
-from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import GraphRewriterHelper as Helper
-from fedcore.neural_compressor.tensorflow.utils import version1_gt_version2
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_rewriter.graph_base import (
+    GraphRewriterBase,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphAnalyzer,
+)
+from fedcore.neural_compressor.tensorflow.quantization.utils.graph_util import (
+    GraphRewriterHelper as Helper,
+)
 
 
 class InsertPrintMinMaxNode(GraphRewriterBase):
@@ -59,7 +64,9 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
             refresh_pre_node_name = graph_info[self.pre_node_name].node.input[0]
             # Check the Conv2D could be fused with previous Pad or not.
             # If so, we need to update the pre-node name correspondingly.
-            refresh_pre_node = graph_info[Helper.node_name_from_input(refresh_pre_node_name)].node
+            refresh_pre_node = graph_info[
+                Helper.node_name_from_input(refresh_pre_node_name)
+            ].node
             if refresh_pre_node.op == "Pad" and top_node.op in ("Conv2D", "Conv3D"):
                 pad_const_node_name = refresh_pre_node.input[1]
                 pad_const_node = graph_info[pad_const_node_name].node
@@ -68,13 +75,20 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
                     if pad_const_node.op == "DataFormatVecPermute":
                         parent_input_node = graph_info[pad_const_node.input[0]].node
                         if parent_input_node.op == "Const":
-                            padding_tensor = tu.MakeNdarray(parent_input_node.attr["value"].tensor).flatten()
+                            padding_tensor = tu.MakeNdarray(
+                                parent_input_node.attr["value"].tensor
+                            ).flatten()
                 else:
-                    padding_tensor = tu.MakeNdarray(pad_const_node.attr["value"].tensor).flatten()
+                    padding_tensor = tu.MakeNdarray(
+                        pad_const_node.attr["value"].tensor
+                    ).flatten()
                 if not any(padding_tensor) or (
-                    any(padding_tensor) and (tf.version.VERSION == "1.15.0-up3" or self.new_api)
+                    any(padding_tensor)
+                    and (tf.version.VERSION == "1.15.0-up3" or self.new_api)
                 ):
-                    insert_node_pairs.append([refresh_pre_node_name, self.post_node_name])
+                    insert_node_pairs.append(
+                        [refresh_pre_node_name, self.post_node_name]
+                    )
                     refresh_pre_node_name = refresh_pre_node.input[0]
 
             insert_node_pairs.append([refresh_pre_node_name, self.post_node_name])
@@ -83,22 +97,33 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
         for node_pair_names in insert_node_pairs:
             for index, each_node_name in enumerate(node_pair_names):
                 name_with_sig = each_node_name + self.signature
-                node_name_prefix = name_with_sig.replace(":", "__port__").replace("^", "__hat__")
+                node_name_prefix = name_with_sig.replace(":", "__port__").replace(
+                    "^", "__hat__"
+                )
                 reshape_dims_name = node_name_prefix + "_reshape_dims"
                 reduction_dims_name = node_name_prefix + "_reduction_dims"
 
-                reshape_dims_node = Helper.create_constant_node(reshape_dims_name, -1, dtypes.int32, [1])
+                reshape_dims_node = Helper.create_constant_node(
+                    reshape_dims_name, -1, dtypes.int32, [1]
+                )
 
-                reduction_dims_node = Helper.create_constant_node(reduction_dims_name, 0, dtypes.int32, [1])
+                reduction_dims_node = Helper.create_constant_node(
+                    reduction_dims_name, 0, dtypes.int32, [1]
+                )
 
                 # the training input QueueDequeueManyV2 has issue with implicit dependency
                 # skip the input node of show_and_tell model
                 if not (
                     Helper.node_name_from_input(each_node_name) == "batch_and_pad"
-                    and graph_info[Helper.node_name_from_input(each_node_name)].node.op == "QueueDequeueManyV2"
+                    and graph_info[Helper.node_name_from_input(each_node_name)].node.op
+                    == "QueueDequeueManyV2"
                 ):
-                    reshape_dims_node.input.append("^" + Helper.node_name_from_input(each_node_name))
-                    reduction_dims_node.input.append("^" + Helper.node_name_from_input(each_node_name))
+                    reshape_dims_node.input.append(
+                        "^" + Helper.node_name_from_input(each_node_name)
+                    )
+                    reduction_dims_node.input.append(
+                        "^" + Helper.node_name_from_input(each_node_name)
+                    )
 
                 reshape_input_name = node_name_prefix + "_reshape_"
 
@@ -107,12 +132,16 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
                 )
 
                 min_input_name = node_name_prefix + "_min"
-                min_input_node = Helper.create_node("Min", min_input_name, [reshape_input_name, reduction_dims_name])
+                min_input_node = Helper.create_node(
+                    "Min", min_input_name, [reshape_input_name, reduction_dims_name]
+                )
                 Helper.set_attr_dtype(min_input_node, "Tidx", dtypes.int32)
                 Helper.set_attr_bool(min_input_node, "keep_dims", False)
 
                 max_input_name = node_name_prefix + "_max"
-                max_input_node = Helper.create_node("Max", max_input_name, [reshape_input_name, reduction_dims_name])
+                max_input_node = Helper.create_node(
+                    "Max", max_input_name, [reshape_input_name, reduction_dims_name]
+                )
                 Helper.set_attr_dtype(max_input_node, "Tidx", dtypes.int32)
                 Helper.set_attr_bool(max_input_node, "keep_dims", False)
 
@@ -128,19 +157,35 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
                 )
 
                 if index == 0:
-                    max_msg = ";{}_eightbit_max_{}__print__;__max:".format(self.pre_node_name, each_node_name)
-                    min_msg = ";{}_eightbit_min_{}__print__;__min:".format(self.pre_node_name, each_node_name)
+                    max_msg = ";{}_eightbit_max_{}__print__;__max:".format(
+                        self.pre_node_name, each_node_name
+                    )
+                    min_msg = ";{}_eightbit_min_{}__print__;__min:".format(
+                        self.pre_node_name, each_node_name
+                    )
                     # workaround for swish_f32, attribute T is not in the op definition
                     if "swish_f32" in graph_info[self.pre_node_name].node.name:
-                        src_dt = attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum)
+                        src_dt = attr_value_pb2.AttrValue(
+                            type=dtypes.float32.as_datatype_enum
+                        )
                     else:
                         src_dt = graph_info[self.pre_node_name].node.attr["T"]
                 else:
-                    max_msg = ";{}_eightbit_requant_range__print__;__requant_max:".format(self.pre_node_name)
-                    min_msg = ";{}_eightbit_requant_range__print__;__requant_min:".format(self.pre_node_name)
+                    max_msg = (
+                        ";{}_eightbit_requant_range__print__;__requant_max:".format(
+                            self.pre_node_name
+                        )
+                    )
+                    min_msg = (
+                        ";{}_eightbit_requant_range__print__;__requant_min:".format(
+                            self.pre_node_name
+                        )
+                    )
                     # workaround for swish_f32, attribute T is not in the op definition
                     if "swish_f32" in graph_info[each_node_name].node.op:
-                        src_dt = attr_value_pb2.AttrValue(type=dtypes.float32.as_datatype_enum)
+                        src_dt = attr_value_pb2.AttrValue(
+                            type=dtypes.float32.as_datatype_enum
+                        )
                     else:
                         src_dt = graph_info[each_node_name].node.attr["T"]
 
@@ -159,9 +204,15 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
                 max_print_node.attr["summarize"].i = 1024
 
                 attr_u = [dtypes.as_dtype(src_dt.type).as_datatype_enum]
-                min_print_node.attr["U"].list.CopyFrom(attr_value_pb2.AttrValue.ListValue(type=attr_u))
-                max_print_node.attr["U"].list.CopyFrom(attr_value_pb2.AttrValue.ListValue(type=attr_u))
-                post_node_names = graph_info[Helper.node_name_from_input(each_node_name)].outputs
+                min_print_node.attr["U"].list.CopyFrom(
+                    attr_value_pb2.AttrValue.ListValue(type=attr_u)
+                )
+                max_print_node.attr["U"].list.CopyFrom(
+                    attr_value_pb2.AttrValue.ListValue(type=attr_u)
+                )
+                post_node_names = graph_info[
+                    Helper.node_name_from_input(each_node_name)
+                ].outputs
                 if post_node_names:
                     for post_node_name in post_node_names:
                         post_node = graph_info[post_node_name].node
@@ -170,17 +221,25 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
                         if (
                             post_node.op == "FusedBatchNormV3"
                             and "_print_identity"
-                            not in graph_info[Helper.node_name_from_input(post_node.name)].node.input[0]
+                            not in graph_info[
+                                Helper.node_name_from_input(post_node.name)
+                            ].node.input[0]
                         ):
                             identity_node = Helper.create_node(
                                 "Identity",
                                 post_node.name + "_print_identity",
-                                [graph_info[Helper.node_name_from_input(post_node.name)].node.input[0]],
+                                [
+                                    graph_info[
+                                        Helper.node_name_from_input(post_node.name)
+                                    ].node.input[0]
+                                ],
                             )
                             identity_node.attr["T"].CopyFrom(src_dt)
                             cur_graph.add_node(
                                 identity_node,
-                                graph_info[Helper.node_name_from_input(post_node.name)].node.input[0],
+                                graph_info[
+                                    Helper.node_name_from_input(post_node.name)
+                                ].node.input[0],
                                 [post_node.name],
                             )
                             identity_node.input.append("^" + min_print_node.name)
@@ -190,30 +249,58 @@ class InsertPrintMinMaxNode(GraphRewriterBase):
                             post_node.input.append("^" + max_print_node.name)
 
                     cur_graph.add_node(reshape_dims_node, None, [reshape_input_name])
-                    cur_graph.add_node(reduction_dims_node, None, [max_input_name, min_input_name])
-                    cur_graph.add_node(reshape_input_node, each_node_name, [max_input_name, min_input_name])
-                    cur_graph.add_node(max_input_node, reshape_input_name, [max_print_node.name])
-                    cur_graph.add_node(min_input_node, reshape_input_name, [min_print_node.name])
+                    cur_graph.add_node(
+                        reduction_dims_node, None, [max_input_name, min_input_name]
+                    )
+                    cur_graph.add_node(
+                        reshape_input_node,
+                        each_node_name,
+                        [max_input_name, min_input_name],
+                    )
+                    cur_graph.add_node(
+                        max_input_node, reshape_input_name, [max_print_node.name]
+                    )
+                    cur_graph.add_node(
+                        min_input_node, reshape_input_name, [min_print_node.name]
+                    )
 
                     cur_graph.add_node(min_print_node, min_input_name, [])
                     cur_graph.add_node(max_print_node, max_input_name, [])
                 else:
                     identity_node0 = Helper.create_node(
-                        "Identity", min_print_node.name + "_identity", [min_print_node.name]
+                        "Identity",
+                        min_print_node.name + "_identity",
+                        [min_print_node.name],
                     )
                     identity_node0.attr["T"].CopyFrom(src_dt)
                     identity_node1 = Helper.create_node(
-                        "Identity", max_print_node.name + "_identity", [max_print_node.name]
+                        "Identity",
+                        max_print_node.name + "_identity",
+                        [max_print_node.name],
                     )
                     identity_node1.attr["T"].CopyFrom(src_dt)
 
                     cur_graph.add_node(reshape_dims_node, None, [reshape_input_name])
-                    cur_graph.add_node(reduction_dims_node, None, [max_input_name, min_input_name])
-                    cur_graph.add_node(reshape_input_node, each_node_name, [max_input_name, min_input_name])
-                    cur_graph.add_node(max_input_node, reshape_input_name, [max_print_node.name])
-                    cur_graph.add_node(min_input_node, reshape_input_name, [min_print_node.name])
-                    cur_graph.add_node(min_print_node, min_input_name, [identity_node0.name])
-                    cur_graph.add_node(max_print_node, max_input_name, [identity_node1.name])
+                    cur_graph.add_node(
+                        reduction_dims_node, None, [max_input_name, min_input_name]
+                    )
+                    cur_graph.add_node(
+                        reshape_input_node,
+                        each_node_name,
+                        [max_input_name, min_input_name],
+                    )
+                    cur_graph.add_node(
+                        max_input_node, reshape_input_name, [max_print_node.name]
+                    )
+                    cur_graph.add_node(
+                        min_input_node, reshape_input_name, [min_print_node.name]
+                    )
+                    cur_graph.add_node(
+                        min_print_node, min_input_name, [identity_node0.name]
+                    )
+                    cur_graph.add_node(
+                        max_print_node, max_input_name, [identity_node1.name]
+                    )
                     cur_graph.add_node(identity_node0, min_print_node.name, [])
                     cur_graph.add_node(identity_node1, max_print_node.name, [])
                     # identity_node0.input.append("^" + min_print_node.name)

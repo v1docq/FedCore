@@ -20,8 +20,12 @@ import tensorflow as tf
 from tensorflow.core.framework import node_def_pb2
 from tensorflow.python.framework import dtypes
 
-from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import QuantizeGraphHelper as helper
-from fedcore.neural_compressor.adaptor.tf_utils.util import version1_eq_version2, version1_gt_version2, version1_lt_version2
+from fedcore.neural_compressor.adaptor.tf_utils.quantize_graph_common import (
+    QuantizeGraphHelper as helper,
+)
+from fedcore.neural_compressor.adaptor.tf_utils.util import (
+    version1_lt_version2,
+)
 
 from ..quantize_graph_base import QuantizeNodeBase
 
@@ -38,7 +42,8 @@ class FuseNodeStartWithPooling(QuantizeNodeBase):
         """Set quantized pooling node attributes."""
         pooling_type = (
             dtypes.quint8
-            if version1_lt_version2(tf.version.VERSION, "2.6.0") or self._find_relu_node(original_node)
+            if version1_lt_version2(tf.version.VERSION, "2.6.0")
+            or self._find_relu_node(original_node)
             else dtypes.qint8
         )
         helper.set_attr_dtype(quantized_op_node, "T", pooling_type)
@@ -65,19 +70,26 @@ class FuseNodeStartWithPooling(QuantizeNodeBase):
             if node.name in skip_node_name:
                 self.logger.debug("skip node {}".format(node.name))
             elif node.name == match_node_name[1]:
-                self.logger.debug("Matched node {} with input {}.".format(node.name, node.input))
+                self.logger.debug(
+                    "Matched node {} with input {}.".format(node.name, node.input)
+                )
                 quantized_op_name = node.name + "_eightbit_quantized"
                 quantized_op_type = "Quantized" + node.op
                 if node.op == "MaxPool3D":
                     quantized_op_type = "_Quantized" + node.op
 
-                quantized_pool_node = helper.create_node(quantized_op_type, quantized_op_name, all_input_names)
+                quantized_pool_node = helper.create_node(
+                    quantized_op_type, quantized_op_name, all_input_names
+                )
 
                 self._add_pool_function(node, quantized_pool_node)
                 self.add_output_graph_node(quantized_pool_node)
                 deq_type = dtypes.quint8 if self._find_relu_node(node) else dtypes.qint8
                 self._intel_cpu_add_dequantize_result_node(
-                    quantized_op_name, node.name, dtype=deq_type, performance_only=self.performance_only
+                    quantized_op_name,
+                    node.name,
+                    dtype=deq_type,
+                    performance_only=self.performance_only,
                 )
             else:
                 new_node = node_def_pb2.NodeDef()
@@ -91,7 +103,9 @@ class FuseNodeStartWithPooling(QuantizeNodeBase):
 
         for k, v in enumerate(self.op_list):
             if v in set(fusion[1] for fusion in self.sorted_patterns):
-                cur_node = self.node_name_mapping[list(self.node_name_mapping.keys())[k]].node
+                cur_node = self.node_name_mapping[
+                    list(self.node_name_mapping.keys())[k]
+                ].node
 
                 if cur_node.name != self.start_node_name:
                     continue
@@ -123,13 +137,17 @@ class FuseNodeStartWithPooling(QuantizeNodeBase):
             else:  # pragma: no cover
                 self.logger.info("Unknown fusion pattern {}.".format(fusion_name))
                 if self.remove_redundant_quant_flag:
-                    self.input_graph = self.remove_redundant_quantization(self.input_graph)
+                    self.input_graph = self.remove_redundant_quantization(
+                        self.input_graph
+                    )
                 return self.input_graph, []
 
             self.input_graph = self.output_graph
             self._reset_output_node_maps()
             if self.remove_redundant_quant_flag:
-                self.output_graph = self.remove_redundant_quantization(self.output_graph)
+                self.output_graph = self.remove_redundant_quantization(
+                    self.output_graph
+                )
             return self.output_graph, []
 
         if self.remove_redundant_quant_flag:

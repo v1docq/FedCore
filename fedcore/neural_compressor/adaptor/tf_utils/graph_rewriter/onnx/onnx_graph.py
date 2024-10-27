@@ -100,7 +100,14 @@ class OnnxGraph:
                 for i, out in enumerate(n.output):
                     if out in input_names_set and not n.is_graph_input():
                         n.output[i] = utils.set_name("@@ALLOC")
-                        ops.append(OnnxNode(helper.make_node("Placeholder", [], outputs=[out], name=out), self))
+                        ops.append(
+                            OnnxNode(
+                                helper.make_node(
+                                    "Placeholder", [], outputs=[out], name=out
+                                ),
+                                self,
+                            )
+                        )
                         logger.info("Created placeholder for input %s", out)
 
         input_nodes = {n.output[0]: n for n in ops if n.is_graph_input()}
@@ -117,7 +124,9 @@ class OnnxGraph:
             if n.is_graph_input():
                 # Don't add identity if the node is also an input. We want to keep input names the same.
                 continue
-            new_output_name = utils.add_port_to_name(n.name + "_" + utils.set_name("raw_output_"))
+            new_output_name = utils.add_port_to_name(
+                n.name + "_" + utils.set_name("raw_output_")
+            )
             n_shapes = n.output_shapes
             n_dtypes = n.output_dtypes
             o_shape = self.get_shape(o)
@@ -125,7 +134,9 @@ class OnnxGraph:
             body_graphs = n.graph.contained_graphs.pop(n.name, None)
             self.remove_node(n.name)
 
-            new_outputs = [output if output != o else new_output_name for output in n.output]
+            new_outputs = [
+                output if output != o else new_output_name for output in n.output
+            ]
             # domain should be passed to new node
             branches = {}
             if body_graphs:
@@ -199,12 +210,20 @@ class OnnxGraph:
             raw: whether to store data at field of raw_data or the specific field according to its dtype
         """
         np_val_flat = np_val.flatten()
-        is_bytes = np_val.dtype == object and len(np_val_flat) > 0 and isinstance(np_val_flat[0], bytes)
+        is_bytes = (
+            np_val.dtype == object
+            and len(np_val_flat) > 0
+            and isinstance(np_val_flat[0], bytes)
+        )
         if raw and not is_bytes:
             onnx_tensor = numpy_helper.from_array(np_val, name)
         else:
             onnx_tensor = helper.make_tensor(
-                name, utils.map_numpy_to_onnx_dtype(np_val.dtype), np_val.shape, np_val_flat, raw=False
+                name,
+                utils.map_numpy_to_onnx_dtype(np_val.dtype),
+                np_val.shape,
+                np_val_flat,
+                raw=False,
             )
         dtype = onnx_tensor.data_type
         node = self.make_node(
@@ -270,9 +289,13 @@ class OnnxGraph:
         utils.assert_error(n is None, "name %s already exists in node: \n%s", name, n)
         for o in outputs:
             n = self.get_node_by_output_in_current_graph(o)
-            utils.assert_error(n is None, "output tensor named %s already exists in node: \n%s", o, n)
+            utils.assert_error(
+                n is None, "output tensor named %s already exists in node: \n%s", o, n
+            )
 
-        onnx_node = helper.make_node(op_type, inputs, outputs, name=name, domain=domain, **raw_attr)
+        onnx_node = helper.make_node(
+            op_type, inputs, outputs, name=name, domain=domain, **raw_attr
+        )
 
         for name2 in onnx_node.input:
             self._register_input_name(name2, onnx_node)
@@ -331,7 +354,11 @@ class OnnxGraph:
 
     def remove_node(self, node_name):
         """Remove node in current graph."""
-        utils.assert_error(node_name in self._nodes_by_name, "node %s not in current graph, cannot remove", node_name)
+        utils.assert_error(
+            node_name in self._nodes_by_name,
+            "node %s not in current graph, cannot remove",
+            node_name,
+        )
         node = self.get_node_by_name(node_name)
         del self._nodes_by_name[node_name]
         if node_name in self.contained_graphs:
@@ -354,7 +381,10 @@ class OnnxGraph:
             if op_input == "":
                 continue
             utils.assert_error(
-                op_input in self._output_to_consumers, "Input %r of node %r not found.", op_input, node_name
+                op_input in self._output_to_consumers,
+                "Input %r of node %r not found.",
+                op_input,
+                node_name,
             )
             self._unregister_input_name(op_input, node)
 
@@ -447,7 +477,9 @@ class OnnxGraph:
                 if not self.is_empty_input(node.input[i]):
                     if logger.isEnabledFor(logging.INFO):
                         logger.warning(
-                            "[%s] infer a inexistent node: [%s], please check the code", node.name, node.input[i]
+                            "[%s] infer a inexistent node: [%s], please check the code",
+                            node.name,
+                            node.input[i],
                         )
                 continue
             if inp.is_const():
@@ -459,25 +491,43 @@ class OnnxGraph:
         input_shapes = [self.get_shape(i) for i in node.input]
         input_dtypes = [self.get_dtype(i) for i in node.input]
 
-        shapes, dtypes = utils.infer_onnx_shape_dtype(node, self._opset, input_shapes, input_dtypes, initializers)
+        shapes, dtypes = utils.infer_onnx_shape_dtype(
+            node, self._opset, input_shapes, input_dtypes, initializers
+        )
         if not shapes or not dtypes:
             return
 
         for output, shape, dtype in zip(node.output, shapes, dtypes):
             if dtype == TensorProto.UNDEFINED:
-                logger.debug("Inferred dtype for [%s, type: %s] is UNDEFINED, SKIP", node.name, node.type)
+                logger.debug(
+                    "Inferred dtype for [%s, type: %s] is UNDEFINED, SKIP",
+                    node.name,
+                    node.type,
+                )
             else:
                 existing_dtype = self.get_dtype(output)
-                if existing_dtype is not None and existing_dtype != dtype and not override:
+                if (
+                    existing_dtype is not None
+                    and existing_dtype != dtype
+                    and not override
+                ):
                     dtype = existing_dtype
                 self.set_dtype(output, dtype)
                 logger.debug("Set dtype of [%s] to %s", output, dtype)
 
             if shape is None:
-                logger.debug("Inferred shape for [%s, type: %s] is None, SKIP", node.name, node.type)
+                logger.debug(
+                    "Inferred shape for [%s, type: %s] is None, SKIP",
+                    node.name,
+                    node.type,
+                )
             else:
                 existing_shape = self.get_shape(output)
-                if existing_shape is not None and not utils.are_shapes_equal(existing_shape, shape) and not override:
+                if (
+                    existing_shape is not None
+                    and not utils.are_shapes_equal(existing_shape, shape)
+                    and not override
+                ):
                     shape = existing_shape
                 self.set_shape(output, shape)
                 logger.debug("Set shape of [%s] to %s", output, shape)
@@ -556,7 +606,9 @@ class OnnxGraph:
 
     def get_shape(self, name):
         """Get shape for node."""
-        utils.assert_error(isinstance(name, six.text_type), "get_shape name is invalid type: %s", name)
+        utils.assert_error(
+            isinstance(name, six.text_type), "get_shape name is invalid type: %s", name
+        )
         node = self.get_node_by_output(name, search_in_parent_graphs=True)
         shape = node.graph._output_shapes.get(name) if node else None
         if shape:
@@ -598,7 +650,9 @@ class OnnxGraph:
 
     def add_graph_output(self, name, dtype=None, shape=None):
         """Add node output as graph's output."""
-        utils.assert_error(name in self._output_to_node_name, "output %s not exist in the graph", name)
+        utils.assert_error(
+            name in self._output_to_node_name, "output %s not exist in the graph", name
+        )
 
         if dtype is None:
             dtype = self.get_dtype(name)
@@ -607,8 +661,12 @@ class OnnxGraph:
             shape = self.get_shape(name)
 
         if name not in self.outputs:
-            utils.assert_error(shape is not None, "shape for output %s should not be None", name)
-            utils.assert_error(dtype is not None, "dtype for output %s should not be None", name)
+            utils.assert_error(
+                shape is not None, "shape for output %s should not be None", name
+            )
+            utils.assert_error(
+                dtype is not None, "dtype for output %s should not be None", name
+            )
             self.outputs.append(name)
             self.set_shape(name, shape)
             self.set_dtype(name, dtype)
@@ -646,7 +704,12 @@ class OnnxGraph:
             all_input = list(filter(lambda a: a != "", all_input))
             for inp in sorted(all_input):
                 j = self.get_node_by_output(inp)
-                utils.assert_error(j is not None, "Cannot find node with output %r in graph %r", inp, self.graph_name)
+                utils.assert_error(
+                    j is not None,
+                    "Cannot find node with output %r in graph %r",
+                    inp,
+                    self.graph_name,
+                )
                 if self.parent_graph and j.name not in op_name_to_index:
                     # there might be some outer-scoped inputs for an inner Graph.
                     pass
@@ -706,7 +769,10 @@ class OnnxGraph:
         placeholder_default_const_ops = []
         for op in graph_inputs:
             if op.type == "PlaceholderWithDefault":
-                utils.assert_error(op.inputs[0] is not None, "Cannot find node with output {}".format(op.input[0]))
+                utils.assert_error(
+                    op.inputs[0] is not None,
+                    "Cannot find node with output {}".format(op.input[0]),
+                )
                 utils.assert_error(
                     op.inputs[0].is_const(),
                     "non-const default value for PlaceholderWithDefault node '%s' is not supported. "
@@ -798,7 +864,9 @@ class OnnxGraph:
 
         # set the IR version based on opset
         try:
-            model_proto.ir_version = utils.OPSET_TO_IR_VERSION.get(self.opset, model_proto.ir_version)
+            model_proto.ir_version = utils.OPSET_TO_IR_VERSION.get(
+                self.opset, model_proto.ir_version
+            )
         except:  # pylint: disable=bare-except
             logger.error("ir_version override failed - install the latest onnx version")
 
@@ -825,7 +893,13 @@ class OnnxGraph:
         """Dump graph with shapes (helpful for debugging)."""
         for node in self.get_nodes():
             input_names = ["{}{}".format(n, self.get_shape(n)) for n in node.input]
-            logger.debug("%s %s %s %s", node.type, self.get_shape(node.output[0]), node.name, ", ".join(input_names))
+            logger.debug(
+                "%s %s %s %s",
+                node.type,
+                self.get_shape(node.output[0]),
+                node.name,
+                ", ".join(input_names),
+            )
 
     def dump_node_statistics(self, include_attrs=False, include_subgraphs=True):
         """Return a counter of op types (and optionally attribute names) within the graph."""
@@ -838,7 +912,9 @@ class OnnxGraph:
             body_graphs = n.get_body_graphs()
             if body_graphs and include_subgraphs:
                 for b_g in body_graphs.values():
-                    g_op_cnt, g_attr_cnt = b_g.dump_node_statistics(include_attrs=True, include_subgraphs=True)
+                    g_op_cnt, g_attr_cnt = b_g.dump_node_statistics(
+                        include_attrs=True, include_subgraphs=True
+                    )
                     op_cnt += g_op_cnt
                     attr_cnt += g_attr_cnt
 
@@ -878,7 +954,16 @@ class OnnxGraph:
                 del node.input[i]
                 break
 
-    def insert_new_node_on_input(self, node, op_type, input_name, name=None, domain=None, input_index=None, **kwargs):
+    def insert_new_node_on_input(
+        self,
+        node,
+        op_type,
+        input_name,
+        name=None,
+        domain=None,
+        input_index=None,
+        **kwargs
+    ):
         """Create and insert a new node into the graph.
 
         Args:
@@ -899,7 +984,14 @@ class OnnxGraph:
         if not isinstance(input_name, list):
             input_name = [input_name]
 
-        new_node = self.make_node(op_type, input_name, attr=kwargs, outputs=[new_output], name=name, domain=domain)
+        new_node = self.make_node(
+            op_type,
+            input_name,
+            attr=kwargs,
+            outputs=[new_output],
+            name=name,
+            domain=domain,
+        )
         if input_index is None:
             for i, n in enumerate(node.input):
                 if n == input_name[0]:
@@ -920,7 +1012,9 @@ class OnnxGraph:
         if shape is None:
             shape = self.get_shape(name)
 
-        new_node = self.make_node("Placeholder", [], outputs=[name], dtypes=[dtype], shapes=[shape])
+        new_node = self.make_node(
+            "Placeholder", [], outputs=[name], dtypes=[dtype], shapes=[shape]
+        )
         self.inputs.append(new_node)
 
     def insert_node_on_output(self, node, output_name=None):
@@ -934,12 +1028,16 @@ class OnnxGraph:
             output_name = node.input[0]
         new_output = node.output[0]
 
-        to_replace = [self.get_node_by_name(n) for n in self._output_to_consumers[output_name]]
+        to_replace = [
+            self.get_node_by_name(n) for n in self._output_to_consumers[output_name]
+        ]
         to_replace = [n for n in to_replace if n != node]
         self.replace_all_inputs(output_name, new_output, ops=to_replace)
         return node
 
-    def insert_new_node_on_output(self, op_type, output_name=None, name=None, inputs=None, domain=None, **kwargs):
+    def insert_new_node_on_output(
+        self, op_type, output_name=None, name=None, inputs=None, domain=None, **kwargs
+    ):
         """Create and insert a new node into the graph. It then calls insert_node_on_output.
 
         Args:
@@ -952,10 +1050,20 @@ class OnnxGraph:
             node that was inserted
         """
         utils.assert_error(
-            isinstance(output_name, six.text_type), "output_name's type is not expected: %s", type(output_name)
+            isinstance(output_name, six.text_type),
+            "output_name's type is not expected: %s",
+            type(output_name),
         )
-        utils.assert_error(isinstance(op_type, six.text_type), "op_type's type is not expected: %s", type(op_type))
-        utils.assert_error(output_name is not None, "output_name cannot be None for op_type=%r.", op_type)
+        utils.assert_error(
+            isinstance(op_type, six.text_type),
+            "op_type's type is not expected: %s",
+            type(op_type),
+        )
+        utils.assert_error(
+            output_name is not None,
+            "output_name cannot be None for op_type=%r.",
+            op_type,
+        )
 
         if inputs is None:
             inputs = [output_name]
@@ -963,7 +1071,9 @@ class OnnxGraph:
             name = utils.set_name(op_type)
 
         new_output = utils.add_port_to_name(name)
-        new_node = self.make_node(op_type, inputs, attr=kwargs, outputs=[new_output], name=name, domain=domain)
+        new_node = self.make_node(
+            op_type, inputs, attr=kwargs, outputs=[new_output], name=name, domain=domain
+        )
         return self.insert_node_on_output(new_node, output_name)
 
     def find_output_consumers(self, output_name):
@@ -1027,7 +1137,10 @@ class OnnxGraph:
             keep_ops = True
         elif old_input in self._output_to_consumers:
             ops = list(
-                filter(lambda a: a is not None, map(self.get_node_by_name, self._output_to_consumers[old_input]))
+                filter(
+                    lambda a: a is not None,
+                    map(self.get_node_by_name, self._output_to_consumers[old_input]),
+                )
             )
             keep_ops = False
         else:
@@ -1037,7 +1150,9 @@ class OnnxGraph:
         for node in ops:
             assert node is not None
             if old_input in node.input and new_input in node.output:
-                raise RuntimeError("creating a circle in the graph is not allowed: " + node.name)
+                raise RuntimeError(
+                    "creating a circle in the graph is not allowed: " + node.name
+                )
             self._register_input_name(new_input, node)
 
             for i, input_name in enumerate(node.input):
@@ -1047,7 +1162,9 @@ class OnnxGraph:
         # modify references in sub graphs
         if old_input in self._input_to_graph:
             for g in self._input_to_graph[old_input].values():
-                g.replace_all_inputs(old_input, new_input, ops=g.get_nodes() if keep_ops else None)
+                g.replace_all_inputs(
+                    old_input, new_input, ops=g.get_nodes() if keep_ops else None
+                )
 
     def replace_input(self, node, old_input, new_input, input_index=None):
         """Replace one input in a node.
@@ -1056,7 +1173,9 @@ class OnnxGraph:
         Otherwise, it renames every output named *old_input*.
         """
         assert (
-            isinstance(node, OnnxNode) and isinstance(old_input, six.text_type) and isinstance(new_input, six.text_type)
+            isinstance(node, OnnxNode)
+            and isinstance(old_input, six.text_type)
+            and isinstance(new_input, six.text_type)
         )
         is_replaced = False
         if input_index is None:
@@ -1068,7 +1187,10 @@ class OnnxGraph:
             node.input[input_index] = new_input
             is_replaced = True
         else:
-            raise RuntimeError("Unable to replace input %r into %r for node %r." % (old_input, new_input, node.name))
+            raise RuntimeError(
+                "Unable to replace input %r into %r for node %r."
+                % (old_input, new_input, node.name)
+            )
 
         to_ops = self._output_to_consumers.get(old_input, None)
         if to_ops is not None:
@@ -1130,7 +1252,9 @@ class OnnxGraph:
                     processing_set.add(node)
         return res_set
 
-    def extract_sub_graph_nodes(self, outputs_name, input_checker=None, remove_unused_inputs=True):
+    def extract_sub_graph_nodes(
+        self, outputs_name, input_checker=None, remove_unused_inputs=True
+    ):
         """Return nodes of subgraph having output_ids as outputs.
 
         Args:
@@ -1159,12 +1283,16 @@ class OnnxGraph:
     def delete_unused_nodes(self, outputs_name):
         """Delete nodes not in subgraph ending with output_names."""
         if not outputs_name:
-            logger.debug("Outputs not specified, delete_unused_nodes not taking effect.")
+            logger.debug(
+                "Outputs not specified, delete_unused_nodes not taking effect."
+            )
             return
 
         # we need keep those placeholders that are used as input of Loop's body graph.
         # some of them are not used in the graph, but still need be there to keep the graph complete.
-        related_nodes = self.extract_sub_graph_nodes(outputs_name, remove_unused_inputs=False)
+        related_nodes = self.extract_sub_graph_nodes(
+            outputs_name, remove_unused_inputs=False
+        )
         for node in related_nodes:
             attr_body_graphs = node.get_body_graphs()
             if attr_body_graphs:
@@ -1190,7 +1318,9 @@ class OnnxGraph:
         qdq_node_output_shape = self.get_shape(dq_node.output[0])
 
         # Get the attributes of qdq node
-        signed_input = bool(q_node.get_attr_value("T", TensorProto.INT8) == TensorProto.INT8)
+        signed_input = bool(
+            q_node.get_attr_value("T", TensorProto.INT8) == TensorProto.INT8
+        )
 
         max_quantized = 127
 
@@ -1204,11 +1334,17 @@ class OnnxGraph:
         quantized_dtype = TensorProto.INT8 if signed_input else TensorProto.UINT8
 
         if axis != -1:
-            utils.assert_error(self.opset >= 13, "Opset >= 13 is required for per channel quantization")
+            utils.assert_error(
+                self.opset >= 13, "Opset >= 13 is required for per channel quantization"
+            )
             q_attrs["axis"] = axis
 
             inp_rank = self.get_rank(q_node.input[0])
-            utils.assert_error(inp_rank is not None, "Input rank cannot be unknown for qdq op %s", q_node.name)
+            utils.assert_error(
+                inp_rank is not None,
+                "Input rank cannot be unknown for qdq op %s",
+                q_node.name,
+            )
 
         # Get the min and max value of the inputs to QDQ op
         min_value = self.get_tensor_value(q_node.input[1])
@@ -1226,24 +1362,38 @@ class OnnxGraph:
             # sing U8 as default for per tensor
             max_quantized = 255
             # Calculate scale from the min and max values
-            scale = (float(max_value) - min_value) / max_quantized if min_value != max_value else 1
+            scale = (
+                (float(max_value) - min_value) / max_quantized
+                if min_value != max_value
+                else 1
+            )
 
             zero_point = round((0 - min_value) / scale)
             zero_point = np.uint8(round(max(0, min(255, zero_point))))
 
-            utils.assert_error(scale > 0, "Quantize/Dequantize scale must be greater than zero")
+            utils.assert_error(
+                scale > 0, "Quantize/Dequantize scale must be greater than zero"
+            )
             scales = np.float32(scale)
             zero_point_np = zero_point
         # Per-Channel
         else:
-            zero_point = np.zeros(num_channels, dtype=np.int8 if signed_input else np.uint8)
+            zero_point = np.zeros(
+                num_channels, dtype=np.int8 if signed_input else np.uint8
+            )
             for i in range(num_channels):
                 # Calculate scales from the min and max values
                 if signed_input:
                     max_range = max(abs(min_value[i]), abs(max_value[i]))
-                    scale = (float(max_range) * 2) / max_quantized if max_range > 0 else 1
+                    scale = (
+                        (float(max_range) * 2) / max_quantized if max_range > 0 else 1
+                    )
                 else:
-                    scale = (float(max_value[i]) - min_value[i]) / max_quantized if min_value[i] != max_value[i] else 1
+                    scale = (
+                        (float(max_value[i]) - min_value[i]) / max_quantized
+                        if min_value[i] != max_value[i]
+                        else 1
+                    )
 
                 if scale == 1 or signed_input:
                     zero_point[i] = np.int8(0)
@@ -1251,15 +1401,23 @@ class OnnxGraph:
                     zero_point[i] = round((0 - min_value[i]) / scale)
                     zero_point[i] = np.uint8(round(max(0, min(255, zero_point[i]))))
 
-                utils.assert_error(scale > 0, "Quantize/Dequantize scale must be greater than zero")
+                utils.assert_error(
+                    scale > 0, "Quantize/Dequantize scale must be greater than zero"
+                )
                 scales[i] = np.float32(scale)
-            utils.assert_error(axis != -1, "Axis must be specified for per channel quantization")
+            utils.assert_error(
+                axis != -1, "Axis must be specified for per channel quantization"
+            )
             zero_point_np = zero_point
 
         # Add QuantizeLinear and DequantizeLinear and remove the TF QDQ node reference
         cast_scale = scales.astype(np.float32)
-        scale = self.make_const(name=utils.set_name("quant_scale"), np_val=cast_scale).output[0]
-        zero_point = self.make_const(utils.set_name("zero_point"), zero_point_np).output[0]
+        scale = self.make_const(
+            name=utils.set_name("quant_scale"), np_val=cast_scale
+        ).output[0]
+        zero_point = self.make_const(
+            utils.set_name("zero_point"), zero_point_np
+        ).output[0]
 
         quant_node = self.make_node(
             op_type="QuantizeLinear",
@@ -1316,7 +1474,9 @@ class OnnxGraph:
                 return []
 
         if self.is_const(node.input[1]):
-            bias_tensor = self.get_node_by_name(node.input[1]).get_tensor_value(as_list=False)
+            bias_tensor = self.get_node_by_name(node.input[1]).get_tensor_value(
+                as_list=False
+            )
             if bias_tensor.ndim > 1:
                 bias_tensor = np.squeeze(bias_tensor)
                 self.get_node_by_name(node.input[1]).set_tensor_value(bias_tensor)
@@ -1326,17 +1486,31 @@ class OnnxGraph:
         input_dequantize_node = self.get_node_by_output(conv_node.input[0])
         weight_dequantize_node = self.get_node_by_output(conv_node.input[1])
         if re.search(r"\w+:\d+", input_dequantize_node.input[1]):
-            input_dequantize_node.input[1] = input_dequantize_node.input[1].rsplit(":", 1)[0]
+            input_dequantize_node.input[1] = input_dequantize_node.input[1].rsplit(
+                ":", 1
+            )[0]
         if re.search(r"\w+:\d+", weight_dequantize_node.input[1]):
-            weight_dequantize_node.input[1] = weight_dequantize_node.input[1].rsplit(":", 1)[0]
-        input_scale = self.get_node_by_name(input_dequantize_node.input[1]).get_tensor_value(as_list=False)
-        weight_scale = self.get_node_by_name(weight_dequantize_node.input[1]).get_tensor_value(as_list=False)
+            weight_dequantize_node.input[1] = weight_dequantize_node.input[1].rsplit(
+                ":", 1
+            )[0]
+        input_scale = self.get_node_by_name(
+            input_dequantize_node.input[1]
+        ).get_tensor_value(as_list=False)
+        weight_scale = self.get_node_by_name(
+            weight_dequantize_node.input[1]
+        ).get_tensor_value(as_list=False)
         bias_scale_val = input_scale * weight_scale
         bias_zp_val = np.zeros(bias_scale_val.shape, dtype=np.int32).reshape(-1)
         quantized_bias = (bias_tensor / bias_scale_val).round().astype(np.int32)
-        bias_scale = self.make_const(name=utils.set_name(node.name + "_scale"), np_val=bias_scale_val).output[0]
-        bias_zero_point = self.make_const(utils.set_name(node.name + "_zero_point"), bias_zp_val).output[0]
-        bias_input = self.make_const(name=utils.set_name(node.name + "_x"), np_val=quantized_bias).output[0]
+        bias_scale = self.make_const(
+            name=utils.set_name(node.name + "_scale"), np_val=bias_scale_val
+        ).output[0]
+        bias_zero_point = self.make_const(
+            utils.set_name(node.name + "_zero_point"), bias_zp_val
+        ).output[0]
+        bias_input = self.make_const(
+            name=utils.set_name(node.name + "_x"), np_val=quantized_bias
+        ).output[0]
 
         dequant_bias_node = self.make_node(
             op_type="DequantizeLinear",
@@ -1357,7 +1531,12 @@ class OnnxGraph:
         conv_name = conv_node.name
         conv_output = node.output
         if len(conv_input) == 3:
-            conv_inputs = [conv_input[0], conv_input[1], conv_input[2], dequant_bias_node.output[0]]
+            conv_inputs = [
+                conv_input[0],
+                conv_input[1],
+                conv_input[2],
+                dequant_bias_node.output[0],
+            ]
         else:
             conv_inputs = [conv_input[0], conv_input[1], dequant_bias_node.output[0]]
 

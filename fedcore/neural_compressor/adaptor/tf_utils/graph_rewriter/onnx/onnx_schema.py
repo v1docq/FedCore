@@ -84,12 +84,16 @@ def _register_all_schemas_with_history():
     name_domain_version_schema_map = defaultdict(lambda: defaultdict(dict))
     for s in onnx_schemas:
         schema = OnnxOpSchema.from_onnx_schema(s)
-        name_domain_version_schema_map[schema.name][schema.domain][schema.since_version] = schema
+        name_domain_version_schema_map[schema.name][schema.domain][
+            schema.since_version
+        ] = schema
 
     ordered_map = defaultdict(lambda: defaultdict(OrderedDict))
     for name, domain_version_schema_map in name_domain_version_schema_map.items():
         for domain, version_schema_map in domain_version_schema_map.items():
-            ordered_map[name][domain] = OrderedDict(sorted(version_schema_map.items(), key=lambda x: -x[0]))
+            ordered_map[name][domain] = OrderedDict(
+                sorted(version_schema_map.items(), key=lambda x: -x[0])
+            )
     return ordered_map
 
 
@@ -103,7 +107,9 @@ def _parse_domain_opset_versions(schemas):
             if domain not in domain_opset_versions:
                 domain_opset_versions[domain] = int(max_version)
             else:
-                domain_opset_versions[domain] = max(domain_opset_versions[domain], int(max_version))
+                domain_opset_versions[domain] = max(
+                    domain_opset_versions[domain], int(max_version)
+                )
     return domain_opset_versions
 
 

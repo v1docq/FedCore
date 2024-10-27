@@ -54,12 +54,18 @@ def Convert(model, tune_cfg):
         mixed_precision_model (object): model with mixed precision.
     """
     bf16_ops_list = tune_cfg["bf16_ops_list"]
-    fx_sub_module_list = tune_cfg["fx_sub_module_list"] if "fx_sub_module_list" in tune_cfg.keys() else []
+    fx_sub_module_list = (
+        tune_cfg["fx_sub_module_list"]
+        if "fx_sub_module_list" in tune_cfg.keys()
+        else []
+    )
     if len(bf16_ops_list) > 0:
         logger.info("Convert operators to bfloat16")
     mixed_precision_model = _bf16_wrapper_model(model, bf16_ops_list)
     if fx_sub_module_list is not None and len(fx_sub_module_list) > 0:
-        mixed_precision_model = bf16_symbolic_trace(mixed_precision_model, fx_sub_module_list)
+        mixed_precision_model = bf16_symbolic_trace(
+            mixed_precision_model, fx_sub_module_list
+        )
     return mixed_precision_model
 
 

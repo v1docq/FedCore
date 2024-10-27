@@ -3,7 +3,6 @@ import typing as tp
 
 import numpy as np
 import torch.utils.data
-from fedot.core.data.data import InputData, OutputData
 from fedot.core.data.supplementary_data import SupplementaryData
 from fedot.core.repository.dataset_types import DataTypesEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum

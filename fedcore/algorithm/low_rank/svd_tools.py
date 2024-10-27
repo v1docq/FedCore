@@ -8,9 +8,9 @@ from typing import Callable, Optional
 import torch
 from torch.nn.modules import Module
 
+
 from fedcore.models.network_impl.layers import IDecomposed
 from fedcore.repository.constanst_repository import DECOMPOSABLE_LAYERS, FORWARD_MODE
-
 
 def decompose_module(
     model: Module,

@@ -39,7 +39,11 @@ BLOCK_PATTERNS = [
 class TransformerBasedModelBlockPatternDetector:
     """Detect the attention block and FFN block in transformer-based model."""
 
-    def __init__(self, model: torch.nn.Module, pattern_lst: List[List[Union[str, int]]] = BLOCK_PATTERNS) -> None:
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        pattern_lst: List[List[Union[str, int]]] = BLOCK_PATTERNS,
+    ) -> None:
         """Init the block detector.
 
         Args:
@@ -70,7 +74,9 @@ class TransformerBasedModelBlockPatternDetector:
                 detect_result.append((result, pattern))
         # Step 3: Get the attention blocks and ffn blocks
         blocks = {"attention_blocks": None, "ffn_blocks": None}
-        blocks["attention_blocks"], blocks["ffn_blocks"] = self._group_block(detect_result)
+        blocks["attention_blocks"], blocks["ffn_blocks"] = self._group_block(
+            detect_result
+        )
         logger.debug(f'FFN BLOCKS: {blocks["ffn_blocks"]}')
         logger.debug(f'Attention BLOCKS: {blocks["attention_blocks"]}')
         return blocks
@@ -101,11 +107,17 @@ class TransformerBasedModelBlockPatternDetector:
             if sub_key not in result[key]:
                 result[key][sub_key] = dict()
             TransformerBasedModelBlockPatternDetector.traverse_model(
-                sub_module, prefix=new_name, depth=depth + 1, result=result[key], key=sub_key
+                sub_module,
+                prefix=new_name,
+                depth=depth + 1,
+                result=result[key],
+                key=sub_key,
             )
 
     @staticmethod
-    def _search_pattern(pos_info: Dict, pattern: List[List[Union[str, int]]]) -> List[List[str]]:
+    def _search_pattern(
+        pos_info: Dict, pattern: List[List[Union[str, int]]]
+    ) -> List[List[str]]:
         """Search all blocks that matched the pattern.
 
         Args:
@@ -139,9 +151,13 @@ class TransformerBasedModelBlockPatternDetector:
                         block_result.append(ops_name)
                 if block_pattern == pattern:
                     matched_cnt += 1
-                    logger.debug(f"[DEPTH] {depth} [BLOCK] {i},  Found block match pattern {pattern}!!")
+                    logger.debug(
+                        f"[DEPTH] {depth} [BLOCK] {i},  Found block match pattern {pattern}!!"
+                    )
                     logger.debug(f"[Block keys] {block.keys()}")
-                    logger.debug(f"[Block Ops] { [pair[0] for pair in ops_lst if pair[2] in target_op_types]}")
+                    logger.debug(
+                        f"[Block Ops] { [pair[0] for pair in ops_lst if pair[2] in target_op_types]}"
+                    )
                     result.append(block_result)
         if matched_cnt > 0:
             logger.info(f" Found {matched_cnt} blocks")

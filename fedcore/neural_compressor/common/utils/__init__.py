@@ -12,8 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fedcore.neural_compressor.common.utils.constants import *
-from fedcore.neural_compressor.common.utils.logger import *
 
 # ! Put the following `utility` import after the `logger` import as `utility` used `logger`
-from fedcore.neural_compressor.common.utils.utility import *
