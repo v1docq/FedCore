@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -6,6 +6,12 @@ from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum
 from sklearn.preprocessing import LabelEncoder
+from torch.utils.data import DataLoader
+
+from fedcore.architecture.abstraction.delegator import DelegatorFactory
+from fedcore.data.data import CompressionInputData
+from fedcore.repository.constanst_repository import FEDOT_TASK
+
 
 
 def get_compression_input(
@@ -97,3 +103,93 @@ def init_input_data(
     )
 
     return input_data
+
+
+class DataLoaderHandler:
+    __non_included_kwargs = {'check_worker_number_rationality'}
+
+    @staticmethod
+    def limited_generator(gen, max_batches, enumerate=False):
+        i = 0
+        for elem in gen:
+            if i >= max_batches:
+                break
+            yield (i, elem) if enumerate else elem
+            i += 1
+
+    @staticmethod
+    def __X2Xy(collate_fn):
+        def wrapped(batch, *args, **kwargs):
+            return collate_fn(batch, *args, **kwargs), [None] * len(batch)
+        return wrapped
+
+    collate_modes = {
+        'X2Xy': __X2Xy,
+        'pass': lambda x: x
+    }
+
+    @classmethod
+    def __clean_dict(cls, d: dict, is_iterable=False):
+      d = {attr: val for attr, val in d.items() if not (attr.startswith('_') or attr in cls.__non_included_kwargs)}
+
+      if is_iterable:
+        d.pop('sampler', None)
+
+      if any((d.get(k, False) for k in ('batch_size', 'shuffle', 'sampler', 'drop_last'))):
+        d.pop('batch_sampler', None)
+      if any((d.get(k, False) for k in ('batch_size', 'shuffle', 'sampler', 'drop_last'))):
+        d.pop('batch_sampler', None)
+
+      if d.get('batch_size', None):
+        d.pop('drop_last', None)
+      if d.get('drop_last', False):
+        d.pop('batch_size', None)
+      return d
+
+    @classmethod
+    def check_convert(cls, dataloader: DataLoader, mode: Union[None, str, Callable] = None, max_batches:int = None, enumerate=False) -> DataLoader:
+        batch = cls.__get_batch_sample(dataloader)
+        dl_params = {attr: getattr(dataloader, attr) for attr in dir(dataloader)}
+        dl_params = cls.__clean_dict(dataloader.__dict__, hasattr(dataloader.dataset, '__iter__'))
+        modified1, dl_params = cls.__substitute_collate_fn(dl_params, batch, mode)
+        if modified1:
+          dataloader = DataLoader(**dl_params)
+        if max_batches:
+          dataloader = cls.limit_batches(dataloader, max_batches, enumerate)
+        return dataloader
+
+    @classmethod
+    def __get_batch_sample(cls, dataloader: DataLoader):
+        for b in dataloader:
+            return b
+
+    @classmethod
+    def __substitute_collate_fn(cls, dl_params: dict, batch: Any, mode: Union[None, str, Callable]):
+        modified = True
+        if isinstance(mode, Callable):
+            collate_fn = mode
+        elif isinstance(mode, str):
+            collate_fn = cls.collate_modes[mode]
+        else:
+            type_ = cls.__check_type(batch)
+            collate_fn = cls.collate_modes[type_]
+            if type_ == 'pass':
+                modified = False
+        dl_params['collate_fn'] = collate_fn(dl_params['collate_fn'])
+        return modified, dl_params
+
+    @staticmethod
+    def limit_batches(dataloader, max_batches, enumerate=False):
+      if max_batches is None:
+          return dataloader
+      return DataLoaderHandler.__substitute_iter(dataloader, max_batches, enumerate)
+      
+    @staticmethod
+    def __substitute_iter(iterable, max_batches=float('inf'), enumerate=False):
+        def newiter(_):
+            return iter(DataLoaderHandler.limited_generator(iterable, max_batches, enumerate))
+        return DelegatorFactory.create_delegator_inst(iterable, {'__iter__': newiter})
+
+    @staticmethod
+    def __check_type(batch) -> str:
+        return 'pass' if isinstance(batch, (tuple, list)) else 'X2Xy'

@@ -3,26 +3,21 @@
 Model decomposition, pruning by threshold, decomposed model loading.
 """
 
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
-from torch.nn import Conv2d, Linear, Embedding
 from torch.nn.modules import Module
 
-from fedcore.models.network_impl.layers import (
-    DecomposedConv2d,
-    DecomposedLinear,
-    DecomposedEmbedding,
-)
-from fedcore.repository.constanst_repository import FORWARD_MODE
 
+from fedcore.models.network_impl.layers import IDecomposed
+from fedcore.repository.constanst_repository import DECOMPOSABLE_LAYERS, FORWARD_MODE
 
 def decompose_module(
     model: Module,
     decomposing_mode: Optional[str] = None,
     forward_mode: str = FORWARD_MODE,
 ) -> None:
-    """Replace Conv2d, Linear layers with DecomposedConv2d, layers in module (in-place).
+    """Replace decomposable layers with their decomposed analogues in module (in-place).
 
     Args:
         model: Decomposable module.
@@ -35,23 +30,11 @@ def decompose_module(
             decompose_module(
                 module, decomposing_mode=decomposing_mode, forward_mode=forward_mode
             )
-
-        if (
-            isinstance(module, Conv2d) and not type(module) is DecomposedConv2d
-        ):  ### add IDecomposable or router func or smth more abstract
-            new_module = DecomposedConv2d(
-                base_conv=module,
-                decomposing_mode=decomposing_mode,
-                forward_mode=forward_mode,
+        decomposed_analogue = _map_decomposed_cls(module)
+        if decomposed_analogue is not None:
+            new_module = decomposed_analogue(
+                module, decomposing_mode, forward_mode
             )
-            setattr(model, name, new_module)
-
-        if isinstance(module, Linear) and not type(module) is DecomposedLinear:
-            new_module = DecomposedLinear(base_lin=module, forward_mode=forward_mode)
-            setattr(model, name, new_module)
-
-        if isinstance(module, Embedding) and not type(module) is DecomposedEmbedding:
-            new_module = DecomposedEmbedding(base_emb=module, forward_mode=forward_mode)
             setattr(model, name, new_module)
 
 
@@ -61,9 +44,7 @@ def _load_svd_params(model, state_dict, prefix="") -> None:
         if len(list(module.children())) > 0:
             _load_svd_params(module, state_dict, prefix=f"{prefix}{name}.")
 
-        if isinstance(
-            module, (DecomposedConv2d, DecomposedLinear, DecomposedEmbedding)
-        ):  ### why was there only Conv2d?
+        if isinstance(module, IDecomposed):
             module.set_U_S_Vh(
                 u=state_dict[f"{prefix}{name}.U"],
                 s=state_dict[f"{prefix}{name}.S"],
@@ -91,3 +72,9 @@ def load_svd_state_dict(
     )
     _load_svd_params(model, state_dict)
     model.load_state_dict(state_dict)
+
+
+def _map_decomposed_cls(inst: torch.nn.Module) -> Optional[IDecomposed]:
+    for decomposable, decomposed in DECOMPOSABLE_LAYERS.items():
+        if isinstance(inst, decomposable):
+            return decomposed

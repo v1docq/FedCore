@@ -2,47 +2,72 @@ import time
 
 import numpy as np
 import torch
+import torch.utils
 from fedot.core.pipelines.pipeline import Pipeline
-from torch.utils.data import DataLoader
+from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
+# from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.metrics.metric_impl import (
+    ClassificationMetricCounter,
     MetricCounter,
     ObjectDetectionMetricCounter,
 )
 
 
 class PerformanceEvaluator:
-    def __init__(self, model, dataset, device=default_device(), batch_size=32):
+    def __init__(
+        self,
+        model,
+        data,
+        device=default_device(),
+        batch_size=32,
+        n_batches=8,
+        collate_fn=None,
+    ):
         is_class_container = hasattr(model, "model")
         is_pipeline_class = isinstance(model, Pipeline)
-        dataset_from_directory = isinstance(dataset, str)
+        dataset_from_directory = isinstance(
+            data, str
+        )  ### where's func for string dataset loading
         self.model = model.model if is_class_container else model
         self.model = (
             model.operator.root_node.fitted_operation.model
             if is_pipeline_class
             else model
         )
-        self.dataset = dataset
-        self.batch_size = batch_size
-        self.data_loader = (
-            DataLoader(dataset, batch_size=batch_size, shuffle=False)
-            if dataset_from_directory
-            else dataset
+        self.n_batches = n_batches
+        if isinstance(data, DataLoader):
+            collate_fn = data.collate_fn
+            dataset = data.dataset
+        elif dataset_from_directory:
+            pass  # TODO some logic for string dataset downloading
+        else:
+            dataset = data
+        self.data_loader = DataLoader(
+            dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
         )
-        self.preload_batches = [i[0] for i in self.data_loader]
+        self.batch_size = batch_size or self.data_loader.batch_size
         self.device = device
         self.model.to(device)
-        self.batch_to_eval = batch_size
         # Measured performance metrics
         self.latency = None
         self.throughput = None
         self.model_size = None
         self.target_metrics = None
 
+    def _preloaded_batches_gen(self, max_num=float("inf"), data_loader=None):
+        num = 0  # for cases when dataset has no __len__
+        for i in data_loader or self.data_loader:
+            yield i
+            num += 1
+            if num >= max_num:
+                break
+
     def eval(self):
+        self.warm_up_cuda()
         lat, thr = self.measure_latency_throughput()
         result = dict(latency=lat, throughput=thr, model_size=self.measure_model_size())
         self.report()
@@ -52,40 +77,50 @@ class PerformanceEvaluator:
     def throughput_eval(self, num_iterations=30):
         self.model.eval()
         thr_list = []
-        for batch in tqdm(self.preload_batches[: self.batch_to_eval]):
-            images = batch.cuda(non_blocking=True)
-            batch_size = images.shape[0]
-            for i in range(50):
-                self.model(images)
-            torch.cuda.synchronize()
+        for batch, _ in tqdm(
+            self._preloaded_batches_gen(self.n_batches), desc="batches", unit="batch"
+        ):
+            X = (
+                batch.cuda(non_blocking=True)
+                if hasattr(batch, "cuda")
+                else batch.to(self.device)
+            )
+            batch_size = len(X)
+            torch.cuda.synchronize(self.device)
             tic1 = time.time()
             for i in range(num_iterations):
-                self.model(images)
-            torch.cuda.synchronize()
+                self.model(X)
+            torch.cuda.synchronize(self.device)
             tic2 = time.time()
             thr_list.append(num_iterations * batch_size / (tic2 - tic1))
         return thr_list
 
     @torch.no_grad()
-    def latency_eval(self):
+    def latency_eval(self, max_samples=None):
         self.model.eval()
         lat_list = []
-        dataset = self.data_loader.dataset
-        dataset.data = dataset.data[: self.batch_to_eval, :, :, :]
-        data_loader = DataLoader(dataset, batch_size=1, shuffle=False)
-        for idx, (images, _) in tqdm(enumerate(data_loader)):
-            images = images.cuda(non_blocking=True)
-            tic1 = time.time()
-            self.model(images)
-            torch.cuda.synchronize()
-            tic2 = time.time()
-            lat_list.append((tic2 - tic1))
+        for batch, _ in tqdm(
+            self._preloaded_batches_gen(max_samples or self.batch_size)
+        ):
+            batch = (
+                batch if hasattr(batch, "__iter__") else [batch]
+            )  ### case batch is not iterable
+            for sample in batch:
+                sample = (
+                    sample.cuda(non_blocking=True)
+                    if hasattr(sample, "cuda")
+                    else sample.to(self.device)
+                )
+                tic1 = time.time()
+                self.model(sample)
+                torch.cuda.synchronize()
+                tic2 = time.time()
+                lat_list.append((tic2 - tic1))
         return lat_list
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):
         timings_lat = []
         timings_thr = []
-
         with tqdm(
             total=reps, desc="Measuring latency and throughput", unit="rep"
         ) as pbar:
@@ -117,11 +152,12 @@ class PerformanceEvaluator:
         self.model_size = round(size_all_mb, 3)
         return self.model_size
 
-    def warm_up_cuda(self, num_iterations=3):
+    @torch.no_grad()
+    def warm_up_cuda(self, n_batches=3):
         """Warm up CUDA by performing some dummy computations"""
-        batch_sample = self.preload_batches[:num_iterations]
+        batch_sample = self._preloaded_batches_gen(n_batches)
         if torch.cuda.is_available():
-            for inputs in batch_sample:
+            for inputs, _ in tqdm(batch_sample, desc="warming"):
                 _ = self.model(inputs.to(self.device))
 
     def report(self):

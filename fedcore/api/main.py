@@ -4,32 +4,32 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn
+from fedot.api.main import Fedot
+from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from torch import Tensor
+
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.architecture.utils.paths import (
     DEFAULT_PATH_RESULTS as default_path_to_save_results,
 )
-import numpy as np
-import pandas as pd
-from fedot.api.main import Fedot
-from fedot.core.pipelines.pipeline import Pipeline
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.metrics.cv_metrics import CV_quality_metric
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
-    FEDOT_ASSUMPTIONS,
-    FEDOT_API_PARAMS,
     FEDCORE_CV_DATASET,
+    FEDOT_API_PARAMS,
+    FEDOT_ASSUMPTIONS,
     FEDOT_GET_METRICS,
 )
-
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
@@ -59,9 +59,9 @@ class FedCore(Fedot):
         self.cv_task = kwargs.get("cv_task", "classification")
         self.model_params = kwargs.get("model_params", {})
         self.cv_dataset = FEDCORE_CV_DATASET[self.cv_task]
-
-        # # enforced params for adapation
-        # self.enforced = kwargs.get('enforced', None)
+        self.need_evo_opt = kwargs.pop("need_evo_opt", True)
+        self.need_fedot_pretrain = kwargs.pop("need_fedot_pretrain", False)
+        self.distributed_compression = kwargs.pop('distributed_compression', True)
 
         # init backend and convertation params
         self.framework_config = kwargs.get("framework_config", None)
@@ -159,12 +159,18 @@ class FedCore(Fedot):
         ].build()
         self.logger.info("Initialising solver")
         self.__init_experiment_setup()
-        self.config_dict["problem"] = "classification"
-        self.dask_client = DaskServer().client
-        self.logger.info(f"LinK Dask Server - {self.dask_client.dashboard_link}")
-        self.logger.info(f"-------------------------------------------------")
-        # TODO: why reassigning?
-        solver = Fedot(**self.config_dict)
+        self.config_dict['problem'] = 'classification' 
+
+        if self.distributed_compression:
+            self.dask_client = DaskServer().client
+            self.logger.info(f"LinK Dask Server - {self.dask_client.dashboard_link}")
+            self.logger.info(f"-------------------------------------------------")
+
+        solver = (
+            Fedot(**self.config_dict)
+            if self.need_evo_opt
+            else self.config_dict["initial_assumption"]
+        )
         return solver
 
     def fit(self, input_data: tuple, manually_done: bool = False, **kwargs):
@@ -182,9 +188,10 @@ class FedCore(Fedot):
         input_preproc = DataCheck(input_data=self.train_data, task=self.cv_task)
         self.train_data = input_preproc.check_input_data(manually_done)
         self.solver = self.__init_solver()
-        fedcore_training = FEDOT_ASSUMPTIONS["training"].build()
-        pretrained_model = fedcore_training.fit(self.train_data)
-        self.train_data.target = pretrained_model.predict
+        if self.need_fedot_pretrain:
+            fedcore_training = FEDOT_ASSUMPTIONS["training"].build()
+            pretrained_model = fedcore_training.fit(self.train_data)
+            self.train_data.target = pretrained_model.predict
         self.solver.fit(self.train_data)
         self.optimised_model = self.solver.root_node.fitted_operation.optimised_model
         # self.original_model = self.solver.root_node.fitted_operation.model
@@ -219,6 +226,7 @@ class FedCore(Fedot):
             mode: str, ``default='full'``. Defines the mode of fine-tuning. Could be 'full' or 'head'.
 
         """
+        pass
 
     def _metric_evaluation_loop(
         self, target, predicted_labels, predicted_probs, problem, metric_type

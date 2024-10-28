@@ -1,38 +1,53 @@
+from enum import Enum
+
 import torch
 import torch_pruning as tp
-from enum import Enum
+import torchvision
+from fastai.torch_core import _has_mps
+from fastcore.basics import defaults
+from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+from fedot.core.pipelines.verification_rules import (
+    has_correct_data_connections,
+    has_correct_data_sources,
+    has_final_operation_as_model,
+    has_no_conflicts_during_multitask,
+    has_no_conflicts_with_data_flow,
+    has_primary_nodes,
+)
+from fedot.core.repository.metrics_repository import QualityMetricsEnum
+from fedot.core.repository.tasks import (
+    Task,
+    TaskParams,
+    TaskTypesEnum,
+    TsForecastingParams,
+)
 from golem.core.dag.verification_rules import (
     has_no_cycle,
     has_no_isolated_nodes,
     has_one_root,
 )
-from fedot.core.pipelines.verification_rules import (
-    has_primary_nodes,
-)
-from fastai.torch_core import _has_mps
-from fastcore.basics import defaults
 from golem.core.optimisers.genetic.operators.inheritance import GeneticSchemeTypesEnum
 from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
-import torchvision
-from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-from fedot.core.repository.metrics_repository import QualityMetricsEnum
-from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
 
 from fedcore.architecture.dataset.object_detection_datasets import YOLODataset
 from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
-from fedcore.architecture.dataset.segmentation_dataset import SegmentationDataset
 from fedcore.architecture.dataset.segmentation_dataset import (
+    SegmentationDataset,
     SemanticSegmentationDataset,
 )
 from fedcore.metrics.api_metric import (
-    calculate_regression_metric,
-    calculate_forecasting_metric,
     calculate_classification_metric,
     calculate_computational_metric,
+    calculate_forecasting_metric,
+    calculate_regression_metric,
 )
-
+from fedcore.models.network_impl.layers import (
+    DecomposedConv2d,
+    DecomposedEmbedding,
+    DecomposedLinear,
+)
 from fedcore.models.network_modules.losses import (
     CenterLoss,
     CenterPlusLoss,
@@ -45,9 +60,6 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
-
-from fedot.core.repository.tasks import Task, TaskTypesEnum
-
 
 def default_device(device_type: str = "CPU"):
     """Return or set default device. Modified from fastai.
@@ -297,13 +309,17 @@ class ModelCompressionConstant(Enum):
     }
 
     PRUNING_NORMS = [0, 1, 2]
-    PRUNING_REDUCTION = ["sum", "mean", "max", "prod", "first"]
-    PRUNING_NORMALIZE = ["sum", "mean", "max", "gaussian"]
-    PRUNING_LAYERS_IMPL = (
-        torchvision.ops.misc.Conv2dNormActivation,
-        torch.nn.modules.container.Sequential,
-        torch.nn.modules.conv.Conv2d,
-    )
+    PRUNING_REDUCTION = ["sum", "mean", "max", 'prod', 'first']
+    PRUNING_NORMALIZE = ["sum", "mean", "max", 'gaussian']
+    PRUNING_LAYERS_IMPL = (torchvision.ops.misc.Conv2dNormActivation,
+                           torch.nn.modules.container.Sequential,
+                           torch.nn.modules.conv.Conv2d)
+    
+    DECOMPOSABLE_LAYERS = {
+        torch.nn.Linear: DecomposedLinear,
+        torch.nn.Conv2d : DecomposedConv2d,
+        torch.nn.Embedding: DecomposedEmbedding
+    }
 
 
 class TorchLossesConstant(Enum):
@@ -365,16 +381,11 @@ class ONNX_CONFIG(Enum):
     }
 
 
-# class ContrastiveLossesEnum(Enum):
-#     CONTRASTIVE_LOSS = partial(ContrastiveLoss, margin=0.5, sampling_strategy=HardNegativePairSelector(neg_count=5))
-#     VICREG_LOSS = partial(VicregLoss, sim_coeff=.33, std_coeff=.33, cov_coeff=.33)
-
-
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
 FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
-FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value  ###
+FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value ###
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
@@ -390,6 +401,7 @@ FEDCORE_GRAPH_VALIDATION = FedotOperationConstant.FEDCORE_GRAPH_VALIDATION.value
 ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
 FORWARD_MODE = ModelCompressionConstant.FORWARD_MODE.value
+DECOMPOSABLE_LAYERS = ModelCompressionConstant.DECOMPOSABLE_LAYERS.value
 HOER_LOSS = ModelCompressionConstant.HOER_LOSS.value
 ORTOGONAL_LOSS = ModelCompressionConstant.ORTOGONAL_LOSS.value
 MODELS_FROM_LENGTH = ModelCompressionConstant.MODELS_FROM_LENGTH.value

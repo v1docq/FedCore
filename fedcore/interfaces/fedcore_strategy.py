@@ -18,6 +18,7 @@ from fedcore.repository.model_repository import (
     TRAINING_MODELS,
 )
 
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 
 class FedCoreStrategy(EvaluationStrategy):
     def _convert_to_output(

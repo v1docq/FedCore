@@ -3,24 +3,22 @@ from typing import Dict, Optional
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 import torch_pruning as tp
+import torch
+from torch import nn
+
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.models.network_impl.layers import (
-    DecomposedConv2d,
-    DecomposedLinear,
-    DecomposedEmbedding,
-)
+from fedcore.models.network_impl.layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     ENERGY_THR,
     DECOMPOSE_MODE,
     FORWARD_MODE,
     HOER_LOSS,
     ORTOGONAL_LOSS,
+    default_device
 )
-import torch
-from fedcore.repository.constanst_repository import default_device
 
 
 class LowRankModel:
@@ -95,23 +93,19 @@ class LowRankModel:
         for name, module in model.named_children():
             if len(list(module.children())) > 0:
                 self._prune_weight_rank(module, thr)
-            if isinstance(
-                module, (DecomposedConv2d, DecomposedLinear, DecomposedEmbedding)
-            ):  ### maybe some IDecomposable?
-                rank_threshold_pruning(
-                    decomposed_module=module,
-                    threshold=thr,
-                    strategy=self.strategy,
-                    module_name=name,
-                )
+            if isinstance(module, IDecomposed): ### maybe some IDecomposable?
+                rank_threshold_pruning(decomposed_module=module,
+                                       threshold=thr,
+                                       strategy=self.strategy,
+                                       module_name=name)
+            
 
     def _prepare_model_for_inference(self, model):
         for name, module in model.named_children():
             if len(list(module.children())) > 0:
                 self._prepare_model_for_inference(module)
-            if isinstance(
-                module, (DecomposedConv2d, DecomposedLinear, DecomposedEmbedding)
-            ):
+            if isinstance(module, IDecomposed):
+                module.inference_mode = True
                 module.compose_weight_for_inference()
 
     def compress(self, input_data) -> None:
