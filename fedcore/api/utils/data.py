@@ -165,7 +165,6 @@ class DataLoaderHandler:
     @classmethod
     def __substitute_collate_fn(cls, dl_params: dict, batch: Any, mode: Union[None, str, Callable]):
         modified = True
-        # print('MODE', mode)
         type_ = mode
         if isinstance(mode, Callable):
             collate_fn = mode
@@ -176,8 +175,6 @@ class DataLoaderHandler:
             collate_fn = cls.collate_modes[type_]
         if type_ == 'pass':
             modified = False
-            # print('TYPE', type_)
-        # print('COLLATE', collate_fn)
         dl_params['collate_fn'] = collate_fn(dl_params['collate_fn'])
         return modified, dl_params
 
@@ -196,5 +193,4 @@ class DataLoaderHandler:
 
     @staticmethod
     def __check_type(batch) -> str:
-        # print('BATCH', batch)
         return 'pass' if isinstance(batch, (tuple, list)) else 'X2Xy'
