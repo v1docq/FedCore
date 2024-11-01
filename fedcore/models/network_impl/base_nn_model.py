@@ -64,6 +64,7 @@ class BaseNeuralModel:
         self.checkpoint_folder = self.params.get('checkpoint_folder', None) ###
         self.batch_limit = self.params.get('batch_limit', None)
         self.calib_batch_limit = self.params.get('calib_batch_limit', None)
+        self.batch_type = self.params.get('batch_type', None)
 
         self.label_encoder = None
         self.is_regression_task = False
@@ -111,13 +112,13 @@ class BaseNeuralModel:
         total_iterations = 0
         losses = None
         train_loader = DataLoaderHandler.check_convert(dataloader=train_loader,
-                                                       mode=None,
+                                                       mode=self.batch_type,
                                                        max_batches=self.batch_limit,
                                                        enumerate=False)
         for batch in tqdm(train_loader, desc='Batch #'):
             self.optimizer.zero_grad()
             total_iterations += 1
-            inputs, targets = self._batch_handler(batch)
+            inputs, targets = batch
             output = self.model(inputs.to(self.device))
             if custom_loss:
                 model_loss = {key: val(model) for key, val in custom_loss.items()}
@@ -206,14 +207,17 @@ class BaseNeuralModel:
     def _predict_model(
         self, x_test: CompressionInputData, output_mode: str = "default"
     ):
-        self.model.eval()
+        assert type(x_test) is CompressionInputData
+        model = self.model or x_test.target
+        model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.calib_dataloader,
+                                                     mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
         for batch in tqdm(dataloader): ###TODO why calib_dataloader???
             inputs, targets = batch
             x_test = inputs.to(self.device)
-            prediction.append(self.model(x_test))
+            prediction.append(model(x_test))
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):

@@ -13,7 +13,6 @@ from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import FEDOT_TASK
 
 
-
 def get_compression_input(
     model,
     train_dataloader,
@@ -154,7 +153,7 @@ class DataLoaderHandler:
         modified1, dl_params = cls.__substitute_collate_fn(dl_params, batch, mode)
         if modified1:
           dataloader = DataLoader(**dl_params)
-        if max_batches:
+        if max_batches or enumerate:
           dataloader = cls.limit_batches(dataloader, max_batches, enumerate)
         return dataloader
 
@@ -166,6 +165,7 @@ class DataLoaderHandler:
     @classmethod
     def __substitute_collate_fn(cls, dl_params: dict, batch: Any, mode: Union[None, str, Callable]):
         modified = True
+        type_ = mode
         if isinstance(mode, Callable):
             collate_fn = mode
         elif isinstance(mode, str):
@@ -173,19 +173,20 @@ class DataLoaderHandler:
         else:
             type_ = cls.__check_type(batch)
             collate_fn = cls.collate_modes[type_]
-            if type_ == 'pass':
-                modified = False
+        if type_ == 'pass':
+            modified = False
         dl_params['collate_fn'] = collate_fn(dl_params['collate_fn'])
         return modified, dl_params
 
     @staticmethod
     def limit_batches(dataloader, max_batches, enumerate=False):
-      if max_batches is None:
+      if max_batches is None and not enumerate:
           return dataloader
       return DataLoaderHandler.__substitute_iter(dataloader, max_batches, enumerate)
       
     @staticmethod
-    def __substitute_iter(iterable, max_batches=float('inf'), enumerate=False):
+    def __substitute_iter(iterable, max_batches=None, enumerate=False):
+        max_batches = max_batches or float('inf')
         def newiter(_):
             return iter(DataLoaderHandler.limited_generator(iterable, max_batches, enumerate))
         return DelegatorFactory.create_delegator_inst(iterable, {'__iter__': newiter})
