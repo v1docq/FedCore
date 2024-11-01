@@ -76,5 +76,5 @@ def load_svd_state_dict(
 
 def _map_decomposed_cls(inst: torch.nn.Module) -> Optional[IDecomposed]:
     for decomposable, decomposed in DECOMPOSABLE_LAYERS.items():
-        if isinstance(inst, decomposable):
+        if isinstance(inst, decomposable) and not isinstance(inst, IDecomposed):
             return decomposed
