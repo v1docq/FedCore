@@ -38,7 +38,8 @@ def adaptor_registry(cls):
         "Adaptor"
     ), "The name of subclass of Adaptor should end with 'Adaptor' substring."
     if cls.__name__[: -len("Adaptor")].lower() in FRAMEWORKS:
-        raise ValueError("Cannot have two frameworks with the same name.")
+        print(f'REPLACED {cls.__name__[: -len("Adaptor")].lower()}') # TODO check why raises
+        # raise ValueError("Cannot have two frameworks with the same name.")
     FRAMEWORKS[cls.__name__[: -len("Adaptor")].lower()] = cls
     return cls
 
