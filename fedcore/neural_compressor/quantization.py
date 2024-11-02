@@ -24,7 +24,7 @@ import numpy as np
 from .config import _Config, options
 from .data import check_dataloader
 from .metric import register_customer_metric
-from .model import Model
+from .model.model import Model
 from .strategy import STRATEGIES
 from .utils import logger
 from .utils.neural_insights_utils import (
@@ -273,4 +273,4 @@ def fit(
                 "Not found any quantized model which meet accuracy goal. Exit."
             )
 
-        return strategy.best_qmodel
+        return strategy.best_qmodel or strategy.last_model or wrapped_model
