@@ -20,10 +20,13 @@ import importlib
 import os
 import sys
 
+from onnxruntime_extensions import get_library_path
+from importlib.util import find_spec
+
 from fedcore.neural_compressor.config import options
 from fedcore.neural_compressor.model.base_model import BaseModel
 from fedcore.neural_compressor.model.keras_model import KerasModel
-from fedcore.neural_compressor.model.mxnet_model import MXNetModel
+# from fedcore.neural_compressor.model.mxnet_model import MXNetModel ### TODO resolve numpy import issue
 from fedcore.neural_compressor.model.onnx_model import ONNXModel
 from fedcore.neural_compressor.model.tensorflow_model import (
     TensorflowBaseModel,
@@ -40,21 +43,31 @@ if importlib.util.find_spec("torch"):
     TORCH = True
     from fedcore.neural_compressor.model.torch_model import *
 
-torch = LazyImport("torch")
-tf = LazyImport("tensorflow")
-mx = LazyImport("mxnet")
-onnx = LazyImport("onnx")
-ort = LazyImport("onnxruntime")
-yaml = LazyImport("yaml")
-json = LazyImport("json")
-np = LazyImport("numpy")
+import torch
+# import tensorflow as tf ###
+# import mxnet as mx
+import onnx
+import onnxruntime as ort
+import yaml
+import json
+import json
+import numpy as np
+
+# torch = LazyImport("torch")
+# tf = LazyImport("tensorflow")
+# mx = LazyImport("mxnet")
+# onnx = LazyImport("onnx")
+# ort = LazyImport("onnxruntime")
+# yaml = LazyImport("yaml")
+# json = LazyImport("json")
+# np = LazyImport("numpy")
 
 MODELS = {
     "tensorflow": TensorflowModel,
     "tensorflow_itex": TensorflowModel,
     "tensorflow_qat": TensorflowQATModel,
     "keras": KerasModel,
-    "mxnet": MXNetModel,
+    # "mxnet": MXNetModel,
     "pytorch": PyTorchModel if TORCH else None,
     "pytorch_ipex": IPEXModel if TORCH else None,
     "pytorch_fx": PyTorchFXModel if TORCH else None,
@@ -74,15 +87,11 @@ def get_model_fwk_name(model):
     """
 
     def _is_onnxruntime(model):
-        from importlib.util import find_spec
-
         try:
             so = ort.SessionOptions()
             if sys.version_info < (3, 11) and find_spec(
                 "onnxruntime_extensions"
             ):  # pragma: no cover
-                from onnxruntime_extensions import get_library_path
-
                 so.register_custom_ops_library(get_library_path())
             if isinstance(model, str):
                 ort.InferenceSession(model, so, providers=ort.get_available_providers())
@@ -132,16 +141,17 @@ def get_model_fwk_name(model):
             return "tensorflow"
 
     def _is_mxnet(model):
-        try:
-            is_mxnet = isinstance(model, mx.gluon.HybridBlock) or (
-                hasattr(model, "__len__")
-                and len(model) > 1
-                and isinstance(model[0], mx.symbol.Symbol)
-            )
-        except:
-            return "NA"
-        else:
-            return "mxnet" if is_mxnet else "NA"
+        return 'NA'
+        # try:
+        #     is_mxnet = isinstance(model, mx.gluon.HybridBlock) or (
+        #         hasattr(model, "__len__")
+        #         and len(model) > 1
+        #         and isinstance(model[0], mx.symbol.Symbol)
+        #     )
+        # except:
+        #     return "NA"
+        # else:
+        #     return "mxnet" if is_mxnet else "NA"
 
     if isinstance(model, str):
         absmodel = os.path.abspath(os.path.expanduser(model))

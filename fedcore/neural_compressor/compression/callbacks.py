@@ -20,8 +20,8 @@ The Component class will be inherited by the class 'QuantizationAwareTrainingCal
 'PruningCallbacks' and 'DistillationCallbacks'.
 """
 
-from ..model import BaseModel, Model
-from ..model.model import MODELS
+from ..model.base_model import BaseModel
+from ..model.model import Model, MODELS
 from ..utils import logger
 from ..utils.utility import LazyImport
 from .distillation.criterions import Criterions
@@ -34,8 +34,7 @@ from .pruner.utils import (
     process_config,
 )
 
-LazyImport("torch.nn")
-torch = LazyImport("torch")
+import torch
 tf = LazyImport("tensorflow")
 
 
