@@ -71,7 +71,7 @@ from onnx.external_data_helper import (
                     load_external_data_for_model,
                 )
 from onnxruntime_extensions import get_library_path
-from fedcore.neural_compressor.utils import options
+from fedcore.neural_compressor import options
 from fedcore.neural_compressor.adaptor.ox_utils.util import (
     remove_init_from_model_input,
     split_shared_bias,
