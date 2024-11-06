@@ -14,32 +14,43 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Model for multiple framework backends."""
+"""Class for ONNX model."""
 
-import importlib
+import logging
 import os
 import sys
+from pathlib import Path
 
-from onnxruntime_extensions import get_library_path
-from importlib.util import find_spec
-
-from fedcore.neural_compressor.config import options
+from fedcore.neural_compressor.adaptor.ox_utils.util import MAXIMUM_PROTOBUF
 from fedcore.neural_compressor.model.base_model import BaseModel
-from fedcore.neural_compressor.model.keras_model import KerasModel
-# from fedcore.neural_compressor.model.mxnet_model import MXNetModel ### TODO resolve numpy import issue
-from fedcore.neural_compressor.model.onnx_model import ONNXModel
-from fedcore.neural_compressor.model.tensorflow_model import (
-    TensorflowBaseModel,
-    TensorflowLLMModel,
-    TensorflowModel,
-    TensorflowQATModel,
-    get_model_type,
-)
-from fedcore.neural_compressor.utils import logger
 from fedcore.neural_compressor.utils.utility import LazyImport
 
 import onnx
 import onnxruntime as ort
+import neural_compressor.adaptor.ox_utils.util as ortq
+from onnx.external_data_helper import (
+            convert_model_to_external_data,
+            write_external_data_tensors,
+            load_external_data_for_model,
+            load_external_data_for_tensor,
+            convert_model_to_external_data
+        )
+from fedcore.neural_compressor.adaptor.ox_utils.util import infer_shapes
+from fedcore.neural_compressor.config import ONNXQlinear2QDQConfig
+from fedcore.neural_compressor.experimental.export.qlinear2qdq import onnx_qlinear_to_qdq
+from collections import deque
+from onnx import NodeProto
+import copy
+from transformers import AutoConfig
+
+logger = logging.getLogger("neural_compressor")
+
+
+class ONNXModel(BaseModel):
+    """Build ONNX model."""
+
+    def __init__(self, model, **kwargs):
+        """Initialize an ONNX model.
 import neural_compressor.adaptor.ox_utils.util as ortq
 from onnx.external_data_helper import (
             convert_model_to_external_data,
@@ -231,101 +242,285 @@ class ONNXModel(BaseModel):
                 convert_attribute=False,
             )
         else:
-            return "tensorflow"
+            onnx.save(self._model, root)
 
-    def _is_mxnet(model):
-        return 'NA'
-        # try:
-        #     is_mxnet = isinstance(model, mx.gluon.HybridBlock) or (
-        #         hasattr(model, "__len__")
-        #         and len(model) > 1
-        #         and isinstance(model[0], mx.symbol.Symbol)
-        #     )
-        # except:
-        #     return "NA"
-        # else:
-        #     return "mxnet" if is_mxnet else "NA"
+        if self._config is not None:
+            model_type = (
+                ""
+                if not hasattr(self._config, "model_type")
+                else getattr(self._config, "model_type")
+            )
+            setattr(self._config.__class__, "model_type", model_type)
+            output_config_file = Path(root).parent.joinpath("config.json").as_posix()
+            self._config.to_json_file(output_config_file, use_diff=False)
 
-    if isinstance(model, str):
-        absmodel = os.path.abspath(os.path.expanduser(model))
-        assert os.path.exists(absmodel) or os.path.exists(
-            absmodel + ".pb"
-        ), "invalid input path, the file does not exist!"
+    def nodes(self):
+        """Return model nodes."""
+        return self._model.graph.node
 
-    # check if the input model is a neural_compressor model
-    for name, nc_model in MODELS.items():
-        if nc_model and isinstance(model, nc_model):
-            return "pytorch" if name == "pytorch_ipex" or name == "pytorch_fx" else name
-    if isinstance(model, TensorflowBaseModel):
-        return "tensorflow"
+    def initializer(self):
+        """Return model initializer."""
+        return self._model.graph.initializer
 
-    checker = [_is_tensorflow, _is_pytorch, _is_onnxruntime, _is_mxnet]
-    for handler in checker:
-        fwk_name = handler(model)
-        if fwk_name != "NA":
-            break
-    assert (
-        fwk_name != "NA"
-    ), "Framework is not detected correctly from model format. This could be \
-caused by unsupported model or inappropriate framework installation."
+    def graph(self):
+        """Return model graph."""
+        return self._model.graph
 
-    return fwk_name
+    def ir_version(self):
+        """Return model ir_version."""
+        return self._model.ir_version
 
+    def opset_import(self):
+        """Return model opset_import."""
+        return self._model.opset_import
 
-class Model(object):
-    """A wrapper to construct a Neural Compressor Model."""
+    def remove_node(self, node):
+        """Remove a node from model."""
+        if node in self._model.graph.node:
+            self._model.graph.node.remove(node)
 
-    def __new__(cls, root, **kwargs):
-        """Create a new instance object of Model.
+    def remove_nodes(self, nodes_to_remove):
+        """Remove nodes from model."""
+        for node in nodes_to_remove:
+            self.remove_node(node)
 
-        Args:
-            root (object): raw model format. For Tensorflow model, could be path to frozen pb file,
-                path to ckpt or savedmodel folder, loaded estimator/graph_def/graph/keras model object.
-                For PyTorch model, it's torch.nn.model instance. For MXNet model, it's mxnet.symbol.Symbol
-                or gluon.HybirdBlock instance. For ONNX model, it's path to onnx model or loaded ModelProto
-                model object.
+    def add_node(self, node):
+        """Add a node to model."""
+        self._model.graph.node.extend([node])
 
-        Returns:
-            BaseModel: neural_compressor built-in model
-        """
-        conf = kwargs.pop("conf", "NA")
-        if isinstance(root, BaseModel):
-            if conf != "NA" and conf.framework is None:
-                try:
-                    conf.framework = list(MODELS.keys())[
-                        list(MODELS.values()).index(type(root))
-                    ]
-                except:
-                    conf.framework = get_model_fwk_name(root._model)
-                if hasattr(conf, "backend") and conf.backend == "ipex":
-                    assert (
-                        conf.framework == "pytorch_ipex"
-                    ), "Please wrap the model with correct Model class!"
-                if hasattr(conf, "backend") and conf.backend == "itex":
-                    if get_model_type(root.model) == "keras":
-                        assert (
-                            conf.framework == "keras"
-                        ), "Please wrap the model with KerasModel class!"
+    def add_nodes(self, nodes_to_add):
+        """Add nodes to model."""
+        self._model.graph.node.extend(nodes_to_add)
+
+    def add_initializer(self, tensor):
+        """Add a initializer to model."""
+        if ortq.find_by_name(tensor.name, self._model.graph.initializer) is None:
+            self._model.graph.initializer.extend([tensor])
+
+    def add_initializers(self, tensors):
+        """Add initializers to model."""
+        for tensor in tensors:
+            self.add_initializer(tensor)
+
+    def get_initializer(self, name):
+        """Get an initializer by name."""
+        for tensor in self._model.graph.initializer:
+            if tensor.name == name:
+                return tensor
+        return None
+
+    def get_initializer_share_num(self, name):
+        """Get the number of shares of initializer."""
+        num = 0
+        if self.get_initializer(name) is None:
+            return num
+
+        for node in self.nodes():
+            if name in node.input:
+                num += 1
+        return num
+
+    def get_node(self, name):
+        """Get a node by name."""
+        for node in self._model.graph.node:
+            if node.name == name:
+                return node
+        return None
+
+    def remove_initializer(self, tensor):
+        """Remove an initializer from model."""
+        if tensor in self._model.graph.initializer:
+            self._model.graph.initializer.remove(tensor)
+
+    def remove_initializers(self, init_to_remove):
+        """Remove initializers from model."""
+        for initializer in init_to_remove:
+            self.remove_initializer(initializer)
+
+    def set_initializer(self, tensor, array, raw=False):
+        """Update initializer."""
+        old_tensor = self.get_initializer(tensor)
+        self.remove_initializer(old_tensor)
+        dims = old_tensor.dims
+        data_type = old_tensor.data_type
+        new_tensor = (
+            onnx.helper.make_tensor(tensor, data_type, dims, array.flatten().tolist())
+            if not raw
+            else onnx.helper.make_tensor(
+                tensor, data_type, dims, array.tostring(), raw=raw
+            )
+        )
+        self.add_initializer(new_tensor)
+
+    @property
+    def input_name_to_nodes(self):
+        """Return input names of nodes."""
+        return self._input_name_to_nodes
+
+    def _get_input_name_to_nodes(self, nodes):
+        """Get input names of nodes."""
+        for node in nodes:
+            attrs = [
+                attr
+                for attr in node.attribute
+                if attr.type == onnx.AttributeProto.GRAPH
+                or attr.type == onnx.AttributeProto.GRAPHS
+            ]
+            if len(attrs) > 0:
+                for attr in attrs:
+                    self._get_input_name_to_nodes(attr.g.node)
+            for input_name in node.input:
+                if len(input_name.strip()) != 0:
+                    if input_name not in self._input_name_to_nodes:
+                        self._input_name_to_nodes[input_name] = [node]
                     else:
-                        assert (
-                            conf.framework == "tensorflow"
-                        ), "Please wrap the model with TensorflowModel class!"
-                        conf.framework = "tensorflow_itex"
-                if getattr(conf, "approach", None) == "quant_aware_training":
-                    assert (
-                        conf.framework == "tensorflow_qat"
-                    ), "Please wrap the model with TensorflowQATModel class!"
+                        self._input_name_to_nodes[input_name].append(node)
+
+    @property
+    def output_name_to_node(self):
+        """Return output names of nodes."""
+        return self._output_name_to_node
+
+    def _get_output_name_to_node(self, nodes):
+        """Get output names of nodes."""
+        for node in nodes:
+            attrs = [
+                attr
+                for attr in node.attribute
+                if attr.type == onnx.AttributeProto.GRAPH
+                or attr.type == onnx.AttributeProto.GRAPHS
+            ]
+            if len(attrs) > 0:
+                for attr in attrs:
+                    self._get_output_name_to_node(attr.g.node)
+            for output_name in node.output:
+                if len(output_name.strip()) != 0:
+                    self._output_name_to_node[output_name] = node
+
+    def get_siblings(self, node):
+        """Get siblings nodes."""
+        siblings = []
+        for parent in self.get_parents(node):
+            for child in self.get_children(parent):
+                if child.name != node.name:
+                    siblings.append(child)
+        return siblings
+
+    def get_children(self, node, input_name_to_nodes=None):
+        """Get children nodes."""
+        if input_name_to_nodes is None:
+            input_name_to_nodes = self._input_name_to_nodes
+
+        children = []
+        for output in node.output:
+            if output in input_name_to_nodes:
+                for child in input_name_to_nodes[output]:
+                    children.append(child)
+        return children
+
+    def get_parents(self, node, output_name_to_node=None):
+        """Get parents nodes."""
+        if output_name_to_node is None:
+            output_name_to_node = self._output_name_to_node
+
+        parents = []
+        for input in node.input:
+            if input in output_name_to_node:
+                parents.append(output_name_to_node[input])
+        return parents
+
+    def get_parent(self, node, idx, output_name_to_node=None):
+        """Get parent node by idx."""
+        if output_name_to_node is None:
+            output_name_to_node = self._output_name_to_node
+
+        if len(node.input) <= idx:
+            return None
+
+        input = node.input[idx]
+        if input not in output_name_to_node:
+            return None
+
+        return output_name_to_node[input]
+
+    def find_node_by_name(self, node_name, new_nodes_list, graph):
+        """Find out node by name."""
+        graph_nodes_list = list(graph.node)  # deep copy
+        graph_nodes_list.extend(new_nodes_list)
+        node = ortq.find_by_name(node_name, graph_nodes_list)
+        return node
+
+    def find_nodes_by_initializer(self, graph, initializer):
+        """Find all nodes with given initializer as an input."""
+        nodes = []
+        for node in graph.node:
+            for node_input in node.input:
+                if node_input == initializer.name:
+                    nodes.append(node)
+        return nodes
+
+    def get_scale_zero(self, tensor):
+        """Help function to get scale and zero_point."""
+        if not tensor.endswith("_quantized"):
+            logger.debug(
+                "Find {} in the quantized graph is not quantized.".format(tensor)
+            )
+            return None, None
+
+        def _searcher(tensor_name):
+            """Search scale and zero point tensor recursively."""
+            node = self._input_name_to_nodes[tensor_name][0]
+            parent = (
+                self._output_name_to_node[tensor_name]
+                if tensor_name in self._output_name_to_node
+                else None
+            )
+            direct_int8 = [
+                "Reshape",
+                "Transpose",
+                "Squeeze",
+                "Unsqueeze",
+                "MaxPool",
+                "Pad",
+                "Split",
+            ]
+            if parent is not None and parent.op_type in direct_int8:
+                fp32_tensor_name = (
+                    parent.input[0]
+                    .replace("_quantized", "")
+                    .replace("_QuantizeLinear", "")
+                    .replace("_QuantizeInput", "")
+                )
+            elif node.op_type in ["Gather"]:  # pragma: no cover
+                fp32_tensor_name = (
+                    node.output[0]
+                    .replace("_quantized", "")
+                    .replace("_QuantizeLinear", "")
+                    .replace("_QuantizeInput", "")
+                )
             else:
-                if "tensorflow" in conf.framework:
-                    if getattr(root, "name", None) is None:
-                        root.name = conf.model_name
-                    if getattr(root, "output_tensor_names", None) is None:
-                        root.output_tensor_names = conf.outputs
-                    if getattr(root, "input_tensor_names", None) is None:
-                        root.input_tensor_names = conf.inputs
-                    if getattr(root, "workspace_path", None) is None:
-                        root.workspace_path = options.workspace
-            return root
+                fp32_tensor_name = (
+                    tensor_name.replace("_quantized", "")
+                    .replace("_QuantizeLinear", "")
+                    .replace("_QuantizeInput", "")
+                )
+            scale = fp32_tensor_name + "_scale"
+            scale_tensor = self.get_initializer(scale)
+            zo = fp32_tensor_name + "_zero_point"
+            zo_tensor = self.get_initializer(zo)
+
+            if scale_tensor is None or zo_tensor is None:
+                if parent is not None:
+                    scale_tensor, zo_tensor = _searcher(parent.input[0])
+            return scale_tensor, zo_tensor
+
+        node = self._input_name_to_nodes[tensor][0]
+        # TODO check if scale_tensor and zero_point is needed
+        # for bias of qlinearconv, scale and zero_point is not needed
+        if (node.op_type == "QLinearConv" and tensor == node.input[-1]) or (
+            node.op_type == "QGemm" and tensor == node.input[-3]
+        ):
+            return None, None
         else:
             scale_tensor, zo_tensor = _searcher(tensor)
             assert scale_tensor, "missing scale for tensor {}".format(tensor)

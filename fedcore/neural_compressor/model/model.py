@@ -27,21 +27,21 @@ from fedcore.neural_compressor.config import options
 from fedcore.neural_compressor.model.base_model import BaseModel
 from fedcore.neural_compressor.model.keras_model import KerasModel
 # from fedcore.neural_compressor.model.mxnet_model import MXNetModel ### TODO resolve numpy import issue
-from fedcore.neural_compressor.model.onnx_model import ONNXModel
+from fedcore.repository.constanst_repository import QUANT_MODEL_TYPES as MODELS
 from fedcore.neural_compressor.model.tensorflow_model import (
     TensorflowBaseModel,
     TensorflowLLMModel,
-    TensorflowModel,
-    TensorflowQATModel,
+    # TensorflowModel,
+    # TensorflowQATModel,
     get_model_type,
 )
 from fedcore.neural_compressor.utils import logger
 from fedcore.neural_compressor.utils.utility import LazyImport
 
-TORCH = False
-if importlib.util.find_spec("torch"):
-    TORCH = True
-    from fedcore.neural_compressor.model.torch_model import *
+# TORCH = False
+# if importlib.util.find_spec("torch"):
+#     TORCH = True
+#     from fedcore.neural_compressor.model.torch_model import *
 
 import torch
 # import tensorflow as tf ###
@@ -49,7 +49,6 @@ import torch
 import onnx
 import onnxruntime as ort
 import yaml
-import json
 import json
 import numpy as np
 
@@ -62,20 +61,21 @@ import numpy as np
 # json = LazyImport("json")
 # np = LazyImport("numpy")
 
-MODELS = {
-    "tensorflow": TensorflowModel,
-    "tensorflow_itex": TensorflowModel,
-    "tensorflow_qat": TensorflowQATModel,
-    "keras": KerasModel,
-    # "mxnet": MXNetModel,
-    "pytorch": PyTorchModel if TORCH else None,
-    "pytorch_ipex": IPEXModel if TORCH else None,
-    "pytorch_fx": PyTorchFXModel if TORCH else None,
-    "onnxruntime": ONNXModel,
-    "onnxrt_qlinearops": ONNXModel,
-    "onnxrt_qdq": ONNXModel,
-    "onnxrt_integerops": ONNXModel,
-}
+# from fedcore.neural_compressor.model.onnx_model import ONNXModel
+# MODELS = {
+#     "tensorflow": TensorflowModel,
+#     "tensorflow_itex": TensorflowModel,
+#     "tensorflow_qat": TensorflowQATModel,
+#     "keras": KerasModel,
+#     # "mxnet": MXNetModel,
+#     "pytorch": PyTorchModel if TORCH else None,
+#     "pytorch_ipex": IPEXModel if TORCH else None,
+#     "pytorch_fx": PyTorchFXModel if TORCH else None,
+#     "onnxruntime": ONNXModel,
+#     "onnxrt_qlinearops": ONNXModel,
+#     "onnxrt_qdq": ONNXModel,
+#     "onnxrt_integerops": ONNXModel,
+# }
 
 
 def get_model_fwk_name(model):
