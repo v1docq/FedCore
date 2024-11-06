@@ -60,6 +60,14 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
+from fedcore.neural_compressor.model.onnx_model import ONNXModel
+from fedcore.neural_compressor.model.keras_model import KerasModel
+from fedcore.neural_compressor.model.tensorflow_model import (
+    TensorflowModel,
+    TensorflowQATModel,
+)
+from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
+
 
 def default_device(device_type: str = "CPU"):
     """Return or set default device. Modified from fastai.
@@ -321,6 +329,21 @@ class ModelCompressionConstant(Enum):
         torch.nn.Embedding: DecomposedEmbedding
     }
 
+    QUANT_MODEL_TYPES = {
+        "tensorflow": TensorflowModel,
+        "tensorflow_itex": TensorflowModel,
+        "tensorflow_qat": TensorflowQATModel,
+        "keras": KerasModel,
+        # "mxnet": MXNetModel,
+        "pytorch": PyTorchModel,
+        "pytorch_ipex": IPEXModel,
+        "pytorch_fx": PyTorchFXModel,
+        "onnxruntime": ONNXModel,
+        "onnxrt_qlinearops": ONNXModel,
+        "onnxrt_qdq": ONNXModel,
+        "onnxrt_integerops": ONNXModel,
+    }
+
 
 class TorchLossesConstant(Enum):
     CROSS_ENTROPY = nn.CrossEntropyLoss
@@ -417,6 +440,7 @@ PRUNER_REQUIRED_GRADS = ModelCompressionConstant.PRUNER_REQUIRED_GRADS.value
 PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMENTS.value
 MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
 PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
+QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
 
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
