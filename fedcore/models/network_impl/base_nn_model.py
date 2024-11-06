@@ -75,7 +75,7 @@ class BaseNeuralModel:
     def __check_and_substitute_loss(self, train_data: InputData):
         if (
             train_data.supplementary_data.col_type_ids is not None
-            and "loss" in train_data.supplementary_data.col_type_ids
+            and train_data.supplementary_data.col_type_ids.get("loss", None)
         ):
             self.loss_fn = train_data.supplementary_data.col_type_ids["loss"]()
             print("Forcely substituted loss to", self.loss_fn)
