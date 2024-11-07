@@ -57,7 +57,7 @@ class BaseNeuralModel:
             "custom_loss", None
         )  # loss which evaluates model structure
         self.enforced_training_loss = self.params.get("enforced_training_loss", None)
-        self.device = default_device()
+        self.device = params.get('enforce_device', default_device())
 
         self.is_operation = self.params.get('is_operation', False) ###
         self.save_each = self.params.get('save_each', None)
