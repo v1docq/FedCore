@@ -925,6 +925,12 @@ class _BaseQuantizationConfig:
         self.ni_workload_name = ni_workload_name
         self._example_inputs = example_inputs
 
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
     @property
     def domain(self):
         """Get domain."""

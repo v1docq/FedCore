@@ -40,6 +40,7 @@ class QuantAwareModel(BaseCompressionModel):
             input_data.target, self.quantisation_config
         )
         self.trainer.model = self.quantisation_model.model
+        self.trainer.model._is_quantized = True
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)

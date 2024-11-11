@@ -57,7 +57,7 @@ class BaseNeuralModel:
             "custom_loss", None
         )  # loss which evaluates model structure
         self.enforced_training_loss = self.params.get("enforced_training_loss", None)
-        self.device = params.get('enforce_device', default_device())
+        self.device = default_device()
 
         self.is_operation = self.params.get('is_operation', False) ###
         self.save_each = self.params.get('save_each', None)
@@ -80,6 +80,12 @@ class BaseNeuralModel:
             self.loss_fn = train_data.supplementary_data.col_type_ids["loss"]()
             print("Forcely substituted loss to", self.loss_fn)
 
+    def __substitute_device_quant(self):
+        if getattr(self.model, '_is_quantized', False):
+            self.device = default_device('cpu')
+            print('Quantized model training supports CPU only')
+
+
     def fit(self, input_data: InputData, supplementary_data: dict = None):
         custom_fit_process = supplementary_data is not None
         loader = input_data.features.train_dataloader
@@ -92,6 +98,7 @@ class BaseNeuralModel:
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.learning_rate
         )
+        self.__substitute_device_quant()
         self.model.to(self.device)
 
         fit_output = Either(
@@ -261,3 +268,7 @@ class BaseNeuralModel:
             return 5  # Validate less frequently after learning rate decay
         else:
             return 2  # Default validation frequency
+        
+    @property
+    def is_quantised(self):
+        return getattr(self, '_is_quantised', False)

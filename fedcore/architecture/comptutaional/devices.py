@@ -5,11 +5,11 @@ from fastai.torch_core import _has_mps
 from fastcore.basics import defaults
 
 
-def default_device(device_type: str = "CUDA"):
+def default_device(device_type: str = None):
     """Return or set default device. Modified from fastai.
 
     Args:
-        device_type: 'CUDA' or 'CPU' or None (default: 'CUDA'). If None, use CUDA if available, else CPU.
+        device_type: 'cuda' or 'cpu' or None (default: 'cuda'). If None, use CUDA if available, else CPU.
 
     Returns:
         torch.device: The default device: CUDA if available, else CPU.
@@ -31,3 +31,4 @@ def default_device(device_type: str = "CUDA"):
             return torch.device(torch.cuda.current_device())
         if _has_mps():
             return torch.device("mps")
+    return torch.device("cpu")

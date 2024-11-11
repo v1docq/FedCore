@@ -436,7 +436,7 @@ def search_clip(
 
 
 def rtn_quantize(
-    model,
+    module,
     num_bits=4,
     group_size=32,
     scheme="asym",
@@ -481,8 +481,9 @@ def rtn_quantize(
     Returns:
         model: fake quantized torch module
     """
-    assert isinstance(model, torch.nn.Module), "only support torch module"
-    supported_layers = ["Linear"]
+    assert isinstance(module, torch.nn.Module), "only support torch module"
+    print('### RTN QUANTIZE')
+    supported_layers = (torch.nn.Linear,)
     if return_int:
         compression_dtype = kwargs.get("compression_dtype", torch.int32)
         compression_dim = kwargs.get("compression_dim", 1)
@@ -490,10 +491,18 @@ def rtn_quantize(
         device = kwargs.get("device", "cpu")
         use_optimum_format = kwargs.get("use_optimum_format", True)
     with torch.no_grad():
-        for name, m in model.named_modules():
-            if m.__class__.__name__ not in supported_layers:
+        print('### model', module)
+        for name, m in module.named_modules():
+            if not isinstance(m, supported_layers):
+                print('name skipped', name)
                 continue
-            orig_dtype = next(m.parameters()).dtype
+            print('not skipped', name)
+            try:
+                orig_dtype = next(m.parameters()).dtype
+            except StopIteration:
+                print('### Skipped', name)
+                orig_dtype = torch.float
+                continue
             if orig_dtype != torch.float:
                 m = m.float()
             if name in weight_config:  # pragma: no cover
@@ -559,8 +568,10 @@ def rtn_quantize(
                 if name == "":
                     return new_module
                 else:
-                    set_module(model, name, new_module)
+                    print('MODULE SETTING ###')
+                    set_module(module, name, new_module)
             else:
+                print('### m', m)
                 quant_weight(
                     m.weight.data,
                     num_bits,
@@ -574,7 +585,7 @@ def rtn_quantize(
                     m.weight.t_()
             if orig_dtype != torch.float:
                 m = m.to(orig_dtype)
-    return model
+    return module
 
 
 def gptq_quantize(
