@@ -23,13 +23,14 @@ class QuantAwareModel(BaseCompressionModel):
         self.loss = params.get("loss", nn.CrossEntropyLoss())
         self.learning_rate = params.get("lr", 3e-3)
         self.optimizer = params.get("optimizer", optim.AdamW)
-        self.scheduler = params.get("optimizer", torch.optim.lr_scheduler.StepLR)
+        self.scheduler = params.get("scheduler", torch.optim.lr_scheduler.StepLR)
+        self.device = 'cpu' #default_device()
         self.quantisation_config = params.get(
-            "quantisation_config", QuantizationAwareTrainingConfig()
+            "quantisation_config", QuantizationAwareTrainingConfig(
+            )
         )
         self.quantisation_model = prepare_compression
-        self.device = default_device()
-        self.trainer = BaseNeuralModel(params)
+        self.trainer = BaseNeuralModel({**params.to_dict(),  'enforce_device': 'cpu'})
 
     def __repr__(self):
         return "QuantisationAware"
@@ -39,16 +40,23 @@ class QuantAwareModel(BaseCompressionModel):
             input_data.target, self.quantisation_config
         )
         self.trainer.model = self.quantisation_model.model
+        self.trainer.model._is_quantized = True
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
-        self.optimised_model = self.trainer.fit(
+        self.quantisation_model.callbacks.on_train_begin()
+        self.trainer.fit(
             input_data,
             supplementary_data={
                 "strategy": "quant_aware",
                 "callback": self.quantisation_model,
             },
         )
+        self.quantisation_model.model.to('cpu')
+        self.quantisation_model.callbacks.on_train_end()
+        # self.quantisation_model.model.to(self.device)
+        self.optimised_model = self.quantisation_model.model
+
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
         self.trainer.model = (

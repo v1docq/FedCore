@@ -35,21 +35,23 @@ class QuantPostModel(BaseCompressionModel):
             if "predict" not in vars(input_data)
             else input_data.predict
         )
-        self.optimized_model = self.quantisation_model.fit(
+        # self.model._is_quantized = True
+        print("###, input_data.features.calib_dataloader", input_data.features.calib_dataloader)
+        self.optimised_model = self.quantisation_model.fit(
             model=self.model,
             conf=self.quantisation_config,
             calib_dataloader=input_data.features.calib_dataloader,
         )
-        self.optimized_model.to(default_device())
+        self.optimised_model.to(default_device())
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
         self.trainer.model = (
-            self.optimized_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == "compress" else self.model
         )
         return self.trainer.predict(input_data, output_mode)
 
     def predict(self, input_data: InputData, output_mode: str = "compress"):
         self.trainer.model = (
-            self.optimized_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == "compress" else self.model
         )
         return self.trainer.predict(input_data, output_mode)
