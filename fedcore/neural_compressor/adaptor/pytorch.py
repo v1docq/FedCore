@@ -167,6 +167,7 @@ def get_example_inputs(model, dataloader):
 
 
 def get_ops_recursively(model, prefix, ops={}):
+    print('### get_ops_recursively')
     """This is a helper function for `graph_info`,
         and it will get all ops from model.
 
@@ -201,20 +202,26 @@ def get_ops_recursively(model, prefix, ops={}):
 
     for name, child in model.named_children():
         op_name = prefix + "." + name if prefix != "" else name
-        if (
-            type(child) in white_list
-            and not isinstance(child, torch.nn.Sequential)
-            and type(child) != torch.quantization.stubs.DeQuantStub
-        ):
-            ops[op_name] = (
-                unify_op_type_mapping[str(child.__class__.__name__)]
-                if str(child.__class__.__name__) in unify_op_type_mapping
-                else str(child.__class__.__name__)
-            )
+        if not (isinstance(child, torch.nn.Sequential)
+            or isinstance(child, torch.quantization.stubs.DeQuantStub)):
+            if type(child) in white_list:        
+                ops[op_name] = (
+                    unify_op_type_mapping[child.__class__.__name__]
+                    if child.__class__.__name__ in unify_op_type_mapping
+                    else child.__class__.__name__
+                )
+            elif issubclass(type(child), tuple(white_list)):
+                base_name = type(child).__base__.__name__
+                ops[op_name] = (
+                    unify_op_type_mapping[base_name]
+                    if base_name in unify_op_type_mapping
+                    else base_name
+                )
         get_ops_recursively(child, op_name, ops)
 
 
 def _cfg_to_qconfig(tune_cfg, observer_type="post_training_static_quant"):
+    print('###', '_cfg_to_qconfig', tune_cfg)
     """Convert tune configure to quantization config for each op.
 
     Args:
@@ -405,6 +412,7 @@ def _cfg_to_qconfig(tune_cfg, observer_type="post_training_static_quant"):
 
 
 def _cfgs_to_fx_cfgs(op_cfgs, observer_type="post_training_static_quant"):
+    print('###', '_cfgs_to_fx_cfgs', op_cfgs)
     """Convert quantization config to a format that meets the requirements of torch.fx.
 
         Args:
@@ -1469,25 +1477,25 @@ class TemplateAdaptor(Adaptor):
             None
         """
 
+        print('_get_bf16_ops_recursively')
         for name, child in model.named_children():
             op_name = prefix + "." + name if prefix != "" else name
-            if (
-                str(child.__class__.__name__) in self.bf16_ops
-                and type(child) != torch.nn.Sequential
-                and type(child) != torch.quantization.stubs.DeQuantStub
-            ):
+            if (isinstance(child, (torch.nn.Sequential, torch.quantization.stubs.DeQuantStub)) 
+                or self.is_fused_module(child)):
+                continue
+            
+            name = child.__class__.__name__
+            if not name in self.bf16_ops:
+                name = child.__class__.__base__.__name__
+                if not name in self.bf16_ops:
+                    name = ''
+            if name:
                 bf16_ops.append(
-                    (
-                        op_name,
-                        (
-                            unify_op_type_mapping[str(child.__class__.__name__)]
-                            if str(child.__class__.__name__) in unify_op_type_mapping
-                            else str(child.__class__.__name__)
-                        ),
+                    (op_name, (unify_op_type_mapping[name]
+                            if name in unify_op_type_mapping
+                            else name),
                     )
                 )
-            elif self.is_fused_module(child):
-                continue
             else:
                 self._get_bf16_ops_recursively(child, op_name, bf16_ops)
 
@@ -2285,7 +2293,9 @@ class TemplateAdaptor(Adaptor):
 
         tune_cfg["recipe_cfgs"]["smoothquant_op_info"] = smoothquant_op_info
         model._model = q_model
+        print('### DEEEPCOPY OF Q QONFIG')
         model.q_config = copy.deepcopy(tune_cfg)
+        q_model.q_config = model.q_config 
         field_names = ["Op Type", "Total", "INT8", "BF16", "FP32"]
         output_data = [
             [
@@ -2370,6 +2380,7 @@ class PyTorchAdaptor(TemplateAdaptor):
 
     @dump_elapsed_time("Pass quantize model")
     def quantize(self, tune_cfg, model, dataloader, q_func=None):
+        print('###', 'quantize', tune_cfg)
         """Execute the quantize process on the specified model.
 
         Args:
@@ -2789,6 +2800,7 @@ class PyTorchAdaptor(TemplateAdaptor):
         Returns:
             None
         """
+        print('### _get_quantizable_ops_recursively')
         module_dict = dict(model.named_modules())
         for op_name, child in model.named_modules():
             if self.is_fused_module(child):
@@ -2803,25 +2815,27 @@ class PyTorchAdaptor(TemplateAdaptor):
             # so remove it here
             if (
                 op_name in self.non_quant_dict["skipped_module_names"]
-                or str(child.__class__.__name__)
+                or child.__class__.__name__
                 in self.non_quant_dict["skipped_module_classes"]
             ):
                 continue
-            if (
-                type(child) in self.white_list
-                and type(child) != torch.nn.Sequential
-                and type(child) != torch.quantization.stubs.DeQuantStub
+            if not (
+                isinstance(child, torch.nn.Sequential)
+                or isinstance(child, torch.quantization.stubs.DeQuantStub)
             ):
-                quantizable_ops.append(
-                    (
-                        op_name,
-                        (
-                            unify_op_type_mapping[str(child.__class__.__name__)]
-                            if str(child.__class__.__name__) in unify_op_type_mapping
-                            else str(child.__class__.__name__)
-                        ),
+                if type(child) in self.white_list:
+                    quantizable_ops.append(
+                        (op_name, (unify_op_type_mapping[str(child.__class__.__name__)]
+                                    if str(child.__class__.__name__) in unify_op_type_mapping
+                                    else str(child.__class__.__name__)),)
                     )
-                )
+                elif issubclass(type(child), tuple(self.white_list)):
+                    name = type(child).__base__.__name__
+                    quantizable_ops.append(
+                        (op_name, (unify_op_type_mapping[name]
+                                    if name in unify_op_type_mapping
+                                    else name),)
+                    )
 
     def _get_scale_zeropoint(self, model, tune_cfg):
         """Get activation scale and zero_point for converted model.
@@ -4880,6 +4894,7 @@ class PyTorch_FXAdaptor(TemplateAdaptor):
         Returns:
             None
         """
+        print('### PTFXADAPT _get_quantizable_ops_recursively')
         from .torch_utils.pattern_detector import (
             TransformerBasedModelBlockPatternDetector,
         )
@@ -4902,21 +4917,16 @@ class PyTorch_FXAdaptor(TemplateAdaptor):
                         )  # remove sub-modules of fused modules
         q_ops_set = set()
         for op_name, child in module_dict.items():
-            if (
-                type(child) in self.white_list
-                and type(child) != torch.nn.Sequential
-                and type(child) != torch.quantization.stubs.DeQuantStub
-            ):
-                quantizable_ops.append(
-                    (
-                        op_name,
-                        (
-                            unify_op_type_mapping[str(child.__class__.__name__)]
-                            if str(child.__class__.__name__) in unify_op_type_mapping
-                            else str(child.__class__.__name__)
-                        ),
+            if not isinstance(child, (torch.quantization.stubs.DeQuantStub, torch.nn.Sequential)):
+                if type(child) in self.white_list:
+                    name = child.__class__.__name__
+                elif isinstance(child, tuple(self.white_list)):
+                    name = type(child).__base__.__name__
+                    quantizable_ops.append(
+                        (op_name, (unify_op_type_mapping[name]
+                                    if name in unify_op_type_mapping
+                                    else name),)
                     )
-                )
                 q_ops_set.add(op_name)
         # discard the op does not belong to quantizable_ops
         block_wise = [
@@ -5802,6 +5812,7 @@ class PyTorchWeightOnlyAdaptor(TemplateAdaptor):
         self.optype_statistics = field_names, output_data
 
     def _get_quantizable_ops_recursively(self, model, prefix, quantizable_ops):
+        print('### _get_quantizable_ops_recursively')
         """This is a helper function for `query_fw_capability`,
            and it will get all quantizable ops from model.
 
@@ -5817,7 +5828,9 @@ class PyTorchWeightOnlyAdaptor(TemplateAdaptor):
         module_dict = dict(model.named_modules())
         for op_name, child in module_dict.items():
             if isinstance(child, tuple(self.white_list)):
-                quantizable_ops.append((op_name, str(child.__class__.__name__)))
+                quantizable_ops.append((op_name, child.__class__.__name__))
+            elif issubclass(type(child), tuple(self.white_list)):
+                quantizable_ops.append((op_name, type(child).__base__.__name__))
 
     @dump_elapsed_time("Pass query framework capability")
     def query_fw_capability(self, model):

@@ -609,6 +609,7 @@ class PyTorchModel(PyTorchBaseModel):
                     num_bits = v["bits"]
                     group_size = v["group_size"]
                     scheme = v["scheme"]
+                print('### module name k', k)
                 mod = fetch_module(self.model, k)
                 mod = rtn_quantize(
                     mod,
