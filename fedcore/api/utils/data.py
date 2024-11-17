@@ -26,7 +26,7 @@ def get_compression_input(
         train_dataloader=train_dataloader,
         calib_dataloader=calib_dataloader,
         task=FEDOT_TASK[task],
-        num_classes=num_classes or len(train_dataloader.dataset.classes),
+        num_classes=num_classes or len(train_dataloader.dataset.get('classes', 0)),
         target=model,
     )
     input_data.supplementary_data.is_auto_preprocessed = True
