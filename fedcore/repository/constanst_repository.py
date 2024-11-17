@@ -61,14 +61,8 @@ from fedcore.models.network_modules.losses import (
     TweedieLoss,
 )
 from fedcore.neural_compressor.model.onnx_model import ONNXModel
-from fedcore.neural_compressor.model.keras_model import KerasModel
-from fedcore.neural_compressor.model.tensorflow_model import (
-    TensorflowModel,
-    TensorflowQATModel,
-)
 from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
 from fedcore.architecture.comptutaional.devices import default_device
-
 
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {
@@ -304,11 +298,6 @@ class ModelCompressionConstant(Enum):
     }
 
     QUANT_MODEL_TYPES = {
-        "tensorflow": TensorflowModel,
-        "tensorflow_itex": TensorflowModel,
-        "tensorflow_qat": TensorflowQATModel,
-        "keras": KerasModel,
-        # "mxnet": MXNetModel,
         "pytorch": PyTorchModel,
         "pytorch_ipex": IPEXModel,
         "pytorch_fx": PyTorchFXModel,
