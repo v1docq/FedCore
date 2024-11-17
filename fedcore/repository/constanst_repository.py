@@ -60,32 +60,14 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
-
-def default_device(device_type: str = "CPU"):
-    """Return or set default device. Modified from fastai.
-
-    Args:
-        device_type: 'CUDA' or 'CPU' or None (default: 'CUDA'). If None, use CUDA if available, else CPU.
-
-    Returns:
-        torch.device: The default device: CUDA if available, else CPU.
-
-    """
-    if device_type == "CUDA":
-        defaults.use_cuda = True
-        return torch.device("cuda")
-    elif device_type == "cpu":
-        defaults.use_cuda = False
-        return torch.device("cpu")
-
-    if device_type is None:
-        if torch.cuda.is_available() or _has_mps():
-            device_type = True
-    if device_type:
-        if torch.cuda.is_available():
-            return torch.device(torch.cuda.current_device())
-        if _has_mps():
-            return torch.device("mps")
+from fedcore.neural_compressor.model.onnx_model import ONNXModel
+from fedcore.neural_compressor.model.keras_model import KerasModel
+from fedcore.neural_compressor.model.tensorflow_model import (
+    TensorflowModel,
+    TensorflowQATModel,
+)
+from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
+from fedcore.architecture.comptutaional.devices import default_device
 
 
 class FedotOperationConstant(Enum):
@@ -321,6 +303,21 @@ class ModelCompressionConstant(Enum):
         torch.nn.Embedding: DecomposedEmbedding
     }
 
+    QUANT_MODEL_TYPES = {
+        "tensorflow": TensorflowModel,
+        "tensorflow_itex": TensorflowModel,
+        "tensorflow_qat": TensorflowQATModel,
+        "keras": KerasModel,
+        # "mxnet": MXNetModel,
+        "pytorch": PyTorchModel,
+        "pytorch_ipex": IPEXModel,
+        "pytorch_fx": PyTorchFXModel,
+        "onnxruntime": ONNXModel,
+        "onnxrt_qlinearops": ONNXModel,
+        "onnxrt_qdq": ONNXModel,
+        "onnxrt_integerops": ONNXModel,
+    }
+
 
 class TorchLossesConstant(Enum):
     CROSS_ENTROPY = nn.CrossEntropyLoss
@@ -380,6 +377,9 @@ class ONNX_CONFIG(Enum):
         "dynamic_axes": {"input": [0], "output": [0]},
     }
 
+class FedcoreInitialAssumptions(Enum):
+    qat_1 = {}
+    ptq_1 = {}
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
@@ -417,6 +417,8 @@ PRUNER_REQUIRED_GRADS = ModelCompressionConstant.PRUNER_REQUIRED_GRADS.value
 PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMENTS.value
 MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
 PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
+QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
+INITIAL_ASSUMPTIONS = {kvp.name: kvp.value for kvp in FedcoreInitialAssumptions}
 
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
