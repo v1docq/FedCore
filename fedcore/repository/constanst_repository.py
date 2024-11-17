@@ -63,6 +63,7 @@ from fedcore.models.network_modules.losses import (
 from fedcore.neural_compressor.model.onnx_model import ONNXModel
 from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
 from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.repository.setups import QAT_1, PTQ_1
 
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {
@@ -367,8 +368,8 @@ class ONNX_CONFIG(Enum):
     }
 
 class FedcoreInitialAssumptions(Enum):
-    qat_1 = {}
-    ptq_1 = {}
+    qat_1 = QAT_1
+    ptq_1 = PTQ_1
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
