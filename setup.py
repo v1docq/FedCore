@@ -16,7 +16,7 @@ LONG_DESC_TYPE = 'text/x-rst'
 README = Path(HERE, 'README.rst').read_text(encoding='utf-8')
 EXCLUDED_PACKAGES = ['tests*', 'examples']
 URL = 'https://github.com/v1docq/FedCore'
-REQUIRES_PYTHON = '>=3.9, <3.11'
+REQUIRES_PYTHON = '>=3.8, <3.11'
 LICENSE = 'BSD 3-Clause'
 KEYWORDS = 'federated learning, machine learning, deep learning, pruning, quantization, distributed learning'
 
