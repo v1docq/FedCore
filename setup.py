@@ -8,7 +8,7 @@ HERE = Path(__file__).parent.resolve()
 
 # The text of the README file
 NAME = 'fedcore'
-VERSION = '0.0.4.3'
+VERSION = '0.0.4.5'
 AUTHOR = 'Ilia Revin'
 AUTHOR_EMAIL = 'revine@inbox.ru'
 SHORT_DESCRIPTION = 'Federated learning core library'
@@ -53,6 +53,7 @@ setuptools.setup(
     install_requires=_get_requirements('requirements.txt'),
     classifiers=[
         'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
     ],
