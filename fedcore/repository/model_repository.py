@@ -6,7 +6,7 @@ from torchvision.models.detection.faster_rcnn import fasterrcnn_mobilenet_v3_lar
 
 from fedcore.algorithm.pruning.pruners import BasePruner
 from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
-from fedcore.algorithm.quantization.quant_post_training import QuantPostModel
+from fedcore.algorithm.quantization.quant_post_training import QuantPostModel, QuantDynamicModel
 
 # from fedcore.models.backbone.chronos import chronos_small
 from fedcore.models.backbone.mobilenet import MobileNetV3Small, MobileNetV3Large
@@ -41,6 +41,7 @@ class AtomizedModel(Enum):
     QUANTISATION_MODELS = {
         "post_training_quant": QuantPostModel,
         "training_aware_quant": QuantAwareModel,
+        "post_dynamic_quant": QuantDynamicModel,
     }
 
     DISTILATION_MODELS = {"distilation_model": BaseDistilator}
