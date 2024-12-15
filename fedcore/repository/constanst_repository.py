@@ -3,7 +3,7 @@ from enum import Enum
 import torch
 import torch_pruning as tp
 import torchvision
-from fastai.torch_core import _has_mps
+# from fastai.torch_core import _has_mps
 from fastcore.basics import defaults
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from fedot.core.pipelines.verification_rules import (
@@ -194,8 +194,9 @@ class FedotOperationConstant(Enum):
     FEDOT_ASSUMPTIONS = {
         "pruning": PipelineBuilder().add_node("pruning_model"),
         "low_rank": PipelineBuilder().add_node("low_rank_model"),
-        "post_quantisation": PipelineBuilder().add_node("post_training_quant"),
-        "quantisation_aware": PipelineBuilder().add_node("training_aware_quant"),
+        "post_quantization": PipelineBuilder().add_node("post_training_quant"),
+        "post_dynamic_quantisation": PipelineBuilder().add_node('post_dynamic_quant'),
+        "quantization_aware": PipelineBuilder().add_node("training_aware_quant"),
         "distilation": PipelineBuilder().add_node("distilation_model"),
         "detection": PipelineBuilder().add_node(
             "detection_model", params={"pretrained": True}
