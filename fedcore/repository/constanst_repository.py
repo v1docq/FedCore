@@ -3,7 +3,7 @@ from enum import Enum
 import torch
 import torch_pruning as tp
 import torchvision
-from fastai.torch_core import _has_mps
+# from fastai.torch_core import _has_mps
 from fastcore.basics import defaults
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from fedot.core.pipelines.verification_rules import (
@@ -61,40 +61,9 @@ from fedcore.models.network_modules.losses import (
     TweedieLoss,
 )
 from fedcore.neural_compressor.model.onnx_model import ONNXModel
-from fedcore.neural_compressor.model.keras_model import KerasModel
-from fedcore.neural_compressor.model.tensorflow_model import (
-    TensorflowModel,
-    TensorflowQATModel,
-)
 from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
-
-
-def default_device(device_type: str = "CPU"):
-    """Return or set default device. Modified from fastai.
-
-    Args:
-        device_type: 'CUDA' or 'CPU' or None (default: 'CUDA'). If None, use CUDA if available, else CPU.
-
-    Returns:
-        torch.device: The default device: CUDA if available, else CPU.
-
-    """
-    if device_type == "CUDA":
-        defaults.use_cuda = True
-        return torch.device("cuda")
-    elif device_type == "cpu":
-        defaults.use_cuda = False
-        return torch.device("cpu")
-
-    if device_type is None:
-        if torch.cuda.is_available() or _has_mps():
-            device_type = True
-    if device_type:
-        if torch.cuda.is_available():
-            return torch.device(torch.cuda.current_device())
-        if _has_mps():
-            return torch.device("mps")
-
+from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.repository.setups import QAT_1, PTQ_1
 
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {
@@ -225,8 +194,9 @@ class FedotOperationConstant(Enum):
     FEDOT_ASSUMPTIONS = {
         "pruning": PipelineBuilder().add_node("pruning_model"),
         "low_rank": PipelineBuilder().add_node("low_rank_model"),
-        "post_quantisation": PipelineBuilder().add_node("post_training_quant"),
-        "quantisation_aware": PipelineBuilder().add_node("training_aware_quant"),
+        "post_quantization": PipelineBuilder().add_node("post_training_quant"),
+        "post_dynamic_quantisation": PipelineBuilder().add_node('post_dynamic_quant'),
+        "quantization_aware": PipelineBuilder().add_node("training_aware_quant"),
         "distilation": PipelineBuilder().add_node("distilation_model"),
         "detection": PipelineBuilder().add_node(
             "detection_model", params={"pretrained": True}
@@ -330,11 +300,6 @@ class ModelCompressionConstant(Enum):
     }
 
     QUANT_MODEL_TYPES = {
-        "tensorflow": TensorflowModel,
-        "tensorflow_itex": TensorflowModel,
-        "tensorflow_qat": TensorflowQATModel,
-        "keras": KerasModel,
-        # "mxnet": MXNetModel,
         "pytorch": PyTorchModel,
         "pytorch_ipex": IPEXModel,
         "pytorch_fx": PyTorchFXModel,
@@ -403,6 +368,9 @@ class ONNX_CONFIG(Enum):
         "dynamic_axes": {"input": [0], "output": [0]},
     }
 
+class FedcoreInitialAssumptions(Enum):
+    qat_1 = QAT_1
+    ptq_1 = PTQ_1
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
@@ -441,6 +409,7 @@ PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMEN
 MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
 PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
 QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
+INITIAL_ASSUMPTIONS = {kvp.name: kvp.value for kvp in FedcoreInitialAssumptions}
 
 CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
