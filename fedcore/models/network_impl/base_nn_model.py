@@ -57,7 +57,7 @@ class BaseNeuralModel:
             "custom_loss", None
         )  # loss which evaluates model structure
         self.enforced_training_loss = self.params.get("enforced_training_loss", None)
-        self.device = default_device()
+        self.device = self.params.get('device', default_device())
 
         self.is_operation = self.params.get('is_operation', False) ###
         self.save_each = self.params.get('save_each', None)
@@ -83,7 +83,8 @@ class BaseNeuralModel:
     def __substitute_device_quant(self):
         if getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
-            print('Quantized model training supports CPU only')
+            self.model.to(self.device)
+            print('Quantized model inference supports CPU only')
 
 
     def fit(self, input_data: InputData, supplementary_data: dict = None):
@@ -98,7 +99,6 @@ class BaseNeuralModel:
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.learning_rate
         )
-        self.__substitute_device_quant()
         self.model.to(self.device)
 
         fit_output = Either(
@@ -203,19 +203,22 @@ class BaseNeuralModel:
         """
         Method for feature generation for all series
         """
+        self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
+        self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
     def _predict_model(
         self, x_test: CompressionInputData, output_mode: str = "default"
     ):
         assert type(x_test) is CompressionInputData
-        model = self.model or x_test.target
+        # print('### IS_QUANTIZED', getattr(self.model, '_is_quantized', False))
+        model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.calib_dataloader,
@@ -223,8 +226,9 @@ class BaseNeuralModel:
                                                      max_batches=self.calib_batch_limit)
         for batch in tqdm(dataloader): ###TODO why calib_dataloader???
             inputs, targets = batch
-            x_test = inputs.to(self.device)
-            prediction.append(model(x_test))
+            inputs = inputs.to(self.device)
+            prediction.append(model(inputs))
+        # print('### PREDICTION', prediction)
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):

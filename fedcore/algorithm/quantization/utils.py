@@ -20,6 +20,13 @@ __all__ = [
     'reset_qconfig'
 ]
 
+def _recreate_decomposed_linear(model: IDecomposed):
+    S = nn.Linear()
+    new_module = nn.Sequential(
+        nn.Linear
+    )
+
+
 def _recreate_embedding(module):
         assert isinstance(module, torch.nn.Embedding)
         new = torch.nn.Embedding(
@@ -42,8 +49,10 @@ def _recreate_linear(module):
 
 from fedcore.architecture.abstraction.accessor import Accessor
 class ParentalReassembler(Accessor):    
-    supported_layers = {torch.nn.Embedding: _recreate_embedding,
-                        torch.nn.Linear: _recreate_linear}
+    supported_layers = {
+        torch.nn.Embedding: _recreate_embedding,
+        # torch.nn.Linear: _recreate_linear
+    }
             
     @classmethod
     def _fetch_module(cls, module):
@@ -65,7 +74,6 @@ class ParentalReassembler(Accessor):
     def convert(cls, module):
         associated, is_decomp = cls._fetch_module(module)
         if associated is None:
-            # print('failed to fetch:', module.__class__.__name__)
             return None
         if is_decomp:
             new_module = cls._decomposed_handle(module)
@@ -109,15 +117,29 @@ def reset_qconfig(model: nn.Module, mapping=Dict[nn.Embedding, Optional[QConfigA
             m.qconfig = mapping[t]
     return model
 
+import inspect
 
 class QDQWrapper(Accessor):
-    def get_layers_order( model: nn.Module, example_input):
+    __conventional_modules = {cls[1] for cls in inspect.getmembers(torch.nn.modules, inspect.isclass)}
+
+    @classmethod
+    def __is_conventional_module(cls, module: nn.Module):
+        return type(module) in cls.__conventional_modules
+
+    @classmethod
+    def get_names_order(cls, model, example_input):
+        modules_order = cls.get_layers_order(model, example_input)
+        names_order = cls.__fetch_names(model, modules_order)
+        return names_order
+    
+    @classmethod
+    def get_layers_order(cls, model: nn.Module, example_input):
         order = []
         hooks = []
         def add_hook(m):
-            def forward_hook(module, input, output):
+            def forward_pre_hook(module, input):
                 order.append(module)
-            registered_hook = m.register_forward_hook(forward_hook)
+            registered_hook = m.register_forward_pre_hook(forward_pre_hook)
             hooks.append(registered_hook)
         model.apply(add_hook)
         model(example_input)
@@ -142,15 +164,18 @@ class QDQWrapper(Accessor):
         return (need_entry or act_type is torch.float32)
             
     @classmethod
-    def add_quant_entry_exit(cls, m: nn.Module, example_input):
+    def add_quant_entry_exit(cls, m: nn.Module, example_input, allow: set=None):
+        allow = allow or set()
         m.eval()
         modules_order = cls.get_layers_order(m, example_input)
-        names_order = cls.__fetch_names(m, modules_order)
+        names_order = cls.get_names_order(m, example_input)
         def parametrizable_order(modules_order):
             is_parametrizable = [
-                (has_no_children_ignoring_parametrizations(module) 
-                    and bool(getattr(module, 'qconfig', None))
-                    and cls.__qconfig_requires_qdq(module)
+                (
+                    type(module) in allow and bool(getattr(module, 'qconfig', None)) or
+                    cls.__is_conventional_module(module) and
+                    has_no_children_ignoring_parametrizations(module) and
+                    bool(getattr(module, 'qconfig', None)) 
                 )
                 for module in modules_order
             ]
@@ -167,32 +192,55 @@ class QDQWrapper(Accessor):
                 if (not is_parametrizable[i - 1] and is_parametrizable[i] 
                     # or is_change(i)
                     ):
-                    cls.set_module(m, names_order[i], QDQWrapping(modules_order[i], 'pre'))
+                    module = cls.get_module(m, names_order[i])
+                    new_module = QDQWrapping(module, 'pre')
+                    cls.set_module(m, names_order[i], new_module)
                 if (is_parametrizable[i - 1] and not is_parametrizable[i]
                     # or is_change(i)
                     ):
-                    cls.set_module(m, names_order[i - 1], QDQWrapping(modules_order[i - 1], 'post'))
+                    module = cls.get_module(m, names_order[i])
+                    new_module = QDQWrapping(module, 'post', qconfig=modules_order[i - 1].qconfig)
+                    cls.set_module(m, names_order[i], new_module)
         if is_parametrizable[0]:
-            cls.set_module(m, names_order[0], QDQWrapping(modules_order[0], 'pre'))
+            cls.set_module(m, names_order[0], QDQWrapping(cls.get_module(m, names_order[0]), 'pre'))
         if is_parametrizable[-1]:
-            cls.set_module(m, names_order[-1], QDQWrapping(modules_order[-1], 'post'))
+            cls.set_module(m, names_order[-1], QDQWrapping(cls.get_module(m, names_order[-1]), 'last'))
         return m
 
 class QDQWrapping(nn.Module, IDelegator):
     __non_redirect =  {'base', 'quant', 'dequant', '_order', 'qconfig', 'forward', '__call__'}
         
-    def __init__(self, base, mode='pre'):
+    def __init__(self, base, mode='pre', qconfig=None):
         super().__init__()
         self.base = base
-        self.quant = QuantStub(getattr(base, 'qconfig', None)) if mode == 'pre' else None
-        self.dequant = DeQuantStub(getattr(base, 'qconfig', None)) if mode == 'post' else None
-        self._order = ['quant', 'base'] if mode == 'pre' else ['base', 'dequant']
-        self.qconfig = getattr(self.base, 'qconfig', None)
+        self._order = {'pre': ['quant', 'base'],
+                       'post': ['dequant', 'base'],
+                       'last': ['base', 'dequant']}[mode]
+        self.quant = QuantStub(getattr(base, 'qconfig', None)) if 'quant' in self._order else None
+        self.dequant = DeQuantStub(getattr(base, 'qconfig', None)) if 'dequant' in self._order else None
+        if mode == 'post':
+            assert qconfig, 'For post mode you need to specify the previous layer\'s qconfig'
+        self.qconfig = qconfig or getattr(self.base, 'qconfig', None)
+        self._is_rnn = isinstance(self.base, nn.RNNBase)
+        self.__h = None
     
     def forward(self, x, *args, **kwargs):
+        h = None
         for layer in self._order:
-            x = getattr(self, layer)(x, *args, **kwargs)
+            module = getattr(self, layer)
+            if layer == 'base':
+                out = module(x, *args, **kwargs)
+                if self._is_rnn:
+                    x, self.__h = out
+                else:
+                    x = out 
+            else:
+                x = module(x)
         return x
+
+    def __call__(self, *input, **kwargs):
+        result = super().__call__(*input, **kwargs)
+        return (result, self.__h) if self._is_rnn else result
         
     def __getattr__(self, name):
         if name not in self.__non_redirect:
