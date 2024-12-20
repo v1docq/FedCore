@@ -7,7 +7,7 @@ from torch.ao.quantization.stubs import QuantStub, DeQuantStub
 from torch.ao.quantization.utils import _get_path_of_module, get_qconfig_dtypes
 import torch.nn as nn
 
-from fedcore.models.network_impl.layers import IDecomposed
+from fedcore.models.network_impl.layers import IDecomposed, DecomposedLinear, DecomposedEmbedding
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.architecture.abstraction.delegator import IDelegator
 
@@ -41,34 +41,69 @@ def _recreate_embedding(module):
             getattr(module.weight, 'device', torch.device('cpu')),
             getattr(module.weight, 'dtype', torch.float32)
         )
+        new.load_state_dict(module.state_dict())
         return new
 
 def _recreate_linear(module):
     assert isinstance(module, torch.nn.Linear)
     raise NotImplementedError
 
-from fedcore.architecture.abstraction.accessor import Accessor
+
+class RecreatedDecomposed(nn.Sequential):
+    pass
+    
+
+def _recreate_decomposed_linear(
+        L: DecomposedLinear
+        ):
+    U, S, Vh = L.U.detach(), L.S.detach(), L.Vh.detach()
+    U = U * S
+    h = S.size(0)
+    new = RecreatedDecomposed(
+        nn.Linear(L.in_features, h, bias=False),
+        nn.Linear(h, L.out_features, bias=True)
+    )
+    new[0].weight.data = Vh
+    new[-1].weight.data = U
+    if getattr(L.bias, 'data', None) is not None:
+        new[-1].bias.data = L.bias.data
+    return new
+
+def _recreate_decomposed_embedding(E: DecomposedEmbedding):
+    U, S, Vh = E.U, E.S, E.Vh
+    h = S.size(0)
+    new = RecreatedDecomposed(
+        nn.Embedding(E.num_embeddings, h),
+        nn.Linear(h, E.embedding_dim, False)
+    )
+    new[0].weight.data = U
+    new[-1].weight.data = (torch.diag(S) @ Vh).T
+    new._is_recreated = True
+    return new
+
+
 class ParentalReassembler(Accessor):    
-    supported_layers = {
-        torch.nn.Embedding: _recreate_embedding,
-        # torch.nn.Linear: _recreate_linear
+    supported_layers = {torch.nn.Embedding: _recreate_embedding,
+                        torch.nn.Linear: _recreate_linear}
+    
+    supported_decomposed_layers = {
+        DecomposedLinear: _recreate_decomposed_linear,
+        DecomposedEmbedding: _recreate_decomposed_embedding,
     }
             
     @classmethod
-    def _fetch_module(cls, module):
+    def _fetch_module(cls, module: nn.Module):
         is_decomposed = isinstance(module, IDecomposed)
-        for supported in cls.supported_layers:
-            if isinstance(module, supported) and not type(module) is supported:
+        supported = cls.supported_decomposed_layers if is_decomposed else cls.supported_layers
+        for supported in supported:
+            if isinstance(module, supported) and (is_decomposed or not type(module) is supported):
                 return supported, is_decomposed
         return None, is_decomposed
     
-    @staticmethod
-    def _decomposed_handle(*args, **kwargs):
-        raise NotImplementedError
-    
     @classmethod
     def _handle(cls, module, type):
-        return cls.supported_layers[type](module)
+        supported = cls.supported_decomposed_layers if issubclass(type, IDecomposed) else cls.supported_layers
+        return supported[type](module)
 
     @classmethod
     def convert(cls, module):
@@ -76,7 +111,7 @@ class ParentalReassembler(Accessor):
         if associated is None:
             return None
         if is_decomp:
-            new_module = cls._decomposed_handle(module)
+            new_module = cls._decomposed_handle(module, associated)
         else:
             new_module = cls._handle(module, associated)
         return new_module
