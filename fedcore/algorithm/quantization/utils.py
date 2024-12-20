@@ -165,6 +165,7 @@ def reset_qconfig(model: nn.Module, mapping=Dict[nn.Embedding, Optional[QConfigA
             m.qconfig = mapping[t]
     return model
 
+import inspect
 
 class QDQWrapper(Accessor):
     __conventional_modules = {cls[1] for cls in inspect.getmembers(torch.nn.modules, inspect.isclass)}

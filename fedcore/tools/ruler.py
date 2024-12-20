@@ -50,8 +50,9 @@ class PerformanceEvaluator:
             dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
         )
         self.batch_size = batch_size or self.data_loader.batch_size
-        self.cuda_allowed =  not getattr(self.model, 'is_quantized', False) and torch.cuda.is_available()
+        self.cuda_allowed =  not getattr(self.model, '_is_quantized', False) and torch.cuda.is_available()
         self.device = device or default_device('cpu' if not self.cuda_allowed else None)
+        self.cuda_allowed = self.cuda_allowed and self.device.type != 'cpu'
         self.model.to(device)
         # Measured performance metrics
         self.latency = None
@@ -69,7 +70,7 @@ class PerformanceEvaluator:
 
     def eval(self):
         self.warm_up_cuda()
-        lat, thr = self.measure_latency_throughput()
+        lat, thr = self.measure_latency_throughput(1, self.n_batches)
         result = dict(latency=lat, throughput=thr, model_size=self.measure_model_size())
         self.report()
         return result
@@ -129,7 +130,7 @@ class PerformanceEvaluator:
             total=reps, desc="Measuring latency and throughput", unit="rep"
         ) as pbar:
             for rep in range(reps):
-                timings_thr.append(self.throughput_eval())
+                timings_thr.append(self.throughput_eval(reps))
                 timings_lat.append(self.latency_eval())
                 pbar.update(1)
 
@@ -170,7 +171,6 @@ class PerformanceEvaluator:
             f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"
         )
         print(f"Model size: {self.model_size} MB")
-
 
 class PerformanceEvaluatorOD:
     def __init__(self, model, data_loader, device=None, batch_size=32):
