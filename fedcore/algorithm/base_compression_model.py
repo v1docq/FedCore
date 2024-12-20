@@ -41,6 +41,7 @@ class BaseCompressionModel:
         self.model = None
         self.model_for_inference = None
         self.optimizer = None
+        self.params = params
 
     def _save_and_clear_cache(self):
         try:

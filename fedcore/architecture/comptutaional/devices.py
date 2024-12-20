@@ -1,7 +1,11 @@
 import sys
 
 import torch
-from fastai.torch_core import _has_mps
+import fastai.torch_core as faitc
+if hasattr(faitc, '_has_mps'):
+    from fastai.torch_core import _has_mps
+else:
+    _has_mps = lambda *args, **kwargs: False
 from fastcore.basics import defaults
 
 
