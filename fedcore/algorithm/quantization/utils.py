@@ -1,10 +1,17 @@
-from typing import Dict, Optional
+from functools import partial
+import inspect
+from typing import Dict, Literal, Optional
 
 import torch
-from torch.ao.quantization.quantize import has_no_children_ignoring_parametrizations
+from torch.ao.quantization.quantize import (
+    has_no_children_ignoring_parametrizations,
+    quantize, 
+    quantize_dynamic, 
+    quantize_qat
+)
 from torch.ao.quantization.qconfig import QConfigAny
 from torch.ao.quantization.stubs import QuantStub, DeQuantStub
-from torch.ao.quantization.utils import _get_path_of_module, get_qconfig_dtypes
+from torch.ao.quantization.utils import get_qconfig_dtypes
 import torch.nn as nn
 
 from fedcore.models.network_impl.layers import IDecomposed, DecomposedLinear, DecomposedEmbedding
@@ -17,8 +24,10 @@ __all__ = [
     'QDQWrapper',
     'QDQWrapping',
     'uninplace',
-    'reset_qconfig'
+    'reset_qconfig',
+    'RecreatedDecomposed'
 ]
+
 
 def _recreate_embedding(module):
         assert isinstance(module, torch.nn.Embedding)
@@ -43,7 +52,17 @@ def _recreate_linear(module):
 
 
 class RecreatedDecomposed(nn.Sequential):
-    pass
+    __non_redirected = {'forward', '__init__', 'routing'}
+    def __init__(self, *args, routing=None):
+        super().__init__(*args)
+        self.routing = routing or {}
+
+    def __getattr__(self, name):
+        if not name in self.__non_redirected:
+            name, module = self.routing.get(name, (name, '0'))
+            return getattr(super().__getattr__(module), name)
+        else:
+            return super().__getattr__(name)
     
 
 def _recreate_decomposed_linear(
@@ -54,7 +73,9 @@ def _recreate_decomposed_linear(
     h = S.size(0)
     new = RecreatedDecomposed(
         nn.Linear(L.in_features, h, bias=False),
-        nn.Linear(h, L.out_features, bias=True)
+        nn.Linear(h, L.out_features, bias=True),
+        routing={'out_features': ('out_features', '1'), 
+                 'bias': ('bias', '1')}
     )
     new[0].weight.data = Vh
     new[-1].weight.data = U
@@ -63,11 +84,12 @@ def _recreate_decomposed_linear(
     return new
 
 def _recreate_decomposed_embedding(E: DecomposedEmbedding):
-    U, S, Vh = E.U, E.S, E.Vh
+    U, S, Vh = E.U.detach(), E.S.detach(), E.Vh.detach()
     h = S.size(0)
     new = RecreatedDecomposed(
         nn.Embedding(E.num_embeddings, h),
-        nn.Linear(h, E.embedding_dim, False)
+        nn.Linear(h, E.embedding_dim, False),
+        routing={'embedding_dim': ('out_features', '1')}
     )
     new[0].weight.data = U
     new[-1].weight.data = (torch.diag(S) @ Vh).T
@@ -77,7 +99,8 @@ def _recreate_decomposed_embedding(E: DecomposedEmbedding):
 
 class ParentalReassembler(Accessor):    
     supported_layers = {torch.nn.Embedding: _recreate_embedding,
-                        torch.nn.Linear: _recreate_linear}
+                        # torch.nn.Linear: _recreate_linear
+                        }
     
     supported_decomposed_layers = {
         DecomposedLinear: _recreate_decomposed_linear,
@@ -103,10 +126,7 @@ class ParentalReassembler(Accessor):
         associated, is_decomp = cls._fetch_module(module)
         if associated is None:
             return None
-        if is_decomp:
-            new_module = cls._decomposed_handle(module, associated)
-        else:
-            new_module = cls._handle(module, associated)
+        new_module = cls._handle(module, associated)
         return new_module
     
     @classmethod
@@ -247,8 +267,7 @@ class QDQWrapper(Accessor):
         if is_parametrizable[-1]:
             cls.set_module(m, names_order[-1], QDQWrapping(cls.get_module(m, names_order[-1]), 'last'))
         return m
-    
-    
+
 class QDQWrapping(nn.Module, IDelegator):
     __non_redirect =  {'base', 'quant', 'dequant', '_order', 'qconfig', 'forward', '__call__'}
         
