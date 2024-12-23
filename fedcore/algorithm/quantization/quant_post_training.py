@@ -22,6 +22,11 @@ from torch.ao.quantization.qconfig_mapping import QConfigMapping, get_default_qc
 from torch.ao.quantization.qconfig_mapping_utils import get_flattened_qconfig_dict
 import torch.nn as nn
 import torch.ao.nn.quantized.dynamic as nnqd
+from torch.ao.quantization.quantization_mappings import (
+    DEFAULT_DYNAMIC_QUANT_MODULE_MAPPINGS, 
+    DEFAULT_QAT_MODULE_MAPPINGS,
+    DEFAULT_STATIC_QUANT_MODULE_MAPPINGS
+)
 
 class PostTrainingQuantization(BaseCompressionModel):
     pass
@@ -33,20 +38,23 @@ class QuantPostModel(BaseCompressionModel):
 
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
+        self.device = default_device('cpu')
+        params.update(device=self.device)
         self.epochs = params.get("epochs", 5)
         self.learning_rate = params.get("learning_rate", 0.001)
         self.backend = params.get('backend', 'x86')
-        self.qconfig = params.get("qconfig", None)
         self.allow_conv = params.get('allow_conv', True)
         self.allow_emb = params.get('allow_emb', True)
         self.inplace = params.get('inplace', False)
         self.trainer = BaseNeuralModel(params)
-        self.device = default_device()
+        self.allow = params.get('allow', set(DEFAULT_STATIC_QUANT_MODULE_MAPPINGS))
+        self.qconfig = params.get("qconfig", self.get_qconfig())
+
 
     def get_qconfig(self):
         qconfig = QConfigMapping().set_global(default_qconfig)
-        if self.allow_emb:
-            qconfig.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig)
+        qconfig.set_object_type(nn.Embedding, 
+                                float_qparams_weight_only_qconfig if self.allow_emb else None)
         return get_flattened_qconfig_dict(qconfig)   
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):
@@ -59,10 +67,10 @@ class QuantPostModel(BaseCompressionModel):
 
         uninplace(model)
         model = ParentalReassembler.reassemble(model, self.params.get('additional_mapping', None))
-        self.qconfig = self.get_qconfig()
+        model.to('cpu')
         propagate_qconfig_(model, self.qconfig)
-        b = self.__get_example_input(input_data)
-        QDQWrapper.add_quant_entry_exit(model, b)
+        b = self.__get_example_input(input_data).to(self.device)
+        QDQWrapper.add_quant_entry_exit(model, b, self.allow)
         prepare(model, inplace=True)
         self.trainer.model = model
         return model
@@ -74,10 +82,11 @@ class QuantPostModel(BaseCompressionModel):
         self.model = self._prepare_model(
             input_data, supplementary_data
         )
+        # b = self.__get_example_input(input_data).to(next(iter(self.model.parameters())).device)
         self.trainer.fit(input_data)
-        convert(self.model, inplace=True)
-        self.optimised_model = self.model.to('cpu')
-        self.model._is_quantized = True
+        convert(self.trainer.model, inplace=True)
+        self.trainer.model._is_quantized = True
+        self.optimised_model = self.trainer.model.to('cpu')
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
         self.trainer.model = (
@@ -105,24 +114,25 @@ class QuantDynamicModel(BaseCompressionModel):
 
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
+        self.device = default_device('cpu')
+        params.update(device=self.device)
         self.epochs = params.get("epochs", 5)
         self.learning_rate = params.get("learning_rate", 0.001)
         self.backend = params.get('backend', 'x86')
         self.dtype = params.get('dtype', None)
-        self.qconfig = params.get(
-            "qconfig", None
-        )
         self.allow_emb = params.get('allow_emb', True)
         self.allow_conv = params.get('allow_conv', False)
         self.inplace = params.get('inplace', False)
         self.trainer = BaseNeuralModel(params)
-        self.device = default_device()
+        self.qconfig = params.get(
+            "qconfig", self.get_qconfig()
+        )
+        
 
     def get_qconfig(self,):
-        if not (self.dtype or self.qconfig):
+        if not (self.dtype):
             qconfig = QConfigMapping().set_global(default_dynamic_qconfig)
-            if self.allow_emb:
-                qconfig.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig)
+            qconfig.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig if self.allow_emb else None)
             return get_flattened_qconfig_dict(qconfig)            
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):
@@ -144,11 +154,11 @@ class QuantDynamicModel(BaseCompressionModel):
     def fit(self, input_data: InputData, supplementary_data=None):
         self.model = self._prepare_model(
             input_data, supplementary_data
-        )
-        quantize_dynamic(self.model, self.get_qconfig(), self.dtype,
+        ).to('cpu')
+        quantize_dynamic(self.model, self.qconfig, self.dtype,
                          self.__update_mappings(),
                          inplace=True)
-        self.optimised_model = self.model.to('cpu')
+        self.optimised_model = self.model
         self.model._is_quantized = True
 
     def __update_mappings(self):
