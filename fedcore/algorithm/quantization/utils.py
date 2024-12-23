@@ -217,18 +217,37 @@ class QDQWrapper(Accessor):
 class QDQWrapping(nn.Module, IDelegator):
     __non_redirect =  {'base', 'quant', 'dequant', '_order', 'qconfig', 'forward', '__call__'}
         
-    def __init__(self, base, mode='pre'):
+    def __init__(self, base, mode='pre', qconfig=None):
         super().__init__()
         self.base = base
-        self.quant = QuantStub(getattr(base, 'qconfig', None)) if mode == 'pre' else None
-        self.dequant = DeQuantStub(getattr(base, 'qconfig', None)) if mode == 'post' else None
-        self._order = ['quant', 'base'] if mode == 'pre' else ['base', 'dequant']
-        self.qconfig = getattr(self.base, 'qconfig', None)
+        self._order = {'pre': ['quant', 'base'],
+                       'post': ['dequant', 'base'],
+                       'last': ['base', 'dequant']}[mode]
+        self.quant = QuantStub(getattr(base, 'qconfig', None)) if 'quant' in self._order else None
+        self.dequant = DeQuantStub(getattr(base, 'qconfig', None)) if 'dequant' in self._order else None
+        if mode == 'post':
+            assert qconfig, 'For post mode you need to specify the previous layer\'s qconfig'
+        self.qconfig = qconfig or getattr(self.base, 'qconfig', None)
+        self._is_rnn = isinstance(self.base, nn.RNNBase)
+        self.__h = None
     
     def forward(self, x, *args, **kwargs):
+        h = None
         for layer in self._order:
-            x = getattr(self, layer)(x, *args, **kwargs)
+            module = getattr(self, layer)
+            if layer == 'base':
+                out = module(x, *args, **kwargs)
+                if self._is_rnn:
+                    x, self.__h = out
+                else:
+                    x = out 
+            else:
+                x = module(x)
         return x
+
+    def __call__(self, *input, **kwargs):
+        result = super().__call__(*input, **kwargs)
+        return (result, self.__h) if self._is_rnn else result
         
     def __getattr__(self, name):
         if name not in self.__non_redirect:
