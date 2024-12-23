@@ -28,6 +28,12 @@ __all__ = [
     'RecreatedDecomposed'
 ]
 
+def _recreate_decomposed_linear(model: IDecomposed):
+    S = nn.Linear()
+    new_module = nn.Sequential(
+        nn.Linear
+    )
+
 
 def _recreate_embedding(module):
         assert isinstance(module, torch.nn.Embedding)
@@ -165,6 +171,7 @@ def reset_qconfig(model: nn.Module, mapping=Dict[nn.Embedding, Optional[QConfigA
             m.qconfig = mapping[t]
     return model
 
+import inspect
 
 class QDQWrapper(Accessor):
     __conventional_modules = {cls[1] for cls in inspect.getmembers(torch.nn.modules, inspect.isclass)}
