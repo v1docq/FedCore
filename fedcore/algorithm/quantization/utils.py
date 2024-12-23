@@ -147,28 +147,14 @@ def reset_qconfig(model: nn.Module, mapping=Dict[nn.Embedding, Optional[QConfigA
 
 
 class QDQWrapper(Accessor):
-    def get_layers_order( model: nn.Module, example_input):
-        order = []
-        hooks = []
-        def add_hook(m):
-            def forward_hook(module, input, output):
-                order.append(module)
-            registered_hook = m.register_forward_hook(forward_hook)
-            hooks.append(registered_hook)
-        model.apply(add_hook)
-        model(example_input)
-        [hook.remove() for hook in hooks]
-        return order
-    
-    def __fetch_names(root: nn.Module, order: list):
-        names_order = []
-        for submodule in order:
-            names_order.append(_get_path_of_module(root, submodule))
-        return names_order
+    __conventional_modules = {cls[1] for cls in inspect.getmembers(torch.nn.modules, inspect.isclass)}
+
+    @classmethod
+    def __is_conventional_module(cls, module: nn.Module):
+        return type(module) in cls.__conventional_modules
     
     @classmethod
     def __qconfig_requires_qdq(cls, module):
-        from torch.ao.quantization.qconfig import float_qparams_weight_only_qconfig, float_qparams_weight_only_qconfig_4bit
         qconfig = getattr(module, 'qconfig', None)
         need_entry = False
         try:
@@ -176,17 +162,61 @@ class QDQWrapper(Accessor):
         except:
             act_type = None
         return (need_entry or act_type is torch.float32)
+    
+    def is_leaf_quantizable(module: nn.Module, 
+                            example_inputs: tuple, 
+                            mode: Literal['qat', 'static', 'dynamic']):
+        module.train(mode == 'qat')
+        module.to('cpu')
+
+        def run_fn(model: nn.Module, *example_inputs: tuple):
+            model(*example_inputs)
+
+        p_f = {
+            'qat': partial(quantize_qat, run_fn=run_fn, run_args=example_inputs),
+            'static': partial(quantize, run_fn=run_fn, run_args=example_inputs),
+            'dynamic': partial(quantize_dynamic, ),
+        }[mode]
+
+        if (example_inputs is not None 
+            and isinstance(example_inputs[0], torch.Tensor) 
+            and example_inputs[0].dtype not in {torch.int16, torch.int32, torch.int64, torch.int8}
+        ):
+            m = QDQWrapping(module, 'pre')
+        else:
+            m = module
+        m.qconfig = module.qconfig
+
+        try:
+            qm = p_f(m)
+            qm(*example_inputs)
+            return True
+        except Exception as x:
+            module.qconfig = None
+            return False 
             
     @classmethod
-    def add_quant_entry_exit(cls, m: nn.Module, example_input):
+    def add_quant_entry_exit(cls, m: nn.Module, *example_input, allow: set=None):
+        allow = allow or set()
         m.eval()
-        modules_order = cls.get_layers_order(m, example_input)
-        names_order = cls.__fetch_names(m, modules_order)
+        modules_order = cls.get_layers_order(m, *example_input)
+        names_order = cls.get_names_order(m, *example_input)
+        def is_parametrizable(module: nn.Module):
+            return (
+                (type(module) in allow  or
+                type(module) not in allow and cls.is_leaf_module(module) and cls.is_leaf_quantizable(module))
+                and bool(getattr(module, 'qconfig', None))
+                # cls.__is_conventional_module(module) and
+                # has_no_children_ignoring_parametrizations(module) and
+                # bool(getattr(module, 'qconfig', None)) 
+            )
         def parametrizable_order(modules_order):
             is_parametrizable = [
-                (has_no_children_ignoring_parametrizations(module) 
-                    and bool(getattr(module, 'qconfig', None))
-                    and cls.__qconfig_requires_qdq(module)
+                (
+                    type(module) in allow and bool(getattr(module, 'qconfig', None)) or
+                    cls.__is_conventional_module(module) and
+                    has_no_children_ignoring_parametrizations(module) and
+                    bool(getattr(module, 'qconfig', None)) 
                 )
                 for module in modules_order
             ]
@@ -203,17 +233,22 @@ class QDQWrapper(Accessor):
                 if (not is_parametrizable[i - 1] and is_parametrizable[i] 
                     # or is_change(i)
                     ):
-                    cls.set_module(m, names_order[i], QDQWrapping(modules_order[i], 'pre'))
+                    module = cls.get_module(m, names_order[i])
+                    new_module = QDQWrapping(module, 'pre')
+                    cls.set_module(m, names_order[i], new_module)
                 if (is_parametrizable[i - 1] and not is_parametrizable[i]
                     # or is_change(i)
                     ):
-                    cls.set_module(m, names_order[i - 1], QDQWrapping(modules_order[i - 1], 'post'))
+                    module = cls.get_module(m, names_order[i])
+                    new_module = QDQWrapping(module, 'post', qconfig=modules_order[i - 1].qconfig)
+                    cls.set_module(m, names_order[i], new_module)
         if is_parametrizable[0]:
-            cls.set_module(m, names_order[0], QDQWrapping(modules_order[0], 'pre'))
+            cls.set_module(m, names_order[0], QDQWrapping(cls.get_module(m, names_order[0]), 'pre'))
         if is_parametrizable[-1]:
-            cls.set_module(m, names_order[-1], QDQWrapping(modules_order[-1], 'post'))
+            cls.set_module(m, names_order[-1], QDQWrapping(cls.get_module(m, names_order[-1]), 'last'))
         return m
-
+    
+    
 class QDQWrapping(nn.Module, IDelegator):
     __non_redirect =  {'base', 'quant', 'dequant', '_order', 'qconfig', 'forward', '__call__'}
         
