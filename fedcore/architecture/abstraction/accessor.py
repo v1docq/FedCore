@@ -1,6 +1,8 @@
 from functools import reduce
 from typing import Any, List
+from typing import Any, List
 
+from torch.ao.quantization.utils import _get_path_of_module
 from torch.ao.quantization.utils import _get_path_of_module
 from torch.nn import Module
 
