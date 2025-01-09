@@ -22,6 +22,11 @@ from torch.ao.quantization.qconfig_mapping import QConfigMapping, get_default_qc
 from torch.ao.quantization.qconfig_mapping_utils import get_flattened_qconfig_dict
 import torch.nn as nn
 import torch.ao.nn.quantized.dynamic as nnqd
+from torch.ao.quantization.quantization_mappings import (
+    DEFAULT_DYNAMIC_QUANT_MODULE_MAPPINGS, 
+    DEFAULT_QAT_MODULE_MAPPINGS,
+    DEFAULT_STATIC_QUANT_MODULE_MAPPINGS
+)
 
 class PostTrainingQuantization(BaseCompressionModel):
     pass
@@ -42,7 +47,7 @@ class QuantPostModel(BaseCompressionModel):
         self.allow_emb = params.get('allow_emb', True)
         self.inplace = params.get('inplace', False)
         self.trainer = BaseNeuralModel(params)
-        self.allow_custom = params.get('allow_custom', set())
+        self.allow = params.get('allow', set(DEFAULT_STATIC_QUANT_MODULE_MAPPINGS))
         self.qconfig = params.get("qconfig", self.get_qconfig())
 
 
@@ -65,7 +70,7 @@ class QuantPostModel(BaseCompressionModel):
         model.to('cpu')
         propagate_qconfig_(model, self.qconfig)
         b = self.__get_example_input(input_data).to(self.device)
-        QDQWrapper.add_quant_entry_exit(model, b, self.allow_custom)
+        QDQWrapper.add_quant_entry_exit(model, b, self.allow)
         prepare(model, inplace=True)
         self.trainer.model = model
         return model
@@ -125,7 +130,7 @@ class QuantDynamicModel(BaseCompressionModel):
         
 
     def get_qconfig(self,):
-        if not (self.dtype or self.qconfig):
+        if not (self.dtype):
             qconfig = QConfigMapping().set_global(default_dynamic_qconfig)
             qconfig.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig if self.allow_emb else None)
             return get_flattened_qconfig_dict(qconfig)            
