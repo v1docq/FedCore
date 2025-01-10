@@ -273,9 +273,11 @@ class QDQWrapping(nn.Module, IDelegator):
         
     def __init__(self, base, mode='pre', qconfig=None):
         super().__init__()
+        self.mode = mode
         self.base = base
         self._order = {'pre': ['quant', 'base'],
                        'post': ['dequant', 'base'],
+                       'both': ['quant', 'base', 'dequant'],
                        'last': ['base', 'dequant']}[mode]
         self.quant = QuantStub(getattr(base, 'qconfig', None)) if 'quant' in self._order else None
         self.dequant = DeQuantStub(getattr(base, 'qconfig', None)) if 'dequant' in self._order else None
@@ -284,6 +286,15 @@ class QDQWrapping(nn.Module, IDelegator):
         self.qconfig = qconfig or getattr(self.base, 'qconfig', None)
         self._is_rnn = isinstance(self.base, nn.RNNBase)
         self.__h = None
+
+    def __repr__(self):
+        d = {
+            'pre': f'{self.quant}\n{self.base}',
+            'post': f'{self.dequant}\n{self.base}',
+            'both': f'{self.quant}\n{self.base}\n{self.dequant}',
+            'last': f'{self.base}\nFinal {self.dequant}'
+        }
+        return d[self.mode]
     
     def forward(self, x, *args, **kwargs):
         h = None
