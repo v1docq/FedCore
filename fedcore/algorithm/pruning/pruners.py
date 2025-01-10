@@ -6,6 +6,7 @@ from fedot.core.data.data import InputData
 from pymonad.either import Either
 from torch import nn, optim
 from torchvision.models import VisionTransformer
+from tqdm import tqdm
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 import torch_pruning as tp
@@ -54,7 +55,7 @@ class BasePruner(BaseCompressionModel):
 
         # importance criterion for parameter selections
         self.importance = PRUNING_IMPORTANCE[self.importance_name](group_reduction=self.importance_reduction,
-                                                              normalizer=self.importance_normalize)
+                                                                   normalizer=self.importance_normalize)
         self.trainer = BaseNeuralModel(params)
 
     def __repr__(self):
@@ -81,6 +82,10 @@ class BasePruner(BaseCompressionModel):
         self.optimizer_for_grad = optim.Adam(self.model.parameters(),
                                              lr=self.learning_rate_for_grad)
 
+        self.pruner_without_grads = isinstance(self.importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values()))
+        self.pruner_with_reg = isinstance(self.importance, tuple(PRUNER_REQUIRED_REG.values()))
+        self.pruner_with_grads = not all([self.pruner_with_reg, self.pruner_without_grads])
+
     def _accumulate_grads(self, data, target, return_false=False):
         data, target = data.to(default_device()), target.to(default_device())
         out = self.model(data)
@@ -95,12 +100,10 @@ class BasePruner(BaseCompressionModel):
         return root_layer_dict[self.pruner_name]
 
     def _pruner_step_with_grads(self, pruner, input_data):
-        for i, (data, target) in enumerate(input_data.features.calib_dataloader):
-            if i != 0:
-                print(f"Gradients accumulation iter- {i}")
-                print(f"==========================================")
-                # we using 1 batch as example of pruning quality
-                self._accumulate_grads(data, target)
+        print(f"Gradients accumulation iter")
+        print(f"==========================================")
+        for i, (data, target) in tqdm(enumerate(input_data.features.calib_dataloader)):
+            self._accumulate_grads(data, target)
         return pruner
 
     def _pruner_step_with_reg(self, pruner, input_data):
@@ -129,15 +132,10 @@ class BasePruner(BaseCompressionModel):
             group.prune()
 
     def pruner_step(self, pruner: callable, input_data):
-
-        pruner_without_grads = isinstance(self.importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values()))
-        pruner_with_reg = isinstance(self.importance, tuple(PRUNER_REQUIRED_REG.values()))
-        pruner_with_grads = not all([pruner_with_reg, pruner_without_grads])
-
         pruner = Either(value=pruner,
-                        monoid=[input_data, pruner_without_grads]).either(
+                        monoid=[input_data, self.pruner_without_grads]).either(
             left_function=lambda data: self._pruner_step_with_grads(pruner, data)
-            if pruner_with_grads else self._pruner_step_with_reg(pruner, data),
+            if self.pruner_with_grads else self._pruner_step_with_reg(pruner, data),
             right_function=lambda pruner_agent: pruner_agent)
         return pruner
 
@@ -160,8 +158,9 @@ class BasePruner(BaseCompressionModel):
 
     def _default_pruning_iter(self, pruner):
         pruning_hist = []
+        interactive = True if self.pruner_without_grads else False
         for i in range(self.pruning_iterations):
-            for group in pruner.step(interactive=True):
+            for group in pruner.step(interactive=interactive):
                 dep, idxs = group[0]
                 layer = dep.layer
                 pruning_fn = dep.pruning_fn
@@ -195,7 +194,6 @@ class BasePruner(BaseCompressionModel):
                              monoid=[self.pruner, manual_pruning]).either(
             left_function=lambda pruner_agent: self._default_pruning_iter(pruner_agent),
             right_function=lambda pruner_agent: self._manual_pruning_iter(pruner_agent))
-
 
         print("==============Finetune pruned model=================")
         self.trainer.model = self.optimised_model

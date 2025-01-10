@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Optional
 
+import numpy as np
 from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
 from fedot.core.pipelines.pipeline import Pipeline
@@ -36,6 +37,7 @@ class CompressionMetric(Metric):
         """
         metric = cls.default_value
         metric = cls.metric(pipeline, reference_data.features.calib_dataloader)
+        metric = np.mean(metric)
         if cls.need_to_minimize:
             metric = - metric
         return metric
@@ -75,7 +77,7 @@ class LastLayer(CompressionMetric):
 
 
 class Throughput(CompressionMetric):
-    need_to_minimize = True
+    need_to_minimize = False
 
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
@@ -84,7 +86,7 @@ class Throughput(CompressionMetric):
 
 
 class Latency(CompressionMetric):
-    need_to_minimize = False
+    need_to_minimize = True
 
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):

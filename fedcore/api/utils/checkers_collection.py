@@ -6,6 +6,7 @@ import torch
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
 from pymonad.either import Either
+from torch import nn
 
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.repository.constanst_repository import FEDOT_TASK
@@ -55,14 +56,13 @@ class DataCheck:
                 torch_model = BACKBONE_MODELS[path_to_model]
             else:
                 torch_model = torch.load(path_to_model, map_location=torch.device('cpu'))
-
+            target = np.concatenate([x[1].cpu() for x in torch_dataloader])
             compression_dataset = CompressionInputData(features=np.zeros((2, 2)),
                                                        num_classes=torch_dataloader.num_classes,
                                                        calib_dataloader=torch_dataloader,
-                                                       target=torch_model
+                                                       target=target
                                                        )
         return compression_dataset, torch_model
-  
 
     def _init_input_data(self, manually_done=False) -> None:
         """Initializes the `input_data` attribute based on its type.
@@ -81,11 +81,14 @@ class DataCheck:
             custom_scenario = 'fedcore' if fedcore_scenario else 'directory'
 
             compression_dataset, torch_model = Either(value='detection',
-                                                  monoid=[custom_scenario, object_detection_scenario]).either(
-            left_function=lambda dataset_type: self._check_directory_dataset(dataset_type),
-            right_function=lambda dataset_type: self._check_od_dataset(dataset_type))
+                                                      monoid=[custom_scenario, object_detection_scenario]).either(
+                left_function=lambda dataset_type: self._check_directory_dataset(dataset_type),
+                right_function=lambda dataset_type: self._check_od_dataset(dataset_type))
         else:
             compression_dataset, torch_model = self.input_data
+        if hasattr(torch_model, 'fc'):
+            if torch_model.fc.out_features != compression_dataset.num_classes:
+                torch_model.fc = nn.Linear(torch_model.fc.in_features, compression_dataset.num_classes)
 
         self.input_data = InputData(features=compression_dataset,  # CompressionInputData object
                                     idx=np.arange(1),  # dummy value

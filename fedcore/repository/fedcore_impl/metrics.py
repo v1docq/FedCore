@@ -1,10 +1,9 @@
 from typing import Dict
 from fedot.core.repository.metrics_repository import ClassificationMetricsEnum, RegressionMetricsEnum, \
     MetricsEnum, MetricCallable
-from fedot.core.composer.metrics import (Accuracy, ComplexityMetric, F1, Logloss, MAE, MAPE, MSE,
+from fedcore.metrics.metric_impl import (Accuracy, F1, Logloss, MAE, MAPE, MSE,
                                          MSLE, Precision, QualityMetric, R2, RMSE, ROCAUC, SMAPE)
 from typing import Union
-
 from fedcore.metrics.cv_metrics import LastLayer, IntermediateFeatures, IntermediateAttention, Latency, Throughput, \
     CV_quality_metric
 from fedcore.repository.constanst_repository import DistilationMetricsEnum, InferenceMetricsEnum, CVMetricsEnum
@@ -13,7 +12,7 @@ class MetricsRepository:
     _metrics_implementations: Dict[MetricsEnum, MetricCallable] = {
         # classification
         ClassificationMetricsEnum.ROCAUC: ROCAUC.get_value,
-        ClassificationMetricsEnum.ROCAUC_penalty: ROCAUC.get_value_with_penalty,
+        #ClassificationMetricsEnum.ROCAUC_penalty: ROCAUC.get_value_with_penalty,
         ClassificationMetricsEnum.f1: F1.get_value,
         ClassificationMetricsEnum.precision: Precision.get_value,
         ClassificationMetricsEnum.accuracy: Accuracy.get_value,
@@ -26,7 +25,7 @@ class MetricsRepository:
         RegressionMetricsEnum.MAPE: MAPE.get_value,
         RegressionMetricsEnum.SMAPE: SMAPE.get_value,
         RegressionMetricsEnum.RMSE: RMSE.get_value,
-        RegressionMetricsEnum.RMSE_penalty: RMSE.get_value_with_penalty,
+       # RegressionMetricsEnum.RMSE_penalty: RMSE.get_value_with_penalty,
         RegressionMetricsEnum.R2: R2.get_value,
 
         # Distilation metric
@@ -50,6 +49,6 @@ class MetricsRepository:
         return MetricsRepository._metrics_implementations[metric_name]
 
     @staticmethod
-    def get_metric_class(metric_name: MetricsEnum) -> Union[QualityMetric, ComplexityMetric]:
+    def get_metric_class(metric_name: MetricsEnum) -> Union[QualityMetric]:
         return MetricsRepository._metrics_classes[metric_name]
 

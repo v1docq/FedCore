@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List
+from typing import Dict, List, Optional
+
+from fedot.core.pipelines.pipeline import Pipeline
 from sklearn.metrics import precision_recall_fscore_support
 from torch.nn.functional import softmax
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -233,7 +235,6 @@ def dice_score(
     return dice
 
 
-
 class ParetoMetrics:
     def pareto_metric_list(self,
                            costs: Union[list,
@@ -280,8 +281,21 @@ class QualityMetric:
         self.metric_list = metric_list
         self.default_value = default_value
 
-    def metric(self) -> float:
+    def metric(self):
         pass
+    @classmethod
+    def get_value(self, pipeline: Pipeline,
+                  reference_data: InputData,
+                  validation_blocks: list = None) -> float:
+        """ Get metric value based on pipeline, reference data, and number of validation blocks.
+        Args:
+            pipeline: a :class:`Pipeline` instance for evaluation.
+            reference_data: :class:`InputData` for evaluation.
+        """
+        self.target = reference_data.features.target
+        results = pipeline.predict(reference_data, output_mode='labels')
+        self.predicted_labels = results.predict.predict
+        return self.metric(self)
 
     @staticmethod
     def _get_least_frequent_val(array: np.ndarray):
@@ -423,7 +437,10 @@ class Accuracy(QualityMetric):
     output_mode = 'labels'
 
     def metric(self) -> float:
-        return accuracy_score(y_true=self.target, y_pred=self.predicted_labels)
+        try:
+            return accuracy_score(y_true=self.target, y_pred=self.predicted_labels)
+        except Exception:
+            _ = 1
 
 
 def mase(A, F, y_train):

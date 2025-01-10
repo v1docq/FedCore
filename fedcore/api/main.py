@@ -126,7 +126,7 @@ class FedCore(Fedot):
             for module in self.config_dict['model_params']:
                 self.config_dict['model_params'][module].update(self.config_dict['common'])
 
-    def __init_solver(self):
+    def __init_solver(self, manually_done):
         self.logger.info('Initialising FedCore Repository')
         self.repo = FedcoreModels().setup_repository()
         self.__add_common_model_params()
@@ -138,8 +138,14 @@ class FedCore(Fedot):
         self.logger.info(f'LinK Dask Server - {self.dask_client.dashboard_link}')
         self.logger.info(f'-------------------------------------------------')
         # TODO: why reassigning?
-        solver = Fedot(**self.config_dict)
+        solver = Fedot(**self.config_dict) if not manually_done else self.config_dict['initial_assumption']
         return solver
+
+    def __create_model_for_compression(self, input_data, manually_done):
+        self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
+        self.train_data = DataCheck(input_data=self.train_data,
+                                    task=self.cv_task).check_input_data(manually_done)
+        self.train_data.target = FEDOT_ASSUMPTIONS['training'].build().fit(self.train_data).predict
 
     def fit(self,
             input_data: tuple,
@@ -153,19 +159,10 @@ class FedCore(Fedot):
             **kwargs: additional parameters
 
         """
-
-        self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
-        self.original_model = input_data[1]
-        input_preproc = DataCheck(input_data=self.train_data,
-                                  task=self.cv_task)
-        self.train_data = input_preproc.check_input_data(manually_done)
-        self.solver = self.__init_solver()
-        fedcore_training = FEDOT_ASSUMPTIONS['training'].build()
-        pretrained_model = fedcore_training.fit(self.train_data)
-        self.train_data.target = pretrained_model.predict
+        self.solver, self.original_model = self.__init_solver(manually_done), input_data[1]
+        self.__create_model_for_compression(input_data, manually_done)
         self.solver.fit(self.train_data)
         self.optimised_model = self.solver.root_node.fitted_operation.optimised_model
-        # self.original_model = self.solver.root_node.fitted_operation.model
 
     def predict(self,
                 predict_data: tuple,

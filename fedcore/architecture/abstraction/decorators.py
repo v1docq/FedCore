@@ -130,9 +130,9 @@ class DaskServer(metaclass=Singleton):
     def _overload_dask_config(self):
         self.sec = Security(tls_max_version=ssl.TLSVersion.TLSv1_3,
                             tls_min_version=ssl.TLSVersion.TLSv1_2)
-        dask.config.set({"distributed.scheduler.idle-timeout": '5 minutes'})
+        dask.config.set({"distributed.scheduler.idle-timeout": '30 minutes'})
         # Shut down the scheduler after this duration if no activity has occurred
-        dask.config.set({"distributed.scheduler.no-workers-timeout": '5 minutes'})
+        dask.config.set({"distributed.scheduler.no-workers-timeout": '30 minutes'})
         # Timeout for tasks in an unrunnable state. If task remains unrunnable for longer than this, it fails.
         # A task is considered unrunnable IFF it has no pending dependencies,
         # and the task has restrictions that are not satisfied by any available worker

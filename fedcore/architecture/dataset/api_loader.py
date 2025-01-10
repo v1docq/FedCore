@@ -41,11 +41,12 @@ class ApiLoader:
     def _pretrain_loader(self, supplementary_data, path):
         train_dataloader, val_dataloader = self._init_pretrain_dataset(dataset=path)
         torch_model = self._init_pretrain_model(supplementary_data['torch_model'])
+        target = np.concatenate([x[1].cpu() for x in val_dataloader])
         torch_dataset = CompressionInputData(features=np.zeros((2, 2)),
                                              num_classes=10,
                                              calib_dataloader=val_dataloader,
                                              train_dataloader=train_dataloader,
-                                             target=torch_model
+                                             target=target
                                              )
         torch_dataset.supplementary_data.is_auto_preprocessed = True
         self.train_data = (torch_dataset, torch_model)

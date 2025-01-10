@@ -28,10 +28,11 @@ fedcore_search_space = {
                 'hyperopt-dist': hp.uniform,
                 'sampling-scope': [0.1, 1.0],
                 'type': 'continuous'},
-            'pruning_iterations': {
-                'hyperopt-dist': hp.choice,
-                'sampling-scope': [[x for x in range(1, 5, 1)]],
-                'type': 'categorical'}}
+            # 'pruning_iterations': {
+            #     'hyperopt-dist': hp.choice,
+            #     'sampling-scope': [[x for x in range(1, 5, 1)]],
+            #     'type': 'categorical'}
+        }
 }
 
 
