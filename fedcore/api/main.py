@@ -1,27 +1,19 @@
-import logging
 import warnings
 from copy import deepcopy
-from pathlib import Path
 from typing import Union
-
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn
 from fedot.api.main import Fedot
 from fedot.core.pipelines.pipeline import Pipeline
-from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from torch import Tensor
-
+from fedcore.api.utils.api_init import ApiManager
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer
 from fedcore.architecture.dataset.api_loader import ApiLoader
-from fedcore.architecture.utils.paths import (
-    DEFAULT_PATH_RESULTS as default_path_to_save_results,
-)
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.metrics.cv_metrics import CV_quality_metric
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
@@ -31,7 +23,6 @@ from fedcore.repository.constanst_repository import (
     FEDOT_GET_METRICS,
 )
 from fedcore.repository.initializer_industrial_models import FedcoreModels
-from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
 warnings.filterwarnings("ignore")
 
@@ -53,124 +44,28 @@ class FedCore(Fedot):
     """
 
     def __init__(self, **kwargs):
-
+        self.manager = ApiManager(**kwargs)
         # init FedCore hyperparams
-        self.compression_task = kwargs.get("compression_task", "pruning")
-        self.cv_task = kwargs.get("cv_task", "classification")
-        self.model_params = kwargs.get("model_params", {})
-        self.cv_dataset = FEDCORE_CV_DATASET[self.cv_task]
-        self.need_evo_opt = kwargs.pop("need_evo_opt", True)
-        self.need_fedot_pretrain = kwargs.pop("need_fedot_pretrain", False)
-        self.distributed_compression = kwargs.pop('distributed_compression', True)
-
-        # init backend and convertation params
-        self.framework_config = kwargs.get("framework_config", None)
-        self.backend_method = kwargs.get("backend", "cpu")
-
-        # init path to results
-        self.path_to_composition_results = kwargs.get("history_dir", None)
-        self.output_folder = kwargs.get("output_folder", None)
-
-        # create dirs with results
-        prefix = (
-            "./composition_results"
-            if self.path_to_composition_results is None
-            else self.path_to_composition_results
-        )
-        Path(prefix).mkdir(parents=True, exist_ok=True)
-
-        # create dirs with results
-        if self.output_folder is None:
-            self.output_folder = default_path_to_save_results
-            Path(self.output_folder).mkdir(parents=True, exist_ok=True)
-        else:
-            Path(self.output_folder).mkdir(parents=True, exist_ok=True)
-            del kwargs["output_folder"]
-        ckpt = Path(self.output_folder, "checkpoints")
-        ckpt.mkdir(parents=True, exist_ok=True)
-        kwargs["common"] = {**kwargs.get("common", {}), "checkpoint_folder": ckpt}
-
-        # init logger
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s %(levelname)s: %(name)s - %(message)s",
-            handlers=[
-                logging.FileHandler(Path(self.output_folder) / "log.log"),
-                logging.StreamHandler(),
-            ],
-        )
-        super(Fedot, self).__init__()
-
-        # init hidden state variables
-        self.logger = logging.getLogger("FedCoreAPI")
-        self.solver = None
-        self.predicted_probs = None
-        self.original_model = None
-
-        # map Fedot params to FedCore params
-        self.config_dict = kwargs
-        self.config_dict["history_dir"] = prefix
-        self.config_dict["available_operations"] = kwargs.get(
-            "available_operations",
-            list(default_fedcore_availiable_operation(self.compression_task)),
-        )
-
-        self.config_dict["optimizer"] = kwargs.get("optimizer", FedcoreEvoOptimizer)
-        self.config_dict["use_input_preprocessing"] = False
-        self.config_dict["use_auto_preprocessing"] = False
-        self.config_dict["use_pipelines_cache"] = False
-        if self.compression_task.__contains__("composite"):
-            composite_pipeline = PipelineBuilder()
-            for node in self.config_dict["initial_assumption"]:
-                node_params = self.model_params[node]
-                composite_pipeline.add_node(operation_type=node, params=node_params)
-            self.config_dict["initial_assumption"] = composite_pipeline
-        else:
-            self.config_dict["initial_assumption"] = kwargs.get(
-                "initial_assumption", FEDOT_ASSUMPTIONS[self.compression_task]
-            )
-            self.config_dict["initial_assumption"].heads[
-                0
-            ].parameters = self.model_params
-        # self.__init_experiment_setup()
-
-    def __init_experiment_setup(self):
-        self.logger.info("Initialising experiment setup")
-        fedcore_params = [
-            param
-            for param in self.config_dict.keys()
-            if param not in list(FEDOT_API_PARAMS.keys())
-        ]
-        [self.config_dict.pop(x, None) for x in fedcore_params]
-
-    def __add_common_model_params(self):
-        if len(self.config_dict["common"]) != 1:
-            for module in self.config_dict["model_params"]:
-                self.config_dict["model_params"][module].update(
-                    self.config_dict["common"]
-                )
+        self.cv_dataset = FEDCORE_CV_DATASET[self.manager.automl_config.task]
+        self.logger = self.manager.logger
+        # self.cluster_params = self.manager.dask_cluster_params
+        self.solver = self.manager.solver
 
     def __init_solver(self):
         self.logger.info("Initialising FedCore Repository")
         self.repo = FedcoreModels().setup_repository()
-        self.__add_common_model_params()
-        self.config_dict["initial_assumption"] = self.config_dict[
-            "initial_assumption"
-        ].build()
         self.logger.info("Initialising solver")
-        self.__init_experiment_setup()
-        self.config_dict['problem'] = 'classification' 
 
-        if self.distributed_compression:
+        if self.manager.compute_config.distributed is not None:
             self.dask_client = DaskServer().client
             self.logger.info(f"LinK Dask Server - {self.dask_client.dashboard_link}")
             self.logger.info(f"-------------------------------------------------")
 
-        solver = (
-            Fedot(**self.config_dict)
-            if self.need_evo_opt
-            else self.config_dict["initial_assumption"]
-        )
+        if self.manager.automl_config.use_automl:
+            solver = Fedot(**self.manager.automl_config.config)
+        else:
+            solver = self.manager.automl_config.initial_assumption
+
         return solver
 
     def fit(self, input_data: tuple, manually_done: bool = False, **kwargs):
@@ -229,7 +124,7 @@ class FedCore(Fedot):
         pass
 
     def _metric_evaluation_loop(
-        self, target, predicted_labels, predicted_probs, problem, metric_type
+            self, target, predicted_labels, predicted_probs, problem, metric_type
     ):
         prediction_dict = dict(
             target=target, labels=predicted_labels, probs=predicted_probs
@@ -254,10 +149,10 @@ class FedCore(Fedot):
         return prediction_dataframe
 
     def evaluate_metric(
-        self,
-        predicton: Union[Tensor, np.array],
-        target: Union[list, np.array],
-        metric_type: str = "quality",
+            self,
+            predicton: Union[Tensor, np.array],
+            target: Union[list, np.array],
+            metric_type: str = "quality",
     ) -> pd.DataFrame:
         """
         Method to calculate metrics for Industrial model.
@@ -360,10 +255,10 @@ class FedCore(Fedot):
             )
 
     def convert_model(
-        self,
-        framework: str = "ONNX",
-        framework_config: dict = None,
-        supplementary_data: dict = None,
+            self,
+            framework: str = "ONNX",
+            framework_config: dict = None,
+            supplementary_data: dict = None,
     ):
         if self.framework_config is None and framework_config is None:
             return self.logger.info(
