@@ -6,26 +6,20 @@ from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.neural_compressor import quantization
-from fedcore.neural_compressor.config import PostTrainingQuantConfig
 from fedcore.repository.constanst_repository import default_device
-from .utils import uninplace, ParentalReassembler, reset_qconfig, QDQWrapper, QDQWrapping, get_flattened_qconfig_dict
+from .utils import uninplace, ParentalReassembler, QDQWrapper, get_flattened_qconfig_dict
 from torch.ao.quantization import (
-    quantize, quantize_dynamic, quantize_qat, 
+    quantize_dynamic,  
     propagate_qconfig_, 
     convert,
     prepare
 )
-from torch.ao.quantization.quantization_mappings import get_default_dynamic_quant_module_mappings
+from torch.ao.quantization.quantization_mappings import get_default_dynamic_quant_module_mappings, DEFAULT_STATIC_QUANT_MODULE_MAPPINGS
 from torch.ao.quantization.qconfig import default_dynamic_qconfig, float_qparams_weight_only_qconfig, default_qconfig
-from torch.ao.quantization.qconfig_mapping import QConfigMapping, get_default_qconfig_mapping
 import torch.nn as nn
 import torch.ao.nn.quantized.dynamic as nnqd
-from torch.ao.quantization.quantization_mappings import (
-    DEFAULT_DYNAMIC_QUANT_MODULE_MAPPINGS, 
-    DEFAULT_QAT_MODULE_MAPPINGS,
-    DEFAULT_STATIC_QUANT_MODULE_MAPPINGS
-)
+from torch.ao.quantization.qconfig_mapping import QConfigMapping
+
 
 class PostTrainingQuantization(BaseCompressionModel):
     pass
