@@ -1,6 +1,7 @@
+from copy import deepcopy
 from functools import partial
 import inspect
-from typing import Dict, Literal, Optional
+from typing import Callable, Dict, Literal, Optional, Union
 
 import torch
 from torch.ao.quantization.quantize import (
@@ -25,8 +26,42 @@ __all__ = [
     'QDQWrapping',
     'uninplace',
     'reset_qconfig',
-    'RecreatedDecomposed'
+    'RecreatedDecomposed',
+    'get_flattened_qconfig_dict'
 ]
+
+QConfigMapping = QConfigAny
+
+def get_flattened_qconfig_dict(qconfig_mapping: QConfigMapping) -> Dict[Union[Callable, str], QConfigAny]:
+    """ flatten the global, object_type and module_name qconfig
+    to the same qconfig_dict so that it can be used by
+    propagate_qconfig_ function.
+    "module_name_regex" is ignored for now since it's not supported
+    in propagate_qconfig_, but it can be fixed later.
+
+    For example:
+    Input: {
+      "": qconfig,
+      "object_type": [
+        (torch.add, qconfig)
+      ],
+      "module_name": [
+        ("conv", qconfig)
+      ]
+    }
+
+    Output: {
+      "": qconfig,
+      torch.add: qconfig,
+      "conv": qconfig
+    }
+    """
+    flattened: Dict[Union[Callable, str], QConfigAny] = {"": qconfig_mapping.global_qconfig}
+    for obj, qconfig in qconfig_mapping.object_type_qconfigs.items():
+        flattened[obj] = qconfig
+    for obj, qconfig in qconfig_mapping.module_name_qconfigs.items():
+        flattened[obj] = qconfig
+    return flattened
 
 
 def _recreate_embedding(module):
@@ -186,6 +221,9 @@ class QDQWrapper(Accessor):
     def is_leaf_quantizable(module: nn.Module, 
                             example_inputs: tuple, 
                             mode: Literal['qat', 'static', 'dynamic']):
+        if example_inputs[0] is None:
+            return False
+        module = deepcopy(module)
         module.train(mode == 'qat')
         module.to('cpu')
 
@@ -205,7 +243,7 @@ class QDQWrapper(Accessor):
             m = QDQWrapping(module, 'pre')
         else:
             m = module
-        m.qconfig = module.qconfig
+        m.qconfig = getattr(module, 'qconfig')
 
         try:
             qm = p_f(m)
@@ -216,37 +254,28 @@ class QDQWrapper(Accessor):
             return False 
             
     @classmethod
-    def add_quant_entry_exit(cls, m: nn.Module, *example_input, allow: set=None):
+    def add_quant_entry_exit(cls, m: nn.Module, *example_input, allow: set=None, mode='static'):
         allow = allow or set()
         m.eval()
         modules_order = cls.get_layers_order(m, *example_input)
         names_order = cls.get_names_order(m, *example_input)
-        def is_parametrizable(module: nn.Module):
+        name_input = cls.get_name_input_mapping(m, *example_input)
+        
+        def _is_parametrizable(name: str):
+            module = cls.get_module(m, name)
+            is_leaf = cls.is_leaf_module(module)
             return (
-                (type(module) in allow  or
-                type(module) not in allow and cls.is_leaf_module(module) and cls.is_leaf_quantizable(module))
+                (type(module) in allow
+                  or
+                (has_no_children_ignoring_parametrizations(module) and not is_leaf
+                  or  is_leaf and cls.is_leaf_quantizable(module, name_input[name], mode)
+                ))
                 and bool(getattr(module, 'qconfig', None))
-                # cls.__is_conventional_module(module) and
-                # has_no_children_ignoring_parametrizations(module) and
-                # bool(getattr(module, 'qconfig', None)) 
             )
-        def parametrizable_order(modules_order):
-            is_parametrizable = [
-                (
-                    type(module) in allow and bool(getattr(module, 'qconfig', None)) or
-                    cls.__is_conventional_module(module) and
-                    has_no_children_ignoring_parametrizations(module) and
-                    bool(getattr(module, 'qconfig', None)) 
-                )
-                for module in modules_order
-            ]
-            return is_parametrizable
-        is_parametrizable = parametrizable_order(modules_order)
-        def is_change(i):
-            return (
-                getattr(modules_order[i - 1], 'qconfig', None) !=
-                getattr(modules_order[i], 'qconfig', None)
-            )
+
+        is_parametrizable = [
+            _is_parametrizable(name) for name in names_order
+        ]
 
         if len(is_parametrizable) > 1:
             for i in range(1, len(is_parametrizable)):

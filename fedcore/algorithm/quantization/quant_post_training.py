@@ -9,7 +9,7 @@ from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.neural_compressor import quantization
 from fedcore.neural_compressor.config import PostTrainingQuantConfig
 from fedcore.repository.constanst_repository import default_device
-from .utils import uninplace, ParentalReassembler, reset_qconfig, QDQWrapper, QDQWrapping
+from .utils import uninplace, ParentalReassembler, reset_qconfig, QDQWrapper, QDQWrapping, get_flattened_qconfig_dict
 from torch.ao.quantization import (
     quantize, quantize_dynamic, quantize_qat, 
     propagate_qconfig_, 
@@ -19,7 +19,6 @@ from torch.ao.quantization import (
 from torch.ao.quantization.quantization_mappings import get_default_dynamic_quant_module_mappings
 from torch.ao.quantization.qconfig import default_dynamic_qconfig, float_qparams_weight_only_qconfig, default_qconfig
 from torch.ao.quantization.qconfig_mapping import QConfigMapping, get_default_qconfig_mapping
-from torch.ao.quantization.qconfig_mapping_utils import get_flattened_qconfig_dict
 import torch.nn as nn
 import torch.ao.nn.quantized.dynamic as nnqd
 from torch.ao.quantization.quantization_mappings import (
@@ -55,6 +54,7 @@ class QuantPostModel(BaseCompressionModel):
         qconfig = QConfigMapping().set_global(default_qconfig)
         qconfig.set_object_type(nn.Embedding, 
                                 float_qparams_weight_only_qconfig if self.allow_emb else None)
+        
         return get_flattened_qconfig_dict(qconfig)   
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):

@@ -11,13 +11,14 @@ from torch.ao.quantization.qconfig import get_default_qat_qconfig
 from torch.ao.quantization.qconfig_mapping import get_default_qat_qconfig_mapping
 # from torch.ao.quantization.q
 from fedcore.algorithm.quantization.utils import ParentalReassembler, QDQWrapper, uninplace
-
+from torch.ao.quantization.qconfig_mapping import QConfigMapping
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-# from fedcore.neural_compressor.config import QuantizationAwareTrainingConfig
-# from fedcore.neural_compressor.training import prepare_compression
+from fedcore.algorithm.quantization.utils import get_flattened_qconfig_dict
+from torch.ao.quantization.qconfig import float_qparams_weight_only_qconfig
 
+from torch.ao.quantization.quantization_mappings import DEFAULT_QAT_MODULE_MAPPINGS, get_embedding_qat_module_mappings
 
 class QuantAwareModel(BaseCompressionModel):
     """Quantization aware training
@@ -28,12 +29,24 @@ class QuantAwareModel(BaseCompressionModel):
         self.epochs = params.get("epochs", 5)
         self.learning_rate = params.get("learning_rate", 0.001)
         self.backend = params.get('backend', 'x86')
-        self.qconfig = params.get(
-            "qconfig", get_default_qat_qconfig_mapping(self.backend).to_dict()
-        )
+        self.allow_emb = params.get('allow_emb', False)
+        self.allow: set = params.get('allow', set(DEFAULT_QAT_MODULE_MAPPINGS))
         self.inplace = params.get('inplace', False)
         self.trainer = BaseNeuralModel(params)
         self.device = default_device()
+        self.qconfig = params.get(
+            "qconfig", self.get_qconfig()
+        )
+        if self.allow_emb:
+            self.allow.update(get_embedding_qat_module_mappings().keys())
+
+    def get_qconfig(self):
+        qconfig = QConfigMapping().set_global(get_default_qat_qconfig(self.backend))
+        qconfig.set_object_type(nn.Embedding, 
+                                float_qparams_weight_only_qconfig if self.allow_emb else None)
+        qconfig.set_object_type(nn.EmbeddingBag, 
+                                float_qparams_weight_only_qconfig if self.allow_emb else None)
+        return get_flattened_qconfig_dict(qconfig)  
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):
         model = (input_data.target
@@ -42,11 +55,11 @@ class QuantAwareModel(BaseCompressionModel):
         if not self.inplace:
             model = deepcopy(model)
         ### TODO add check whether it is 
-        uninplace(model)
+        # uninplace(model)
         model = ParentalReassembler.reassemble(model, self.params.get('additional_mapping', None))
         propagate_qconfig_(model, self.qconfig)
         b = self.__get_example_input(input_data)
-        QDQWrapper.add_quant_entry_exit(model, b)
+        QDQWrapper.add_quant_entry_exit(model, b, allow=self.allow, mode='qat')
         model.train()
         prepare_qat(model, inplace=True)
         self.trainer.model = model
