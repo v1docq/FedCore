@@ -119,6 +119,12 @@
       ],
       "tags": ["non-default"]
     },
+    "post_dynamic_quant": {
+      "meta": "fedcore_quantisation",
+      "presets": [
+      ],
+      "tags": ["non-default"]
+    },
     "training_aware_quant": {
       "meta": "fedcore_quantisation",
       "presets": [

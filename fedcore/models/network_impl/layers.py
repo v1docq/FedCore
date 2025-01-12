@@ -1,3 +1,5 @@
+import abc
+
 from typing import List, Type, Union, Dict
 from typing import Dict, List, Optional, Type, Union
 
@@ -266,7 +268,22 @@ class OutConv(nn.Module):
     def forward(self, x):
         return self.conv(x)
 
-class IDecomposed:
+class IDecomposed(abc.ABC):
+    def __init__(self, forward_mode, decomposing_mode,):
+        self.forward_mode = forward_mode
+        self.inference_mode = False
+        if decomposing_mode is not None:
+            self.decompose(decomposing_mode)
+        else:
+            self.U = None
+            self.S = None
+            self.Vh = None
+            self.decomposing = None
+        self.inference_dict = {'one_layer': self._one_layer_forward,
+                               'two_layers': self._two_layers_forward,
+                               'three_layers': self._three_layers_forward}
+
+
     def compose_weight_for_inference(self):
         self.inference_dict[self.forward_mode]()
         self.inference_mode = True
@@ -283,6 +300,7 @@ class IDecomposed:
         """Compose the weight matrix from singular value decomposition.
         Replaces U, S, Vh matrices with weights such that weights = U * S * Vh.
         """
+        
         W = self.U @ torch.diag(self.S) @ self.Vh
         self.weight = Parameter(W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute']))
         self.register_parameter('U', None)
@@ -300,15 +318,14 @@ class IDecomposed:
         self.S = Parameter(s)
         self.Vh = Parameter(vh)
 
-    def _one_layer_forward(self):
-        raise NotImplementedError
+    @abc.abstractmethod
+    def _one_layer_forward(self): pass
     
-    def _two_layers_forward(self):
-        raise NotImplementedError
+    @abc.abstractmethod
+    def _two_layers_forward(self): pass
     
-    def _three_layers_forward(self):
-        raise NotImplementedError
-
+    @abc.abstractmethod
+    def _three_layers_forward(self): pass
 
 
 class DecomposedConv2d(Conv2d, IDecomposed):
@@ -354,19 +371,8 @@ class DecomposedConv2d(Conv2d, IDecomposed):
             dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        self.forward_mode = forward_mode
-        self.inference_mode = False
-        if decomposing_mode is not None:
-            self.decompose(decomposing_mode)
-        else:
-            self.U = None
-            self.S = None
-            self.Vh = None
-            self.decomposing = None
-        self.inference_dict = {'one_layer': self._one_layer_forward,
-                               'two_layers': self._two_layers_forward,
-                               'three_layers': self._three_layers_forward}
-        
+        IDecomposed.__init__(self, forward_mode, decomposing_mode,)
+
     def decompose(self, decomposing_mode: Optional[str] = None) -> None:
         """Decomposes the weight matrix in singular value decomposition.
         Replaces the weights with U, S, Vh matrices such that weights = U * S * Vh.
@@ -468,6 +474,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
     def set_U_S_Vh(
         self, u: torch.Tensor, s: torch.Tensor, vh: torch.Tensor, rank: int = 1
     ) -> None:
+        self.eval()
         """Update U, S, Vh matrices.
         Raises:
             Assertion Error: If ``self.decomposing`` is False.
@@ -512,18 +519,18 @@ class DecomposedLinear(nn.Linear, IDecomposed):
             dtype=dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        self.forward_mode = forward_mode
-        self.decomposing = decomposing_mode
-        self.inference_mode = False
-        self.inference_dict = {'one_layer': self._one_layer_forward,
-                               'two_layers': self._two_layers_forward}
-        if decomposing_mode:
-            self.decompose()
-        else:
-            self.U = None
-            self.S = None
-            self.Vh = None
-            self.decomposing = None
+        IDecomposed.__init__(self, forward_mode, decomposing_mode,)
+        # self.forward_mode = forward_mode
+        # self.decomposing = decomposing_mode
+        # self.inference_mode = False
+        
+        # if decomposing_mode:
+        #     self.decompose()
+        # else:
+        #     self.U = None
+        #     self.S = None
+        #     self.Vh = None
+        #     self.decomposing = None
 
     def decompose(self) -> None:
         """Decomposes the weight matrix in singular value decomposition.
@@ -536,15 +543,19 @@ class DecomposedLinear(nn.Linear, IDecomposed):
         super().decompose(W)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        if not self.inference_mode:
-            self.compose_weight_for_inference()
+        if self.forward_mode == 'three_layers':
+            x = input @ self.Vh.T
+            x = x @ (self.U * self.S).T
+        else:
+            assert self.inference_mode, 'For usage of 1-, 2-layer modes run `compose_weight_for_inference`'
+
         if self.forward_mode == "one_layer":
             x = input @ self.W.T
         if self.forward_mode == "two_layers":
             x = input @ self.Vh.T
             x = x @ self.U.T
         if self.bias is not None:
-            x += self.bias
+            x = x + self.bias
         return x
 
     def _one_layer_forward(self):
@@ -555,6 +566,9 @@ class DecomposedLinear(nn.Linear, IDecomposed):
         if singular_diag.shape[1] != self.Vh.shape[0]:
             self.Vh = Parameter(self.Vh)
         self.Vh = Parameter(singular_diag @ self.Vh)
+
+    def _three_layers_forward(self):
+        pass
         
 
 class DecomposedEmbedding(nn.Embedding, IDecomposed):
@@ -583,26 +597,19 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
             dtype=dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        self.forward_mode = forward_mode
-        self.decomposing = decomposing_mode
-        self.inference_mode = False
-        self.inference_dict = {'one_layer': self._one_layer_forward,
-                               'two_layers': self._two_layers_forward}
-        if decomposing_mode:
-            self.decompose()
-        else:
-            self.U = None
-            self.S = None
-            self.Vh = None
-            self.decomposing = None
+        IDecomposed.__init__(self, forward_mode, decomposing_mode,)
 
     def decompose(self) -> None:
         W = self.weight
         super().decompose(W)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        if not self.inference_mode:
-            self.compose_weight_for_inference()
+        if self.forward_mode == 'three_layers':
+            x = (self.U * self.S)[input]
+            x = x @ self.Vh
+        else:
+            assert self.inference_mode, 'For usage of 1-, 2-layer modes run `compose_weight_for_inference`'
+
         if self.forward_mode == "one_layer":
             x = self.W[input]
         if self.forward_mode == "two_layers":
@@ -618,3 +625,6 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
         if singular_diag.shape[1] != self.Vh.shape[0]:
             self.Vh = Parameter(self.Vh)
         self.Vh = Parameter(singular_diag @ self.Vh)
+
+    def _three_layers_forward(self):
+        pass

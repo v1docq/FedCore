@@ -85,9 +85,7 @@ class CompressionManager:
 
         if isinstance(confs, List) and len(confs) > 1:
             for conf in confs:
-                if isinstance(conf, QuantizationAwareTrainingConfig) or isinstance(
-                    conf, WeightPruningConfig
-                ):
+                if isinstance(conf, (QuantizationAwareTrainingConfig, WeightPruningConfig)):
                     self.model = Model(model, conf=conf)
             if self.model is None:
                 self.model = Model(model)

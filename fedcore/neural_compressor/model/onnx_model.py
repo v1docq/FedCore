@@ -25,9 +25,23 @@ from fedcore.neural_compressor.adaptor.ox_utils.util import MAXIMUM_PROTOBUF
 from fedcore.neural_compressor.model.base_model import BaseModel
 from fedcore.neural_compressor.utils.utility import LazyImport
 
-onnx = LazyImport("onnx")
-ort = LazyImport("onnxruntime")
-ortq = LazyImport("neural_compressor.adaptor.ox_utils.util")
+import onnx
+import onnxruntime as ort
+import neural_compressor.adaptor.ox_utils.util as ortq
+from onnx.external_data_helper import (
+            convert_model_to_external_data,
+            write_external_data_tensors,
+            load_external_data_for_model,
+            load_external_data_for_tensor,
+            convert_model_to_external_data
+        )
+from fedcore.neural_compressor.adaptor.ox_utils.util import infer_shapes
+from fedcore.neural_compressor.config import ONNXQlinear2QDQConfig
+from fedcore.neural_compressor.experimental.export.qlinear2qdq import onnx_qlinear_to_qdq
+from collections import deque
+from onnx import NodeProto
+import copy
+from transformers import AutoConfig
 
 logger = logging.getLogger("neural_compressor")
 
@@ -65,16 +79,12 @@ class ONNXModel(BaseModel):
             and isinstance(model, str)
             and kwargs.get("load_external_data", True)
         ):
-            from onnx.external_data_helper import load_external_data_for_model
-
             load_external_data_for_model(self._model, os.path.dirname(self._model_path))
 
         self._config = None
         if isinstance(model, str) and os.path.exists(
             Path(model).parent.joinpath("config.json").as_posix()
         ):
-            from transformers import AutoConfig
-
             self._config = AutoConfig.from_pretrained(Path(model).parent.as_posix())
 
         self.node_name_counter = {}
@@ -193,8 +203,7 @@ class ONNXModel(BaseModel):
         """Save ONNX model."""
         if os.path.split(root)[0] != "" and not os.path.exists(os.path.split(root)[0]):
             raise ValueError('"root" directory does not exists.')
-        if self.is_large_model:  # pragma: no cover
-            from onnx.external_data_helper import load_external_data_for_model
+        if self.is_large_model:  # pragma: no cover        
 
             load_external_data_for_model(
                 self._model, os.path.split(self._model_path)[0]
@@ -496,7 +505,7 @@ class ONNXModel(BaseModel):
 
     def save_model_to_file(self, output_path, use_external_data_format=False):
         """Save model to external data, which is needed for model size > 2GB."""
-        from onnx.external_data_helper import convert_model_to_external_data
+        
 
         if use_external_data_format:
             convert_model_to_external_data(
@@ -607,8 +616,7 @@ class ONNXModel(BaseModel):
 
     def topological_sort(self, enable_subgraph=False):
         """Topological sort the model."""
-        import copy
-        from collections import deque
+        
 
         if not enable_subgraph:
             input_name_to_nodes = {}
@@ -676,9 +684,7 @@ class ONNXModel(BaseModel):
 
     def get_nodes_chain(self, start, stop, result_chain=[]):
         """Get nodes chain with given start node and stop node."""
-        from collections import deque
-
-        from onnx import NodeProto
+        
 
         # process start node list
         start_node = deque()
@@ -943,8 +949,7 @@ class ONNXModel(BaseModel):
 
     def export(self, save_path, conf):
         """Export Qlinear to QDQ model."""
-        from fedcore.neural_compressor.config import ONNXQlinear2QDQConfig
-        from fedcore.neural_compressor.experimental.export import onnx_qlinear_to_qdq
+        
 
         if isinstance(conf, ONNXQlinear2QDQConfig):
             add_nodes, remove_nodes, inits = onnx_qlinear_to_qdq(
@@ -1180,8 +1185,7 @@ class ONNXModel(BaseModel):
         # infer shape of the model to be split
         if shape_infer:
             try:
-                from fedcore.neural_compressor.adaptor.ox_utils.util import infer_shapes
-
+                
                 self._model = infer_shapes(
                     self._model,
                     auto_merge=True,
@@ -1345,7 +1349,8 @@ class ONNXModel(BaseModel):
         Args:
             data_path (str, optional): the directory of saved initializer. Defaults to None.
         """
-        from onnx.external_data_helper import load_external_data_for_tensor
+        
+
 
         if data_path is None:
             data_path = os.path.dirname(self._model_path)
@@ -1366,10 +1371,7 @@ class ONNXModel(BaseModel):
                                                     Defaults to "external.data".
             overwrite (bool, optional): if True, remove existed externa data. Defaults to False.
         """
-        from onnx.external_data_helper import (
-            convert_model_to_external_data,
-            write_external_data_tensors,
-        )
+        
 
         if overwrite and os.path.exists(
             os.path.join(os.path.dirname(self._model_path), external_data_location)

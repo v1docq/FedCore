@@ -155,6 +155,7 @@ class TuneStrategy(metaclass=TuneStrategyMeta):
         self.history_path = self._create_path(options.workspace, "./history.snapshot")
         self.deploy_path = self._create_path(options.workspace, "deploy.yaml")
         self.calib_dataloader = q_dataloader
+        print('### self.calib_dataloader', self.calib_dataloader)
         self.eval_func = eval_func
         self.eval_dataloader = eval_dataloader
         self.eval_metric = eval_metric

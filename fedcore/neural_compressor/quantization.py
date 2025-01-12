@@ -24,7 +24,7 @@ import numpy as np
 from .config import _Config, options
 from .data import check_dataloader
 from .metric import register_customer_metric
-from .model import Model
+from .model.model import Model
 from .strategy import STRATEGIES
 from .utils import logger
 from .utils.neural_insights_utils import (
@@ -147,6 +147,7 @@ def fit(
 
     if calib_dataloader is not None:
         check_dataloader(calib_dataloader)
+        print('### CHECKED CALIB DL', calib_dataloader)
     if eval_dataloader is not None:
         check_dataloader(eval_dataloader)
 
@@ -204,7 +205,7 @@ def fit(
 
     if eval_func is None and eval_dataloader is None:  # pragma: no cover
         logger.info("Quantize model without tuning!")
-
+    print('### before STRATEGY', calib_dataloader)
     strategy = STRATEGIES[strategy_name](
         model=wrapped_model,
         conf=config,
@@ -273,4 +274,6 @@ def fit(
                 "Not found any quantized model which meet accuracy goal. Exit."
             )
 
-        return strategy.best_qmodel
+        return (getattr(strategy, 'best_qmodel', None) or 
+                getattr(strategy, 'last_model', None) or 
+                wrapped_model)

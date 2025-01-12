@@ -1192,7 +1192,8 @@ def collect_weight_info(model, q_config):
     """
     weight_info = {}
     from fedcore.neural_compressor.utils.logger import DEBUG, level
-
+    from ..pytorch import get_torch_white_list
+    valid_modules = get_torch_white_list(q_config['approach'])
     for op, config in q_config["op"].items():
         op_name, op_type = op
         if config["weight"]["dtype"] == "fp32":
@@ -1200,24 +1201,32 @@ def collect_weight_info(model, q_config):
         else:
             # fetch module type for MulLinear
             module = fetch_module(model, op_name)
+            print('### MODULE', module)
             if level == DEBUG:
                 weight_info[op_name] = {
-                    "dtype": config["weight"]["dtype"],
-                    "bits": config["weight"]["bits"],
-                    "group_size": config["weight"]["group_size"],
-                    "scheme": config["weight"]["scheme"],
-                    "module_type": str(type(module)).split("'")[1],
-                    "algorithm": config["weight"]["algorithm"],
+                    "dtype": config["weight"].get("dtype", 'int8'),
+                    "bits": config["weight"].get("bits", 8),
+                    "group_size": config["weight"].get("group_size", 128),
+                    "scheme": config["weight"].get("scheme", "sym"),
+                    "module_type": fetch_name(module, valid_modules),
+                    "algorithm": config["weight"].get("algorithm", "RTN"),
                 }
             else:
                 weight_info[op_name] = {
-                    "dtype": config["weight"]["dtype"],
-                    "bits": config["weight"]["bits"],
-                    "group_size": config["weight"]["group_size"],
-                    "scheme": config["weight"]["scheme"],
-                    "module_type": str(type(module)).split("'")[1],
+                    "dtype": config["weight"].get("dtype", 'int8'),
+                    "bits": config["weight"].get("bits", 8),
+                    "group_size": config["weight"].get("group_size", 128),
+                    "scheme": config["weight"].get("scheme", "sym"),
+                    "module_type": fetch_name(module, valid_modules),
                 }
     return weight_info
+
+def fetch_name(module, valid_set=None):
+    # print('### valid set', valid_set)
+    if valid_set is None or type(module) in valid_set:
+         return type(module).__name__
+    print('### non valid', type(module))
+    return type(module).__base__.__name__
 
 
 def get_module_input_output(
@@ -1450,3 +1459,4 @@ def get_hidden_states(model, dataloader=None, n_samples=128, calib_func=None):
     model.forward = model_forward_cache
     first_block.forward = block_forward_cache
     return total_block_args, total_block_kwargs
+

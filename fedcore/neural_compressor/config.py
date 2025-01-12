@@ -925,6 +925,12 @@ class _BaseQuantizationConfig:
         self.ni_workload_name = ni_workload_name
         self._example_inputs = example_inputs
 
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
     @property
     def domain(self):
         """Get domain."""
@@ -2311,6 +2317,7 @@ class ExportConfig:
         input_names=None,
         output_names=None,
         dynamic_axes=None,
+        **kwargs
     ):
         """Init an ExportConfig object."""
         self.dtype = dtype
@@ -2320,6 +2327,7 @@ class ExportConfig:
         self.input_names = input_names
         self.output_names = output_names
         self.dynamic_axes = dynamic_axes
+        self.kwargs = kwargs
 
     @property
     def dtype(self):

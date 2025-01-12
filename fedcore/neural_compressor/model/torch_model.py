@@ -53,7 +53,7 @@ class PyTorchBaseModel(torch.nn.Module, BaseModel):
         self._workspace_path = ""
         self.is_quantized = False
         self.fp32_model = model
-        self.kwargs = kwargs if kwargs else None
+        self.kwargs = kwargs if kwargs else {}
 
     def __repr__(self):
         """Describe a PyTorchBaseModel as a string."""
@@ -609,6 +609,7 @@ class PyTorchModel(PyTorchBaseModel):
                     num_bits = v["bits"]
                     group_size = v["group_size"]
                     scheme = v["scheme"]
+                print('### module name k', k)
                 mod = fetch_module(self.model, k)
                 mod = rtn_quantize(
                     mod,

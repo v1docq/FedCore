@@ -57,7 +57,7 @@ class BaseNeuralModel:
             "custom_loss", None
         )  # loss which evaluates model structure
         self.enforced_training_loss = self.params.get("enforced_training_loss", None)
-        self.device = default_device()
+        self.device = self.params.get('device', default_device())
 
         self.is_operation = self.params.get('is_operation', False) ###
         self.save_each = self.params.get('save_each', None)
@@ -75,14 +75,23 @@ class BaseNeuralModel:
     def __check_and_substitute_loss(self, train_data: InputData):
         if (
             train_data.supplementary_data.col_type_ids is not None
-            and "loss" in train_data.supplementary_data.col_type_ids
+            and train_data.supplementary_data.col_type_ids.get("loss", None)
         ):
             self.loss_fn = train_data.supplementary_data.col_type_ids["loss"]()
             print("Forcely substituted loss to", self.loss_fn)
 
-    def fit(self, input_data: InputData, supplementary_data: dict = None):
+    def __substitute_device_quant(self):
+        if getattr(self.model, '_is_quantized', False):
+            self.device = default_device('cpu')
+            self.model.to(self.device)
+            print('Quantized model inference supports CPU only')
+
+
+    def fit(self, input_data: InputData, supplementary_data: dict = None, finetune=False):
         custom_fit_process = supplementary_data is not None
-        loader = input_data.features.train_dataloader
+        loader = (input_data.features.train_dataloader 
+                    if not finetune else 
+                        input_data.features.calib_dataloader)
 
         self.loss_fn = _get_loss_metric(input_data)
         self.__check_and_substitute_loss(input_data)
@@ -153,15 +162,7 @@ class BaseNeuralModel:
                 # Freeze batch norm mean and variance estimates
                 self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
             if self._check_saving(epoch):
-                torch.save(
-                    self.model,
-                    Path(
-                        self.checkpoint_folder,
-                        f"model_train{now_for_file()}_{epoch}.pth",
-                    ),
-                )
-
-        # callback.callbacks.on_train_end()
+                self.save_model(epoch)
 
     def _check_saving(self, epoch) -> bool:
         if not self.save_each:
@@ -184,31 +185,48 @@ class BaseNeuralModel:
             else:
                 print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
             if self._check_saving(epoch):
-                torch.save(
-                    self.model,
-                    Path(
-                        self.checkpoint_folder,
-                        f"model_train{now_for_file()}_{epoch}.pth",
-                    ),
-                )
+                self.save_model(epoch)            
+    
+    def save_model(self, epoch, name=''):
+        name = name or self.params.get('name', '')
+        path_pref = Path(self.checkpoint_folder)
+        try:
+            torch.save(
+                self.model,
+                path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}.pth"),
+            )
+        except Exception as x:
+            print('Basic saving failed. Trying to use jit. \nReason: ', x.args[0])
+        try:
+            torch.jit.save(torch.jit.script(self.model), 
+                           path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_jit.pth")
+            )
+        except Exception as x: 
+            print('JIT saving failed. saving weights only. \nReason: ', x.args[0])
+            torch.save(self.model.state_dict(), 
+                           path_pref.joinpath(f"model_train{name}{now_for_file()}_{epoch}_state.pth")
+            )        
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
+        self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
+        self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
     def _predict_model(
         self, x_test: CompressionInputData, output_mode: str = "default"
     ):
         assert type(x_test) is CompressionInputData
-        model = self.model or x_test.target
+        # print('### IS_QUANTIZED', getattr(self.model, '_is_quantized', False))
+        model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.calib_dataloader,
@@ -216,8 +234,9 @@ class BaseNeuralModel:
                                                      max_batches=self.calib_batch_limit)
         for batch in tqdm(dataloader): ###TODO why calib_dataloader???
             inputs, targets = batch
-            x_test = inputs.to(self.device)
-            prediction.append(model(x_test))
+            inputs = inputs.to(self.device)
+            prediction.append(model(inputs))
+        # print('### PREDICTION', prediction)
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
@@ -261,3 +280,7 @@ class BaseNeuralModel:
             return 5  # Validate less frequently after learning rate decay
         else:
             return 2  # Default validation frequency
+        
+    @property
+    def is_quantised(self):
+        return getattr(self, '_is_quantised', False)

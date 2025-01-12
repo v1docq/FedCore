@@ -26,6 +26,8 @@ from collections import OrderedDict
 from collections.abc import KeysView
 from importlib.util import find_spec
 from pathlib import Path
+import onnxruntime as ort
+import onnx 
 
 import numpy as np
 import yaml
@@ -48,9 +50,50 @@ from fedcore.neural_compressor.utils.utility import (
     Statistics,
     dump_elapsed_time,
 )
+from functools import cmp_to_key
+from fedcore.neural_compressor.conf.pythonic_config import onnxruntime_config
+from fedcore.neural_compressor.strategy.utils.constant import WOQ_TUNING_ALGOS
+from onnx.external_data_helper import (
+                convert_model_to_external_data,
+                load_external_data_for_model,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.weight_only import (
+                rtn_quantize,
+                awq_quantize,
+                gptq_quantize
+)
+from copy import deepcopy
+from onnx import onnx_pb as onnx_proto
+from collections import deque
+from onnx import numpy_helper
+from onnx.external_data_helper import (
+                    convert_model_to_external_data,
+                    load_external_data_for_model,
+                )
+from onnxruntime_extensions import get_library_path
+from fedcore.neural_compressor.utils import options
+from fedcore.neural_compressor.adaptor.ox_utils.util import (
+    remove_init_from_model_input,
+    split_shared_bias,
+    quantize_data_with_scale_zero,
+    find_by_name,
+    collate_preds,
+    trt_env_setup,
+    attribute_to_kwarg,
+    QuantizationMode,
+)
+from fedcore.neural_compressor.adaptor.ox_utils.calibration import ONNXRTAugment
+from fedcore.neural_compressor.utils.utility import dump_data_to_local
+from fedcore.neural_compressor.adaptor.ox_utils.quantizer import Quantizer
+from onnx.external_data_helper import (
+                convert_model_to_external_data,
+                load_external_data_for_model,
+            )
+from onnx import version_converter
+from .ox_utils.smooth_quant import ORTSmoothQuant
 
-onnx = LazyImport("onnx")
-ort = LazyImport("onnxruntime")
+# onnx = LazyImport("onnx")
+# ort = LazyImport("onnxruntime")
 ONNXRT152_VERSION = Version("1.5.2")
 ONNXRT170_VERSION = Version("1.7.0")
 ONNXRT112_VERSION = Version("1.12.0")
@@ -248,7 +291,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         if self.smooth_quant_model is not None:
             return self.smooth_quant_model
 
-        from .ox_utils.smooth_quant import ORTSmoothQuant
 
         # set params to cur_sq_args
         self.cur_sq_args["alpha"] = alpha
@@ -325,7 +367,8 @@ class ONNXRUNTIMEAdaptor(Adaptor):
                 for i in model.model.opset_import
             ]
         ):  # pragma: no cover
-            from onnx import version_converter
+
+
 
             try:
                 model = self._rename_node(
@@ -338,7 +381,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
                 )
                 exit(0)
 
-        from fedcore.neural_compressor.adaptor.ox_utils.util import QuantizationMode
 
         if self.format == "qlinearops":
             format = QuantizationMode.QLinearOps
@@ -492,8 +534,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
                 quantize_params = None
             self.quantize_params = quantize_params
 
-            from fedcore.neural_compressor import options
-            from fedcore.neural_compressor.adaptor.ox_utils.quantizer import Quantizer
 
             quantizer = Quantizer(
                 tmp_model,
@@ -534,10 +574,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
 
         # if the model is large and acc tuning is required, save it to workspace
         if not self.performance_only and tmp_model.is_large_model:  # pragma: no cover
-            from onnx.external_data_helper import (
-                convert_model_to_external_data,
-                load_external_data_for_model,
-            )
 
             model_name = os.path.split(tmp_model.model_path)[-1]
             model_path = os.path.join(self.work_space, model_name)
@@ -607,9 +643,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         self, split_model, quantize_config, quantize_params, quantized_model_merged
     ):
         """Quantize split model, and merge the quantized models to generate final model."""
-        from fedcore.neural_compressor import options
-        from fedcore.neural_compressor.adaptor.ox_utils.quantizer import Quantizer
-
         quantizer = Quantizer(
             split_model,
             quantize_config,
@@ -785,8 +818,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         if model.model.opset_import[0].version < 11:  # pragma: no cover
             logger.warning("Quantize input needs model opset 11 or newer.")
 
-        from fedcore.neural_compressor.adaptor.ox_utils.util import QuantizationMode
-
         if self.format in ["qlinearops"]:
             format = QuantizationMode.QLinearOps
         elif self.format == "qdq":
@@ -796,9 +827,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
             format = self.format
         else:
             format = QuantizationMode.IntegerOps
-        from fedcore.neural_compressor import options
-        from fedcore.neural_compressor.adaptor.ox_utils.quantizer import Quantizer
-
         self.quantizable_ops = self._query_quantizable_ops(model.model)
         quantize_params, tune_cfg = self._parse_qconfig(q_config)
         quantize_config = self._cfg_to_quantize_config(tune_cfg)
@@ -920,9 +948,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
     def _get_quantize_params(
         self, model, data_loader, quantize_config, iterations, **kwargs
     ):
-        from fedcore.neural_compressor.adaptor.ox_utils.calibration import ONNXRTAugment
-        from fedcore.neural_compressor.model.onnx_model import ONNXModel
-
         if not isinstance(model, ONNXModel):
             model = ONNXModel(model)
         black_nodes = [
@@ -962,9 +987,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         quantization_cfg=None,
     ):
         """The function is used by tune strategy class for dumping tensor info."""
-        from fedcore.neural_compressor.adaptor.ox_utils.calibration import ONNXRTAugment
-        from fedcore.neural_compressor.utils.utility import dump_data_to_local
-
         if not isinstance(model, ONNXModel):
             model = ONNXModel(model)
 
@@ -990,13 +1012,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         return tensors
 
     def set_tensor(self, model, tensor_dict):
-        from onnx import numpy_helper
-
-        from fedcore.neural_compressor.adaptor.ox_utils.util import (
-            quantize_data_with_scale_zero,
-        )
-        from fedcore.neural_compressor.model.onnx_model import ONNXModel
-
         if not isinstance(model, ONNXModel):
             model = ONNXModel(model)
         assert "QuantizeLinear" in [
@@ -1062,7 +1077,7 @@ class ONNXRUNTIMEAdaptor(Adaptor):
 
     def _requantize_bias(self, model, bias_name, bias_data):
         """Helper function to requantize bias, borrowed from onnx_quantizer."""
-        from onnx import numpy_helper
+        
 
         node = model.input_name_to_nodes[bias_name][0]
         input_scale_name = node.input[1]
@@ -1128,12 +1143,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         if self.pre_optimized_model:
             logger.info("Pre-optimization already done, return it directly.")
             return self.pre_optimized_model
-        from fedcore.neural_compressor import options
-        from fedcore.neural_compressor.adaptor.ox_utils.util import (
-            remove_init_from_model_input,
-            split_shared_bias,
-        )
-
         remove_init_from_model_input(model)
         sess_options = ort.SessionOptions()
         optimization_levels = {
@@ -1187,7 +1196,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         if sys.version_info < (3, 11) and find_spec(
             "onnxruntime_extensions"
         ):  # pragma: no cover
-            from onnxruntime_extensions import get_library_path
 
             sess_options.register_custom_ops_library(get_library_path())
 
@@ -1212,10 +1220,7 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         if model.is_large_model:
             if not self.performance_only:
                 # save the large model to workspace if acc tuning is required
-                from onnx.external_data_helper import (
-                    convert_model_to_external_data,
-                    load_external_data_for_model,
-                )
+                
 
                 # load external data
                 load_external_data_for_model(
@@ -1257,7 +1262,7 @@ class ONNXRUNTIMEAdaptor(Adaptor):
             else:
                 if not self.recipes.get("layer_wise_quant", False):
                     # load external data if layer-wise quant is False
-                    from onnx.external_data_helper import load_external_data_for_model
+                    
 
                     load_external_data_for_model(
                         tmp_model, os.path.split(model.model_path)[0]
@@ -1281,10 +1286,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         self.pre_optimized_model = model
 
     def _revert_conv_add_fusion(self, model):
-        from onnx import numpy_helper
-
-        from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg
-
         add_nodes = []
         remove_nodes = []
         for node in model.model.graph.node:
@@ -1320,9 +1321,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
 
     def _revert_fusedconv(self, model):
         pass
-
-        from fedcore.neural_compressor.adaptor.ox_utils.util import attribute_to_kwarg
-
         new_nodes = []
         remove_nodes = []
         for node in model.model.graph.node:
@@ -1388,8 +1386,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
     @staticmethod
     def _replace_gemm_with_matmul(model):
         new_nodes = []
-        from onnx import numpy_helper
-
         if not isinstance(model, ONNXModel):
             model = ONNXModel(model, ignore_warning=True)
 
@@ -1722,8 +1718,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
             and first_quantizable_node[0].name != last_quantizable_node[0].name
         ):
             # get backbone nodes
-            from collections import deque
-
             # get nodes between first quantizable node and last quantizable node
             backbone_queue = deque(last_quantizable_node)
             backbone_nodes = self.pre_optimized_model.get_nodes_chain(
@@ -1820,8 +1814,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         granularity = "per_tensor"
         algorithm = "minmax"
 
-        from onnx import onnx_pb as onnx_proto
-
         for _, op in enumerate(self.quantizable_ops):
             if (op.name, op.op_type) not in tune_cfg["op"]:
                 continue
@@ -1904,7 +1896,7 @@ class ONNXRUNTIMEAdaptor(Adaptor):
             )
         sess_options = ort.SessionOptions()
         if self.backend == "TensorrtExecutionProvider":
-            from fedcore.neural_compressor.adaptor.ox_utils.util import trt_env_setup
+            
 
             trt_env_setup(input_graph.model)
             sess_options.graph_optimization_level = (
@@ -1920,7 +1912,7 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         if sys.version_info < (3, 11) and find_spec(
             "onnxruntime_extensions"
         ):  # pragma: no cover
-            from onnxruntime_extensions import get_library_path
+            
 
             sess_options.register_custom_ops_library(get_library_path())
         session = (
@@ -2013,7 +2005,7 @@ class ONNXRUNTIMEAdaptor(Adaptor):
             eval_func(dataloader)
 
         if self.fp32_preds_as_label:
-            from fedcore.neural_compressor.adaptor.ox_utils.util import collate_preds
+            
 
             if fp32_baseline:
                 results = collate_preds(self.fp32_results)
@@ -2029,9 +2021,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         return acc if not isinstance(acc, list) or len(acc) > 1 else acc[0]
 
     def diagnosis_helper(self, fp32_model, int8_model, tune_cfg=None, save_path=None):
-        from fedcore.neural_compressor.adaptor.ox_utils.util import find_by_name
-        from fedcore.neural_compressor.utils.utility import dump_data_to_local
-
         if self.format == "qlinearops":
             supported_optype = [
                 "Conv",
@@ -2130,7 +2119,6 @@ class ONNXRUNTIMEAdaptor(Adaptor):
         Returns:
           A list of op names, sorted by its MSE sensitivity.
         """
-        from copy import deepcopy
 
         fp32_op_cfg = {
             "activation": {"dtype": "fp32", "quant_mode": "fp32"},
@@ -2316,9 +2304,7 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
             ]
         )
         if "GPTQ" in algos:
-            from fedcore.neural_compressor.adaptor.ox_utils.weight_only import (
-                gptq_quantize,
-            )
+            
 
             assert (
                 data_loader is not None
@@ -2344,10 +2330,6 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
                 providers=[self.backend],
             )
         if "AWQ" in algos:
-            from fedcore.neural_compressor.adaptor.ox_utils.weight_only import (
-                awq_quantize,
-            )
-
             assert (
                 data_loader is not None
             ), "AWQ WOQ algorithm needs to pass 'calib_dataloader' to quantization.fit()"
@@ -2370,10 +2352,6 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
                 providers=[self.backend],
             )
         elif "RTN" in algos:
-            from fedcore.neural_compressor.adaptor.ox_utils.weight_only import (
-                rtn_quantize,
-            )
-
             accuracy_level = self.recipes.get("rtn_args", {}).get("accuracy_level", 0)
             tmp_model = rtn_quantize(
                 tmp_model,
@@ -2387,10 +2365,7 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
 
         # if the model is large and acc tuning is required, save it to workspace
         if not self.performance_only and tmp_model.is_large_model:
-            from onnx.external_data_helper import (
-                convert_model_to_external_data,
-                load_external_data_for_model,
-            )
+            
 
             model_name = os.path.split(tmp_model.model_path)[-1]
             model_path = os.path.join(self.work_space, model_name)
@@ -2433,7 +2408,6 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
         return tmp_model
 
     def _dump_model_op_stats(self, model, tune_cfg):
-        import re
 
         fp32_op_list = self.query_handler.get_op_types_by_precision(
             precision="weight_only_integer"
@@ -2512,8 +2486,6 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
         """Update tune cfg according to woq_tuning_cfg."""
         if tune_cfg.get("woq_tuning_cfg") is None:
             return tune_cfg
-
-        from fedcore.neural_compressor.strategy.utils.constant import WOQ_TUNING_ALGOS
 
         woq_tuning_cfg = tune_cfg.get("woq_tuning_cfg")
         new_woq_cfg = WOQ_TUNING_ALGOS.get(woq_tuning_cfg)
@@ -2697,8 +2669,6 @@ class ONNXRTQuery(QueryBackendCapability):
         self._update_cfg_with_usr_definition()
 
     def _update_cfg_with_usr_definition(self):
-        from fedcore.neural_compressor.conf.pythonic_config import onnxruntime_config
-
         if onnxruntime_config.graph_optimization_level is not None:
             self.cur_config["graph_optimization"][
                 "level"
@@ -2719,8 +2689,6 @@ class ONNXRTQuery(QueryBackendCapability):
         Returns:
             [dictionary]: the content for specific version.
         """
-        from functools import cmp_to_key
-
         version_config = None
 
         def _compare(version1, version2):
