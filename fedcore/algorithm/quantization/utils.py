@@ -87,7 +87,7 @@ def _recreate_linear(module):
 
 
 class RecreatedDecomposed(nn.Sequential):
-    __non_redirected = {'forward', '__init__', 'routing'}
+    __non_redirected = {'forward', '__init__', 'routing', '0', '1'}
     def __init__(self, *args, routing=None):
         super().__init__(*args)
         self.routing = routing or {}
@@ -260,7 +260,7 @@ class QDQWrapper(Accessor):
         modules_order = cls.get_layers_order(m, *example_input)
         names_order = cls.get_names_order(m, *example_input)
         name_input = cls.get_name_input_mapping(m, *example_input)
-        
+
         def _is_parametrizable(name: str):
             module = cls.get_module(m, name)
             is_leaf = cls.is_leaf_module(module)

@@ -168,8 +168,6 @@ class BaseNeuralModel:
                     ),
                 )
 
-        # callback.callbacks.on_train_end()
-
     def _check_saving(self, epoch) -> bool:
         if not self.save_each:
             return False
@@ -191,13 +189,26 @@ class BaseNeuralModel:
             else:
                 print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
             if self._check_saving(epoch):
-                torch.save(
-                    self.model,
-                    Path(
-                        self.checkpoint_folder,
-                        f"model_train{now_for_file()}_{epoch}.pth",
-                    ),
-                )
+                self.save_model(epoch)            
+    
+    def save_model(self, epoch):
+        path_pref = Path(self.checkpoint_folder)
+        try:
+            torch.save(
+                self.model,
+                path_pref.joinpath(f"model_train{now_for_file()}_{epoch}.pth"),
+            )
+        except Exception as x:
+            print('Basic saving failed. Trying to use jit. \nReason: ', x.args[0])
+        try:
+            torch.jit.save(torch.jit.script(self.model), 
+                           path_pref.joinpath(f"model_train{now_for_file()}_{epoch}_jit.pth")
+            )
+        except Exception as x: 
+            print('JIT saving failed. saving weights only. \nReason: ', x.args[0])
+            torch.save(self.model.state_dict(), 
+                           path_pref.joinpath(f"model_train{now_for_file()}_{epoch}_state.pth")
+            )        
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
         """

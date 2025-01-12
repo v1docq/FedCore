@@ -8,8 +8,6 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from torch import optim, nn
 from torch.ao.quantization.quantize import (convert, prepare_qat, propagate_qconfig_,)
 from torch.ao.quantization.qconfig import get_default_qat_qconfig
-from torch.ao.quantization.qconfig_mapping import get_default_qat_qconfig_mapping
-# from torch.ao.quantization.q
 from fedcore.algorithm.quantization.utils import ParentalReassembler, QDQWrapper, uninplace
 from torch.ao.quantization.qconfig_mapping import QConfigMapping
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -23,7 +21,6 @@ from torch.ao.quantization.quantization_mappings import DEFAULT_QAT_MODULE_MAPPI
 class QuantAwareModel(BaseCompressionModel):
     """Quantization aware training
     """
-
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
         self.epochs = params.get("epochs", 5)
