@@ -131,7 +131,7 @@ class LowRankModel:
         self.trainer.model = self.optimised_model
         self.trainer.custom_loss = self.ft_params["custom_loss"]
         self.trainer.epochs = self.ft_params["epochs"]
-        self.optimised_model = self.trainer.fit(input_data)
+        self.optimised_model = self.trainer.fit(input_data, finetune=True)
 
         print("==============After low rank truncation=================")
         macs, nparams = tp.utils.count_ops_and_params(self.optimised_model, first_batch)

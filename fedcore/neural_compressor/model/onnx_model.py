@@ -51,30 +51,6 @@ class ONNXModel(BaseModel):
 
     def __init__(self, model, **kwargs):
         """Initialize an ONNX model.
-import neural_compressor.adaptor.ox_utils.util as ortq
-from onnx.external_data_helper import (
-            convert_model_to_external_data,
-            write_external_data_tensors,
-            load_external_data_for_model,
-            load_external_data_for_tensor,
-            convert_model_to_external_data
-        )
-from fedcore.neural_compressor.adaptor.ox_utils.util import infer_shapes
-from fedcore.neural_compressor.config import ONNXQlinear2QDQConfig
-from fedcore.neural_compressor.experimental.export.qlinear2qdq import onnx_qlinear_to_qdq
-from collections import deque
-from onnx import NodeProto
-import copy
-from transformers import AutoConfig
-
-logger = logging.getLogger("neural_compressor")
-
-
-class ONNXModel(BaseModel):
-    """Build ONNX model."""
-
-    def __init__(self, model, **kwargs):
-        """Initialize an ONNX model.
 
         Args:
             model (str or ModelProto): path to onnx model or loaded ModelProto model object.

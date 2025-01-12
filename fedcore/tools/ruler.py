@@ -116,7 +116,7 @@ class PerformanceEvaluator:
                     else sample.to(self.device)
                 )
                 tic1 = time.time()
-                self.model(sample)
+                self.model(sample[None, ...])
                 if self.cuda_allowed:
                     torch.cuda.synchronize()
                 tic2 = time.time()
