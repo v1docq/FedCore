@@ -183,7 +183,7 @@ class FedCore(Fedot):
 
         """
 
-        self.train_data = deepcopy(input_data)  # we do not want to make inplace changes
+        self.train_data = deepcopy(input_data)  # we do not want to make inplace changes TODO it copies not only model, but dataloaders and datasets.
         self.original_model = input_data[1]
         input_preproc = DataCheck(input_data=self.train_data, task=self.cv_task)
         self.train_data = input_preproc.check_input_data(manually_done)
