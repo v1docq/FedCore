@@ -64,7 +64,7 @@ class QuantPostModel(BaseCompressionModel):
         model.to('cpu')
         propagate_qconfig_(model, self.qconfig)
         b = self.__get_example_input(input_data).to(self.device)
-        QDQWrapper.add_quant_entry_exit(model, b, self.allow)
+        QDQWrapper.add_quant_entry_exit(model, b, allow=self.allow)
         prepare(model, inplace=True)
         self.trainer.model = model
         return model
