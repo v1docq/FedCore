@@ -1,9 +1,6 @@
 from functools import reduce
 from typing import Any, List
-from typing import Any, List
 
-from torch.ao.quantization.utils import _get_path_of_module
-from torch.ao.quantization.utils import _get_path_of_module
 from torch.nn import Module
 
 
@@ -31,11 +28,6 @@ class Accessor:
         cls._set_names(root)
         return [module._eigenname for module in order]
         
-    # def __fetch_names(root: Module, order: list) -> List[str]:
-    #     names_order = []
-    #     for submodule in order:
-    #         names_order.append(_get_path_of_module(root, submodule))
-    #     return names_order
     
     @classmethod
     def get_names_order(cls, model: Module, *example_input) -> List[str]:
