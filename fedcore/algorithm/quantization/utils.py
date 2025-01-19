@@ -167,6 +167,7 @@ class ParentalReassembler(Accessor):
     @classmethod
     def reassemble(cls, model: nn.Module, additional_mapping: dict=None):
         """additional mapping for cases such as 'nn.ReLU6 -> nn.ReLU in format """
+        device = model.device
         if additional_mapping:
             for name, module in model.named_modules():
                 t = type(module)
@@ -177,7 +178,8 @@ class ParentalReassembler(Accessor):
             new_module = cls.convert(module)
             if new_module is None:
                 continue
-            cls.set_module(model, name, new_module)
+            cls.set_module(model, name, new_module.to(device))
+        assert all(device == p.device for p in model.parameters())
         return model
 
 
@@ -257,44 +259,48 @@ class QDQWrapper(Accessor):
     def add_quant_entry_exit(cls, m: nn.Module, *example_input, allow: set=None, mode='static'):
         allow = allow or set()
         m.eval()
-        modules_order = cls.get_layers_order(m, *example_input)
-        names_order = cls.get_names_order(m, *example_input)
-        name_input = cls.get_name_input_mapping(m, *example_input)
+        example_input = tuple(
+            inp.to(m.device) if hasattr(inp, 'to') else inp for inp in example_input
+        )
+        with torch.no_grad():
+            modules_order = cls.get_layers_order(m, *example_input)
+            names_order = cls.get_names_order(m, *example_input)
+            name_input = cls.get_name_input_mapping(m, *example_input)
 
-        def _is_parametrizable(name: str):
-            module = cls.get_module(m, name)
-            is_leaf = cls.is_leaf_module(module)
-            return (
-                (type(module) in allow
-                  or
-                (has_no_children_ignoring_parametrizations(module) and not is_leaf
-                  or  is_leaf and cls.is_leaf_quantizable(module, name_input[name], mode)
-                ))
-                and bool(getattr(module, 'qconfig', None))
-            )
+            def _is_parametrizable(name: str):
+                module = cls.get_module(m, name)
+                is_leaf = cls.is_leaf_module(module)
+                return (
+                    (type(module) in allow
+                    or
+                    (has_no_children_ignoring_parametrizations(module) and not is_leaf
+                    or  is_leaf and cls.is_leaf_quantizable(module, name_input[name], mode)
+                    ))
+                    and bool(getattr(module, 'qconfig', None))
+                )
 
-        is_parametrizable = [
-            _is_parametrizable(name) for name in names_order
-        ]
+            is_parametrizable = [
+                _is_parametrizable(name) for name in names_order
+            ]
 
-        if len(is_parametrizable) > 1:
-            for i in range(1, len(is_parametrizable)):
-                if (not is_parametrizable[i - 1] and is_parametrizable[i] 
-                    # or is_change(i)
-                    ):
-                    module = cls.get_module(m, names_order[i])
-                    new_module = QDQWrapping(module, 'pre')
-                    cls.set_module(m, names_order[i], new_module)
-                if (is_parametrizable[i - 1] and not is_parametrizable[i]
-                    # or is_change(i)
-                    ):
-                    module = cls.get_module(m, names_order[i])
-                    new_module = QDQWrapping(module, 'post', qconfig=modules_order[i - 1].qconfig)
-                    cls.set_module(m, names_order[i], new_module)
-        if is_parametrizable[0]:
-            cls.set_module(m, names_order[0], QDQWrapping(cls.get_module(m, names_order[0]), 'pre'))
-        if is_parametrizable[-1]:
-            cls.set_module(m, names_order[-1], QDQWrapping(cls.get_module(m, names_order[-1]), 'last'))
+            if len(is_parametrizable) > 1:
+                for i in range(1, len(is_parametrizable)):
+                    if (not is_parametrizable[i - 1] and is_parametrizable[i] 
+                        # or is_change(i)
+                        ):
+                        module = cls.get_module(m, names_order[i])
+                        new_module = QDQWrapping(module, 'pre')
+                        cls.set_module(m, names_order[i], new_module)
+                    if (is_parametrizable[i - 1] and not is_parametrizable[i]
+                        # or is_change(i)
+                        ):
+                        module = cls.get_module(m, names_order[i])
+                        new_module = QDQWrapping(module, 'post', qconfig=modules_order[i - 1].qconfig)
+                        cls.set_module(m, names_order[i], new_module)
+            if is_parametrizable[0]:
+                cls.set_module(m, names_order[0], QDQWrapping(cls.get_module(m, names_order[0]), 'pre'))
+            if is_parametrizable[-1]:
+                cls.set_module(m, names_order[-1], QDQWrapping(cls.get_module(m, names_order[-1]), 'last'))
         return m
 
 class QDQWrapping(nn.Module, IDelegator):
