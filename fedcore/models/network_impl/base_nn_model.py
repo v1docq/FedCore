@@ -204,7 +204,7 @@ class BaseNeuralModel:
         except Exception as x: 
             print('JIT saving failed. saving weights only. \nReason: ', x.args[0])
             torch.save(self.model.state_dict(), 
-                           path_pref.joinpath(f"model_train{name}{now_for_file()}_{epoch}_state.pth")
+                           path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
             )        
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
