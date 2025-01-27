@@ -20,6 +20,7 @@ from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.data.data import CompressionInputData
 from fedcore.losses.utils import _get_loss_metric
 from fedcore.repository.constanst_repository import default_device
+from fedcore.architecture.abstraction.accessor import Accessor
 
 
 def now_for_file():
@@ -61,10 +62,12 @@ class BaseNeuralModel:
 
         self.is_operation = self.params.get('is_operation', False) ###
         self.save_each = self.params.get('save_each', None)
+        self.eval_each = self.params.get('eval_each', 5)
         self.checkpoint_folder = self.params.get('checkpoint_folder', None) ###
         self.batch_limit = self.params.get('batch_limit', None)
         self.calib_batch_limit = self.params.get('calib_batch_limit', None)
         self.batch_type = self.params.get('batch_type', None)
+        self.name = self.params.get('name', '')
 
         self.label_encoder = None
         self.is_regression_task = False
@@ -77,7 +80,11 @@ class BaseNeuralModel:
             train_data.supplementary_data.col_type_ids is not None
             and train_data.supplementary_data.col_type_ids.get("loss", None)
         ):
-            self.loss_fn = train_data.supplementary_data.col_type_ids["loss"]()
+            criterion = train_data.supplementary_data.col_type_ids["loss"]
+            try: 
+                self.loss_fn = criterion()
+            except:
+                self.loss_fn = criterion
             print("Forcely substituted loss to", self.loss_fn)
 
     def __substitute_device_quant(self):
@@ -86,12 +93,12 @@ class BaseNeuralModel:
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
 
-
     def fit(self, input_data: InputData, supplementary_data: dict = None, finetune=False):
         custom_fit_process = supplementary_data is not None
-        loader = (input_data.features.train_dataloader 
+        train_loader = (input_data.features.train_dataloader 
                     if not finetune else 
                         input_data.features.calib_dataloader)
+        val_loader = getattr(input_data.features, 'calib_dataloader', None)
 
         self.loss_fn = _get_loss_metric(input_data)
         self.__check_and_substitute_loss(input_data)
@@ -107,16 +114,43 @@ class BaseNeuralModel:
             value=supplementary_data, monoid=[self.custom_loss, custom_fit_process]
         ).either(
             left_function=lambda custom_loss: self._default_train(
-                loader, self.model, custom_loss
+                train_loader, self.model, custom_loss, val_loader=val_loader
             ),
             right_function=lambda sup_data: self._custom_train(
-                loader, self.model, sup_data["callback"]
+                train_loader, self.model, sup_data["callback"], val_loader=val_loader
             ),
         )
         self._clear_cache()
         return self.model
+    
+    @torch.no_grad()
+    def _eval(self, model, val_dataloader, metrics=None, custom_loss=None):
+        model.eval()
+        loss_sum = 0
+        total_iterations = 0
+        val_dataloader = DataLoaderHandler.check_convert(dataloader=val_dataloader,
+                                                       mode=self.batch_type,
+                                                       max_batches=self.calib_batch_limit,
+                                                       enumerate=False)
+        for batch in tqdm(val_dataloader, desc='Batch #'):
+            total_iterations += 1
+            inputs, targets = batch
+            output = self.model(inputs.to(self.device))
+            if custom_loss:
+                model_loss = {key: val(model) for key, val in custom_loss.items()}
+                model_loss["metric_loss"] = self.loss_fn(
+                    output, targets.to(self.device)
+                )
+                quality_loss = reduce(iadd, [loss for loss in model_loss.values()])
+                loss_sum += model_loss["metric_loss"].item()
+            else:
+                quality_loss = self.loss_fn(output, targets.to(self.device))
+                loss_sum += quality_loss.item()
+                model_loss = quality_loss
+        avg_loss = loss_sum / total_iterations
+        return avg_loss
 
-    def _train_loop(self, train_loader, model, custom_loss: dict = None):
+    def _train_loop(self, train_loader, model, val_loader=None, custom_loss: dict = None, need_eval=False):
         loss_sum = 0
         total_iterations = 0
         losses = None
@@ -146,15 +180,16 @@ class BaseNeuralModel:
         if custom_loss:
             losses = reduce(iadd, list(model_loss.items()))
             losses = [x.item() if not isinstance(x, str) else x for x in losses]
-
         return losses, avg_loss
 
-    def _custom_train(self, train_loader, model, callback: Callable):
+    def _custom_train(self, train_loader,  model, callback: Callable, val_loader=None):
         # callback.callbacks.on_train_end()
         for epoch in range(1, self.epochs + 1):
             self.model.train()
             model_loss, avg_loss = self._train_loop(train_loader, model)
             print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
+            if epoch % self.eval_each == 0 and val_loader is not None:
+                print('Model Validation:' , self._eval(self.model, val_loader, ))
             if epoch > 3:
                 # Freeze quantizer parameters
                 self.model.apply(torch.quantization.disable_observer)
@@ -162,7 +197,7 @@ class BaseNeuralModel:
                 # Freeze batch norm mean and variance estimates
                 self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
             if self._check_saving(epoch):
-                self.save_model(epoch)
+                self.save_model(epoch, self.name)
 
     def _check_saving(self, epoch) -> bool:
         if not self.save_each:
@@ -172,7 +207,7 @@ class BaseNeuralModel:
         else:
             return epoch == self.epochs
 
-    def _default_train(self, train_loader, model, custom_loss: dict = None):
+    def _default_train(self, train_loader, model, custom_loss: dict = None, val_loader=None):
         for epoch in range(1, self.epochs + 1):
             self.model.train()
             model_loss, avg_loss = self._train_loop(train_loader, model, custom_loss)
@@ -184,28 +219,36 @@ class BaseNeuralModel:
                 )
             else:
                 print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
+            if epoch % self.eval_each == 0 and val_loader is not None:
+                print('Model Validation:' , self._eval(self.model, val_loader, custom_loss))
             if self._check_saving(epoch):
-                self.save_model(epoch)            
+                self.save_model(epoch, self.name)            
     
     def save_model(self, epoch, name=''):
         name = name or self.params.get('name', '')
         path_pref = Path(self.checkpoint_folder)
+        save_only = self.params.get('save_only', '')
+        to_save = self.model if not save_only else Accessor.get_module(self.model, save_only)
         try:
+            path = path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}.pth")
             torch.save(
-                self.model,
-                path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}.pth"),
+                to_save,
+                path,
             )
         except Exception as x:
+            if os.path.exists(path):
+                os.remove(path)
             print('Basic saving failed. Trying to use jit. \nReason: ', x.args[0])
-        try:
-            torch.jit.save(torch.jit.script(self.model), 
-                           path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_jit.pth")
-            )
-        except Exception as x: 
-            print('JIT saving failed. saving weights only. \nReason: ', x.args[0])
-            torch.save(self.model.state_dict(), 
-                           path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
-            )        
+            try:
+                path = path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_jit.pth")
+                torch.jit.save(torch.jit.script(to_save), path)
+            except Exception as x: 
+                if os.path.exists(path):
+                    os.remove(path)
+                print('JIT saving failed. saving weights only. \nReason: ', x.args[0])
+                torch.save(to_save.state_dict(), 
+                            path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
+                )        
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
         """
