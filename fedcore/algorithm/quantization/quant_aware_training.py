@@ -39,11 +39,13 @@ class QuantAwareModel(BaseCompressionModel):
             self.allow.update(get_embedding_qat_module_mappings().keys())
 
     def get_qconfig(self):
-        qconfig = QConfigMapping().set_global(get_default_qat_qconfig(self.backend))
-        qconfig.set_object_type(nn.Embedding, 
+        qconfig = (QConfigMapping().set_global(get_default_qat_qconfig(self.backend))
+            .set_object_type(nn.Embedding, 
                                 float_qparams_weight_only_qconfig if self.allow_emb else None)
-        qconfig.set_object_type(nn.EmbeddingBag, 
+            .set_object_type(nn.EmbeddingBag, 
                                 float_qparams_weight_only_qconfig if self.allow_emb else None)
+            .set_object_type(nn.MultiheadAttention, None)
+        )
         return get_flattened_qconfig_dict(qconfig)  
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):

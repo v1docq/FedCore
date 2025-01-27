@@ -45,9 +45,13 @@ class QuantPostModel(BaseCompressionModel):
 
 
     def get_qconfig(self):
-        qconfig = QConfigMapping().set_global(default_qconfig)
-        qconfig.set_object_type(nn.Embedding, 
+        qconfig = (QConfigMapping().set_global(default_qconfig)
+            .set_object_type(nn.Embedding, 
                                 float_qparams_weight_only_qconfig if self.allow_emb else None)
+            .set_object_type(nn.MultiheadAttention, None)
+            .set_object_type(nn.modules.linear.NonDynamicallyQuantizableLinear, None)
+            # .set_object_type(nn.TransformerEncoderLayer, None)
+        )
         
         return get_flattened_qconfig_dict(qconfig)   
 
@@ -125,8 +129,12 @@ class QuantDynamicModel(BaseCompressionModel):
 
     def get_qconfig(self,):
         if not (self.dtype):
-            qconfig = QConfigMapping().set_global(default_dynamic_qconfig)
-            qconfig.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig if self.allow_emb else None)
+            qconfig = (QConfigMapping().set_global(default_dynamic_qconfig)
+                .set_object_type(nn.Embedding, float_qparams_weight_only_qconfig if self.allow_emb else None)
+                .set_object_type(nn.MultiheadAttention, None)
+                .set_object_type(nn.modules.linear.NonDynamicallyQuantizableLinear, None)
+                # .set_object_type(nn.TransformerEncoderLayer, None)
+            )
             return get_flattened_qconfig_dict(qconfig)            
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):
