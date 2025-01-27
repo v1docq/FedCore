@@ -302,7 +302,7 @@ class IDecomposed(abc.ABC):
         self.inference_mode = False
 
     def compose(self):
-        W = self.U @ torch.diag(self.S) @ self.Vh
+        W = self._get_composed_weight()
         self.weight = Parameter(W)
         assert self.U.device.type == self.weight.device.type
         # self.weight = Parameter(W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute']))
@@ -316,6 +316,14 @@ class IDecomposed(abc.ABC):
         self.U = Parameter(u)
         self.S = Parameter(s)
         self.Vh = Parameter(vh)
+
+    @property
+    def weight(self):
+        return self._get_composed_weight()
+    
+    def _get_composed_weight(self): #TODO add assertion if module is decomposed. Forward mode support
+        W = self.U @ torch.diag(self.S) @ self.Vh
+        return W
 
     @abc.abstractmethod
     def _one_layer_forward(self): pass
@@ -439,12 +447,16 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         Replaces U, S, Vh matrices with weights such that weights = U * S * Vh.
         """
         assert all([self.U.ndim == 2, self.Vh.ndim == 2])
-        W = self.U @ torch.diag(self.S) @ self.Vh
-        self.weight = Parameter(W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute']))
+        self.weight = self._get_composed_weight()
         self.register_parameter('U', None)
         self.register_parameter('S', None)
         self.register_parameter('Vh', None)
-        self.decomposing = None
+        # self.decomposing = None
+
+    def _get_composed_weight(self):
+        W = self.U @ torch.diag(self.S) @ self.Vh
+        W = Parameter(W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute']))
+        return W
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         if not self.inference_mode:
@@ -535,18 +547,8 @@ class DecomposedLinear(nn.Linear, IDecomposed):
             dtype=dtype,
         )
         self.load_state_dict(base_module.state_dict())
+        assert self.bias is not None
         IDecomposed.__init__(self, forward_mode, decomposing_mode,)
-        # self.forward_mode = forward_mode
-        # self.decomposing = decomposing_mode
-        # self.inference_mode = False
-        
-        # if decomposing_mode:
-        #     self.decompose()
-        # else:
-        #     self.U = None
-        #     self.S = None
-        #     self.Vh = None
-        #     self.decomposing = None
 
     def decompose(self) -> None:
         """Decomposes the weight matrix in singular value decomposition.

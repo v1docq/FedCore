@@ -10,11 +10,15 @@ from torch.nn.modules import Module
 
 
 from fedcore.models.network_impl.layers import IDecomposed
-from fedcore.repository.constanst_repository import DECOMPOSABLE_LAYERS, FORWARD_MODE
+from fedcore.repository.constanst_repository import (
+    DECOMPOSABLE_LAYERS, 
+    FORWARD_MODE, 
+    PROHIBIT_TO_DECOMPOSE
+)
 
 def decompose_module(
     model: Module,
-    decomposing_mode: Optional[str] = None,
+    decomposing_mode: Optional[str] = True,
     forward_mode: str = FORWARD_MODE,
 ) -> None:
     """Replace decomposable layers with their decomposed analogues in module (in-place).
@@ -76,5 +80,7 @@ def load_svd_state_dict(
 
 def _map_decomposed_cls(inst: torch.nn.Module) -> Optional[IDecomposed]:
     for decomposable, decomposed in DECOMPOSABLE_LAYERS.items():
-        if isinstance(inst, decomposable) and not isinstance(inst, IDecomposed):
+        if (not type(isinstance) in PROHIBIT_TO_DECOMPOSE 
+            and isinstance(inst, decomposable) 
+            and not isinstance(inst, IDecomposed)):
             return decomposed

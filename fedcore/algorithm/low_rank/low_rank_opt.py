@@ -93,7 +93,7 @@ class LowRankModel:
         for name, module in model.named_children():
             if len(list(module.children())) > 0:
                 self._prune_weight_rank(module, thr)
-            if isinstance(module, IDecomposed): ### maybe some IDecomposable?
+            if isinstance(module, IDecomposed): 
                 rank_threshold_pruning(decomposed_module=module,
                                        threshold=thr,
                                        strategy=self.strategy,
