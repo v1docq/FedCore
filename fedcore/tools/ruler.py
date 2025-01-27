@@ -7,7 +7,6 @@ from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
-# from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.metrics.metric_impl import (
@@ -15,6 +14,9 @@ from fedcore.metrics.metric_impl import (
     MetricCounter,
     ObjectDetectionMetricCounter,
 )
+from functools import partial
+from fedcore.api.utils.data import DataLoaderHandler
+
 
 
 class PerformanceEvaluator:
@@ -46,27 +48,27 @@ class PerformanceEvaluator:
             pass  # TODO some logic for string dataset downloading
         else:
             dataset = data
-        self.data_loader = DataLoader(
-            dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
+        self.data_loader = partial(DataLoaderHandler.check_convert, dataloader=DataLoader(
+            dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
         )
-        self.batch_size = batch_size or self.data_loader.batch_size
+        self.batch_size = batch_size# or self.data_loader.batch_size
         self.cuda_allowed =  not getattr(self.model, '_is_quantized', False) and torch.cuda.is_available()
         self.device = device or default_device('cpu' if not self.cuda_allowed else None)
         self.cuda_allowed = self.cuda_allowed and self.device.type != 'cpu'
-        self.model.to(device)
+        self.model.to(self.device)
         # Measured performance metrics
         self.latency = None
         self.throughput = None
         self.model_size = None
         self.target_metrics = None
 
-    def _preloaded_batches_gen(self, max_num=float("inf"), data_loader=None):
-        num = 0  # for cases when dataset has no __len__
-        for i in data_loader or self.data_loader:
-            yield i
-            num += 1
-            if num >= max_num:
-                break
+    # def _preloaded_batches_gen(self, max_num=float("inf"), data_loader=None):
+    #     num = 0  # for cases when dataset has no __len__
+    #     for i in data_loader or self.data_loader:
+    #         yield i
+    #         num += 1
+    #         if num >= max_num:
+    #             break
 
     def eval(self):
         self.warm_up_cuda()
@@ -79,8 +81,7 @@ class PerformanceEvaluator:
     def throughput_eval(self, num_iterations=30):
         self.model.eval()
         thr_list = []
-        for batch, _ in tqdm(
-            self._preloaded_batches_gen(self.n_batches), desc="batches", unit="batch"
+        for batch, _ in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"
         ):
             X = (
                 batch.cuda(non_blocking=True)
@@ -103,20 +104,24 @@ class PerformanceEvaluator:
     def latency_eval(self, max_samples=None):
         self.model.eval()
         lat_list = []
-        for batch, _ in tqdm(
-            self._preloaded_batches_gen(max_samples or self.batch_size)
-        ):
-            batch = (
-                batch if hasattr(batch, "__iter__") else [batch]
-            )  ### case batch is not iterable
-            for sample in batch:
-                sample = (
-                    sample.cuda(non_blocking=True)
-                    if hasattr(sample, "cuda") and self.cuda_allowed
-                    else sample.to(self.device)
-                )
+        for batch, _ in tqdm(self.data_loader(max_batches=max_samples or self.batch_size)):
+            if isinstance(batch, torch.Tensor):
+                for sample in batch:
+                    sample = (
+                        sample.cuda(non_blocking=True)
+                        if hasattr(sample, "cuda") and self.cuda_allowed
+                        else sample.to(self.device)
+                    )
+                    sample_batch = sample[None, ...]
+                    tic1 = time.time()
+                    self.model(sample_batch)
+                    if self.cuda_allowed:
+                        torch.cuda.synchronize()
+                    tic2 = time.time()
+                    lat_list.append((tic2 - tic1))
+            else:
                 tic1 = time.time()
-                self.model(sample[None, ...])
+                self.model(batch.to(self.device))
                 if self.cuda_allowed:
                     torch.cuda.synchronize()
                 tic2 = time.time()
@@ -160,10 +165,9 @@ class PerformanceEvaluator:
     @torch.no_grad()
     def warm_up_cuda(self, n_batches=3):
         """Warm up CUDA by performing some dummy computations"""
-        batch_sample = self._preloaded_batches_gen(n_batches)
         if self.cuda_allowed:
-            for inputs, _ in tqdm(batch_sample, desc="warming"):
-                _ = self.model(inputs.to(self.device))
+            for inputs, _ in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
+                _ = self.model(inputs.to(self.model.device))
 
     def report(self):
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
@@ -275,7 +279,7 @@ class PerformanceEvaluatorOD:
         """Warm up CUDA by performing some dummy computations"""
         if torch.cuda.is_available():
             for _ in range(num_iterations):
-                inputs, _ = next(iter(self.data_loader))
+                inputs, _ = next(iter(self.data_loader(max_batches=2)))
                 inputs = list(input.to(self.device) for input in inputs)
                 _ = self.model(inputs)
 
