@@ -294,10 +294,13 @@ class ModelCompressionConstant(Enum):
                            torch.nn.modules.conv.Conv2d)
     
     DECOMPOSABLE_LAYERS = {
+        # torch.nn.modules.linear.NonDynamicallyQuantizableLinear: DecomposedNonDynamicallyQuantizableLinear,
         torch.nn.Linear: DecomposedLinear,
         torch.nn.Conv2d : DecomposedConv2d,
         torch.nn.Embedding: DecomposedEmbedding
     }
+
+    PROHIBIT_TO_DECOMPOSE = {torch.nn.modules.linear.NonDynamicallyQuantizableLinear}
 
     QUANT_MODEL_TYPES = {
         "pytorch": PyTorchModel,
@@ -393,6 +396,7 @@ ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
 FORWARD_MODE = ModelCompressionConstant.FORWARD_MODE.value
 DECOMPOSABLE_LAYERS = ModelCompressionConstant.DECOMPOSABLE_LAYERS.value
+PROHIBIT_TO_DECOMPOSE = ModelCompressionConstant.PROHIBIT_TO_DECOMPOSE.value
 HOER_LOSS = ModelCompressionConstant.HOER_LOSS.value
 ORTOGONAL_LOSS = ModelCompressionConstant.ORTOGONAL_LOSS.value
 MODELS_FROM_LENGTH = ModelCompressionConstant.MODELS_FROM_LENGTH.value
