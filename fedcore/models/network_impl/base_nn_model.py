@@ -4,7 +4,7 @@ from datetime import datetime
 from functools import reduce
 from operator import iadd
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 
 import numpy as np
 import torch
@@ -93,11 +93,12 @@ class BaseNeuralModel:
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
 
-    def fit(self, input_data: InputData, supplementary_data: dict = None, finetune=False):
+    def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type: Literal['train', 'calib'] = 'train'):
         custom_fit_process = supplementary_data is not None
-        train_loader = (input_data.features.train_dataloader 
-                    if not finetune else 
-                        input_data.features.calib_dataloader)
+        train_loader = getattr(input_data.features, f'{loader_type}_dataloader', 'train_dataloader')
+        # (input_data.features.train_dataloader 
+        #             if not finetune else 
+        #                 input_data.features.calib_dataloader)
         val_loader = getattr(input_data.features, 'calib_dataloader', None)
 
         self.loss_fn = _get_loss_metric(input_data)

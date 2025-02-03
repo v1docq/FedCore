@@ -81,7 +81,7 @@ class QuantPostModel(BaseCompressionModel):
             input_data, supplementary_data
         )
         # b = self.__get_example_input(input_data).to(next(iter(self.model.parameters())).device)
-        self.trainer.fit(input_data, finetune=True)
+        self.trainer.fit(input_data, loader_type='calib')
         convert(self.trainer.model, inplace=True)
         self.trainer.model._is_quantized = True
         self.optimised_model = self.trainer.model.to('cpu')
