@@ -12,14 +12,29 @@ from torch.nn.modules import Module
 from fedcore.models.network_impl.layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     DECOMPOSABLE_LAYERS, 
-    FORWARD_MODE, 
+    COMPOSE_MODE, 
     PROHIBIT_TO_DECOMPOSE
 )
+
+__all__ = [
+    '_contiguous',
+    'decompose_module',
+    'count_params'
+]
+
+def _contiguous(t: torch.Tensor):
+    return t if t.is_contiguous() else t.contiguous()
+
+def count_params(m: torch.nn.Module):
+    c = 0
+    for p in m.parameters():
+        c += p.numel()
+    return c
 
 def decompose_module(
     model: Module,
     decomposing_mode: Optional[str] = True,
-    forward_mode: str = FORWARD_MODE,
+    compose_mode: str = COMPOSE_MODE,
 ) -> None:
     """Replace decomposable layers with their decomposed analogues in module (in-place).
 
@@ -27,17 +42,17 @@ def decompose_module(
         model: Decomposable module.
         decomposing_mode: ``'channel'`` or ``'spatial'`` weights reshaping method.
             If ``None`` replace layers without decomposition.
-        forward_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
+        compose_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
     """
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             decompose_module(
-                module, decomposing_mode=decomposing_mode, forward_mode=forward_mode
+                module, decomposing_mode=decomposing_mode, compose_mode=compose_mode
             )
         decomposed_analogue = _map_decomposed_cls(module)
         if decomposed_analogue is not None:
             new_module = decomposed_analogue(
-                module, decomposing_mode, forward_mode
+                module, decomposing_mode, compose_mode
             )
             setattr(model, name, new_module)
 
@@ -60,7 +75,7 @@ def load_svd_state_dict(
     model: Module,
     decomposing_mode: str,
     state_dict_path: str,
-    forward_mode: str = FORWARD_MODE,
+    compose_mode: str = COMPOSE_MODE,
 ) -> None:
     """Loads SVD state_dict to model.
 
@@ -68,11 +83,11 @@ def load_svd_state_dict(
         model: An instance of the base model.
         decomposing_mode: ``'channel'`` or ``'spatial'`` weights reshaping method.
         state_dict_path: Path to state_dict file.
-        forward_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
+        compose_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
     """
     state_dict = torch.load(state_dict_path, map_location="cpu")
     decompose_module(
-        model=model, decomposing_mode=decomposing_mode, forward_mode=forward_mode
+        model=model, decomposing_mode=decomposing_mode, compose_mode=compose_mode
     )
     _load_svd_params(model, state_dict)
     model.load_state_dict(state_dict)
