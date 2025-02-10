@@ -15,9 +15,15 @@ from torch.ao.quantization.stubs import QuantStub, DeQuantStub
 from torch.ao.quantization.utils import get_qconfig_dtypes
 import torch.nn as nn
 
-from fedcore.models.network_impl.layers import IDecomposed, DecomposedLinear, DecomposedEmbedding
+from fedcore.models.network_impl.layers import (
+    IDecomposed, 
+    DecomposedLinear,
+    DecomposedEmbedding, 
+    DecomposedConv2d
+)
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.architecture.abstraction.delegator import IDelegator
+from fedcore.architecture.comptutaional.devices import extract_device
 
 
 __all__ = [
@@ -131,6 +137,26 @@ def _recreate_decomposed_embedding(E: DecomposedEmbedding):
     new._is_recreated = True
     return new
 
+def _recreate_decomposed_conv2d(C: DecomposedConv2d):
+    U, S, Vh = C.U.detach(), C.S.detach(), C.Vh.detach()
+    assert U.ndim == 4, 'Non composed layers are not supported'
+    # h = S.squeeze().size(0)
+    out_1, in_1, k_11, k_12 = Vh.size()
+    out_2, in_2, k_21, k_22 = U.size()
+    new = RecreatedDecomposed(
+        nn.Conv2d(in_1, out_1, (k_11, k_12), groups=C.groups, **C.decomposing['Vh']),
+        nn.Conv2d(in_2, out_2, (k_21, k_22), **C.decomposing['U']),
+        routing={
+            'in_channels': ('in_channels', '0'),
+            'out_channels': ('out_channels', '1'),
+            'groups': ('groups', '0')
+        }
+    )
+    new[0].weight.data = Vh
+    new[-1].weight.data = U
+    new._is_recreated = True
+    return new
+
 
 class ParentalReassembler(Accessor):    
     supported_layers = {torch.nn.Embedding: _recreate_embedding,
@@ -140,6 +166,7 @@ class ParentalReassembler(Accessor):
     supported_decomposed_layers = {
         DecomposedLinear: _recreate_decomposed_linear,
         DecomposedEmbedding: _recreate_decomposed_embedding,
+        DecomposedConv2d: _recreate_decomposed_conv2d,
     }
             
     @classmethod
@@ -167,7 +194,7 @@ class ParentalReassembler(Accessor):
     @classmethod
     def reassemble(cls, model: nn.Module, additional_mapping: dict=None):
         """additional mapping for cases such as 'nn.ReLU6 -> nn.ReLU in format """
-        device = model.device
+        device = extract_device(model)
         if additional_mapping:
             for name, module in model.named_modules():
                 t = type(module)
