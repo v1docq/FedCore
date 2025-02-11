@@ -62,14 +62,6 @@ class PerformanceEvaluator:
         self.model_size = None
         self.target_metrics = None
 
-    # def _preloaded_batches_gen(self, max_num=float("inf"), data_loader=None):
-    #     num = 0  # for cases when dataset has no __len__
-    #     for i in data_loader or self.data_loader:
-    #         yield i
-    #         num += 1
-    #         if num >= max_num:
-    #             break
-
     def eval(self):
         self.warm_up_cuda()
         lat, thr = self.measure_latency_throughput(1, self.n_batches)
@@ -279,7 +271,7 @@ class PerformanceEvaluatorOD:
         """Warm up CUDA by performing some dummy computations"""
         if torch.cuda.is_available():
             for _ in range(num_iterations):
-                inputs, _ = next(iter(self.data_loader(max_batches=2)))
+                inputs, _ = next(iter(self.data_loader))
                 inputs = list(input.to(self.device) for input in inputs)
                 _ = self.model(inputs)
 

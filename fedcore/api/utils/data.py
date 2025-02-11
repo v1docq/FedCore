@@ -104,10 +104,9 @@ def init_input_data(
     return input_data
 
 def _X2Xy(collate_fn):
-        print('### WRP',)
-        def wrapped(batch, *args, **kwargs):
-            return collate_fn(batch, *args, **kwargs), [None] * len(batch)
-        return wrapped
+    def wrapped(batch, *args, **kwargs):
+        return collate_fn(batch, *args, **kwargs), [None] * len(batch)
+    return wrapped
 
 class DataLoaderHandler:
     __non_included_kwargs = {'check_worker_number_rationality'}

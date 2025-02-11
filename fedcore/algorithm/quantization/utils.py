@@ -140,7 +140,6 @@ def _recreate_decomposed_embedding(E: DecomposedEmbedding):
 def _recreate_decomposed_conv2d(C: DecomposedConv2d):
     U, S, Vh = C.U.detach(), C.S.detach(), C.Vh.detach()
     assert U.ndim == 4, 'Non composed layers are not supported'
-    # h = S.squeeze().size(0)
     out_1, in_1, k_11, k_12 = Vh.size()
     out_2, in_2, k_21, k_22 = U.size()
     new = RecreatedDecomposed(
@@ -281,18 +280,7 @@ class QDQWrapper(Accessor):
         except Exception as x:
             module.qconfig = None
             return False 
-        
-    # @classmethod
-    # def _wrap_all(cls, m: nn.Module, allow:set = None, mode="static", *example_input):
-    #     allow = allow or set()
-    #     m.eval()
-    #     example_input = tuple(
-    #         inp.to(m.device) if hasattr(inp, 'to') else inp for inp in example_input
-    #     )
-    #     with torch.no_grad():
-    #         modules_order = cls.get_layers_order(m, *example_input)
-    #         names_order = cls.get_names_order(m, *example_input)
-    #         name_input = cls.get_name_input_mapping(m, *example_input)
+
     @classmethod
     def _replace_dicts(cls, d):
         for name, branch in d._layers.items():
@@ -338,22 +326,19 @@ class QDQWrapper(Accessor):
             if len(is_parametrizable) > 1:
                 for i in range(1, len(is_parametrizable)):
                     if (not is_parametrizable[i - 1] and is_parametrizable[i] 
-                        # or is_change(i)
+                        # or is_change(i) #TODO
                         ):
                         module = cls.get_module(m, names_order[i])
-                        # print('Wrapping pre', names_order[i])
                         new_module = QDQWrapping(module, 'pre')
                         cls.set_module(m, names_order[i], new_module)
                     elif (is_parametrizable[i - 1] and not is_parametrizable[i]
                         # or is_change(i)
                         ):
                         module = cls.get_module(m, names_order[i])
-                        # print('Wrapping post', names_order[i])
                         new_module = QDQWrapping(module, 'post', qconfig=modules_order[i - 1].qconfig)
                         cls.set_module(m, names_order[i], new_module)
                     else:
                         pass
-                        # print('Skipped', names_order[i])
             [cls._replace_dicts(module) for module in modules_order if isinstance(module, torch.nn.ModuleDict)]
             if is_parametrizable[0]:
                 cls.set_module(m, names_order[0], QDQWrapping(cls.get_module(m, names_order[0]), 'pre'))

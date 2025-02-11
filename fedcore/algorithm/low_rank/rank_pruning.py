@@ -32,8 +32,6 @@ def rank_threshold_pruning(
     else:
         # TODO Grad-based & approx. error
         return
-    # channels_per_device = floor(n_components / n_cpu)
-    # n_components = channels_per_device * n_cpu
     decomposed_module.set_U_S_Vh(
         _contiguous(U[:, indices]),
         _contiguous(S[indices]),
@@ -56,7 +54,6 @@ def _apply_S_strategy(S, strategy, threshold):
 def _quantile_strategy(S, threshold) -> int:
     thr_value = torch.quantile(S, threshold)
     n_components = max((S > thr_value).sum().item(), 1)
-    # n_components = indices.cpu().detach().numpy().max() - n_components
     return n_components
 
 def _explained_variance_strategy(S, threshold):
