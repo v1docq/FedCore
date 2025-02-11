@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 
 from fedcore.architecture.abstraction.delegator import DelegatorFactory
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import FEDOT_TASK
 
 
 def get_compression_input(
@@ -21,6 +20,7 @@ def get_compression_input(
     num_classes=None,
     train_loss=None,
 ):
+    from fedcore.repository.constanst_repository import FEDOT_TASK
     input_data = CompressionInputData(
         features=np.zeros((2, 2)),
         train_dataloader=train_dataloader,
@@ -103,6 +103,10 @@ def init_input_data(
 
     return input_data
 
+def _X2Xy(collate_fn):
+    def wrapped(batch, *args, **kwargs):
+        return collate_fn(batch, *args, **kwargs), [None] * len(batch)
+    return wrapped
 
 class DataLoaderHandler:
     __non_included_kwargs = {'check_worker_number_rationality'}
@@ -116,14 +120,9 @@ class DataLoaderHandler:
             yield (i, elem) if enumerate else elem
             i += 1
 
-    @staticmethod
-    def __X2Xy(collate_fn):
-        def wrapped(batch, *args, **kwargs):
-            return collate_fn(batch, *args, **kwargs), [None] * len(batch)
-        return wrapped
 
     collate_modes = {
-        'X2Xy': __X2Xy,
+        'X2Xy': _X2Xy,
         'pass': lambda x: x
     }
 

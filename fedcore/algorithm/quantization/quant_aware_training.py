@@ -23,6 +23,8 @@ class QuantAwareModel(BaseCompressionModel):
     """
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
+        self.device = default_device()
+        params.update(device=self.device)
         self.epochs = params.get("epochs", 5)
         self.learning_rate = params.get("learning_rate", 0.001)
         self.backend = params.get('backend', 'x86')
@@ -30,7 +32,6 @@ class QuantAwareModel(BaseCompressionModel):
         self.allow: set = params.get('allow', set(DEFAULT_QAT_MODULE_MAPPINGS))
         self.inplace = params.get('inplace', False)
         self.trainer = BaseNeuralModel(params)
-        self.device = default_device()
         self.qconfig = params.get(
             "qconfig", self.get_qconfig()
         )
@@ -38,11 +39,13 @@ class QuantAwareModel(BaseCompressionModel):
             self.allow.update(get_embedding_qat_module_mappings().keys())
 
     def get_qconfig(self):
-        qconfig = QConfigMapping().set_global(get_default_qat_qconfig(self.backend))
-        qconfig.set_object_type(nn.Embedding, 
+        qconfig = (QConfigMapping().set_global(get_default_qat_qconfig(self.backend))
+            .set_object_type(nn.Embedding, 
                                 float_qparams_weight_only_qconfig if self.allow_emb else None)
-        qconfig.set_object_type(nn.EmbeddingBag, 
+            .set_object_type(nn.EmbeddingBag, 
                                 float_qparams_weight_only_qconfig if self.allow_emb else None)
+            .set_object_type(nn.MultiheadAttention, None)
+        )
         return get_flattened_qconfig_dict(qconfig)  
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):
@@ -55,7 +58,7 @@ class QuantAwareModel(BaseCompressionModel):
         # uninplace(model)
         model = ParentalReassembler.reassemble(model, self.params.get('additional_mapping', None))
         propagate_qconfig_(model, self.qconfig)
-        b = self.__get_example_input(input_data)
+        b = self.__get_example_input(input_data).to(self.device)
         QDQWrapper.add_quant_entry_exit(model, b, allow=self.allow, mode='qat')
         model.train()
         prepare_qat(model, inplace=True)
@@ -70,8 +73,11 @@ class QuantAwareModel(BaseCompressionModel):
             input_data, supplementary_data
         )
         self.trainer.fit(input_data)
+        self.device = torch.device('cpu')
+        self.trainer.device = self.device
+        self.model.to(self.device)
         convert(self.model, inplace=True)
-        self.optimised_model = self.model.to('cpu')
+        self.optimised_model = self.model
         self.model._is_quantized = True
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):

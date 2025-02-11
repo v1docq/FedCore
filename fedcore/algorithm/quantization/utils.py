@@ -15,9 +15,15 @@ from torch.ao.quantization.stubs import QuantStub, DeQuantStub
 from torch.ao.quantization.utils import get_qconfig_dtypes
 import torch.nn as nn
 
-from fedcore.models.network_impl.layers import IDecomposed, DecomposedLinear, DecomposedEmbedding
+from fedcore.models.network_impl.layers import (
+    IDecomposed, 
+    DecomposedLinear,
+    DecomposedEmbedding, 
+    DecomposedConv2d
+)
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.architecture.abstraction.delegator import IDelegator
+from fedcore.architecture.comptutaional.devices import extract_device
 
 
 __all__ = [
@@ -131,6 +137,25 @@ def _recreate_decomposed_embedding(E: DecomposedEmbedding):
     new._is_recreated = True
     return new
 
+def _recreate_decomposed_conv2d(C: DecomposedConv2d):
+    U, S, Vh = C.U.detach(), C.S.detach(), C.Vh.detach()
+    assert U.ndim == 4, 'Non composed layers are not supported'
+    out_1, in_1, k_11, k_12 = Vh.size()
+    out_2, in_2, k_21, k_22 = U.size()
+    new = RecreatedDecomposed(
+        nn.Conv2d(in_1, out_1, (k_11, k_12), groups=C.groups, **C.decomposing['Vh']),
+        nn.Conv2d(in_2, out_2, (k_21, k_22), **C.decomposing['U']),
+        routing={
+            'in_channels': ('in_channels', '0'),
+            'out_channels': ('out_channels', '1'),
+            'groups': ('groups', '0')
+        }
+    )
+    new[0].weight.data = Vh
+    new[-1].weight.data = U
+    new._is_recreated = True
+    return new
+
 
 class ParentalReassembler(Accessor):    
     supported_layers = {torch.nn.Embedding: _recreate_embedding,
@@ -140,6 +165,7 @@ class ParentalReassembler(Accessor):
     supported_decomposed_layers = {
         DecomposedLinear: _recreate_decomposed_linear,
         DecomposedEmbedding: _recreate_decomposed_embedding,
+        DecomposedConv2d: _recreate_decomposed_conv2d,
     }
             
     @classmethod
@@ -167,6 +193,7 @@ class ParentalReassembler(Accessor):
     @classmethod
     def reassemble(cls, model: nn.Module, additional_mapping: dict=None):
         """additional mapping for cases such as 'nn.ReLU6 -> nn.ReLU in format """
+        device = extract_device(model)
         if additional_mapping:
             for name, module in model.named_modules():
                 t = type(module)
@@ -177,7 +204,8 @@ class ParentalReassembler(Accessor):
             new_module = cls.convert(module)
             if new_module is None:
                 continue
-            cls.set_module(model, name, new_module)
+            cls.set_module(model, name, new_module.to(device))
+        assert all(device == p.device for p in model.parameters())
         return model
 
 
@@ -252,50 +280,72 @@ class QDQWrapper(Accessor):
         except Exception as x:
             module.qconfig = None
             return False 
+
+    @classmethod
+    def _replace_dicts(cls, d):
+        for name, branch in d._layers.items():
+            last_q = None
+            for module in branch.modules():
+                if isinstance(module, QDQWrapping):
+                    if module.mode == 'pre':
+                        last_q = module
+                    else:
+                        last_q = None
+            if last_q is None: continue
+            del d[name]
+            d[name] = QDQWrapping(branch, 'last', last_q.qconfig)   
             
     @classmethod
     def add_quant_entry_exit(cls, m: nn.Module, *example_input, allow: set=None, mode='static'):
         allow = allow or set()
         m.eval()
-        modules_order = cls.get_layers_order(m, *example_input)
-        names_order = cls.get_names_order(m, *example_input)
-        name_input = cls.get_name_input_mapping(m, *example_input)
+        example_input = tuple(
+            inp.to(m.device) if hasattr(inp, 'to') else inp for inp in example_input
+        )
+        with torch.no_grad():
+            modules_order = cls.get_layers_order(m, *example_input)
+            names_order = cls.get_names_order(m, *example_input)
+            name_input = cls.get_name_input_mapping(m, *example_input)
 
-        def _is_parametrizable(name: str):
-            module = cls.get_module(m, name)
-            is_leaf = cls.is_leaf_module(module)
-            return (
-                (type(module) in allow
-                  or
-                (has_no_children_ignoring_parametrizations(module) and not is_leaf
-                  or  is_leaf and cls.is_leaf_quantizable(module, name_input[name], mode)
-                ))
-                and bool(getattr(module, 'qconfig', None))
-            )
+            def _is_parametrizable(name: str):
+                module = cls.get_module(m, name)
+                is_leaf = cls.is_leaf_module(module)
+                return (
+                    (type(module) in allow
+                    or
+                    (has_no_children_ignoring_parametrizations(module) and not is_leaf
+                    or  is_leaf and cls.is_leaf_quantizable(module, name_input[name], mode)
+                    ))
+                    and bool(getattr(module, 'qconfig', None))
+                )
 
-        is_parametrizable = [
-            _is_parametrizable(name) for name in names_order
-        ]
-
-        if len(is_parametrizable) > 1:
-            for i in range(1, len(is_parametrizable)):
-                if (not is_parametrizable[i - 1] and is_parametrizable[i] 
-                    # or is_change(i)
-                    ):
-                    module = cls.get_module(m, names_order[i])
-                    new_module = QDQWrapping(module, 'pre')
-                    cls.set_module(m, names_order[i], new_module)
-                if (is_parametrizable[i - 1] and not is_parametrizable[i]
-                    # or is_change(i)
-                    ):
-                    module = cls.get_module(m, names_order[i])
-                    new_module = QDQWrapping(module, 'post', qconfig=modules_order[i - 1].qconfig)
-                    cls.set_module(m, names_order[i], new_module)
-        if is_parametrizable[0]:
-            cls.set_module(m, names_order[0], QDQWrapping(cls.get_module(m, names_order[0]), 'pre'))
-        if is_parametrizable[-1]:
-            cls.set_module(m, names_order[-1], QDQWrapping(cls.get_module(m, names_order[-1]), 'last'))
+            is_parametrizable = [
+                _is_parametrizable(name) for name in names_order
+            ]
+          
+            if len(is_parametrizable) > 1:
+                for i in range(1, len(is_parametrizable)):
+                    if (not is_parametrizable[i - 1] and is_parametrizable[i] 
+                        # or is_change(i) #TODO
+                        ):
+                        module = cls.get_module(m, names_order[i])
+                        new_module = QDQWrapping(module, 'pre')
+                        cls.set_module(m, names_order[i], new_module)
+                    elif (is_parametrizable[i - 1] and not is_parametrizable[i]
+                        # or is_change(i)
+                        ):
+                        module = cls.get_module(m, names_order[i])
+                        new_module = QDQWrapping(module, 'post', qconfig=modules_order[i - 1].qconfig)
+                        cls.set_module(m, names_order[i], new_module)
+                    else:
+                        pass
+            [cls._replace_dicts(module) for module in modules_order if isinstance(module, torch.nn.ModuleDict)]
+            if is_parametrizable[0]:
+                cls.set_module(m, names_order[0], QDQWrapping(cls.get_module(m, names_order[0]), 'pre'))
+            if is_parametrizable[-1]:
+                cls.set_module(m, names_order[-1], QDQWrapping(cls.get_module(m, names_order[-1]), 'last'))
         return m
+
 
 class QDQWrapping(nn.Module, IDelegator):
     __non_redirect =  {'base', 'quant', 'dequant', '_order', 'qconfig', 'forward', '__call__'}
