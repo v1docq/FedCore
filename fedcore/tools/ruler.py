@@ -159,7 +159,7 @@ class PerformanceEvaluator:
         """Warm up CUDA by performing some dummy computations"""
         if self.cuda_allowed:
             for inputs, _ in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
-                _ = self.model(inputs.to(self.model.device))
+                _ = self.model(inputs.to(self.device))
 
     def report(self):
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
