@@ -535,14 +535,14 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         SVh = torch.diag(self.S) @ self.Vh
         self.Vh = Parameter(SVh.view(*self.decomposing["Vh4d"]))
         self.U = Parameter(
-            self.U.view(self.decomposing["U4d"]).permute(0, 3, 1, 2)
+            self.U.view(*self.decomposing["U4d"]).permute(0, 3, 1, 2)
         )
 
     def _three_layers_compose(self):
         super().set_U_S_Vh(
-            self.U.view(self.decomposing["U4d"]).permute(0, 3, 1, 2),
+            self.U.view(*self.decomposing["U4d"]).permute(0, 3, 1, 2),
             self.S[..., None, None],
-            self.Vh.view(self.decomposing["Vh4d"])
+            self.Vh.view(*self.decomposing["Vh4d"])
         )
 
     def _anti_three_layers_compose(self):
@@ -676,3 +676,141 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = self._current_forward(input)
         return x
+    
+class DecomposedConvTranspose2d(nn.ConvTranspose2d, DecomposedConv2d):
+    def __init__(
+            self,
+            base_module: nn.ConvTranspose2d,
+            decomposing_mode: Optional[str] = 'channel',
+            compose_mode: str = 'two_layers',
+            device=None,
+            dtype=None,
+    ) -> None:
+        super().__init__(
+            base_module.in_channels,
+            base_module.out_channels,
+            base_module.kernel_size,
+            base_module.stride,
+            base_module.padding,
+            base_module.output_padding,
+            base_module.groups,
+            (base_module.bias is not None),
+            base_module.dilation,
+            base_module.padding_mode,
+            device,
+            dtype,
+        )
+        self.load_state_dict(base_module.state_dict())
+        IDecomposed.__init__(self, compose_mode, decomposing_mode,)
+
+    def __set_decomposing_params(self, decomposing_mode):
+        in_channels, out_channels, kernel_height, kernel_width = self.weight.size()
+        decomposing_modes = {
+            "channel": {
+                "type": "channel",
+                "permute": (0, 2, 3, 1),
+                "decompose_shape": (in_channels, kernel_height * kernel_width * out_channels),
+                "compose_shape": (in_channels, kernel_height, kernel_width, out_channels),
+                "compose_permute": (0, 3, 1, 2),
+                "U2d": (in_channels, -1),
+                "U4d": (in_channels, -1, 1, 1),
+                "U4d_permute": (0, 1, 2, 3),
+                "U": {
+                    "stride": 1,
+                    "padding": 0,
+                    "dilation": 1,
+                },
+                "Vh2d": (-1, out_channels * kernel_height * kernel_width),
+                "Vh4d": (-1, out_channels, kernel_height, kernel_width),
+                "Vh4d_permute": (0, 1, 2, 3),
+                "Vh": {
+                    "stride": self.stride,
+                    "padding": self.padding,
+                    "dilation": self.dilation,
+                },
+            },
+            "spatial": {
+                "type": "spatial",
+                "permute": (0, 2, 3, 1),
+                "inverse_permute": (0, 3, 1, 2),
+                "decompose_shape": (in_channels * kernel_height, out_channels * kernel_width),
+                "compose_shape": (in_channels, kernel_height, kernel_width, out_channels),
+                "U2d": (in_channels * kernel_height, -1),
+                "U4d": (in_channels, kernel_height, 1, -1),
+                "U": {
+                    "stride": (self.stride[0], 1),
+                    "padding": (self.padding[0], 0),
+                    "dilation": (self.dilation[0], 1),
+                },
+                "Vh2d": (-1, out_channels * kernel_width),
+                "Vh4d": (-1, 1, kernel_width, out_channels),
+                "Vh": {
+                    "stride": (1, self.stride[1]),
+                    "padding": (0, self.padding[1]),
+                    "dilation": (1, self.dilation[1]),
+                },
+            },
+        }
+        self.decomposing = decomposing_modes[decomposing_mode]
+
+    def _forward1(self, x, output_size):
+        return super().forward(x, output_size=output_size)
+    
+    def _compose_transform(self, weight: torch.Tensor, key: str):
+        return weight.reshape(*self.decomposing[key]).permute(*self.decomposing['inverse_permute'])
+    
+    def _decompose_transform(self, weight: torch.Tensor, key: str):
+        return weight.permute(*self.decomposing['permute']).reshape(*self.decomposing[key])
+    
+    def _forward2(self, x, output_size):
+        num_spatial_dims = 2
+        output_padding = self._output_padding(
+            x, output_size, self.stride, self.padding, self.kernel_size,  # type: ignore[arg-type]
+            num_spatial_dims, self.dilation)
+        x = torch.nn.functional.conv_transpose2d(
+            x, self.U, output_padding=output_padding, **self.decomposing['U'])
+        x = torch.nn.functional.conv_transpose2d(
+            x, self.Vh, output_padding=output_padding, **self.decomposing['Vh'])
+        return x
+    
+    def _forward3(self, x, output_size):
+        num_spatial_dims = 2
+        output_padding = self._output_padding(
+            x, output_size, self.stride, self.padding, self.kernel_size,  # type: ignore[arg-type]
+            num_spatial_dims, self.dilation)
+        x = torch.nn.functional.conv_transpose2d(
+            x, self.U * self.S, output_padding=output_padding, **self.decomposing['U'])
+        x = torch.nn.functional.conv_transpose2d(
+            x, self.Vh, output_padding=output_padding, **self.decomposing['Vh'])
+        return x
+    
+    def forward(self, input: torch.Tensor, output_size=None) -> torch.Tensor:
+        x = self._current_forward(input, output_size=output_size)
+        return x
+       
+    def _one_layer_compose(self):
+        W = self.U @ torch.diag(self.S) @ self.Vh
+        self.weight = Parameter(self._compose_transform(W, 'compose_shape'))
+
+    def _two_layers_compose(self):
+        SVh = torch.diag(self.S) @ self.Vh
+        self.Vh = Parameter(
+            self._compose_transform(SVh, 'Vh4d')
+        )
+        self.U = Parameter(
+            self._compose_transform(self.U, 'U4d')
+        )
+
+    def _three_layers_compose(self):
+        super().set_U_S_Vh(
+            self._compose_transform(self.U, 'U4d'),
+            self.S[..., None, None],
+            self._compose_transform(self.U, 'Vh4d'),
+        )
+
+    def _anti_three_layers_compose(self):
+        super().set_U_S_Vh(
+            self._decompose_transform(self.U, 'U2d'),
+            self.S[..., 0, 0],
+            self._decompose_transform(self.Vh, 'Vh4d')
+        )
