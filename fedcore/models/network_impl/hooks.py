@@ -17,7 +17,8 @@ def now_for_file():
     return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
 
 class BaseHook(ABC):
-    _KEYS: Set[str]
+    _SUMMON_KEY: str
+    _hook_place : str = 'post'
 
     def __init__(self, params, model):
         self.params : dict = params
@@ -40,6 +41,8 @@ class BaseHook(ABC):
         pass
 
 class DynamicRankPruner(BaseHook):
+    _SUMMON_KEY = 'n_plateau'
+
     def __init__(self, params, model):
         super().__init__(params, model)
         self.n_plateau : int= params.get('n_plateau', 5)
@@ -93,6 +96,8 @@ class DynamicRankPruner(BaseHook):
             self.traced_layers.pop(name, None)
 
 class Saver(BaseHook):
+    _SUMMON_KEY = 'save_each'
+
     def __init__(self, params, model):
         super().__init__(params, model)
         self.save_each = params.get('save_each', False)
@@ -107,7 +112,7 @@ class Saver(BaseHook):
             return epoch == self.params.get('epochs', 0)
         
     def action(self, epoch, kw):
-        name = kw.get(name, '') or self.params.get('name', '')
+        name = kw.get('name', '') or self.params.get('name', '')
         path_pref = Path(self.checkpoint_folder)
         save_only = self.params.get('save_only', '')
         to_save = self.model if not save_only else Accessor.get_module(self.model, save_only)
