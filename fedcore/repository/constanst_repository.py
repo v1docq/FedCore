@@ -60,8 +60,8 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
-from fedcore.neural_compressor.model.onnx_model import ONNXModel
-from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
+# from fedcore.neural_compressor.model.onnx_model import ONNXModel
+# from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.setups import QAT_1, PTQ_1
 
@@ -303,13 +303,13 @@ class ModelCompressionConstant(Enum):
     PROHIBIT_TO_DECOMPOSE = {torch.nn.modules.linear.NonDynamicallyQuantizableLinear}
 
     QUANT_MODEL_TYPES = {
-        "pytorch": PyTorchModel,
-        "pytorch_ipex": IPEXModel,
-        "pytorch_fx": PyTorchFXModel,
-        "onnxruntime": ONNXModel,
-        "onnxrt_qlinearops": ONNXModel,
-        "onnxrt_qdq": ONNXModel,
-        "onnxrt_integerops": ONNXModel,
+        # "pytorch": PyTorchModel,
+        # "pytorch_ipex": IPEXModel,
+        # "pytorch_fx": PyTorchFXModel,
+        # "onnxruntime": ONNXModel,
+        # "onnxrt_qlinearops": ONNXModel,
+        # "onnxrt_qdq": ONNXModel,
+        # "onnxrt_integerops": ONNXModel,
     }
 
 
@@ -374,6 +374,12 @@ class ONNX_CONFIG(Enum):
 class FedcoreInitialAssumptions(Enum):
     qat_1 = QAT_1
     ptq_1 = PTQ_1
+
+from fedcore.models.network_impl.hooks import Saver, DynamicRankPruner
+
+class Hooks(Enum):
+    SAVER = Saver
+    CUTTLEFISH_PRUNER = DynamicRankPruner
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
