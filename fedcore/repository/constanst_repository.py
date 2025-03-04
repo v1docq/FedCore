@@ -210,7 +210,7 @@ class FedotOperationConstant(Enum):
 class ModelCompressionConstant(Enum):
     ENERGY_THR = [0.9, 0.95, 0.99, 0.999]
     DECOMPOSE_MODE = "channel"
-    FORWARD_MODE = "two_layers"
+    COMPOSE_MODE = "two_layers"
     HOER_LOSS = 1
     ORTOGONAL_LOSS = 5
     MODELS_FROM_LENGTH = {
@@ -294,10 +294,13 @@ class ModelCompressionConstant(Enum):
                            torch.nn.modules.conv.Conv2d)
     
     DECOMPOSABLE_LAYERS = {
+        # torch.nn.modules.linear.NonDynamicallyQuantizableLinear: DecomposedNonDynamicallyQuantizableLinear,
         torch.nn.Linear: DecomposedLinear,
         torch.nn.Conv2d : DecomposedConv2d,
         torch.nn.Embedding: DecomposedEmbedding
     }
+
+    PROHIBIT_TO_DECOMPOSE = {torch.nn.modules.linear.NonDynamicallyQuantizableLinear}
 
     QUANT_MODEL_TYPES = {
         "pytorch": PyTorchModel,
@@ -391,8 +394,9 @@ FEDCORE_GRAPH_VALIDATION = FedotOperationConstant.FEDCORE_GRAPH_VALIDATION.value
 
 ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
-FORWARD_MODE = ModelCompressionConstant.FORWARD_MODE.value
+COMPOSE_MODE = ModelCompressionConstant.COMPOSE_MODE.value
 DECOMPOSABLE_LAYERS = ModelCompressionConstant.DECOMPOSABLE_LAYERS.value
+PROHIBIT_TO_DECOMPOSE = ModelCompressionConstant.PROHIBIT_TO_DECOMPOSE.value
 HOER_LOSS = ModelCompressionConstant.HOER_LOSS.value
 ORTOGONAL_LOSS = ModelCompressionConstant.ORTOGONAL_LOSS.value
 MODELS_FROM_LENGTH = ModelCompressionConstant.MODELS_FROM_LENGTH.value

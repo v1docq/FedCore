@@ -36,3 +36,6 @@ def default_device(device_type: str = None):
         if _has_mps():
             return torch.device("mps")
     return torch.device("cpu")
+
+def extract_device(nn: torch.nn.Module):
+    return next(iter(nn.parameters())).device

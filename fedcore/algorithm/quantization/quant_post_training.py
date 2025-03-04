@@ -45,9 +45,13 @@ class QuantPostModel(BaseCompressionModel):
 
 
     def get_qconfig(self):
-        qconfig = QConfigMapping().set_global(default_qconfig)
-        qconfig.set_object_type(nn.Embedding, 
+        qconfig = (QConfigMapping().set_global(default_qconfig)
+            .set_object_type(nn.Embedding, 
                                 float_qparams_weight_only_qconfig if self.allow_emb else None)
+            .set_object_type(nn.MultiheadAttention, None)
+            .set_object_type(nn.modules.linear.NonDynamicallyQuantizableLinear, None)
+            # .set_object_type(nn.TransformerEncoderLayer, None)
+        )
         
         return get_flattened_qconfig_dict(qconfig)   
 
@@ -64,7 +68,7 @@ class QuantPostModel(BaseCompressionModel):
         model.to('cpu')
         propagate_qconfig_(model, self.qconfig)
         b = self.__get_example_input(input_data).to(self.device)
-        QDQWrapper.add_quant_entry_exit(model, b, self.allow)
+        QDQWrapper.add_quant_entry_exit(model, b, allow=self.allow)
         prepare(model, inplace=True)
         self.trainer.model = model
         return model
@@ -77,7 +81,7 @@ class QuantPostModel(BaseCompressionModel):
             input_data, supplementary_data
         )
         # b = self.__get_example_input(input_data).to(next(iter(self.model.parameters())).device)
-        self.trainer.fit(input_data, finetune=True)
+        self.trainer.fit(input_data, loader_type='calib')
         convert(self.trainer.model, inplace=True)
         self.trainer.model._is_quantized = True
         self.optimised_model = self.trainer.model.to('cpu')
@@ -125,8 +129,12 @@ class QuantDynamicModel(BaseCompressionModel):
 
     def get_qconfig(self,):
         if not (self.dtype):
-            qconfig = QConfigMapping().set_global(default_dynamic_qconfig)
-            qconfig.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig if self.allow_emb else None)
+            qconfig = (QConfigMapping().set_global(default_dynamic_qconfig)
+                .set_object_type(nn.Embedding, float_qparams_weight_only_qconfig if self.allow_emb else None)
+                .set_object_type(nn.MultiheadAttention, None)
+                .set_object_type(nn.modules.linear.NonDynamicallyQuantizableLinear, None)
+                # .set_object_type(nn.TransformerEncoderLayer, None)
+            )
             return get_flattened_qconfig_dict(qconfig)            
 
     def _prepare_model(self, input_data: InputData, supplementary_data=None):
