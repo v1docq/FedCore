@@ -1,4 +1,6 @@
 import ssl
+from contextlib import contextmanager
+from typing import Optional, Callable
 
 import dask
 import distributed.dashboard.components.scheduler as dashboard
@@ -6,6 +8,7 @@ from distributed import Client, LocalCluster
 from distributed.security import Security
 from weakref import WeakValueDictionary
 from fedot.core.data.data import InputData
+from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 from fedcore.architecture.preprocessing.data_convertor import (
     CustomDatasetCLF,
@@ -124,12 +127,18 @@ class Singleton(type):
 
 
 class DaskServer(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self, params: Optional[OperationParameters] = None):
         self._overload_dask_config()
-        print("Creating Dask Server")
-        cluster = LocalCluster(processes=False, security=self.sec)
+        print('Creating Dask Server')
+        cluster_params = params.get('cluster_params', dict(processes=False,
+                                                           n_workers=1,
+                                                           threads_per_worker=4,
+                                                           memory_limit='auto'
+                                                           ))
+        cluster = LocalCluster(**cluster_params)
         # connect client to your cluster
         self.client = Client(cluster)
+        self.cluster = cluster
 
     def _overload_dask_config(self):
         self.sec = Security(
@@ -152,3 +161,26 @@ class DaskServer(metaclass=Singleton):
         # 'dark_minimal'
         # 'night_sky'
         # 'contrast'
+
+@contextmanager
+def exception_handler(*exception_types, on_exception: Optional[Callable] = None, suppress: bool = True):
+    """
+    A context manager that wraps code with a try-except block.
+
+    Args:
+        *exception_types (tuple): The types of exceptions to catch (e.g., ValueError, TypeError).
+        on_exception (callable, optional): A function to call when an exception is caught.
+        suppress (bool, optional): If True, suppresses the exception after handling it.
+            If False, re-raises the exception after handling it. Defaults to True.
+
+    Returns:
+        None: This context manager does not return any value directly.
+              However, it controls the flow of execution within the `with` block.
+    """
+    try:
+        yield  # Executes the code within the 'with' block
+    except exception_types:
+        if on_exception:
+            on_exception()  # Call the provided callback function
+        if not suppress:
+            raise  # Re-raise the exception if suppression is disabled

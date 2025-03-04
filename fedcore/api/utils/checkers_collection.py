@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from typing import Union
 
 import numpy as np
@@ -11,6 +12,7 @@ from tqdm import tqdm
 
 from fedcore.architecture.utils.loader import collate
 from fedcore.data.data import CompressionInputData, CompressionOutputData
+from fedcore.repository.config_repository import TASK_MAPPING
 from fedcore.repository.constanst_repository import FEDOT_TASK
 from fedcore.repository.model_repository import BACKBONE_MODELS
 
@@ -37,13 +39,9 @@ class DataCheck:
     def _check_od_dataset(self, dataset_type):
         list(self.input_data.classes.keys())
         target = []
-        loader = DataLoader(
-            self.input_data, batch_size=1, shuffle=False, collate_fn=collate
-        )
-        gen = (
-            target.append((targets[0]["boxes"], targets[0]["labels"]))
-            for i, (images, targets) in enumerate(tqdm(loader, desc="Fitting"))
-        )
+        loader = DataLoader(self.input_data, batch_size=1, shuffle=False, collate_fn=collate)
+        gen = (target.append((targets[0]["boxes"], targets[0]["labels"])) for i, (images, targets)
+               in enumerate(tqdm(loader, desc="Fitting")))
         return gen
 
     def _check_directory_dataset(self, dataset_type):
@@ -145,3 +143,60 @@ class DataCheck:
         self._check_input_data_features()
         self._check_input_data_target()
         return self.input_data
+
+
+
+class ApiConfigCheck:
+    def __init__(self):
+        pass
+
+    def compare_configs(self, original, updated):
+        """Compares two nested dictionaries"""
+
+        changes = []
+
+        def recursive_compare(orig, upd, path):
+            all_keys = orig.keys() | upd.keys()
+            for key in all_keys:
+                orig_val = orig.get(key, "<MISSING>")
+                upd_val = upd.get(key, "<MISSING>")
+
+                if isinstance(orig_val, dict) and isinstance(upd_val, dict):
+                    recursive_compare(orig_val, upd_val, path + [key])
+                elif orig_val != upd_val:
+                    changes.append(f"{' -> '.join(map(str, path + [key]))} -> Changed value {orig_val} to {upd_val}")
+
+        for sub_config in original.keys():
+            if sub_config in updated:
+                recursive_compare(original[sub_config], updated[sub_config], [sub_config])
+            else:
+                changes.append(f"{sub_config} -> Removed completely")
+
+        for i in changes:
+            print('>>>', i)
+        return "\n".join(changes) if changes else "No changes detected."
+
+    def update_config_with_kwargs(self, config_to_update, **kwargs):
+        """ Recursively update config dictionary with provided keyword arguments. """
+
+        # prevent inplace changes to the original config
+        config = deepcopy(config_to_update)
+
+        def recursive_update(d, key, value):
+            if key in d:
+                d[key] = value
+                # print(f'Updated {key} with {value}')
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    recursive_update(v, key, value)
+
+        # we select automl problem
+        assert 'task' in kwargs, 'Problem type is not provided'
+        problem_type = kwargs['task']
+        config['automl_config'] = TASK_MAPPING[problem_type]
+
+        # change MEGA config with keyword arguments
+        for param, value in kwargs.items():
+            recursive_update(config, param, value)
+
+        return config

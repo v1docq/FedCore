@@ -50,7 +50,7 @@ class ApiManager(ConfigTemplate):
                 method(config[key])
             else:
                 method()
-
+        return self
 
 class DeviceConfig(ConfigTemplate):
     def __init__(self):

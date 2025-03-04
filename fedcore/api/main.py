@@ -1,17 +1,20 @@
 import warnings
 from copy import deepcopy
-from typing import Union
+from functools import partial
+from typing import Union, Optional, Callable
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn
 from fedot.api.main import Fedot
+from fedot.core.data.data import InputData, OutputData
 from fedot.core.pipelines.pipeline import Pipeline
 from pymonad.either import Either
+from pymonad.maybe import Maybe
 from torch import Tensor
 from fedcore.api.utils.api_init import ApiManager
 from fedcore.api.utils.checkers_collection import DataCheck
-from fedcore.architecture.abstraction.decorators import DaskServer
+from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.metrics.cv_metrics import CV_quality_metric
@@ -44,29 +47,80 @@ class FedCore(Fedot):
     """
 
     def __init__(self, **kwargs):
-        self.manager = ApiManager(**kwargs)
-        # init FedCore hyperparams
-        self.cv_dataset = FEDCORE_CV_DATASET[self.manager.automl_config.task]
+        super(Fedot, self).__init__()
+        self.manager = ApiManager().build(kwargs)
         self.logger = self.manager.logger
-        # self.cluster_params = self.manager.dask_cluster_params
-        self.solver = self.manager.solver
 
-    def __init_solver(self):
-        self.logger.info("Initialising FedCore Repository")
-        self.repo = FedcoreModels().setup_repository()
-        self.logger.info("Initialising solver")
-
-        if self.manager.compute_config.distributed is not None:
-            self.dask_client = DaskServer().client
-            self.logger.info(f"LinK Dask Server - {self.dask_client.dashboard_link}")
-            self.logger.info(f"-------------------------------------------------")
-
-        if self.manager.automl_config.use_automl:
-            solver = Fedot(**self.manager.automl_config.config)
+    def __init_fedcore_backend(self, input_data: Optional[Union[InputData, np.array]] = None):
+        self.logger.info('-' * 50)
+        self.logger.info('Initialising Industrial Repository')
+        if self.manager.industrial_config.is_default_fedot_context:
+            self.logger.info(f'-------------------------------------------------')
+            self.logger.info('Initialising Fedot Evolutionary Optimisation params')
+            self.repo = FedcoreModels().setup_default_repository()
+            self.manager.automl_config.optimisation_strategy = self.manager.optimisation_agent['Fedot']
         else:
-            solver = self.manager.automl_config.initial_assumption
+            self.logger.info(f'-------------------------------------------------')
+            self.logger.info('Initialising Industrial Evolutionary Optimisation params')
+            self.repo = FedcoreModels().setup_repository(backend=self.manager.compute_config.backend)
+            optimisation_agent = self.manager.automl_config.optimisation_strategy['optimisation_agent']
+            optimisation_params = self.manager.automl_config.optimisation_strategy['optimisation_strategy']
+            self.manager.automl_config.optimisation_strategy = partial(
+                self.manager.optimisation_agent[optimisation_agent],
+                optimisation_params=optimisation_params)
+        return input_data
 
-        return solver
+    def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
+        self.logger.info('-' * 50)
+        self.logger.info('Initialising Dask Server')
+        if self.manager.automl_config.config['initial_assumption'] is None:
+            self.manager.automl_config.config['initial_assumption'] = \
+                self.manager.industrial_config.config['initial_assumption'].build()
+        else:
+            self.manager.automl_config.config['initial_assumption'] = \
+                self.manager.automl_config.config['initial_assumption'].build()
+        dask_server = DaskServer(self.manager.compute_config.distributed)
+        self.manager.dask_client = dask_server.client
+        self.manager.dask_cluster = dask_server.cluster
+        self.logger.info(f'Link Dask Server - {self.manager.dask_client.dashboard_link}')
+        self.logger.info('-' * 50)
+        self.logger.info('Initialising solver')
+        self.manager.solver = Fedot(
+            **self.manager.learning_config.config['learning_strategy_params'],
+            metric=self.manager.learning_config.config['optimisation_loss'],
+            problem=self.manager.automl_config.config['task'],
+            task_params=self.manager.industrial_config.task_params
+            if self.manager.industrial_config.is_forecasting_context else self.manager.automl_config.config
+            ['task_params'], optimizer=self.manager.automl_config.optimisation_strategy,
+            available_operations=self.manager.automl_config.config['available_operations'],
+            initial_assumption=self.manager.automl_config.config['initial_assumption'])
+        return input_data
+
+    def _process_input_data(self, input_data):
+        train_data = Either.insert(input_data).then(lambda data: deepcopy(data)). \
+            then(lambda data: DataCheck(input_data=data, task=self.manager.automl_config.config['task'],
+                                        task_params=self.manager.automl_config.config['task_params'], fit_stage=True,
+                                        industrial_task_params=self.manager.industrial_config.strategy_params)). \
+            then(lambda data_cls: (data_cls.check_input_data(), data_cls.get_target_encoder())).value
+
+        train_data.features = train_data.features.squeeze() if self.manager.industrial_config.is_default_fedot_context \
+            else train_data.features
+        return train_data
+
+    def _pretrain_before_optimise(self, fedot_pipeline: Pipeline):
+        pretrained_model = fedot_pipeline.fit(self.train_data)
+        self.train_data.target = pretrained_model.predict
+        return pretrained_model
+
+    def __abstract_predict(self, predict_data):
+        custom_predict = all([not self.manager.condition_check.solver_is_fedot_class(self.manager.solver),
+                              not self.manager.condition_check.solver_is_pipeline_class(self.manager.solver)])
+        predict = Either(value=predict_data,
+                         monoid=[predict_data, custom_predict]).either(
+            left_function=lambda predict_for_solver:  self.manager.solver.predict(predict_for_solver),
+            right_function=lambda predict_for_custom: self.manager.solver.predict(predict_for_custom))
+        predict = Maybe.insert(predict).then(lambda x: x.predict if isinstance(predict, OutputData) else x).value
+        return predict
 
     def fit(self, input_data: tuple, manually_done: bool = False, **kwargs):
         """
@@ -78,18 +132,21 @@ class FedCore(Fedot):
 
         """
 
-        self.train_data = deepcopy(input_data)  # we do not want to make inplace changes TODO it copies not only model, but dataloaders and datasets.
-        self.original_model = input_data[1]
-        input_preproc = DataCheck(input_data=self.train_data, task=self.cv_task)
-        self.train_data = input_preproc.check_input_data(manually_done)
-        self.solver = self.__init_solver()
-        if self.need_fedot_pretrain:
-            fedcore_training = FEDOT_ASSUMPTIONS["training"].build()
-            pretrained_model = fedcore_training.fit(self.train_data)
-            self.train_data.target = pretrained_model.predict
-        self.solver.fit(self.train_data)
-        self.optimised_model = self.solver.root_node.fitted_operation.optimised_model
-        # self.original_model = self.solver.root_node.fitted_operation.model
+        def fit_function(train_data):
+            return Either(value=train_data, monoid=[FEDOT_ASSUMPTIONS["training"].build(),
+                                                    self.manager.learning_config.
+                          config['learning_strategy'].__contains__('from_scratch')]). \
+                either(left_function=self.manager.solver.fit,
+                       right_function=self._pretrain_before_optimise)
+
+        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
+            solver = Maybe.insert(self._process_input_data(input_data)). \
+                then(self.__init_fedcore_backend). \
+                then(self.__init_solver). \
+                then(fit_function). \
+                maybe(None, lambda solver: solver)
+        self.optimised_model = solver.root_node.fitted_operation.optimised_model
+        return solver
 
     def predict(self, predict_data: tuple, **kwargs):
         """
@@ -102,16 +159,14 @@ class FedCore(Fedot):
             the array with prediction values
 
         """
-        self.predict_data = deepcopy(
-            predict_data
-        )  # we do not want to make inplace changes
-        self.predict_data = DataCheck(
-            input_data=self.predict_data, task=self.cv_task
-        ).check_input_data()
-        output = self.solver.predict(self.predict_data, **kwargs)
-        return output.predict
+        self.manager.predicted_labels = Maybe. \
+            insert(self._process_input_data(predict_data)). \
+            then(self.__init_fedcore_backend). \
+            then(self.__abstract_predict). \
+            maybe(None, lambda labels: labels)
+        return self.manager.predicted_labels
 
-    def finetune(self, train_data, tuning_params=None, mode: str = "head"):
+    def finetune(self, train_data, tuning_params=None):
         """
         Method to obtain prediction probabilities from trained Industrial model.
 
@@ -121,7 +176,27 @@ class FedCore(Fedot):
             mode: str, ``default='full'``. Defines the mode of fine-tuning. Could be 'full' or 'head'.
 
         """
-        pass
+
+        def _fit_pipeline(data_dict):
+            data_dict['model_to_tune'].fit(data_dict['train_data'])
+            return data_dict
+
+        is_fedot_datatype = self.manager.condition_check.input_data_is_fedot_type(train_data)
+        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.manager.automl_config.config['task']]
+        tuning_params['tuner'] = FEDOT_TUNER_STRATEGY[tuning_params.get('tuner', 'sequential')]
+
+        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
+            model_to_tune = Either.insert(train_data). \
+                then(lambda data: self._process_input_data(data) if not is_fedot_datatype else data). \
+                then(lambda data: self.__init_fedcore_backend(data)). \
+                then(lambda processed_data: {'train_data': processed_data} |
+                                            {'model_to_tune': model_to_tune.build()} |
+                                            {'tuning_params': tuning_params}). \
+                then(lambda dict_for_tune: _fit_pipeline(dict_for_tune)['model_to_tune'] if return_only_fitted
+            else build_tuner(self, **dict_for_tune)).value
+
+        self.manager.is_finetuned = True
+        self.manager.solver = model_to_tune
 
     def _metric_evaluation_loop(
             self, target, predicted_labels, predicted_probs, problem, metric_type
@@ -236,25 +311,51 @@ class FedCore(Fedot):
         self.target = np.array(self.train_data[0].calib_dataloader.dataset.targets)
         return self.train_data
 
-    def save_best_model(self):
-        if isinstance(self.solver, Fedot):
-            return self.solver.current_pipeline.save(
-                path=self.output_folder, create_subdir=True, is_datetime_in_path=True
-            )
-        elif isinstance(self.solver, Pipeline):
-            return self.solver.save(
-                path=self.output_folder, create_subdir=True, is_datetime_in_path=True
-            )
-        else:
-            for idx, p in enumerate(self.solver.ensemble_branches):
-                Pipeline(p).save(
-                    f"./raf_ensemble/{idx}_ensemble_branch", create_subdir=True
-                )
-            Pipeline(self.solver.ensemble_head).save(
-                f"./raf_ensemble/ensemble_head", create_subdir=True
-            )
+    def save(self, mode: str = 'all', **kwargs):
+        is_fedot_solver = self.manager.condition_check.solver_is_fedot_class(self.manager.solver)
 
-    def convert_model(
+        def save_model(api_manager):
+            return Either(value=api_manager.solver,
+                          monoid=[api_manager.solver,
+                                  api_manager.condition_check.solver_is_fedot_class(
+                                      api_manager.solver)]). \
+                either(left_function=lambda pipeline: pipeline.save(path=api_manager.compute_config.output_folder,
+                                                                    create_subdir=True, is_datetime_in_path=True),
+                       right_function=lambda solver: solver.current_pipeline.save(
+                           path=api_manager.compute_config.output_folder,
+                           create_subdir=True,
+                           is_datetime_in_path=True))
+
+        def save_opt_hist(api_manager):
+            return self.manager.solver.history.save(
+                f"{self.manager.compute_config.output_folder}/optimization_history.json")
+
+        def save_metrics(api_manager):
+            return self.metric_dict.to_csv(
+                f'{self.manager.compute_config.output_folder}/metrics.csv')
+
+        def save_preds(api_manager):
+            return pd.DataFrame(api_manager.predicted_labels).to_csv(
+                f'{self.manager.compute_config.output_folder}/labels.csv')
+
+        method_dict = {'metrics': save_metrics, 'model': save_model, 'opt_hist': save_opt_hist,
+                       'prediction': save_preds}
+        self.manager.create_folder(self.manager.compute_config.output_folder)
+        if not is_fedot_solver:
+            del method_dict['opt_hist']
+
+        def save_all(api_manager):
+            for method in method_dict.values():
+                try:
+                    method(api_manager)
+                except Exception as ex:
+                    self.manager.logger.info(f'Error during saving. Exception - {ex}')
+
+        Either(value=self.manager, monoid=[self.manager, mode.__contains__('all')]). \
+            either(left_function=lambda api_manager: method_dict[mode](self.manager),
+                   right_function=lambda api_manager: save_all(api_manager))
+
+    def export(
             self,
             framework: str = "ONNX",
             framework_config: dict = None,
@@ -278,3 +379,12 @@ class FedCore(Fedot):
                 )
                 converted_model = ONNXInferenceModel("converted-model.onnx")
         return converted_model
+
+    def shutdown(self):
+        """Shutdown Dask client"""
+        if self.manager.dask_client is not None:
+            self.manager.dask_client.close()
+            del self.manager.dask_client
+        if self.manager.dask_cluster is not None:
+            self.manager.dask_cluster.close()
+            del self.manager.dask_cluster
