@@ -53,32 +53,19 @@ class FedCore(Fedot):
 
     def __init_fedcore_backend(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('-' * 50)
-        self.logger.info('Initialising Industrial Repository')
-        if self.manager.industrial_config.is_default_fedot_context:
-            self.logger.info(f'-------------------------------------------------')
-            self.logger.info('Initialising Fedot Evolutionary Optimisation params')
-            self.repo = FedcoreModels().setup_default_repository()
-            self.manager.automl_config.optimisation_strategy = self.manager.optimisation_agent['Fedot']
-        else:
-            self.logger.info(f'-------------------------------------------------')
-            self.logger.info('Initialising Industrial Evolutionary Optimisation params')
-            self.repo = FedcoreModels().setup_repository(backend=self.manager.compute_config.backend)
-            optimisation_agent = self.manager.automl_config.optimisation_strategy['optimisation_agent']
-            optimisation_params = self.manager.automl_config.optimisation_strategy['optimisation_strategy']
-            self.manager.automl_config.optimisation_strategy = partial(
-                self.manager.optimisation_agent[optimisation_agent],
-                optimisation_params=optimisation_params)
+        self.logger.info('Initialising Fedcore Repository')
+        self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
+        self.repo = FedcoreModels().setup_repository()
+        optimisation_agent = self.manager.automl_config.optimisation_strategy['optimisation_agent']
+        optimisation_params = self.manager.automl_config.optimisation_strategy['optimisation_strategy']
+        self.manager.automl_config.optimisation_strategy = partial(
+            self.manager.optimisation_agent[optimisation_agent],
+            optimisation_params=optimisation_params)
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('-' * 50)
         self.logger.info('Initialising Dask Server')
-        if self.manager.automl_config.config['initial_assumption'] is None:
-            self.manager.automl_config.config['initial_assumption'] = \
-                self.manager.industrial_config.config['initial_assumption'].build()
-        else:
-            self.manager.automl_config.config['initial_assumption'] = \
-                self.manager.automl_config.config['initial_assumption'].build()
         dask_server = DaskServer(self.manager.compute_config.distributed)
         self.manager.dask_client = dask_server.client
         self.manager.dask_cluster = dask_server.cluster
@@ -86,38 +73,36 @@ class FedCore(Fedot):
         self.logger.info('-' * 50)
         self.logger.info('Initialising solver')
         self.manager.solver = Fedot(
-            **self.manager.learning_config.config['learning_strategy_params'],
-            metric=self.manager.learning_config.config['optimisation_loss'],
+            timeout=self.manager.automl_config.config['timeout'],
+            # **self.manager.automl_config.config['learning_strategy_params'],
+            # metric=self.manager.learning_config.config['optimisation_loss'],
             problem=self.manager.automl_config.config['task'],
-            task_params=self.manager.industrial_config.task_params
-            if self.manager.industrial_config.is_forecasting_context else self.manager.automl_config.config
-            ['task_params'], optimizer=self.manager.automl_config.optimisation_strategy,
-            available_operations=self.manager.automl_config.config['available_operations'],
-            initial_assumption=self.manager.automl_config.config['initial_assumption'])
+            # task_params=self.manager.industrial_config.task_params
+            # if self.manager.industrial_config.is_forecasting_context else self.manager.automl_config.config
+            # ['task_params'], optimizer=self.manager.automl_config.optimisation_strategy,
+            # available_operations=self.manager.automl_config.config['available_operations'],
+            # initial_assumption=self.manager.automl_config.config['initial_assumption']
+        )
         return input_data
 
     def _process_input_data(self, input_data):
-        train_data = Either.insert(input_data).then(lambda data: deepcopy(data)). \
-            then(lambda data: DataCheck(input_data=data, task=self.manager.automl_config.config['task'],
-                                        task_params=self.manager.automl_config.config['task_params'], fit_stage=True,
-                                        industrial_task_params=self.manager.industrial_config.strategy_params)). \
-            then(lambda data_cls: (data_cls.check_input_data(), data_cls.get_target_encoder())).value
-
-        train_data.features = train_data.features.squeeze() if self.manager.industrial_config.is_default_fedot_context \
-            else train_data.features
+        data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
+                             optimised_model=self.manager.automl_config.config['initial_assumption']
+                             )
+        train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
         return train_data
 
-    def _pretrain_before_optimise(self, fedot_pipeline: Pipeline):
-        pretrained_model = fedot_pipeline.fit(self.train_data)
-        self.train_data.target = pretrained_model.predict
-        return pretrained_model
+    def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
+        pretrained_model = fedot_pipeline.fit(train_data)
+        train_data.target = pretrained_model.predict
+        return train_data
 
     def __abstract_predict(self, predict_data):
         custom_predict = all([not self.manager.condition_check.solver_is_fedot_class(self.manager.solver),
                               not self.manager.condition_check.solver_is_pipeline_class(self.manager.solver)])
         predict = Either(value=predict_data,
                          monoid=[predict_data, custom_predict]).either(
-            left_function=lambda predict_for_solver:  self.manager.solver.predict(predict_for_solver),
+            left_function=lambda predict_for_solver: self.manager.solver.predict(predict_for_solver),
             right_function=lambda predict_for_custom: self.manager.solver.predict(predict_for_custom))
         predict = Maybe.insert(predict).then(lambda x: x.predict if isinstance(predict, OutputData) else x).value
         return predict
@@ -133,11 +118,16 @@ class FedCore(Fedot):
         """
 
         def fit_function(train_data):
-            return Either(value=train_data, monoid=[FEDOT_ASSUMPTIONS["training"].build(),
-                                                    self.manager.learning_config.
-                          config['learning_strategy'].__contains__('from_scratch')]). \
-                either(left_function=self.manager.solver.fit,
-                       right_function=self._pretrain_before_optimise)
+            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]
+            model_learning_pipeline.heads[0].parameters = self.manager.learning_config.config[
+                'learning_strategy_params']
+            pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'].__contains__(
+                'from_scratch')
+            fitted_solver = Maybe.insert(train_data).then(
+                lambda data: self._pretrain_before_optimise(model_learning_pipeline.build(),
+                                                            data) if pretrain_before_optimise else data). \
+                then(self.manager.solver.fit).maybe(None, lambda solver: solver)
+            return fitted_solver
 
         with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
             solver = Maybe.insert(self._process_input_data(input_data)). \
@@ -281,35 +271,6 @@ class FedCore(Fedot):
             path (str): path to the model
 
         """
-
-    def load_data(self, path: str = None, supplementary_data: dict = None):
-        pretrained_scenario = all(
-            [
-                any([path.__contains__("CIFAR"), path.__contains__("MNIST")]),
-                supplementary_data is not None,
-            ]
-        )
-        torchvision_scenario = all(
-            [
-                supplementary_data is not None,
-                "torchvision_dataset" in supplementary_data.keys(),
-                "torchvision_dataset" == True,
-            ]
-        )
-        custom_scenario = "pretrain" if pretrained_scenario else "directory"
-        data_loader = ApiLoader()
-        self.train_data = Either(
-            value="torchvision", monoid=[custom_scenario, torchvision_scenario]
-        ).either(
-            left_function=lambda loader_type: data_loader.load_data(
-                loader_type, supplementary_data, path
-            ),
-            right_function=lambda loader_type: data_loader.load_data(
-                loader_type, supplementary_data, path
-            ),
-        )
-        self.target = np.array(self.train_data[0].calib_dataloader.dataset.targets)
-        return self.train_data
 
     def save(self, mode: str = 'all', **kwargs):
         is_fedot_solver = self.manager.condition_check.solver_is_fedot_class(self.manager.solver)

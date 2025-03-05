@@ -65,6 +65,7 @@ from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXM
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.setups import QAT_1, PTQ_1
 
+
 class FedotOperationConstant(Enum):
     FEDOT_TASK = {
         "classification": Task(TaskTypesEnum.classification),
@@ -292,11 +293,11 @@ class ModelCompressionConstant(Enum):
     PRUNING_LAYERS_IMPL = (torchvision.ops.misc.Conv2dNormActivation,
                            torch.nn.modules.container.Sequential,
                            torch.nn.modules.conv.Conv2d)
-    
+
     DECOMPOSABLE_LAYERS = {
         # torch.nn.modules.linear.NonDynamicallyQuantizableLinear: DecomposedNonDynamicallyQuantizableLinear,
         torch.nn.Linear: DecomposedLinear,
-        torch.nn.Conv2d : DecomposedConv2d,
+        torch.nn.Conv2d: DecomposedConv2d,
         torch.nn.Embedding: DecomposedEmbedding
     }
 
@@ -371,15 +372,23 @@ class ONNX_CONFIG(Enum):
         "dynamic_axes": {"input": [0], "output": [0]},
     }
 
+
 class FedcoreInitialAssumptions(Enum):
     qat_1 = QAT_1
     ptq_1 = PTQ_1
+
+
+class TorchvisionBenchmark(Enum):
+    CLASSIFICATION = ["CIFAR10", "CIFAR100", 'FasnionMNIST']
+    OBJECT_DETECTION = ['VOCDetection', 'COCO']
+    SEGMENTATION = ['VOCSegmentation']
+
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
 FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
-FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value ###
+FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value  ###
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
@@ -435,5 +444,12 @@ KL_LOSS = TorchLossesConstant.KL_LOSS.value
 ONNX_INT8_CONFIG = ONNX_CONFIG.INT8_CONFIG.value
 DEFAULT_TORCH_DATASET = {
     "CIFAR10": torchvision.datasets.CIFAR10,
+    "CIFAR100": torchvision.datasets.CIFAR100,
+    'FasnionMNIST': torchvision.datasets.FashionMNIST,
+    'EuroSAT': torchvision.datasets.EuroSAT,
     "MNIST": torchvision.datasets.MNIST,
+    'COCO': torchvision.datasets.CocoDetection,
+    'ImageNet': torchvision.datasets.ImageNet,
+    'VOCSegmentation': torchvision.datasets.VOCSegmentation,
+    'VOCDetection': torchvision.datasets.VOCDetection
 }

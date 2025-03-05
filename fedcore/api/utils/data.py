@@ -13,12 +13,12 @@ from fedcore.data.data import CompressionInputData
 
 
 def get_compression_input(
-    model,
-    train_dataloader,
-    calib_dataloader,
-    task="classification",
-    num_classes=None,
-    train_loss=None,
+        model,
+        train_dataloader,
+        calib_dataloader,
+        task="classification",
+        num_classes=None,
+        train_loss=None,
 ):
     from fedcore.repository.constanst_repository import FEDOT_TASK
     input_data = CompressionInputData(
@@ -51,7 +51,7 @@ def check_multivariate_data(data: pd.DataFrame) -> tuple:
 
 
 def init_input_data(
-    X: pd.DataFrame, y: Optional[np.ndarray], task: str = "classification"
+        X: pd.DataFrame, y: Optional[np.ndarray], task: str = "classification"
 ) -> InputData:
     """
     Initializes a Fedot InputData object from input features and target.
@@ -103,10 +103,13 @@ def init_input_data(
 
     return input_data
 
+
 def _X2Xy(collate_fn):
     def wrapped(batch, *args, **kwargs):
         return collate_fn(batch, *args, **kwargs), [None] * len(batch)
+
     return wrapped
+
 
 class DataLoaderHandler:
     __non_included_kwargs = {'check_worker_number_rationality'}
@@ -120,7 +123,6 @@ class DataLoaderHandler:
             yield (i, elem) if enumerate else elem
             i += 1
 
-
     collate_modes = {
         'X2Xy': _X2Xy,
         'pass': lambda x: x
@@ -128,32 +130,33 @@ class DataLoaderHandler:
 
     @classmethod
     def __clean_dict(cls, d: dict, is_iterable=False):
-      d = {attr: val for attr, val in d.items() if not (attr.startswith('_') or attr in cls.__non_included_kwargs)}
+        d = {attr: val for attr, val in d.items() if not (attr.startswith('_') or attr in cls.__non_included_kwargs)}
 
-      if is_iterable:
-        d.pop('sampler', None)
+        if is_iterable:
+            d.pop('sampler', None)
 
-      if any((d.get(k, False) for k in ('batch_size', 'shuffle', 'sampler', 'drop_last'))):
-        d.pop('batch_sampler', None)
-      if any((d.get(k, False) for k in ('batch_size', 'shuffle', 'sampler', 'drop_last'))):
-        d.pop('batch_sampler', None)
+        if any((d.get(k, False) for k in ('batch_size', 'shuffle', 'sampler', 'drop_last'))):
+            d.pop('batch_sampler', None)
+        if any((d.get(k, False) for k in ('batch_size', 'shuffle', 'sampler', 'drop_last'))):
+            d.pop('batch_sampler', None)
 
-      if d.get('batch_size', None):
-        d.pop('drop_last', None)
-      if d.get('drop_last', False):
-        d.pop('batch_size', None)
-      return d
+        if d.get('batch_size', None):
+            d.pop('drop_last', None)
+        if d.get('drop_last', False):
+            d.pop('batch_size', None)
+        return d
 
     @classmethod
-    def check_convert(cls, dataloader: DataLoader, mode: Union[None, str, Callable] = None, max_batches:int = None, enumerate=False) -> DataLoader:
+    def check_convert(cls, dataloader: DataLoader, mode: Union[None, str, Callable] = None, max_batches: int = None,
+                      enumerate=False) -> DataLoader:
         batch = cls.__get_batch_sample(dataloader)
         dl_params = {attr: getattr(dataloader, attr) for attr in dir(dataloader)}
         dl_params = cls.__clean_dict(dataloader.__dict__, hasattr(dataloader.dataset, '__iter__'))
         modified1, dl_params = cls.__substitute_collate_fn(dl_params, batch, mode)
         if modified1:
-          dataloader = DataLoader(**dl_params)
+            dataloader = DataLoader(**dl_params)
         if max_batches or enumerate:
-          dataloader = cls.limit_batches(dataloader, max_batches, enumerate)
+            dataloader = cls.limit_batches(dataloader, max_batches, enumerate)
         return dataloader
 
     @classmethod
@@ -179,15 +182,17 @@ class DataLoaderHandler:
 
     @staticmethod
     def limit_batches(dataloader, max_batches, enumerate=False):
-      if max_batches is None and not enumerate:
-          return dataloader
-      return DataLoaderHandler.__substitute_iter(dataloader, max_batches, enumerate)
-      
+        if max_batches is None and not enumerate:
+            return dataloader
+        return DataLoaderHandler.__substitute_iter(dataloader, max_batches, enumerate)
+
     @staticmethod
     def __substitute_iter(iterable, max_batches=None, enumerate=False):
         max_batches = max_batches or float('inf')
+
         def newiter(_):
             return iter(DataLoaderHandler.limited_generator(iterable, max_batches, enumerate))
+
         return DelegatorFactory.create_delegator_inst(iterable, {'__iter__': newiter})
 
     @staticmethod

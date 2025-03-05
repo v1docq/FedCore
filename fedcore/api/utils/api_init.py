@@ -1,6 +1,8 @@
 import logging
 from typing import Union, Callable, List
 
+from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
+
 
 class ConfigTemplate:
     def __init__(self):
@@ -10,7 +12,8 @@ class ConfigTemplate:
     def build(self, config: dict = None):
         for key, method in self.keys.items():
             val = method(config[key]) if key in config.keys() else method()
-            self.config.update({key:val})
+            self.config.update({key: val})
+        return self
 
 
 class ApiManager(ConfigTemplate):
@@ -22,6 +25,7 @@ class ApiManager(ConfigTemplate):
                      'automl_config': self.with_automl_config,
                      'learning_config': self.with_learning_config,
                      'compute_config': self.with_compute_config}
+        self.optimisation_agent = {"Fedcore": FedcoreEvoOptimizer}
 
     def null_state_object(self):
         self.solver = None
@@ -51,6 +55,7 @@ class ApiManager(ConfigTemplate):
             else:
                 method()
         return self
+
 
 class DeviceConfig(ConfigTemplate):
     def __init__(self):
@@ -103,6 +108,7 @@ class AutomlConfig(ConfigTemplate):
         self.keys = {'task': self.with_task,
                      'initial_assumption': self.with_initial_assumption,
                      'use_automl': self.with_automl,
+                     'timeout':self.with_timeout,
                      'available_operations': self.with_available_operations,
                      'optimisation_strategy': self.with_optimisation_strategy}
 
@@ -117,7 +123,9 @@ class AutomlConfig(ConfigTemplate):
     def with_automl(self, use_automl: bool = False):
         self.use_automl = use_automl
         return self.use_automl
-
+    def with_timeout(self, timeout: int = 10):
+        self.timeout = timeout
+        return self.use_automl
     def with_available_operations(self, available_operations: List[str] = None):
         self.available_operations = available_operations
         return self.available_operations
@@ -133,6 +141,7 @@ class LearningConfig(ConfigTemplate):
         self.keys = {'learning_strategy': self.with_learning_strategy,
                      'learning_strategy_params': self.with_learning_strategy_params,
                      'peft_strategy': self.with_peft_strategy,
+                     'peft_strategy_params': self.with_peft_strategy_params,
                      'loss': self.with_loss}
 
     def with_learning_strategy(self, learning_strategy: str = None):
@@ -142,6 +151,10 @@ class LearningConfig(ConfigTemplate):
     def with_learning_strategy_params(self, learning_strategy_params: dict = None):
         self.learning_strategy_params = learning_strategy_params
         return self.learning_strategy_params
+
+    def with_peft_strategy_params(self, peft_strategy_params: dict = None):
+        self.peft_strategy_params = peft_strategy_params
+        return self.peft_strategy_params
 
     def with_peft_strategy(self, peft_strategy: dict = None):
         self.peft_strategy = peft_strategy

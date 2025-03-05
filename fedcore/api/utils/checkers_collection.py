@@ -1,20 +1,17 @@
 import logging
 from copy import deepcopy
-from typing import Union
 
 import numpy as np
-import torch
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
-from pymonad.either import Either
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+from fedot.core.repository.tasks import (
+    Task,
+    TaskTypesEnum,
+)
 
-from fedcore.architecture.utils.loader import collate
 from fedcore.data.data import CompressionInputData, CompressionOutputData
+from fedcore.models.backbone.backbone_loader import load_backbone
 from fedcore.repository.config_repository import TASK_MAPPING
-from fedcore.repository.constanst_repository import FEDOT_TASK
-from fedcore.repository.model_repository import BACKBONE_MODELS
 
 
 class DataCheck:
@@ -31,45 +28,18 @@ class DataCheck:
 
     """
 
-    def __init__(self, input_data: Union[InputData, tuple] = None, task=None):
+    def __init__(self, peft_task=None, optimised_model=None):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.input_data = input_data
-        self.task = task
+        self.task = peft_task
+        self.model = optimised_model
+        self._init_dummy_val()
 
-    def _check_od_dataset(self, dataset_type):
-        list(self.input_data.classes.keys())
-        target = []
-        loader = DataLoader(self.input_data, batch_size=1, shuffle=False, collate_fn=collate)
-        gen = (target.append((targets[0]["boxes"], targets[0]["labels"])) for i, (images, targets)
-               in enumerate(tqdm(loader, desc="Fitting")))
-        return gen
+    def _init_dummy_val(self):
+        self.fedot_dummy_task = Task(TaskTypesEnum.classification)
+        self.fedot_dummy_idx = np.arange(1)
+        self.fedot_dummy_datatype = DataTypesEnum.image
 
-    def _check_directory_dataset(self, dataset_type):
-        if dataset_type == "fedcore":
-            return self.input_data[0], self.input_data[1]
-        else:
-            path_to_files, path_to_labels, path_to_model = (
-                self.input_data[0],
-                self.input_data[1],
-                self.input_data[2],
-            )
-            torch_dataloader = self.cv_dataset(path_to_files, path_to_labels)
-            if not path_to_model.__contains__("pt"):
-                torch_model = BACKBONE_MODELS[path_to_model]
-            else:
-                torch_model = torch.load(
-                    path_to_model, map_location=torch.device("cpu")
-                )
-
-            compression_dataset = CompressionInputData(
-                features=np.zeros((2, 2)),
-                num_classes=torch_dataloader.num_classes,
-                calib_dataloader=torch_dataloader,
-                target=torch_model,
-            )
-        return compression_dataset, torch_model
-
-    def _init_input_data(self, manually_done=False) -> None:
+    def _init_input_data(self, input_data: [InputData, CompressionInputData] = None, manually_done=False) -> None:
         """Initializes the `input_data` attribute based on its type.
 
         If a tuple (X, y) is provided, it converts it to a Fedot InputData object
@@ -80,38 +50,27 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
-        if not manually_done:
-            object_detection_scenario = self.task == "detection"
-            fedcore_scenario = isinstance(
-                self.input_data[0], (CompressionInputData, CompressionOutputData)
-            )
-            custom_scenario = "fedcore" if fedcore_scenario else "directory"
-
-            compression_dataset, torch_model = Either(
-                value="detection", monoid=[custom_scenario, object_detection_scenario]
-            ).either(
-                left_function=lambda dataset_type: self._check_directory_dataset(
-                    dataset_type
-                ),
-                right_function=lambda dataset_type: self._check_od_dataset(
-                    dataset_type
-                ),
-            )
+        if input_data.supplementary_data.is_auto_preprocessed:
+            compression_dataset = input_data
         else:
-            compression_dataset, torch_model = self.input_data
+            compression_dataset, torch_model = input_data
+
+        if self.model is not None:
+            torch_model = load_backbone(self.model)
+            compression_dataset.target = torch_model
 
         self.input_data = InputData(
             features=compression_dataset,  # CompressionInputData object
-            idx=np.arange(1),  # dummy value
+            idx=self.fedot_dummy_idx,  # dummy value
             features_names=compression_dataset.num_classes,  # CompressionInputData attribute
-            task=FEDOT_TASK["classification"],  # dummy value
-            data_type=DataTypesEnum.image,  # dummy value
+            task=self.fedot_dummy_task,  # dummy value
+            data_type=self.fedot_dummy_datatype,  # dummy value
             target=torch_model,  # model for compression
             supplementary_data=compression_dataset.supplementary_data,
         )
         self.input_data.supplementary_data.is_auto_preprocessed = True
 
-    def _check_input_data_features(self):
+    def _check_dataloader(self):
         """Checks and preprocesses the features in the input data.
 
         - Replaces NaN and infinite values with 0.
@@ -119,7 +78,7 @@ class DataCheck:
 
         """
 
-    def _check_input_data_target(self):
+    def _check_optimised_model(self):
         """Checks and preprocesses the features in the input data.
 
         - Replaces NaN and infinite values with 0.
@@ -127,7 +86,7 @@ class DataCheck:
 
         """
 
-    def check_input_data(self, manually_done=False) -> InputData:
+    def check_input_data(self, input_data: [InputData, CompressionInputData] = None) -> InputData:
         """Checks and preprocesses the input data for Fedot AutoML.
 
         Performs the following steps:
@@ -139,11 +98,10 @@ class DataCheck:
             InputData: The preprocessed and initialized Fedot InputData object.
 
         """
-        self._init_input_data(manually_done)
-        self._check_input_data_features()
-        self._check_input_data_target()
+        self._init_input_data(input_data)
+        self._check_dataloader()
+        self._check_optimised_model()
         return self.input_data
-
 
 
 class ApiConfigCheck:
@@ -191,9 +149,9 @@ class ApiConfigCheck:
                     recursive_update(v, key, value)
 
         # we select automl problem
-        assert 'task' in kwargs, 'Problem type is not provided'
-        problem_type = kwargs['task']
-        config['automl_config'] = TASK_MAPPING[problem_type]
+        # assert 'task' in kwargs, 'Problem type is not provided'
+        # problem_type = kwargs['task']
+        # config['automl_config'] = TASK_MAPPING[problem_type]
 
         # change MEGA config with keyword arguments
         for param, value in kwargs.items():

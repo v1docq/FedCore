@@ -43,13 +43,16 @@ class PeftLearningConfigConstant(Enum):
 
 class AutomlConfigConstant(Enum):
     DEFAULT_SUBCONFIG = {'use_automl': True,
+                         'initial_assumption': None,
+                         'timeout': 10,
                          'optimisation_strategy': {'optimisation_strategy':
                                                        {'mutation_agent': 'random',
-                                                        'mutation_strategy': 'growth_mutation_strategy'},
-                                                   'optimisation_agent': 'Industrial'}}
-    DEFAULT_CLF_AUTOML_CONFIG = {'task': 'classification', **DEFAULT_SUBCONFIG}
-    DEFAULT_REG_AUTOML_CONFIG = {'task': 'regression', **DEFAULT_SUBCONFIG}
-    DEFAULT_TSF_AUTOML_CONFIG = {'task': 'ts_forecasting', 'task_params': {'forecast_length': 14}, **DEFAULT_SUBCONFIG}
+                                                        'mutation_strategy': "params_mutation_strategy"},
+                                                   'optimisation_agent': 'Fedcore'}}
+    DEFAULT_CLF_AUTOML_CONFIG = {'task': 'classification', 'metric': 'accuracy', **DEFAULT_SUBCONFIG}
+    DEFAULT_REG_AUTOML_CONFIG = {'task': 'regression', 'metric': 'rmse', **DEFAULT_SUBCONFIG}
+    DEFAULT_TSF_AUTOML_CONFIG = {'task': 'ts_forecasting', 'metric': 'smape',
+                                 'task_params': {'forecast_length': 14}, **DEFAULT_SUBCONFIG}
 
 
 class LearningConfigConstant(Enum):
@@ -67,16 +70,16 @@ class LearningConfigConstant(Enum):
             'optimisation_strategy': {
                 'optimisation_strategy': {
                     'mutation_agent': 'random',
-                    'mutation_strategy': 'growth_mutation_strategy'},
-                'optimisation_agent': 'Industrial'}},
+                    'mutation_strategy': "params_mutation_strategy"},
+                'optimisation_agent': 'Fedcore'}},
         'regression': {
             'task': 'regression',
             'use_automl': True,
             'optimisation_strategy': {
                 'optimisation_strategy': {
                     'mutation_agent': 'random',
-                    'mutation_strategy': 'growth_mutation_strategy'},
-                'optimisation_agent': 'Industrial'}},
+                    'mutation_strategy': "params_mutation_strategy"},
+                'optimisation_agent': 'Fedcore'}},
         'ts_forecasting': {
             'task': 'ts_forecasting',
             'use_automl': True,
@@ -85,8 +88,8 @@ class LearningConfigConstant(Enum):
             'optimisation_strategy': {
                 'optimisation_strategy': {
                     'mutation_agent': 'random',
-                    'mutation_strategy': 'growth_mutation_strategy'},
-                'optimisation_agent': 'Industrial'}}}
+                    'mutation_strategy': "params_mutation_strategy"},
+                'optimisation_agent': 'Fedcore'}}}
 
 
 class EdgeConfigConstant(Enum):
