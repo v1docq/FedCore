@@ -201,16 +201,6 @@ class BaseNeuralModel:
             if epoch > 2:
                 # Freeze batch norm mean and variance estimates
                 self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
-    #         if self._check_saving(epoch):
-    #             self.save_model(epoch, self.name)
-
-    # def _check_saving(self, epoch) -> bool:
-    #     if not self.save_each:
-    #         return False
-    #     if self.save_each != -1:
-    #         return not epoch % self.save_each
-    #     else:
-    #         return epoch == self.epochs
 
     def _default_train(self, train_loader, model, custom_loss: dict = None, val_loader=None):
         for epoch in range(1, self.epochs + 1):
@@ -228,38 +218,8 @@ class BaseNeuralModel:
                 print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
 
             for hook in self._on_epoch_end:
-                hook(epoch=epoch, val_loader=val_loader, custom_loss=custom_loss)
-            
-            # if epoch % self.eval_each == 0 and val_loader is not None:
-            #     print('Model Validation:' , self._eval(self.model, val_loader, custom_loss))
-            # if self._check_saving(epoch):
-            #     self.save_model(epoch, self.name)            
+                hook(epoch=epoch, val_loader=val_loader, custom_loss=custom_loss)         
     
-    # def save_model(self, epoch, name=''):
-    #     name = name or self.params.get('name', '')
-    #     path_pref = Path(self.checkpoint_folder)
-    #     save_only = self.params.get('save_only', '')
-    #     to_save = self.model if not save_only else Accessor.get_module(self.model, save_only)
-    #     try:
-    #         path = path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}.pth")
-    #         torch.save(
-    #             to_save,
-    #             path,
-    #         )
-    #     except Exception as x:
-    #         if os.path.exists(path):
-    #             os.remove(path)
-    #         print('Basic saving failed. Trying to use jit. \nReason: ', x.args[0])
-    #         try:
-    #             path = path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_jit.pth")
-    #             torch.jit.save(torch.jit.script(to_save), path)
-    #         except Exception as x: 
-    #             if os.path.exists(path):
-    #                 os.remove(path)
-    #             print('JIT saving failed. saving weights only. \nReason: ', x.args[0])
-    #             torch.save(to_save.state_dict(), 
-    #                         path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
-    #             )        
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
         """
