@@ -1,9 +1,10 @@
 import os
-from typing import Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 import torch
 import torch_pruning as tp
+from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.comptutaional.devices import default_device
@@ -71,6 +72,12 @@ class BaseCompressionModel:
     def _predict_model(self, x_test, output_mode: str = "default"):
         pass
 
+    def _get_example_input(self, input_data: InputData):
+        b = next(iter(input_data.features.calib_dataloader))
+        if isinstance(b, (list, tuple)) and len(b) == 2:
+            return b[0]
+        return b
+
     # def _load_pretrain_model(self):
     #     init_model_with_pretrain(label2id=label2id, id2label=id2label, pretrain_path=teacher_path)
     #
@@ -121,7 +128,7 @@ class BaseCompressionModel:
 
     def predict(
         self, input_data: CompressionInputData, output_mode: str = "default"
-    ) -> np.array:
+    ) -> Union[Any, torch.Tensor]:
         """
         Method for feature generation for all series
         """
@@ -129,8 +136,14 @@ class BaseCompressionModel:
 
     def predict_for_fit(
         self, input_data: CompressionInputData, output_mode: str = "default"
-    ) -> np.array:
+    ) -> torch.nn.Module:
         """
         Method for feature generation for all series
         """
         return self._predict_model(input_data, output_mode)
+    
+    def _diagnose(self, example_batch, base_nparams, base_macs, stage):
+        print(stage)
+        macs, nparams = tp.utils.count_ops_and_params(self.optimised_model, example_batch)
+        print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
+        print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
