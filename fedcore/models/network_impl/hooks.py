@@ -2,6 +2,7 @@ import os
 from abc import abstractmethod, ABC
 from datetime import datetime
 from pathlib import Path
+
 from functools import reduce
 from operator import iadd
 
@@ -12,6 +13,7 @@ from tqdm import tqdm
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.models.network_modules.layers.special import EarlyStopping
+
 
 
 def now_for_file():
@@ -30,6 +32,7 @@ class BaseHook(ABC):
         trigger_result = self.trigger(epoch, kws)
         if trigger_result:
             self.action(epoch, kws)
+
 
     @abstractmethod
     def trigger(self, epoch, kws):
@@ -159,6 +162,7 @@ class Evaluator(BaseHook):
                                                          mode=self.batch_type,
                                                          max_batches=self.calib_batch_limit,
                                                          enumerate=False)
+
         for batch in tqdm(val_dataloader, desc='Batch #'):
             total_iterations += 1
             inputs, targets = batch
@@ -176,7 +180,6 @@ class Evaluator(BaseHook):
                 model_loss = quality_loss
         avg_loss = loss_sum / total_iterations
         return avg_loss
-
 
 class OptimizerRenewal(BaseHook):
     def trigger(self, epoch, kws):
