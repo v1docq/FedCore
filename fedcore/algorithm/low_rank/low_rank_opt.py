@@ -10,7 +10,7 @@ from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.models.network_impl.layers import IDecomposed
+from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     DECOMPOSE_MODE,
     COMPOSE_MODE,
@@ -18,9 +18,10 @@ from fedcore.repository.constanst_repository import (
     ORTOGONAL_LOSS,
     default_device
 )
+from fedcore.algorithm.base_compression_model import BaseCompressionModel
 
 
-class LowRankModel:
+class LowRankModel(BaseCompressionModel):
     """Singular value decomposition for model structure optimization.
 
     Args:
@@ -40,10 +41,11 @@ class LowRankModel:
             self.ft_params = {}
             self.ft_params["custom_loss"] = None
             self.ft_params["epochs"] = round(self.epochs / 2)
-        self.non_adaptive_threshold = params.get('threshold', 0.5)
+        self.non_adaptive_threshold = params.get('non_adaptive_threshold', 0.5)
         # self.energy_thresholds = params.get("energy_thresholds", ENERGY_THR)
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
-        self.compose_mode = params.get("compose_mode", COMPOSE_MODE)
+        self.decomposer = params.get('decomposer', 'svd')
+        self.compose_mode = params.get("compose_mode", None)
         self.hoer_loss = HoyerLoss(params.get("hoyer_loss", HOER_LOSS))
         self.orthogonal_loss = OrthogonalLoss(
             params.get("orthogonal_loss", ORTOGONAL_LOSS)
@@ -62,7 +64,7 @@ class LowRankModel:
             else input_data.predict.target
         )
         decompose_module(
-            self.model, self.decomposing_mode, compose_mode=self.compose_mode
+            self.model, self.decomposing_mode, self.decomposer, self.compose_mode
         )
 
     def fit(self, input_data) -> None:
@@ -89,10 +91,8 @@ class LowRankModel:
         )  ### any case same model
         return self.trainer.predict(input_data, output_mode)
 
-    def _prune_weight_rank(self, model, non_adaptive_thr):
-        for name, module in model.named_children():
-            if len(list(module.children())) > 0:
-                self._prune_weight_rank(module, non_adaptive_thr)
+    def _prune_weight_rank(self, model: nn.Module, non_adaptive_thr: float):
+        for name, module in model.named_modules():
             if isinstance(module, IDecomposed): 
                 rank_threshold_pruning(decomposed_module=module,
                                        threshold=non_adaptive_thr,
@@ -100,10 +100,8 @@ class LowRankModel:
                                        module_name=name)
             
 
-    def _prepare_model_for_inference(self, model):
-        for name, module in model.named_children():
-            if len(list(module.children())) > 0:
-                self._prepare_model_for_inference(module)
+    def _prepare_model_for_inference(self, model: nn.Module):
+        for name, module in model.named_modules():
             if isinstance(module, IDecomposed):
                 module.inference_mode = True
                 module.compose_weight_for_inference()
@@ -117,8 +115,9 @@ class LowRankModel:
             ft_params: An object containing fine-tuning parameters for optimized model.
         """
         batch_iter = (b[0] for b in input_data.features.train_dataloader)
-        first_batch = next(batch_iter).to(self.device)
-        base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, first_batch)
+        example_batch = self._get_example_input(input_data).to(self.device)
+        example_batch = next(batch_iter).to(self.device)
+        base_macs, base_nparams = tp.utils.count_ops_and_params(self.model, example_batch)
 
         print("==============Truncate rank for each weight matrix=================") 
         self._prune_weight_rank(self.optimised_model, self.non_adaptive_threshold)
@@ -130,17 +129,15 @@ class LowRankModel:
         self.trainer.epochs = self.ft_params["epochs"]
         self.optimised_model = self.trainer.fit(input_data, loader_type='train')
 
-        print("==============After low rank truncation=================")
-        macs, nparams = tp.utils.count_ops_and_params(self.optimised_model, first_batch)
-        print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+        self._diagnose(example_batch, base_nparams, base_macs,
+            "==============After low rank truncation=================")
 
     def __loss(self) -> Dict[str, torch.Tensor]:
         """
         Computes the orthogonal and the Hoer loss for the model.
 
         Args:
-            model: CNN model with DecomposedConv layers.
+            model: model with IDecomposed layers.
 
         Returns:
             A dict ``{loss_name: loss_value}``

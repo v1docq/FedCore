@@ -15,7 +15,7 @@ from torch.ao.quantization.stubs import QuantStub, DeQuantStub
 from torch.ao.quantization.utils import get_qconfig_dtypes
 import torch.nn as nn
 
-from fedcore.models.network_impl.layers import (
+from fedcore.models.network_impl.decomposed_layers import (
     IDecomposed, 
     DecomposedLinear,
     DecomposedEmbedding, 

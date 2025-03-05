@@ -67,7 +67,7 @@ class QuantPostModel(BaseCompressionModel):
         model = ParentalReassembler.reassemble(model, self.params.get('additional_mapping', None))
         model.to('cpu')
         propagate_qconfig_(model, self.qconfig)
-        b = self.__get_example_input(input_data).to(self.device)
+        b = self._get_example_input(input_data).to(self.device)
         QDQWrapper.add_quant_entry_exit(model, b, allow=self.allow)
         prepare(model, inplace=True)
         self.trainer.model = model
@@ -98,11 +98,7 @@ class QuantPostModel(BaseCompressionModel):
         )
         return self.trainer.predict(input_data, output_mode)
     
-    def __get_example_input(self, input_data: InputData):
-        b = next(iter(input_data.features.calib_dataloader))
-        if isinstance(b, (list, tuple)) and len(b) == 2:
-            return b[0]
-        return b
+    
     
 
 class QuantDynamicModel(BaseCompressionModel):
