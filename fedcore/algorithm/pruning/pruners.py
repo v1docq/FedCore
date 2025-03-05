@@ -19,7 +19,7 @@ from fedcore.repository.constanst_repository import (
     PRUNER_REQUIRED_REG,
     PRUNER_WITHOUT_REQUIREMENTS,
     PRUNING_FUNC,
-    MANUAL_PRUNING_STRATEGY,
+    # MANUAL_PRUNING_STRATEGY,
 )
 
 
