@@ -8,7 +8,7 @@ DATASET = 'CIFAR10'
 DATASET_PARAMS = {'train_bs': 64,
                   'val_bs': 100,
                   'train_shuffle': True,
-                  'val_shuffle':False}
+                  'val_shuffle': False}
 METRIC_TO_OPTIMISE = ['accuracy', 'latency', 'throughput']
 
 USER_CONFIG = {'task': 'classification',
@@ -16,8 +16,12 @@ USER_CONFIG = {'task': 'classification',
                'initial_assumption': 'ResNet18',
                'timeout': 200,
                'learning_strategy': 'from_scratch',
-               'learning_strategy_params': dict(epochs=15,
-                                                learning_rate=0.0001
+               'learning_strategy_params': dict(epochs=5,
+                                                learning_rate=0.0001,
+                                                loss='crossentropy',
+                                                custom_learning_params=dict(use_early_stopping={'patience': 30,
+                                                                                                'maximise_task': False,
+                                                                                                'delta': 0.01})
                                                 ),
                'peft_strategy': 'pruning',
                'peft_strategy_params': dict(pruning_iterations=1,

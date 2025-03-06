@@ -65,7 +65,8 @@ from fedcore.models.network_modules.losses import (
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.setups import QAT_1, PTQ_1
 from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
-
+from fedcore.models.network_impl.hooks import Saver, FitReport, Scheduler
+from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
 
 
 class FedotOperationConstant(Enum):
@@ -295,7 +296,7 @@ class ModelCompressionConstant(Enum):
     # PRUNING_LAYERS_IMPL = (torchvision.ops.misc.Conv2dNormActivation,
     #                        torch.nn.modules.container.Sequential,
     #                        torch.nn.modules.conv.Conv2d)
-    
+
     DECOMPOSABLE_LAYERS = {
         # torch.nn.modules.linear.NonDynamicallyQuantizableLinear: DecomposedNonDynamicallyQuantizableLinear,
         torch.nn.Linear: DecomposedLinear,
@@ -317,7 +318,7 @@ class ModelCompressionConstant(Enum):
 
 
 class TorchLossesConstant(Enum):
-    CROSS_ENTROPY = nn.CrossEntropyLoss
+    crossentropy = nn.CrossEntropyLoss
     MULTI_CLASS_CROSS_ENTROPY = nn.BCEWithLogitsLoss
     MSE = nn.MSELoss
     KL_LOSS = nn.KLDivLoss  #
@@ -389,11 +390,17 @@ class FedcoreInitialAssumptions(Enum):
     qat_1 = QAT_1
     ptq_1 = PTQ_1
 
-from fedcore.models.network_impl.hooks import Saver
-from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
+
+class LoggingHooks(Enum):
+    SAVER = Saver
+    FITREPORT = FitReport
+
+
+class ModelLearningHooks(Enum):
+    SCHEDULER = Scheduler
+
 
 class Hooks(Enum):
-    SAVER = Saver
     CUTTLEFISH_PRUNER = DynamicRankPruner
 
 
@@ -445,7 +452,7 @@ PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
 QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
 INITIAL_ASSUMPTIONS = {kvp.name: kvp.value for kvp in FedcoreInitialAssumptions}
 
-CROSS_ENTROPY = TorchLossesConstant.CROSS_ENTROPY.value
+CROSS_ENTROPY = TorchLossesConstant.crossentropy.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
 MSE = TorchLossesConstant.MSE.value
 KL_LOSS = TorchLossesConstant.KL_LOSS.value
