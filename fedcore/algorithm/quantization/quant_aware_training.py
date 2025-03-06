@@ -58,7 +58,7 @@ class QuantAwareModel(BaseCompressionModel):
         # uninplace(model)
         model = ParentalReassembler.reassemble(model, self.params.get('additional_mapping', None))
         propagate_qconfig_(model, self.qconfig)
-        b = self.__get_example_input(input_data).to(self.device)
+        b = self._get_example_input(input_data).to(self.device)
         QDQWrapper.add_quant_entry_exit(model, b, allow=self.allow, mode='qat')
         model.train()
         prepare_qat(model, inplace=True)
@@ -91,9 +91,3 @@ class QuantAwareModel(BaseCompressionModel):
             self.optimised_model if output_mode == "compress" else self.model
         )
         return self.trainer.predict(input_data, output_mode)
-    
-    def __get_example_input(self, input_data: InputData):
-        b = next(iter(input_data.features.calib_dataloader))
-        if isinstance(b, (list, tuple)) and len(b) == 2:
-            return b[0]
-        return b

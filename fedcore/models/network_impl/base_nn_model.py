@@ -23,6 +23,7 @@ from fedcore.data.data import CompressionInputData
 from fedcore.losses.utils import _get_loss_metric
 from fedcore.models.network_modules.layers.special import EarlyStopping
 from fedcore.repository.constanst_repository import default_device, TorchLossesConstant
+from fedcore.repository.constanst_repository import default_device, Hooks
 from fedcore.architecture.abstraction.accessor import Accessor
 
 
@@ -63,6 +64,7 @@ class BaseNeuralModel:
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
         self.learning_params = self.params.get('learning_params', {})
+        self._optimizer_gen = partial(torch.optim.Adam, lr=self.learning_rate)
 
         # TODO move to learning or model params
         # self.is_operation = self.params.get('is_operation', False)  ###
@@ -100,6 +102,10 @@ class BaseNeuralModel:
         self.model.load_state_dict(torch.load(path, weights_only=True))
         self.model.eval()
 
+        # add hooks
+        self._on_epoch_end = []
+        self._on_epoch_start = []
+
     def __check_and_substitute_loss(self, train_data: InputData):
         if (train_data.supplementary_data.col_type_ids is not None
                 and train_data.supplementary_data.col_type_ids.get("loss", None)
@@ -135,9 +141,13 @@ class BaseNeuralModel:
         val_loader = getattr(input_data.features, 'calib_dataloader', None)
         loss_fn = self.get_loss()
         self.__check_and_substitute_loss(input_data)
+        if self.model is None:
+            self.model = input_data.target
+        self._init_hooks()
         optimizer = self.get_optimizer()
         self.model = input_data.target if self.model is None else self.model
         self.optimised_model = self.model
+        self.optimizer = self._optimizer_gen(self.model.parameters())
         self.model.to(self.device)
         self._train_loop(
             train_loader=train_loader,
@@ -239,55 +249,25 @@ class BaseNeuralModel:
             if epoch > 2:
                 # Freeze batch norm mean and variance estimates
                 self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
-            if self._check_saving(epoch):
-                self.save_model(epoch, self.name)
 
-    def _check_saving(self, epoch) -> bool:
-        if not self.save_each:
-            return False
-        if self.save_each != -1:
-            return not epoch % self.save_each
-        else:
-            return epoch == self.epochs
-
-    def _default_fit_callback(self, model_loss: dict, current_epoch: int, custom_loss: dict = None, val_loader=None):
-
-        if model_loss is not None:
-            print(
-                "Epoch: {}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}".format(
-                    current_epoch, avg_loss, *model_loss
+    def _default_train(self, train_loader, model, custom_loss: dict = None, val_loader=None):
+        for epoch in range(1, self.epochs + 1):
+            for hook in self._on_epoch_start:
+                hook(epoch=epoch)
+            self.model.train()
+            model_loss, avg_loss = self._train_loop(train_loader, model, custom_loss)
+            if model_loss is not None:
+                print(
+                    "Epoch: {}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}".format(
+                        epoch, avg_loss, *model_loss
+                    )
                 )
-            )
-        else:
-            print("Epoch: {}, Average loss {}".format(current_epoch, avg_loss))
-        if current_epoch % self.eval_each == 0 and val_loader is not None:
-            print('Model Validation:', self._eval(self.model, val_loader, custom_loss))
+            else:
+                print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
 
-    def save_model(self, epoch, name=''):
-        name = name or self.params.get('name', '')
-        path_pref = Path(self.checkpoint_folder)
-        save_only = self.params.get('save_only', '')
-        to_save = self.model if not save_only else Accessor.get_module(self.model, save_only)
-        try:
-            path = path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}.pth")
-            torch.save(
-                to_save,
-                path,
-            )
-        except Exception as x:
-            if os.path.exists(path):
-                os.remove(path)
-            print('Basic saving failed. Trying to use jit. \nReason: ', x.args[0])
-            try:
-                path = path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_jit.pth")
-                torch.jit.save(torch.jit.script(to_save), path)
-            except Exception as x:
-                if os.path.exists(path):
-                    os.remove(path)
-                print('JIT saving failed. saving weights only. \nReason: ', x.args[0])
-                torch.save(to_save.state_dict(),
-                           path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
-                           )
+            for hook in self._on_epoch_end:
+                hook(epoch=epoch, val_loader=val_loader, custom_loss=custom_loss)
+
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
         """
@@ -362,7 +342,18 @@ class BaseNeuralModel:
             return 5  # Validate less frequently after learning rate decay
         else:
             return 2  # Default validation frequency
-
+        
     @property
     def is_quantised(self):
         return getattr(self, '_is_quantised', False)
+
+    def _init_hooks(self):
+        for hook_elem in Hooks:
+            hook = hook_elem.value
+            if not self.params.get(hook._SUMMON_KEY, None):
+                continue
+            hook = hook(self.params, self.model)
+            if hook._hook_place == 'post':
+                self._on_epoch_end.append(hook)
+            else:
+                self._on_epoch_start.append(hook)

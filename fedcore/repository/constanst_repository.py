@@ -43,7 +43,7 @@ from fedcore.metrics.api_metric import (
     calculate_forecasting_metric,
     calculate_regression_metric,
 )
-from fedcore.models.network_impl.layers import (
+from fedcore.models.network_impl.decomposed_layers import (
     DecomposedConv2d,
     DecomposedEmbedding,
     DecomposedLinear,
@@ -60,10 +60,12 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
-from fedcore.neural_compressor.model.onnx_model import ONNXModel
-from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
+# from fedcore.neural_compressor.model.onnx_model import ONNXModel
+# from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.setups import QAT_1, PTQ_1
+from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
+
 
 
 class FedotOperationConstant(Enum):
@@ -279,21 +281,21 @@ class ModelCompressionConstant(Enum):
         "mha_out": tp.prune_multihead_attention_out_channels,
         "mha_in": tp.prune_multihead_attention_in_channels,
     }
-    MANUAL_PRUNING_STRATEGY = {
-        "manual_conv": ["conv_out", "conv_in"],
-        "manual_linear": ["linear_out", "linear_in"],
-        "manual_attention": ["mha_out", "mha_in"],
-        "manual_parameter": ["conv_out", "conv_in"],
-        "manual_embedding": ["embedding_out", "embedding_in"],
-    }
+    # MANUAL_PRUNING_STRATEGY = {
+    #     "manual_conv": ["conv_out", "conv_in"],
+    #     "manual_linear": ["linear_out", "linear_in"],
+    #     "manual_attention": ["mha_out", "mha_in"],
+    #     "manual_parameter": ["conv_out", "conv_in"],
+    #     "manual_embedding": ["embedding_out", "embedding_in"],
+    # }
 
     PRUNING_NORMS = [0, 1, 2]
     PRUNING_REDUCTION = ["sum", "mean", "max", 'prod', 'first']
     PRUNING_NORMALIZE = ["sum", "mean", "max", 'gaussian']
-    PRUNING_LAYERS_IMPL = (torchvision.ops.misc.Conv2dNormActivation,
-                           torch.nn.modules.container.Sequential,
-                           torch.nn.modules.conv.Conv2d)
-
+    # PRUNING_LAYERS_IMPL = (torchvision.ops.misc.Conv2dNormActivation,
+    #                        torch.nn.modules.container.Sequential,
+    #                        torch.nn.modules.conv.Conv2d)
+    
     DECOMPOSABLE_LAYERS = {
         # torch.nn.modules.linear.NonDynamicallyQuantizableLinear: DecomposedNonDynamicallyQuantizableLinear,
         torch.nn.Linear: DecomposedLinear,
@@ -304,13 +306,13 @@ class ModelCompressionConstant(Enum):
     PROHIBIT_TO_DECOMPOSE = {torch.nn.modules.linear.NonDynamicallyQuantizableLinear}
 
     QUANT_MODEL_TYPES = {
-        "pytorch": PyTorchModel,
-        "pytorch_ipex": IPEXModel,
-        "pytorch_fx": PyTorchFXModel,
-        "onnxruntime": ONNXModel,
-        "onnxrt_qlinearops": ONNXModel,
-        "onnxrt_qdq": ONNXModel,
-        "onnxrt_integerops": ONNXModel,
+        # "pytorch": PyTorchModel,
+        # "pytorch_ipex": IPEXModel,
+        # "pytorch_fx": PyTorchFXModel,
+        # "onnxruntime": ONNXModel,
+        # "onnxrt_qlinearops": ONNXModel,
+        # "onnxrt_qdq": ONNXModel,
+        # "onnxrt_integerops": ONNXModel,
     }
 
 
@@ -387,6 +389,13 @@ class FedcoreInitialAssumptions(Enum):
     qat_1 = QAT_1
     ptq_1 = PTQ_1
 
+from fedcore.models.network_impl.hooks import Saver
+from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
+
+class Hooks(Enum):
+    SAVER = Saver
+    CUTTLEFISH_PRUNER = DynamicRankPruner
+
 
 class TorchvisionBenchmark(Enum):
     CLASSIFICATION = ["CIFAR10", "CIFAR100", 'FasnionMNIST']
@@ -415,6 +424,8 @@ ENERGY_THR = ModelCompressionConstant.ENERGY_THR.value
 DECOMPOSE_MODE = ModelCompressionConstant.DECOMPOSE_MODE.value
 COMPOSE_MODE = ModelCompressionConstant.COMPOSE_MODE.value
 DECOMPOSABLE_LAYERS = ModelCompressionConstant.DECOMPOSABLE_LAYERS.value
+DIM_SUM_LIM = 1024
+DIM_LIM = 2048
 PROHIBIT_TO_DECOMPOSE = ModelCompressionConstant.PROHIBIT_TO_DECOMPOSE.value
 HOER_LOSS = ModelCompressionConstant.HOER_LOSS.value
 ORTOGONAL_LOSS = ModelCompressionConstant.ORTOGONAL_LOSS.value
@@ -424,12 +435,12 @@ PRUNING_IMPORTANCE = ModelCompressionConstant.PRUNING_IMPORTANCE.value
 PRUNING_NORMS = ModelCompressionConstant.PRUNING_NORMS.value
 PRUNING_REDUCTION = ModelCompressionConstant.PRUNING_REDUCTION.value
 PRUNING_NORMALIZE = ModelCompressionConstant.PRUNING_NORMALIZE.value
-PRUNING_LAYERS_IMPL = ModelCompressionConstant.PRUNING_LAYERS_IMPL.value
+# PRUNING_LAYERS_IMPL = ModelCompressionConstant.PRUNING_LAYERS_IMPL.value
 GROUP_PRUNING_IMPORTANCE = ModelCompressionConstant.GROUP_PRUNING_IMPORTANCE.value
 PRUNER_REQUIRED_REG = ModelCompressionConstant.PRUNER_REQUIRED_REG.value
 PRUNER_REQUIRED_GRADS = ModelCompressionConstant.PRUNER_REQUIRED_GRADS.value
 PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMENTS.value
-MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
+# MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
 PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
 QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
 INITIAL_ASSUMPTIONS = {kvp.name: kvp.value for kvp in FedcoreInitialAssumptions}

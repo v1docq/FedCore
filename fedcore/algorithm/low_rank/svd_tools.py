@@ -3,13 +3,12 @@
 Model decomposition, pruning by threshold, decomposed model loading.
 """
 
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 
 import torch
 from torch.nn.modules import Module
 
-
-from fedcore.models.network_impl.layers import IDecomposed
+from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     DECOMPOSABLE_LAYERS, 
     COMPOSE_MODE, 
@@ -17,24 +16,15 @@ from fedcore.repository.constanst_repository import (
 )
 
 __all__ = [
-    '_contiguous',
     'decompose_module',
-    'count_params'
+    'load_svd_state_dict'
 ]
-
-def _contiguous(t: torch.Tensor):
-    return t if t.is_contiguous() else t.contiguous()
-
-def count_params(m: torch.nn.Module):
-    c = 0
-    for p in m.parameters():
-        c += p.numel()
-    return c
 
 def decompose_module(
     model: Module,
     decomposing_mode: Optional[str] = True,
-    compose_mode: str = COMPOSE_MODE,
+    decomposer: Literal['svd', 'cur', 'rsvd'] = 'svd',
+    compose_mode: str = None,
 ) -> None:
     """Replace decomposable layers with their decomposed analogues in module (in-place).
 
@@ -47,12 +37,12 @@ def decompose_module(
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             decompose_module(
-                module, decomposing_mode=decomposing_mode, compose_mode=compose_mode
+                module, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
             )
         decomposed_analogue = _map_decomposed_cls(module)
         if decomposed_analogue is not None:
             new_module = decomposed_analogue(
-                module, decomposing_mode, compose_mode
+                module, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
             )
             setattr(model, name, new_module)
 
