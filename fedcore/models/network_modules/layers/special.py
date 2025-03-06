@@ -19,41 +19,49 @@ from fedcore.models.network_modules.layers.linear_layers import (
     Noop,
     Transpose,
 )
-from fedcore.repository.constanst_repository import PATIENCE_FOR_EARLY_STOP
+
 
 
 class EarlyStopping:
-    def __init__(self, patience=PATIENCE_FOR_EARLY_STOP, verbose=False, delta=0):
+    def __init__(
+            self,
+            patience: int = 15,
+            maximise_task: bool = False,
+            verbose: bool = False,
+            delta: float = 0.5):
         self.patience = patience
         self.verbose = verbose
+        self.is_maximise_task = maximise_task
         self.counter = 0
-        self.best_score = None
+        self.best_loss = None
         self.early_stop = False
         self.val_loss_min = np.Inf
         self.delta = delta
 
-    def __call__(self, val_loss, model, path):
-        score = -val_loss
-        if self.best_score is None:
-            self.best_score = score
-            self.save_checkpoint(val_loss, model, path)
-        elif score < self.best_score + self.delta:
+    def __call__(self, loss):
+        if self.best_loss is None:
+            self.best_loss = loss
+
+        if self.is_maximise_task:
+            patience_condition = self.best_loss + self.delta > loss > self.best_loss - self.delta
+        else:
+            patience_condition = self.best_loss - self.delta < loss < self.best_loss + self.delta
+        if patience_condition:
             self.counter += 1
-            print(f"EarlyStopping counter: {self.counter} out of {self.patience}")
+            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
-            self.best_score = score
-            self.save_checkpoint(val_loss, model, path)
+            self.best_loss = loss
             self.counter = 0
 
     def save_checkpoint(self, val_loss, model, path):
         if self.verbose:
             print(
-                f"Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ..."
-            )
-        torch.save(model.state_dict(), path + "/" + "checkpoint.pth")
+                f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
+        torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
         self.val_loss_min = val_loss
+
 
 
 def adjust_learning_rate(

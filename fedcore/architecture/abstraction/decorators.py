@@ -21,6 +21,19 @@ from fedcore.architecture.settings.computational import backend_methods as np
 
 # from dask.distributed import LocalCluster, Client
 
+def with_checkpoints(func):
+    def decorated_func(self, *args, **kwargs):
+        if self.learning_params is not None and 'save_checkpoint' in self.learning_params.keys():
+            optimizer, loss, training_loss, val_loss = func(self, *args)
+            if args[0] in self.learning_params['save_checkpoint']['checkpoint_epochs']:
+                split_base_path = self.learning_params['save_checkpoint']['path'].split('.pt')
+                new_checkpoint_path = f'{split_base_path[0]}_on_epoch_{args[0]}.pt'
+                self.save_model(new_checkpoint_path)
+                print(f'Save model on epoch - {args[0]}')
+            return optimizer, loss, training_loss, val_loss
+        else:
+            return func(self, *args)
+    return decorated_func
 
 def fedot_data_type(func):
     def decorated_func(self, *args):

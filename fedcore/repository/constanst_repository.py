@@ -319,6 +319,16 @@ class TorchLossesConstant(Enum):
     MULTI_CLASS_CROSS_ENTROPY = nn.BCEWithLogitsLoss
     MSE = nn.MSELoss
     KL_LOSS = nn.KLDivLoss  #
+    RMSE = RMSELoss
+    SMAPE = SMAPELoss
+    TWEEDIE_LOSS = TweedieLoss
+    FOCAL_LOSS = FocalLoss
+    CENTER_PLUS_LOSS = CenterPlusLoss
+    CENTER_LOSS = CenterLoss
+    MASK_LOSS = MaskedLossWrapper
+    LOG_COSH_LOSS = LogCoshLoss
+    HUBER_LOSS = HuberLoss
+    EXPONENTIAL_WEIGHTED_LOSS = ExpWeightedLoss
 
 
 class DistilationMetricsEnum(QualityMetricsEnum):
