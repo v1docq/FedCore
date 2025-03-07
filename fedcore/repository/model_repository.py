@@ -133,4 +133,4 @@ def default_fedcore_availiable_operation(problem: str = "pruning"):
         "training": TRAINING_MODELS.keys(),
     }
 
-    return operation_dict[problem]
+    return list(operation_dict[problem])

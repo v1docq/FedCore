@@ -18,8 +18,7 @@ from fedcore.repository.constanst_repository import (
     PRUNING_IMPORTANCE,
     PRUNER_REQUIRED_REG,
     PRUNER_WITHOUT_REQUIREMENTS,
-    PRUNING_FUNC,
-    # MANUAL_PRUNING_STRATEGY,
+    PRUNING_FUNC
 )
 
 
@@ -61,7 +60,7 @@ class BasePruner(BaseCompressionModel):
             group_reduction=self.importance_reduction,
             normalizer=self.importance_normalize,
         )
-        self.trainer = BaseNeuralModel(params)
+        self.trainer = BaseNeuralModel(self.ft_params)
 
     def __repr__(self):
         return self.pruner_name
@@ -173,21 +172,19 @@ class BasePruner(BaseCompressionModel):
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
-        if input_data.target.training:
-            self.model = input_data.target
-        else:
-            self.model = self.trainer.fit(input_data)
+        self.model = input_data.target
         self.optimised_model = deepcopy(self.model)
-        self.compress(input_data=input_data)
+        self.prune(input_data=input_data)
         return self.optimised_model
 
     def _manual_pruning_iter(self, pruner):
-        for i in range(self.pruning_iterations):
-            for pruning_func in MANUAL_PRUNING_STRATEGY[self.pruner_name]:
-                root_layer = self._define_root_layer()
-                pruner.manual_prune(
-                    root_layer, PRUNING_FUNC[pruning_func], self.pruning_ratio
-                )
+        # for i in range(self.pruning_iterations):
+        #     for pruning_func in MANUAL_PRUNING_STRATEGY[self.pruner_name]:
+        #         root_layer = self._define_root_layer()
+        #         pruner.manual_prune(
+        #             root_layer, PRUNING_FUNC[pruning_func], self.pruning_ratio
+        #         )
+        pass
 
     def _default_pruning_iter(self, pruner):
         pruning_hist = []
@@ -205,7 +202,7 @@ class BasePruner(BaseCompressionModel):
                 else:
                     continue
 
-    def compress(self, input_data: InputData) -> np.array:
+    def prune(self, input_data: InputData) -> np.array:
         self.pruner = self.pruner(
             self.optimised_model,
             self.data_batch_for_calib,
@@ -234,8 +231,8 @@ class BasePruner(BaseCompressionModel):
 
         print("==============Finetune pruned model=================")
         self.trainer.model = self.optimised_model
-        self.trainer.custom_loss = self.ft_params["custom_loss"]
-        self.trainer.epochs = self.ft_params["epochs"]
+        # self.trainer.custom_loss = self.ft_params["custom_loss"]
+        # self.trainer.epochs = self.ft_params["epochs"]
         self.optimised_model = self.trainer.fit(input_data)
 
         print("==============After pruning=================")

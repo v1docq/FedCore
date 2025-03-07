@@ -91,9 +91,9 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         initial_individuals = [Individual(graph, metadata=self.requirements.static_individual_metadata)
                                for graph in self.initial_graphs]
 
-        if len(initial_individuals) < pop_size:  # in case we have only one init assumption
+        if len(initial_individuals) <= pop_size and pop_size != 1:  # in case we have only one init assumption
             # change strategy of init assumption creation. Set max probability to node change mutation
-            self.mutation.agent._probs = FEDOT_MUTATION_STRATEGY['initial_population_diversity_strategy']
+            self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['initial_population_diversity_strategy']
             initial_individuals = self._extend_population(initial_individuals, pop_size)
             self.mutation.agent._probs = self.optimisation_mutation_probs
             label = 'extended_initial_assumptions'

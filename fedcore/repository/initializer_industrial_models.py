@@ -11,7 +11,7 @@ from fedot.core.operations.operation import Operation
 from fedot.core.optimisers.objective.data_source_splitter import DataSourceSplitter
 from fedot.core.pipelines.tuning.search_space import PipelineSearchSpace
 from fedot.core.repository.operation_types_repository import OperationTypesRepository
-
+from fedot.api.api_utils.api_composer import ApiComposer
 from fedcore.architecture.utils.paths import PROJECT_PATH
 from fedcore.interfaces.search_space import get_fedcore_search_space
 from fedcore.repository.fedcore_impl.abstract import (
@@ -22,7 +22,7 @@ from fedcore.repository.fedcore_impl.abstract import (
     predict_operation_fedcore,
     fedcore_preprocess_predicts,
     merge_fedcore_predicts,
-    _get_default_fedcore_mutations,
+    _get_default_fedcore_mutations, obtain_model_fedcore,
 )
 from fedcore.repository.fedcore_impl.data import (
     build_holdout_producer,
@@ -46,6 +46,7 @@ FEDOT_METHOD_TO_REPLACE = [
     (Operation, "_predict"),
     (ImageDataMerger, "preprocess_predicts"),
     (ImageDataMerger, "merge_predicts"),
+    (ApiComposer,'obtain_model')
 ]
 
 FEDCORE_REPLACE_METHODS = [
@@ -62,6 +63,7 @@ FEDCORE_REPLACE_METHODS = [
     predict_operation_fedcore,
     fedcore_preprocess_predicts,
     merge_fedcore_predicts,
+    obtain_model_fedcore
 ]
 DEFAULT_METHODS = [
     getattr(class_impl[0], class_impl[1]) for class_impl in FEDOT_METHOD_TO_REPLACE

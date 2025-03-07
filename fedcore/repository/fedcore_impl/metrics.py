@@ -3,7 +3,7 @@ from fedot.core.repository.metrics_repository import (
     ClassificationMetricsEnum,
     RegressionMetricsEnum,
     MetricsEnum,
-    MetricCallable,
+    MetricCallable, ComplexityMetricsEnum,
 )
 from fedot.core.composer.metrics import (
     Accuracy,
@@ -19,7 +19,7 @@ from fedot.core.composer.metrics import (
     R2,
     RMSE,
     ROCAUC,
-    SMAPE,
+    SMAPE, NodeNum,
 )
 from typing import Union
 
@@ -63,8 +63,11 @@ class MetricsRepository:
         # Inference metric
         InferenceMetricsEnum.latency: Latency.get_value,
         InferenceMetricsEnum.throughput: Throughput.get_value,
+        ComplexityMetricsEnum.node_number: NodeNum.get_value,
         # CV metric
         CVMetricsEnum.cv_clf_metric: CV_quality_metric.get_value,
+
+
     }
 
     _metrics_classes = {

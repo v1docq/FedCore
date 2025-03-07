@@ -1,15 +1,58 @@
+import gc
 from enum import Enum
 from typing import Optional, Sequence
 
-from fedot.core.data.data import InputData
 from fedot.core.data.multi_modal import MultiModalData
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.tasks import TaskTypesEnum
+from fedot.api.time import ApiTime
+from fedot.core.data.data import InputData
+from fedot.utilities.composer_timer import fedot_composer_timer
+
 from golem.core.optimisers.genetic.operators.base_mutations import MutationTypesEnum
 from golem.utilities.memory import MemoryAnalytics
 
 from fedcore.repository.fedcore_impl.optimisation import FedcoreMutations
 
+
+def obtain_model_fedcore(self, train_data: InputData):
+    """ Function for composing FEDOT pipeline model """
+
+    with fedot_composer_timer.launch_composing():
+        timeout: float = self.params.timeout
+        with_tuning = self.params.get('with_tuning')
+
+        self.timer = ApiTime(time_for_automl=timeout, with_tuning=with_tuning)
+
+        # skip fit init_assumption for Fedcore
+        #initial_assumption, fitted_assumption = self.propose_and_fit_initial_assumption(train_data)
+        initial_assumption, fitted_assumption = self.params.get('initial_assumption'), None
+        multi_objective = len(self.metrics) > 1
+        self.params.init_params_for_composing(self.timer.timedelta_composing, multi_objective)
+
+        self.log.message(f"AutoML configured."
+                         f" Parameters tuning: {with_tuning}."
+                         f" Time limit: {timeout} min."
+                         f" Set of candidate models: {self.params.get('available_operations')}.")
+
+        best_pipeline, best_pipeline_candidates, gp_composer = self.compose_pipeline(
+            train_data,
+            initial_assumption,
+            fitted_assumption
+        )
+
+    if with_tuning:
+        with fedot_composer_timer.launch_tuning('composing'):
+            best_pipeline = self.tune_final_pipeline(train_data, best_pipeline)
+
+    if gp_composer.history:
+        adapter = self.params.graph_generation_params.adapter
+        gp_composer.history.tuning_result = adapter.adapt(best_pipeline)
+    # enforce memory cleaning
+    gc.collect()
+
+    self.log.message('Model generation finished')
+    return best_pipeline, best_pipeline_candidates, gp_composer.history
 
 class TaskCompression(Enum):
     classification = "classification"

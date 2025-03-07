@@ -11,8 +11,6 @@ from golem.core.optimisers.optimizer import AlgorithmParameters
 from golem.core.optimisers.optimizer import GraphGenerationParams
 
 
-
-
 class FedcoreMutations:
     def __init__(self, task_type):
         self.node_adapter = PipelineAdapter()
@@ -34,7 +32,7 @@ class FedcoreMutations:
         return self.node_adapter._transform_to_opt_node(node)
 
     def parameter_change_mutation(
-        self, pipeline: Pipeline, requirements, graph_gen_params, parameters, **kwargs
+            self, pipeline: Pipeline, requirements, graph_gen_params, parameters, **kwargs
     ) -> Pipeline:
         """
         This type of mutation is passed over all nodes and changes
@@ -51,7 +49,7 @@ class FedcoreMutations:
                 "exog_ts",
             )
             do_mutation = random() < (
-                node_mutation_probability * (0.5 if lagged else 1)
+                    node_mutation_probability * (0.5 if lagged else 1)
             )
             if do_mutation:
                 operation_name = node.operation.operation_type
@@ -68,11 +66,11 @@ class FedcoreMutations:
         return pipeline
 
     def single_change(
-        self,
-        graph: OptGraph,
-        requirements: GraphRequirements,
-        graph_gen_params: GraphGenerationParams,
-        parameters: AlgorithmParameters,
+            self,
+            graph: OptGraph,
+            requirements: GraphRequirements,
+            graph_gen_params: GraphGenerationParams,
+            parameters: AlgorithmParameters,
     ) -> OptGraph:
         """
         Change node between two sequential existing modes.

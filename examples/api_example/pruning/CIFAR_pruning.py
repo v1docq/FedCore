@@ -11,12 +11,13 @@ DATASET_PARAMS = {'train_bs': 64,
                   'val_shuffle': False}
 METRIC_TO_OPTIMISE = ['accuracy', 'latency', 'throughput']
 
-USER_CONFIG = {'task': 'classification',
+USER_CONFIG = {'problem': 'classification',
                'metric': METRIC_TO_OPTIMISE,
                'initial_assumption': 'ResNet18',
-               'timeout': 200,
+               'pop_size': 1,
+               'timeout': 5,
                'learning_strategy': 'from_scratch',
-               'learning_strategy_params': dict(epochs=5,
+               'learning_strategy_params': dict(epochs=1,
                                                 learning_rate=0.0001,
                                                 loss='crossentropy',
                                                 custom_learning_params=dict(use_early_stopping={'patience': 30,
@@ -30,7 +31,8 @@ USER_CONFIG = {'task': 'classification',
                                             importance_norm=1,
                                             pruning_ratio=0.7,
                                             finetune_params={'epochs': 1,
-                                                             'custom_loss': None}
+                                                             "learning_rate": 0.0001,
+                                                             'loss': 'crossentropy'}
                                             )
                }
 

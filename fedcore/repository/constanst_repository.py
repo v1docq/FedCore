@@ -103,6 +103,7 @@ class FedotOperationConstant(Enum):
     FEDOT_MUTATION_STRATEGY = {
         "params_mutation_strategy": [0.8, 0.2],
         "growth_mutation_strategy": [0.3, 0.7],
+        'initial_population_diversity_strategy': [0.5, 0.5]
     }
     EXCLUDED_OPERATION_MUTATION = {
         "regression": [

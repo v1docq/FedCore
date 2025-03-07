@@ -2,6 +2,8 @@ import logging
 from typing import Union, Callable, List
 
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
+from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS
+from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
 
 class ConfigTemplate:
@@ -54,6 +56,10 @@ class ApiManager(ConfigTemplate):
                 method(config[key])
             else:
                 method()
+        available_operation = default_fedcore_availiable_operation(self.learning_config.peft_strategy)
+        if self.automl_config.config['available_operations'] is None:
+            self.automl_config.config.update({'available_operations': available_operation})
+
         return self
 
 
@@ -105,34 +111,36 @@ class ComputationalConfig(ConfigTemplate):
 class AutomlConfig(ConfigTemplate):
     def __init__(self):
         super().__init__()
-        self.keys = {'task': self.with_task,
+        self.keys = {'problem': self.with_problem,
                      'initial_assumption': self.with_initial_assumption,
-                     'use_automl': self.with_automl,
-                     'timeout':self.with_timeout,
+                     'timeout': self.with_timeout,
+                     'pop_size': self.with_pop_size,
                      'available_operations': self.with_available_operations,
-                     'optimisation_strategy': self.with_optimisation_strategy}
+                     'optimizer': self.with_optimizer}
 
-    def with_task(self, task: str = None):
-        self.task = task
-        return self.task
+    def with_problem(self, problem: str = None):
+        self.problem = problem
+        return self.problem
 
     def with_initial_assumption(self, initial_assumption: str = None):
         self.initial_assumption = initial_assumption
         return self.initial_assumption
 
-    def with_automl(self, use_automl: bool = False):
-        self.use_automl = use_automl
-        return self.use_automl
     def with_timeout(self, timeout: int = 10):
         self.timeout = timeout
-        return self.use_automl
+        return self.timeout
+
+    def with_pop_size(self, pop_size: int = 1):
+        self.pop_size = pop_size
+        return self.pop_size
+
     def with_available_operations(self, available_operations: List[str] = None):
         self.available_operations = available_operations
         return self.available_operations
 
-    def with_optimisation_strategy(self, optimisation_strategy: dict = None):
-        self.optimisation_strategy = optimisation_strategy
-        return self.optimisation_strategy
+    def with_optimizer(self, optimisation_strategy: dict = None):
+        self.optimizer = optimisation_strategy
+        return self.optimizer
 
 
 class LearningConfig(ConfigTemplate):

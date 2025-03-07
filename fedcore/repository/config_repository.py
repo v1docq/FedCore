@@ -42,16 +42,23 @@ class PeftLearningConfigConstant(Enum):
 
 
 class AutomlConfigConstant(Enum):
-    DEFAULT_SUBCONFIG = {'use_automl': True,
-                         'initial_assumption': None,
-                         'timeout': 10,
-                         'optimisation_strategy': {'optimisation_strategy':
-                                                       {'mutation_agent': 'random',
-                                                        'mutation_strategy': "params_mutation_strategy"},
-                                                   'optimisation_agent': 'Fedcore'}}
-    DEFAULT_CLF_AUTOML_CONFIG = {'task': 'classification', 'metric': 'accuracy', **DEFAULT_SUBCONFIG}
-    DEFAULT_REG_AUTOML_CONFIG = {'task': 'regression', 'metric': 'rmse', **DEFAULT_SUBCONFIG}
-    DEFAULT_TSF_AUTOML_CONFIG = {'task': 'ts_forecasting', 'metric': 'smape',
+    DEFAULT_AUTOML_CONFIG = dict(timeout=10,
+                                 pop_size=5,
+                                 early_stopping_iterations=10,
+                                 early_stopping_timeout=10,
+                                 with_tuning=False,
+                                 n_jobs=1)
+    DEFAULT_SUBCONFIG = {
+        'initial_assumption': None,
+        'timeout': 10,
+        'optimizer': {'optimisation_strategy':
+                          {'mutation_agent': 'random',
+                           'mutation_strategy': "params_mutation_strategy"},
+                      'optimisation_agent': 'Fedcore'},
+        **DEFAULT_AUTOML_CONFIG}
+    DEFAULT_CLF_AUTOML_CONFIG = {'problem': 'classification', 'metric': 'accuracy', **DEFAULT_SUBCONFIG}
+    DEFAULT_REG_AUTOML_CONFIG = {'problem': 'regression', 'metric': 'rmse', **DEFAULT_SUBCONFIG}
+    DEFAULT_TSF_AUTOML_CONFIG = {'problem': 'ts_forecasting', 'metric': 'smape',
                                  'task_params': {'forecast_length': 14}, **DEFAULT_SUBCONFIG}
 
 
@@ -66,7 +73,6 @@ class LearningConfigConstant(Enum):
     TASK_MAPPING = {
         'classification': {
             'task': 'classification',
-            'use_automl': True,
             'optimisation_strategy': {
                 'optimisation_strategy': {
                     'mutation_agent': 'random',
@@ -74,7 +80,6 @@ class LearningConfigConstant(Enum):
                 'optimisation_agent': 'Fedcore'}},
         'regression': {
             'task': 'regression',
-            'use_automl': True,
             'optimisation_strategy': {
                 'optimisation_strategy': {
                     'mutation_agent': 'random',
@@ -82,7 +87,6 @@ class LearningConfigConstant(Enum):
                 'optimisation_agent': 'Fedcore'}},
         'ts_forecasting': {
             'task': 'ts_forecasting',
-            'use_automl': True,
             'task_params': {
                 'forecast_length': 14},
             'optimisation_strategy': {

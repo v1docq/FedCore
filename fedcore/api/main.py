@@ -26,6 +26,7 @@ from fedcore.repository.constanst_repository import (
     FEDOT_GET_METRICS,
 )
 from fedcore.repository.initializer_industrial_models import FedcoreModels
+from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
 warnings.filterwarnings("ignore")
 
@@ -56,11 +57,12 @@ class FedCore(Fedot):
         self.logger.info('Initialising Fedcore Repository')
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
         self.repo = FedcoreModels().setup_repository()
-        optimisation_agent = self.manager.automl_config.optimisation_strategy['optimisation_agent']
-        optimisation_params = self.manager.automl_config.optimisation_strategy['optimisation_strategy']
-        self.manager.automl_config.optimisation_strategy = partial(
-            self.manager.optimisation_agent[optimisation_agent],
-            optimisation_params=optimisation_params)
+        optimisation_agent = self.manager.automl_config.optimizer['optimisation_agent']
+        optimisation_params = self.manager.automl_config.optimizer['optimisation_strategy']
+        fedcore_opt = partial(self.manager.optimisation_agent[optimisation_agent],
+                              optimisation_params=optimisation_params)
+        self.manager.automl_config.optimizer = fedcore_opt
+        self.manager.automl_config.config.update({'optimizer':fedcore_opt})
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
@@ -72,17 +74,12 @@ class FedCore(Fedot):
         self.logger.info(f'Link Dask Server - {self.manager.dask_client.dashboard_link}')
         self.logger.info('-' * 50)
         self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(
-            timeout=self.manager.automl_config.config['timeout'],
-            # **self.manager.automl_config.config['learning_strategy_params'],
-            # metric=self.manager.learning_config.config['optimisation_loss'],
-            problem=self.manager.automl_config.config['task'],
-            # task_params=self.manager.industrial_config.task_params
-            # if self.manager.industrial_config.is_forecasting_context else self.manager.automl_config.config
-            # ['task_params'], optimizer=self.manager.automl_config.optimisation_strategy,
-            # available_operations=self.manager.automl_config.config['available_operations'],
-            # initial_assumption=self.manager.automl_config.config['initial_assumption']
-        )
+        self.manager.solver = Fedot(**self.manager.automl_config.config,
+                                    use_input_preprocessing=False,
+                                    use_auto_preprocessing=False)
+        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
+        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params
+        self.manager.solver.params.data.update({'initial_assumption': initial_assumption.build()})
         return input_data
 
     def _process_input_data(self, input_data):
