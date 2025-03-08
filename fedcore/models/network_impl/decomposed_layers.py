@@ -10,6 +10,17 @@ from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
 from fedcore.architecture.utils.misc import count_params
 from fedcore.architecture.abstraction.placeholders import ParameterPlaceHolder
 
+__all__ = [
+    'IDecomposed',
+    'DecomposedConv2d',
+    'DecomposedLinear',
+    'DecomposedEmbedding'
+]
+
+def _diag_tensor_check(t: torch.Tensor):
+    print(t.size())
+    return torch.diag(t) if t.ndim == 1 else t
+    
 
 class IDecomposed(abc.ABC):
     _weight_name = ['weight']
@@ -73,7 +84,6 @@ class IDecomposed(abc.ABC):
     def compose(self: nn.Module):
         W = self._get_composed_weight()
         self.register_parameter('weight', Parameter(W))
-        assert self.U.device.type == self.weight.device.type
         # self.weight = Parameter(W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute']))
         self.register_parameter('U', None)
         self.register_parameter('S', None)
@@ -97,7 +107,7 @@ class IDecomposed(abc.ABC):
         if self.compose_mode == 'two_layers':
             W = self.U @ self.Vh
         elif self.compose_mode == 'three_layers':
-            W = (self.U * self.S) @ self.Vh
+            W = self.U @ _diag_tensor_check(self.S) @ self.Vh
         else:
             W = self.weight
         return W
@@ -113,10 +123,10 @@ class IDecomposed(abc.ABC):
 
     def _one_layer_compose(self):
         self.register_parameter('U', Parameter((self.U * self.S) @ self.Vh))
-        self._eliminate_extra_params(['U', 'S', 'Vh'])
+        self._eliminate_extra_params(['weight', 'S', 'Vh'])
 
     def _two_layers_compose(self: nn.Module):
-        singular_diag = torch.diag(self.S)
+        singular_diag = _diag_tensor_check(self.S)
         self.register_parameter('Vh', Parameter(singular_diag @ self.Vh))
         self._eliminate_extra_params(['S'])
     
@@ -257,6 +267,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return x
     
     def _forward3(self, x):
+        print(self.Vh.size(), self.S.size(), self.U.size(), (self.S * self.U).size())
         x = conv2d(
             input=x,
             weight=self.Vh,
@@ -273,18 +284,17 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return x
        
     def _one_layer_compose(self):
-        W = self.U @ torch.diag(self.S) @ self.Vh
+        W = self.U @ _diag_tensor_check(self.S) @ self.Vh
         self.register_parameter('U', Parameter(W.reshape(self.decomposing["compose_shape"]).permute(
             self.decomposing["permute"]
         )))
         self._eliminate_extra_params(['S', 'Vh'])
 
     def _two_layers_compose(self):
-        SVh = torch.diag(self.S) @ self.Vh
-        self.Vh = Parameter(SVh.view(*self.decomposing["Vh4d"]))
-        self.U = Parameter(
-            self.U.view(*self.decomposing["U4d"]).permute(0, 3, 1, 2)
-        )
+        SVh = _diag_tensor_check(self.S) @ self.Vh
+        self.register_parameter('Vh', Parameter(SVh.view(*self.decomposing["Vh4d"])))
+        self.register_parameter('U', 
+            Parameter(self.U.view(*self.decomposing["U4d"]).permute(0, 3, 1, 2)))
         self._eliminate_extra_params(['S'])
 
     def _three_layers_compose(self):
@@ -296,7 +306,6 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         self._eliminate_extra_params([])
 
     def _anti_three_layers_compose(self):
-        self.register_parameter('weight', None)
         super().set_U_S_Vh(
             self.U.permute(0, 2, 3, 1).view(*self.decomposing['U2d']),
             self.S[..., 0, 0],
@@ -533,7 +542,7 @@ class DecomposedConvTranspose2d(nn.ConvTranspose2d, DecomposedConv2d):
             x, output_size, self.stride, self.padding, self.kernel_size,  # type: ignore[arg-type]
             num_spatial_dims, self.dilation)
         x = conv_transpose2d(
-            x, self.U * self.S, output_padding=output_padding, **self.decomposing['U'])
+            x, self.U @ _diag_tensor_check(self.S), output_padding=output_padding, **self.decomposing['U'])
         x = conv_transpose2d(
             x, self.Vh, output_padding=output_padding, **self.decomposing['Vh'])
         return x
@@ -543,11 +552,11 @@ class DecomposedConvTranspose2d(nn.ConvTranspose2d, DecomposedConv2d):
         return x
        
     def _one_layer_compose(self):
-        W = self.U @ torch.diag(self.S) @ self.Vh
+        W = self.U @ _diag_tensor_check(self.S) @ self.Vh
         self.register_parameter('weight', Parameter(self._compose_transform(W, 'compose_shape')))
 
     def _two_layers_compose(self):
-        SVh = torch.diag(self.S) @ self.Vh
+        SVh = _diag_tensor_check(self.S) @ self.Vh
         self.Vh = Parameter(
             self._compose_transform(SVh, 'Vh4d')
         )

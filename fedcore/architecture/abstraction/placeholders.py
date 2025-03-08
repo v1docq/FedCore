@@ -20,13 +20,17 @@ class PlaceHolder:
                 val = deepcopy(val_orig)
             setattr(self, attr, val)
     
-class ParameterPlaceHolder(PlaceHolder):
-    __slots__ = ('shape', 'size', 'dtype', 'device')
+    def set_as(self, obj: object, name: str):
+        setattr(obj, name, self)
 
-    @staticmethod
-    def set(m: Module, name: str, plhr: PlaceHolder):
+    
+class ParameterPlaceHolder(PlaceHolder):
+    __slots__ = ('shape', 'size', 'dtype', 'device', 'numel')
+
+    def set_as(self, m: Module, name: str):
         assert isinstance(m, Module), 'Only Torch Modules are supported!'
         d: dict = m.__dict__.get('_parameters', {})
         d.pop(name, None)
-        setattr(m, name, plhr)
-        d[name] = plhr
+        setattr(m, name, self)
+        # d[name] = self # here a problem arises with weight not registered in optimizer 
+        # when there's a need to register parameter again .register_parameter must be used.
