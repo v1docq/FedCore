@@ -20,6 +20,9 @@ USER_CONFIG = {'problem': 'classification',
                'learning_strategy_params': dict(epochs=1,
                                                 learning_rate=0.0001,
                                                 loss='crossentropy',
+                                                #custom_loss = ['norm_loss', 'weight_loss'] needs to rework BaseNN class
+                                                #custom_loss_params = {'norm_loss':{...},
+                                                #'weight_loss':{...}}
                                                 custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                                 'maximise_task': False,
                                                                                                 'delta': 0.01})
