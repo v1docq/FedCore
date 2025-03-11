@@ -29,6 +29,7 @@ from torchvision.models.densenet import (
 )
 
 from fedcore.models.backbone.segformer import segformer_pretrain
+from fedcore.models.backbone.tst import TSTModel
 
 
 class AtomizedModel(Enum):
@@ -80,6 +81,8 @@ class AtomizedModel(Enum):
 
     # CHRONOS_MODELS = {'chronos-t5-small': chronos_small}
 
+    TRANSFORMER_MODELS = {'TST': TSTModel}
+
     PRUNED_RESNET_MODELS = {
         "ResNet18": pruned_resnet18,
         "ResNet34": pruned_resnet34,
@@ -103,6 +106,7 @@ EFFICIENTNET_MODELS = AtomizedModel.EFFICIENTNET_MODELS.value
 MOBILENET_MODELS = AtomizedModel.MOBILENET_MODELS.value
 # CHRONOS_MODELS = AtomizedModel.CHRONOS_MODELS.value
 SEGFORMER_MODELS = AtomizedModel.SEGFORMER_MODELS.value
+TRANSFORMER_MODELS = AtomizedModel.TRANSFORMER_MODELS.value
 
 BACKBONE_MODELS = {
     **MOBILENET_MODELS,
@@ -111,6 +115,7 @@ BACKBONE_MODELS = {
     **RESNET_MODELS,
     #    **CHRONOS_MODELS,
     **SEGFORMER_MODELS,
+    **TRANSFORMER_MODELS
 }
 DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 

@@ -3,7 +3,7 @@
     "fedcore_training": {
       "input_type": "[DataTypesEnum.ts]",
       "output_type": "[DataTypesEnum.table]",
-      "tasks": "[TaskTypesEnum.classification]", 
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
       "forbidden_node_types": "[]",
       "strategies": [
         "fedcore.interfaces.fedcore_strategy",
@@ -30,7 +30,7 @@
 			"description": "Implementations of data sources in multi-modal pipelines"
 		},
     "fedcore_pruning": {
-      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "accepted_node_types": [
@@ -46,7 +46,7 @@
       "description": "Implementations of industrial preprocessing operations"
     },
     "fedcore_low_rank": {
-      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "accepted_node_types": [
@@ -62,7 +62,7 @@
       "description": "Implementations of industrial preprocessing operations"
     },
     "fedcore_quantisation": {
-      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "accepted_node_types": [
@@ -78,7 +78,7 @@
       "description": "Implementations of fedcore quantisation operations"
     },
     "fedcore_distilation": {
-      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression]",
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "accepted_node_types": [

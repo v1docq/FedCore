@@ -1,7 +1,7 @@
 from datetime import datetime
 from functools import reduce, partial
 from operator import iadd
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import numpy as np
 import torch
@@ -90,7 +90,7 @@ class BaseNeuralModel:
                             'use_scheduler': self.learning_params.get('use_early_stopping', None),
                             'name': ''}
 
-    def _init_model(self, dataloader):
+    def _init_model(self):
         pass
 
     def _init_hooks(self, hook_type: str = 'logging'):
@@ -119,9 +119,9 @@ class BaseNeuralModel:
     def save_model(self, path: str):
         torch.save(self.model.state_dict(), path)
 
-    def load_model(self, dataloader, path: str):
+    def load_model(self, path: str):
         if self.model is None:
-            self._init_model(dataloader)
+            self._init_model()
         self.model.load_state_dict(torch.load(path, weights_only=True))
         self.model.eval()
 
@@ -308,3 +308,103 @@ class BaseNeuralModel:
     @property
     def is_quantised(self):
         return getattr(self, '_is_quantised', False)
+
+
+class BaseNeuralForecaster(BaseNeuralModel):
+    """Class responsible for NN model implementation.
+
+    Attributes:
+        self.num_features: int, the number of features.
+
+    Example:
+        To use this operation you can create pipeline as follows::
+            from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+            from fedot_ind.tools.loader import DataLoader
+            from fedot_ind.core.repository.initializer_industrial_models import IndustrialModels
+
+            train_data, test_data = DataLoader(dataset_name='Ham').load_data()
+            with IndustrialModels():
+                pipeline = PipelineBuilder().add_node('resnet_model').add_node('rf').build()
+                pipeline.fit(input_data)
+                features = pipeline.predict(input_data)
+                print(features)
+    """
+
+    def __init__(self, params: Optional[OperationParameters] = None):
+        super().__init__(params)
+        self.train_horizon = self.params.get('train_horizon', 1)
+        self.test_horizon = self.params.get('test_horizon', 1)
+        self.in_sample_regime = self.params.get('use_in_sample', True)
+        self.use_exog_features = self.params.get('use_exog_features', False)
+        self.forecasting_blocks = int(self.test_horizon / self.train_horizon)
+        self.val_interval = 5
+        self.device = default_device()
+
+    def out_of_sample_predict(self, tensor_endogen: Tensor, tensor_exogen: Tensor, target: Tensor):
+        pred = self.model(x=tensor_endogen, mask=None)  # output [bs x seq_len x horizon]
+        predict = pred[:, -1, :][:, None, :]  # take predict from last point as output [bs x 1 x train_horizon]
+        return predict
+
+    def create_features_from_predict(self, tensor_endogen: Tensor, tensor_exogen: Tensor, predict: Tensor):
+        features_from_predict = torch.concat([predict, tensor_exogen], dim=1)
+        tensor_endogen = tensor_endogen[:, :, self.train_horizon:]
+        tensor_endogen = torch.concat([tensor_endogen, features_from_predict], dim=2)
+        return tensor_endogen
+
+    def in_sample_predict(self, tensor_endogen: Tensor, tensor_exogen: Tensor, target: Tensor):
+        all_predict = []
+        new_tensor_endogen = tensor_endogen
+        for block in range(self.forecasting_blocks):
+            start_idx, end_idx = block * self.train_horizon, block * self.train_horizon + self.train_horizon
+            exog_feature = tensor_exogen[:, :, start_idx:end_idx]
+            horizon_pred = self.out_of_sample_predict(new_tensor_endogen, exog_feature,
+                                                      target)  # output [bs x 1 x train_horizon]
+            all_predict.append(horizon_pred)
+            new_tensor_endogen = self.create_features_from_predict(new_tensor_endogen, exog_feature, horizon_pred)
+        in_sample_predict = torch.concat(all_predict, dim=2)  # output [bs x 1 x test_horizon]
+        return in_sample_predict
+
+    def _eval_one_epoch(self, epoch, train_loader, val_loader, loss_fn, optimizer):
+        training_loss = 0.0
+        val_loss = 0.0
+        self.model.train()
+        for batch in train_loader:
+            x_hist, x_fut, y = [b.to(self.device).transpose(2, 1) for b in batch]
+            predict = self.out_of_sample_predict(x_hist, x_fut, y)
+            loss = loss_fn(predict, y)  # output [bs x last_hist_val x train_horizon]
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            training_loss += loss.item()
+        print('Epoch: {}, Training Loss: {:.5f}'.format(epoch, training_loss))
+        if epoch % self.val_interval == 0:
+            self.model.eval()
+            for batch in val_loader:
+                x_hist, x_fut, y = [b.to(self.device).transpose(2, 1) for b in batch]
+                if self.in_sample_regime:
+                    predict = self.in_sample_predict(x_hist, x_fut, y)
+                else:
+                    predict = self.out_of_sample_predict(x_hist, x_fut, y)
+                # Loss on final predictions
+                loss_val = loss_fn(predict, y)  # output [bs x last_hist_val x train_horizon]
+                val_loss += loss_val.item()
+            print('Epoch: {}, Validation Loss: {:.5f}'.format(epoch, val_loss))
+        return optimizer, loss, training_loss, val_loss
+
+    def _predict_model(self, test_loader, output_mode: str = 'default'):
+        self.model.eval()
+
+        def predict_loop(batch):
+            x_hist, x_fut, y = [b.to(self.device).transpose(2, 1) for b in batch]
+            if self.in_sample_regime:
+                predict = self.in_sample_predict(x_hist, x_fut, y)
+            else:
+                predict = self.out_of_sample_predict(x_hist, x_fut, y)
+            predict = predict.cpu().detach().numpy().squeeze()
+            target = y.cpu().detach().numpy().squeeze()
+            return predict, target
+
+        prediction = list(map(lambda batch: predict_loop(batch), test_loader))
+        all_prediction = np.concatenate([x[0] for x in prediction])
+        all_target = np.concatenate([x[1] for x in prediction])
+        return all_prediction, all_target
