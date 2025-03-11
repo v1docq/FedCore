@@ -224,3 +224,11 @@ def _get_default_fedcore_mutations(
         # ind_mutations.single_add
     ]
     return mutations
+
+@staticmethod
+def divide_operations_fedcore(available_operations, task):
+    """ Function divide operations for primary and secondary """
+
+    primary_operations = available_operations
+    secondary_operations = available_operations
+    return primary_operations, secondary_operations

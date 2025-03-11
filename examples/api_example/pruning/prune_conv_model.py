@@ -1,3 +1,4 @@
+from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from fedcore.api.utils.checkers_collection import ApiConfigCheck
 from fedcore.data.dataloader import load_data
@@ -10,19 +11,21 @@ DATASET_PARAMS = {'train_bs': 64,
                   'train_shuffle': True,
                   'val_shuffle': False}
 METRIC_TO_OPTIMISE = ['accuracy', 'latency', 'throughput']
-
+initial_assumption = {'path_to_model': './pretrain_model/resnet_1_epoch_pretrain.pt',
+                      'model_type': 'ResNet18'}
+initial_assumption, learning_strategy = get_scenario_for_api('checkpoint',initial_assumption)
 USER_CONFIG = {'problem': 'classification',
                'metric': METRIC_TO_OPTIMISE,
-               'initial_assumption': 'ResNet18',
+               'initial_assumption': initial_assumption,
                'pop_size': 1,
                'timeout': 5,
-               'learning_strategy': 'from_scratch',
+               'learning_strategy': learning_strategy,
                'learning_strategy_params': dict(epochs=1,
                                                 learning_rate=0.0001,
                                                 loss='crossentropy',
-                                                #custom_loss = ['norm_loss', 'weight_loss'] needs to rework BaseNN class
-                                                #custom_loss_params = {'norm_loss':{...},
-                                                #'weight_loss':{...}}
+                                                # custom_loss = ['norm_loss', 'weight_loss'] needs to rework BaseNN class
+                                                # custom_loss_params = {'norm_loss':{...},
+                                                # 'weight_loss':{...}}
                                                 custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                                 'maximise_task': False,
                                                                                                 'delta': 0.01})

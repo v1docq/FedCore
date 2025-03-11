@@ -4,7 +4,7 @@ from fedot.core.repository.metrics_repository import (
     MetricsRepository as fedot_metric_repo,
 )
 from fedot.api.api_utils.api_params_repository import ApiParamsRepository
-
+from fedot.core.repository.pipeline_operation_repository import PipelineOperationRepository
 from fedot.api.api_utils.assumptions.assumptions_handler import AssumptionsHandler
 from fedot.core.data.merge.data_merger import DataMerger, ImageDataMerger
 from fedot.core.operations.operation import Operation
@@ -22,7 +22,7 @@ from fedcore.repository.fedcore_impl.abstract import (
     predict_operation_fedcore,
     fedcore_preprocess_predicts,
     merge_fedcore_predicts,
-    _get_default_fedcore_mutations, obtain_model_fedcore,
+    _get_default_fedcore_mutations, obtain_model_fedcore, divide_operations_fedcore,
 )
 from fedcore.repository.fedcore_impl.data import (
     build_holdout_producer,
@@ -46,7 +46,8 @@ FEDOT_METHOD_TO_REPLACE = [
     (Operation, "_predict"),
     (ImageDataMerger, "preprocess_predicts"),
     (ImageDataMerger, "merge_predicts"),
-    (ApiComposer,'obtain_model')
+    (ApiComposer, 'obtain_model'),
+    (PipelineOperationRepository, 'divide_operations')
 ]
 
 FEDCORE_REPLACE_METHODS = [
@@ -63,7 +64,8 @@ FEDCORE_REPLACE_METHODS = [
     predict_operation_fedcore,
     fedcore_preprocess_predicts,
     merge_fedcore_predicts,
-    obtain_model_fedcore
+    obtain_model_fedcore,
+    divide_operations_fedcore
 ]
 DEFAULT_METHODS = [
     getattr(class_impl[0], class_impl[1]) for class_impl in FEDOT_METHOD_TO_REPLACE

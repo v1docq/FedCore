@@ -460,8 +460,8 @@ KL_LOSS = TorchLossesConstant.KL_LOSS.value
 # CONTRASTIVE_LOSS = ContrastiveLossesEnum.CONTRASTIVE_LOSS.value
 # VICREG_LOSS = ContrastiveLossesEnum.VICREG_LOSS.value
 
-# RMSE = TorchLossesConstant.RMSE.value
-# SMAPE = TorchLossesConstant.SMAPE.value
+RMSE = TorchLossesConstant.RMSE.value
+SMAPE = TorchLossesConstant.SMAPE.value
 # TWEEDIE_LOSS = TorchLossesConstant.TWEEDIE_LOSS.value
 # FOCAL_LOSS = TorchLossesConstant.FOCAL_LOSS.value
 # CENTER_PLUS_LOSS = TorchLossesConstant.CENTER_PLUS_LOSS.value

@@ -10,10 +10,11 @@ from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 @dataclass
 class CompressionInputData:
-    features: np.ndarray = None
+    features: np.ndarray = np.zeros((2, 2))
     target: tp.Optional[np.ndarray] = None
     train_dataloader: torch.utils.data.DataLoader = None
     calib_dataloader: torch.utils.data.DataLoader = None
+    test_dataloader: torch.utils.data.DataLoader = None
     task: Task = Task(TaskTypesEnum.classification)
     num_classes: int = None
     model = None
