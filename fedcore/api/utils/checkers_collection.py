@@ -1,6 +1,8 @@
 import logging
 from copy import deepcopy
+from typing import Callable
 
+import torch
 import numpy as np
 from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
@@ -28,10 +30,11 @@ class DataCheck:
 
     """
 
-    def __init__(self, peft_task=None, optimised_model=None):
+    def __init__(self, peft_task=None, optimised_model=None, learning_params=None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.task = peft_task
         self.model = optimised_model
+        self.learning_params = learning_params
         self._init_dummy_val()
 
     def _init_dummy_val(self):
@@ -39,7 +42,7 @@ class DataCheck:
         self.fedot_dummy_idx = np.arange(1)
         self.fedot_dummy_datatype = DataTypesEnum.image
 
-    def _init_input_data(self, input_data: [InputData, CompressionInputData] = None, manually_done=False) -> None:
+    def _init_input_data(self, input_data: [InputData, CompressionInputData, dict] = None, manually_done=False) -> None:
         """Initializes the `input_data` attribute based on its type.
 
         If a tuple (X, y) is provided, it converts it to a Fedot InputData object
@@ -50,13 +53,30 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
-        if input_data.supplementary_data.is_auto_preprocessed:
-            compression_dataset = input_data
+        if isinstance(input_data, dict):
+            compression_dataset = CompressionInputData(
+                calib_dataloader=input_data['val_dataloader'],
+                train_dataloader=input_data['train_dataloader'],
+                test_dataloader=input_data['test_dataloader']
+            )
+            compression_dataset.supplementary_data.is_auto_preprocessed = True
         else:
-            compression_dataset, torch_model = input_data
+            if input_data.supplementary_data.is_auto_preprocessed:
+                compression_dataset = input_data
+            else:
+                compression_dataset, torch_model = input_data
 
         if self.model is not None:
-            torch_model = load_backbone(self.model)
+            if isinstance(self.model, str):
+                torch_model = load_backbone(self.model)
+            elif isinstance(self.model, dict):
+                torch_model = load_backbone(torch_model=self.model['model_type'],
+                                            model_params=self.learning_params)
+                torch_model.load_model(self.model['path_to_model'])
+            elif isinstance(self.model, Callable):
+                torch_model = self.model
+            else:
+                torch_model = None
             compression_dataset.target = torch_model
 
         self.input_data = InputData(

@@ -62,7 +62,7 @@ class FedCore(Fedot):
         fedcore_opt = partial(self.manager.optimisation_agent[optimisation_agent],
                               optimisation_params=optimisation_params)
         self.manager.automl_config.optimizer = fedcore_opt
-        self.manager.automl_config.config.update({'optimizer':fedcore_opt})
+        self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
@@ -84,7 +84,8 @@ class FedCore(Fedot):
 
     def _process_input_data(self, input_data):
         data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
-                             optimised_model=self.manager.automl_config.config['initial_assumption']
+                             optimised_model=self.manager.automl_config.config['initial_assumption'],
+                             learning_params=self.manager.learning_config.learning_strategy_params
                              )
         train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
         return train_data
@@ -119,7 +120,7 @@ class FedCore(Fedot):
             model_learning_pipeline.heads[0].parameters = self.manager.learning_config.config[
                 'learning_strategy_params']
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'].__contains__(
-                'from_scratch')
+                'scratch')
             fitted_solver = Maybe.insert(train_data).then(
                 lambda data: self._pretrain_before_optimise(model_learning_pipeline.build(),
                                                             data) if pretrain_before_optimise else data). \
