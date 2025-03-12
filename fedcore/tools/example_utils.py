@@ -68,7 +68,7 @@ class CustomForecastingDataset(Dataset):
         x_fut = torch.FloatTensor(x_fut)
         y = torch.FloatTensor(y)
         x_fut[..., :] = x_fut[..., :] * self.scaling_factor
-        return x_hist, x_fut, y
+        return x_hist.T, x_fut.T, y.T
 
 
 def get_custom_dataloader(task_params):
@@ -96,7 +96,8 @@ def get_custom_dataloader(task_params):
                                                           batch_size=task_params['batch_size'][name],
                                                           shuffle=is_shuffled,
                                                           num_workers=8,  # Adjust based on CPU cores
-                                                          pin_memory=True  # Faster data transfer to GPU
+                                                          pin_memory=True,  # Faster data transfer to GPU
+                                                          #collate_fn=custom_collate_fn
                                                           ) for dataset, name, is_shuffled in
                          zip(ts_dataset_list, dataset_names, shuffle)}
     return torch_loader_dict

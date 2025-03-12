@@ -3,7 +3,7 @@ from fedcore.api.main import FedCore
 from fedcore.api.utils.checkers_collection import ApiConfigCheck
 from fedcore.data.dataloader import load_data
 from fedcore.api.utils.evaluation import evaluate_original_model, evaluate_optimised_model
-from fedcore.repository.config_repository import DEFAULT_CLF_API_CONFIG
+from fedcore.repository.config_repository import DEFAULT_CLF_API_CONFIG, DEFAULT_TSF_API_CONFIG
 
 dataloader_params = {'path_to_dataset': './custom_dataset/forecasting',
                      "seq_len": {"train": 512, "val": 512, "test": 512},
@@ -25,6 +25,7 @@ initial_assumption = {'path_to_model': './pretrain_model/transformer_500_epoch_p
                       'model_type': 'TST'}
 initial_assumption, learning_strategy = get_scenario_for_api('checkpoint', initial_assumption)
 USER_CONFIG = {'problem': 'ts_forecasting',
+               'task_params': {'forecast_length': 60},
                'metric': METRIC_TO_OPTIMISE,
                'initial_assumption': initial_assumption,
                'pop_size': 1,
@@ -57,7 +58,7 @@ USER_CONFIG = {'problem': 'ts_forecasting',
                }
 
 if __name__ == "__main__":
-    api_config = ApiConfigCheck().update_config_with_kwargs(DEFAULT_CLF_API_CONFIG, **USER_CONFIG)
+    api_config = ApiConfigCheck().update_config_with_kwargs(DEFAULT_TSF_API_CONFIG, **USER_CONFIG)
     input_data = load_data(source=get_custom_dataloader, loader_params=dataloader_params)
     fedcore_compressor = FedCore(**api_config)
     fedcore_compressor.fit(input_data)

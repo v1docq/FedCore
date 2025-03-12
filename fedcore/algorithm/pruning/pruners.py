@@ -65,10 +65,31 @@ class BasePruner(BaseCompressionModel):
     def __repr__(self):
         return self.pruner_name
 
+    def _check_model_before_prune(self, input_data):
+        # list of tensors with dim size n_samples x n_channel x height x width
+        batch_generator = (b for b in input_data.features.calib_dataloader)
+        # take first batch
+        batch_list = next(batch_generator)
+        self.data_batch_for_calib = batch_list[0].to(default_device())
+        n_classes = input_data.task.task_params['forecast_length'] \
+            if input_data.task.task_type.value.__contains__('forecasting') else input_data.features.num_classes
+        self.validator = PruningValidator(model=self.model_after_pruning,
+                                          output_dim=n_classes, input_dim=input_data.features.input_dim)
+        self.ignored_layers = self.validator.filter_ignored_layers(self.model_after_pruning,
+                                                                   str(self.model_after_pruning.__class__))
+        self.channel_groups = self.validator.validate_channel_groups()
+
     def _init_model(self, input_data):
         print("==============Prepare original model for pruning=================")
-        self.model = input_data.target
-        self.trainer.model = self.model
+        self.model_before_pruning = input_data.target
+        if hasattr(self.model_before_pruning, 'model'):
+            self.trainer = self.model_before_pruning
+            self.model_before_pruning = self.model_before_pruning.model
+        else:
+            self.trainer.model = self.model_before_pruning
+        self.model_before_pruning.to(default_device())
+        self.model_after_pruning = deepcopy(self.model_before_pruning)
+
         print(
             f"==============Initialisation of {self.pruner_name} pruning agent================="
         )
@@ -81,23 +102,12 @@ class BasePruner(BaseCompressionModel):
         )
         # Pruner initialization
         self.pruner = PRUNERS[self.pruner_name]
-        # list of tensors with dim size n_samples x n_channel x height x width
-        batch_generator = (b for b in input_data.features.calib_dataloader)
-        # take first batch
-        input, target = next(batch_generator)
-        self.data_batch_for_calib = input.to(self.trainer.device)
-        self.validator = PruningValidator(self.model, input_data.features.num_classes)
-        self.ignored_layers = self.validator.filter_ignored_layers(
-            self.model, str(self.model.__class__)
-        )
-        self.channel_groups = self.validator.validate_channel_groups()
-        self.optimizer_for_grad = optim.Adam(
-            self.model.parameters(), lr=self.learning_rate_for_grad
-        )
+        self._check_model_before_prune(input_data)
+        self.optimizer_for_grad = optim.Adam(self.model_after_pruning.parameters(), lr=self.learning_rate_for_grad)
 
     def _accumulate_grads(self, data, target, return_false=False):
         data, target = data.to(default_device()), target.to(default_device())
-        out = self.model(data)
+        out = self.model_after_pruning(data)
         loss = self.criterion_for_grad(out, target)
         loss.backward()
         if return_false:
@@ -131,24 +141,24 @@ class BasePruner(BaseCompressionModel):
                 loss = self._accumulate_grads(
                     data, target, True
                 )  # after loss.backward()
-                pruner.regularize(self.optimised_model, loss)  # <== for sparse training
+                pruner.regularize(self.model_after_pruning, loss)  # <== for sparse training
                 self.optimizer_for_grad.step()
         return pruner
 
-    def _dependency_graph_pruner(self):
-        DG = tp.DependencyGraph().build_dependency(
-            self.optimised_model,
-            example_inputs=self.data_batch_for_calib,
-            ignored_layers=self.ignored_layers,
-        )
-        group = DG.get_pruning_group(
-            self.optimised_model.conv1, tp.prune_conv_out_channels, idxs=[2, 6, 9]
-        )
-
-        print(group.details())
-
-        if DG.check_pruning_group(group):  # avoid over-pruning, i.e., channels=0.
-            group.prune()
+    # def _dependency_graph_pruner(self):
+    #     DG = tp.DependencyGraph().build_dependency(
+    #         self.model_after_pruning,
+    #         example_inputs=self.data_batch_for_calib,
+    #         ignored_layers=self.ignored_layers,
+    #     )
+    #     group = DG.get_pruning_group(
+    #         self.optimised_model.conv1, tp.prune_conv_out_channels, idxs=[2, 6, 9]
+    #     )
+    #
+    #     print(group.details())
+    #
+    #     if DG.check_pruning_group(group):  # avoid over-pruning, i.e., channels=0.
+    #         group.prune()
 
     def pruner_step(self, pruner: callable, input_data):
 
@@ -172,10 +182,8 @@ class BasePruner(BaseCompressionModel):
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
-        self.model = input_data.target
-        self.optimised_model = deepcopy(self.model)
         self.prune(input_data=input_data)
-        return self.optimised_model
+        return self.model_after_pruning
 
     def _manual_pruning_iter(self, pruner):
         # for i in range(self.pruning_iterations):
@@ -189,13 +197,12 @@ class BasePruner(BaseCompressionModel):
     def _default_pruning_iter(self, pruner):
         pruning_hist = []
         for i in range(self.pruning_iterations):
-            for group in pruner.step(interactive=True):
+            potential_groups_to_prune = list(pruner.step(interactive=True))
+            for group in potential_groups_to_prune:
                 dep, idxs = group[0]
                 layer = dep.layer
                 pruning_fn = dep.pruning_fn
-                valid_to_prune = self.validator.validate_pruned_layers(
-                    layer, pruning_fn
-                )
+                valid_to_prune = self.validator.validate_pruned_layers(layer, pruning_fn)
                 if valid_to_prune:
                     pruning_hist.append((layer, idxs, pruning_fn))
                     group.prune()
@@ -204,7 +211,7 @@ class BasePruner(BaseCompressionModel):
 
     def prune(self, input_data: InputData) -> np.array:
         self.pruner = self.pruner(
-            self.optimised_model,
+            self.model_after_pruning,
             self.data_batch_for_calib,
             # global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
             importance=self.importance,  # importance criterion for parameter selection
@@ -217,7 +224,7 @@ class BasePruner(BaseCompressionModel):
         )
 
         base_macs, base_nparams = tp.utils.count_ops_and_params(
-            self.model, self.data_batch_for_calib
+            self.model_before_pruning, self.data_batch_for_calib
         )
         manual_pruning = self.pruner_name.__contains__("manual")
 
@@ -228,26 +235,27 @@ class BasePruner(BaseCompressionModel):
             left_function=lambda pruner_agent: self._default_pruning_iter(pruner_agent),
             right_function=lambda pruner_agent: self._manual_pruning_iter(pruner_agent),
         )
-
-        print("==============Finetune pruned model=================")
-        self.trainer.model = self.optimised_model
-        # self.trainer.custom_loss = self.ft_params["custom_loss"]
-        # self.trainer.epochs = self.ft_params["epochs"]
-        self.optimised_model = self.trainer.fit(input_data)
-
         print("==============After pruning=================")
         macs, nparams = tp.utils.count_ops_and_params(
-            self.optimised_model, self.data_batch_for_calib
+            self.model_after_pruning, self.data_batch_for_calib
         )
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
-        return self.model
+
+        print("==============Finetune pruned model=================")
+        self.trainer.model = self.model_after_pruning
+        # self.trainer.custom_loss = self.ft_params["custom_loss"]
+        # self.trainer.epochs = self.ft_params["epochs"]
+        self.model_after_pruning = self.trainer.fit(input_data)
+
+        return self.model_after_pruning
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
-        return self.optimised_model if output_mode == "compress" else self.model
+        return self.model_after_pruning if output_mode == "compress" else self.model
 
     def predict(self, input_data: InputData, output_mode: str = "compress"):
-        self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
-        )
+        if output_mode == "compress":
+            self.trainer.model = self.model_after_pruning
+        else:
+            self.trainer.model = self.model_before_pruning
         return self.trainer.predict(input_data, output_mode)

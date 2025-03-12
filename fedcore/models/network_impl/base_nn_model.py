@@ -364,32 +364,18 @@ class BaseNeuralForecaster(BaseNeuralModel):
         in_sample_predict = torch.concat(all_predict, dim=2)  # output [bs x 1 x test_horizon]
         return in_sample_predict
 
-    def _eval_one_epoch(self, epoch, train_loader, val_loader, loss_fn, optimizer):
+    def _eval_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
-        val_loss = 0.0
         self.model.train()
-        for batch in train_loader:
-            x_hist, x_fut, y = [b.to(self.device).transpose(2, 1) for b in batch]
+        for batch in dataloader:
+            x_hist, x_fut, y = [b.to(self.device) for b in batch]
             predict = self.out_of_sample_predict(x_hist, x_fut, y)
             loss = loss_fn(predict, y)  # output [bs x last_hist_val x train_horizon]
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
             training_loss += loss.item()
-        print('Epoch: {}, Training Loss: {:.5f}'.format(epoch, training_loss))
-        if epoch % self.val_interval == 0:
-            self.model.eval()
-            for batch in val_loader:
-                x_hist, x_fut, y = [b.to(self.device).transpose(2, 1) for b in batch]
-                if self.in_sample_regime:
-                    predict = self.in_sample_predict(x_hist, x_fut, y)
-                else:
-                    predict = self.out_of_sample_predict(x_hist, x_fut, y)
-                # Loss on final predictions
-                loss_val = loss_fn(predict, y)  # output [bs x last_hist_val x train_horizon]
-                val_loss += loss_val.item()
-            print('Epoch: {}, Validation Loss: {:.5f}'.format(epoch, val_loss))
-        return optimizer, loss, training_loss, val_loss
+        return optimizer, loss_fn, training_loss
 
     def _predict_model(self, test_loader, output_mode: str = 'default'):
         self.model.eval()

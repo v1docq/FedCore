@@ -17,6 +17,7 @@ class CompressionInputData:
     test_dataloader: torch.utils.data.DataLoader = None
     task: Task = Task(TaskTypesEnum.classification)
     num_classes: int = None
+    input_dim: int = None
     model = None
     supplementary_data: SupplementaryData = field(default_factory=SupplementaryData)
 

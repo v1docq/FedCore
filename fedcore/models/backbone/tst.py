@@ -104,7 +104,7 @@ class _TSTEncoder(Module):
         return output
 
 
-class TST(Module):
+class TimeSeriesTransformerTorch(Module):
     def __init__(self,
                  input_dim: int,
                  output_dim: int,
@@ -290,4 +290,4 @@ class TSTModel(BaseNeuralForecaster):
         return input_dim, seq_len
 
     def _init_model(self):
-        self.model = TST(output_dim=self.train_horizon, **self.model_params).to(default_device())
+        self.model = TimeSeriesTransformerTorch(output_dim=self.train_horizon, **self.model_params).to(default_device())

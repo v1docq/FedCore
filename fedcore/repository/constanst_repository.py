@@ -48,6 +48,7 @@ from fedcore.models.network_impl.decomposed_layers import (
     DecomposedEmbedding,
     DecomposedLinear,
 )
+from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
 from fedcore.models.network_modules.losses import (
     CenterLoss,
     CenterPlusLoss,
@@ -298,6 +299,11 @@ class ModelCompressionConstant(Enum):
     #                        torch.nn.modules.container.Sequential,
     #                        torch.nn.modules.conv.Conv2d)
 
+    PRUNING_LAYER_TYPE = {torch.nn.Linear: 'TorchLinear',
+                          torch.nn.MultiheadAttention: 'TorchMHA',
+                          MultiHeadAttention: 'FedCoreMHA'
+                          }
+
     DECOMPOSABLE_LAYERS = {
         # torch.nn.modules.linear.NonDynamicallyQuantizableLinear: DecomposedNonDynamicallyQuantizableLinear,
         torch.nn.Linear: DecomposedLinear,
@@ -321,10 +327,10 @@ class ModelCompressionConstant(Enum):
 class TorchLossesConstant(Enum):
     crossentropy = nn.CrossEntropyLoss
     MULTI_CLASS_CROSS_ENTROPY = nn.BCEWithLogitsLoss
-    MSE = nn.MSELoss
+    mse = nn.MSELoss
     KL_LOSS = nn.KLDivLoss  #
-    RMSE = RMSELoss
-    SMAPE = SMAPELoss
+    rmse = RMSELoss
+    smape = SMAPELoss
     TWEEDIE_LOSS = TweedieLoss
     FOCAL_LOSS = FocalLoss
     CENTER_PLUS_LOSS = CenterPlusLoss
@@ -450,18 +456,19 @@ PRUNER_REQUIRED_GRADS = ModelCompressionConstant.PRUNER_REQUIRED_GRADS.value
 PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMENTS.value
 # MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
 PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
+PRUNING_LAYER_TYPE = ModelCompressionConstant.PRUNING_LAYER_TYPE.value
 QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
 INITIAL_ASSUMPTIONS = {kvp.name: kvp.value for kvp in FedcoreInitialAssumptions}
 
 CROSS_ENTROPY = TorchLossesConstant.crossentropy.value
 MULTI_CLASS_CROSS_ENTROPY = TorchLossesConstant.MULTI_CLASS_CROSS_ENTROPY.value
-MSE = TorchLossesConstant.MSE.value
+MSE = TorchLossesConstant.mse.value
 KL_LOSS = TorchLossesConstant.KL_LOSS.value
 # CONTRASTIVE_LOSS = ContrastiveLossesEnum.CONTRASTIVE_LOSS.value
 # VICREG_LOSS = ContrastiveLossesEnum.VICREG_LOSS.value
 
-RMSE = TorchLossesConstant.RMSE.value
-SMAPE = TorchLossesConstant.SMAPE.value
+RMSE = TorchLossesConstant.rmse.value
+SMAPE = TorchLossesConstant.smape.value
 # TWEEDIE_LOSS = TorchLossesConstant.TWEEDIE_LOSS.value
 # FOCAL_LOSS = TorchLossesConstant.FOCAL_LOSS.value
 # CENTER_PLUS_LOSS = TorchLossesConstant.CENTER_PLUS_LOSS.value

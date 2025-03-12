@@ -53,11 +53,13 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
+        model_params = self.learning_params.get('model_params', None)
         if isinstance(input_data, dict):
             compression_dataset = CompressionInputData(
                 calib_dataloader=input_data['val_dataloader'],
                 train_dataloader=input_data['train_dataloader'],
-                test_dataloader=input_data['test_dataloader']
+                test_dataloader=input_data['test_dataloader'],
+                input_dim=model_params['input_dim'] if model_params is not None else 1
             )
             compression_dataset.supplementary_data.is_auto_preprocessed = True
         else:

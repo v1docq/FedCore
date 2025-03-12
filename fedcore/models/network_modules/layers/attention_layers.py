@@ -188,9 +188,10 @@ class MultiHeadAttention(Module):
         # scores: [bs x n_heads x max_q_len x q_len]
 
         # back to the original inputs dimensions
-        output = (
-            output.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * self.d_v)
-        )
+        # output = (
+        #     output.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * self.d_v)
+        # )
+        output = output.view(bs, -1, self.n_heads * self.d_v).transpose(1, 2).contiguous()
         # output: [bs x q_len x n_heads * d_v]
         output = self.to_out(output)
 
