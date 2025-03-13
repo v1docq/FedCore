@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from typing import Dict
 from fedot.core.repository.metrics_repository import (
     ClassificationMetricsEnum,
@@ -5,22 +7,18 @@ from fedot.core.repository.metrics_repository import (
     MetricsEnum,
     MetricCallable, ComplexityMetricsEnum,
 )
-from fedot.core.composer.metrics import (
-    Accuracy,
-    ComplexityMetric,
-    F1,
-    Logloss,
-    MAE,
-    MAPE,
-    MSE,
-    MSLE,
-    Precision,
-    QualityMetric,
-    R2,
-    RMSE,
-    ROCAUC,
-    SMAPE, NodeNum,
-)
+from fedcore.metrics.metric_impl import (Accuracy,
+                                         F1,
+                                         Logloss,
+                                         MAE,
+                                         MAPE,
+                                         MSE,
+                                         MSLE,
+                                         Precision,
+                                         QualityMetric,
+                                         R2,
+                                         SMAPE)
+from fedot.core.composer.metrics import (ROCAUC, RMSE, ComplexityMetric, NodeNum, StructuralComplexity)
 from typing import Union
 
 from fedcore.metrics.cv_metrics import (
@@ -67,13 +65,13 @@ class MetricsRepository:
         # CV metric
         CVMetricsEnum.cv_clf_metric: CV_quality_metric.get_value,
 
-
     }
-
-    _metrics_classes = {
-        metric_id: getattr(metric_func, "__self__")
-        for metric_id, metric_func in _metrics_implementations.items()
-    }
+    _metrics_classes = {}
+    for metric_id, metric_func in _metrics_implementations.items():
+        try:
+            _metrics_classes.update({metric_id: getattr(metric_func, "__self__")})
+        except Exception:
+            continue
 
     @staticmethod
     def get_metric(metric_name: MetricsEnum) -> MetricCallable:
@@ -81,6 +79,6 @@ class MetricsRepository:
 
     @staticmethod
     def get_metric_class(
-        metric_name: MetricsEnum,
+            metric_name: MetricsEnum,
     ) -> Union[QualityMetric, ComplexityMetric]:
         return MetricsRepository._metrics_classes[metric_name]

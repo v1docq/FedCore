@@ -1,4 +1,6 @@
 from abc import abstractmethod
+
+import numpy as np
 from typing import Optional
 
 from fedot.core.composer.metrics import Metric
@@ -93,7 +95,9 @@ class Latency(CompressionMetric):
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
-        return evaluator.latency_eval()
+        latency_list = evaluator.latency_eval()
+        avg_lat = np.mean(latency_list)
+        return avg_lat
 
 
 class CV_quality_metric(CompressionMetric):

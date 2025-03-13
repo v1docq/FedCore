@@ -114,6 +114,7 @@ class AutomlConfig(ConfigTemplate):
         self.keys = {'problem': self.with_problem,
                      'initial_assumption': self.with_initial_assumption,
                      'task_params': self.with_task_params,
+                     'metric': self.with_task_params,
                      'timeout': self.with_timeout,
                      'pop_size': self.with_pop_size,
                      'available_operations': self.with_available_operations,
@@ -126,6 +127,10 @@ class AutomlConfig(ConfigTemplate):
     def with_task_params(self, task_params: dict = None):
         self.task_params = task_params
         return self.task_params
+
+    def with_metric(self, metric: Union[str, list] = None):
+        self.metric = metric
+        return self.metric
 
     def with_initial_assumption(self, initial_assumption: str = None):
         self.initial_assumption = initial_assumption

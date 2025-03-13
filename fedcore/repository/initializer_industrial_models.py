@@ -12,6 +12,7 @@ from fedot.core.optimisers.objective.data_source_splitter import DataSourceSplit
 from fedot.core.pipelines.tuning.search_space import PipelineSearchSpace
 from fedot.core.repository.operation_types_repository import OperationTypesRepository
 from fedot.api.api_utils.api_composer import ApiComposer
+import fedot.core.composer.metrics as original_fedot_metric
 from fedcore.architecture.utils.paths import PROJECT_PATH
 from fedcore.interfaces.search_space import get_fedcore_search_space
 from fedcore.repository.fedcore_impl.abstract import (

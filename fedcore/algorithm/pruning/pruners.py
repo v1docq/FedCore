@@ -239,8 +239,8 @@ class BasePruner(BaseCompressionModel):
         macs, nparams = tp.utils.count_ops_and_params(
             self.model_after_pruning, self.data_batch_for_calib
         )
-        print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+        print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
+        print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))
 
         print("==============Finetune pruned model=================")
         self.trainer.model = self.model_after_pruning

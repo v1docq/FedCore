@@ -95,13 +95,13 @@ class FedCore(Fedot):
         train_data.target = pretrained_model.predict
         return train_data
 
-    def __abstract_predict(self, predict_data):
+    def __abstract_predict(self, predict_data, output_mode):
         custom_predict = all([not self.manager.condition_check.solver_is_fedot_class(self.manager.solver),
                               not self.manager.condition_check.solver_is_pipeline_class(self.manager.solver)])
         predict = Either(value=predict_data,
                          monoid=[predict_data, custom_predict]).either(
-            left_function=lambda predict_for_solver: self.manager.solver.predict(predict_for_solver),
-            right_function=lambda predict_for_custom: self.manager.solver.predict(predict_for_custom))
+            left_function=lambda predict_for_solver: self.manager.solver.predict(predict_for_solver, output_mode),
+            right_function=lambda predict_for_custom: self.manager.solver.predict(predict_for_custom, output_mode))
         predict = Maybe.insert(predict).then(lambda x: x.predict if isinstance(predict, OutputData) else x).value
         return predict
 
@@ -136,7 +136,7 @@ class FedCore(Fedot):
         self.optimised_model = solver.root_node.fitted_operation.optimised_model
         return solver
 
-    def predict(self, predict_data: tuple, **kwargs):
+    def predict(self, predict_data: tuple, output_mode:str = 'compress',  **kwargs):
         """
         Method to obtain prediction labels from trained Industrial model.
 
@@ -150,7 +150,7 @@ class FedCore(Fedot):
         self.manager.predicted_labels = Maybe. \
             insert(self._process_input_data(predict_data)). \
             then(self.__init_fedcore_backend). \
-            then(self.__abstract_predict). \
+            then(lambda predict_data: self.__abstract_predict(predict_data, output_mode)). \
             maybe(None, lambda labels: labels)
         return self.manager.predicted_labels
 
@@ -186,18 +186,10 @@ class FedCore(Fedot):
         self.manager.is_finetuned = True
         self.manager.solver = model_to_tune
 
-    def _metric_evaluation_loop(
-            self, target, predicted_labels, predicted_probs, problem, metric_type
-    ):
-        prediction_dict = dict(
-            target=target, labels=predicted_labels, probs=predicted_probs
-        )
+    def _metric_evaluation_loop(self, target, predicted_labels, predicted_probs, problem, metric_type):
+        prediction_dict = dict(target=target, labels=predicted_labels, probs=predicted_probs)
         inference_metric = metric_type.__contains__("computational")
-        inference_model = (
-            self.optimised_model
-            if metric_type.__contains__("optimised")
-            else self.original_model
-        )
+        inference_model = self.optimised_model if metric_type.__contains__("optimised")else self.original_model
         inference_eval = CV_quality_metric()
 
         prediction_dataframe = Either(
@@ -215,10 +207,10 @@ class FedCore(Fedot):
             self,
             predicton: Union[Tensor, np.array],
             target: Union[list, np.array],
-            metric_type: str = "quality",
+            metric_type: str = "computational",
     ) -> pd.DataFrame:
         """
-        Method to calculate metrics for Industrial model.
+        Method to calculate metrics.
 
         Available metrics for classification task: 'f1', 'accuracy', 'precision', 'roc_auc', 'logloss'.
 
@@ -236,21 +228,12 @@ class FedCore(Fedot):
         """
         from sklearn.preprocessing import OneHotEncoder
 
-        model_output = (
-            predicton.cpu().detach().numpy()
-            if isinstance(predicton, Tensor)
-            else predicton
-        )
+        model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
         model_output_is_probs = all(
             [len(model_output.shape) > 1, model_output.shape[1] > 1]
         )
-        labels, predicted_probs = Either(
-            value=model_output, monoid=[model_output, model_output_is_probs]
-        ).either(
-            left_function=lambda output: (
-                output,
-                OneHotEncoder().fit_transform(output),
-            ),
+        labels, predicted_probs = Either(value=model_output, monoid=[model_output, model_output_is_probs]).either(
+            left_function=lambda output: (output,OneHotEncoder().fit_transform(output)),
             right_function=lambda output: (np.argmax(output, axis=1), output),
         )
         metric_dict = self._metric_evaluation_loop(

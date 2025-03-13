@@ -23,6 +23,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sktime.performance_metrics.forecasting import mean_absolute_scaled_error
+from fedot.core.composer.metrics import Metric
 
 
 class MetricCounter(ABC):
@@ -147,9 +148,9 @@ class ObjectDetectionMetricCounter(MetricCounter):
         self.class_metrics = class_metrics
 
     def update(
-        self,
-        predictions: List[Dict[str, torch.Tensor]],
-        targets: List[Dict[str, torch.Tensor]],
+            self,
+            predictions: List[Dict[str, torch.Tensor]],
+            targets: List[Dict[str, torch.Tensor]],
     ) -> None:
         """Accumulates predictions and targets."""
         self.map.update(preds=predictions, target=targets)
@@ -204,10 +205,10 @@ class LossesAverager(MetricCounter):
 
 
 def iou_score(
-    outputs: torch.Tensor,
-    masks: torch.Tensor,
-    threshold: float = 0.5,
-    smooth: float = 1e-10,
+        outputs: torch.Tensor,
+        masks: torch.Tensor,
+        threshold: float = 0.5,
+        smooth: float = 1e-10,
 ) -> torch.Tensor:
     """Computes intersection over union (masks) on batch.
 
@@ -229,10 +230,10 @@ def iou_score(
 
 
 def dice_score(
-    outputs: torch.Tensor,
-    masks: torch.Tensor,
-    threshold: float = 0.5,
-    smooth: float = 1e-10,
+        outputs: torch.Tensor,
+        masks: torch.Tensor,
+        threshold: float = 0.5,
+        smooth: float = 1e-10,
 ) -> torch.Tensor:
     """Computes dice coefficient (masks) on batch.
 
@@ -255,7 +256,7 @@ def dice_score(
 
 class ParetoMetrics:
     def pareto_metric_list(
-        self, costs: Union[list, np.ndarray], maximise: bool = True
+            self, costs: Union[list, np.ndarray], maximise: bool = True
     ) -> np.ndarray:
         """Calculates the pareto front for a list of costs.
 
@@ -281,28 +282,32 @@ class ParetoMetrics:
         return is_efficient
 
 
-class QualityMetric:
-    def __init__(
-        self,
-        target,
-        predicted_labels,
-        predicted_probs=None,
-        metric_list: list = ("f1", "roc_auc", "accuracy", "logloss", "precision"),
-        default_value: float = 0.0,
-    ):
-        self.predicted_probs = predicted_probs
-        labels_as_matrix = len(predicted_labels.shape) >= 2
-        labels_as_one_dim = min(predicted_labels.shape) == 1
-        if labels_as_matrix and not labels_as_one_dim:
-            self.predicted_labels = np.argmax(predicted_labels, axis=1)
-        else:
-            self.predicted_labels = np.array(predicted_labels).flatten()
-        self.target = np.array(target).flatten()
-        self.metric_list = metric_list
-        self.default_value = default_value
+class QualityMetric(Metric):
+    default_value = 0
+    need_to_minimize = False
+    output_mode = 'compress'
 
-    def metric(self) -> float:
+    @classmethod
+    @abstractmethod
+    def metric(cls, target, predict) -> float:
         pass
+
+    @classmethod
+    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+        """ Get metric value based on pipeline, reference data, and number of validation blocks.
+        Args:
+            pipeline: a :class:`Pipeline` instance for evaluation.
+            reference_data: :class:`InputData` for evaluation.
+            validation_blocks: number of validation blocks. Used only for time series forecasting.
+                If ``None``, data separation is not performed.
+        """
+        metric = cls.default_value
+        results = pipeline.predict(reference_data, output_mode=cls.output_mode)
+        # get true targets from test/calib dataloader
+        true_target = reference_data.features.calib_dataloader.dataset.targets
+        # get predction from result.predict (OutputData)
+        true_pred = results.predict.predict
+        return cls.metric(cls, target=true_target, predict=true_pred)
 
     @staticmethod
     def _get_least_frequent_val(array: np.ndarray):
@@ -314,24 +319,14 @@ class QualityMetric:
 
 
 class RMSE(QualityMetric):
-    def metric(self) -> float:
-        return mean_squared_error(
-            y_true=self.target, y_pred=self.predicted_labels, squared=False
-        )
+    def metric(cls, target, predict) -> float:
+        return mean_squared_error(y_true=target, y_pred=predict, squared=False)
 
 
 class SMAPE(QualityMetric):
-    def metric(self):
-        return (
-            1
-            / len(self.predicted_labels)
-            * np.sum(
-                2
-                * np.abs(self.target - self.predicted_labels)
-                / (np.abs(self.predicted_labels) + np.abs(self.target))
-                * 100
-            )
-        )
+    def metric(cls, target, predict) -> float:
+        return (1 / len(predict) * np.sum(2 * np.abs(target - predict)
+                                          / (np.abs(predict) + np.abs(target)) * 100))
 
 
 class MSE(QualityMetric):
@@ -445,8 +440,8 @@ class Logloss(QualityMetric):
 class Accuracy(QualityMetric):
     output_mode = "labels"
 
-    def metric(self) -> float:
-        return accuracy_score(y_true=self.target, y_pred=self.predicted_labels)
+    def metric(cls, target, predict) -> float:
+        return accuracy_score(y_true=target, y_pred=predict)
 
 
 def mase(A, F, y_train):

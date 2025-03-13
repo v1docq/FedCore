@@ -10,7 +10,7 @@ DATASET_PARAMS = {'train_bs': 64,
                   'val_bs': 100,
                   'train_shuffle': True,
                   'val_shuffle': False}
-METRIC_TO_OPTIMISE = ['accuracy', 'latency', 'throughput']
+METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 initial_assumption = {'path_to_model': './pretrain_model/resnet_1_epoch_pretrain.pt',
                       'model_type': 'ResNet18'}
 initial_assumption, learning_strategy = get_scenario_for_api('checkpoint',initial_assumption)
@@ -47,6 +47,12 @@ if __name__ == "__main__":
     input_data = load_data(DATASET)
     fedcore_compressor = FedCore(**api_config)
     fedcore_compressor.fit(input_data)
-    pruning_result = evaluate_optimised_model(fedcore_compressor, input_data)
-    original_result = evaluate_original_model(fedcore_compressor, input_data)
+    pruning_prediction = fedcore_compressor.predict(input_data, output_mode="compress")
+    original_prediction = fedcore_compressor.predict(input_data, output_mode="original")
+    quality_metrics_after_pruning = fedcore_compressor.evaluate_metric(predicton=pruning_prediction,
+                                                                       target=input_data.calib_dataloader)
+    computational_metrics_after_pruning = fedcore_compressor.evaluate_metric(
+        predicton=pruning_prediction,
+        target=fedcore_compressor.target,
+        metric_type="optimised_computational")
     onnx_model = fedcore_compressor.export()

@@ -18,28 +18,29 @@ from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
 
 
-
 class PerformanceEvaluator:
     def __init__(
-        self,
-        model,
-        data,
-        device=None,
-        batch_size=32,
-        n_batches=8,
-        collate_fn=None,
+            self,
+            model,
+            data,
+            device=None,
+            batch_size=32,
+            n_batches=8,
+            collate_fn=None,
     ):
         is_class_container = hasattr(model, "model")
         is_pipeline_class = isinstance(model, Pipeline)
         dataset_from_directory = isinstance(
             data, str
         )  ### where's func for string dataset loading
-        self.model = model.model if is_class_container else model
-        self.model = (
-            model.operator.root_node.fitted_operation.model
-            if is_pipeline_class
-            else model
-        )
+        if is_pipeline_class:
+            model_attr_list = dir(model.operator.root_node.fitted_operation)
+            model_attr_name = [x for x in model_attr_list if x.__contains__('model_after')][0]
+            self.model = getattr(model.operator.root_node.fitted_operation, model_attr_name)
+        elif is_class_container:
+            self.model = model.model
+        else:
+            self.model = model
         self.n_batches = n_batches
         if isinstance(data, DataLoader):
             collate_fn = data.collate_fn
@@ -50,9 +51,9 @@ class PerformanceEvaluator:
             dataset = data
         self.data_loader = partial(DataLoaderHandler.check_convert, dataloader=DataLoader(
             dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
-        )
-        self.batch_size = batch_size# or self.data_loader.batch_size
-        self.cuda_allowed =  not getattr(self.model, '_is_quantized', False) and torch.cuda.is_available()
+                                   )
+        self.batch_size = batch_size  # or self.data_loader.batch_size
+        self.cuda_allowed = not getattr(self.model, '_is_quantized', False) and torch.cuda.is_available()
         self.device = device or default_device('cpu' if not self.cuda_allowed else None)
         self.cuda_allowed = self.cuda_allowed and self.device.type != 'cpu'
         self.model.to(self.device)
@@ -74,7 +75,7 @@ class PerformanceEvaluator:
         self.model.eval()
         thr_list = []
         for batch, _ in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"
-        ):
+                             ):
             X = (
                 batch.cuda(non_blocking=True)
                 if hasattr(batch, "cuda") and self.cuda_allowed
@@ -124,7 +125,7 @@ class PerformanceEvaluator:
         timings_lat = []
         timings_thr = []
         with tqdm(
-            total=reps, desc="Measuring latency and throughput", unit="rep"
+                total=reps, desc="Measuring latency and throughput", unit="rep"
         ) as pbar:
             for rep in range(reps):
                 timings_thr.append(self.throughput_eval(reps))
@@ -139,7 +140,7 @@ class PerformanceEvaluator:
         return self.latency, self.throughput
 
     def measure_model_size(self):
-        size_constant = 1024**2
+        size_constant = 1024 ** 2
         if isinstance(self.model, ONNXInferenceModel):
             size_all_mb = round(self.model.size(), 3) / size_constant
         else:
@@ -167,6 +168,7 @@ class PerformanceEvaluator:
             f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"
         )
         print(f"Model size: {self.model_size} MB")
+
 
 class PerformanceEvaluatorOD:
     def __init__(self, model, data_loader, device=None, batch_size=32):
@@ -254,7 +256,7 @@ class PerformanceEvaluatorOD:
 
     def measure_model_size(self):
         if isinstance(self.model, ONNXInferenceModel):
-            size_all_mb = round(self.model.size(), 3) / 1024**2
+            size_all_mb = round(self.model.size(), 3) / 1024 ** 2
         else:
             param_size = 0
             for param in self.model.parameters():
@@ -263,7 +265,7 @@ class PerformanceEvaluatorOD:
             for buffer in self.model.buffers():
                 buffer_size += buffer.nelement() * buffer.element_size()
 
-            size_all_mb = (param_size + buffer_size) / 1024**2
+            size_all_mb = (param_size + buffer_size) / 1024 ** 2
         self.model_size = round(size_all_mb, 3)
         return self.model_size
 

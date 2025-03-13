@@ -74,7 +74,10 @@ class DataCheck:
             elif isinstance(self.model, dict):
                 torch_model = load_backbone(torch_model=self.model['model_type'],
                                             model_params=self.learning_params)
-                torch_model.load_model(self.model['path_to_model'])
+                if hasattr(torch_model, 'load_model'):
+                    torch_model.load_model(self.model['path_to_model'])
+                else:
+                    torch_model.load_state_dict(torch.load(self.model['path_to_model'], weights_only=True))
             elif isinstance(self.model, Callable):
                 torch_model = self.model
             else:
