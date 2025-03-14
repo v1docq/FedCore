@@ -57,12 +57,13 @@ class FedCore(Fedot):
         self.logger.info('Initialising Fedcore Repository')
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
         self.repo = FedcoreModels().setup_repository()
-        optimisation_agent = self.manager.automl_config.optimizer['optimisation_agent']
-        optimisation_params = self.manager.automl_config.optimizer['optimisation_strategy']
-        fedcore_opt = partial(self.manager.optimisation_agent[optimisation_agent],
-                              optimisation_params=optimisation_params)
-        self.manager.automl_config.optimizer = fedcore_opt
-        self.manager.automl_config.config.update({'optimizer': fedcore_opt})
+        if not isinstance(self.manager.automl_config.config['optimizer'], partial):
+            optimisation_agent = self.manager.automl_config.optimizer['optimisation_agent']
+            optimisation_params = self.manager.automl_config.optimizer['optimisation_strategy']
+            fedcore_opt = partial(self.manager.optimisation_agent[optimisation_agent],
+                                  optimisation_params=optimisation_params)
+            self.manager.automl_config.optimizer = fedcore_opt
+            self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
@@ -96,13 +97,7 @@ class FedCore(Fedot):
         return train_data
 
     def __abstract_predict(self, predict_data, output_mode):
-        custom_predict = all([not self.manager.condition_check.solver_is_fedot_class(self.manager.solver),
-                              not self.manager.condition_check.solver_is_pipeline_class(self.manager.solver)])
-        predict = Either(value=predict_data,
-                         monoid=[predict_data, custom_predict]).either(
-            left_function=lambda predict_for_solver: self.manager.solver.predict(predict_for_solver, output_mode),
-            right_function=lambda predict_for_custom: self.manager.solver.predict(predict_for_custom, output_mode))
-        predict = Maybe.insert(predict).then(lambda x: x.predict if isinstance(predict, OutputData) else x).value
+        predict = self.fedcore_model.predict(predict_data, output_mode)
         return predict
 
     def fit(self, input_data: tuple, manually_done: bool = False, **kwargs):
@@ -128,13 +123,12 @@ class FedCore(Fedot):
             return fitted_solver
 
         with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
-            solver = Maybe.insert(self._process_input_data(input_data)). \
+            self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
                 then(self.__init_fedcore_backend). \
                 then(self.__init_solver). \
                 then(fit_function). \
                 maybe(None, lambda solver: solver)
-        self.optimised_model = solver.root_node.fitted_operation.optimised_model
-        return solver
+        return self.fedcore_model
 
     def predict(self, predict_data: tuple, output_mode:str = 'compress',  **kwargs):
         """
@@ -151,7 +145,7 @@ class FedCore(Fedot):
             insert(self._process_input_data(predict_data)). \
             then(self.__init_fedcore_backend). \
             then(lambda predict_data: self.__abstract_predict(predict_data, output_mode)). \
-            maybe(None, lambda labels: labels)
+            maybe(None, lambda labels: labels.predict.predict)
         return self.manager.predicted_labels
 
     def finetune(self, train_data, tuning_params=None):
@@ -186,28 +180,12 @@ class FedCore(Fedot):
         self.manager.is_finetuned = True
         self.manager.solver = model_to_tune
 
-    def _metric_evaluation_loop(self, target, predicted_labels, predicted_probs, problem, metric_type):
-        prediction_dict = dict(target=target, labels=predicted_labels, probs=predicted_probs)
-        inference_metric = metric_type.__contains__("computational")
-        inference_model = self.optimised_model if metric_type.__contains__("optimised")else self.original_model
-        inference_eval = CV_quality_metric()
-
-        prediction_dataframe = Either(
-            value=inference_model, monoid=[prediction_dict, inference_metric]
-        ).either(
-            left_function=lambda pred: FEDOT_GET_METRICS[problem](**pred),
-            right_function=lambda model: inference_eval.metric(
-                model=model, dataset=self.predict_data.features.calib_dataloader
-            ),
-        )
-
-        return prediction_dataframe
 
     def evaluate_metric(
             self,
             predicton: Union[Tensor, np.array],
             target: Union[list, np.array],
-            metric_type: str = "computational",
+            problem: str = "computational",
     ) -> pd.DataFrame:
         """
         Method to calculate metrics.
@@ -229,21 +207,18 @@ class FedCore(Fedot):
         from sklearn.preprocessing import OneHotEncoder
 
         model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
-        model_output_is_probs = all(
-            [len(model_output.shape) > 1, model_output.shape[1] > 1]
-        )
-        labels, predicted_probs = Either(value=model_output, monoid=[model_output, model_output_is_probs]).either(
-            left_function=lambda output: (output,OneHotEncoder().fit_transform(output)),
-            right_function=lambda output: (np.argmax(output, axis=1), output),
-        )
-        metric_dict = self._metric_evaluation_loop(
-            target=target,
-            problem=self.cv_task,
-            predicted_labels=labels,
-            predicted_probs=predicted_probs,
-            metric_type=metric_type,
-        )
-        return metric_dict
+        model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
+        if model_output_is_probs:
+            labels = np.argmax(model_output, axis=1)
+            predicted_probs = model_output
+
+        inference_metric = problem.__contains__("computational")
+        if inference_metric:
+            prediction_dict = dict(target=self.fedcore_model, labels=target, probs=predicted_probs)
+        else:
+            prediction_dict = dict(target=target, labels=labels, probs=predicted_probs)
+        prediction_dataframe = FEDOT_GET_METRICS[problem](**prediction_dict)
+        return prediction_dataframe
 
     def load(self, path):
         """Loads saved Industrial model from disk

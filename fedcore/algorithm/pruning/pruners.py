@@ -145,21 +145,6 @@ class BasePruner(BaseCompressionModel):
                 self.optimizer_for_grad.step()
         return pruner
 
-    # def _dependency_graph_pruner(self):
-    #     DG = tp.DependencyGraph().build_dependency(
-    #         self.model_after_pruning,
-    #         example_inputs=self.data_batch_for_calib,
-    #         ignored_layers=self.ignored_layers,
-    #     )
-    #     group = DG.get_pruning_group(
-    #         self.optimised_model.conv1, tp.prune_conv_out_channels, idxs=[2, 6, 9]
-    #     )
-    #
-    #     print(group.details())
-    #
-    #     if DG.check_pruning_group(group):  # avoid over-pruning, i.e., channels=0.
-    #         group.prune()
-
     def pruner_step(self, pruner: callable, input_data):
 
         pruner_without_grads = isinstance(
@@ -184,15 +169,6 @@ class BasePruner(BaseCompressionModel):
         self._init_model(input_data)
         self.prune(input_data=input_data)
         return self.model_after_pruning
-
-    def _manual_pruning_iter(self, pruner):
-        # for i in range(self.pruning_iterations):
-        #     for pruning_func in MANUAL_PRUNING_STRATEGY[self.pruner_name]:
-        #         root_layer = self._define_root_layer()
-        #         pruner.manual_prune(
-        #             root_layer, PRUNING_FUNC[pruning_func], self.pruning_ratio
-        #         )
-        pass
 
     def _default_pruning_iter(self, pruner):
         pruning_hist = []

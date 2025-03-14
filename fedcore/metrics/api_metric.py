@@ -86,9 +86,7 @@ def calculate_forecasting_metric(
     return df.round(rounding_order)
 
 
-def calculate_classification_metric(
-    target, labels, probs, rounding_order=3, metric_names=("f1" "accuracy")
-):
+def calculate_classification_metric(target, labels, probs, rounding_order=3, metric_names=("f1" "accuracy")):
     metric_dict = {
         "accuracy": Accuracy,
         "f1": F1,
@@ -98,7 +96,7 @@ def calculate_classification_metric(
 
     df = pd.DataFrame(
         {
-            name: func(target, labels, probs).metric()
+            name: func().metric(target, labels)
             for name, func in metric_dict.items()
             if name in metric_names
         },
@@ -107,17 +105,7 @@ def calculate_classification_metric(
     return df.round(rounding_order)
 
 
-def calculate_computational_metric(
-    target, labels, probs, rounding_order=3, metric_names=("f1" "accuracy")
-):
-    metric_dict = CV_quality_metric()
-
-    df = pd.DataFrame(
-        {
-            name: func(target, labels, probs).metric()
-            for name, func in metric_dict.items()
-            if name in metric_names
-        },
-        index=[0],
-    )
-    return df.round(rounding_order)
+def calculate_computational_metric(target, labels, probs, rounding_order=3,
+                                   metric_names=("latency" "throughput")):
+    metric_dict = CV_quality_metric().metric(target, labels, probs)
+    return metric_dict

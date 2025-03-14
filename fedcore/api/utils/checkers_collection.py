@@ -71,6 +71,7 @@ class DataCheck:
         if self.model is not None:
             if isinstance(self.model, str):
                 torch_model = load_backbone(self.model)
+                _ = 1
             elif isinstance(self.model, dict):
                 torch_model = load_backbone(torch_model=self.model['model_type'],
                                             model_params=self.learning_params)

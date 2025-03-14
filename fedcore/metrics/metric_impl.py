@@ -330,51 +330,51 @@ class SMAPE(QualityMetric):
 
 
 class MSE(QualityMetric):
-    def metric(self) -> float:
+    def metric(cls, target, predict) -> float:
         return mean_squared_error(
-            y_true=self.target, y_pred=self.predicted_labels, squared=True
+            y_true=target, y_pred=predict, squared=True
         )
 
 
 class MSLE(QualityMetric):
-    def metric(self) -> float:
-        return mean_squared_log_error(y_true=self.target, y_pred=self.predicted_labels)
+    def metric(cls, target, predict) -> float:
+        return mean_squared_log_error(y_true=target, y_pred=predict)
 
 
 class MAPE(QualityMetric):
-    def metric(self) -> float:
+    def metric(cls, target, predict) -> float:
         return mean_absolute_percentage_error(
-            y_true=self.target, y_pred=self.predicted_labels
+            y_true=target, y_pred=predict
         )
 
 
 class F1(QualityMetric):
     output_mode = "labels"
 
-    def metric(self) -> float:
-        n_classes = len(np.unique(self.target))
-        n_classes_pred = len(np.unique(self.predicted_labels))
+    def metric(cls, target, predict) -> float:
+        n_classes = len(np.unique(target))
+        n_classes_pred = len(np.unique(predict))
 
         try:
             if n_classes > 2 or n_classes_pred > 2:
                 return f1_score(
-                    y_true=self.target, y_pred=self.predicted_labels, average="weighted"
+                    y_true=target, y_pred=predict, average="weighted"
                 )
             else:
-                pos_label = QualityMetric._get_least_frequent_val(self.target)
+                pos_label = QualityMetric._get_least_frequent_val(target)
                 return f1_score(
-                    y_true=self.target,
-                    y_pred=self.predicted_labels,
+                    y_true=target,
+                    y_pred=predict,
                     average="binary",
                     pos_label=pos_label,
                 )
         except ValueError:
-            return self.default_value
+            return cls.default_value
 
 
 class MAE(QualityMetric):
-    def metric(self) -> float:
-        return mean_absolute_error(y_true=self.target, y_pred=self.predicted_labels)
+    def metric(cls, target, predict) -> float:
+        return mean_absolute_error(y_true=target, y_pred=predict)
 
 
 class R2(QualityMetric):
@@ -389,20 +389,17 @@ def maximised_r2(graph: Graph, reference_data: InputData, **kwargs):
 
 
 class ROCAUC(QualityMetric):
-    def metric(self) -> float:
-        n_classes = len(np.unique(self.target))
+    def metric(cls, target, predict) -> float:
+        n_classes = len(np.unique(target))
 
         if n_classes > 2:
-            target = pd.get_dummies(self.target)
+            target = pd.get_dummies(target)
             additional_params = {"multi_class": "ovr", "average": "macro"}
-            if self.predicted_probs is None:
-                prediction = pd.get_dummies(self.predicted_labels)
-            else:
-                prediction = self.predicted_probs
+            prediction = pd.get_dummies(predict)
         else:
-            target = self.target
+            target = target
             additional_params = {}
-            prediction = self.predicted_probs
+            prediction = predict
 
         score = roc_auc_score(
             y_score=prediction,
@@ -418,23 +415,21 @@ class ROCAUC(QualityMetric):
 class Precision(QualityMetric):
     output_mode = "labels"
 
-    def metric(self) -> float:
-        n_classes = np.unique(self.target)
+    def metric(cls, target, predict) -> float:
+        n_classes = np.unique(target)
         if n_classes.shape[0] >= 2:
             additional_params = {"average": "macro"}
         else:
             additional_params = {}
 
-        score = precision_score(
-            y_pred=self.predicted_labels, y_true=self.target, **additional_params
-        )
+        score = precision_score(y_pred=predict, y_true=target, **additional_params)
         score = round(score, 3)
         return score
 
 
 class Logloss(QualityMetric):
-    def metric(self) -> float:
-        return log_loss(y_true=self.target, y_pred=self.predicted_probs)
+    def metric(cls, target, predict) -> float:
+        return log_loss(y_true=target, y_pred=predict)
 
 
 class Accuracy(QualityMetric):

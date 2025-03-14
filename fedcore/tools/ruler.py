@@ -28,20 +28,13 @@ class PerformanceEvaluator:
             n_batches=8,
             collate_fn=None,
     ):
-        is_class_container = hasattr(model, "model")
-        is_pipeline_class = isinstance(model, Pipeline)
-        dataset_from_directory = isinstance(
-            data, str
-        )  ### where's func for string dataset loading
-        if is_pipeline_class:
-            model_attr_list = dir(model.operator.root_node.fitted_operation)
-            model_attr_name = [x for x in model_attr_list if x.__contains__('model_after')][0]
-            self.model = getattr(model.operator.root_node.fitted_operation, model_attr_name)
-        elif is_class_container:
-            self.model = model.model
-        else:
-            self.model = model
+        self._init_null_object()
+        self._init_eval_backend(device)
+        self._init_model(model)
         self.n_batches = n_batches
+        self.batch_size = batch_size  # or self.data_loader.batch_size
+
+        dataset_from_directory = isinstance(data, str)  ### where's func for string dataset loading
         if isinstance(data, DataLoader):
             collate_fn = data.collate_fn
             dataset = data.dataset
@@ -52,16 +45,36 @@ class PerformanceEvaluator:
         self.data_loader = partial(DataLoaderHandler.check_convert, dataloader=DataLoader(
             dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
                                    )
-        self.batch_size = batch_size  # or self.data_loader.batch_size
-        self.cuda_allowed = not getattr(self.model, '_is_quantized', False) and torch.cuda.is_available()
-        self.device = device or default_device('cpu' if not self.cuda_allowed else None)
-        self.cuda_allowed = self.cuda_allowed and self.device.type != 'cpu'
-        self.model.to(self.device)
+
+    def _init_null_object(self):
         # Measured performance metrics
         self.latency = None
         self.throughput = None
         self.model_size = None
         self.target_metrics = None
+
+    def _init_eval_backend(self, device):
+        self.cuda_allowed = all([#not getattr(self.model, '_is_quantized', False),
+                            device != 'cpu',
+                            torch.cuda.is_available()])
+        if self.cuda_allowed:
+            self.device = default_device("CUDA")
+        else:
+            self.device = default_device('cpu')
+
+    def _init_model(self, model):
+        is_class_container = hasattr(model, "model")
+        is_pipeline_class = isinstance(model, Pipeline)
+
+        if is_pipeline_class:
+            model_attr_list = dir(model.operator.root_node.fitted_operation)
+            model_attr_name = [x for x in model_attr_list if x.__contains__('model_after')][0]
+            self.model = getattr(model.operator.root_node.fitted_operation, model_attr_name)
+        elif is_class_container:
+            self.model = model.model
+        else:
+            self.model = model
+        self.model.to(self.device)
 
     def eval(self):
         self.warm_up_cuda()
@@ -160,7 +173,7 @@ class PerformanceEvaluator:
         """Warm up CUDA by performing some dummy computations"""
         if self.cuda_allowed:
             for inputs, _ in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
-                _ = self.model(inputs.to(self.model.device))
+                _ = self.model(inputs.to(self.device))
 
     def report(self):
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
