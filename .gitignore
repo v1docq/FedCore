@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+*.pyc
 
 .DS_Store
 
@@ -100,3 +101,6 @@ venv.bak/
 
 .local/
 /.idea/
+
+results_of_experiments/
+composition_results/
