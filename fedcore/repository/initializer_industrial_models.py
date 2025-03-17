@@ -11,8 +11,8 @@ from fedot.core.operations.operation import Operation
 from fedot.core.optimisers.objective.data_source_splitter import DataSourceSplitter
 from fedot.core.pipelines.tuning.search_space import PipelineSearchSpace
 from fedot.core.repository.operation_types_repository import OperationTypesRepository
+from fedot.core.optimisers.objective.data_objective_eval import PipelineObjectiveEvaluate
 from fedot.api.api_utils.api_composer import ApiComposer
-import fedot.core.composer.metrics as original_fedot_metric
 from fedcore.architecture.utils.paths import PROJECT_PATH
 from fedcore.interfaces.search_space import get_fedcore_search_space
 from fedcore.repository.fedcore_impl.abstract import (
@@ -23,17 +23,18 @@ from fedcore.repository.fedcore_impl.abstract import (
     predict_operation_fedcore,
     fedcore_preprocess_predicts,
     merge_fedcore_predicts,
-    _get_default_fedcore_mutations, obtain_model_fedcore, divide_operations_fedcore,
+    _get_default_fedcore_mutations, obtain_model_fedcore, divide_operations_fedcore, fit_fedcore,
 )
 from fedcore.repository.fedcore_impl.data import (
     build_holdout_producer,
     build_fedcore_dataproducer,
 )
-from fedcore.repository.fedcore_impl.metrics import MetricsRepository as FedcoreMetric
+from fedcore.repository.fedcore_impl.metrics import MetricsRepository as FedcoreMetric, evaluate_objective_fedcore
 
 FEDCORE_METRIC_REPO = FedcoreMetric()
 
 FEDOT_METHOD_TO_REPLACE = [
+    (PipelineObjectiveEvaluate, 'evaluate'),
     (fedot_task, "TaskTypesEnum"),
     (DataSourceSplitter, "build"),
     (fedot_metric_repo, "_metrics_implementations"),
@@ -52,6 +53,7 @@ FEDOT_METHOD_TO_REPLACE = [
 ]
 
 FEDCORE_REPLACE_METHODS = [
+    evaluate_objective_fedcore,
     TaskCompression,
     build_fedcore_dataproducer,
     FedcoreMetric._metrics_implementations,

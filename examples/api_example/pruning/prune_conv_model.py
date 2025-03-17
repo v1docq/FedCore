@@ -11,16 +11,17 @@ DATASET_PARAMS = {'train_bs': 64,
                   'train_shuffle': True,
                   'val_shuffle': False}
 METRIC_TO_OPTIMISE = ['accuracy', 'latency']
-initial_assumption = {'path_to_model': './pretrain_model/resnet_1_epoch_pretrain.pt',
+initial_assumption = {'path_to_model': './pretrain_model/pretrain_model_checkpoint_at_15_epoch.pt',
                       'model_type': 'ResNet18'}
-initial_assumption, learning_strategy = get_scenario_for_api('checkpoint', initial_assumption)
+scenario = 'from_checkpoint'
+initial_assumption, learning_strategy = get_scenario_for_api(scenario, initial_assumption)
 USER_CONFIG = {'problem': 'classification',
                'metric': METRIC_TO_OPTIMISE,
                'initial_assumption': initial_assumption,
                'pop_size': 1,
                'timeout': 0.1,
                'learning_strategy': learning_strategy,
-               'learning_strategy_params': dict(epochs=1,
+               'learning_strategy_params': dict(epochs=15,
                                                 learning_rate=0.0001,
                                                 loss='crossentropy',
                                                 # custom_loss = ['norm_loss', 'weight_loss'] needs to rework BaseNN class
@@ -32,10 +33,10 @@ USER_CONFIG = {'problem': 'classification',
                                                 ),
                'peft_strategy': 'pruning',
                'peft_strategy_params': dict(pruning_iterations=1,
-                                            importance='MagnitudeImportance',
-                                            pruner_name='magnitude_pruner',
-                                            importance_norm=1,
-                                            pruning_ratio=0.7,
+                                            importance="GroupNormImportance", # "BNScaleImportance", 'MagnitudeImportance', "GroupNormImportance",
+                                            pruner_name='meta_pruner',
+                                            importance_norm=2,
+                                            pruning_ratio=0.9,
                                             finetune_params={'epochs': 1,
                                                              "learning_rate": 0.0001,
                                                              'loss': 'crossentropy'}

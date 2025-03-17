@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Callable
+from typing import Callable, Union
 
 import torch
 import numpy as np
@@ -14,6 +14,7 @@ from fedot.core.repository.tasks import (
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.models.backbone.backbone_loader import load_backbone
 from fedcore.repository.config_repository import TASK_MAPPING
+from pymonad.maybe import Maybe
 
 
 class DataCheck:
@@ -53,8 +54,15 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
+        input_data_is_user_dataloaders = isinstance(input_data, dict)
+        input_data_is_fedcore_data = input_data.supplementary_data.is_auto_preprocessed
+
+        model_is_pretrain_torch_backbone = isinstance(self.model, str)
+        model_is_pretrain_backbone_with_weights = isinstance(self.model, dict)
+        model_is_custom_callable_object = isinstance(self.model, Callable)
+
         model_params = self.learning_params.get('model_params', None)
-        if isinstance(input_data, dict):
+        if input_data_is_user_dataloaders:
             compression_dataset = CompressionInputData(
                 calib_dataloader=input_data['val_dataloader'],
                 train_dataloader=input_data['train_dataloader'],
@@ -62,41 +70,45 @@ class DataCheck:
                 input_dim=model_params['input_dim'] if model_params is not None else 1
             )
             compression_dataset.supplementary_data.is_auto_preprocessed = True
-        else:
-            if input_data.supplementary_data.is_auto_preprocessed:
-                compression_dataset = input_data
-            else:
-                compression_dataset, torch_model = input_data
+        elif input_data_is_fedcore_data:
+            compression_dataset = input_data
 
-        if self.model is not None:
-            if isinstance(self.model, str):
-                torch_model = load_backbone(self.model)
-                _ = 1
-            elif isinstance(self.model, dict):
-                torch_model = load_backbone(torch_model=self.model['model_type'],
-                                            model_params=self.learning_params)
-                if hasattr(torch_model, 'load_model'):
-                    torch_model.load_model(self.model['path_to_model'])
-                else:
-                    torch_model.load_state_dict(torch.load(self.model['path_to_model'], weights_only=True))
-            elif isinstance(self.model, Callable):
-                torch_model = self.model
-            else:
-                torch_model = None
-            compression_dataset.target = torch_model
-
-        self.input_data = InputData(
+        input_data = InputData(
             features=compression_dataset,  # CompressionInputData object
             idx=self.fedot_dummy_idx,  # dummy value
             features_names=compression_dataset.num_classes,  # CompressionInputData attribute
             task=self.fedot_dummy_task,  # dummy value
             data_type=self.fedot_dummy_datatype,  # dummy value
-            target=torch_model,  # model for compression
             supplementary_data=compression_dataset.supplementary_data,
         )
-        self.input_data.supplementary_data.is_auto_preprocessed = True
+        input_data.supplementary_data.is_auto_preprocessed = True
 
-    def _check_dataloader(self):
+        if model_is_pretrain_torch_backbone or model_is_pretrain_backbone_with_weights:
+            torch_model = load_backbone(torch_model=self.model,
+                                        model_params=model_params)
+            torch_model = self._check_optimised_model(torch_model, input_data)
+            if model_is_pretrain_backbone_with_weights:
+                if hasattr(torch_model, 'load_model'):
+                    torch_model.load_model(self.model['path_to_model'])
+                else:
+                    torch_model.load_state_dict(torch.load(self.model['path_to_model'], weights_only=True))
+        elif model_is_custom_callable_object:
+            torch_model = self.model
+
+        input_data.target = torch_model  # model for compression
+        input_data.features.target = torch_model  # model for compression
+        return input_data
+
+    def _check_dataloader(self, input_data: InputData):
+        """Checks and preprocesses the features in the input data.
+
+        - Replaces NaN and infinite values with 0.
+        - Converts features to torch format using NumpyConverter.
+
+        """
+        return input_data
+
+    def _check_optimised_model(self, model: Callable, input_data: InputData):
         """Checks and preprocesses the features in the input data.
 
         - Replaces NaN and infinite values with 0.
@@ -104,13 +116,14 @@ class DataCheck:
 
         """
 
-    def _check_optimised_model(self):
-        """Checks and preprocesses the features in the input data.
-
-        - Replaces NaN and infinite values with 0.
-        - Converts features to torch format using NumpyConverter.
-
-        """
+        model_layers = list(model.modules())
+        output_layer = model_layers[-1]
+        n_classes = input_data.features.num_classes
+        if output_layer.weight.shape[0] != n_classes:
+            output_layer.weight = torch.nn.Parameter(output_layer.weight[:n_classes, :])
+            output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
+            output_layer.out_features = n_classes
+        return model
 
     def check_input_data(self, input_data: [InputData, CompressionInputData] = None) -> InputData:
         """Checks and preprocesses the input data for Fedot AutoML.
@@ -124,9 +137,9 @@ class DataCheck:
             InputData: The preprocessed and initialized Fedot InputData object.
 
         """
-        self._init_input_data(input_data)
-        self._check_dataloader()
-        self._check_optimised_model()
+        self.input_data = Maybe.insert(self._init_input_data(input_data)). \
+            then(self._check_dataloader). \
+            maybe(None, lambda data: data)
         return self.input_data
 
 

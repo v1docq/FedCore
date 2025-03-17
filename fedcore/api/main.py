@@ -1,3 +1,4 @@
+import os
 import warnings
 from copy import deepcopy
 from functools import partial
@@ -15,9 +16,7 @@ from torch import Tensor
 from fedcore.api.utils.api_init import ApiManager
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
-from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.metrics.cv_metrics import CV_quality_metric
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
     FEDCORE_CV_DATASET,
@@ -93,6 +92,11 @@ class FedCore(Fedot):
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
         pretrained_model = fedot_pipeline.fit(train_data)
+        fedcore_trainer = fedot_pipeline.operator.root_node.operation.fitted_operation
+        path_to_save_pretrain = os.path.join(self.manager.compute_config.config['output_folder'],
+                                             f'pretrain_model_checkpoint_at_{fedcore_trainer.epochs}_epoch.pt')
+        os.makedirs(self.manager.compute_config.config['output_folder'])
+        fedcore_trainer.save_model(path_to_save_pretrain)
         train_data.target = pretrained_model.predict
         return train_data
 

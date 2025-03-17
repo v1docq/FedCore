@@ -15,6 +15,41 @@ from golem.utilities.memory import MemoryAnalytics
 from fedcore.repository.fedcore_impl.optimisation import FedcoreMutations
 
 
+def fit_fedcore(self,
+                features,
+                target='target',
+                predefined_model=None):
+    """Composes and fits a new pipeline, or fits a predefined one.
+
+    Args:
+        features: train data feature values in one of the supported features formats.
+        target: train data target values in one of the supported target formats.
+        predefined_model: the name of a single model or a :class:`Pipeline` instance, or ``auto``.
+            With any value specified, the method does not perform composing and tuning.
+            In case of ``auto``, the method generates a single initial assumption and then fits
+            the created pipeline.
+
+    Returns:
+        :class:`Pipeline` object.
+    """
+
+    MemoryAnalytics.start()
+    self.target = target
+    with fedot_composer_timer.launch_data_definition('fit'):
+        self.train_data = self.data_processor.define_data(features=features, target=target, is_predict=False)
+
+    self.params.update_available_operations_by_preset(self.train_data)
+    self._init_remote_if_necessary()
+
+    if isinstance(self.train_data, InputData) and self.params.get('use_auto_preprocessing'):
+        with fedot_composer_timer.launch_preprocessing():
+            self.train_data = self.data_processor.fit_transform(self.train_data)
+
+    self.current_pipeline, self.best_models, self.history = self.api_composer.obtain_model(self.train_data)
+    MemoryAnalytics.finish()
+    return self.current_pipeline
+
+
 def obtain_model_fedcore(self, train_data: InputData):
     """ Function for composing FEDOT pipeline model """
 
@@ -25,7 +60,7 @@ def obtain_model_fedcore(self, train_data: InputData):
         self.timer = ApiTime(time_for_automl=timeout, with_tuning=with_tuning)
 
         # skip fit init_assumption for Fedcore
-        #initial_assumption, fitted_assumption = self.propose_and_fit_initial_assumption(train_data)
+        # initial_assumption, fitted_assumption = self.propose_and_fit_initial_assumption(train_data)
         initial_assumption, fitted_assumption = self.params.get('initial_assumption'), None
         multi_objective = len(self.metrics) > 1
         self.params.init_params_for_composing(self.timer.timedelta_composing, multi_objective)
@@ -54,6 +89,7 @@ def obtain_model_fedcore(self, train_data: InputData):
     self.log.message('Model generation finished')
     return best_pipeline, best_pipeline_candidates, gp_composer.history
 
+
 class TaskCompression(Enum):
     classification = "classification"
     regression = "regression"
@@ -63,7 +99,7 @@ class TaskCompression(Enum):
 
 
 def _fit_assumption_and_check_correctness(
-    self, pipeline, pipelines_cache, preprocessing_cache, eval_n_jobs: int = -1
+        self, pipeline, pipelines_cache, preprocessing_cache, eval_n_jobs: int = -1
 ):
     """
     Check if initial pipeline can be fitted on a presented data
@@ -156,12 +192,12 @@ def _train_test_data_setup(data):
 
 
 def predict_operation_fedcore(
-    self,
-    fitted_operation,
-    data: InputData,
-    params: Optional[OperationParameters] = None,
-    output_mode: str = "default",
-    is_fit_stage: bool = False,
+        self,
+        fitted_operation,
+        data: InputData,
+        params: Optional[OperationParameters] = None,
+        output_mode: str = "default",
+        is_fit_stage: bool = False,
 ):
     is_main_target = data.supplementary_data.is_main_target
     data_flow_length = data.supplementary_data.data_flow_length
@@ -214,7 +250,7 @@ def merge_fedcore_predicts(self, predicts):
 
 
 def _get_default_fedcore_mutations(
-    task_type: TaskTypesEnum, params
+        task_type: TaskTypesEnum, params
 ) -> Sequence[MutationTypesEnum]:
     ind_mutations = FedcoreMutations(task_type=task_type)
     mutations = [
@@ -224,6 +260,7 @@ def _get_default_fedcore_mutations(
         # ind_mutations.single_add
     ]
     return mutations
+
 
 @staticmethod
 def divide_operations_fedcore(available_operations, task):
