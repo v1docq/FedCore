@@ -132,7 +132,7 @@ class TaskCompression(Enum):
     classification = "classification"
     regression = "regression"
     pruning = "pruning"
-    quantisation = "quantisation"
+    quantization = "quantization"
     distilation = "distilation"
 
 

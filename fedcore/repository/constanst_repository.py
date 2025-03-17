@@ -111,7 +111,7 @@ class FedotTaskEnum(Enum):
 
 class FedCoreTaskEnum(Enum):  # FEDCORE_TASK
     pruning = auto()
-    quantisation = auto()
+    quantization = auto()
     distilation = auto()
     low_rank = auto()
     evo_composed = auto()
@@ -188,8 +188,7 @@ class FedotOperationConstant(Enum):
     # FEDOT_ASSUMPTIONS = {
     #     "pruning": partial(PipelineBuilder().add_node, operation_type="pruning_model"),
     #     "low_rank": partial(PipelineBuilder().add_node, operation_type="low_rank_model"),
-    #     "post_quantization": PipelineBuilder().add_node("post_training_quant"),
-    #     "post_dynamic_quantisation": PipelineBuilder().add_node('post_dynamic_quant'),
+    #     "quantization": partial(PipelineBuilder().add_node, operation_type="quantization_model"),
     #     "quantization_aware": PipelineBuilder().add_node("training_aware_quant"),
     #     "distilation": PipelineBuilder().add_node("distilation_model"),
     #     "detection": PipelineBuilder().add_node(
@@ -197,8 +196,6 @@ class FedotOperationConstant(Enum):
     #     ),
     #     "training": PipelineBuilder().add_node("training_model"),
     # }
-
-    FEDOT_ENSEMBLE_ASSUMPTIONS = {}
 
 
 class PEFTStrategies(Enum):
@@ -462,7 +459,7 @@ PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMEN
 # MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
 PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
 PRUNING_LAYER_TYPE = ModelCompressionConstant.PRUNING_LAYER_TYPE.value
-QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
+# QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
 INITIAL_ASSUMPTIONS = {kvp.name: kvp.value for kvp in FedcoreInitialAssumptions}
 
 CROSS_ENTROPY = TorchLossesConstant.cross_entropy.value

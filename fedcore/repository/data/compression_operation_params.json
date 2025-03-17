@@ -7,9 +7,9 @@
     "importance_normalize": "mean",
     "importance_reduction": "mean"
   },
-   "quantisation_model": {
+   "quantization_model": {
     "epochs":5,
-    "quantisation_config":null
+    "quantization_config":null
   },
    "distilation_model": {
     "epochs":5
