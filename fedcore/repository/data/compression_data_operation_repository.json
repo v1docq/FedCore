@@ -61,7 +61,7 @@
       ],
       "description": "Implementations of industrial preprocessing operations"
     },
-    "fedcore_quantisation": {
+    "fedcore_quantization": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.image, DataTypesEnum.table]",
@@ -71,11 +71,11 @@
       "forbidden_node_types": "[]",
       "strategies": [
         "fedcore.interfaces.fedcore_strategy",
-        "FedcoreQuantisationStrategy"
+        "FedcoreQuantizationStrategy"
       ],
       "tags": [
       ],
-      "description": "Implementations of fedcore quantisation operations"
+      "description": "Implementations of fedcore quantization operations"
     },
     "fedcore_distilation": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
@@ -113,20 +113,8 @@
       ],
       "tags": ["non-default"]
     },
-    "post_training_quant": {
-      "meta": "fedcore_quantisation",
-      "presets": [
-      ],
-      "tags": ["non-default"]
-    },
-    "post_dynamic_quant": {
-      "meta": "fedcore_quantisation",
-      "presets": [
-      ],
-      "tags": ["non-default"]
-    },
-    "training_aware_quant": {
-      "meta": "fedcore_quantisation",
+    "quantization_model": {
+      "meta": "fedcore_quantization",
       "presets": [
       ],
       "tags": ["non-default"]

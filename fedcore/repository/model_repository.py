@@ -5,8 +5,7 @@ from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
 from torchvision.models.detection.faster_rcnn import fasterrcnn_mobilenet_v3_large_fpn
 
 from fedcore.algorithm.pruning.pruners import BasePruner
-from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
-from fedcore.algorithm.quantization.quant_post_training import QuantPostModel, QuantDynamicModel
+from fedcore.algorithm.quantization.quantizers import BaseQuantizer
 
 # from fedcore.models.backbone.chronos import chronos_small
 from fedcore.models.backbone.mobilenet import MobileNetV3Small, MobileNetV3Large
@@ -39,11 +38,7 @@ class AtomizedModel(Enum):
 
     LOW_RANK_MODELS = {"low_rank_model": LowRankModel}
 
-    QUANTISATION_MODELS = {
-        "post_training_quant": QuantPostModel,
-        "training_aware_quant": QuantAwareModel,
-        "post_dynamic_quant": QuantDynamicModel,
-    }
+    QUANTIZATION_MODELS = {"quantization_model": BaseQuantizer}
 
     DISTILATION_MODELS = {"distilation_model": BaseDistilator}
 
@@ -95,7 +90,7 @@ class AtomizedModel(Enum):
 
 
 PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
-QUANTISATION_MODELS = AtomizedModel.QUANTISATION_MODELS.value
+QUANTIZATION_MODELS = AtomizedModel.QUANTIZATION_MODELS.value
 DISTILATION_MODELS = AtomizedModel.DISTILATION_MODELS.value
 LOW_RANK_MODELS = AtomizedModel.LOW_RANK_MODELS.value
 TRAINING_MODELS = AtomizedModel.TRAINING_MODELS.value
@@ -122,16 +117,14 @@ DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 def default_fedcore_availiable_operation(problem: str = "pruning"):
     all_operations = [
-        "training_aware_quant",
-        "post_training_quant",
+        "quantization_model",
         "low_rank_model",
         "pruning_model",
     ]
     operation_dict = {
         "pruning": PRUNER_MODELS.keys(),
         "composite_compression": all_operations,
-        "quantisation_aware": "training_aware_quant",
-        "post_quantisation": "post_training_quant",
+        "quantization": QUANTIZATION_MODELS.keys(),
         "distilation": DISTILATION_MODELS.keys(),
         "low_rank": LOW_RANK_MODELS.keys(),
         "detection": DETECTION_MODELS.keys(),

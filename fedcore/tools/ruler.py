@@ -54,7 +54,8 @@ class PerformanceEvaluator:
         self.target_metrics = None
 
     def _init_eval_backend(self, device):
-        self.cuda_allowed = all([#not getattr(self.model, '_is_quantized', False),
+        self.cuda_allowed = all([
+                            not getattr(self.model, '_is_quantized', False),
                             device != 'cpu',
                             torch.cuda.is_available()])
         if self.cuda_allowed:

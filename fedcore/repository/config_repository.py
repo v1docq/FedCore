@@ -34,9 +34,8 @@ class PeftLearningConfigConstant(Enum):
                                   importance_norm=1,
                                   pruning_ratio=0.5,
                                   finetune_params={'epochs': 5,
-                                                   'custom_loss': None}
-                                  )
-    DEFAULT_QUANTISATION_CONFIG = {}
+                                                   'custom_loss': None})
+    DEFAULT_QUANTIZATION_CONFIG = dict()
     DEFAULT_DISTILATION_CONFIG = {}
     DEFAULT_LOW_RANK_CONFIG = {}
 

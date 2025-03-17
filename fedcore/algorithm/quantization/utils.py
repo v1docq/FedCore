@@ -299,8 +299,12 @@ class QDQWrapper(Accessor):
     def add_quant_entry_exit(cls, m: nn.Module, *example_input, allow: set=None, mode='static'):
         allow = allow or set()
         m.eval()
+        try:
+            device = m.device
+        except:
+            device = next(m.parameters()).device
         example_input = tuple(
-            inp.to(m.device) if hasattr(inp, 'to') else inp for inp in example_input
+            inp.to(device) if hasattr(inp, 'to') else inp for inp in example_input
         )
         with torch.no_grad():
             modules_order = cls.get_layers_order(m, *example_input)
