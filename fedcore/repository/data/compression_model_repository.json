@@ -48,7 +48,7 @@
       ],
       "description": "Implementations of FedCore Low Rank strategy"
     },
-    "fedcore_quantisation": {
+    "fedcore_quantization": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
       "input_type": "[DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.table]",
@@ -58,12 +58,12 @@
       "forbidden_node_types": "[]",
       "strategies": [
         "fedcore.interfaces.fedcore_strategy",
-        "FedcoreQuantisationStrategy"
+        "FedcoreQuantizationStrategy"
       ],
       "tags": [
         "non-default"
       ],
-      "description": "Implementations of FedCore Quantisation strategy"
+      "description": "Implementations of FedCore Quantization strategy"
     },
     "fedcore_detection": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
@@ -91,8 +91,8 @@
         "non-default"
       ]
     },
-    "quantisation_model": {
-      "meta": "fedcore_quantisation",
+    "quantization_model": {
+      "meta": "fedcore_quantization",
       "presets": [],
       "tags": [
         "non-default"

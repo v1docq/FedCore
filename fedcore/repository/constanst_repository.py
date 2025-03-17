@@ -74,7 +74,7 @@ class FedotOperationConstant(Enum):
 
     FEDCORE_TASK = [
         "pruning",
-        "quantisation",
+        "quantization",
         "distilation",
         "low_rank",
         "evo_composed",
@@ -207,9 +207,7 @@ class FedotOperationConstant(Enum):
     FEDOT_ASSUMPTIONS = {
         "pruning": partial(PipelineBuilder().add_node, operation_type="pruning_model"),
         "low_rank": partial(PipelineBuilder().add_node, operation_type="low_rank_model"),
-        "post_quantization": PipelineBuilder().add_node("post_training_quant"),
-        "post_dynamic_quantisation": PipelineBuilder().add_node('post_dynamic_quant'),
-        "quantization_aware": PipelineBuilder().add_node("training_aware_quant"),
+        "quantization": partial(PipelineBuilder().add_node, operation_type="quantization_model"),
         "distilation": PipelineBuilder().add_node("distilation_model"),
         "detection": PipelineBuilder().add_node(
             "detection_model", params={"pretrained": True}
@@ -477,7 +475,7 @@ PRUNER_WITHOUT_REQUIREMENTS = ModelCompressionConstant.PRUNER_WITHOUT_REQUIREMEN
 # MANUAL_PRUNING_STRATEGY = ModelCompressionConstant.MANUAL_PRUNING_STRATEGY.value
 PRUNING_FUNC = ModelCompressionConstant.PRUNING_FUNC.value
 PRUNING_LAYER_TYPE = ModelCompressionConstant.PRUNING_LAYER_TYPE.value
-QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
+# QUANT_MODEL_TYPES = ModelCompressionConstant.QUANT_MODEL_TYPES.value
 INITIAL_ASSUMPTIONS = {kvp.name: kvp.value for kvp in FedcoreInitialAssumptions}
 
 CROSS_ENTROPY = TorchLossesConstant.crossentropy.value

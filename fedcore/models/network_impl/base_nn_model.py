@@ -150,7 +150,7 @@ class BaseNeuralModel(torch.nn.Module):
                 print("Forcely substituted criterion[loss] to", self.criterion)
 
     def __substitute_device_quant(self):
-        if getattr(self.model, '_is_quantized', False):
+        if not getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
