@@ -189,7 +189,6 @@ class FedotOperationConstant(Enum):
     #     "pruning": partial(PipelineBuilder().add_node, operation_type="pruning_model"),
     #     "low_rank": partial(PipelineBuilder().add_node, operation_type="low_rank_model"),
     #     "quantization": partial(PipelineBuilder().add_node, operation_type="quantization_model"),
-    #     "quantization_aware": PipelineBuilder().add_node("training_aware_quant"),
     #     "distilation": PipelineBuilder().add_node("distilation_model"),
     #     "detection": PipelineBuilder().add_node(
     #         "detection_model", params={"pretrained": True}
