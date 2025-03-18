@@ -284,6 +284,9 @@ class TSTModel(BaseNeuralForecaster):
         self.is_regression_task = True
         self.device = default_device()
 
+    def forward(self, *inputs):
+        return self.model(*inputs)
+
     def __preproc_torch_loader(self, loader):
         input_dim = loader.dataset.data.shape[1]
         seq_len = loader.dataset.seq_len

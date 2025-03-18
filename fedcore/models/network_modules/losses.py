@@ -262,8 +262,8 @@ class SMAPELoss(Module):
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
         return 100 * torch.mean(
-            2 * torch.abs(input - target) / (torch.abs(target) + torch.abs(input))
-            + 1e-8
+            2 * torch.abs(input - target) / (torch.abs(target) + torch.abs(input)
+            + 1e-8)
         )
 
 
