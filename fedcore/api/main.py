@@ -134,7 +134,7 @@ class FedCore(Fedot):
                 maybe(None, lambda solver: solver)
         return self.fedcore_model
 
-    def predict(self, predict_data: tuple, output_mode:str = 'compress',  **kwargs):
+    def predict(self, predict_data: tuple, output_mode: str = 'compress', **kwargs):
         """
         Method to obtain prediction labels from trained Industrial model.
 
@@ -184,7 +184,6 @@ class FedCore(Fedot):
         self.manager.is_finetuned = True
         self.manager.solver = model_to_tune
 
-
     def evaluate_metric(
             self,
             predicton: Union[Tensor, np.array],
@@ -218,11 +217,39 @@ class FedCore(Fedot):
 
         inference_metric = problem.__contains__("computational")
         if inference_metric:
-            prediction_dict = dict(target=self.fedcore_model, labels=target, probs=predicted_probs)
+            if problem.__contains__('fedcore'):
+                model_regime = 'model_after'
+            else:
+                model_regime = 'model_before'
+            prediction_dict = dict(model=self.fedcore_model, dataset=target, model_regime=model_regime)
         else:
             prediction_dict = dict(target=target, labels=labels, probs=predicted_probs)
         prediction_dataframe = FEDOT_GET_METRICS[problem](**prediction_dict)
         return prediction_dataframe
+
+    def get_report(self, test_data: InputData):
+        def create_df(iterator):
+            df_list = []
+            for metric_dict, col in iterator:
+                df = pd.DataFrame.from_dict(metric_dict)
+                df.columns = [f'{col}_{x}' for x in df.columns]
+                df_list.append(df)
+            return pd.concat(df_list, axis=1)
+
+        eval_regime = ['original', 'fedcore']
+        prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
+        quality_metrics_list = [self.evaluate_metric(predicton=prediction,
+                                                     target=test_data.target,
+                                                     problem=self.manager.automl_config.problem)
+                                for prediction in prediction_list]
+        computational_metrics_list = [self.evaluate_metric(predicton=prediction,
+                                                           target=test_data.val_dataloader,
+                                                           problem=f'computational_{regime}')
+                                      for prediction, regime in zip(prediction_list, eval_regime)]
+
+        quality_df = create_df(zip(quality_metrics_list, eval_regime))
+        compute_df = create_df(zip(computational_metrics_list, eval_regime))
+        return dict(quality_comparasion=quality_df, computational_comparasion=compute_df)
 
     def load(self, path):
         """Loads saved Industrial model from disk
@@ -288,7 +315,7 @@ class FedCore(Fedot):
             )
         else:
             if framework == "ONNX":
-                example_input = next(iter(self.train_data.features.calib_dataloader))[
+                example_input = next(iter(self.train_data.features.val_dataloader))[
                     0
                 ][0]
                 self.framework_config["example_inputs"] = torch.unsqueeze(

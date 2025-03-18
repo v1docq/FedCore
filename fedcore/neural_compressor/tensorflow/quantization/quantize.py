@@ -39,7 +39,7 @@ def need_apply(configs_mapping: Dict[Tuple[str, callable], BaseConfig], algo_nam
 def quantize_model(
     model: Union[str, tf.keras.Model, BaseModel],
     quant_config: BaseConfig,
-    calib_dataloader: Callable = None,
+    val_dataloader: Callable = None,
     calib_iteration: int = 100,
 ):
     """The main entry to quantize model.
@@ -47,7 +47,7 @@ def quantize_model(
     Args:
         model: a fp32 model to be quantized.
         quant_config: a quantization configuration.
-        calib_dataloader: a data loader for calibration.
+        val_dataloader: a data loader for calibration.
         calib_iteration: the iteration of calibration.
 
     Returns:
@@ -77,6 +77,6 @@ def quantize_model(
         if need_apply(configs_mapping, algo_name):
             logger.info(f"Start to apply {algo_name} on the model.")
             q_model = algo_func(
-                q_model, configs_mapping, calib_dataloader, calib_iteration
+                q_model, configs_mapping, val_dataloader, calib_iteration
             )
     return q_model

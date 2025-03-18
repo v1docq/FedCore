@@ -65,9 +65,9 @@ class BasePruner(BaseCompressionModel):
     def __repr__(self):
         return self.pruner_name
 
-    def _check_model_before_prune(self, input_data):
+    def _check_before_prune(self, input_data):
         # list of tensors with dim size n_samples x n_channel x height x width
-        batch_generator = (b for b in input_data.features.calib_dataloader)
+        batch_generator = (b for b in input_data.features.val_dataloader)
         # take first batch
         batch_list = next(batch_generator)
         self.data_batch_for_calib = batch_list[0].to(default_device())
@@ -94,15 +94,15 @@ class BasePruner(BaseCompressionModel):
             f"==============Initialisation of {self.pruner_name} pruning agent================="
         )
         print(
-            f"==============Pruning importance - {self.importance_name} ================="
+            f"==============Pruning importance - {self.importance_name}================="
         )
-        print(f"==============Pruning ratio -  {self.pruning_ratio} =================")
+        print(f"==============Pruning ratio - {self.pruning_ratio}=================")
         print(
             f"==============Pruning importance norm -  {self.importance_norm} ================="
         )
         # Pruner initialization
         self.pruner = PRUNERS[self.pruner_name]
-        self._check_model_before_prune(input_data)
+        self._check_before_prune(input_data)
         self.optimizer_for_grad = optim.Adam(self.model_after_pruning.parameters(), lr=self.learning_rate_for_grad)
 
     def _accumulate_grads(self, data, target, return_false=False):
@@ -121,7 +121,7 @@ class BasePruner(BaseCompressionModel):
         return root_layer_dict[self.pruner_name]
 
     def _pruner_step_with_grads(self, pruner, input_data):
-        for i, (data, target) in enumerate(input_data.features.calib_dataloader):
+        for i, (data, target) in enumerate(input_data.features.val_dataloader):
             if i != 0:
                 print(f"Gradients accumulation iter- {i}")
                 print(f"==========================================")
@@ -132,7 +132,7 @@ class BasePruner(BaseCompressionModel):
     def _pruner_step_with_reg(self, pruner, input_data):
         pruner.update_regularizer()
         # <== initialize regularizer
-        for i, (data, target) in enumerate(input_data.features.calib_dataloader):
+        for i, (data, target) in enumerate(input_data.features.val_dataloader):
             if i != 0:
                 print(f"Pruning reg iter- {i}")
                 print(f"==========================================")
@@ -226,11 +226,11 @@ class BasePruner(BaseCompressionModel):
 
         return self.model_after_pruning
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
-        return self.model_after_pruning if output_mode == "compress" else self.model
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
+        return self.model_after_pruning if output_mode == 'fedcore' else self.model
 
-    def predict(self, input_data: InputData, output_mode: str = "compress"):
-        if output_mode == "compress":
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
+        if output_mode == 'fedcore':
             self.trainer.model = self.model_after_pruning
         else:
             self.trainer.model = self.model_before_pruning

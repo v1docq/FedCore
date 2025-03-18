@@ -75,7 +75,7 @@ class Scheduler(object):
 
        quantizer = Quantization('/path/to/quantization.yaml')
        quantizer.metric = ...                     # optional if it is configured in user yaml.
-       quantizer.calib_dataloader = ...           # optional if it is configured in user yaml.
+       quantizer.val_dataloader = ...           # optional if it is configured in user yaml.
        quantizer.eval_dataloader = ...            # optional if it is configured in user yaml.
 
        scheduler = Scheduler()
@@ -99,7 +99,7 @@ class Scheduler(object):
         Args:
             conf_fname_or_obj (string or obj): The path to user configuration yaml file or
                                                 conf class.
-            calib_dataloader (generator): Optional. Data loader for calibration of Post-
+            val_dataloader (generator): Optional. Data loader for calibration of Post-
                                             Training Static Quantization,
                                             or None for Post-Training Dynamic Quantization,
                                             or Data loader for training phase of Quantization-

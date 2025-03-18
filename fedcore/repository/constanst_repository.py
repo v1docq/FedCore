@@ -99,12 +99,13 @@ class FedotOperationConstant(Enum):
         "regression": calculate_regression_metric,
         "ts_forecasting": calculate_forecasting_metric,
         "classification": calculate_classification_metric,
-        "computational": calculate_computational_metric,
+        "computational_fedcore": calculate_computational_metric,
+        "computational_original": calculate_computational_metric
     }
     FEDOT_MUTATION_STRATEGY = {
         "params_mutation_strategy": [0.8, 0.2],
         "growth_mutation_strategy": [0.3, 0.7],
-        'initial_population_diversity_strategy': [0.5, 0.5]
+        'initial_population_diversity_strategy': [1.0, 0.0]
     }
     EXCLUDED_OPERATION_MUTATION = {
         "regression": [

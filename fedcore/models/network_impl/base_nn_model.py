@@ -156,7 +156,7 @@ class BaseNeuralModel:
         # define data for fit process
         self.custom_fit_process = supplementary_data is not None
         train_loader = getattr(input_data.features, f'{loader_type}_dataloader', 'train_dataloader')
-        val_loader = getattr(input_data.features, 'calib_dataloader', None)
+        val_loader = getattr(input_data.features, 'val_dataloader', None)
         # define model for fit process
         self.model = input_data.target if self.model is None else self.model
         self.optimised_model = self.model
@@ -253,10 +253,10 @@ class BaseNeuralModel:
         model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
-        dataloader = DataLoaderHandler.check_convert(x_test.calib_dataloader,
+        dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
-        for batch in tqdm(dataloader):  ###TODO why calib_dataloader???
+        for batch in tqdm(dataloader):  ###TODO why val_dataloader???
             inputs, targets = batch
             inputs = inputs.to(self.device)
             prediction.append(model(inputs))

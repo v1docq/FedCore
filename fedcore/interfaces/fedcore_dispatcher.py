@@ -1,3 +1,4 @@
+import gc
 import logging
 import pathlib
 import timeit
@@ -46,6 +47,15 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
                                       individuals_to_evaluate))
         evaluation_results = dask.compute(*evaluation_results)
         return evaluation_results
+
+    def _evaluate_graph(self, domain_graph):
+        fitness = self._objective_eval(domain_graph)
+
+        if self._post_eval_callback:
+            self._post_eval_callback(domain_graph)
+        gc.collect()
+
+        return fitness, domain_graph
 
     def _eval_at_least_one(self, individuals):
         successful_evals = None

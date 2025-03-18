@@ -67,7 +67,7 @@ class ApiLoader:
         self.train_data = CompressionInputData(
             features=np.zeros((2, 2)),
             num_classes=num_classes,
-            calib_dataloader=val_dataloader,
+            val_dataloader=val_dataloader,
             train_dataloader=train_dataloader,
         )
         self.train_data.supplementary_data.is_auto_preprocessed = True
@@ -79,7 +79,7 @@ class ApiLoader:
         self.train_data = CompressionInputData(
             features=np.zeros((2, 2)),
             num_classes=num_classes,
-            calib_dataloader=val_dataloader,
+            val_dataloader=val_dataloader,
             train_dataloader=train_dataloader,
         )
         self.train_data.supplementary_data.is_auto_preprocessed = True

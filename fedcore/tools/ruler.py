@@ -1,4 +1,5 @@
 import time
+from typing import Union
 
 import numpy as np
 import torch
@@ -21,18 +22,21 @@ from fedcore.api.utils.data import DataLoaderHandler
 class PerformanceEvaluator:
     def __init__(
             self,
-            model,
-            data,
+            model: callable,
+            model_regime: str = 'model_after',
+            data: Union[DataLoader, str] = None,
             device=None,
             batch_size=32,
             n_batches=8,
             collate_fn=None,
     ):
+        self.model_regime = model_regime
+        self.n_batches = n_batches
+        self.batch_size = batch_size  # or self.data_loader.batch_size
+
         self._init_null_object()
         self._init_eval_backend(device)
         self._init_model(model)
-        self.n_batches = n_batches
-        self.batch_size = batch_size  # or self.data_loader.batch_size
 
         dataset_from_directory = isinstance(data, str)  ### where's func for string dataset loading
         if isinstance(data, DataLoader):
@@ -54,9 +58,9 @@ class PerformanceEvaluator:
         self.target_metrics = None
 
     def _init_eval_backend(self, device):
-        self.cuda_allowed = all([#not getattr(self.model, '_is_quantized', False),
-                            device != 'cpu',
-                            torch.cuda.is_available()])
+        self.cuda_allowed = all([  # not getattr(self.model, '_is_quantized', False),
+            device != 'cpu',
+            torch.cuda.is_available()])
         if self.cuda_allowed:
             self.device = default_device("CUDA")
         else:
@@ -68,7 +72,7 @@ class PerformanceEvaluator:
 
         if is_pipeline_class:
             model_attr_list = dir(model.operator.root_node.fitted_operation)
-            model_attr_name = [x for x in model_attr_list if x.__contains__('model_after')][0]
+            model_attr_name = [x for x in model_attr_list if x.__contains__(self.model_regime)][0]
             self.model = getattr(model.operator.root_node.fitted_operation, model_attr_name)
         elif is_class_container:
             self.model = model.model

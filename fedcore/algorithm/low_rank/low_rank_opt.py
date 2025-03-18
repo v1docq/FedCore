@@ -80,14 +80,14 @@ class LowRankModel(BaseCompressionModel):
         self.compress(input_data=input_data)
         return self.optimised_model
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
         return (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )  ### any case same model
 
-    def predict(self, input_data: InputData, output_mode: str = "compress"):
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )  ### any case same model
         return self.trainer.predict(input_data, output_mode)
 

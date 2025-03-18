@@ -1,4 +1,5 @@
 import gc
+from copy import deepcopy
 from enum import Enum
 from typing import Optional, Sequence
 
@@ -8,11 +9,48 @@ from fedot.core.repository.tasks import TaskTypesEnum
 from fedot.api.time import ApiTime
 from fedot.core.data.data import InputData
 from fedot.utilities.composer_timer import fedot_composer_timer
+from golem.core.dag.graph_utils import map_dag_nodes
+from fedot.core.pipelines.pipeline import Pipeline
 
 from golem.core.optimisers.genetic.operators.base_mutations import MutationTypesEnum
 from golem.utilities.memory import MemoryAnalytics
-
+from fedot.core.pipelines.node import PipelineNode
 from fedcore.repository.fedcore_impl.optimisation import FedcoreMutations
+
+
+@property
+def is_fitted_fedcore(self, value: bool = None) -> bool:
+    """Property showing whether pipeline is fitted
+
+    Returns:
+        flag showing if all of the pipeline nodes are fitted already
+    """
+    if value is None:
+        return all(node.fitted_operation is not None for node in self.nodes)
+    else:
+        return value
+
+
+def adapter_restore(opt_graph, metadata=None):
+    def transform_to_pipeline_node(node):
+        content = deepcopy(node.content)
+        return PipelineNode(operation_type=content['name'], content=content)
+
+    restored_nodes = map_dag_nodes(transform_to_pipeline_node, opt_graph.nodes)
+    pipeline = Pipeline(restored_nodes, use_input_preprocessing=False)
+    metadata = metadata or {}
+    pipeline.computation_time = metadata.get('computation_time_in_seconds')
+
+    return pipeline
+
+
+def restore_pipeline_fedcore(self, opt_result):
+    multi_objective = self.optimizer.objective.is_multi_objective
+    best_pipelines = [adapter_restore(graph) for graph in opt_result]
+    if not best_pipelines:
+        return None, []
+    chosen_best_pipeline = best_pipelines if multi_objective else best_pipelines[0]
+    return chosen_best_pipeline, best_pipelines
 
 
 def fit_fedcore(self,

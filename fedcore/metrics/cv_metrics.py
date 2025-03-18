@@ -28,10 +28,10 @@ class CompressionMetric(Metric):
 
     @classmethod
     def get_value(
-        cls,
-        pipeline: Pipeline,
-        reference_data: InputData,
-        validation_blocks: Optional[int] = None,
+            cls,
+            pipeline: Pipeline,
+            reference_data: InputData,
+            validation_blocks: Optional[int] = None,
     ) -> float:
         """Get metric value based on pipeline, reference data, and number of validation blocks.
         Args:
@@ -41,7 +41,7 @@ class CompressionMetric(Metric):
                 If ``None``, data separation is not performed.
         """
         metric = cls.default_value
-        metric = cls.metric(pipeline, reference_data.features.calib_dataloader)
+        metric = cls.metric(pipeline, reference_data.features.val_dataloader)
         if cls.need_to_minimize:
             metric = -metric
         return metric
@@ -50,11 +50,11 @@ class CompressionMetric(Metric):
 class IntermediateAttention(CompressionMetric):
     @classmethod
     def metric(
-        cls,
-        student_attentions,
-        teacher_attentions,
-        weights,
-        student_teacher_attention_mapping,
+            cls,
+            student_attentions,
+            teacher_attentions,
+            weights,
+            student_teacher_attention_mapping,
     ):
         loss = 0
         for i in range(len(student_attentions)):
@@ -93,8 +93,9 @@ class Latency(CompressionMetric):
     need_to_minimize = False
 
     @classmethod
-    def metric(cls, model, dataset, device=default_device(), batch_size=32):
-        evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
+    def metric(cls, model, dataset):
+        evaluator = PerformanceEvaluator(model=model, model_regime='after',
+                                         data=dataset, device=default_device(), batch_size=32)
         latency_list = evaluator.latency_eval()
         avg_lat = np.mean(latency_list)
         return avg_lat
@@ -108,7 +109,11 @@ class CV_quality_metric(CompressionMetric):
         """Fedcore_compression_quality_metric"""
 
     @classmethod
-    def metric(cls, model, dataset, device=default_device(), batch_size=32):
-        evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
+    def metric(cls, model, dataset, model_regime):
+        evaluator = PerformanceEvaluator(model=model,
+                                         model_regime=model_regime,
+                                         data=dataset,
+                                         device=default_device(),
+                                         batch_size=32)
         metric_dict = evaluator.eval()
         return metric_dict

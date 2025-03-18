@@ -34,6 +34,47 @@ from fedcore.repository.constanst_repository import (
     InferenceMetricsEnum,
     CVMetricsEnum,
 )
+from typing import Callable, Iterable, Tuple
+
+import numpy as np
+from golem.core.optimisers.fitness import Fitness
+from golem.core.optimisers.objective.objective import to_fitness
+from fedot.core.data.data import InputData
+from fedot.core.pipelines.pipeline import Pipeline
+
+DataSource = Callable[[], Iterable[Tuple[InputData, InputData]]]
+
+
+def evaluate_objective_fedcore(self, graph: Pipeline) -> Fitness:
+    # Seems like a workaround for situation when logger is lost
+    #  when adapting and restoring it to/from OptGraph.
+    graph.log = self._log
+
+    graph_id = graph.root_node.descriptive_id
+    self._log.debug(f'Pipeline {graph_id} fit started')
+
+    folds_metrics = []
+    for fold_id, (train_data, test_data) in enumerate(self._data_producer()):
+        try:
+            prepared_pipeline = self.prepare_graph(graph, train_data, fold_id, self._eval_n_jobs)
+        except Exception as ex:
+            self._log.warning(f'Unsuccessful pipeline fit during fitness evaluation. '
+                              f'Skipping the pipeline. Exception <{ex}> on {graph_id}')
+
+        evaluated_fitness = self._objective(prepared_pipeline,
+                                            reference_data=test_data,
+                                            validation_blocks=self._validation_blocks)
+        if evaluated_fitness.valid:
+            folds_metrics.append(evaluated_fitness.values)
+        else:
+            self._log.warning(f'Invalid fitness after objective evaluation. '
+                              f'Skipping the graph: {graph_id}', raise_if_test=True)
+    if folds_metrics:
+        folds_metrics = tuple(np.mean(folds_metrics, axis=0))  # averages for each metric over folds
+        self._log.debug(f'Pipeline {graph_id} with evaluated metrics: {folds_metrics}')
+    else:
+        folds_metrics = None
+    return to_fitness(folds_metrics, self._objective.is_multi_objective)
 
 
 class MetricsRepository:

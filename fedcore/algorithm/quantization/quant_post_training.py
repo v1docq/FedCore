@@ -86,15 +86,15 @@ class QuantPostModel(BaseCompressionModel):
         self.trainer.model._is_quantized = True
         self.optimised_model = self.trainer.model.to('cpu')
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )
         return self.trainer.predict(input_data, output_mode)
 
-    def predict(self, input_data: InputData, output_mode: str = "compress"):
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )
         return self.trainer.predict(input_data, output_mode)
     
@@ -174,14 +174,14 @@ class QuantDynamicModel(BaseCompressionModel):
         return mapping
 
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )
         return self.trainer.predict(input_data, output_mode)
 
-    def predict(self, input_data: InputData, output_mode: str = "compress"):
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )
         return self.trainer.predict(input_data, output_mode)

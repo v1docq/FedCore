@@ -304,7 +304,7 @@ class QualityMetric(Metric):
         metric = cls.default_value
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
         # get true targets from test/calib dataloader
-        true_target = reference_data.features.calib_dataloader.dataset.targets
+        true_target = reference_data.features.val_dataloader.dataset.targets
         # get predction from result.predict (OutputData)
         true_pred = results.predict.predict
         return cls.metric(cls, target=true_target, predict=true_pred)

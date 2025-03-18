@@ -150,7 +150,7 @@ class AutoMixedPrecisionTuneStrategy(TuneStrategy):
             logger.debug("Dump current mixed precision configuration:")
             logger.debug(tune_cfg)
             self.last_qmodel = self.adaptor.quantize(
-                tune_cfg, self.model, self.calib_dataloader, self.q_func
+                tune_cfg, self.model, self.val_dataloader, self.q_func
             )
             assert self.last_qmodel
             # Return the last quantized model as a result. if performance only.

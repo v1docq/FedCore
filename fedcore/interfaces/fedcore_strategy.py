@@ -30,7 +30,7 @@ class FedCoreStrategy(EvaluationStrategy):
         output_data = CompressionOutputData(
             features=predict_data.features,
             idx=[1, 2],
-            calib_dataloader=predict_data.features.calib_dataloader,
+            val_dataloader=predict_data.features.val_dataloader,
             task=predict_data.task,
             num_classes=predict_data.features.num_classes,
             target=predict_data.features.target,
@@ -168,7 +168,7 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
             idx=[1, 2],
             features=predict_data.features,
             # train_dataloader=predict_data.train_dataloader,
-            # calib_dataloader=predict_data.calib_dataloader,
+            # val_dataloader=predict_data.val_dataloader,
             predict=prediction,
             task=predict_data.task,
             target=predict_data.target,

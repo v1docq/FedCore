@@ -27,7 +27,7 @@ from fedcore.metrics.metric_impl import (
 
 
 def calculate_regression_metric(
-    target, labels, rounding_order=3, metric_names=("r2", "rmse", "mae"), **kwargs
+        target, labels, rounding_order=3, metric_names=("r2", "rmse", "mae"), **kwargs
 ):
     target = target.astype(float)
 
@@ -59,7 +59,7 @@ def calculate_regression_metric(
 
 
 def calculate_forecasting_metric(
-    target, labels, rounding_order=3, metric_names=("smape", "rmse", "mape"), **kwargs
+        target, labels, rounding_order=3, metric_names=("smape", "rmse", "mape"), **kwargs
 ):
     target = target.astype(float)
 
@@ -105,7 +105,6 @@ def calculate_classification_metric(target, labels, probs, rounding_order=3, met
     return df.round(rounding_order)
 
 
-def calculate_computational_metric(target, labels, probs, rounding_order=3,
-                                   metric_names=("latency" "throughput")):
-    metric_dict = CV_quality_metric().metric(target, labels, probs)
+def calculate_computational_metric(model, dataset, model_regime):
+    metric_dict = CV_quality_metric().metric(model, dataset, model_regime)
     return metric_dict

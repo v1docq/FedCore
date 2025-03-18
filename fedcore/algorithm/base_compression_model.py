@@ -73,7 +73,7 @@ class BaseCompressionModel:
         pass
 
     def _get_example_input(self, input_data: InputData):
-        b = next(iter(input_data.features.calib_dataloader))
+        b = next(iter(input_data.features.val_dataloader))
         if isinstance(b, (list, tuple)) and len(b) == 2:
             return b[0]
         return b
@@ -84,7 +84,7 @@ class BaseCompressionModel:
     # def evaluate_model(self,
     #                    input_data: CompressionInputData):
     #     evaluate_model(CompressionInputData.model,
-    #                    CompressionInputData.calib_dataloader,
+    #                    CompressionInputData.val_dataloader,
     #                    CompressionInputData.target)
 
     def finetune(self, finetune_object: callable, finetune_data):

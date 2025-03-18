@@ -25,7 +25,7 @@ class DataLoader(object):
     """A wrapper of the information needed to construct a dataloader.
 
     This class can't yield batched data and only in this Quantization/Benchmark
-    object's setter method a 'real' calib_dataloader will be created, the reason
+    object's setter method a 'real' val_dataloader will be created, the reason
     is we have to know the framework info and only after the Quantization/Benchmark
     object created then framework information can be known. Future we will support
     creating iterable dataloader from fedcore.neural_compressor.experimental.common.DataLoader

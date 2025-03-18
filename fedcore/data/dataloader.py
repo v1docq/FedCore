@@ -18,6 +18,6 @@ def load_data(source: Union[str, Callable] = None, loader_params: dict = None):
     train_data = Either(value=loader_params, monoid=[loader_type, source_is_loader]). \
         either(left_function=data_loader.load_data, right_function=lambda custom_params:source(custom_params))
     test_data = deepcopy(train_data)
-    test_data.train_dataloader = train_data.calib_dataloader
-    test_data.target = train_data.train_dataloader.dataset.targets
+    test_data.train_dataloader = train_data.val_dataloader
+    test_data.target = train_data.val_dataloader.dataset.targets
     return train_data, test_data

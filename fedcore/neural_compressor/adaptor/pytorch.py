@@ -119,7 +119,7 @@ def get_example_inputs(model, dataloader):
     version = get_torch_version()
     from .torch_utils.util import move_input_device
 
-    # Suggest set dataloader like calib_dataloader
+    # Suggest set dataloader like val_dataloader
     if dataloader is None:
         return None
     device = next(model.parameters()).device
@@ -3773,7 +3773,7 @@ class PyTorch_IPEXAdaptor(TemplateAdaptor):
                         logger.error("Calibration with IPEX failed due to:{}".format(e))
                         assert (
                             False
-                        ), "Please pass in example_inputs or calib_dataloader to bypass."
+                        ), "Please pass in example_inputs or val_dataloader to bypass."
 
                 model.save_qconf_summary(qconf_summary=self.ipex_config_path)
             if isinstance(self.q_dataloader, BaseDataLoader):

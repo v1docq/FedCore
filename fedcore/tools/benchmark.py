@@ -126,7 +126,7 @@ class CompressionBenchmark:
         model, performance = self.evaluate_loop(model, train_dataloader, val_dataloader)
         input_data = CompressionInputData(
             num_classes=10,
-            calib_dataloader=val_dataloader,
+            val_dataloader=val_dataloader,
             train_dataloader=train_dataloader,
             task=Task(TaskTypesEnum.classification),
             target=model,

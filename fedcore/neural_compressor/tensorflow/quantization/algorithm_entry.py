@@ -33,7 +33,7 @@ from fedcore.neural_compressor.tensorflow.utils import (
 def static_quantize_entry(
     model: BaseModel,
     quant_config: StaticQuantConfig,
-    calib_dataloader: Callable = None,
+    val_dataloader: Callable = None,
     calib_iteration: int = 100,
 ):
     """The main entry to apply static quantization.
@@ -41,7 +41,7 @@ def static_quantize_entry(
     Args:
         model: a fp32 model to be quantized.
         quant_config: a quantization configuration.
-        calib_dataloader: a data loader for calibration.
+        val_dataloader: a data loader for calibration.
         calib_iteration: the iteration of calibration.
 
     Returns:
@@ -49,7 +49,7 @@ def static_quantize_entry(
     """
     keras_adaptor = KerasAdaptor(framework_specific_info)
     q_model = keras_adaptor.quantize(
-        quant_config, model, calib_dataloader, calib_iteration
+        quant_config, model, val_dataloader, calib_iteration
     )
     return q_model
 
@@ -58,7 +58,7 @@ def static_quantize_entry(
 def smooth_quant_entry(
     model: BaseModel,
     smooth_quant_config: SmoothQuantConfig,
-    calib_dataloader: Callable = None,
+    val_dataloader: Callable = None,
     calib_iteration: int = 100,
 ):
     assert not isinstance(
@@ -67,7 +67,7 @@ def smooth_quant_entry(
 
     from fedcore.neural_compressor.tensorflow.algorithms import SmoothQuant
 
-    converter = SmoothQuant(smooth_quant_config, calib_dataloader, calib_iteration)
+    converter = SmoothQuant(smooth_quant_config, val_dataloader, calib_iteration)
     sq_model = converter(model)
 
     return sq_model

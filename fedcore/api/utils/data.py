@@ -15,7 +15,7 @@ from fedcore.data.data import CompressionInputData
 def get_compression_input(
         model,
         train_dataloader,
-        calib_dataloader,
+        val_dataloader,
         task="classification",
         num_classes=None,
         train_loss=None,
@@ -24,7 +24,7 @@ def get_compression_input(
     input_data = CompressionInputData(
         features=np.zeros((2, 2)),
         train_dataloader=train_dataloader,
-        calib_dataloader=calib_dataloader,
+        val_dataloader=val_dataloader,
         task=FEDOT_TASK[task],
         num_classes=num_classes or len(train_dataloader.dataset.get('classes', 0)),
         target=model,

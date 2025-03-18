@@ -95,13 +95,13 @@ class Graph_Optimization:
             a dataset implemented __iter__ or __getitem__ methods and invoke dataloader()
             with dataset as input parameter to create neural_compressor dataloader before calling this
             function.
-            After that, User specifies fp32 "model", calibration dataset "calib_dataloader"
+            After that, User specifies fp32 "model", calibration dataset "val_dataloader"
             and evaluation dataset "eval_dataloader".
             The calibrated and converted model is evaluated with "eval_dataloader"
             with evaluation metrics specified in the configuration file. The evaluation tells
             the tuner whether the converted model meets the accuracy criteria. If not,
             the tuner starts a new calibration and tuning flow.
-            For this usage, model, calib_dataloader and eval_dataloader parameters are mandatory.
+            For this usage, model, val_dataloader and eval_dataloader parameters are mandatory.
         c) Partial yaml configuration: User specifies dataloaders used in calibration phase
             by code.
             This usage is quite similar with b), just user specifies a custom "eval_func"
@@ -109,7 +109,7 @@ class Graph_Optimization:
             The calibrated and converted model is evaluated with "eval_func".
             The "eval_func" tells the tuner whether the converted model meets
             the accuracy criteria. If not, the Tuner starts a new calibration and tuning flow.
-            For this usage, model, calib_dataloader and eval_func parameters are mandatory.
+            For this usage, model, val_dataloader and eval_func parameters are mandatory.
 
         Returns:
             converted model: best converted model found, otherwise return None

@@ -2,7 +2,6 @@ from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from fedcore.api.utils.checkers_collection import ApiConfigCheck
 from fedcore.data.dataloader import load_data
-from fedcore.api.utils.evaluation import evaluate_original_model, evaluate_optimised_model
 from fedcore.repository.config_repository import DEFAULT_CLF_API_CONFIG
 
 DATASET = 'CIFAR10'
@@ -15,6 +14,7 @@ initial_assumption = {'path_to_model': './pretrain_model/pretrain_model_checkpoi
                       'model_type': 'ResNet18'}
 scenario = 'from_checkpoint'
 initial_assumption, learning_strategy = get_scenario_for_api(scenario, initial_assumption)
+
 USER_CONFIG = {'problem': 'classification',
                'metric': METRIC_TO_OPTIMISE,
                'initial_assumption': initial_assumption,
@@ -44,25 +44,6 @@ USER_CONFIG = {'problem': 'classification',
                }
 
 
-def eval_and_compare_metrics(fedcore_compressor, pruning_prediction, original_prediction, test_data):
-    quality_metrics_after_pruning = fedcore_compressor.evaluate_metric(predicton=pruning_prediction,
-                                                                       target=test_data.target,
-                                                                       problem='classification')
-    computational_metrics_after_pruning = fedcore_compressor.evaluate_metric(
-        predicton=pruning_prediction,
-        target=test_data.calib_dataloader,
-        problem="computational")
-    # get prediction and quality metrics from pruned model
-
-    quality_metrics_before_pruning = fedcore_compressor.evaluate_metric(predicton=original_prediction,
-                                                                        target=test_data.target,
-                                                                        problem='classification')
-    computational_metrics_before_pruning = fedcore_compressor.evaluate_metric(
-        predicton=original_prediction,
-        target=test_data.calib_dataloader,
-        problem="computational")
-    return quality_metrics_after_pruning
-
 
 if __name__ == "__main__":
     api_config = ApiConfigCheck().update_config_with_kwargs(DEFAULT_CLF_API_CONFIG, **USER_CONFIG)
@@ -70,7 +51,7 @@ if __name__ == "__main__":
     fedcore_compressor = FedCore(**api_config)
     fedcore_model = fedcore_compressor.fit(train_data)
     # get prediction and quality metrics from pruned and original model
-    pruning_prediction = fedcore_compressor.predict(test_data, output_mode="compress")
-    original_prediction = fedcore_compressor.predict(test_data, output_mode="original")
-    metric_comparison = eval_and_compare_metrics(fedcore_compressor, pruning_prediction, original_prediction, test_data)
-    onnx_model = fedcore_compressor.export()
+    #pruning_prediction = fedcore_compressor.predict(test_data, output_mode='fedcore')
+    #original_prediction = fedcore_compressor.predict(test_data, output_mode="original")
+    model_comparison = fedcore_compressor.get_report(test_data)
+    #onnx_model = fedcore_compressor.export()

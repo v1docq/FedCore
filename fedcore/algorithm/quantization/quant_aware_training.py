@@ -80,14 +80,14 @@ class QuantAwareModel(BaseCompressionModel):
         self.optimised_model = self.model
         self.model._is_quantized = True
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )
         return self.trainer.predict(input_data, output_mode)
 
-    def predict(self, input_data: InputData, output_mode: str = "compress"):
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )
         return self.trainer.predict(input_data, output_mode)

@@ -64,7 +64,7 @@ class DataCheck:
         model_params = self.learning_params.get('model_params', None)
         if input_data_is_user_dataloaders:
             compression_dataset = CompressionInputData(
-                calib_dataloader=input_data['val_dataloader'],
+                val_dataloader=input_data['val_dataloader'],
                 train_dataloader=input_data['train_dataloader'],
                 test_dataloader=input_data['test_dataloader'],
                 input_dim=model_params['input_dim'] if model_params is not None else 1

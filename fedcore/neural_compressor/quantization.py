@@ -38,7 +38,7 @@ from .utils.utility import dump_class_attrs, time_limit
 def fit(
     model,
     conf,
-    calib_dataloader=None,
+    val_dataloader=None,
     calib_func=None,
     eval_func=None,
     eval_dataloader=None,
@@ -58,7 +58,7 @@ def fit(
         conf (PostTrainingQuantConfig):       The class of PostTrainingQuantConfig containing accuracy goal,
                                               tuning objective and preferred calibration &
                                               quantization tuning space etc.
-        calib_dataloader (generator):         Data loader for calibration, mandatory for
+        val_dataloader (generator):         Data loader for calibration, mandatory for
                                               post-training quantization. It is iterable
                                               and should yield a tuple (input, label) for
                                               calibration dataset containing label,
@@ -137,7 +137,7 @@ def fit(
         conf = PostTrainingQuantConfig()
         q_model = quantization.fit(model_origin,
                                    conf,
-                                   calib_dataloader=dataloader,
+                                   val_dataloader=dataloader,
                                    eval_func=eval_func)
 
         # Saved quantized model in ./saved folder
@@ -145,9 +145,9 @@ def fit(
     """
     ni_workload_id = None
 
-    if calib_dataloader is not None:
-        check_dataloader(calib_dataloader)
-        print('### CHECKED CALIB DL', calib_dataloader)
+    if val_dataloader is not None:
+        check_dataloader(val_dataloader)
+        print('### CHECKED CALIB DL', val_dataloader)
     if eval_dataloader is not None:
         check_dataloader(eval_dataloader)
 
@@ -205,11 +205,11 @@ def fit(
 
     if eval_func is None and eval_dataloader is None:  # pragma: no cover
         logger.info("Quantize model without tuning!")
-    print('### before STRATEGY', calib_dataloader)
+    print('### before STRATEGY', val_dataloader)
     strategy = STRATEGIES[strategy_name](
         model=wrapped_model,
         conf=config,
-        q_dataloader=calib_dataloader,
+        q_dataloader=val_dataloader,
         q_func=calib_func,
         eval_func=eval_func,
         eval_dataloader=eval_dataloader,
