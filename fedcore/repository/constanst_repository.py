@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import partialmethod, partial
 
 import torch
 import torch_pruning as tp
@@ -66,8 +67,11 @@ from fedcore.models.network_modules.losses import (
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.setups import QAT_1, PTQ_1
 from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
-from fedcore.models.network_impl.hooks import Saver, FitReport, Scheduler
+from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen
 from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
+
+from fedcore.models.network_impl.hooks import Optimizers, Schedulers # Need for referencing via constant_repository
+from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 
 
 class FedotOperationConstant(Enum):
@@ -197,9 +201,22 @@ class FedotOperationConstant(Enum):
         # has_correct_data_sources
     ]
 
+    # FEDOT_ASSUMPTIONS = {
+    #     "pruning": PipelineBuilder().add_node("pruning_model"),
+    #     "low_rank": PipelineBuilder().add_node("low_rank_model"),
+    #     "post_quantization": PipelineBuilder().add_node("post_training_quant"),
+    #     "post_dynamic_quantisation": PipelineBuilder().add_node('post_dynamic_quant'),
+    #     "quantization_aware": PipelineBuilder().add_node("training_aware_quant"),
+    #     "distilation": PipelineBuilder().add_node("distilation_model"),
+    #     "detection": PipelineBuilder().add_node(
+    #         "detection_model", params={"pretrained": True}
+    #     ),
+    #     "training": PipelineBuilder().add_node("training_model"),
+    # }
+
     FEDOT_ASSUMPTIONS = {
-        "pruning": PipelineBuilder().add_node("pruning_model"),
-        "low_rank": PipelineBuilder().add_node("low_rank_model"),
+        "pruning": partial(PipelineBuilder().add_node, operation_type="pruning_model"),
+        "low_rank": partial(PipelineBuilder().add_node, operation_type="low_rank_model"),
         "post_quantization": PipelineBuilder().add_node("post_training_quant"),
         "post_dynamic_quantisation": PipelineBuilder().add_node('post_dynamic_quant'),
         "quantization_aware": PipelineBuilder().add_node("training_aware_quant"),
@@ -404,12 +421,22 @@ class LoggingHooks(Enum):
 
 
 class ModelLearningHooks(Enum):
-    SCHEDULER = Scheduler
+    OPTIMIZER_GEN = OptimizerGen
+    SCHEDULER_RENEWAL = SchedulerRenewal
 
 
-class Hooks(Enum):
+class LRHooks(Enum):
     CUTTLEFISH_PRUNER = DynamicRankPruner
 
+Hooks = {
+    'logging': LoggingHooks, 
+    'model_learning': ModelLearningHooks,
+    'lr': LRHooks
+}
+
+class StructureCriterions(Enum):
+    HOER = HoyerLoss
+    ORTHOGONAL = OrthogonalLoss
 
 class TorchvisionBenchmark(Enum):
     CLASSIFICATION = ["CIFAR10", "CIFAR100", 'FasnionMNIST']
