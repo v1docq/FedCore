@@ -16,7 +16,7 @@ from fedcore.models.backbone.backbone_loader import load_backbone
 from fedcore.repository.config_repository import TASK_MAPPING
 from pymonad.maybe import Maybe
 
-
+import torch.optim.adam
 class DataCheck:
     """Class for checking and preprocessing input data for Fedot AutoML.
 
@@ -31,10 +31,10 @@ class DataCheck:
 
     """
 
-    def __init__(self, peft_task=None, optimised_model=None, learning_params=None):
+    def __init__(self, peft_task=None, model=None, learning_params=None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.task = peft_task
-        self.model = optimised_model
+        self.model = model
         self.learning_params = learning_params
         self._init_dummy_val()
 
@@ -70,10 +70,28 @@ class DataCheck:
                 input_dim=model_params['input_dim'] if model_params is not None else 1
             )
             compression_dataset.supplementary_data.is_auto_preprocessed = True
-        elif input_data_is_fedcore_data:
+        elif isinstance(input_data, tuple):
+            compression_dataset, torch_model = input_data 
+        elif input_data.supplementary_data.is_auto_preprocessed:
             compression_dataset = input_data
+        else:
+            raise ValueError('Unsupported input format!')
+        if self.model is not None:
+            if isinstance(self.model, str):
+                torch_model = load_backbone(self.model)
+            elif isinstance(self.model, dict):
+                torch_model = load_backbone(torch_model=self.model['model_type'],
+                                            model_params=self.learning_params)
+                torch_model.load_model(self.model['path_to_model'])
+            elif isinstance(self.model, Callable):
+                torch_model = self.model
+            else:
+                torch_model = None
+            compression_dataset.target = torch_model
+        if torch_model is None:
+            raise ValueError('No torch model provided!')
 
-        input_data = InputData(
+        self.input_data = InputData(
             features=compression_dataset,  # CompressionInputData object
             idx=self.fedot_dummy_idx,  # dummy value
             features_names=compression_dataset.num_classes,  # CompressionInputData attribute

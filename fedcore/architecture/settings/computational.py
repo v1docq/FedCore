@@ -74,7 +74,7 @@ def default_device(device_type: str = "CUDA"):
 
     """
     if device_type == "CUDA":
-        device_type = defaults.use_cuda
+        device_type = getattr(defaults, 'use_cuda', True)
     elif device_type == "cpu":
         defaults.use_cuda = False
         return torch.device("cpu")
