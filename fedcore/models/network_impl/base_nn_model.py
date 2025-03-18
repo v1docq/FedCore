@@ -16,8 +16,10 @@ from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import TorchLossesConstant, ModelLearningHooks, \
     LoggingHooks
-from fedcore.repository.constanst_repository import default_device
+from fedcore.repository.constanst_repository import default_device, Hooks
 
+from fedcore.losses.utils import _get_loss_metric
+from fedcore.architecture.abstraction.accessor import Accessor
 
 def now_for_file():
     return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
@@ -69,7 +71,7 @@ class BaseNeuralModel:
         self.task_type = None
         self.checkpoint_folder = self.params.get('checkpoint_folder', None)
         self.batch_limit = self.learning_params.get('batch_limit', None)
-        self.calib_batch_limit = self.learning_params.get('calib_batch_limit', None)
+        self.calib_batch_limit = self.learning_params.get('calib_batch_limit', None) 
         self.batch_type = self.learning_params.get('batch_type', None)
 
     def _init_empty_object(self):
@@ -124,6 +126,10 @@ class BaseNeuralModel:
             self._init_model()
         self.model.load_state_dict(torch.load(path, weights_only=True))
         self.model.eval()
+
+        # add hooks
+        self._on_epoch_end = []
+        self._on_epoch_start = []
 
     def __check_and_substitute_loss(self, train_data: InputData):
         if (train_data.supplementary_data.col_type_ids is not None
