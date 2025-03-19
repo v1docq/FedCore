@@ -51,7 +51,7 @@ class FedCore(Fedot):
         self.manager = ApiManager().build(kwargs)
         self.logger = self.manager.logger
 
-    def __init_fedcore_backend(self, input_data: Optional[Union[InputData, np.array]] = None):
+    def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
         self.logger.info('-' * 50)
         self.logger.info('Initialising Fedcore Repository')
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
@@ -66,6 +66,16 @@ class FedCore(Fedot):
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
+        self.logger.info('Initialising solver')
+        self.manager.solver = Fedot(**self.manager.automl_config.config,
+                                    use_input_preprocessing=False,
+                                    use_auto_preprocessing=False)
+        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](params=self.manager.learning_config.peft_strategy_params)
+        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params
+        self.manager.solver.params.data.update({'initial_assumption': initial_assumption.build()})
+        return input_data
+
+    def __init_dask(self, input_data):
         self.logger.info('-' * 50)
         self.logger.info('Initialising Dask Server')
         dask_server = DaskServer(self.manager.compute_config.distributed)
@@ -73,13 +83,15 @@ class FedCore(Fedot):
         self.manager.dask_cluster = dask_server.cluster
         self.logger.info(f'Link Dask Server - {self.manager.dask_client.dashboard_link}')
         self.logger.info('-' * 50)
+        return input_data
+
+    def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
         self.manager.solver = Fedot(**self.manager.automl_config.config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
-        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params
-        self.manager.solver.params.data.update({'initial_assumption': initial_assumption.build()})
+        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](params=self.manager.learning_config.peft_strategy_params)
+        self.manager.solver = initial_assumption.build()
         return input_data
 
     def _process_input_data(self, input_data):
@@ -129,12 +141,31 @@ class FedCore(Fedot):
         with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
             self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
                 then(self.__init_fedcore_backend). \
+                then(self.__init_dask). \
                 then(self.__init_solver). \
                 then(fit_function). \
                 maybe(None, lambda solver: solver)
         return self.fedcore_model
 
-    def predict(self, predict_data: tuple, output_mode: str = 'compress', **kwargs):
+    def fit_no_evo(self, input_data: tuple, manually_done=False, **kwargs):
+        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
+            x = self._process_input_data(input_data)
+            x = self.__init_fedcore_backend(x)
+            x = self.__init_dask(x)
+            x = self.__init_solver_no_evo(x)
+            fitted_solver = self.manager.solver.fit(x)
+
+            # fitted_solver = (
+            #     Maybe.insert(self._process_input_data(input_data))
+            #     .then(self.__init_fedcore_backend)
+            #     .then(self.__init_solver)
+            #     .then(self.manager.solver.fit)
+            #     .maybe(None, lambda solver: solver)
+            # )
+        self.optimised_model = fitted_solver.target
+        return fitted_solver
+
+    def predict(self, predict_data: tuple, **kwargs):
         """
         Method to obtain prediction labels from trained Industrial model.
 
@@ -145,11 +176,12 @@ class FedCore(Fedot):
             the array with prediction values
 
         """
-        self.manager.predicted_labels = Maybe. \
-            insert(self._process_input_data(predict_data)). \
-            then(self.__init_fedcore_backend). \
-            then(lambda predict_data: self.__abstract_predict(predict_data, output_mode)). \
-            maybe(None, lambda labels: labels.predict.predict)
+        self.manager.predicted_labels = (Maybe
+            .insert(self._process_input_data(predict_data))
+            .then(self.__init_fedcore_backend)
+            .then(self.__abstract_predict)
+            .maybe(None, lambda labels: labels)
+        )
         return self.manager.predicted_labels
 
     def finetune(self, train_data, tuning_params=None):

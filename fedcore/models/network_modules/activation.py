@@ -1,3 +1,5 @@
+from inspect import getmembers, isclass
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,25 +9,7 @@ from fastai.torch_core import Module
 
 
 def get_activation_fn(activation):
-    pytorch_acts = {
-        "ELU": nn.ELU,
-        "LeakyReLU": nn.LeakyReLU,
-        "PReLU": nn.PReLU,
-        "ReLU": nn.ReLU,
-        "ReLU6": nn.ReLU6,
-        "SELU": nn.SELU,
-        "CELU": nn.CELU,
-        "GELU": nn.GELU,
-        "SwishBeta": SwishBeta,
-        "Sigmoid": nn.Sigmoid,
-        "Mish": Mish,
-        "Softplus": nn.Softplus,
-        "Tanh": nn.Tanh,
-        "Softmax": nn.Softmax,
-        "GEGLU": GEGLU,
-        "ReGLU": ReGLU,
-        "SmeLU": SmeLU,
-    }
+    pytorch_acts = dict(getmembers(torch.nn, isclass))
     return pytorch_acts[activation]()
 
 
