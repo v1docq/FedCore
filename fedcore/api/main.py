@@ -96,7 +96,7 @@ class FedCore(Fedot):
 
     def _process_input_data(self, input_data):
         data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
-                             optimised_model=self.manager.automl_config.config['initial_assumption'],
+                             model=self.manager.automl_config.config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
         train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
@@ -165,7 +165,7 @@ class FedCore(Fedot):
         self.optimised_model = fitted_solver.target
         return fitted_solver
 
-    def predict(self, predict_data: tuple, **kwargs):
+    def predict(self, predict_data: tuple, output_mode:str = 'fedcore', **kwargs):
         """
         Method to obtain prediction labels from trained Industrial model.
 
@@ -176,12 +176,11 @@ class FedCore(Fedot):
             the array with prediction values
 
         """
-        self.manager.predicted_labels = (Maybe
-            .insert(self._process_input_data(predict_data))
-            .then(self.__init_fedcore_backend)
-            .then(self.__abstract_predict)
-            .maybe(None, lambda labels: labels)
-        )
+        self.manager.predicted_labels = Maybe.insert(self._process_input_data(predict_data)). \
+                                         then(self.__init_fedcore_backend). \
+                                         then(lambda data: self.__abstract_predict(data,output_mode)). \
+                                         maybe(None, lambda output: output)
+
         return self.manager.predicted_labels
 
     def finetune(self, train_data, tuning_params=None):
@@ -239,7 +238,6 @@ class FedCore(Fedot):
             pandas DataFrame with calculated metrics
 
         """
-        from sklearn.preprocessing import OneHotEncoder
 
         model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
         model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])

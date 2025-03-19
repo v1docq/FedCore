@@ -76,22 +76,8 @@ class DataCheck:
             compression_dataset = input_data
         else:
             raise ValueError('Unsupported input format!')
-        if self.model is not None:
-            if isinstance(self.model, str):
-                torch_model = load_backbone(self.model)
-            elif isinstance(self.model, dict):
-                torch_model = load_backbone(torch_model=self.model['model_type'],
-                                            model_params=self.learning_params)
-                torch_model.load_model(self.model['path_to_model'])
-            elif isinstance(self.model, Callable):
-                torch_model = self.model
-            else:
-                torch_model = None
-            compression_dataset.target = torch_model
-        if torch_model is None:
-            raise ValueError('No torch model provided!')
 
-        self.input_data = InputData(
+        input_data = InputData(
             features=compression_dataset,  # CompressionInputData object
             idx=self.fedot_dummy_idx,  # dummy value
             features_names=compression_dataset.num_classes,  # CompressionInputData attribute
