@@ -50,9 +50,5 @@ if __name__ == "__main__":
     train_data, test_data = load_data(DATASET)
     fedcore_compressor = FedCore(**api_config)
     fedcore_model = fedcore_compressor.fit(train_data)
-    # get prediction and quality metrics from pruned and original model
-    #pruning_prediction = fedcore_compressor.predict(test_data, output_mode='fedcore')
-    #original_prediction = fedcore_compressor.predict(test_data, output_mode="original")
     model_comparison = fedcore_compressor.get_report(test_data)
-    _ = 1
     #onnx_model = fedcore_compressor.export()

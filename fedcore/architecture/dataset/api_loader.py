@@ -4,11 +4,11 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.dataset.prediction_datasets import TorchVisionDataset
 from fedcore.architecture.utils.paths import data_path, PROJECT_PATH
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import (
-    default_device,
     DEFAULT_TORCH_DATASET,
 )
 from fedcore.repository.model_repository import BACKBONE_MODELS

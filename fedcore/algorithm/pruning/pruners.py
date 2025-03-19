@@ -1,9 +1,6 @@
 from copy import deepcopy
 from itertools import chain
-
-import numpy as np
 from fedot.core.data.data import InputData
-from pymonad.either import Either
 from torch import nn, optim
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -11,16 +8,14 @@ import torch_pruning as tp
 from typing import Optional
 from fedot.core.operations.operation_parameters import OperationParameters
 
+from fedcore.algorithm.pruning.hooks import PruningHooks
 from fedcore.algorithm.pruning.pruning_validation import PruningValidator
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import (
     PRUNERS,
-    PRUNING_IMPORTANCE,
-    PRUNER_REQUIRED_REG,
-    PRUNER_WITHOUT_REQUIREMENTS,
-    PRUNING_FUNC, PruningHooks
+    PRUNING_IMPORTANCE
 )
 
 
@@ -80,17 +75,6 @@ class BasePruner(BaseCompressionModel):
         self._on_epoch_start = []
 
     def _init_hooks(self):
-        # define pruner strategy and choose appropriate callback
-        pruner_without_grads = isinstance(self.importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values()))
-        pruner_with_reg = isinstance(self.importance, tuple(PRUNER_REQUIRED_REG.values()))
-        pruner_with_grads = not all([pruner_with_reg, pruner_without_grads])
-        if pruner_with_grads:
-            self.callback = 'GradPruner'
-        elif pruner_with_reg:
-            self.callback = 'RegPruner'
-        elif pruner_without_grads:
-            self.callback = 'ZeroShotPruner'
-
         for hook_elem in chain(*self._hooks):
             hook: BaseHook = hook_elem.value
             hook = hook(self.ft_params, self.model_after_pruning)
@@ -161,7 +145,7 @@ class BasePruner(BaseCompressionModel):
                                'optimizer_for_grad_acc': self.optimizer_for_grad,
                                'pruner_cls': self.pruner}
         for hook in self._on_epoch_end:
-            hook(callback_type=self.callback, pruner_objects=self.pruner_objects)
+            hook(importance=self.importance, pruner_objects=self.pruner_objects)
         return self.finetune(finetune_object=self.model_after_pruning, finetune_data=input_data)
 
     def finetune(self, finetune_object, finetune_data):

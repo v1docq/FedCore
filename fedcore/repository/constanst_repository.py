@@ -4,21 +4,13 @@ from functools import partialmethod, partial
 import torch
 import torch_pruning as tp
 import torchvision
-# from fastai.torch_core import _has_mps
-from fastcore.basics import defaults
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from fedot.core.pipelines.verification_rules import (
-    has_correct_data_connections,
-    has_correct_data_sources,
-    has_final_operation_as_model,
-    has_no_conflicts_during_multitask,
-    has_no_conflicts_with_data_flow,
     has_primary_nodes,
 )
 from fedot.core.repository.metrics_repository import QualityMetricsEnum
 from fedot.core.repository.tasks import (
     Task,
-    TaskParams,
     TaskTypesEnum,
     TsForecastingParams,
 )
@@ -62,13 +54,9 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
-# from fedcore.neural_compressor.model.onnx_model import ONNXModel
-# from fedcore.neural_compressor.model.torch_model import PyTorchModel, PyTorchFXModel, IPEXModel
-from fedcore.architecture.comptutaional.devices import default_device
+
 from fedcore.repository.setups import QAT_1, PTQ_1
-from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
-from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen, PrunerWithGrad, \
-    PrunerWithReg, ZeroShotPruner
+from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen
 from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
 
 from fedcore.models.network_impl.hooks import Optimizers, Schedulers  # Need for referencing via constant_repository
@@ -415,12 +403,6 @@ class ONNX_CONFIG(Enum):
 class FedcoreInitialAssumptions(Enum):
     qat_1 = QAT_1
     ptq_1 = PTQ_1
-
-
-class PruningHooks(Enum):
-    PRUNERWITHGRAD = PrunerWithGrad
-    PRUNERWITHREG = PrunerWithReg
-    ZEROSHOTPRUNER = ZeroShotPruner
 
 
 class LoggingHooks(Enum):

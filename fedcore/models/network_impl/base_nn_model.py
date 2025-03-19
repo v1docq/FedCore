@@ -15,9 +15,9 @@ from torch import Tensor
 from tqdm import tqdm
 
 from fedcore.api.utils.data import DataLoaderHandler
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import (
-    default_device, 
     ModelLearningHooks, 
     LoggingHooks, 
     StructureCriterions,

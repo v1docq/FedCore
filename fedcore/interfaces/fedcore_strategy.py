@@ -7,8 +7,8 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionOutputData, CompressionInputData
-from fedcore.repository.constanst_repository import default_device
 from fedcore.repository.model_repository import (
     PRUNER_MODELS,
     QUANTISATION_MODELS,

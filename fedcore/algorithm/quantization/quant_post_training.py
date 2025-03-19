@@ -6,7 +6,6 @@ from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.repository.constanst_repository import default_device
 from .utils import uninplace, ParentalReassembler, QDQWrapper, get_flattened_qconfig_dict
 from torch.ao.quantization import (
     quantize_dynamic,  
@@ -19,6 +18,8 @@ from torch.ao.quantization.qconfig import default_dynamic_qconfig, float_qparams
 import torch.nn as nn
 import torch.ao.nn.quantized.dynamic as nnqd
 from torch.ao.quantization.qconfig_mapping import QConfigMapping
+
+from ...architecture.comptutaional.devices import default_device
 
 
 class PostTrainingQuantization(BaseCompressionModel):
