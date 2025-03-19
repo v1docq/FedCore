@@ -138,13 +138,13 @@ class FedCore(Fedot):
                 then(self.manager.solver.fit).maybe(None, lambda solver: solver)
             return fitted_solver
 
-        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
-            self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
-                then(self.__init_fedcore_backend). \
-                then(self.__init_dask). \
-                then(self.__init_solver). \
-                then(fit_function). \
-                maybe(None, lambda solver: solver)
+        #with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
+        self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
+            then(self.__init_fedcore_backend). \
+            then(self.__init_dask). \
+            then(self.__init_solver). \
+            then(fit_function). \
+            maybe(None, lambda solver: solver)
         return self.fedcore_model
 
     def fit_no_evo(self, input_data: tuple, manually_done=False, **kwargs):
@@ -268,7 +268,7 @@ class FedCore(Fedot):
 
         eval_regime = ['original', 'fedcore']
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
-        quality_metrics_list = [self.evaluate_metric(predicton=prediction,
+        quality_metrics_list = [self.evaluate_metric(predicton=prediction.predict.predict,
                                                      target=test_data.target,
                                                      problem=self.manager.automl_config.problem)
                                 for prediction in prediction_list]

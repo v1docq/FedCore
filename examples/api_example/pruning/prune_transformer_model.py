@@ -59,9 +59,7 @@ USER_CONFIG = {'problem': 'ts_forecasting',
 
 if __name__ == "__main__":
     api_config = ApiConfigCheck().update_config_with_kwargs(DEFAULT_TSF_API_CONFIG, **USER_CONFIG)
-    input_data = load_data(source=get_custom_dataloader, loader_params=dataloader_params)
+    train_data, test_data = load_data(source=get_custom_dataloader, loader_params=dataloader_params)
     fedcore_compressor = FedCore(**api_config)
-    fedcore_compressor.fit(input_data)
-    pruning_result = evaluate_optimised_model(fedcore_compressor, input_data)
-    original_result = evaluate_original_model(fedcore_compressor, input_data)
-    onnx_model = fedcore_compressor.export()
+    fedcore_compressor.fit(train_data)
+    model_comparison = fedcore_compressor.get_report(test_data)

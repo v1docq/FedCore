@@ -16,8 +16,6 @@ from tqdm import tqdm
 
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import TorchLossesConstant, ModelLearningHooks, \
-    LoggingHooks
 from fedcore.repository.constanst_repository import (
     default_device, 
     ModelLearningHooks, 
@@ -26,8 +24,6 @@ from fedcore.repository.constanst_repository import (
     TorchLossesConstant,
 )
 
-from fedcore.losses.utils import _get_loss_metric
-from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.models.network_impl.hooks import BaseHook
 
 def now_for_file():
@@ -70,8 +66,6 @@ class BaseNeuralModel(torch.nn.Module):
         self._init_empty_object()
         self._init_null_object()
         self._hooks = [LoggingHooks, ModelLearningHooks]
-        # self._init_hook_params()
-        # self._init_hooks(hook_type='logging')
 
     def _init_criterions(self):
         for name, coef in self.custom_criterions.items():
@@ -101,18 +95,6 @@ class BaseNeuralModel(torch.nn.Module):
         # add hooks
         self._on_epoch_end = []
         self._on_epoch_start = []
-        # self.hook_params = {}
-        # self.learning_hook_params = {}
-
-    # def _init_hook_params(self):
-    #     self.hook_params = {'is_operation': self.params.get('is_operation', False),
-    #                         'save_each': self.params.get('save_each', None),
-    #                         'eval_each': self.params.get('eval_each', 5),
-    #                         'log_each': self.params.get('log_each', 5),
-    #                         'n_plateau': self.params.get('n_plateau', None),
-    #                         'use_scheduler': self.learning_params.get('use_early_stopping', None),
-    #                         # why use the only CycleLR scheduler, shiuldn't it be dissociated
-    #                         'name': ''}
 
     def _init_model(self):
         pass

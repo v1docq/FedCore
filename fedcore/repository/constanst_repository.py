@@ -67,10 +67,11 @@ from fedcore.models.network_modules.losses import (
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.repository.setups import QAT_1, PTQ_1
 from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
-from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen
+from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen, PrunerWithGrad, \
+    PrunerWithReg, ZeroShotPruner
 from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
 
-from fedcore.models.network_impl.hooks import Optimizers, Schedulers # Need for referencing via constant_repository
+from fedcore.models.network_impl.hooks import Optimizers, Schedulers  # Need for referencing via constant_repository
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 
 
@@ -416,6 +417,12 @@ class FedcoreInitialAssumptions(Enum):
     ptq_1 = PTQ_1
 
 
+class PruningHooks(Enum):
+    PRUNERWITHGRAD = PrunerWithGrad
+    PRUNERWITHREG = PrunerWithReg
+    ZEROSHOTPRUNER = ZeroShotPruner
+
+
 class LoggingHooks(Enum):
     SAVER = Saver
     FITREPORT = FitReport
@@ -429,15 +436,18 @@ class ModelLearningHooks(Enum):
 class LRHooks(Enum):
     CUTTLEFISH_PRUNER = DynamicRankPruner
 
+
 Hooks = {
-    'logging': LoggingHooks, 
+    'logging': LoggingHooks,
     'model_learning': ModelLearningHooks,
     'lr': LRHooks
 }
 
+
 class StructureCriterions(Enum):
     HOER = HoyerLoss
     ORTHOGONAL = OrthogonalLoss
+
 
 class TorchvisionBenchmark(Enum):
     CLASSIFICATION = ["CIFAR10", "CIFAR100", 'FasnionMNIST']

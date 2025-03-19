@@ -71,7 +71,6 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
     _operations_by_types = TRAINING_MODELS
 
     def fit(self, train_data: InputData):
-        self.original_model = train_data.features.target
         self.trained_model = self.operation_impl.fit(train_data)
         return self.operation_impl
 

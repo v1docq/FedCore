@@ -15,9 +15,11 @@ from tqdm import tqdm
 
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
+from fedcore.architecture.settings.computational import default_device
 from fedcore.models.network_modules.layers.special import EarlyStopping
 
-VERBOSE = True  
+VERBOSE = True
+
 
 class Optimizers(Enum):
     ADAM = torch.optim.Adam
@@ -26,8 +28,10 @@ class Optimizers(Enum):
     SGD = torch.optim.SGD
     ADADELTA = torch.optim.Adadelta
 
+
 class Schedulers(Enum):
     ONE_CYCLE = torch.optim.lr_scheduler.OneCycleLR
+
 
 def now_for_file():
     return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
@@ -58,15 +62,15 @@ class BaseHook(ABC):
 
     def _filter_kw(self):
         pass
-    
+
     @classmethod
     def check_init(cls, d: dict):
         summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
         return any(d[summon] is not None for summon in summons if summon in d.keys())
-    
+
     def __repr__(self):
         return self.__class__.__name__
-    
+
     def _verbose(self, epoch):
         print(f'Triggered {repr(self)} at {epoch} epoch.')
 
@@ -112,6 +116,109 @@ class Saver(BaseHook):
                 torch.save(to_save.state_dict(),
                            path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
                            )
+
+
+class ZeroShotPruner(BaseHook):
+    _SUMMON_KEY = 'pruning'
+    _hook_place = 'post'
+
+    def __init__(self, params, model):
+        super().__init__(params, model)
+
+    def __call__(self, callback_type, **kws):
+        trigger_result = self.trigger(callback_type, kws)
+        if trigger_result:
+            self.action(callback_type, kws)
+
+    def trigger(self, callback_type, kw) -> bool:
+        return callback_type.__contains__('ZeroShotPruner')
+
+    def pruning_operation(self, kws):
+        pruning_hist = []
+        for i in range(kws['pruning_iterations']):
+            potential_groups_to_prune = list(kws['pruner_cls'].step(interactive=True))
+            for group in potential_groups_to_prune:
+                dep, idxs = group[0]
+                layer = dep.layer
+                pruning_fn = dep.pruning_fn
+                pruning_hist.append((layer, idxs, pruning_fn))
+                group.prune()
+                # valid_to_prune = kws['validator'].validate_pruned_layers(layer, pruning_fn)
+                # if valid_to_prune:
+
+    def action(self, callback, kws):
+        pruner_metadata = kws['pruner_objects']
+        self.pruning_operation(pruner_metadata)
+
+
+class PrunerWithGrad(ZeroShotPruner):
+    _SUMMON_KEY = 'pruning'
+    _hook_place = 'post'
+
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.criterion_for_grad = params.get('criterion_for_grad', None)
+
+    def __call__(self, callback_type, **kws):
+        trigger_result = self.trigger(callback_type, kws)
+        if trigger_result:
+            self.action(callback_type, kws)
+
+    def trigger(self, callback_type, kw) -> bool:
+        return callback_type.__contains__('GradPruner')
+
+    def _accumulate_grads(self, data, target):
+        data, target = data.to(default_device()), target.to(default_device())
+        out = self.model(data)
+        loss = self.criterion_for_grad(out, target)
+        loss.backward()
+
+    def action(self, callback_type, kws):
+        print(f"Gradients accumulation")
+        print(f"==========================================")
+        pruner_metadata = kws['pruner_objects']
+        for i, (data, target) in enumerate(pruner_metadata['input_data'].features.val_dataloader):
+            self._accumulate_grads(data, target)
+        self.pruning_operation(pruner_metadata)
+
+
+class PrunerWithReg(ZeroShotPruner):
+    _SUMMON_KEY = 'pruning'
+    _hook_place = 'post'
+
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.optimizer_for_grad = params.get('optimizer_for_grad_acc', None)
+        self.criterion_for_grad = params.get('criterion_for_grad', None)
+
+    def __call__(self, callback_type, **kws):
+        trigger_result = self.trigger(callback_type, kws)
+        if trigger_result:
+            self.action(callback_type, kws)
+
+    def trigger(self, callback_type, kw) -> bool:
+        return callback_type.__contains__('RegPruner')
+
+    def _accumulate_grads(self, data, target):
+        data, target = data.to(default_device()), target.to(default_device())
+        out = self.model(data)
+        loss = self.criterion_for_grad(out, target)
+        loss.backward()
+
+    def action(self, callback_type, kws):
+        pruner_metadata = kws['pruner_objects']
+        pruner = pruner_metadata['pruner_cls']
+        pruner.update_regularizer()
+        # <== initialize regularizer
+        for i, (data, target) in enumerate(pruner_metadata['input_data'].features.val_dataloader):
+            if i != 0:
+                print(f"Pruning reg iter- {i}")
+                print(f"==========================================")
+                # we using 1 batch as example of pruning quality
+                self.optimizer_for_grad.zero_grad()
+                loss = self._accumulate_grads(data, target)  # after loss.backward()
+                pruner.regularize(self.model, loss)  # <== for sparse training
+                self.optimizer_for_grad.step()
 
 
 class FitReport(BaseHook):
@@ -205,23 +312,24 @@ class Evaluator(BaseHook):
         history = kws['history']['val_loss']
         history.append((epoch, avg_loss))
 
+
 class OptimizerGen(BaseHook):
     _check_field = '_structure_changed__'
     _hook_place = 'pre'
-    
+
     def __init__(self, params, model):
         super().__init__(params, model)
         self.__gen = self.__get_optimizer_gen(
             self.params.get('optimizer', 'ADAM')
         )
-    
+
     @classmethod
     def check_init(cls, d: dict):
         return True
 
     def trigger(self, epoch, kws):
         return epoch == 1 or getattr(self.model, self._check_field, False)
-    
+
     def action(self, epoch, kws):
         kws['trainer_objects']['optimizer'] = self.__gen(self.model.parameters())
         if hasattr(self.model, self._check_field):
@@ -235,10 +343,11 @@ class OptimizerGen(BaseHook):
         elif isclass(opt_type):
             opt_constructor = opt_type
         else:
-            raise TypeError('Unknown type for optimizer is passed! Required: constructor, partial, or str')            
+            raise TypeError('Unknown type for optimizer is passed! Required: constructor, partial, or str')
         optimizer_gen = partial(opt_constructor, lr=self.params.get('learning_rate', 1e-3), **kws)
         return optimizer_gen
-    
+
+
 class SchedulerRenewal(BaseHook):
     _hook_place = 'pre'
     _SUMMON_KEY = ('scheduler_step_each', 'scheduler')
@@ -258,9 +367,9 @@ class SchedulerRenewal(BaseHook):
         elif isclass(sch_type):
             sch_constructor = sch_type
         else:
-            raise TypeError('Unknown type for scheduler is passed! Required: constructor, partial, or str')            
+            raise TypeError('Unknown type for scheduler is passed! Required: constructor, partial, or str')
         scheduler_gen = partial(sch_constructor, **kws)
-        return scheduler_gen        
+        return scheduler_gen
 
     def trigger(self, epoch, kws):
         opt_changed = kws['trainer_params']['scheduler'].optimizer is kws['trainer_params']['optimizer']
@@ -269,7 +378,7 @@ class SchedulerRenewal(BaseHook):
         if epoch % self.params.get(['scheduler_step_each'], 1) == 0:
             self._mode.append('step')
         return bool(self._mode)
-    
+
     def action(self, epoch, kws):
         if 'renew' in self._mode:
             kws['trainer_params']['scheduler'] = self.__gen(kws['trainer_params']['optimizer'])

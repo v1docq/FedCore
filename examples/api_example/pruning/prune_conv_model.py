@@ -54,4 +54,5 @@ if __name__ == "__main__":
     #pruning_prediction = fedcore_compressor.predict(test_data, output_mode='fedcore')
     #original_prediction = fedcore_compressor.predict(test_data, output_mode="original")
     model_comparison = fedcore_compressor.get_report(test_data)
+    _ = 1
     #onnx_model = fedcore_compressor.export()

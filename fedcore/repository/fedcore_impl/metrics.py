@@ -56,6 +56,7 @@ def evaluate_objective_fedcore(self, graph: Pipeline) -> Fitness:
     folds_metrics = []
     for fold_id, (train_data, test_data) in enumerate(self._data_producer()):
         try:
+            self._pipelines_cache = None # turn off cache
             prepared_pipeline = self.prepare_graph(graph, train_data, fold_id, self._eval_n_jobs)
         except Exception as ex:
             self._log.warning(f'Unsuccessful pipeline fit during fitness evaluation. '
