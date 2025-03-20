@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import Callable, Union
 from pymonad.either import Either
 from fedcore.architecture.dataset.api_loader import ApiLoader
+from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import DEFAULT_TORCH_DATASET
 
 
@@ -15,9 +16,19 @@ def load_data(source: Union[str, Callable] = None, loader_params: dict = None):
     else:
         loader_type = "torchvision"
 
-    train_data = Either(value=loader_params, monoid=[loader_type, source_is_loader]). \
-        either(left_function=data_loader.load_data, right_function=lambda custom_params:source(custom_params))
+    input_data = Either(value=loader_params, monoid=[loader_type, source_is_loader]). \
+        either(left_function=data_loader.load_data, right_function=lambda custom_params: source(custom_params))
+    if source_is_loader:
+        train_data = CompressionInputData(
+            val_dataloader=input_data['val_dataloader'],
+            train_dataloader=input_data['train_dataloader'],
+            test_dataloader=input_data['test_dataloader']
+        )
+        train_data.supplementary_data.is_auto_preprocessed = True
+    else:
+        train_data = input_data
     test_data = deepcopy(train_data)
-    test_data.train_dataloader = train_data.val_dataloader
-    test_data.target = train_data.val_dataloader.dataset.targets
+    if test_data.test_dataloader is None:
+        test_data.train_dataloader = train_data.val_dataloader
+        test_data.target = train_data.val_dataloader.dataset.targets
     return train_data, test_data

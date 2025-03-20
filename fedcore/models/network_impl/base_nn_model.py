@@ -350,8 +350,8 @@ class BaseNeuralForecaster(BaseNeuralModel):
         self.in_sample_regime = self.params.get('use_in_sample', True)
         self.use_exog_features = self.params.get('use_exog_features', False)
         self.forecasting_blocks = int(self.test_horizon / self.train_horizon)
+        self.loss = self.params.get('loss', 'smape')
         self.val_interval = 5
-        self.device = default_device()
 
     def out_of_sample_predict(self, tensor_endogen: Tensor, tensor_exogen: Tensor, target: Tensor):
         pred = self.model(x=tensor_endogen, mask=None)  # output [bs x seq_len x horizon]

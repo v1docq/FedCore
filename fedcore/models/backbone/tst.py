@@ -274,15 +274,7 @@ class TSTModel(BaseNeuralForecaster):
 
     def __init__(self, params: Optional[OperationParameters] = None):
         super().__init__(params)
-        self.train_horizon = self.params.get('train_horizon', 1)
-        self.test_horizon = self.params.get('test_horizon', 1)
-        self.in_sample_regime = self.params.get('use_in_sample', True)
-        self.epochs = self.params.get('epochs', 100)
-        self.batch_size = self.params.get('batch_size', 32)
-        self.model_params = self.params.get('model_params', {})
-        self.loss = self.params.get('loss', 'RMSE')
         self.is_regression_task = True
-        self.device = default_device()
 
     def forward(self, *inputs):
         return self.model(*inputs)

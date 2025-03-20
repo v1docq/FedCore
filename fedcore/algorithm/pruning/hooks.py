@@ -31,11 +31,13 @@ class ZeroShotPruner(BaseHook):
         trigger_result = self.trigger(callback_type, kws)
         if trigger_result:
             self.action(callback_type, kws)
+
     def _accumulate_grads(self, data, target):
         data, target = data.to(default_device()), target.to(default_device())
         out = self.model(data)
         loss = self.criterion_for_grad(out, target)
         loss.backward()
+
     def trigger(self, callback_type, kw) -> bool:
         return callback_type.__contains__('ZeroShot')
 

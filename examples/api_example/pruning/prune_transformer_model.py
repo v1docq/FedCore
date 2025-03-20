@@ -2,8 +2,7 @@ from fedcore.tools.example_utils import get_scenario_for_api, get_custom_dataloa
 from fedcore.api.main import FedCore
 from fedcore.api.utils.checkers_collection import ApiConfigCheck
 from fedcore.data.dataloader import load_data
-from fedcore.api.utils.evaluation import evaluate_original_model, evaluate_optimised_model
-from fedcore.repository.config_repository import DEFAULT_CLF_API_CONFIG, DEFAULT_TSF_API_CONFIG
+from fedcore.repository.config_repository import DEFAULT_TSF_API_CONFIG
 
 dataloader_params = {'path_to_dataset': './custom_dataset/forecasting',
                      "seq_len": {"train": 512, "val": 512, "test": 512},
@@ -20,10 +19,11 @@ dataloader_params = {'path_to_dataset': './custom_dataset/forecasting',
                      "target_columns": ["LIQ_RATE"],
                      "exog_columns": ["injection_0", "injection_1", "injection_2"]}
 
-METRIC_TO_OPTIMISE = ['accuracy', 'latency', 'throughput']
+METRIC_TO_OPTIMISE = ['smape', 'latency']
 initial_assumption = {'path_to_model': './pretrain_model/transformer_500_epoch_pretrain.pt',
                       'model_type': 'TST'}
-initial_assumption, learning_strategy = get_scenario_for_api('checkpoint', initial_assumption)
+scenario = 'from_checkpoint'
+initial_assumption, learning_strategy = get_scenario_for_api(scenario, initial_assumption)
 USER_CONFIG = {'problem': 'ts_forecasting',
                'task_params': {'forecast_length': 60},
                'metric': METRIC_TO_OPTIMISE,

@@ -17,6 +17,8 @@ from fedcore.repository.config_repository import TASK_MAPPING
 from pymonad.maybe import Maybe
 
 import torch.optim.adam
+
+
 class DataCheck:
     """Class for checking and preprocessing input data for Fedot AutoML.
 
@@ -62,16 +64,12 @@ class DataCheck:
         model_is_custom_callable_object = isinstance(self.model, Callable)
 
         model_params = self.learning_params.get('model_params', None)
-        if input_data_is_user_dataloaders:
-            compression_dataset = CompressionInputData(
-                val_dataloader=input_data['val_dataloader'],
-                train_dataloader=input_data['train_dataloader'],
-                test_dataloader=input_data['test_dataloader'],
-                input_dim=model_params['input_dim'] if model_params is not None else 1
-            )
+        if model_params is not None and isinstance(input_data, CompressionInputData):
+            compression_dataset = input_data
+            compression_dataset.input_dim = model_params['input_dim']
             compression_dataset.supplementary_data.is_auto_preprocessed = True
         elif isinstance(input_data, tuple):
-            compression_dataset, torch_model = input_data 
+            compression_dataset, torch_model = input_data
         elif input_data.supplementary_data.is_auto_preprocessed:
             compression_dataset = input_data
         else:
@@ -89,7 +87,7 @@ class DataCheck:
 
         if model_is_pretrain_torch_backbone or model_is_pretrain_backbone_with_weights:
             torch_model = load_backbone(torch_model=self.model,
-                                        model_params=model_params)
+                                        model_params=self.learning_params)
             torch_model = self._check_optimised_model(torch_model, input_data)
             if model_is_pretrain_backbone_with_weights:
                 if hasattr(torch_model, 'load_model'):
@@ -119,14 +117,16 @@ class DataCheck:
         - Converts features to torch format using NumpyConverter.
 
         """
-
-        model_layers = list(model.modules())
-        output_layer = model_layers[-1]
-        n_classes = input_data.features.num_classes
-        if output_layer.weight.shape[0] != n_classes:
-            output_layer.weight = torch.nn.Parameter(output_layer.weight[:n_classes, :])
-            output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
-            output_layer.out_features = n_classes
+        if not input_data.task.task_type.value == 'classifciation':
+            return model
+        else:
+            model_layers = list(model.modules())
+            output_layer = model_layers[-1]
+            n_classes = input_data.features.num_classes
+            if output_layer.weight.shape[0] != n_classes:
+                output_layer.weight = torch.nn.Parameter(output_layer.weight[:n_classes, :])
+                output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
+                output_layer.out_features = n_classes
         return model
 
     def check_input_data(self, input_data: [InputData, CompressionInputData] = None) -> InputData:
