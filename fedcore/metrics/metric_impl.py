@@ -25,6 +25,8 @@ from sklearn.metrics import (
 from sktime.performance_metrics.forecasting import mean_absolute_scaled_error
 from fedot.core.composer.metrics import Metric
 
+from fedcore.architecture.comptutaional.devices import default_device
+
 
 class MetricCounter(ABC):
     """Generalized class for calculating metrics"""
@@ -324,6 +326,26 @@ class RMSE(QualityMetric):
 
 
 class SMAPE(QualityMetric):
+
+    @classmethod
+    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+        """ Get metric value based on pipeline, reference data, and number of validation blocks.
+        Args:
+            pipeline: a :class:`Pipeline` instance for evaluation.
+            reference_data: :class:`InputData` for evaluation.
+            validation_blocks: number of validation blocks. Used only for time series forecasting.
+                If ``None``, data separation is not performed.
+        """
+        true_pred = pipeline.predict(reference_data, output_mode=cls.output_mode).predict
+        # get true targets from test dataloader
+        target_list = []
+        for batch in reference_data.features.test_dataloader:
+            x_hist, x_fut, y = [b.to(default_device()) for b in batch]
+            target_list.append(y.cpu().detach().numpy().squeeze())
+        true_target = np.concatenate(target_list).ravel()
+        # get predction from result.predict (OutputData)
+        return cls.metric(cls, target=true_target, predict=true_pred)
+
     def metric(cls, target, predict) -> float:
         return (1 / len(predict) * np.sum(2 * np.abs(target - predict)
                                           / (np.abs(predict) + np.abs(target)) * 100))

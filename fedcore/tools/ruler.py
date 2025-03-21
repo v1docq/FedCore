@@ -91,13 +91,15 @@ class PerformanceEvaluator:
     def throughput_eval(self, num_iterations=30):
         self.model.eval()
         thr_list = []
-        for batch, _ in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"
+        for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"
                              ):
-            X = (
-                batch.cuda(non_blocking=True)
-                if hasattr(batch, "cuda") and self.cuda_allowed
-                else batch.to(self.device)
-            )
+            if isinstance(batch, tuple) or isinstance(batch, list):
+                features = batch[0]
+            is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
+            if is_already_cuda:
+                X = batch.cuda(non_blocking=True)
+            else:
+                X = batch.to(self.device)
             batch_size = len(X)
             if self.cuda_allowed:
                 torch.cuda.synchronize(self.device)
@@ -114,21 +116,23 @@ class PerformanceEvaluator:
     def latency_eval(self, max_samples=None):
         self.model.eval()
         lat_list = []
-        for batch, _ in tqdm(self.data_loader(max_batches=max_samples or self.batch_size)):
-            if isinstance(batch, torch.Tensor):
-                for sample in batch:
-                    sample = (
-                        sample.cuda(non_blocking=True)
-                        if hasattr(sample, "cuda") and self.cuda_allowed
-                        else sample.to(self.device)
-                    )
-                    sample_batch = sample[None, ...]
-                    tic1 = time.time()
-                    self.model(sample_batch)
-                    if self.cuda_allowed:
-                        torch.cuda.synchronize()
-                    tic2 = time.time()
-                    lat_list.append((tic2 - tic1))
+        for batch in tqdm(self.data_loader(max_batches=max_samples or self.batch_size)):
+            if isinstance(batch, tuple) or isinstance(batch, list):
+                features = batch[0]
+                if isinstance(features, torch.Tensor):
+                    for sample in features:
+                        is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
+                        if is_already_cuda:
+                            sample = sample.cuda(non_blocking=True)
+                        else:
+                            sample = sample.to(self.device)
+                        sample_batch = sample[None, ...]
+                        tic1 = time.time()
+                        self.model(sample_batch)
+                        if self.cuda_allowed:
+                            torch.cuda.synchronize()
+                        tic2 = time.time()
+                        lat_list.append((tic2 - tic1))
             else:
                 tic1 = time.time()
                 self.model(batch.to(self.device))

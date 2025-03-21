@@ -241,7 +241,7 @@ class FedCore(Fedot):
 
         model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
         model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
-        if model_output_is_probs:
+        if model_output_is_probs and not self.manager.automl_config.problem.__contains__('forecasting'):
             labels = np.argmax(model_output, axis=1)
             predicted_probs = model_output
 
@@ -268,7 +268,7 @@ class FedCore(Fedot):
 
         eval_regime = ['original', 'fedcore']
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
-        quality_metrics_list = [self.evaluate_metric(predicton=prediction.predict.predict,
+        quality_metrics_list = [self.evaluate_metric(predicton=prediction.predict,
                                                      target=test_data.target,
                                                      problem=self.manager.automl_config.problem)
                                 for prediction in prediction_list]

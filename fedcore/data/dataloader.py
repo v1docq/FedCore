@@ -1,7 +1,10 @@
 from copy import deepcopy
 
+import numpy as np
 from typing import Callable, Union
 from pymonad.either import Either
+
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import DEFAULT_TORCH_DATASET
@@ -25,6 +28,11 @@ def load_data(source: Union[str, Callable] = None, loader_params: dict = None):
             test_dataloader=input_data['test_dataloader']
         )
         train_data.supplementary_data.is_auto_preprocessed = True
+        target_list = []
+        for batch in train_data.test_dataloader:
+            batch_list = [b.to(default_device()) for b in batch]
+            target_list.append(batch_list[-1].cpu().detach().numpy().squeeze())
+        train_data.target = np.concatenate(target_list)
     else:
         train_data = input_data
     test_data = deepcopy(train_data)

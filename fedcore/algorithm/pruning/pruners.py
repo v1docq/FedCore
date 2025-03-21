@@ -11,7 +11,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.algorithm.pruning.hooks import PruningHooks
 from fedcore.algorithm.pruning.pruning_validation import PruningValidator
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import (
     PRUNERS,
@@ -58,7 +58,7 @@ class BasePruner(BaseCompressionModel):
             group_reduction=self.importance_reduction,
             normalizer=self.importance_normalize,
         )
-        self.trainer = BaseNeuralModel(self.ft_params)
+
         self._hooks = [PruningHooks]
         self._init_empty_object()
 
@@ -86,6 +86,10 @@ class BasePruner(BaseCompressionModel):
     def _init_model(self, input_data):
         print("==============Prepare original model for pruning=================")
         self.model_before_pruning = input_data.target
+        if input_data.task.task_type.value.__contains__('forecasting'):
+            self.trainer = BaseNeuralForecaster(self.ft_params)
+        else:
+            self.trainer = BaseNeuralModel(self.ft_params)
         if hasattr(self.model_before_pruning, 'model'):
             self.trainer = self.model_before_pruning
             self.model_before_pruning = self.model_before_pruning.model

@@ -13,16 +13,19 @@ class ZeroShotPruner(BaseHook):
         super().__init__(params, model)
         self.optimizer_for_grad = params.get('optimizer_for_grad_acc', None)
         self.criterion_for_grad = params.get('criterion_for_grad', None)
+        self.zeroshot_names = ["Magnitude", 'LAMP', 'Random']
 
     def _define_pruner_type(self, importance):
-        pruner_without_grads = isinstance(importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values()))
-        pruner_with_reg = isinstance(importance, tuple(PRUNER_REQUIRED_REG.values()))
-        pruner_with_grads = not all([pruner_with_reg, pruner_without_grads])
+        zeroshot_cond_one = isinstance(importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values()))
+        zeroshot_cond_two = any([str(importance).__contains__(x) for x in self.zeroshot_names])
+        zeroshot_pruner = all([zeroshot_cond_one, zeroshot_cond_two])
+        pruner_with_grads = all([not zeroshot_pruner, str(importance).__contains__('Taylor')])
+        pruner_with_reg = all([not zeroshot_pruner, not pruner_with_grads])
         if pruner_with_grads:
             callback = 'GradPruner'
         elif pruner_with_reg:
             callback = 'RegPruner'
-        elif pruner_without_grads:
+        elif zeroshot_pruner:
             callback = 'ZeroShotPruner'
         return callback
 
