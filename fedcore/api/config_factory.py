@@ -2,7 +2,7 @@ from enum import Enum
 from inspect import signature, isclass
 from typing import get_args, get_origin, Literal, Optional, Union
 
-from .api_configs import ConfigTemplate
+from .api_configs import ConfigTemplate, get_nested
 
 
 __all__ = [
@@ -51,6 +51,12 @@ class ConfigFactory:
                 raise ValueError(f'Passing wrong argument of type {value.__class__.__name__}! Required: {orig_type}')
             setattr(self, key, value)
 
+        def __repr__(self: ConfigTemplate):
+            params_str = '\n'.join(
+                f'{k}: {getattr(self, k)}' for k in self.__slots__
+            )
+            return f'{self.get_default_name()}: \n{params_str}\n'
+
         def update(self, d: dict):
             for k, v in d.items():
                 obj, attr = get_nested(self, k)
@@ -66,6 +72,7 @@ class ConfigFactory:
             '__getitem__': __getitem__,
             '__setitem__': __setitem__,
             '__setattr__': __setattr__,
+            '__repr__': __repr__,
             'get': get,
             'update': update,
         }

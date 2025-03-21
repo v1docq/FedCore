@@ -17,6 +17,8 @@ __all__ = [
     'NeuralModelConfigTemplate',
     'LearningConfigTemplate',
     'APIConfigTemplate',
+
+    'get_nested',
 ]
 
 def get_nested(root: object, k: str):
@@ -29,7 +31,10 @@ class ConfigTemplate:
 
     @classmethod
     def get_default_name(cls):
-        return cls.__name__.split('.')[-1][:-8]
+        name = cls.__name__.split('.')[-1]
+        if name.endswith('Template'):
+            name = name[:-8]
+        return name
 
     @classmethod
     def get_annotation(cls, key):
