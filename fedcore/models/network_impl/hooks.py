@@ -106,7 +106,6 @@ class Saver(BaseHook):
                            path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
                            )
 
-
 class FitReport(BaseHook):
     _SUMMON_KEY = 'log_each'
     _hook_place = 10
