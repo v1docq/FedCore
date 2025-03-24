@@ -54,10 +54,7 @@ class BaseNeuralModel(torch.nn.Module):
 
     def __init__(self, params: Optional[OperationParameters] = None):
         super().__init__()
-        if not isinstance(params, dict):
-            self.params = params.to_dict()
-        else:
-            self.params = params
+        self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_empty_object()
         self._init_null_object()
@@ -145,12 +142,11 @@ class BaseNeuralModel(torch.nn.Module):
         self._hooks.extend(hooks)
 
     def __get_criterion(self):
-        key = self.params.get('loss', None) or self.params.get('criterion', 'no_loss')
+        key = self.params.get('loss', None) or self.params.get('criterion', None)
         if hasattr(TorchLossesConstant, key):
             return TorchLossesConstant[key].value()
         if hasattr(key, '__call__'):
             return key
-        return lambda *args, **kwargs: torch.zeros((1,))
         raise ValueError('No loss specified!')
 
     def save_model(self, path: str):
@@ -230,11 +226,9 @@ class BaseNeuralModel(torch.nn.Module):
         training_loss = 0.0
         self.model.train()
         for batch in tqdm(dataloader, desc='Batch #'):
-            # *inputs, targets = batch
-            # inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            inputs, targets = batch
-            output = self.model(inputs.to(self.device))
-            targets = targets.to(self.device).to(output.dtype)
+            *inputs, targets = batch
+            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            output = self.model(*inputs)
             loss = self._compute_loss(loss_fn, output,
                                       targets.to(self.device), epoch=epoch)
             loss.backward()
@@ -268,6 +262,7 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
+        print('###', 'BNN predict')
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
 
@@ -275,6 +270,8 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
+        print('###', 'BNN predict4fit')
+
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
@@ -284,14 +281,13 @@ class BaseNeuralModel(torch.nn.Module):
         model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
-        dataloader = x_test.val_dataloader if isinstance(x_test, CompressionInputData) else x_test.features.val_dataloader
-        dataloader = DataLoaderHandler.check_convert(dataloader,
+        dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
         for batch in tqdm(dataloader):  ###TODO why val_dataloader???
-            inputs, targets = batch
-            output = model(inputs.to(self.device))
-            prediction.append(output)
+            *inputs, targets = batch
+            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            prediction.append(model(*inputs))
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
