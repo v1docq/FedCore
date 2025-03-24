@@ -103,7 +103,6 @@ class Saver(BaseHook):
                            path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
                            )
 
-
 class FitReport(BaseHook):
     _SUMMON_KEY = 'log_each'
 
@@ -118,7 +117,7 @@ class FitReport(BaseHook):
         history = kws['history']
         (tr_e, train_loss) = history['train_loss'][-1]
         val_losses = history['val_loss']
-
+        
         (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
         # if val_loss:
         #     val_loss = torch.round(val_loss, decimals=4)
@@ -138,45 +137,6 @@ class FitReport(BaseHook):
             if hist:
                 epoch, val = hist[-1]
                 print(f'\tCriterion `{name}`: {val}')
-
-        # if custom_loss is not None:
-        #     print(f"Epoch: {epoch}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}".
-        #           format(epoch, avg_loss, *custom_loss))
-        # else:
-        #     print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
-
-
-# class Scheduler(BaseHook):
-#     _SUMMON_KEY = 'use_scheduler'
-
-#     def __init__(self, params, model):
-#         super().__init__(params, model)
-#         self._init_scheduler(optimizer=params['optimizer'],
-#                              steps_per_epoch=max(1, len(params['train_loader'])),
-#                              epochs=params['epochs'],
-#                              learning_rate=params['learning_rate'],
-#                              )
-#         self._init_early_stop(learning_params=params['learning_params'])
-
-#     def _init_scheduler(self, optimizer, epochs, learning_rate, steps_per_epoch):
-#         self.scheduler = lr_scheduler.OneCycleLR(optimizer=optimizer,
-#                                                  steps_per_epoch=steps_per_epoch,
-#                                                  epochs=epochs,
-#                                                  max_lr=learning_rate)
-
-#     def _init_early_stop(self, learning_params):
-#         self.early_stopping = EarlyStopping(**learning_params['use_early_stopping'])
-
-#     def trigger(self, epoch, kw) -> bool:
-#         return True
-
-#     def action(self, epoch, kws):
-#         self.scheduler.step()
-#         self.early_stopping(loss=kws['train_loss'])
-#         if not self.early_stopping.early_stop:
-#             print('Updating learning rate to {}'.format(self.scheduler.get_last_lr()[0]))
-#         else:
-#             print("Early stopping")
 
 
 class Evaluator(BaseHook):
