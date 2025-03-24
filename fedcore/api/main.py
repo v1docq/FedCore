@@ -239,6 +239,8 @@ class FedCore(Fedot):
 
         """
 
+        if isinstance(predicton, OutputData):
+            predicton = predicton.predict
         model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
         model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
         if model_output_is_probs and not self.manager.automl_config.problem.__contains__('forecasting'):
@@ -272,14 +274,14 @@ class FedCore(Fedot):
                                                      target=test_data.target,
                                                      problem=self.manager.automl_config.problem)
                                 for prediction in prediction_list]
-        computational_metrics_list = [self.evaluate_metric(predicton=prediction,
-                                                           target=test_data.val_dataloader,
-                                                           problem=f'computational_{regime}')
-                                      for prediction, regime in zip(prediction_list, eval_regime)]
+        # computational_metrics_list = [self.evaluate_metric(predicton=prediction,
+        #                                                    target=test_data.val_dataloader,
+        #                                                    problem=f'computational_{regime}')
+        #                               for prediction, regime in zip(prediction_list, eval_regime)]
 
         quality_df = create_df(zip(quality_metrics_list, eval_regime))
-        compute_df = create_df(zip(computational_metrics_list, eval_regime))
-        return dict(quality_comparasion=quality_df, computational_comparasion=compute_df)
+        # compute_df = create_df(zip(computational_metrics_list, eval_regime))
+        return dict(quality_comparasion=quality_df)
 
     def load(self, path):
         """Loads saved Industrial model from disk

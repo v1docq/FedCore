@@ -1,3 +1,4 @@
+import traceback
 from abc import abstractmethod
 
 from typing import Dict
@@ -59,6 +60,7 @@ def evaluate_objective_fedcore(self, graph: Pipeline) -> Fitness:
             self._pipelines_cache = None # turn off cache
             prepared_pipeline = self.prepare_graph(graph, train_data, fold_id, self._eval_n_jobs)
         except Exception as ex:
+            traceback.print_exc()
             self._log.warning(f'Unsuccessful pipeline fit during fitness evaluation. '
                               f'Skipping the pipeline. Exception <{ex}> on {graph_id}')
 

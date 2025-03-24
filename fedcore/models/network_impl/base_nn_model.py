@@ -116,8 +116,9 @@ class BaseNeuralModel(torch.nn.Module):
 
     def __get_criterion(self):
         key = self.params.get('loss', None) or self.params.get('criterion', None)
-        if hasattr(TorchLossesConstant, key):
-            return TorchLossesConstant[key].value()
+        if isinstance(key, str):
+            if hasattr(TorchLossesConstant, key):
+                return TorchLossesConstant[key].value()
         if hasattr(key, '__call__'):
             return key
         raise ValueError('No loss specified!')
