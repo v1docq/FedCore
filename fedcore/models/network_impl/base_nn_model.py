@@ -233,27 +233,7 @@ class BaseNeuralModel(torch.nn.Module):
     def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
         self.model.train()
-        with torch.set_grad_enabled(True):
-            for batch in tqdm(dataloader, desc='Batch #'):
-                # *inputs, targets = batch
-                # inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-                inputs, targets = batch
-                output = self.model(inputs.to(self.device))
-                targets = targets.to(self.device).to(output.dtype)
-                loss = self._compute_loss(loss_fn, output,
-                                          targets.to(self.device), epoch=epoch)
-                loss.backward()
-                optimizer.step()
-                optimizer.zero_grad()
-                training_loss += loss.item()
-            avg_loss = training_loss / len(dataloader)
-            self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
         for batch in tqdm(dataloader, desc='Batch #'):
-            *inputs, targets = batch
-            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            output = self.model(*inputs)
-            loss = self._compute_loss(loss_fn, output,
-                                      targets.to(self.device), epoch=epoch)
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
             output = self.model(*inputs)
@@ -263,8 +243,6 @@ class BaseNeuralModel(torch.nn.Module):
             optimizer.step()
             optimizer.zero_grad()
             training_loss += loss.item()
-        avg_loss = training_loss / len(dataloader)
-        self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
         avg_loss = training_loss / len(dataloader)
         self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
 
@@ -291,6 +269,7 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
+        print('###', 'BNN predict')
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
 
@@ -298,6 +277,8 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
+        print('###', 'BNN predict4fit')
+
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
