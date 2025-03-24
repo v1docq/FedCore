@@ -244,6 +244,9 @@ class FedCore(Fedot):
         if model_output_is_probs and not self.manager.automl_config.problem.__contains__('forecasting'):
             labels = np.argmax(model_output, axis=1)
             predicted_probs = model_output
+        else:
+            labels = model_output
+            predicted_probs = model_output
 
         inference_metric = problem.__contains__("computational")
         if inference_metric:

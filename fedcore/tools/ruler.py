@@ -180,7 +180,9 @@ class PerformanceEvaluator:
     def warm_up_cuda(self, n_batches=3):
         """Warm up CUDA by performing some dummy computations"""
         if self.cuda_allowed:
-            for inputs, _ in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
+            for batch in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
+                if isinstance(batch, tuple) or isinstance(batch, list):
+                    inputs = batch[0]
                 _ = self.model(inputs.to(self.device))
 
     def report(self):

@@ -59,7 +59,7 @@ def calculate_regression_metric(
 
 
 def calculate_forecasting_metric(
-        target, labels, rounding_order=3, metric_names=("smape", "rmse", "mape"), **kwargs
+        target, labels, rounding_order=3, metric_names=("smape", "rmse"), **kwargs
 ):
     target = target.astype(float)
 
@@ -71,8 +71,8 @@ def calculate_forecasting_metric(
         "mae": mean_absolute_error,
         "median_absolute_error": median_absolute_error,
         "smape": smape,
-        "mase": mase,
-        "mape": mape,
+        #"mase": mase,
+        #"mape": mape,
     }
 
     df = pd.DataFrame(

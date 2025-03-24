@@ -85,5 +85,6 @@ class HoyerLoss(SVDLoss):
             if name.split(".")[-1] == "S":
                 n += 1
                 S = parameter
-                loss += vector_norm(S, ord=1) / vector_norm(S, ord=2)
+                loss += vector_norm(S, ord=1) / vector_norm(S, ord=2) # L1 spectrum norm () и L2 spectrum norm ()
+                #loss += vector_norm(S, ord=2) / vector_norm(S^(-1), ord=2)  # ratio between max and min singular val
         return self.factor * loss / n
