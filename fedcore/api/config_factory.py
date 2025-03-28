@@ -1,8 +1,8 @@
 from enum import Enum
 from inspect import signature, isclass
-from typing import get_args, get_origin, Literal, Optional, Union
+from typing import get_args, get_origin, Iterable, Literal, Optional, Union
 
-from .api_configs import ConfigTemplate, get_nested
+from .api_configs import ConfigTemplate, ExtendableConfigTemplate, get_nested, LookUp
 
 
 __all__ = [
@@ -17,53 +17,44 @@ class ConfigFactory:
         raise Exception('ConfigFactory is a static class')
 
     @classmethod
-    def from_template(cls, template: ConfigTemplate, name:str = None):
+    def from_template(cls, template: ConfigTemplate, name: str = None):
         template_cls, content = template
         if name is None:
             name = template_cls.get_default_name()
         cls.registered_configs[name] = template_cls
-        slots = tuple(content)
-        def __init__(self):
+        slots = list(content) + ['_parent']
+
+        def __init__(self, parent=None, **kwargs):
+            object.__setattr__(self, '_parent', parent)
+            content.update(kwargs)
             for key, value in content.items():
-                value, need_check = ConfigFactory._instantiate_default(name, key, value)
+                value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
                 if not need_check:
                     self.__class__.check(key, value)
                     setattr(self, key, value)
                 else:
                     object.__setattr__(self, key, value)
+            if not isinstance(self, ExtendableConfigTemplate):
+                delattr(self, '__dict__')
 
+        def __new__(cls, *args, **kwargs):
+            return object.__new__(cls)
+        
         def __getitem__(self, key):
             val = getattr(self, key)
             if isinstance(val, Enum):
                 return val.value
             return val
-
-        def __new__(cls, *args, **kwargs):
-            return object.__new__(cls, *args, **kwargs)
-        
-        def __setattr__(self: ConfigTemplate, key, value):
+            
+        def __setattr__(self, key, value):
             self.check(key, value)
             ConfigTemplate.__setattr__(self, key, value)
-        
+                
         def __setitem__(self, key, value):
             orig_type = type(getattr(self, key))
             if not isinstance(value, orig_type): #isinstance or is?
                 raise ValueError(f'Passing wrong argument of type {value.__class__.__name__}! Required: {orig_type}')
             setattr(self, key, value)
-
-        def __repr__(self: ConfigTemplate):
-            params_str = '\n'.join(
-                f'{k}: {getattr(self, k)}' for k in self.__slots__
-            )
-            return f'{self.get_default_name()}: \n{params_str}\n'
-
-        def update(self, d: dict):
-            for k, v in d.items():
-                obj, attr = get_nested(self, k)
-                obj.__setattr__(attr, v)
-
-        def get(self, key, default=None):
-            return getattr(*get_nested(self, key), default)
         
         class_dict = {
             '__slots__': slots,
@@ -72,9 +63,6 @@ class ConfigFactory:
             '__getitem__': __getitem__,
             '__setitem__': __setitem__,
             '__setattr__': __setattr__,
-            '__repr__': __repr__,
-            'get': get,
-            'update': update,
         }
         return type(name, (cls.registered_configs[name],), class_dict)
     
@@ -90,19 +78,37 @@ class ConfigFactory:
            type(None) in get_args(annotation))         
     
     @classmethod
-    def _instantiate_default(cls, config_name: str, k: str, v):
-        if v is not None:
+    def _instantiate_default(cls, self: ConfigTemplate, config_name: str, k: str, v):
+        # check look-up
+        if isinstance(v, LookUp):
+            if self._parent:
+                v = getattr(self._parent, k, None)
+            else:
+                v = v.value
+        annotation = cls._get_annotation(config_name, k)
+        is_config = isclass(annotation) and issubclass(annotation, ConfigTemplate)
+        
+        if v is not None and not is_config:
             return v, True
         # check if explicitly optional
-        annotation = cls._get_annotation(config_name, k)
         if cls.__is_optional(annotation):
             return None, False
-        # if another config, run recursively
-        if isclass(annotation) and issubclass(annotation, ConfigTemplate):
-            return ConfigFactory.from_template(annotation(), annotation.get_default_name())(), False
+        # if another config and not specified, run recursively
+        if is_config and v is None:
+            x = ConfigFactory.from_template(
+                annotation(), annotation.get_default_name())(
+                    parent=self
+                ), False
+            return x
+        # specified
+        if is_config and isinstance(v, tuple):
+            x = ConfigFactory.from_template(v)(parent=self), False
+            return x
+        
         # try instantiate empty object
-        x = ValueError(f'Misconfiguration! detected class `{annotation}`\
-                        has wrong argument passed and not explicitly optional.')
+        x = ValueError(f'Misconfiguration! detected class `{annotation}`\n' +
+                    f'has wrong argument passed at `{k}` and not explicitly optional.\n' +
+                    f'Config: {config_name}')
         # case union
         for arg in get_args(annotation):
             try:
