@@ -7,7 +7,7 @@ from fastai.torch_core import Module
 from fastcore.basics import snake2camel
 from torch import Tensor
 
-from fedcore.architecture.settings.computational import default_device
+from fedcore.architecture.comptutaional.devices import default_device
 
 
 def init_lin_zero(m):

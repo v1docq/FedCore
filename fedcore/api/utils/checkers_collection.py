@@ -11,6 +11,7 @@ from fedot.core.repository.tasks import (
     TaskTypesEnum,
 )
 
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.models.backbone.backbone_loader import load_backbone
 from fedcore.repository.config_repository import TASK_MAPPING
@@ -93,7 +94,13 @@ class DataCheck:
                 if hasattr(torch_model, 'load_model'):
                     torch_model.load_model(self.model['path_to_model'])
                 else:
-                    torch_model.load_state_dict(torch.load(self.model['path_to_model'], weights_only=True))
+                    torch_model.load_state_dict(
+                        torch.load(
+                            self.model['path_to_model'],
+                            weights_only=True,
+                            map_location=default_device()
+                            )
+                        )
         elif model_is_custom_callable_object:
             torch_model = self.model
 
@@ -117,7 +124,7 @@ class DataCheck:
         - Converts features to torch format using NumpyConverter.
 
         """
-        if not input_data.task.task_type.value == 'classifciation':
+        if not input_data.task.task_type.value == 'classification':
             return model
         else:
             model_layers = list(model.modules())

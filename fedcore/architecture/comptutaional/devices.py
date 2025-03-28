@@ -1,41 +1,39 @@
-import sys
-
 import torch
-import fastai.torch_core as faitc
-if hasattr(faitc, '_has_mps'):
-    from fastai.torch_core import _has_mps
-else:
-    _has_mps = lambda *args, **kwargs: False
-from fastcore.basics import defaults
+import logging
+
+
+def check_device(dev_type: str):
+    if dev_type == 'cuda':
+        return torch.cuda.is_available()
+    elif dev_type == 'mps':
+        return torch.backends.mps.is_available()
+    elif dev_type == 'cpu':
+        return True
+    raise ValueError('Unknown device')
 
 
 def default_device(device_type: str = None):
-    """Return or set default device. Modified from fastai.
 
-    Args:
-        device_type: 'cuda' or 'cpu' or None (default: 'cuda'). If None, use CUDA if available, else CPU.
+    if device_type is not None and check_device(device_type):
+        logging.info(f'Trying to use device <{device_type}>')
+        if device_type == 'cuda':
+            selected = torch.device(torch.cuda.current_device())
+        elif device_type == 'mps':
+            selected = torch.device('mps')
+        elif device_type == 'cpu':
+            selected = torch.device('cpu')
+    else:
+        available_device = next((dev for dev in ('cuda', 
+                                                 'mps', 
+                                                 'cpu'
+                                                 ) if check_device(dev)))
+        if available_device == 'cuda':
+            selected = torch.device(torch.cuda.current_device())
+        elif available_device == 'mps' or 'cpu':
+            selected = torch.device(device=available_device)
+    logging.info(f'Device <{selected}> is selected')
+    return selected
 
-    Returns:
-        torch.device: The default device: CUDA if available, else CPU.
-
-    """
-    if device_type == "CUDA":
-        device_type = defaults.use_cuda
-    elif device_type == "cpu":
-        defaults.use_cuda = False
-        return torch.device("cpu")
-
-    if device_type is None:
-        if torch.cuda.is_available() or _has_mps() and sys.platform != "darwin":
-            device_type = True
-        else:
-            return torch.device("cpu")
-    if device_type:
-        if torch.cuda.is_available():
-            return torch.device(torch.cuda.current_device())
-        if _has_mps():
-            return torch.device("mps")
-    return torch.device("cpu")
 
 def extract_device(nn: torch.nn.Module):
     return next(iter(nn.parameters())).device

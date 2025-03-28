@@ -15,7 +15,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from fedcore.api.utils.data import check_multivariate_data
 from fedcore.architecture.settings.computational import backend_methods as np
-from fedcore.architecture.settings.computational import default_device
+from fedcore.architecture.comptutaional.devices import default_device
 
 
 class CustomDatasetTS:

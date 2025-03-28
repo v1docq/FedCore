@@ -8,7 +8,7 @@ from torch import nn, Tensor
 
 from fedcore.architecture.abstraction.decorators import convert_to_torch_tensor
 from fedcore.architecture.settings.computational import backend_methods as np
-from fedcore.architecture.settings.computational import default_device
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_modules.activation import get_activation_fn
 from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
 from fedcore.models.network_modules.layers.conv_layers import Conv1d, ConvBlock
