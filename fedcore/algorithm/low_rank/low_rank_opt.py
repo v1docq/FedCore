@@ -8,15 +8,15 @@ from torch import nn
 
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     DECOMPOSE_MODE,
     COMPOSE_MODE,
-    HOER_LOSS,
-    ORTOGONAL_LOSS,
-    default_device
+    # HOER_LOSS,
+    # ORTOGONAL_LOSS
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 
@@ -46,16 +46,16 @@ class LowRankModel(BaseCompressionModel):
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
-        self.hoer_loss = HoyerLoss(params.get("hoyer_loss", HOER_LOSS))
-        self.orthogonal_loss = OrthogonalLoss(
-            params.get("orthogonal_loss", ORTOGONAL_LOSS)
-        )
+        # self.hoer_loss = HoyerLoss(params.get("hoyer_loss", HOER_LOSS))
+        # self.orthogonal_loss = OrthogonalLoss(
+        #     params.get("orthogonal_loss", ORTOGONAL_LOSS)
+        # )
         self.strategy = params.get("spectrum_pruning_strategy", "quantile")
         self.learning_rate = params.get("learning_rate", 0.001)
         self.finetuning = False
         self.device = default_device()
         self.trainer = BaseNeuralModel(params)
-        self.trainer.custom_loss = self.__loss()
+        # self.trainer.custom_loss = self.__loss()
 
     def _init_model(self, input_data):
         self.model = (
@@ -80,14 +80,14 @@ class LowRankModel(BaseCompressionModel):
         self.compress(input_data=input_data)
         return self.optimised_model
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
         return (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )  ### any case same model
 
-    def predict(self, input_data: InputData, output_mode: str = "compress"):
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
         self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
+            self.optimised_model if output_mode == 'fedcore' else self.model
         )  ### any case same model
         return self.trainer.predict(input_data, output_mode)
 
@@ -125,7 +125,7 @@ class LowRankModel(BaseCompressionModel):
 
         print("==============Finetune truncated model=================")
         self.trainer.model = self.optimised_model
-        self.trainer.custom_loss = self.ft_params["custom_loss"]
+        # self.trainer.custom_loss = self.ft_params["custom_loss"]
         self.trainer.epochs = self.ft_params["epochs"]
         self.optimised_model = self.trainer.fit(input_data, loader_type='train')
 

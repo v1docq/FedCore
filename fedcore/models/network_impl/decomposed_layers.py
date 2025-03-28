@@ -267,7 +267,6 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return x
     
     def _forward3(self, x):
-        print(self.Vh.size(), self.S.size(), self.U.size(), (self.S * self.U).size())
         x = conv2d(
             input=x,
             weight=self.Vh,
@@ -577,3 +576,9 @@ class DecomposedConvTranspose2d(nn.ConvTranspose2d, DecomposedConv2d):
             self.S[..., 0, 0],
             self._decompose_transform(self.Vh, 'Vh4d')
         )
+
+DecomposableLayers = {
+    torch.nn.Linear: DecomposedLinear,
+    torch.nn.Embedding: DecomposedEmbedding,
+    torch.nn.Conv2d: DecomposedConv2d
+}
