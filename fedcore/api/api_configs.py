@@ -115,9 +115,12 @@ class ConfigTemplate:
         )
         
     def to_dict(self) -> dict:
-        return {
-            k: v for k,v in self.items()
-        }
+        ret = {}
+        for k, v in self.items():
+            if hasattr(v, 'to_dict'):
+                v = v.to_dict()
+            ret[k] = v
+        return ret
     
     @property
     def config(self):
@@ -226,6 +229,6 @@ class APIConfigTemplate(ExtendableConfigTemplate):
 @dataclass
 class LowRankTemplate(NeuralModelConfigTemplate):
     """Example of specific node template"""
-    custom_criterions: Dict[str, float] = {'hoer': 0.5, 'orthogonal': 0.2}, # {'norm_loss':{...},
+    custom_criterions: dict = None # {'norm_loss':{...},
     non_adaptive_threshold: float = .5
     finetune_params: NeuralModelConfigTemplate = None
