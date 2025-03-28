@@ -84,7 +84,7 @@ class BasePruner(BaseCompressionModel):
                 self._on_epoch_start.append(hook)
 
     def _init_model(self, input_data):
-        print("==============Prepare original model for pruning=================")
+        print('Prepare original model for pruning'.center(80, '='))
         self.model_before_pruning = input_data.target
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.ft_params)
@@ -97,17 +97,10 @@ class BasePruner(BaseCompressionModel):
             self.trainer.model = self.model_before_pruning
         self.model_before_pruning.to(default_device())
         self.model_after_pruning = deepcopy(self.model_before_pruning)
-
-        print(
-            f"==============Initialisation of {self.pruner_name} pruning agent================="
-        )
-        print(
-            f"==============Pruning importance - {self.importance_name}================="
-        )
-        print(f"==============Pruning ratio - {self.pruning_ratio}=================")
-        print(
-            f"==============Pruning importance norm -  {self.importance_norm} ================="
-        )
+        print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
+        print(f' Pruning importance - {self.importance_name} '.center(80, '='))
+        print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
+        print(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
         # Pruner initialization
         self.pruner = PRUNERS[self.pruner_name]
         self._check_before_prune(input_data)

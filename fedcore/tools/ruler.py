@@ -91,10 +91,9 @@ class PerformanceEvaluator:
     def throughput_eval(self, num_iterations=30):
         self.model.eval()
         thr_list = []
-        for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"
-                             ):
-            if isinstance(batch, tuple) or isinstance(batch, list):
-                features = batch[0]
+        for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
+            if isinstance(batch, (tuple, list)):
+                batch = batch[0]
             is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
             if is_already_cuda:
                 X = batch.cuda(non_blocking=True)

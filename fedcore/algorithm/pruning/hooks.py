@@ -1,5 +1,6 @@
 from enum import Enum
 
+from tqdm import tqdm
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import PRUNER_WITHOUT_REQUIREMENTS, PRUNER_REQUIRED_REG
@@ -99,15 +100,22 @@ class PrunerWithReg(ZeroShotPruner):
         pruner = pruner_metadata['pruner_cls']
         pruner.update_regularizer()
         # <== initialize regularizer
-        for i, (data, target) in enumerate(pruner_metadata['input_data'].features.val_dataloader):
-            if i != 0:
-                print(f"Pruning reg iter- {i}")
-                print(f"==========================================")
-                # we using 1 batch as example of pruning quality
-                self.optimizer_for_grad.zero_grad()
-                loss = self._accumulate_grads(data, target)  # after loss.backward()
-                pruner.regularize(self.model, loss)  # <== for sparse training
-                self.optimizer_for_grad.step()
+        with tqdm(total=len(pruner_metadata['input_data'].features.val_dataloader) - 1,
+                  desc='Pruning reg',
+                  ) as pbar:
+            for i, (data, target) in enumerate(pruner_metadata['input_data'].features.val_dataloader):
+                if i != 0:
+                    # we using 1 batch as example of pruning quality
+                    try:
+                        self.optimizer_for_grad.zero_grad()
+                        # pruner_metadata['optimizer_for_grad_acc'].zero_grad()
+                        loss = self._accumulate_grads(data, target)  # after loss.backward()
+                        pruner.regularize(self.model, loss)  # <== for sparse training
+                        self.optimizer_for_grad.step()
+                        # pruner_metadata['optimizer_for_grad_acc'].step()
+                    except Exception as er:
+                        print('Caught ex')
+                    pbar.update(1)
 
 
 class PruningHooks(Enum):

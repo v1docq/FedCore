@@ -27,6 +27,8 @@ from fedcore.repository.constanst_repository import (
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
+from fedcore.data.data import CompressionOutputData
+
 warnings.filterwarnings("ignore")
 
 
@@ -239,7 +241,14 @@ class FedCore(Fedot):
 
         """
 
-        model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
+        if isinstance(predicton, OutputData):
+            model_output = predicton.predict
+        elif isinstance(predicton, CompressionOutputData):
+            model_output = predicton.predict.predict
+        else:
+            model_output = predicton
+        model_output = model_output.cpu().detach().numpy()
+
         model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
         if model_output_is_probs and not self.manager.automl_config.problem.__contains__('forecasting'):
             labels = np.argmax(model_output, axis=1)
