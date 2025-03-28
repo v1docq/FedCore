@@ -26,6 +26,9 @@ from fedcore.repository.constanst_repository import (
 )
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
+from fedcore.api.api_configs import ConfigTemplate
+from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
+
 
 warnings.filterwarnings("ignore")
 
@@ -46,9 +49,11 @@ class FedCore(Fedot):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, api_config: ConfigTemplate, **kwargs):
         super(Fedot, self).__init__()
-        self.manager = ApiManager().build(kwargs)
+        # self.manager = ApiManager().build(kwargs)
+        api_config.update(kwargs)
+        self.manager = api_config
         self.logger = self.manager.logger
 
     def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
@@ -56,12 +61,12 @@ class FedCore(Fedot):
         self.logger.info('Initialising Fedcore Repository')
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
         self.repo = FedcoreModels().setup_repository()
-        optimisation_agent = self.manager.automl_config.optimizer['optimisation_agent']
-        optimisation_params = self.manager.automl_config.optimizer['optimisation_strategy']
-        fedcore_opt = partial(self.manager.optimisation_agent[optimisation_agent],
-                              optimisation_params=optimisation_params)
-        self.manager.automl_config.optimizer = fedcore_opt
-        self.manager.automl_config.config.update({'optimizer': fedcore_opt})
+        if not isinstance(self.manager.automl_config.optimizer, partial):
+            fedcore_opt = partial(FedcoreEvoOptimizer, optimisation_params={
+                                     'mutation_strategy': self.manager.automl_config.mutation_strategy,
+                                     'mutation_agent': self.manager.automl_config.mutation_agent})
+            self.manager.automl_config.optimizer = fedcore_opt
+            # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
@@ -86,16 +91,17 @@ class FedCore(Fedot):
 
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(**self.manager.automl_config.config,
+        self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](params=self.manager.learning_config.peft_strategy_params)
+        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]()
+        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params.to_dict()
         self.manager.solver = initial_assumption.build()
         return input_data
 
     def _process_input_data(self, input_data):
         data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
-                             model=self.manager.automl_config.config['initial_assumption'],
+                             model=self.manager.automl_config.fedot_config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
         train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
@@ -126,7 +132,7 @@ class FedCore(Fedot):
         """
 
         def fit_function(train_data):
-            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]
+            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]()
             model_learning_pipeline.heads[0].parameters = self.manager.learning_config.config[
                 'learning_strategy_params']
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'].__contains__(
@@ -137,13 +143,13 @@ class FedCore(Fedot):
                 then(self.manager.solver.fit).maybe(None, lambda solver: solver)
             return fitted_solver
 
-        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
-            self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
-                then(self.__init_fedcore_backend). \
-                then(self.__init_dask). \
-                then(self.__init_solver). \
-                then(fit_function). \
-                maybe(None, lambda solver: solver)
+        #with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
+        self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
+            then(self.__init_fedcore_backend). \
+            then(self.__init_dask). \
+            then(self.__init_solver). \
+            then(fit_function). \
+            maybe(None, lambda solver: solver)
         return self.fedcore_model
 
     def fit_no_evo(self, input_data: tuple, manually_done=False, **kwargs):
@@ -164,7 +170,7 @@ class FedCore(Fedot):
         self.optimised_model = fitted_solver.target
         return fitted_solver
 
-    def predict(self, predict_data: tuple, **kwargs):
+    def predict(self, predict_data: tuple, output_mode:str = 'fedcore', **kwargs):
         """
         Method to obtain prediction labels from trained Industrial model.
 
@@ -175,12 +181,11 @@ class FedCore(Fedot):
             the array with prediction values
 
         """
-        self.manager.predicted_labels = (Maybe
-            .insert(self._process_input_data(predict_data))
-            .then(self.__init_fedcore_backend)
-            .then(self.__abstract_predict)
-            .maybe(None, lambda labels: labels)
-        )
+        self.manager.predicted_labels = Maybe.insert(self._process_input_data(predict_data)). \
+                                         then(self.__init_fedcore_backend). \
+                                         then(lambda data: self.__abstract_predict(data,output_mode)). \
+                                         maybe(None, lambda output: output)
+
         return self.manager.predicted_labels
 
     def finetune(self, train_data, tuning_params=None):
@@ -199,7 +204,7 @@ class FedCore(Fedot):
             return data_dict
 
         is_fedot_datatype = self.manager.condition_check.input_data_is_fedot_type(train_data)
-        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.manager.automl_config.config['task']]
+        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.manager.automl_config.fedot_config['task']]
         tuning_params['tuner'] = FEDOT_TUNER_STRATEGY[tuning_params.get('tuner', 'sequential')]
 
         with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
@@ -214,7 +219,6 @@ class FedCore(Fedot):
 
         self.manager.is_finetuned = True
         self.manager.solver = model_to_tune
-
 
     def evaluate_metric(
             self,
@@ -239,21 +243,51 @@ class FedCore(Fedot):
             pandas DataFrame with calculated metrics
 
         """
-        from sklearn.preprocessing import OneHotEncoder
 
         model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
         model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
-        if model_output_is_probs:
+        if model_output_is_probs and not self.manager.automl_config.fedot_config.problem.__contains__('forecasting'):
             labels = np.argmax(model_output, axis=1)
+            predicted_probs = model_output
+        else:
+            labels = model_output
             predicted_probs = model_output
 
         inference_metric = problem.__contains__("computational")
         if inference_metric:
-            prediction_dict = dict(target=self.fedcore_model, labels=target, probs=predicted_probs)
+            if problem.__contains__('fedcore'):
+                model_regime = 'model_after'
+            else:
+                model_regime = 'model_before'
+            prediction_dict = dict(model=self.fedcore_model, dataset=target, model_regime=model_regime)
         else:
             prediction_dict = dict(target=target, labels=labels, probs=predicted_probs)
         prediction_dataframe = FEDOT_GET_METRICS[problem](**prediction_dict)
         return prediction_dataframe
+
+    def get_report(self, test_data: InputData):
+        def create_df(iterator):
+            df_list = []
+            for metric_dict, col in iterator:
+                df = pd.DataFrame.from_dict(metric_dict)
+                df.columns = [f'{col}_{x}' for x in df.columns]
+                df_list.append(df)
+            return pd.concat(df_list, axis=1)
+
+        eval_regime = ['original', 'fedcore']
+        prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
+        quality_metrics_list = [self.evaluate_metric(predicton=prediction.predict,
+                                                     target=test_data.target,
+                                                     problem=self.manager.automl_config.fedot_config.problem)
+                                for prediction in prediction_list]
+        computational_metrics_list = [self.evaluate_metric(predicton=prediction,
+                                                           target=test_data.val_dataloader,
+                                                           problem=f'computational_{regime}')
+                                      for prediction, regime in zip(prediction_list, eval_regime)]
+
+        quality_df = create_df(zip(quality_metrics_list, eval_regime))
+        compute_df = create_df(zip(computational_metrics_list, eval_regime))
+        return dict(quality_comparasion=quality_df, computational_comparasion=compute_df)
 
     def load(self, path):
         """Loads saved Industrial model from disk
@@ -319,7 +353,7 @@ class FedCore(Fedot):
             )
         else:
             if framework == "ONNX":
-                example_input = next(iter(self.train_data.features.calib_dataloader))[
+                example_input = next(iter(self.train_data.features.val_dataloader))[
                     0
                 ][0]
                 self.framework_config["example_inputs"] = torch.unsqueeze(
