@@ -15,7 +15,8 @@ def load_data(source: Union[str, Callable] = None, loader_params: dict = None):
     source_is_loader = isinstance(source, Callable)
     data_loader = ApiLoader(load_source=source, loader_params=loader_params)
     if source_is_dir:
-        loader_type = "benchmark" if source in DEFAULT_TORCH_DATASET.keys() else "directory"
+        dataset_type = str.lower(data_loader.loader_params['dataset_type'])
+        loader_type = "benchmark" if source in DEFAULT_TORCH_DATASET.keys() else dataset_type
     else:
         loader_type = "torchvision"
 

@@ -2,9 +2,10 @@
 
 import json
 import os
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Tuple, Literal, List, Optional, Any, Tuple, Union
 
 import numpy as np
+import random
 import torch
 import yaml
 from PIL import Image
@@ -14,6 +15,7 @@ from tqdm import tqdm
 import opendatasets as od
 from opendatasets.utils.archive import extract_archive
 
+from fedcore.architecture.utils.loader import image_transform, get_loader
 from fedcore.architecture.utils.paths import (
     data_path,
     yolo_data_path,
@@ -21,7 +23,7 @@ from fedcore.architecture.utils.paths import (
     YOLO_DATA_URL,
     YOLO_YAML_URL,
 )
-from fedcore.architecture.utils.loader import transform
+
 
 IMG_EXTENSIONS = (
     ".jpg",
@@ -34,6 +36,15 @@ IMG_EXTENSIONS = (
     ".tiff",
     ".webp",
 )
+
+
+def img2label_paths(img_path):
+    """Define label path as a function of image path."""
+    sa, sb = (
+        f"{os.sep}images{os.sep}",
+        f"{os.sep}labels{os.sep}",
+    )  # /images/, /labels/ substrings
+    return sb.join(img_path.rsplit(sa, 1)).rsplit(".", 1)[0] + ".txt"
 
 
 class COCODataset(Dataset):
@@ -131,24 +142,17 @@ class COCODataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
-
-
-def img2label_paths(img_path):
-    """Define label path as a function of image path."""
-    sa, sb = (
-        f"{os.sep}images{os.sep}",
-        f"{os.sep}labels{os.sep}",
-    )  # /images/, /labels/ substrings
-    return sb.join(img_path.rsplit(sa, 1)).rsplit(".", 1)[0] + ".txt"
-
+    
+    def get_dataloader(self, batch_size: int = 1):
+        return get_loader(self, batch_size, self.train)
 
 class YOLODataset(Dataset):
     """Class-loader for YOLO format (https://docs.ultralytics.com/datasets/detect/).
 
     Args:
         path: YAML file path.
-        transform: A function/transform that takes in an PIL image and returns a
-            transformed version.
+        custom_transform: A function/transform function that takes in an tensor image, bounding boxes with labels 
+            and returns a transformed version of them.
         train: If True, creates dataset from training set, otherwise creates from test set.
         replace_to_binary: If ``True`` set label 1 for any class.
 
@@ -158,7 +162,8 @@ class YOLODataset(Dataset):
         self,
         path: str = None,
         dataset_name: str = None,
-        transform: Callable = transform(),
+        transform: Callable = None,
+        target_transform: Callable = None,
         train: bool = True,
         replace_to_binary: bool = False,
         download: bool = False,
@@ -181,12 +186,18 @@ class YOLODataset(Dataset):
 
             path = yolo_yaml_path(dataset_name)
 
-        self.transform = transform
+        if transform:
+            self.transform = transform
+        else:
+            self.transform = image_transform()
+            
+        self.target_transform = target_transform
+        self.train = train
         with open(path, "r") as f:
             data = yaml.safe_load(f)
         self.root = os.path.abspath(
             os.path.join(
-                os.path.dirname(path), (data["train"] if train else data["test"])
+                os.path.dirname(path), (data["train"] if train else data["val"])
             )
         )
         self.classes = {0: "background"}
@@ -227,13 +238,14 @@ class YOLODataset(Dataset):
         labels = np.ones_like(labels) if self.binary else labels
         boxes = annotation[:, 1:]
         if len(boxes) != 0:
+            if self.target_transform is not None:
+                image, boxes, labels = self.target_transform(image, boxes, labels)
             c, h, w = image.shape
             boxes *= [w, h, w, h]
             area = boxes[:, 2] * boxes[:, 3]
             # x centre, y centre, w, h -> x1, y1, w, h
             boxes[:, :2] -= boxes[:, 2:] / 2
             boxes[:, 2:] += boxes[:, :2]  # x1, y1, w, h -> x1, y1, x2, y2
-
             targets = {
                 "labels": torch.tensor(labels, dtype=torch.int64),
                 "boxes": torch.tensor(boxes, dtype=torch.float32),
@@ -242,6 +254,8 @@ class YOLODataset(Dataset):
                 "iscrowd": torch.zeros(annotation.shape[0], dtype=torch.int64),
             }
         else:
+            if self.target_transform is not None:
+                image, boxes, labels = self.target_transform(image, boxes, labels)
             targets = {
                 "labels": torch.zeros(0, dtype=torch.int64),
                 "boxes": torch.zeros((0, 4), dtype=torch.float32),
@@ -255,6 +269,9 @@ class YOLODataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
+    
+    def get_dataloader(self, batch_size: int = 1):
+        return get_loader(self, batch_size, self.train)
 
 
 class UnlabeledDataset(Dataset):
@@ -266,8 +283,9 @@ class UnlabeledDataset(Dataset):
             transformed version.
     """
 
-    def __init__(self, images_path: str, transform: Callable = transform()) -> None:
+    def __init__(self, images_path: str, transform: Callable = None) -> None:
         self.transform = transform
+        self.image_transform = image_transform()
         self.images_path = images_path
 
         self.samples = []
@@ -291,7 +309,9 @@ class UnlabeledDataset(Dataset):
         """
         sample = self.samples[idx]
         image = Image.open(sample["image"])
-        image = self.transform(image)
+        image = self.image_transform(image)
+        if self.transform is not None:
+            image = self.transform(image)
         targets = {
             "name": sample["name"],
             "labels": torch.zeros(0, dtype=torch.int64),
@@ -305,3 +325,6 @@ class UnlabeledDataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
+        
+    def get_dataloader(self, batch_size: int = 1):
+        return get_loader(self, batch_size)
