@@ -92,13 +92,16 @@ class DataCheck:
             torch_model = self._check_optimised_model(torch_model, input_data)
             if model_is_pretrain_backbone_with_weights:
                 if hasattr(torch_model, 'load_model'):
-                    torch_model.load_model(self.model['path_to_model'])
+                    torch_model.load_model(input_data, self.model['path_to_model'])
                 else:
                     torch_model.load_state_dict(
-                        torch.load(
-                            self.model['path_to_model'],
-                            weights_only=True,
-                            map_location=default_device()
+                        self._check_state_dict(
+                            torch.load(
+                                self.model['path_to_model'],
+                                weights_only=True,
+                                map_location=default_device()
+                                ),
+                            input_data
                             )
                         )
         elif model_is_custom_callable_object:
@@ -135,6 +138,19 @@ class DataCheck:
                 output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
                 output_layer.out_features = n_classes
         return model
+    
+    def _check_state_dict(self, state_dict: dict, input_data: InputData):
+        if not input_data.task.task_type.value == 'classification':
+            return state_dict
+        else:
+            layers = list(state_dict.keys())
+            output_layer_weight = layers[-2]
+            output_layer_bias = layers[-1]
+            n_classes = input_data.features.num_classes
+            if state_dict[output_layer_weight].shape[0] != n_classes:
+                state_dict[output_layer_weight] = torch.nn.Parameter(state_dict[output_layer_weight][:n_classes, :])
+                state_dict[output_layer_bias] = torch.nn.Parameter(state_dict[output_layer_bias][:n_classes])
+        return state_dict
 
     def check_input_data(self, input_data: [InputData, CompressionInputData] = None) -> InputData:
         """Checks and preprocesses the input data for Fedot AutoML.
