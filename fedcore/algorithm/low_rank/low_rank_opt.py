@@ -15,8 +15,8 @@ from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     DECOMPOSE_MODE,
     COMPOSE_MODE,
-    HOER_LOSS,
-    ORTOGONAL_LOSS
+    # HOER_LOSS,
+    # ORTOGONAL_LOSS
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 
@@ -46,16 +46,16 @@ class LowRankModel(BaseCompressionModel):
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
-        self.hoer_loss = HoyerLoss(params.get("hoyer_loss", HOER_LOSS))
-        self.orthogonal_loss = OrthogonalLoss(
-            params.get("orthogonal_loss", ORTOGONAL_LOSS)
-        )
+        # self.hoer_loss = HoyerLoss(params.get("hoyer_loss", HOER_LOSS))
+        # self.orthogonal_loss = OrthogonalLoss(
+        #     params.get("orthogonal_loss", ORTOGONAL_LOSS)
+        # )
         self.strategy = params.get("spectrum_pruning_strategy", "quantile")
         self.learning_rate = params.get("learning_rate", 0.001)
         self.finetuning = False
         self.device = default_device()
         self.trainer = BaseNeuralModel(params)
-        self.trainer.custom_loss = self.__loss()
+        # self.trainer.custom_loss = self.__loss()
 
     def _init_model(self, input_data):
         self.model = (
@@ -125,7 +125,7 @@ class LowRankModel(BaseCompressionModel):
 
         print("==============Finetune truncated model=================")
         self.trainer.model = self.optimised_model
-        self.trainer.custom_loss = self.ft_params["custom_loss"]
+        # self.trainer.custom_loss = self.ft_params["custom_loss"]
         self.trainer.epochs = self.ft_params["epochs"]
         self.optimised_model = self.trainer.fit(input_data, loader_type='train')
 

@@ -26,8 +26,9 @@ from fedcore.repository.constanst_repository import (
 )
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
+from fedcore.api.api_configs import ConfigTemplate
+from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 
-from fedcore.data.data import CompressionOutputData
 
 warnings.filterwarnings("ignore")
 
@@ -48,9 +49,11 @@ class FedCore(Fedot):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, api_config: ConfigTemplate, **kwargs):
         super(Fedot, self).__init__()
-        self.manager = ApiManager().build(kwargs)
+        # self.manager = ApiManager().build(kwargs)
+        api_config.update(kwargs)
+        self.manager = api_config
         self.logger = self.manager.logger
 
     def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
@@ -58,13 +61,12 @@ class FedCore(Fedot):
         self.logger.info('Initialising Fedcore Repository')
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
         self.repo = FedcoreModels().setup_repository()
-        if not isinstance(self.manager.automl_config.config['optimizer'], partial):
-            optimisation_agent = self.manager.automl_config.optimizer['optimisation_agent']
-            optimisation_params = self.manager.automl_config.optimizer['optimisation_strategy']
-            fedcore_opt = partial(self.manager.optimisation_agent[optimisation_agent],
-                                  optimisation_params=optimisation_params)
+        if not isinstance(self.manager.automl_config.optimizer, partial):
+            fedcore_opt = partial(FedcoreEvoOptimizer, optimisation_params={
+                                     'mutation_strategy': self.manager.automl_config.mutation_strategy,
+                                     'mutation_agent': self.manager.automl_config.mutation_agent})
             self.manager.automl_config.optimizer = fedcore_opt
-            self.manager.automl_config.config.update({'optimizer': fedcore_opt})
+            # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
@@ -89,16 +91,17 @@ class FedCore(Fedot):
 
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(**self.manager.automl_config.config,
+        self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](params=self.manager.learning_config.peft_strategy_params)
+        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]()
+        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params.to_dict()
         self.manager.solver = initial_assumption.build()
         return input_data
 
     def _process_input_data(self, input_data):
         data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
-                             model=self.manager.automl_config.config['initial_assumption'],
+                             model=self.manager.automl_config.fedot_config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
         train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
@@ -129,7 +132,7 @@ class FedCore(Fedot):
         """
 
         def fit_function(train_data):
-            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]
+            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]()
             model_learning_pipeline.heads[0].parameters = self.manager.learning_config.config[
                 'learning_strategy_params']
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'].__contains__(
@@ -201,7 +204,7 @@ class FedCore(Fedot):
             return data_dict
 
         is_fedot_datatype = self.manager.condition_check.input_data_is_fedot_type(train_data)
-        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.manager.automl_config.config['task']]
+        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.manager.automl_config.fedot_config['task']]
         tuning_params['tuner'] = FEDOT_TUNER_STRATEGY[tuning_params.get('tuner', 'sequential')]
 
         with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
@@ -241,16 +244,9 @@ class FedCore(Fedot):
 
         """
 
-        if isinstance(predicton, OutputData):
-            model_output = predicton.predict
-        elif isinstance(predicton, CompressionOutputData):
-            model_output = predicton.predict.predict
-        else:
-            model_output = predicton
-        model_output = model_output.cpu().detach().numpy()
-
+        model_output = predicton.cpu().detach().numpy() if isinstance(predicton, Tensor) else predicton
         model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
-        if model_output_is_probs and not self.manager.automl_config.problem.__contains__('forecasting'):
+        if model_output_is_probs and not self.manager.automl_config.fedot_config.problem.__contains__('forecasting'):
             labels = np.argmax(model_output, axis=1)
             predicted_probs = model_output
         else:
@@ -282,7 +278,7 @@ class FedCore(Fedot):
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
         quality_metrics_list = [self.evaluate_metric(predicton=prediction.predict,
                                                      target=test_data.target,
-                                                     problem=self.manager.automl_config.problem)
+                                                     problem=self.manager.automl_config.fedot_config.problem)
                                 for prediction in prediction_list]
         computational_metrics_list = [self.evaluate_metric(predicton=prediction,
                                                            target=test_data.val_dataloader,

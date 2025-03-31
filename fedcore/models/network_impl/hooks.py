@@ -15,22 +15,12 @@ from tqdm import tqdm
 
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.settings.computational import default_device
 from fedcore.models.network_modules.layers.special import EarlyStopping
 
 VERBOSE = True
 
 
-class Optimizers(Enum):
-    ADAM = torch.optim.Adam
-    ADAMW = torch.optim.AdamW
-    RMSPROP = torch.optim.RMSprop
-    SGD = torch.optim.SGD
-    ADADELTA = torch.optim.Adadelta
-
-
-class Schedulers(Enum):
-    ONE_CYCLE = torch.optim.lr_scheduler.OneCycleLR
 
 
 def now_for_file():
@@ -65,6 +55,9 @@ class BaseHook(ABC):
 
     @classmethod
     def check_init(cls, d: dict):
+        from fedot.core.operations.operation_parameters import OperationParameters
+        if isinstance(d, OperationParameters):
+            d = d.to_dict()
         summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
         return any(d[summon] is not None for summon in summons if summon in d.keys())
 
@@ -128,14 +121,35 @@ class FitReport(BaseHook):
         return epoch % self.log_interval == 0
 
     def action(self, epoch, kws):
-        avg_loss = kws.get('train_loss', None)
-        custom_loss = kws.get('custom_loss', None)
+        history = kws['history']
+        (tr_e, train_loss) = history['train_loss'][-1]
+        val_losses = history['val_loss']
+        
+        (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
+        # if val_loss:
+        #     val_loss = torch.round(val_loss, decimals=4)
+        # if train_loss:
+        #     train_loss = torch.round(train_loss, decimals=4)
+
         # TODO Any number of custom losses
-        if custom_loss is not None:
-            print("Epoch: {}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}".
-                  format(epoch, avg_loss, *custom_loss))
-        else:
-            print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
+        print(f'Train # epoch: {tr_e}, value: {train_loss}')
+        if va_e:
+            print(f'Valid # epoch: {va_e}, value: {val_loss}')
+        if len(history) <= 2:
+            return
+        print('Including:')
+        for name, hist in history.items():
+            if name in ('train_loss', 'val_loss'):
+                continue
+            if hist:
+                epoch, val = hist[-1]
+                print(f'\tCriterion `{name}`: {val}')
+            
+        # if custom_loss is not None:
+        #     print(f"Epoch: {epoch}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}".
+        #           format(epoch, avg_loss, *custom_loss))
+        # else:
+        #     print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
 
 
 # class Scheduler(BaseHook):
@@ -174,37 +188,31 @@ class FitReport(BaseHook):
 class Evaluator(BaseHook):
     _SUMMON_KEY = 'eval_each'
 
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.eval_each = params.get('eval_each', 1)
+        self.device = next(iter(self.model.parameters())).device
+
     def trigger(self, epoch, kws):
-        return epoch % self.eval_each == 0 and self.val_loader is not None
+        return epoch % self.eval_each == 0 and kws['val_loader'] is not None
 
     @torch.no_grad()
     def action(self, epoch, kws):
         self.model.eval()
-        metrics = kws.get('metrics', {})
-        custom_loss = kws.get('custom_loss', None)
+        criterion = kws['criterion']
+        val_dataloader = kws['val_loader']
         loss_sum = 0
-        total_iterations = 0
         val_dataloader = DataLoaderHandler.check_convert(dataloader=val_dataloader,
-                                                         mode=self.batch_type,
-                                                         max_batches=self.calib_batch_limit,
                                                          enumerate=False)
 
         for batch in tqdm(val_dataloader, desc='Batch #'):
-            total_iterations += 1
-            inputs, targets = batch
-            output = self.model(inputs.to(self.device))
-            if custom_loss:
-                model_loss = {key: val(self.model) for key, val in custom_loss.items()}
-                model_loss["metric_loss"] = self.loss_fn(
-                    output, targets.to(self.device)
-                )
-                quality_loss = reduce(iadd, [loss for loss in model_loss.values()])
-                loss_sum += model_loss["metric_loss"].item()
-            else:
-                quality_loss = self.loss_fn(output, targets.to(self.device))
-                loss_sum += quality_loss.item()
-                model_loss = quality_loss
-        avg_loss = loss_sum / total_iterations
+            *inputs, targets = batch
+            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            output = self.model(*inputs)
+            loss_sum += criterion(model_output=output,
+                                      target=targets.to(self.device),
+                                        epoch=epoch, stage='val')
+        avg_loss = loss_sum / len(val_dataloader)
         history = kws['history']['val_loss']
         history.append((epoch, avg_loss))
 
@@ -216,7 +224,7 @@ class OptimizerGen(BaseHook):
     def __init__(self, params, model):
         super().__init__(params, model)
         self.__gen = self.__get_optimizer_gen(
-            self.params.get('optimizer', 'ADAM')
+            self.params.get('optimizer', 'adam')
         )
 
     @classmethod
@@ -251,7 +259,7 @@ class SchedulerRenewal(BaseHook):
     def __init__(self, params, model):
         super().__init__(params, model)
         self.__gen = self.__get_scheduler_gen(
-            self.params.get('sch_type', 'ONE_CYCLE')
+            self.params.get('sch_type', 'one_cycle')
         )
         self._mode = []
 
@@ -259,25 +267,55 @@ class SchedulerRenewal(BaseHook):
         if isinstance(sch_type, partial):
             return partial(sch_type, **kws)
         if isinstance(sch_type, str):
-            sch_constructor = Schedulers[sch_type].value
+            sch_constructor, remapping = Schedulers[sch_type].value
         elif isclass(sch_type):
             sch_constructor = sch_type
         else:
             raise TypeError('Unknown type for scheduler is passed! Required: constructor, partial, or str')
+        # kws = {remapping[k]: v for k, v in self.params.to_dict().items() if k in remapping}
+        # print(kws)
         scheduler_gen = partial(sch_constructor, **kws)
         return scheduler_gen
-
+    
+    def __renew(self, kws):
+        return self.__gen(kws['trainer_objects']['optimizer'], 
+                                                             self.params.get('learning_rate',1e-3), 
+                                                             self.params.get('epochs', 1))
     def trigger(self, epoch, kws):
-        opt_changed = kws['trainer_params']['scheduler'].optimizer is kws['trainer_params']['optimizer']
+        if kws['trainer_objects']['scheduler'] is None:
+            kws['trainer_objects']['scheduler'] = self.__renew(kws)
+        opt_changed = kws['trainer_objects']['scheduler'].optimizer is kws['trainer_objects']['optimizer']
         if epoch == 1 or opt_changed:
             self._mode.append('renew')
-        if epoch % self.params.get(['scheduler_step_each'], 1) == 0:
+        if epoch % self.params.get('scheduler_step_each', 1) == 0:
             self._mode.append('step')
         return bool(self._mode)
 
     def action(self, epoch, kws):
         if 'renew' in self._mode:
-            kws['trainer_params']['scheduler'] = self.__gen(kws['trainer_params']['optimizer'])
+            kws['trainer_objects']['scheduler'] = self.__renew(kws)
         if 'step' in self._mode:
-            kws['trainer_params']['scheduler'].step()
+            kws['trainer_objects']['scheduler'].step()
         self._mode.clear()
+
+
+class LoggingHooks(Enum):
+    evaluator = Evaluator
+    fit_report = FitReport
+    saver = Saver
+
+class ModelLearningHooks(Enum):
+    optimizer_gen = OptimizerGen
+    scheduler_renewal = SchedulerRenewal
+
+class Optimizers(Enum):
+    adam = torch.optim.Adam
+    adamw = torch.optim.AdamW
+    rmsprop = torch.optim.RMSprop
+    sgd = torch.optim.SGD
+    adadelta = torch.optim.Adadelta
+
+class Schedulers(Enum):
+    one_cycle = (torch.optim.lr_scheduler.OneCycleLR,
+                  {'learning_rate': 'max_lr', 'epochs': 'total_steps'})
+    

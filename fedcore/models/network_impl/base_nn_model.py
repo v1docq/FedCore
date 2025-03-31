@@ -55,23 +55,31 @@ class BaseNeuralModel(torch.nn.Module):
     def __init__(self, params: Optional[OperationParameters] = None):
         super().__init__()
         self.params = params or {}
-        self.epochs = self.params.get("epochs", 1)
-        self.batch_size = self.params.get("batch_size", 16)
-        self.learning_rate = self.params.get("learning_rate", 0.001)
-        self.custom_criterions = self.params.get("custom_criterions",
-                                                 {})  # let it be dict[name : coef], let nodes add it to trainer
-        self.criterion = self.__get_criterion()
-        self.device = self.params.get('device', default_device())
-        self.model_params = self.params.get('model_params', {})
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_empty_object()
         self._init_null_object()
+        self.epochs = self.params.get("epochs", 1)
+        self.batch_size = self.params.get("batch_size", 16)
+        self.learning_rate = self.params.get("learning_rate", 0.001)
+        self._init_custom_criterions(self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer
+        self.criterion = self.__get_criterion()
+        self.device = self.params.get('device', default_device())
+        self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
+        
 
-    def _init_criterions(self):
-        for name, coef in self.custom_criterions.items():
-            criterion = StructureCriterions[name].value
-            self.custom_criterions[name] = (criterion(), coef)
+    def _init_custom_criterions(self, custom_criterions: dict):
+        for name, coef in custom_criterions.items():
+            if hasattr(StructureCriterions, name):
+                criterion = StructureCriterions[name].value
+            elif hasattr(TorchLossesConstant, name):
+                criterion = TorchLossesConstant[name].value
+            else:
+                raise ValueError(f'Unknown type `{name}` of custom loss')
+            self.history[f'train_{name}_loss'] = []
+            self.history[f'val_{name}_loss'] = []
+            custom_criterions[name] = (criterion(), coef)
+        self.custom_criterions = custom_criterions
 
     def _init_null_object(self):
         self.label_encoder = None
@@ -97,6 +105,25 @@ class BaseNeuralModel(torch.nn.Module):
         self._on_epoch_end = []
         self._on_epoch_start = []
 
+    def __repr__(self):
+        return self.__class__.__name__ +'\nStart hooks:\n' + '\n'.join(
+            str(hook) for hook in self._on_epoch_start
+        ) + '\nEnd hooks:\n' + '\n'.join(
+            str(hook) for hook in self._on_epoch_end
+        )
+    
+    def clear_hooks(self):
+        self._hooks.clear()
+        self._on_epoch_end.clear()
+        self._on_epoch_start.clear()
+    
+    @classmethod
+    def wrap(cls, model, params: Optional[OperationParameters] = None):
+        bnn = cls(params)
+        bnn.clear_hooks()
+        bnn.model = model 
+        return bnn
+
     def _init_model(self):
         pass
 
@@ -115,22 +142,21 @@ class BaseNeuralModel(torch.nn.Module):
         self._hooks.extend(hooks)
 
     def __get_criterion(self):
-        key = self.params.get('loss', None) or self.params.get('criterion', None)
+        key = self.params.get('loss', None) or self.params.get('criterion', 'no_loss')
         if hasattr(TorchLossesConstant, key):
             return TorchLossesConstant[key].value()
         if hasattr(key, '__call__'):
             return key
+        return lambda *args, **kwargs: torch.zeros((1,))
         raise ValueError('No loss specified!')
 
     def save_model(self, path: str):
         torch.save(self.model.state_dict(), path)
 
-    def load_model(self, input_data: InputData, path: str):
+    def load_model(self, path: str):
         if self.model is None:
-            self._init_model(input_data)
-        self.model.load_state_dict(torch.load(path, 
-                                              weights_only=True, 
-                                              map_location=default_device()))
+            self._init_model()
+        self.model.load_state_dict(torch.load(path, weights_only=True))
         self.model.eval()
 
         # add hooks
@@ -157,19 +183,22 @@ class BaseNeuralModel(torch.nn.Module):
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
 
-    def _compute_loss(self, criterion, model_output, target):
+    def _compute_loss(self, criterion, model_output, target, stage='train', epoch=None):
         if hasattr(model_output, 'loss'):
             quality_loss = model_output.loss
         else:
             quality_loss = criterion(model_output, target)
         if isinstance(model_output, torch.Tensor):
-            additional_losses = [coef * criterion(model_output, target)
+            additional_losses = {name: coef * criterion(model_output, target)
                                  for name, (criterion, coef) in self.custom_criterions.items()
-                                 if name in TorchLossesConstant]
-            additional_losses.extend([coef * criterion(self.model)
+                                 if hasattr(TorchLossesConstant, name)}
+            additional_losses.update({name: coef * criterion(self.model)
                                       for name, (criterion, coef) in self.custom_criterions.items()
-                                      if name in StructureCriterions])
-        return reduce(torch.add, additional_losses, quality_loss)
+                                      if hasattr(StructureCriterions, name)})
+            for name, val in additional_losses.items():
+                self.history[f'{stage}_{name}_loss'].append((epoch, val))
+            
+        return reduce(torch.add, additional_losses.values(), quality_loss)
 
     def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
@@ -198,7 +227,7 @@ class BaseNeuralModel(torch.nn.Module):
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
             output = self.model(*inputs)
             loss = self._compute_loss(loss_fn, output,
-                                      targets.to(self.device))
+                                      targets.to(self.device), epoch=epoch)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -213,13 +242,17 @@ class BaseNeuralModel(torch.nn.Module):
                                                        enumerate=False)
         for epoch in range(1, self.epochs + 1):
             for hook in self._on_epoch_start:
-                hook(epoch=epoch, trainer_objects=self.trainer_objects)
+                hook(epoch=epoch, trainer_objects=self.trainer_objects,
+                     learning_rate=self.learning_rate)
             self._run_one_epoch(epoch=epoch,
                                 dataloader=train_loader,
                                 loss_fn=loss_fn,
                                 optimizer=self.optimizer)
+            from functools import partial
             for hook in self._on_epoch_end:
-                hook(epoch=epoch, val_loader=val_loader, custom_loss=self.custom_loss, history=self.history)
+                hook(epoch=epoch, val_loader=val_loader, 
+                     criterion=partial(self._compute_loss, criterion=loss_fn), 
+                     history=self.history)
         return self
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
@@ -227,7 +260,7 @@ class BaseNeuralModel(torch.nn.Module):
         Method for feature generation for all series
         """
         self.__substitute_device_quant()
-        return self._predict_model(input_data.features, output_mode)
+        return self._predict_model(input_data, output_mode)
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "default"):
         """
@@ -239,8 +272,6 @@ class BaseNeuralModel(torch.nn.Module):
     def _predict_model(
             self, x_test: CompressionInputData, output_mode: str = "default"
     ):
-        assert type(x_test) is CompressionInputData
-        # print('### IS_QUANTIZED', getattr(self.model, '_is_quantized', False))
         model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
@@ -248,10 +279,9 @@ class BaseNeuralModel(torch.nn.Module):
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
         for batch in tqdm(dataloader):  ###TODO why val_dataloader???
-            inputs, targets = batch
-            inputs = inputs.to(self.device)
-            prediction.append(model(inputs))
-        # print('### PREDICTION', prediction)
+            *inputs, targets = batch
+            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            prediction.append(model(*inputs))
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
@@ -287,6 +317,11 @@ class BaseNeuralModel(torch.nn.Module):
         with torch.no_grad():
             torch.cuda.empty_cache()
 
+    def __wrap(self, model):
+        if not isinstance(model, BaseNeuralModel):
+            return BaseNeuralModel.wrap(model, self.params)
+        return model
+
     @staticmethod
     def get_validation_frequency(epoch, lr):
         if epoch < 10:
@@ -311,6 +346,22 @@ class BaseNeuralModel(torch.nn.Module):
 
 class BaseNeuralForecaster(BaseNeuralModel):
     """Class responsible for NN model implementation.
+
+    Attributes:
+        self.num_features: int, the number of features.
+
+    Example:
+        To use this operation you can create pipeline as follows::
+            from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+            from fedot_ind.tools.loader import DataLoader
+            from fedot_ind.core.repository.initializer_industrial_models import IndustrialModels
+
+            train_data, test_data = DataLoader(dataset_name='Ham').load_data()
+            with IndustrialModels():
+                pipeline = PipelineBuilder().add_node('resnet_model').add_node('rf').build()
+                pipeline.fit(input_data)
+                features = pipeline.predict(input_data)
+                print(features)
     """
 
     def __init__(self, params: Optional[OperationParameters] = None):
