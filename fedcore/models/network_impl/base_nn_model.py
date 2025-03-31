@@ -125,10 +125,12 @@ class BaseNeuralModel(torch.nn.Module):
     def save_model(self, path: str):
         torch.save(self.model.state_dict(), path)
 
-    def load_model(self, path: str):
+    def load_model(self, input_data: InputData, path: str):
         if self.model is None:
-            self._init_model()
-        self.model.load_state_dict(torch.load(path, weights_only=True))
+            self._init_model(input_data)
+        self.model.load_state_dict(torch.load(path, 
+                                              weights_only=True, 
+                                              map_location=default_device()))
         self.model.eval()
 
         # add hooks

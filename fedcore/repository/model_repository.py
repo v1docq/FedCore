@@ -11,6 +11,7 @@ from fedcore.algorithm.quantization.quant_post_training import QuantPostModel, Q
 # from fedcore.models.backbone.chronos import chronos_small
 from fedcore.models.backbone.mobilenet import MobileNetV3Small, MobileNetV3Large
 from fedcore.models.backbone.resnet import *
+from fedcore.models.backbone.custom import CustomModel
 from torchvision.models.efficientnet import (
     efficientnet_b0,
     efficientnet_b1,
@@ -92,6 +93,8 @@ class AtomizedModel(Enum):
     }
 
     DETECTION_MODELS = {"detection_model": fasterrcnn_mobilenet_v3_large_fpn}
+    
+    CUSTOM_MODEL = {"custom": CustomModel}
 
 
 PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
@@ -107,6 +110,7 @@ MOBILENET_MODELS = AtomizedModel.MOBILENET_MODELS.value
 # CHRONOS_MODELS = AtomizedModel.CHRONOS_MODELS.value
 SEGFORMER_MODELS = AtomizedModel.SEGFORMER_MODELS.value
 TRANSFORMER_MODELS = AtomizedModel.TRANSFORMER_MODELS.value
+CUSTOM_MODEL = AtomizedModel.CUSTOM_MODEL.value
 
 BACKBONE_MODELS = {
     **MOBILENET_MODELS,
@@ -115,7 +119,8 @@ BACKBONE_MODELS = {
     **RESNET_MODELS,
     #    **CHRONOS_MODELS,
     **SEGFORMER_MODELS,
-    **TRANSFORMER_MODELS
+    **TRANSFORMER_MODELS,
+    **CUSTOM_MODEL
 }
 DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
