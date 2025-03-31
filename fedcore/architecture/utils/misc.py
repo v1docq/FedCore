@@ -1,7 +1,9 @@
+from enum import Enum 
+from functools import wraps
+
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch import Tensor
 from torch.nn import Module
-from functools import wraps
 
 
 def filter_kw(f):
@@ -43,3 +45,21 @@ def count_params(m: Module):
     for p in m.parameters():
         c += p.numel()
     return c
+
+
+class EnumNoValue:
+    def __init__(self, base: Enum):
+        assert issubclass(base, Enum), 'Only Enums are supported'
+        self.base = base
+
+    def __getattr__(self, name):
+        val = getattr(self.base, name)
+        if isinstance(val, Enum):
+            return val.value
+        return val
+
+    def __getitem__(self, name):
+        return getattr(self, name)
+
+    def __contains__(self, name):
+        return name in self.base._member_map_
