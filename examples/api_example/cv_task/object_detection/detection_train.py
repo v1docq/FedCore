@@ -14,7 +14,7 @@ from torch import optim
 from torchvision.transforms import v2
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, fasterrcnn_mobilenet_v3_large_fpn
     
-from fedcore.architecture.dataset.object_detection_datasets import YOLODataset
+from fedcore.architecture.dataset.task_specified.object_detection_datasets import YOLODataset
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.tools.ruler import PerformanceEvaluatorOD
 from fedcore.architecture.utils.loader import get_loader

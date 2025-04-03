@@ -6,6 +6,7 @@ from operator import itemgetter
 from torch.autograd.function import Function
 from torch.utils.checkpoint import get_device_states, set_device_states
 
+
 # for routing arguments into the functions of the reversible layer
 def route_args(router, args, depth):
     routed_args = [(dict(), dict()) for _ in range(depth)]
@@ -18,11 +19,13 @@ def route_args(router, args, depth):
             routed_args[depth] = ({**f_args, **new_f_args}, {**g_args, **new_g_args})
     return routed_args
 
+
 def layer_drop(layers, prob):
     to_drop = torch.empty(len(layers)).uniform_(0, 1) < prob
     blocks = [block for block, drop in zip(layers, to_drop) if not drop]
     blocks = layers[:1] if len(blocks) == 0 else blocks
     return blocks
+
 
 # following example for saving and setting rng here https://pytorch.org/docs/stable/_modules/torch/utils/checkpoint.html
 class Deterministic(nn.Module):
@@ -40,7 +43,7 @@ class Deterministic(nn.Module):
             self.cuda_in_fwd = True
             self.gpu_devices, self.gpu_states = get_device_states(*args)
 
-    def forward(self, *args, record_rng = False, set_rng = False, **kwargs):
+    def forward(self, *args, record_rng=False, set_rng=False, **kwargs):
         if record_rng:
             self.record_rng(*args)
 
@@ -57,6 +60,7 @@ class Deterministic(nn.Module):
                 set_device_states(self.gpu_devices, self.gpu_states)
             return self.net(*args, **kwargs)
 
+
 # heavily inspired by https://github.com/RobinBruegger/RevTorch/blob/master/revtorch/revtorch.py
 # once multi-GPU is confirmed working, refactor and send PR back to source
 class ReversibleBlock(nn.Module):
@@ -65,7 +69,7 @@ class ReversibleBlock(nn.Module):
         self.f = Deterministic(f)
         self.g = Deterministic(g)
 
-    def forward(self, x, f_args = {}, g_args = {}):
+    def forward(self, x, f_args={}, g_args={}):
         x1, x2 = torch.chunk(x, 2, dim=2)
         y1, y2 = None, None
 
@@ -75,7 +79,7 @@ class ReversibleBlock(nn.Module):
 
         return torch.cat([y1, y2], dim=2)
 
-    def backward_pass(self, y, dy, f_args = {}, g_args = {}):
+    def backward_pass(self, y, dy, f_args={}, g_args={}):
         y1, y2 = torch.chunk(y, 2, dim=2)
         del y
 
@@ -113,6 +117,7 @@ class ReversibleBlock(nn.Module):
 
         return x, dx
 
+
 class _ReversibleFunction(Function):
     @staticmethod
     def forward(ctx, x, blocks, args):
@@ -133,9 +138,10 @@ class _ReversibleFunction(Function):
 
 
 class SequentialSequence(nn.Module):
-    def __init__(self, layers, args_route = {}, layer_dropout = 0.):
+    def __init__(self, layers, args_route={}, layer_dropout=0.):
         super().__init__()
-        assert all(len(route) == len(layers) for route in args_route.values()), 'each argument route map must have the same depth as the number of sequential layers'
+        assert all(len(route) == len(layers) for route in
+                   args_route.values()), 'each argument route map must have the same depth as the number of sequential layers'
         self.layers = layers
         self.args_route = args_route
         self.layer_dropout = layer_dropout
@@ -152,8 +158,9 @@ class SequentialSequence(nn.Module):
             x = x + g(x, **g_args)
         return x
 
+
 class ReversibleSequence(nn.Module):
-    def __init__(self, blocks, args_route = {}, layer_dropout = 0.):
+    def __init__(self, blocks, args_route={}, layer_dropout=0.):
         super().__init__()
         self.args_route = args_route
         self.layer_dropout = layer_dropout
@@ -172,13 +179,15 @@ class ReversibleSequence(nn.Module):
             layers_and_args = layer_drop(layers_and_args, self.layer_dropout)
             blocks, args = map(lambda ind: list(map(itemgetter(ind), layers_and_args)), (0, 1))
 
-        out =  _ReversibleFunction.apply(x, blocks, args)
+        out = _ReversibleFunction.apply(x, blocks, args)
         return torch.stack(out.chunk(2, dim=-1)).sum(dim=0)
+
 
 # helper functions
 
 def default(val, default_val):
     return val if val is not None else default_val
+
 
 def init_(tensor):
     dim = tensor.shape[-1]
@@ -186,32 +195,39 @@ def init_(tensor):
     tensor.uniform_(-std, std)
     return tensor
 
+
 # helper classes
 
 class Residual(nn.Module):
     def __init__(self, fn):
         super().__init__()
         self.fn = fn
+
     def forward(self, x):
         return x + self.fn(x)
+
 
 class PreNorm(nn.Module):
     def __init__(self, dim, fn):
         super().__init__()
         self.fn = fn
         self.norm = nn.LayerNorm(dim)
+
     def forward(self, x):
         x = self.norm(x)
         return self.fn(x)
+
 
 class GELU_(nn.Module):
     def forward(self, x):
         return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
 
+
 GELU = nn.GELU if hasattr(nn, 'GELU') else GELU_
 
+
 class FeedForward(nn.Module):
-    def __init__(self, dim, mult = 4, dropout = 0., activation = None, glu = False):
+    def __init__(self, dim, mult=4, dropout=0., activation=None, glu=False):
         super().__init__()
         activation = default(activation, GELU)
 
@@ -233,8 +249,9 @@ class FeedForward(nn.Module):
         x = self.w2(x)
         return x
 
+
 class LinformerSelfAttention(nn.Module):
-    def __init__(self, dim, seq_len, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, dropout = 0.):
+    def __init__(self, dim, seq_len, k=256, heads=8, dim_head=None, one_kv_head=False, share_kv=False, dropout=0.):
         super().__init__()
         assert (dim % heads) == 0, 'dimension must be divisible by the number of heads'
 
@@ -246,21 +263,21 @@ class LinformerSelfAttention(nn.Module):
         dim_head = default(dim_head, dim // heads)
         self.dim_head = dim_head
 
-        self.to_q = nn.Linear(dim, dim_head * heads, bias = False)
+        self.to_q = nn.Linear(dim, dim_head * heads, bias=False)
 
         kv_dim = dim_head if one_kv_head else (dim_head * heads)
-        self.to_k = nn.Linear(dim, kv_dim, bias = False)
+        self.to_k = nn.Linear(dim, kv_dim, bias=False)
         self.proj_k = nn.Parameter(init_(torch.zeros(seq_len, k)))
 
         self.share_kv = share_kv
         if not share_kv:
-            self.to_v = nn.Linear(dim, kv_dim, bias = False)
+            self.to_v = nn.Linear(dim, kv_dim, bias=False)
             self.proj_v = nn.Parameter(init_(torch.zeros(seq_len, k)))
 
         self.dropout = nn.Dropout(dropout)
         self.to_out = nn.Linear(dim_head * heads, dim)
 
-    def forward(self, x, context = None, **kwargs):
+    def forward(self, x, context=None, **kwargs):
         b, n, d, d_h, h, k = *x.shape, self.dim_head, self.heads, self.k
 
         kv_len = n if context is None else context.shape[1]
@@ -294,7 +311,6 @@ class LinformerSelfAttention(nn.Module):
         keys, values = map(merge_key_values, (keys, values))
 
         # attention
-
         dots = torch.einsum('bhnd,bhkd->bhnk', queries, keys) * (d_h ** -0.5)
         attn = dots.softmax(dim=-1)
         attn = self.dropout(attn)
@@ -304,13 +320,16 @@ class LinformerSelfAttention(nn.Module):
         out = out.transpose(1, 2).reshape(b, n, -1)
         return self.to_out(out)
 
+
 class Linformer(nn.Module):
-    def __init__(self, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False, dropout = 0.):
+    def __init__(self, dim, seq_len, depth, k=256, heads=8, dim_head=None, one_kv_head=False, share_kv=False,
+                 reversible=False, dropout=0.):
         super().__init__()
         layers = nn.ModuleList([])
         for _ in range(depth):
-            attn = LinformerSelfAttention(dim, seq_len, k = k, heads = heads, dim_head = dim_head, one_kv_head = one_kv_head, share_kv = share_kv, dropout = dropout)
-            ff = FeedForward(dim, dropout = dropout)
+            attn = LinformerSelfAttention(dim, seq_len, k=k, heads=heads, dim_head=dim_head, one_kv_head=one_kv_head,
+                                          share_kv=share_kv, dropout=dropout)
+            ff = FeedForward(dim, dropout=dropout)
 
             layers.append(nn.ModuleList([
                 PreNorm(dim, attn),
@@ -323,13 +342,15 @@ class Linformer(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+
 class LinformerLM(nn.Module):
-    def __init__(self, num_tokens, dim, seq_len, depth, k = 256, heads = 8, dim_head = None, one_kv_head = False, share_kv = False, reversible = False, dropout = 0.):
+    def __init__(self, num_tokens, dim, seq_len, depth, k=256, heads=8, dim_head=None, one_kv_head=False,
+                 share_kv=False, reversible=False, dropout=0.):
         super().__init__()
         self.token_emb = nn.Embedding(num_tokens, dim)
         self.pos_emb = nn.Embedding(seq_len, dim)
-        self.linformer = Linformer(dim, seq_len, depth, k = k, heads = heads, dim_head = dim_head,
-                one_kv_head = one_kv_head, share_kv = share_kv, reversible = reversible, dropout = dropout)
+        self.linformer = Linformer(dim, seq_len, depth, k=k, heads=heads, dim_head=dim_head,
+                                   one_kv_head=one_kv_head, share_kv=share_kv, reversible=reversible, dropout=dropout)
         self.to_logits = nn.Linear(dim, num_tokens)
 
     def forward(self, x):

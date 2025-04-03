@@ -1,22 +1,17 @@
-import os
-
-import numpy as np
 from torch.utils.data import DataLoader
-from torchvision import transforms
 
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.architecture.dataset.prediction_datasets import TorchVisionDataset, CustomDatasetForImages
+from fedcore.architecture.dataset.datasets_from_source import TorchVisionDataset
 from fedcore.architecture.utils.paths import (
-    data_path, PROJECT_PATH, PATH_TO_DATA
+    PROJECT_PATH, PATH_TO_DATA
 )
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import (
     DEFAULT_TORCH_DATASET,
 )
 from fedcore.repository.model_repository import BACKBONE_MODELS
-from fedcore.api.utils.checkers_collection import DataCheck
-from fedcore.architecture.dataset.object_detection_datasets import *
-from fedcore.architecture.dataset.classification_datasets import *
+from fedcore.architecture.dataset.task_specified.object_detection_datasets import *
+from fedcore.architecture.dataset.task_specified.classification_datasets import *
 
 
 class ApiLoader:
@@ -124,14 +119,14 @@ class ApiLoader:
         train_bs = self.loader_params['train_bs']
         val_bs = self.loader_params['val_bs']
 
-        train_dataloader = YOLODataset(path=path_to_data, 
-                                 dataset_name=source,
-                                 transform=self.transform, 
-                                 train=True).get_dataloader(batch_size=train_bs)
-        val_dataloader = YOLODataset(path=path_to_data, 
-                                  dataset_name=source, 
-                                  transform=self.transform,
-                                  train=False).get_dataloader(batch_size=val_bs)
+        train_dataloader = YOLODataset(path=path_to_data,
+                                       dataset_name=source,
+                                       transform=self.transform,
+                                       train=True).get_dataloader(batch_size=train_bs)
+        val_dataloader = YOLODataset(path=path_to_data,
+                                     dataset_name=source,
+                                     transform=self.transform,
+                                     train=False).get_dataloader(batch_size=val_bs)
         try:
             test_dataloader = UnlabeledDatasetOD(images_path=test_dir).get_dataloader()
         except:
@@ -149,15 +144,15 @@ class ApiLoader:
 
     def _yolo_cls_loader(self, source, supplementary_data=None):
         path_to_data = os.path.join(PATH_TO_DATA, source)
-        train_dir =  os.path.join(path_to_data, "train")
+        train_dir = os.path.join(path_to_data, "train")
         val_dir = os.path.join(path_to_data, "val")
 
-        train_dataloader = YOLOClassificationDataset(path=train_dir, 
-                                 transform=self.transform, 
-                                 train=True).get_dataloader(params=self.loader_params)
-        val_dataloader = YOLOClassificationDataset(path=val_dir, 
-                                  transform=self.transform,
-                                  train=False).get_dataloader(params=self.loader_params)
+        train_dataloader = YOLOClassificationDataset(path=train_dir,
+                                                     transform=self.transform,
+                                                     train=True).get_dataloader(params=self.loader_params)
+        val_dataloader = YOLOClassificationDataset(path=val_dir,
+                                                   transform=self.transform,
+                                                   train=False).get_dataloader(params=self.loader_params)
 
         num_classes = len(train_dataloader.dataset.classes) if hasattr(train_dataloader.dataset, 'classes') else 1
         self.train_data = CompressionInputData(
@@ -174,18 +169,18 @@ class ApiLoader:
         train_bs = self.loader_params['train_bs']
         val_bs = self.loader_params['val_bs']
 
-        train_dataloader = COCODataset(path=path_to_data, 
-                                 dataset_name=source, 
-                                 train=True).get_dataloader(batch_size=train_bs)
-        val_dataloader = COCODataset(path=path_to_data, 
-                                  dataset_name=source, 
-                                  train=False).get_dataloader(batch_size=val_bs)
-        
+        train_dataloader = COCODataset(path=path_to_data,
+                                       dataset_name=source,
+                                       train=True).get_dataloader(batch_size=train_bs)
+        val_dataloader = COCODataset(path=path_to_data,
+                                     dataset_name=source,
+                                     train=False).get_dataloader(batch_size=val_bs)
+
         try:
             test_dataloader = UnlabeledDataset(images_path=test_dir).get_dataloader()
         except:
             test_dataloader = None
-            
+
         num_classes = len(train_dataloader.dataset.classes) if hasattr(train_dataloader.dataset, 'classes') else 1
         self.train_data = CompressionInputData(
             features=np.zeros((2, 2)),

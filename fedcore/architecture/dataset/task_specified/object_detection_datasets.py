@@ -2,10 +2,9 @@
 
 import json
 import os
-from typing import Callable, Dict, Tuple, Literal, List, Optional, Any, Tuple, Union
+from typing import Callable, Dict, Tuple
 
 import numpy as np
-import random
 import torch
 import yaml
 from PIL import Image
@@ -15,7 +14,7 @@ from tqdm import tqdm
 import opendatasets as od
 from opendatasets.utils.archive import extract_archive
 
-from fedcore.architecture.utils.loader import image_transform, get_loader
+from fedcore.architecture.utils.loader import get_loader
 from fedcore.architecture.utils.paths import (
     data_path,
     yolo_data_path,
@@ -23,7 +22,6 @@ from fedcore.architecture.utils.paths import (
     YOLO_DATA_URL,
     YOLO_YAML_URL,
 )
-
 
 IMG_EXTENSIONS = (
     ".jpg",
@@ -62,18 +60,18 @@ class COCODataset(Dataset):
     """
 
     def __init__(
-        self,
-        images_path: str,
-        json_path: str,
-        transform: Callable,
-        fix_zero_class: bool = False,
-        replace_to_binary: bool = False,
+            self,
+            images_path: str,
+            annotation_path: str,
+            transform: Callable,
+            fix_zero_class: bool = False,
+            replace_to_binary: bool = False,
     ) -> None:
         self.transform = transform
         self.classes = {}
         self.samples = []
 
-        with open(json_path) as f:
+        with open(annotation_path) as f:
             data = json.load(f)
 
         for category in data["categories"]:
@@ -142,9 +140,7 @@ class COCODataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
-    
-    def get_dataloader(self, batch_size: int = 1):
-        return get_loader(self, batch_size, self.train)
+
 
 class YOLODataset(Dataset):
     """Class-loader for YOLO format (https://docs.ultralytics.com/datasets/detect/).
@@ -159,15 +155,15 @@ class YOLODataset(Dataset):
     """
 
     def __init__(
-        self,
-        path: str = None,
-        dataset_name: str = None,
-        transform: Callable = None,
-        target_transform: Callable = None,
-        train: bool = True,
-        replace_to_binary: bool = False,
-        download: bool = False,
-        log: bool = False,
+            self,
+            path: str = None,
+            dataset_name: str = None,
+            transform: Callable = None,
+            target_transform: Callable = None,
+            train: bool = True,
+            replace_to_binary: bool = False,
+            download: bool = False,
+            log: bool = False,
     ) -> None:
 
         if dataset_name is not None:
@@ -186,12 +182,10 @@ class YOLODataset(Dataset):
 
             path = yolo_yaml_path(dataset_name)
 
-        if transform:
-            self.transform = transform
-        else:
-            self.transform = image_transform()
-            
+
+        self.transform = transform
         self.target_transform = target_transform
+
         self.train = train
         with open(path, "r") as f:
             data = yaml.safe_load(f)
@@ -269,9 +263,6 @@ class YOLODataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
-    
-    def get_dataloader(self, batch_size: int = 1):
-        return get_loader(self, batch_size, self.train)
 
 
 class UnlabeledDataset(Dataset):
@@ -285,7 +276,6 @@ class UnlabeledDataset(Dataset):
 
     def __init__(self, images_path: str, transform: Callable = None) -> None:
         self.transform = transform
-        self.image_transform = image_transform()
         self.images_path = images_path
 
         self.samples = []
@@ -309,7 +299,7 @@ class UnlabeledDataset(Dataset):
         """
         sample = self.samples[idx]
         image = Image.open(sample["image"])
-        image = self.image_transform(image)
+        image = self.transform(image)
         if self.transform is not None:
             image = self.transform(image)
         targets = {
@@ -325,6 +315,6 @@ class UnlabeledDataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.samples)
-        
+
     def get_dataloader(self, batch_size: int = 1):
         return get_loader(self, batch_size)

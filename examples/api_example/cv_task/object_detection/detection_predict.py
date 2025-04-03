@@ -7,8 +7,7 @@ import torch
 from tqdm import tqdm
 from torchvision.transforms import v2
     
-from fedcore.architecture.dataset.object_detection_datasets import YOLODataset, UnlabeledDataset
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from fedcore.architecture.dataset.task_specified.object_detection_datasets import YOLODataset, UnlabeledDataset
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.utils.loader import get_loader
 from fedcore.architecture.visualisation.visualization import get_image, apply_nms, filter_boxes

@@ -9,10 +9,12 @@ from torchvision import transforms
 from typing import Callable, Optional
 from tqdm import tqdm
 
+from fedcore.architecture.dataset.datasets_from_source import AbstractDataset
+
 IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp")
 
 
-class YOLOClassificationDataset(Dataset):
+class YOLOClassificationDataset(AbstractDataset):
     def __init__(self, 
                  path: str, 
                  transform: Optional[Callable] = None, 

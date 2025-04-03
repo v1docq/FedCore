@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from functools import partialmethod, partial
+from functools import partial
 
 import torch
 import torch_pruning as tp
@@ -24,9 +24,9 @@ from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
 
-from fedcore.architecture.dataset.object_detection_datasets import YOLODataset
-from fedcore.architecture.dataset.prediction_datasets import CustomDatasetForImages
-from fedcore.architecture.dataset.segmentation_dataset import (
+from fedcore.architecture.dataset.task_specified.object_detection_datasets import YOLODataset
+from fedcore.architecture.dataset.datasets_from_source import CustomDatasetForImages
+from fedcore.architecture.dataset.task_specified.segmentation_dataset import (
     SegmentationDataset,
     SemanticSegmentationDataset,
 )
@@ -56,7 +56,6 @@ from fedcore.repository.setups import QAT_1, PTQ_1
 from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen
 from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
 
-from fedcore.models.network_impl.hooks import Optimizers, Schedulers  # Need for referencing via constant_repository
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 
 from fedcore.architecture.utils.misc import EnumNoValue

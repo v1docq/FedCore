@@ -2,7 +2,7 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from fedcore.architecture.dataset.dummy_clf import DummyDatasetCLF
+from fedcore.architecture.dataset.task_specified.dummy_clf import DummyDatasetCLF
 from fedcore.models.backbone.efficientnet import EFFICIENTNET_MODELS, EfficientNet
 
 

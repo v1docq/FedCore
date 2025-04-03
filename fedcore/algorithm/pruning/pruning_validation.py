@@ -12,7 +12,7 @@ class PruningValidator:
         self.output_dim = output_dim
         self.input_dim = input_dim
         self.specified_models = ["ssd", "raft_larget", "retinanet_resnet50_fpn_v2",
-                                 "faster_rcnn", "chronos", "fcos_resnet50_fpn", "keypointrcnn_resnet50_fpn",
+                                 "object_detection", "chronos", "fcos_resnet50_fpn", "keypointrcnn_resnet50_fpn",
                                  "maskrcnn_resnet50_fpn_v2"]
 
     def validate_pruned_layers(self, layer, pruning_fn):
@@ -31,7 +31,7 @@ class PruningValidator:
             ignored_layers.extend(
                 [model.corr_block, model.update_block, model.mask_predictor]
             )
-        if model_name.__contains__("faster_rcnn"):
+        if model_name.__contains__("object_detection"):
             ignored_layers.extend(
                 [
                     model.rpn.head.cls_logits,
