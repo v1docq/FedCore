@@ -18,6 +18,8 @@ import torchvision
 from torchvision import transforms
 from torchvision.datasets.folder import DatasetFolder
 from torchvision.transforms import v2
+
+from fedcore.architecture.dataset.custom_loader import TimeSeriesLoader
 from fedcore.architecture.dataset.task_specified.object_detection_datasets import YOLODataset, COCODataset
 from fedcore.architecture.utils.paths import PROJECT_PATH, PATH_TO_DATA
 
@@ -31,6 +33,7 @@ class TorchVisionTransforms(Enum):
     STANDART_PIL_IMAGE_TRANSFORM = transforms.Compose(
         [transforms.PILToTensor(), transforms.ToTensor(), transforms.Normalize(mean=[0], std=[1])])
     IMAGE_FLOAT32_TRANSFORM = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+    TIME_SERIES_FLOAT32_TRANSFORM = v2.Compose([v2.ToTensor(), v2.ToDtype(torch.float32, scale=True)])
 
 
 IMG_EXTENSIONS = (
@@ -45,7 +48,12 @@ IMG_EXTENSIONS = (
     ".webp",
 )
 
-BATCH_SIZE = 32
+TIME_SERIES_EXTENSIONS = (
+    ".ts",
+    ".txt",
+    ".tsv",
+    ".arff"
+)
 
 
 class DatasetFromTorchVision(Dataset):
@@ -181,31 +189,41 @@ class DatasetFromFolder(DatasetFolder):
 
     def __init__(
             self,
-            image_folder: str,
+            data_folder: str,
             transform: Callable = None,
     ) -> None:
-        self.images = os.listdir(image_folder)
-        self.root = image_folder
+        try:  # if path to folder with several files
+            self.files = os.listdir(data_folder)
+        except Exception:  # if path to folder with one file
+            self.files = [data_folder]
+        self.root = data_folder
         self.transform = transform
-        self._define_data_source(image_folder)
+        self._define_data_source(data_folder)
 
-    def _define_data_source(self, image_folder):
-        if self.images[0].lower().endswith(IMG_EXTENSIONS):
+    def _define_data_source(self, data_folder):
+        if self.files[0].lower().endswith(IMG_EXTENSIONS):
             self.is_dir_with_images = True
-        elif any([x.__contains__('labels') for x in self.images]):
-            path_to_images = os.path.join(image_folder, 'images')
-            path_to_labels = os.path.join(image_folder, 'labels')
-            self.images = [(os.path.join(path_to_images, img), os.path.join(path_to_labels, target))
-                           for img, target in zip(os.listdir(path_to_images),
-                                                  os.listdir(path_to_labels))]
+        elif self.files[0].lower().endswith(TIME_SERIES_EXTENSIONS):
+            self.is_dir_with_images = False
+            feature, target = self._default_ts_loader(data_folder)
+            self.files = [(feature[:, idx, :], target[idx]) for idx in range(target.shape[0])]
+        elif any([x.__contains__('labels') for x in self.files]):
+            path_to_images = os.path.join(data_folder, 'images')
+            path_to_labels = os.path.join(data_folder, 'labels')
+            self.files = [(os.path.join(path_to_images, img), os.path.join(path_to_labels, target))
+                          for img, target in zip(os.listdir(path_to_images),
+                                                 os.listdir(path_to_labels))]
             self.is_dir_with_images = False
         else:
-            self.class_names, self.class_mapping = self.find_classes(image_folder)
-            self.images = self.make_dataset(self.root, class_to_idx=self.class_mapping, extensions=IMG_EXTENSIONS)
+            self.class_names, self.class_mapping = self.find_classes(data_folder)
+            self.files = self.make_dataset(self.root, class_to_idx=self.class_mapping, extensions=IMG_EXTENSIONS)
             self.is_dir_with_images = False
 
     def _default_image_loader(self, path_to_image):
         return Image.open(path_to_image).convert("RGB")
+
+    def _default_ts_loader(self, path_to_ts):
+        return TimeSeriesLoader().load_data(path_to_ts)
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, str]:
         """Returns a sample from a dataset.
@@ -220,20 +238,22 @@ class DatasetFromFolder(DatasetFolder):
         """
 
         if self.is_dir_with_images:
-            path_to_image, target = os.path.join(self.root, self.images[idx]), None
+            feature, targett = os.path.join(self.root, self.files[idx]), None
         else:
-            path_to_image, target = self.images[idx]
-
-        image = self.transform(self._default_image_loader(path_to_image))
-        for ext in IMG_EXTENSIONS:
-            if ext in target:
-                target = self.transform(self._default_image_loader(target))
-                break
+            feature, target = self.files[idx]
+        if isinstance(feature, np.ndarray):
+            image, target = self.transform(feature), self.transform(target)
+        else:
+            image = self.transform(self._default_image_loader(feature))
+            for ext in IMG_EXTENSIONS:
+                if ext in target:
+                    target = self.transform(self._default_image_loader(target))
+                    break
         return image, target
 
     def __len__(self) -> int:
         """Return length of dataset"""
-        return len(self.images)
+        return len(self.files)
 
 
 class AbstractDataset(Dataset):
@@ -249,6 +269,9 @@ class AbstractDataset(Dataset):
     def __getitem__(self, idx) -> Tuple[torch.Tensor, str]:
         return self.dataset_impl.__getitem__(idx)
 
+    def __len__(self) -> int:
+        """Return length of dataset"""
+        return len(self.dataset_impl.files)
 
 class ObjectDetectionDataset(AbstractDataset):
 
@@ -264,14 +287,7 @@ class ObjectDetectionDataset(AbstractDataset):
                                             transform=transformation_func)
 
 
-
-if __name__ == "__main__":
-    #
-    image_clf_source = os.path.join(PATH_TO_DATA, 'image_segmentation', "train")
-    image_od_source = os.path.join(PATH_TO_DATA, 'object_detection', 'chips.yaml')
-    image_od_annotation = os.path.join(PATH_TO_DATA, 'object_detection', "labels")
-    torch_dataset = ObjectDetectionDataset(data_source=image_clf_source,
-                                           annotation_source=image_od_annotation)
-    # torch_dataset = AbstractDataset(data_source=image_clf_source)
-    image, target = next(iter(torch_dataset))
-    _ = 1
+class TimeSeriesDataset(AbstractDataset):
+    def __init__(self, data_source: Union[str, np.array], annotation_source: str = None,
+                 transformation_func: Callable = TorchVisionTransforms.TIME_SERIES_FLOAT32_TRANSFORM.value):
+        super().__init__(data_source, annotation_source, transformation_func)

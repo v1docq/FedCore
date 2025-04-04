@@ -13,19 +13,15 @@ from fedot.core.pipelines.pipeline import Pipeline
 from pymonad.either import Either
 from pymonad.maybe import Maybe
 from torch import Tensor
-from fedcore.api.utils.api_init import ApiManager
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
-    FEDCORE_CV_DATASET,
-    FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,
     FEDOT_GET_METRICS,
 )
 from fedcore.repository.initializer_industrial_models import FedcoreModels
-from fedcore.repository.model_repository import default_fedcore_availiable_operation
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 

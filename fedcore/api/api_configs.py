@@ -5,18 +5,16 @@ from inspect import signature, isclass
 from numbers import Number
 from pathlib import Path
 from typing import (
-    get_origin, get_args,   
-    Any, Callable, Dict, Iterable, Literal, Optional, Union, 
+    get_origin, get_args,
+    Any, Callable, Dict, Iterable, Literal, Optional, Union,
 )
 import logging
 
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch.nn import Module
-
+from fedcore.models.network_impl.hooks import Schedulers, Optimizers
 from fedcore.repository.constanst_repository import (
     FedotTaskEnum,
-    Schedulers, 
-    Optimizers, 
     PEFTStrategies,
     TaskTypesEnum,
     TorchLossesConstant
@@ -30,7 +28,6 @@ __all__ = [
     'NeuralModelConfigTemplate',
     'LearningConfigTemplate',
     'APIConfigTemplate',
-
     'get_nested',
     'LookUp',
 ]

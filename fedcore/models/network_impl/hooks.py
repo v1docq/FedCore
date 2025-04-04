@@ -5,22 +5,13 @@ from enum import Enum
 from functools import partial
 from inspect import isclass
 from pathlib import Path
-
-from functools import reduce
-from operator import iadd
-
 import torch
-from torch.optim import lr_scheduler
 from tqdm import tqdm
 
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
-from fedcore.architecture.settings.computational import default_device
-from fedcore.models.network_modules.layers.special import EarlyStopping
 
 VERBOSE = True
-
-
 
 
 def now_for_file():
@@ -110,6 +101,7 @@ class Saver(BaseHook):
                            path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
                            )
 
+
 class FitReport(BaseHook):
     _SUMMON_KEY = 'log_each'
 
@@ -124,7 +116,7 @@ class FitReport(BaseHook):
         history = kws['history']
         (tr_e, train_loss) = history['train_loss'][-1]
         val_losses = history['val_loss']
-        
+
         (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
         # if val_loss:
         #     val_loss = torch.round(val_loss, decimals=4)
@@ -144,7 +136,7 @@ class FitReport(BaseHook):
             if hist:
                 epoch, val = hist[-1]
                 print(f'\tCriterion `{name}`: {val}')
-            
+
         # if custom_loss is not None:
         #     print(f"Epoch: {epoch}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}".
         #           format(epoch, avg_loss, *custom_loss))
@@ -210,8 +202,8 @@ class Evaluator(BaseHook):
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
             output = self.model(*inputs)
             loss_sum += criterion(model_output=output,
-                                      target=targets.to(self.device),
-                                        epoch=epoch, stage='val')
+                                  target=targets.to(self.device),
+                                  epoch=epoch, stage='val')
         avg_loss = loss_sum / len(val_dataloader)
         history = kws['history']['val_loss']
         history.append((epoch, avg_loss))
@@ -276,11 +268,12 @@ class SchedulerRenewal(BaseHook):
         # print(kws)
         scheduler_gen = partial(sch_constructor, **kws)
         return scheduler_gen
-    
+
     def __renew(self, kws):
-        return self.__gen(kws['trainer_objects']['optimizer'], 
-                                                             self.params.get('learning_rate',1e-3), 
-                                                             self.params.get('epochs', 1))
+        return self.__gen(kws['trainer_objects']['optimizer'],
+                          self.params.get('learning_rate', 1e-3),
+                          self.params.get('epochs', 1))
+
     def trigger(self, epoch, kws):
         if kws['trainer_objects']['scheduler'] is None:
             kws['trainer_objects']['scheduler'] = self.__renew(kws)
@@ -304,9 +297,11 @@ class LoggingHooks(Enum):
     fit_report = FitReport
     saver = Saver
 
+
 class ModelLearningHooks(Enum):
     optimizer_gen = OptimizerGen
     scheduler_renewal = SchedulerRenewal
+
 
 class Optimizers(Enum):
     adam = torch.optim.Adam
@@ -315,7 +310,7 @@ class Optimizers(Enum):
     sgd = torch.optim.SGD
     adadelta = torch.optim.Adadelta
 
+
 class Schedulers(Enum):
     one_cycle = (torch.optim.lr_scheduler.OneCycleLR,
-                  {'learning_rate': 'max_lr', 'epochs': 'total_steps'})
-    
+                 {'learning_rate': 'max_lr', 'epochs': 'total_steps'})
