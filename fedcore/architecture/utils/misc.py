@@ -1,3 +1,5 @@
+from typing import Optional, Any
+
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch import Tensor
 from torch.nn import Module
@@ -43,3 +45,7 @@ def count_params(m: Module):
     for p in m.parameters():
         c += p.numel()
     return c
+
+def default_value(val: Optional[Any], default_val: Any) -> Any:
+    """Safely returns `val` or `default_val` if `val` is None."""
+    return val if val is not None else default_val
