@@ -554,3 +554,24 @@ class RevIN(nn.Module):
             x = x.mul(self.std)
             x = x.add(self.sub)
             return x
+
+
+class Residual(nn.Module):
+    """Implementation of residual connection: `output = x + fn(x)`."""
+    def __init__(self, fn: nn.Module):
+        super().__init__()
+        self.fn = fn
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x + self.fn(x)
+
+
+class PreNorm(nn.Module):
+    """Applies normalization before `fn`."""
+    def __init__(self, dim: int, fn: nn.Module):
+        super().__init__()
+        self.fn = fn
+        self.norm = nn.LayerNorm(dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.fn(self.norm(x))
