@@ -203,7 +203,7 @@ class MultiHeadAttention(Module):
             return output, attn_weights
 
 
-class LinformerSelfAttention(nn.Module):
+class LinformerSelfAttention(Module):
     """Self-attention implementation from Linformer.
 
     Args:
