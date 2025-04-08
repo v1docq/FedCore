@@ -56,14 +56,18 @@ class ApiLoader:
         self._update_loader_params()
         train_dataloader = DataLoader(dataset=train_dataset, **self.loader_params)
         val_dataloader = DataLoader(dataset=val_dataset, **self.loader_params)
+        sample = next(iter(torch_dataset))[0]
         num_classes = len(train_dataloader.dataset.classes) if hasattr(train_dataloader.dataset, 'classes') else 1
+        input_dim = sample.shape[1]
         fedcore_train_data = CompressionInputData(
             features=np.zeros((2, 2)),
+            input_dim=input_dim,
             num_classes=num_classes,
             val_dataloader=val_dataloader,
             train_dataloader=train_dataloader,
         )
         fedcore_train_data.supplementary_data.is_auto_preprocessed = True
+        return fedcore_train_data
 
     def load_data(self, loader_type: str = None):
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)

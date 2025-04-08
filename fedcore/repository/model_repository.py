@@ -31,7 +31,7 @@ from torchvision.models.densenet import (
 
 from fedcore.models.backbone.segformer import segformer_pretrain
 from fedcore.models.backbone.tst import TSTModel
-
+from fedcore.models.backbone.inception import InceptionTimeModel
 
 class AtomizedModel(Enum):
     TRAINING_MODELS = {"training_model": BaseNeuralModel}
@@ -70,6 +70,9 @@ class AtomizedModel(Enum):
         "ResNet101": resnet101,
         "ResNet152": resnet152,
     }
+    INCEPTIONET_MODELS = {
+        "InceptionNet": InceptionTimeModel
+    }
 
     SEGFORMER_MODELS = {"segformer": segformer_pretrain}
 
@@ -93,7 +96,7 @@ class AtomizedModel(Enum):
     }
 
     DETECTION_MODELS = {"detection_model": fasterrcnn_mobilenet_v3_large_fpn}
-    
+
     CUSTOM_MODEL = {"custom": CustomModel}
 
 
@@ -106,6 +109,7 @@ TRAINING_MODELS = AtomizedModel.TRAINING_MODELS.value
 RESNET_MODELS = AtomizedModel.RESNET_MODELS.value
 DENSENET_MODELS = AtomizedModel.DENSENET_MODELS.value
 EFFICIENTNET_MODELS = AtomizedModel.EFFICIENTNET_MODELS.value
+INCEPTIONET_MODELS = AtomizedModel.INCEPTIONET_MODELS.value
 MOBILENET_MODELS = AtomizedModel.MOBILENET_MODELS.value
 # CHRONOS_MODELS = AtomizedModel.CHRONOS_MODELS.value
 SEGFORMER_MODELS = AtomizedModel.SEGFORMER_MODELS.value
@@ -114,6 +118,7 @@ CUSTOM_MODEL = AtomizedModel.CUSTOM_MODEL.value
 
 BACKBONE_MODELS = {
     **MOBILENET_MODELS,
+    **INCEPTIONET_MODELS,
     **EFFICIENTNET_MODELS,
     **DENSENET_MODELS,
     **RESNET_MODELS,

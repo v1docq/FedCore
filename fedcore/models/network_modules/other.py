@@ -10,12 +10,12 @@ from fastai.torch_core import Module
 from fastcore.basics import listify
 from torch import Tensor
 
-from fedot_ind.core.models.nn.network_modules.activation import (
+from fedcore.models.network_modules.activation import (
     pytorch_act_names,
     pytorch_acts,
 )
-from fedot_ind.core.models.nn.network_modules.layers.linear_layers import Noop
-from fedot_ind.core.models.nn.network_modules.layers.pooling_layers import GAP1d
+from fedcore.models.network_modules.layers.linear_layers import Noop
+from fedcore.models.network_modules.layers.pooling_layers import GAP1d
 from fedcore.models.network_modules.activation import get_activation_fn
 
 
@@ -205,7 +205,7 @@ class Sequential(nn.Sequential):
 
     def forward(self, *x):
         for i, module in enumerate(self._modules.values()):
-            x = module(*x) if isinstance(x, (list, tuple, L)) else module(x)
+            x = module(*x) if isinstance(x, (list, tuple)) else module(x)
         return x
 
 

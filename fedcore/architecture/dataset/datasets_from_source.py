@@ -273,6 +273,7 @@ class AbstractDataset(Dataset):
         """Return length of dataset"""
         return len(self.dataset_impl.files)
 
+
 class ObjectDetectionDataset(AbstractDataset):
 
     def __init__(self, data_source: str,

@@ -1,11 +1,15 @@
 import os
 
 from fedcore.architecture.utils.paths import PATH_TO_DATA
-from fedcore.tools.example_utils import get_scenario_for_api, get_custom_dataloader
+from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
-from fedcore.api.utils.checkers_collection import ApiConfigCheck
 from fedcore.data.dataloader import load_data
-from fedcore.repository.config_repository import DEFAULT_REG_API_CONFIG
+
+from fedcore.api.config_factory import ConfigFactory
+from fedcore.api.api_configs import (
+    APIConfigTemplate, DeviceConfigTemplate, AutoMLConfigTemplate,
+    LearningConfigTemplate, NeuralModelConfigTemplate, ComputeConfigTemplate, FedotConfigTemplate,
+    PruningTemplate, ModelArchitectureConfigTemplate)
 
 METRIC_TO_OPTIMISE = ['rmse', 'latency']
 INITIAL_MODEL = 'InceptionNet'
@@ -26,35 +30,44 @@ test_dataloader_params = {"batch_size": 8,
 
 initial_assumption, learning_strategy = get_scenario_for_api(SCENARIO, INITIAL_MODEL)
 
-USER_CONFIG = {'problem': 'regression',
-               'metric': METRIC_TO_OPTIMISE,
-               'initial_assumption': initial_assumption,
-               'pop_size': 1,
-               'timeout': 5,
-               'learning_strategy': learning_strategy,
-               'learning_strategy_params': dict(epochs=200,
-                                                learning_rate=0.0001,
-                                                loss=LOSS,
-                                                custom_learning_params=dict(use_early_stopping={'patience': 30,
-                                                                                                'maximise_task': False,
-                                                                                                'delta': 0.01})
-                                                ),
-               'peft_strategy': 'pruning',
-               'peft_strategy_params': dict(pruning_iterations=1,
-                                            importance="MagnitudeImportance",
-                                            pruner_name='meta_pruner',
-                                            importance_norm=2,
-                                            pruning_ratio=0.5,
-                                            finetune_params={'epochs': 10,
-                                                             "learning_rate": 0.0001,
-                                                             'loss': LOSS}
-                                            )
-               }
+fedot_config = FedotConfigTemplate(problem='regression',
+                                   metric=METRIC_TO_OPTIMISE,
+                                   pop_size=1,
+                                   timeout=5,
+                                   initial_assumption=initial_assumption)
+
+model_config = ModelArchitectureConfigTemplate(input_dim=None,
+                                               output_dim=None,
+                                               depth=3)
+
+pretrain_config = NeuralModelConfigTemplate(epochs=200,
+                                            criterion=LOSS,
+                                            model_architecture=model_config,
+                                            custom_learning_params=dict(use_early_stopping={'patience': 30,
+                                                                                            'maximise_task': False,
+                                                                                            'delta': 0.01}))
+finetune_config = NeuralModelConfigTemplate(custom_learning_params={'epochs': 10,
+                                                                    "learning_rate": 0.0001},
+                                            custom_criterions={'loss': LOSS})
+peft_config = PruningTemplate(importance="MagnitudeImportance",
+                              pruning_ratio=0.5,
+                              finetune_params=finetune_config
+                              )
+
+automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
+learning_config = LearningConfigTemplate(criterion=LOSS,
+                                         learning_strategy=learning_strategy,
+                                         learning_strategy_params=pretrain_config,
+                                         peft_strategy='pruning',
+                                         peft_strategy_params=peft_config)
+api_template = APIConfigTemplate(automl_config=automl_config,
+                                 learning_config=learning_config)
 
 if __name__ == "__main__":
-    api_config = ApiConfigCheck().update_config_with_kwargs(DEFAULT_REG_API_CONFIG, **USER_CONFIG)
+    APIConfig = ConfigFactory.from_template(api_template)
+    api_config = APIConfig()
+    fedcore_compressor = FedCore(api_config)
     fedcore_train_data = load_data(source=PATH_TO_TRAIN, loader_params=train_dataloader_params)
     fedcore_test_data = load_data(source=PATH_TO_TEST, loader_params=test_dataloader_params)
-    fedcore_compressor = FedCore(api_config)
     fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)

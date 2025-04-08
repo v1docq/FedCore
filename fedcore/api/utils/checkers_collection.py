@@ -46,7 +46,29 @@ class DataCheck:
         self.fedot_dummy_idx = np.arange(1)
         self.fedot_dummy_datatype = DataTypesEnum.image
 
-    def _init_input_data(self, input_data: [InputData, CompressionInputData, dict] = None, manually_done=False) -> None:
+    def _init_model_from_backbone(self, input_data):
+        model_is_pretrain_torch_backbone = isinstance(self.model, str)
+        model_is_pretrain_backbone_with_weights = isinstance(self.model, dict)
+        model_is_custom_callable_object = isinstance(self.model, Callable)
+
+        if model_is_pretrain_torch_backbone or model_is_pretrain_backbone_with_weights:
+            torch_model = load_backbone(torch_model=self.model,
+                                        model_params=self.learning_params)
+            torch_model = self._check_optimised_model(torch_model, input_data)
+            if model_is_pretrain_backbone_with_weights:
+                if hasattr(torch_model, 'load_model'):
+                    torch_model.load_model(input_data, self.model['path_to_model'])
+                else:
+                    loaded_state_dict = torch.load(self.model['path_to_model'], weights_only=True,
+                                                   map_location=default_device())
+                    verified_state_dict = self._check_state_dict(loaded_state_dict, input_data)
+                    torch_model.load_state_dict(verified_state_dict)
+        elif model_is_custom_callable_object:
+            torch_model = self.model
+
+        return torch_model
+
+    def _init_input_data(self, compression_dataset: CompressionInputData = None, manually_done=False) -> None:
         """Initializes the `input_data` attribute based on its type.
 
         If a tuple (X, y) is provided, it converts it to a Fedot InputData object
@@ -57,58 +79,24 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
-        input_data_is_user_dataloaders = isinstance(input_data, dict)
-        input_data_is_fedcore_data = input_data.supplementary_data.is_auto_preprocessed
 
-        model_is_pretrain_torch_backbone = isinstance(self.model, str)
-        model_is_pretrain_backbone_with_weights = isinstance(self.model, dict)
-        model_is_custom_callable_object = isinstance(self.model, Callable)
-
-        model_params = self.learning_params.get('model_params', None)
-        if model_params is not None and isinstance(input_data, CompressionInputData):
-            compression_dataset = input_data
-            compression_dataset.input_dim = model_params['input_dim']
-            compression_dataset.supplementary_data.is_auto_preprocessed = True
-        elif isinstance(input_data, tuple):
-            compression_dataset, torch_model = input_data
-        elif input_data.supplementary_data.is_auto_preprocessed:
-            compression_dataset = input_data
-        else:
-            raise ValueError('Unsupported input format!')
+        model_params = self.learning_params.model_architecture
+        if any([model_params.input_dim is None, model_params.output_dim is None]):
+            model_params.input_dim = compression_dataset.input_dim
+            model_params.output_dim = compression_dataset.num_classes
 
         input_data = InputData(
             features=compression_dataset,  # CompressionInputData object
             idx=self.fedot_dummy_idx,  # dummy value
-            features_names=compression_dataset.num_classes,  # CompressionInputData attribute
             task=self.fedot_dummy_task,  # dummy value
             data_type=self.fedot_dummy_datatype,  # dummy value
             supplementary_data=compression_dataset.supplementary_data,
         )
-        input_data.supplementary_data.is_auto_preprocessed = True
-
-        if model_is_pretrain_torch_backbone or model_is_pretrain_backbone_with_weights:
-            torch_model = load_backbone(torch_model=self.model,
-                                        model_params=self.learning_params)
-            torch_model = self._check_optimised_model(torch_model, input_data)
-            if model_is_pretrain_backbone_with_weights:
-                if hasattr(torch_model, 'load_model'):
-                    torch_model.load_model(input_data, self.model['path_to_model'])
-                else:
-                    torch_model.load_state_dict(
-                        self._check_state_dict(
-                            torch.load(
-                                self.model['path_to_model'],
-                                weights_only=True,
-                                map_location=default_device()
-                                ),
-                            input_data
-                            )
-                        )
-        elif model_is_custom_callable_object:
-            torch_model = self.model
+        torch_model = self._init_model_from_backbone(input_data)
 
         input_data.target = torch_model  # model for compression
         input_data.features.target = torch_model  # model for compression
+        input_data.supplementary_data.is_auto_preprocessed = True
         return input_data
 
     def _check_dataloader(self, input_data: InputData):
@@ -138,7 +126,7 @@ class DataCheck:
                 output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
                 output_layer.out_features = n_classes
         return model
-    
+
     def _check_state_dict(self, state_dict: dict, input_data: InputData):
         if not input_data.task.task_type.value == 'classification':
             return state_dict

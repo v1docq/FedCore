@@ -1,6 +1,8 @@
+import logging
 import os
 import warnings
 from copy import deepcopy
+from datetime import datetime
 from functools import partial
 from typing import Union, Optional, Callable
 import numpy as np
@@ -18,13 +20,13 @@ from fedcore.architecture.abstraction.decorators import DaskServer, exception_ha
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
+    FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,
     FEDOT_GET_METRICS,
 )
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
-
 
 warnings.filterwarnings("ignore")
 
@@ -47,10 +49,9 @@ class FedCore(Fedot):
 
     def __init__(self, api_config: ConfigTemplate, **kwargs):
         super(Fedot, self).__init__()
-        # self.manager = ApiManager().build(kwargs)
         api_config.update(kwargs)
         self.manager = api_config
-        self.logger = self.manager.logger
+        self.logger = logging.Logger('Fedcore')
 
     def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
         self.logger.info('-' * 50)
@@ -59,20 +60,22 @@ class FedCore(Fedot):
         self.repo = FedcoreModels().setup_repository()
         if not isinstance(self.manager.automl_config.optimizer, partial):
             fedcore_opt = partial(FedcoreEvoOptimizer, optimisation_params={
-                                     'mutation_strategy': self.manager.automl_config.mutation_strategy,
-                                     'mutation_agent': self.manager.automl_config.mutation_agent})
+                'mutation_strategy': self.manager.automl_config.mutation_strategy,
+                'mutation_agent': self.manager.automl_config.mutation_agent})
             self.manager.automl_config.optimizer = fedcore_opt
             # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(**self.manager.automl_config.config,
+        self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](params=self.manager.learning_config.peft_strategy_params)
-        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params
-        self.manager.solver.params.data.update({'initial_assumption': initial_assumption.build()})
+        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
+        initial_assumption = initial_assumption(params=self.manager.learning_config.peft_strategy_params.to_dict())
+        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params.to_dict()
+        initial_pipeline = initial_assumption.build()
+        self.manager.solver.params.data.update({'initial_assumption': initial_pipeline})
         return input_data
 
     def __init_dask(self, input_data):
@@ -106,10 +109,12 @@ class FedCore(Fedot):
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
         pretrained_model = fedot_pipeline.fit(train_data)
         fedcore_trainer = fedot_pipeline.operator.root_node.operation.fitted_operation
-        path_to_save_pretrain = os.path.join(self.manager.compute_config.config['output_folder'],
-                                             f'pretrain_model_checkpoint_at_{fedcore_trainer.epochs}_epoch.pt')
-        os.makedirs(self.manager.compute_config.config['output_folder'])
-        fedcore_trainer.save_model(path_to_save_pretrain)
+        path_to_save_pretrain = os.path.join(self.manager.compute_config.output_folder,
+                                             str(datetime.datetime.now()).split(':')[0])
+        os.makedirs(path_to_save_pretrain)
+        path_to_model = os.path.join(path_to_save_pretrain,
+                                     f'pretrain_model_checkpoint_at_{fedcore_trainer.epochs}_epoch.pt')
+        fedcore_trainer.save_model(path_to_model)
         train_data.target = pretrained_model.predict
         return train_data
 
@@ -128,18 +133,18 @@ class FedCore(Fedot):
         """
 
         def fit_function(train_data):
-            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]()
-            model_learning_pipeline.heads[0].parameters = self.manager.learning_config.config[
-                'learning_strategy_params']
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'].__contains__(
                 'scratch')
-            fitted_solver = Maybe.insert(train_data).then(
-                lambda data: self._pretrain_before_optimise(model_learning_pipeline.build(),
-                                                            data) if pretrain_before_optimise else data). \
-                then(self.manager.solver.fit).maybe(None, lambda solver: solver)
+            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]()
+            model_learning_pipeline.heads[0].parameters = self.manager.learning_config.learning_strategy_params.to_dict()
+            model_learning_pipeline = model_learning_pipeline.build()
+            pretrain_func = lambda data: self._pretrain_before_optimise(model_learning_pipeline, data) \
+                if pretrain_before_optimise else data
+            fitted_solver = Maybe.insert(train_data).then(pretrain_func).then(self.manager.solver.fit). \
+                maybe(None, lambda solver: solver)
             return fitted_solver
 
-        #with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
+        # with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
         self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
             then(self.__init_fedcore_backend). \
             then(self.__init_dask). \
@@ -166,7 +171,7 @@ class FedCore(Fedot):
         self.optimised_model = fitted_solver.target
         return fitted_solver
 
-    def predict(self, predict_data: tuple, output_mode:str = 'fedcore', **kwargs):
+    def predict(self, predict_data: tuple, output_mode: str = 'fedcore', **kwargs):
         """
         Method to obtain prediction labels from trained Industrial model.
 
@@ -178,9 +183,9 @@ class FedCore(Fedot):
 
         """
         self.manager.predicted_labels = Maybe.insert(self._process_input_data(predict_data)). \
-                                         then(self.__init_fedcore_backend). \
-                                         then(lambda data: self.__abstract_predict(data,output_mode)). \
-                                         maybe(None, lambda output: output)
+            then(self.__init_fedcore_backend). \
+            then(lambda data: self.__abstract_predict(data, output_mode)). \
+            maybe(None, lambda output: output)
 
         return self.manager.predicted_labels
 
