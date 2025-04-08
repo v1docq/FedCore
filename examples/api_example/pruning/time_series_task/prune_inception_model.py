@@ -38,9 +38,12 @@ fedot_config = FedotConfigTemplate(problem='regression',
 
 model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
-                                               depth=3)
+                                               depth=6)
 
 pretrain_config = NeuralModelConfigTemplate(epochs=200,
+                                            log_each=10,
+                                            eval_each=15,
+                                            save_each=50,
                                             criterion=LOSS,
                                             model_architecture=model_config,
                                             custom_learning_params=dict(use_early_stopping={'patience': 30,

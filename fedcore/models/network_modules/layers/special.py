@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from typing import Optional
 
 import torch
@@ -214,12 +216,15 @@ class InceptionModule(Module):
         return ks
 
     def forward(self, input_tensor):
-        x = self.bottleneck(input_tensor)
-        conv_result = [conv_layer(x.float()) for conv_layer in self.convs]
-        max_conv_result = self.maxconvpool(x.float())
-        x = self.concat(conv_result + max_conv_result)
-        normalized_output = self.batch_norm(x)
-        return self.activation(normalized_output)
+        x = self.bottleneck(input_tensor)  # step 1 - project to lower dimension
+        conv_result = [conv_layer(x.float()) for conv_layer in
+                       self.convs]  # step 2 - apply set of conv layers with different "scales" (kernel_size)
+        max_conv_result = [self.maxconvpool(
+            input_tensor.float())]  # step 3 - apply "standard" (small fixed kernel size) conv layer for input signal
+        x = self.concat(conv_result + max_conv_result)  # step 4 - concat in one embedding
+        normalized_output = self.batch_norm(x)  # step 5 - normalize output
+        output = self.activation(normalized_output)  # step 6 - apply activation func for output
+        return output
 
 
 @delegates(InceptionModule.__init__)
@@ -236,39 +241,45 @@ class InceptionBlock(Module):
         self.residual, self.depth = residual, depth
         self.inception, self.shortcut = nn.ModuleList(), nn.ModuleList()
         for d in range(self.depth):
+            inception_module_dim = input_dim if d == 0 else number_of_filters * 4
             self.inception.append(
                 InceptionModule(
-                    input_dim if d == 0 else number_of_filters * 4,
-                    number_of_filters,
+                    input_dim=inception_module_dim,
+                    number_of_filters=number_of_filters,
                     **kwargs)
             )
             add_skip_connection = all([self.residual, d % 3 == 2])
             if add_skip_connection:
-                input_filters = number_of_filters if d == 2 else number_of_filters * 4
+                # input_filters = input_dim if d == 2 else number_of_filters * 4
+                input_filters = input_dim
                 output_filters = number_of_filters * 4
                 self._add_skip_connection(input_filters, output_filters)
         self.add = Add()
         self.activation = get_activation_fn(activation)
 
     def _add_skip_connection(self, input_filters, output_filters):
-        if input_filters == output_filters:
-            skip_connection_layer = BN1d(input_filters)
-        else:
-            skip_connection_layer = ConvBlock(input_filters, output_filters, 1, act=None)
+        skip_connection_layer = nn.Sequential(nn.Conv1d(in_channels=input_filters, out_channels=output_filters,
+                                                        kernel_size=1, stride=1, padding=0),
+                                              nn.BatchNorm1d(num_features=output_filters))
+        # if input_filters == output_filters:
+        #     skip_connection_layer = BN1d(input_filters)
+        # else:
+        #     skip_connection_layer = ConvBlock(input_filters, output_filters, 1, act=None)
         self.shortcut.append(skip_connection_layer)
 
     def forward(self, input_tensor):
         # going through all inception block
+        X = deepcopy(input_tensor)
         for d, l in enumerate(range(self.depth)):
-            input_tensor = self.inception[d](input_tensor)
+            X = self.inception[d](X)
             add_skip_connection = all([self.residual, d % 3 == 2])
             # going through all inception block
             if add_skip_connection:
                 residual_tensor = self.shortcut[d // 3](input_tensor)
-                tensor_sum = self.add(input_tensor, residual_tensor)
-                input_tensor = self.activation(tensor_sum)
+                X = self.add(X, residual_tensor)
+                X = self.activation(X)
 
-        return input_tensor
+        return X
 
 
 class _TSTiEncoderLayer(nn.Module):

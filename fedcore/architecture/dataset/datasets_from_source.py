@@ -243,6 +243,8 @@ class DatasetFromFolder(DatasetFolder):
             feature, target = self.files[idx]
         if isinstance(feature, np.ndarray):
             image, target = self.transform(feature), self.transform(target)
+            if len(image.shape) > 2 and image.shape[0] == 1:  # custom_check for incorrected sampled batch
+                image = image.squeeze()
         else:
             image = self.transform(self._default_image_loader(feature))
             for ext in IMG_EXTENSIONS:

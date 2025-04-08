@@ -58,7 +58,7 @@ class ApiLoader:
         val_dataloader = DataLoader(dataset=val_dataset, **self.loader_params)
         sample = next(iter(torch_dataset))[0]
         num_classes = len(train_dataloader.dataset.classes) if hasattr(train_dataloader.dataset, 'classes') else 1
-        input_dim = sample.shape[1]
+        input_dim = sample.shape[1] if len(sample.shape) > 2 else sample.shape[0]
         fedcore_train_data = CompressionInputData(
             features=np.zeros((2, 2)),
             input_dim=input_dim,

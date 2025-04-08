@@ -202,6 +202,7 @@ class NodeTemplate(ConfigTemplate):
     """Computational Node settings. May include hooks summon keys"""
     log_each: Optional[int] = LookUp(None)
     eval_each: Optional[int] = LookUp(None)
+    save_each: Optional[int] = LookUp(None)
     epochs: int = 15
     optimizer: Optimizers = 'adam'
     scheduler: Optional[Schedulers] = None

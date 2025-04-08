@@ -54,7 +54,7 @@ class BaseNeuralModel(torch.nn.Module):
 
     def __init__(self, params: Optional[OperationParameters] = None):
         super().__init__()
-        self.params = params or {}
+        self.params = params.to_dict()
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_empty_object()
         self._init_null_object()
@@ -197,8 +197,8 @@ class BaseNeuralModel(torch.nn.Module):
                                       if hasattr(StructureCriterions, name)})
             for name, val in additional_losses.items():
                 self.history[f'{stage}_{name}_loss'].append((epoch, val))
-            
-        return reduce(torch.add, additional_losses.values(), quality_loss)
+        final_loss = reduce(torch.add, additional_losses.values(), quality_loss)
+        return final_loss
 
     def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
@@ -223,9 +223,11 @@ class BaseNeuralModel(torch.nn.Module):
         training_loss = 0.0
         self.model.train()
         for batch in tqdm(dataloader, desc='Batch #'):
-            *inputs, targets = batch
-            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            output = self.model(*inputs)
+            # *inputs, targets = batch
+            # inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            inputs, targets = batch
+            output = self.model(inputs.to(self.device))
+            targets = targets.to(self.device).to(output.dtype)
             loss = self._compute_loss(loss_fn, output,
                                       targets.to(self.device), epoch=epoch)
             loss.backward()
