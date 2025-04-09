@@ -63,6 +63,7 @@ class FedCore(Fedot):
                 'mutation_strategy': self.manager.automl_config.mutation_strategy,
                 'mutation_agent': self.manager.automl_config.mutation_agent})
             self.manager.automl_config.optimizer = fedcore_opt
+            self.manager.automl_config.fedot_config.optimizer = fedcore_opt
             # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
@@ -73,7 +74,6 @@ class FedCore(Fedot):
                                     use_auto_preprocessing=False)
         initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
         initial_assumption = initial_assumption(params=self.manager.learning_config.peft_strategy_params.to_dict())
-        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params.to_dict()
         initial_pipeline = initial_assumption.build()
         self.manager.solver.params.data.update({'initial_assumption': initial_pipeline})
         return input_data

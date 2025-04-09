@@ -29,18 +29,12 @@ class BasePruner(BaseCompressionModel):
         # finetune params
         self.epochs = params.get("epochs", 5)
         self.ft_params = params.get("finetune_params", None)
-        if self.ft_params is None:
-            self.ft_params = {}
-            self.ft_params["custom_loss"] = None
-            self.ft_params["epochs"] = round(self.epochs / 3)
-
-        self.criterion = params.get("loss", nn.CrossEntropyLoss())
         self.optimizer = params.get("optimizer", optim.Adam)
-        self.learning_rate = params.get("lr", 0.001)
+        self.learning_rate = params.get("lr", 0.0001)
 
         # pruning gradients params
         self.ft_params['criterion_for_grad'] = params.get("loss", nn.CrossEntropyLoss())
-        self.ft_params['lr_for_grad'] = params.get("lr", 0.001)
+        self.ft_params['lr_for_grad'] = params.get("lr", 0.0001)
 
         # pruning params
         self.pruner_name = params.get("pruner_name", "meta_pruner")
@@ -91,10 +85,7 @@ class BasePruner(BaseCompressionModel):
         else:
             self.trainer = BaseNeuralModel(self.ft_params)
         if hasattr(self.model_before_pruning, 'model'):
-            self.trainer = self.model_before_pruning
-            self.model_before_pruning = self.model_before_pruning.model
-        else:
-            self.trainer.model = self.model_before_pruning
+            self.trainer.model = self.model_before_pruning.model
         self.model_before_pruning.to(default_device())
         self.model_after_pruning = deepcopy(self.model_before_pruning)
         print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
@@ -148,6 +139,7 @@ class BasePruner(BaseCompressionModel):
     def finetune(self, finetune_object, finetune_data):
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model_before_pruning, self.data_batch_for_calib)
         print("==============After pruning=================")
+        finetune_object = self.validator.validate_pruned_layers(finetune_object)
         macs, nparams = tp.utils.count_ops_and_params(finetune_object, self.data_batch_for_calib)
         print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))

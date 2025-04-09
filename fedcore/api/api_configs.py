@@ -178,6 +178,7 @@ class FedotConfigTemplate(ConfigTemplate):
     pop_size: int = 5
     early_stopping_iterations: int = 10
     early_stopping_timeout: int = 10
+    optimizer: Optional[Any] = None
     with_tuning: bool = False
     problem: FedotTaskEnum = None
     task_params: Optional[TaskTypesEnum] = None

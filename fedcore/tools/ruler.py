@@ -35,7 +35,7 @@ class PerformanceEvaluator:
         self.batch_size = batch_size  # or self.data_loader.batch_size
 
         self._init_null_object()
-        self._init_eval_backend(device)
+        self.device = device
         self._init_model(model)
 
         dataset_from_directory = isinstance(data, str)  ### where's func for string dataset loading
@@ -56,15 +56,6 @@ class PerformanceEvaluator:
         self.throughput = None
         self.model_size = None
         self.target_metrics = None
-
-    def _init_eval_backend(self, device):
-        self.cuda_allowed = all([  # not getattr(self.model, '_is_quantized', False),
-            device != 'cpu',
-            torch.cuda.is_available()])
-        if self.cuda_allowed:
-            self.device = default_device("CUDA")
-        else:
-            self.device = default_device('cpu')
 
     def _init_model(self, model):
         is_class_container = hasattr(model, "model")
@@ -120,7 +111,7 @@ class PerformanceEvaluator:
                 features = batch[0]
                 if isinstance(features, torch.Tensor):
                     for sample in features:
-                        is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
+                        is_already_cuda = all([hasattr(sample, "cuda"), self.device.type == 'cuda'])
                         if is_already_cuda:
                             sample = sample.cuda(non_blocking=True)
                         else:
@@ -128,14 +119,14 @@ class PerformanceEvaluator:
                         sample_batch = sample[None, ...]
                         tic1 = time.time()
                         self.model(sample_batch)
-                        if self.cuda_allowed:
+                        if self.device.type == 'cuda':
                             torch.cuda.synchronize()
                         tic2 = time.time()
                         lat_list.append((tic2 - tic1))
             else:
                 tic1 = time.time()
                 self.model(batch.to(self.device))
-                if self.cuda_allowed:
+                if self.device.type == 'cuda':
                     torch.cuda.synchronize()
                 tic2 = time.time()
                 lat_list.append((tic2 - tic1))
@@ -178,7 +169,7 @@ class PerformanceEvaluator:
     @torch.no_grad()
     def warm_up_cuda(self, n_batches=3):
         """Warm up CUDA by performing some dummy computations"""
-        if self.cuda_allowed:
+        if self.device.type == 'cuda':
             for batch in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
                 if isinstance(batch, tuple) or isinstance(batch, list):
                     inputs = batch[0]

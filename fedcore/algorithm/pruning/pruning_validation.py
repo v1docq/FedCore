@@ -15,14 +15,23 @@ class PruningValidator:
                                  "object_detection", "chronos", "fcos_resnet50_fpn", "keypointrcnn_resnet50_fpn",
                                  "maskrcnn_resnet50_fpn_v2"]
 
-    def validate_pruned_layers(self, layer, pruning_fn):
-        is_linear_layer = isinstance(layer, torch.nn.Linear)
-        prune_fc_out = isinstance(pruning_fn, type(PRUNING_FUNC["linear_out"]))
-        if is_linear_layer:
-            is_fc_layer = layer.out_features == self.output_dim
-        else:
-            is_fc_layer = False
-        return True if not all([is_linear_layer, is_fc_layer, prune_fc_out]) else False
+    def validate_pruned_layers(self, pruned_model):
+        list_of_layers = list(pruned_model.modules())
+        for layer in list_of_layers:
+            if isinstance(layer, torch.nn.BatchNorm1d):
+                current_layer_shape = layer.bias.shape[0]
+                shape_after_pruning = layer.num_features
+                if current_layer_shape != shape_after_pruning:
+                    layer.bias = torch.nn.Parameter(layer.bias[:shape_after_pruning])
+                    layer.running_var = torch.Tensor(layer.running_var[:shape_after_pruning])
+                    layer.running_mean = torch.Tensor(layer.running_mean[:shape_after_pruning])
+                    layer.weight = torch.nn.Parameter(layer.weight[:shape_after_pruning])
+            if isinstance(layer, torch.nn.Conv1d):
+                current_layer_shape = layer.weight.shape[1]
+                shape_after_pruning = layer.in_channels
+                if current_layer_shape != shape_after_pruning:
+                    layer.weight = torch.nn.Parameter(layer.weight[:, :shape_after_pruning, :])
+        return pruned_model
 
     def _filter_specified_layers(self, model_name, model, ignored_layers):
         if model_name.__contains__("ssd"):
@@ -91,8 +100,15 @@ class PruningValidator:
             return self.filter_layers_for_tst(model)
         else:
             for layer in model_layers:
+                # dont prune final fc layer
                 if isinstance(layer, torch.nn.Linear) and layer.out_features == self.output_dim:
                     ignored_layers.append(layer)
+                # dont prune input conv layer
+                elif isinstance(layer, torch.nn.Conv1d):
+                    if layer.in_channels == self.input_dim:
+                        ignored_layers.append(layer)
+                # elif isinstance(layer, torch.nn.BatchNorm1d):
+                #     ignored_layers.append(layer)
             if model_name in self.specified_models:
                 self._filter_specified_layers(model=model, model_name=model_name, ignored_layers=ignored_layers)
 
