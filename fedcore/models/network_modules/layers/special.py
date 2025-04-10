@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from typing import Optional
 
 import torch
@@ -19,7 +21,6 @@ from fedcore.models.network_modules.layers.linear_layers import (
     Noop,
     Transpose,
 )
-
 
 
 class EarlyStopping:
@@ -63,9 +64,8 @@ class EarlyStopping:
         self.val_loss_min = val_loss
 
 
-
 def adjust_learning_rate(
-    optimizer, scheduler, epoch, learning_rate, printout=True, lradj="3"
+        optimizer, scheduler, epoch, learning_rate, printout=True, lradj="3"
 ):
     # lr = args.learning_rate * (0.2 ** (epoch // 2))
     if lradj == "type1":
@@ -105,8 +105,8 @@ class MovingAverage(nn.Module):
     """Moving average block to highlight the trend of time series"""
 
     def __init__(
-        self,
-        kernel_size: int,  # the size of the window
+            self,
+            kernel_size: int,  # the size of the window
     ):
         super().__init__()
         padding_left = (kernel_size - 1) // 2
@@ -126,8 +126,8 @@ class SeriesDecomposition(nn.Module):
     "Series decomposition block"
 
     def __init__(
-        self,
-        kernel_size: int,  # the size of the window
+            self,
+            kernel_size: int,  # the size of the window
     ):
         super().__init__()
         self.moving_avg = MovingAverage(kernel_size)
@@ -188,25 +188,18 @@ class ParameterizedLayer(Module):
 
 class InceptionModule(Module):
     def __init__(
-        self, input_dim, number_of_filters, ks=40, bottleneck=True, activation="ReLU"
+            self, input_dim, number_of_filters, base_kernel_size=40, bottleneck=True, activation="ReLU"
     ):
-        ks = [ks // (2**i) for i in range(3)]
-        ks = [k if k % 2 != 0 else k - 1 for k in ks]  # ensure odd ks
-        bottleneck = bottleneck if input_dim > 1 else False
-        self.bottleneck = (
-            Conv1d(input_dim, number_of_filters, 1, bias=False) if bottleneck else Noop
-        )
-        self.convs = nn.ModuleList(
-            [
-                Conv1d(
-                    number_of_filters if bottleneck else input_dim,
-                    number_of_filters,
-                    k,
-                    bias=False,
-                )
-                for k in ks
-            ]
-        )
+        kernel_size_list = self._generate_kernel_size_list(base_kernel_size)
+        if input_dim > 1:
+            self.bottleneck = Conv1d(input_dim, number_of_filters, 1, bias=False)
+            input_filters = number_of_filters
+        else:
+            self.bottleneck = Noop
+            input_filters = input_dim
+        conv_layers_list = [Conv1d(input_filters, number_of_filters, kernel_size, bias=False, )
+                            for kernel_size in kernel_size_list]
+        self.convs = nn.ModuleList(conv_layers_list)
         self.maxconvpool = nn.Sequential(
             *[
                 nn.MaxPool1d(3, stride=1, padding=1),
@@ -217,78 +210,95 @@ class InceptionModule(Module):
         self.batch_norm = BN1d(number_of_filters * 4)
         self.activation = get_activation_fn(activation)
 
-    @convert_to_torch_tensor
-    def forward(self, x):
-        input_tensor = x
-        x = self.bottleneck(input_tensor)
-        x = self.concat(
-            [l(x.float()) for l in self.convs]
-            + [self.maxconvpool(input_tensor.float())]
-        )
-        return self.activation(self.batch_norm(x))
+    def _generate_kernel_size_list(self, base_kernel_size):
+        ks = [base_kernel_size // (2 ** i) for i in range(3)]
+        ks = [k if k % 2 != 0 else k - 1 for k in ks]  # ensure odd ks
+        return ks
+
+    def forward(self, input_tensor):
+        x = self.bottleneck(input_tensor)  # step 1 - project to lower dimension
+        conv_result = [conv_layer(x.float()) for conv_layer in
+                       self.convs]  # step 2 - apply set of conv layers with different "scales" (kernel_size)
+        max_conv_result = [self.maxconvpool(
+            input_tensor.float())]  # step 3 - apply "standard" (small fixed kernel size) conv layer for input signal
+        x = self.concat(conv_result + max_conv_result)  # step 4 - concat in one embedding
+        normalized_output = self.batch_norm(x)  # step 5 - normalize output
+        output = self.activation(normalized_output)  # step 6 - apply activation func for output
+        return output
 
 
 @delegates(InceptionModule.__init__)
 class InceptionBlock(Module):
     def __init__(
-        self,
-        input_dim,
-        number_of_filters=32,
-        residual=False,
-        depth=6,
-        activation="ReLU",
-        **kwargs,
+            self,
+            input_dim,
+            number_of_filters=32,
+            residual=True,
+            depth=6,
+            activation="ReLU",
+            **kwargs,
     ):
         self.residual, self.depth = residual, depth
         self.inception, self.shortcut = nn.ModuleList(), nn.ModuleList()
-        for d in range(depth):
+        for d in range(self.depth):
+            inception_module_dim = input_dim if d == 0 else number_of_filters * 4
             self.inception.append(
                 InceptionModule(
-                    input_dim if d == 0 else number_of_filters * 4,
-                    number_of_filters,
-                    **kwargs,
-                )
+                    input_dim=inception_module_dim,
+                    number_of_filters=number_of_filters,
+                    **kwargs)
             )
-            if self.residual and d % 3 == 2:
-                n_in, n_out = (
-                    number_of_filters if d == 2 else number_of_filters * 4
-                ), number_of_filters * 4
-                self.shortcut.append(
-                    BN1d(n_in) if n_in == n_out else ConvBlock(n_in, n_out, 1, act=None)
-                )
+            add_skip_connection = all([self.residual, d % 3 == 2])
+            if add_skip_connection:
+                # input_filters = input_dim if d == 2 else number_of_filters * 4
+                input_filters = input_dim
+                output_filters = number_of_filters * 4
+                self._add_skip_connection(input_filters, output_filters)
         self.add = Add()
         self.activation = get_activation_fn(activation)
 
-    @convert_to_torch_tensor
-    def forward(self, x):
-        res = x
+    def _add_skip_connection(self, input_filters, output_filters):
+        skip_connection_layer = nn.Sequential(nn.Conv1d(in_channels=input_filters, out_channels=output_filters,
+                                                        kernel_size=1, stride=1, padding=0),
+                                              nn.BatchNorm1d(num_features=output_filters))
+        # if input_filters == output_filters:
+        #     skip_connection_layer = BN1d(input_filters)
+        # else:
+        #     skip_connection_layer = ConvBlock(input_filters, output_filters, 1, act=None)
+        self.shortcut.append(skip_connection_layer)
+
+    def forward(self, input_tensor):
+        # going through all inception block
+        X = deepcopy(input_tensor)
         for d, l in enumerate(range(self.depth)):
-            x = self.inception[d](x)
-            try:
-                if self.residual and d % 3 == 2:
-                    res = x = self.activation(self.add(x, self.shortcut[d // 3](res)))
-            except Exception:
-                _ = 1
-        return x
+            X = self.inception[d](X)
+            add_skip_connection = all([self.residual, d % 3 == 2])
+            # going through all inception block
+            if add_skip_connection:
+                residual_tensor = self.shortcut[d // 3](input_tensor)
+                X = self.add(X, residual_tensor)
+                X = self.activation(X)
+
+        return X
 
 
 class _TSTiEncoderLayer(nn.Module):
     def __init__(
-        self,
-        q_len,
-        d_model,
-        n_heads,
-        d_k=None,
-        d_v=None,
-        d_ff=256,
-        store_attn=False,
-        norm="BatchNorm",
-        attn_dropout=0,
-        dropout=0.0,
-        bias=True,
-        activation="GELU",
-        res_attention=False,
-        pre_norm=False,
+            self,
+            q_len,
+            d_model,
+            n_heads,
+            d_k=None,
+            d_v=None,
+            d_ff=256,
+            store_attn=False,
+            norm="BatchNorm",
+            attn_dropout=0,
+            dropout=0.0,
+            bias=True,
+            activation="GELU",
+            res_attention=False,
+            pre_norm=False,
     ):
         super().__init__()
         assert (
@@ -381,23 +391,23 @@ class _TSTiEncoderLayer(nn.Module):
 
 class _TSTiEncoder(nn.Module):  # i means channel-independent
     def __init__(
-        self,
-        input_dim,
-        patch_num,
-        patch_len,
-        n_layers=3,
-        d_model=128,
-        n_heads=16,
-        d_k=None,
-        d_v=None,
-        d_ff=256,
-        norm="BatchNorm",
-        attn_dropout=0.0,
-        dropout=0.0,
-        act="GELU",
-        store_attn=False,
-        res_attention=True,
-        pre_norm=False,
+            self,
+            input_dim,
+            patch_num,
+            patch_len,
+            n_layers=3,
+            d_model=128,
+            n_heads=16,
+            d_k=None,
+            d_v=None,
+            d_ff=256,
+            norm="BatchNorm",
+            attn_dropout=0.0,
+            dropout=0.0,
+            act="GELU",
+            store_attn=False,
+            res_attention=True,
+            pre_norm=False,
     ):
 
         super().__init__()
@@ -490,12 +500,12 @@ class RevIN(nn.Module):
     """
 
     def __init__(
-        self,
-        input_dim: int,  # #features (aka variables or channels)
-        affine: bool = True,  # flag to incidate if RevIN has learnable weight and bias
-        subtract_last: bool = False,
-        dim: int = 2,  # int or tuple of dimensions used to calculate mean and std
-        eps: float = 1e-5,  # epsilon - parameter added for numerical stability
+            self,
+            input_dim: int,  # #features (aka variables or channels)
+            affine: bool = True,  # flag to incidate if RevIN has learnable weight and bias
+            subtract_last: bool = False,
+            dim: int = 2,  # int or tuple of dimensions used to calculate mean and std
+            eps: float = 1e-5,  # epsilon - parameter added for numerical stability
     ):
         super().__init__()
         self.input_dim, self.affine, self.subtract_last, self.dim, self.eps = (
@@ -530,7 +540,7 @@ class RevIN(nn.Module):
         else:
             self.sub = torch.mean(x, dim=-1, keepdim=True).detach()
         self.std = (
-            torch.std(x, dim=-1, keepdim=True, unbiased=False).detach() + self.eps
+                torch.std(x, dim=-1, keepdim=True, unbiased=False).detach() + self.eps
         )
         if self.affine:
             x = x.sub(self.sub)
@@ -554,3 +564,26 @@ class RevIN(nn.Module):
             x = x.mul(self.std)
             x = x.add(self.sub)
             return x
+
+
+class Residual(nn.Module):
+    """Implementation of residual connection: `output = x + fn(x)`."""
+
+    def __init__(self, fn: nn.Module):
+        super().__init__()
+        self.fn = fn
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x + self.fn(x)
+
+
+class PreNorm(nn.Module):
+    """Applies normalization before `fn`."""
+
+    def __init__(self, dim: int, fn: nn.Module):
+        super().__init__()
+        self.fn = fn
+        self.norm = nn.LayerNorm(dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.fn(self.norm(x))

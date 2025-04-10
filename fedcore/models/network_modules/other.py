@@ -1,5 +1,7 @@
 from pathlib import Path
+from typing import Any, Optional, Callable
 
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,12 +10,13 @@ from fastai.torch_core import Module
 from fastcore.basics import listify
 from torch import Tensor
 
-from fedot_ind.core.models.nn.network_modules.activation import (
+from fedcore.models.network_modules.activation import (
     pytorch_act_names,
     pytorch_acts,
 )
-from fedot_ind.core.models.nn.network_modules.layers.linear_layers import Noop
-from fedot_ind.core.models.nn.network_modules.layers.pooling_layers import GAP1d
+from fedcore.models.network_modules.layers.linear_layers import Noop
+from fedcore.models.network_modules.layers.pooling_layers import GAP1d
+from fedcore.models.network_modules.activation import get_activation_fn
 
 
 def correct_sizes(sizes):
@@ -202,7 +205,7 @@ class Sequential(nn.Sequential):
 
     def forward(self, *x):
         for i, module in enumerate(self._modules.values()):
-            x = module(*x) if isinstance(x, (list, tuple, L)) else module(x)
+            x = module(*x) if isinstance(x, (list, tuple)) else module(x)
         return x
 
 
@@ -364,6 +367,46 @@ class GaussianNoise(Module):
         return x
 
 
+class FeedForward(nn.Module):
+    """Implementation of FFN block with optional GLU.
+
+    Args:
+        dim (int): Input dimension.
+        mult (int): Hidden layer multiplier (default: 4).
+        dropout (float): Dropout probability (default: 0).
+        activation (str): Activation name (default: "gelu").
+        glu (bool): Use GLU (default: False).
+    """
+
+    def __init__(
+            self,
+            dim: int,
+            mult: int = 4,
+            dropout: Optional[float] = 0,
+            activation: Optional[str] = "gelu",
+            glu: bool = False
+    ):
+        super().__init__()
+        self.glu = glu
+        hidden_dim = dim * mult
+
+        self.act = get_activation_fn(activation or "gelu")
+
+        self.w1 = nn.Linear(dim, hidden_dim * (2 if glu else 1))
+        self.dropout = nn.Dropout(dropout)
+        self.w2 = nn.Linear(hidden_dim, dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.glu:
+            x, gate = self.w1(x).chunk(2, dim=-1)
+            x = self.act(x) * gate
+        else:
+            x = self.act(self.w1(x))
+
+        x = self.dropout(x)
+        return self.w2(x)
+
+
 class PositionwiseFeedForward(nn.Sequential):
     def __init__(self, dim, dropout=0.0, act="reglu", mlp_ratio=1):
         act_mult = 2 if act.lower() in ["geglu", "reglu"] else 1
@@ -464,6 +507,14 @@ class MultiEmbedding(Module):
             1,
         )
         return torch.cat([x_cat, x_cont], 1)
+
+
+def init_tensor(tensor: Tensor) -> Tensor:
+    """Xavier-style uniform initialization for tensors."""
+    dim = tensor.shape[-1]
+    std = 1 / math.sqrt(dim)
+    torch.nn.init.uniform_(tensor, -std, std)
+    return tensor
 
 
 # def build_ts_model(arch, c_in=None, c_out=None, seq_len=None, d=None, dls=None, device=None, verbose=False,

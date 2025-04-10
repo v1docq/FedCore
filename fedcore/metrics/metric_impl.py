@@ -5,7 +5,7 @@ from torch.nn.functional import softmax
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 import torch
 from typing import Union
-
+from torch import Tensor
 import numpy as np
 import pandas as pd
 from fedot.core.data.data import InputData
@@ -306,10 +306,18 @@ class QualityMetric(Metric):
         metric = cls.default_value
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
         # get true targets from test/calib dataloader
-        true_target = reference_data.features.val_dataloader.dataset.targets
+        test_dataset = reference_data.features.val_dataloader.dataset
         # get predction from result.predict (OutputData)
-        true_pred = results.predict.predict
-        return cls.metric(cls, target=true_target, predict=true_pred)
+        prediction = results.predict.predict
+        if isinstance(prediction, Tensor):
+            prediction = prediction.cpu().detach().numpy().flatten()
+        if hasattr(test_dataset, 'targets'):
+            true_target = reference_data.features.val_dataloader.dataset.targets
+        else:
+            iter_object = iter(test_dataset)
+            true_target = np.array([batch[1] for batch in iter_object])
+
+        return cls.metric(cls, target=true_target, predict=prediction)
 
     @staticmethod
     def _get_least_frequent_val(array: np.ndarray):

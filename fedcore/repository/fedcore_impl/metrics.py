@@ -9,6 +9,7 @@ from fedot.core.repository.metrics_repository import (
 )
 from fedcore.metrics.metric_impl import (Accuracy,
                                          F1,
+                                        RMSE,
                                          Logloss,
                                          MAE,
                                          MAPE,
@@ -18,7 +19,7 @@ from fedcore.metrics.metric_impl import (Accuracy,
                                          QualityMetric,
                                          R2,
                                          SMAPE)
-from fedot.core.composer.metrics import (ROCAUC, RMSE, ComplexityMetric, NodeNum, StructuralComplexity)
+from fedot.core.composer.metrics import (ROCAUC, ComplexityMetric, NodeNum, StructuralComplexity)
 from typing import Union
 
 from fedcore.metrics.cv_metrics import (
@@ -94,7 +95,7 @@ class MetricsRepository:
         RegressionMetricsEnum.MAPE: MAPE.get_value,
         RegressionMetricsEnum.SMAPE: SMAPE.get_value,
         RegressionMetricsEnum.RMSE: RMSE.get_value,
-        RegressionMetricsEnum.RMSE_penalty: RMSE.get_value_with_penalty,
+        #RegressionMetricsEnum.RMSE_penalty: RMSE.get_value_with_penalty,
         RegressionMetricsEnum.R2: R2.get_value,
         # Distilation metric
         DistilationMetricsEnum.last_layer: LastLayer.get_value,
