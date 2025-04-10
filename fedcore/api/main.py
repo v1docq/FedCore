@@ -1,3 +1,4 @@
+import logging
 import os
 import warnings
 from copy import deepcopy
@@ -54,7 +55,8 @@ class FedCore(Fedot):
         # self.manager = ApiManager().build(kwargs)
         api_config.update(kwargs)
         self.manager = api_config
-        self.logger = self.manager.logger
+        # self.logger = self.manager.logger
+        self.logger = logging.getLogger("FedCoreAPI")
 
     def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
         self.logger.info('-' * 50)
@@ -71,7 +73,7 @@ class FedCore(Fedot):
 
     def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(**self.manager.automl_config.config,
+        self.manager.solver = Fedot(**self.manager.automl_config.config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
         initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](params=self.manager.learning_config.peft_strategy_params)
@@ -368,9 +370,11 @@ class FedCore(Fedot):
 
     def shutdown(self):
         """Shutdown Dask client"""
-        if self.manager.dask_client is not None:
+        # if self.manager.dask_client is not None:
+        if hasattr(self.manager, 'dask_client'):
             self.manager.dask_client.close()
             del self.manager.dask_client
-        if self.manager.dask_cluster is not None:
+        if hasattr(self.manager, 'dask_cluster'):
+        # if self.manager.dask_cluster is not None:
             self.manager.dask_cluster.close()
             del self.manager.dask_cluster

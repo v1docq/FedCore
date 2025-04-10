@@ -138,7 +138,7 @@ class ExtendableConfigTemplate(ConfigTemplate):
 @dataclass
 class DeviceConfigTemplate(ConfigTemplate):
     """Training device specification. TODO check fields"""
-    device: Literal['cuda', 'cpu', 'gpu'] = 'cuda'
+    device: Literal['cuda', 'cpu', 'gpu', 'mps'] = 'cuda'
     inference: Literal['onnx'] = 'onnx'
     
 @dataclass
@@ -231,4 +231,14 @@ class LowRankTemplate(NeuralModelConfigTemplate):
     """Example of specific node template"""
     custom_criterions: dict = None # {'norm_loss':{...},
     non_adaptive_threshold: float = .5
+    finetune_params: NeuralModelConfigTemplate = None
+
+
+@dataclass
+class PruningTemplate(NeuralModelConfigTemplate):
+    pruning_iterations: int = 1
+    importance: str = "BNScaleImportance"
+    pruner_name: str = "meta_pruner"
+    importance_norm: int = 2
+    pruning_ratio: float = 0.9
     finetune_params: NeuralModelConfigTemplate = None
