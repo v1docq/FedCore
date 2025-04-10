@@ -75,7 +75,7 @@ pretrain_config = NeuralModelConfigTemplate(epochs=200,
                                             custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                             'maximise_task': False,
                                                                                             'delta': 0.01}))
-finetune_config = NeuralModelConfigTemplate(epochs=3,
+finetune_config = NeuralModelConfigTemplate(epochs=15,
                                             log_each=3,
                                             eval_each=3,
                                             criterion=LOSS,
@@ -91,7 +91,7 @@ peft_config = PruningTemplate(importance="magnitude",
 fedot_config = FedotConfigTemplate(problem=PROBLEM,
                                    metric=METRIC_TO_OPTIMISE,
                                    pop_size=1,
-                                   timeout=5,
+                                   timeout=1,
                                    initial_assumption=initial_assumption)
 # config for AutoML agent
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)

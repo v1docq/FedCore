@@ -33,9 +33,10 @@ class PerformanceEvaluator:
         self.model_regime = model_regime
         self.n_batches = n_batches
         self.batch_size = batch_size  # or self.data_loader.batch_size
-
         self._init_null_object()
+
         self.device = device
+        self.cuda_allowed = True if self.device.type == 'cuda' else False
         self._init_model(model)
 
         dataset_from_directory = isinstance(data, str)  ### where's func for string dataset loading
@@ -111,7 +112,7 @@ class PerformanceEvaluator:
                 features = batch[0]
                 if isinstance(features, torch.Tensor):
                     for sample in features:
-                        is_already_cuda = all([hasattr(sample, "cuda"), self.device.type == 'cuda'])
+                        is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
                         if is_already_cuda:
                             sample = sample.cuda(non_blocking=True)
                         else:
@@ -119,14 +120,14 @@ class PerformanceEvaluator:
                         sample_batch = sample[None, ...]
                         tic1 = time.time()
                         self.model(sample_batch)
-                        if self.device.type == 'cuda':
+                        if self.cuda_allowed:
                             torch.cuda.synchronize()
                         tic2 = time.time()
                         lat_list.append((tic2 - tic1))
             else:
                 tic1 = time.time()
                 self.model(batch.to(self.device))
-                if self.device.type == 'cuda':
+                if self.cuda_allowed:
                     torch.cuda.synchronize()
                 tic2 = time.time()
                 lat_list.append((tic2 - tic1))
@@ -169,7 +170,7 @@ class PerformanceEvaluator:
     @torch.no_grad()
     def warm_up_cuda(self, n_batches=3):
         """Warm up CUDA by performing some dummy computations"""
-        if self.device.type == 'cuda':
+        if self.cuda_allowed:
             for batch in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
                 if isinstance(batch, tuple) or isinstance(batch, list):
                     inputs = batch[0]
