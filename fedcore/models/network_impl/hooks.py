@@ -10,6 +10,8 @@ from tqdm import tqdm
 
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
+from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.models.network_modules.layers.special import EarlyStopping
 
 VERBOSE = True
 

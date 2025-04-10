@@ -401,9 +401,11 @@ class FedCore(Fedot):
 
     def shutdown(self):
         """Shutdown Dask client"""
-        if self.manager.dask_client is not None:
+        # if self.manager.dask_client is not None:
+        if hasattr(self.manager, 'dask_client'):
             self.manager.dask_client.close()
             del self.manager.dask_client
-        if self.manager.dask_cluster is not None:
+        if hasattr(self.manager, 'dask_cluster'):
+        # if self.manager.dask_cluster is not None:
             self.manager.dask_cluster.close()
             del self.manager.dask_cluster

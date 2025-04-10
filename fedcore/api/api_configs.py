@@ -141,7 +141,7 @@ class ExtendableConfigTemplate(ConfigTemplate):
 @dataclass
 class DeviceConfigTemplate(ConfigTemplate):
     """Training device specification. TODO check fields"""
-    device: Literal['cuda', 'cpu', 'gpu'] = 'cuda'
+    device: Literal['cuda', 'cpu', 'gpu', 'mps'] = 'cuda'
     inference: Literal['onnx'] = 'onnx'
 
 
