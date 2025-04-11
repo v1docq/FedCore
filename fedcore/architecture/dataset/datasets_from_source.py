@@ -250,8 +250,8 @@ class DatasetFromFolder(DatasetFolder):
         else:
             feature, target = self.files[idx]
         if isinstance(feature, np.ndarray):
-            if not len(feature.shape) > 2:
-                image, target = Tensor(feature).reshape(1,-1), Tensor(target)
+            if not len(feature.shape) > 1:
+                image, target = Tensor(feature).reshape(1, -1), Tensor(target)
             else:
                 image, target = self.transform(feature), self.transform(target)
             if len(image.shape) > 2 and image.shape[0] == 1:  # custom_check for incorrected sampled batch
