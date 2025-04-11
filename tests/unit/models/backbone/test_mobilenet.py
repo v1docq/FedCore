@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from fedcore.architecture.dataset.task_specified.dummy_clf import DummyDatasetCLF
-from fedcore.models.backbone.mobilenet import MOBILENET_MODELS, MobileNet
+from fedcore.models.backbone.convolutional.mobilenet import MOBILENET_MODELS, MobileNet
 
 
 @pytest.mark.parametrize('model_name, in_channels',

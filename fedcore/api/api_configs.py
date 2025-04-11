@@ -216,7 +216,7 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
     """Example of specific node template"""
     input_dim: Union[None, int] = None
     output_dim: Union[None, int] = None
-    depth: int = 3
+    depth: Union[dict, int] = 3
     custom_model_params: dict = None
 
 

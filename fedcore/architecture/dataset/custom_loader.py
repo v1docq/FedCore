@@ -37,6 +37,7 @@ class TimeSeriesLoader:
         if is_tsv_or_csv_file:
             mode = 'tsv' if path_to_data.__contains__('.tsv') else 'csv'
             features, target = read_tsv_or_csv(path_to_data, mode=mode)
+            features = features.values
         elif is_txt_file:
             xfeatures, target = read_txt_files(path_to_data)
         elif is_ts_file:

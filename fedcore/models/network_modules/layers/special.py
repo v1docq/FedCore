@@ -188,7 +188,7 @@ class ParameterizedLayer(Module):
 
 class InceptionModule(Module):
     def __init__(
-            self, input_dim, number_of_filters, base_kernel_size=40, bottleneck=True, activation="ReLU"
+            self, input_dim, number_of_filters, base_kernel_size, bottleneck, activation="ReLU"
     ):
         kernel_size_list = self._generate_kernel_size_list(base_kernel_size)
         if input_dim > 1:
@@ -236,7 +236,9 @@ class InceptionBlock(Module):
             residual=True,
             depth=6,
             activation="ReLU",
-            **kwargs,
+            base_kernel_size=40,
+            bottleneck=True,
+            **kwargs
     ):
         self.residual, self.depth = residual, depth
         self.inception, self.shortcut = nn.ModuleList(), nn.ModuleList()
@@ -246,7 +248,9 @@ class InceptionBlock(Module):
                 InceptionModule(
                     input_dim=inception_module_dim,
                     number_of_filters=number_of_filters,
-                    **kwargs)
+                    activation=activation,
+                    base_kernel_size=base_kernel_size,
+                    bottleneck=bottleneck)
             )
             add_skip_connection = all([self.residual, d % 3 == 2])
             if add_skip_connection:

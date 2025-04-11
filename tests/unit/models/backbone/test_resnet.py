@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from fedcore.architecture.dataset.task_specified.dummy_clf import DummyDatasetCLF
-from fedcore.models.backbone.resnet import CLF_MODELS, ResNet
+from fedcore.models.backbone.convolutional.resnet import CLF_MODELS, ResNet
 
 
 @pytest.mark.parametrize('model_name, in_channels',

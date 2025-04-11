@@ -11,6 +11,7 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.io import read_image
+from torch import Tensor
 import torch
 import numpy as np
 import torch.utils.data as data
@@ -198,6 +199,7 @@ class DatasetFromFolder(DatasetFolder):
             self.files = [data_folder]
         self.root = data_folder
         self.transform = transform
+        self.class_names = None
         self._define_data_source(data_folder)
 
     def _define_data_source(self, data_folder):
@@ -206,7 +208,13 @@ class DatasetFromFolder(DatasetFolder):
         elif self.files[0].lower().endswith(TIME_SERIES_EXTENSIONS):
             self.is_dir_with_images = False
             feature, target = self._default_ts_loader(data_folder)
-            self.files = [(feature[:, idx, :], target[idx]) for idx in range(target.shape[0])]
+            unique_target_val = np.unique(target)
+            if len(unique_target_val) < 50:
+                self.class_names = unique_target_val
+            if len(feature.shape) > 2:
+                self.files = [(feature[:, idx, :], target[idx]) for idx in range(target.shape[0])]
+            else:
+                self.files = [(feature[idx, :], target[idx]) for idx in range(target.shape[0])]
         elif any([x.__contains__('labels') for x in self.files]):
             path_to_images = os.path.join(data_folder, 'images')
             path_to_labels = os.path.join(data_folder, 'labels')
@@ -242,7 +250,10 @@ class DatasetFromFolder(DatasetFolder):
         else:
             feature, target = self.files[idx]
         if isinstance(feature, np.ndarray):
-            image, target = self.transform(feature), self.transform(target)
+            if not len(feature.shape) > 2:
+                image, target = Tensor(feature).reshape(1,-1), Tensor(target)
+            else:
+                image, target = self.transform(feature), self.transform(target)
             if len(image.shape) > 2 and image.shape[0] == 1:  # custom_check for incorrected sampled batch
                 image = image.squeeze()
         else:
@@ -256,6 +267,11 @@ class DatasetFromFolder(DatasetFolder):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.files)
+
+    @property
+    def classes(self) -> int:
+        """Return length of dataset"""
+        return self.class_names
 
 
 class AbstractDataset(Dataset):
@@ -274,6 +290,10 @@ class AbstractDataset(Dataset):
     def __len__(self) -> int:
         """Return length of dataset"""
         return len(self.dataset_impl.files)
+
+    @property
+    def classes(self):
+        return self.dataset_impl.classes
 
 
 class ObjectDetectionDataset(AbstractDataset):

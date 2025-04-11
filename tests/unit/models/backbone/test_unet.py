@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from fedcore.architecture.dataset.task_specified.dummy_clf import DummyDatasetCLF
-from fedcore.models.backbone.unet import UNetwork
+from fedcore.models.backbone.encoder_decoder.unet import UNetwork
 
 
 @pytest.mark.parametrize('in_channels', [1, 3])

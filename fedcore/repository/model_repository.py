@@ -9,9 +9,9 @@ from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
 from fedcore.algorithm.quantization.quant_post_training import QuantPostModel, QuantDynamicModel
 
 # from fedcore.models.backbone.chronos import chronos_small
-from fedcore.models.backbone.mobilenet import MobileNetV3Small, MobileNetV3Large
-from fedcore.models.backbone.resnet import *
-from fedcore.models.backbone.custom import CustomModel
+from fedcore.models.backbone.convolutional.mobilenet import MobileNetV3Small, MobileNetV3Large
+from fedcore.models.backbone.convolutional.resnet import *
+from fedcore.models.backbone.custom.custom import CustomModel
 from torchvision.models.efficientnet import (
     efficientnet_b0,
     efficientnet_b1,
@@ -29,9 +29,9 @@ from torchvision.models.densenet import (
     densenet201,
 )
 
-from fedcore.models.backbone.segformer import segformer_pretrain
-from fedcore.models.backbone.tst import TSTModel
-from fedcore.models.backbone.inception import InceptionTimeModel
+from fedcore.models.backbone.pretrain_model.segformer import segformer_pretrain
+from fedcore.models.backbone.transformers.tst import TSTModel
+from fedcore.models.backbone.convolutional.inception import InceptionTimeModel
 
 class AtomizedModel(Enum):
     TRAINING_MODELS = {"training_model": BaseNeuralModel}
@@ -64,6 +64,7 @@ class AtomizedModel(Enum):
         "efficientnet_b7": efficientnet_b7,
     }
     RESNET_MODELS = {
+        "ResNet": ResNetModel,
         "ResNet18": resnet18,
         "ResNet34": resnet34,
         "ResNet50": resnet50,
