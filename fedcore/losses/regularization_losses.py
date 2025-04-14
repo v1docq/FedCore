@@ -1,5 +1,6 @@
 import torch
 from torch.nn.modules import Module
+from torch import Tensor
 
 
 class RegularizationLoss(Module):
