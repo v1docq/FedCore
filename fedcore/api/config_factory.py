@@ -29,13 +29,14 @@ class ConfigFactory:
             content.update(kwargs)
             for key, value in content.items():
                 value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
-                if not need_check:
+                if need_check:
                     self.__class__.check(key, value)
                     setattr(self, key, value)
                 else:
                     object.__setattr__(self, key, value)
             if not isinstance(self, ExtendableConfigTemplate):
                 delattr(self, '__dict__')
+            self._parent = None
 
         def __new__(cls, *args, **kwargs):
             return object.__new__(cls)
@@ -45,6 +46,9 @@ class ConfigFactory:
             if isinstance(val, Enum):
                 return val.value
             return val
+        
+        def __contains__(self, obj):
+            return hasattr(self, str(obj))
             
         def __setattr__(self, key, value):
             self.check(key, value)
