@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from inspect import isclass
+from itertools import chain
 
 import numpy as np
 from pathlib import Path
@@ -21,6 +22,29 @@ VERBOSE = True
 def now_for_file():
     return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
 
+
+class HooksCollection:
+    def __init__(self, hooks=None, additional_hooks=None, **kwargs):
+        self.__hooks = hooks or []
+        self.__additional_hooks = additional_hooks or []
+        self.__sort()
+
+    def __sort(self):
+        self.__hooks.sort(key=lambda x: x._hook_place)
+    
+    def append(self, hook):
+        assert isinstance(hook, BaseHook)
+        self.__hooks.append(hook)
+
+    def check_specific(self):
+        hook_classes = tuple(hook.__class__ for hook in self.__hooks)
+        for specific_hook in chain(*self.__additional_hooks):
+            if specific_hook.value in hook_classes:
+                return True 
+        return False
+    
+    def __repr__(self):
+        return repr(self.__hooks)
 
 class BaseHook(ABC):
     _SUMMON_KEY: str
