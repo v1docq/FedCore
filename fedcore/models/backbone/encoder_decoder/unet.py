@@ -2,6 +2,7 @@
 
 import torch
 import torch.nn as nn
+from segmentation-models-pytorch import UnetPlusPlus
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.layers import DoubleConv, Down, OutConv, Up
@@ -56,6 +57,20 @@ class UNet(nn.Module):
 class UNetwork:
     def __init__(self, input_dim, output_dim):
         self.model = UNet(n_channels=input_dim, n_classes=output_dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.to(default_device())
+        return self.model(x)
+
+
+class UNetPlusPlusNetwork:
+    def __init__(self, input_dim, output_dim, encoder: str = 'timm-efficientnet-b0', weights: str = 'imagenet'):
+        self.model = UnetPlusPlus(
+            encoder_name=encoder,
+            encoder_weights=weights,
+            in_channels=input_dim,
+            classes=output_dim,
+            activation=None)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(default_device())
