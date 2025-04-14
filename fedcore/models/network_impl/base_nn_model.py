@@ -23,11 +23,7 @@ from fedcore.repository.constanst_repository import (
     TorchLossesConstant,
 )
 
-from fedcore.models.network_impl.hooks import BaseHook
-
-def now_for_file():
-    return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
-
+from fedcore.models.network_impl.hooks import BaseHook, HooksCollection
 
 class BaseNeuralModel(torch.nn.Module):
     """Class responsible for NN model implementation.
@@ -51,7 +47,7 @@ class BaseNeuralModel(torch.nn.Module):
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = None):
+    def __init__(self, params: Optional[OperationParameters] = None, additional_hooks=None):
         super().__init__()
         self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
@@ -67,6 +63,7 @@ class BaseNeuralModel(torch.nn.Module):
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
+        self._additional_hooks = additional_hooks
 
     def _init_custom_criterions(self, custom_criterions: dict):
         for name, coef in custom_criterions.items():
@@ -102,8 +99,8 @@ class BaseNeuralModel(torch.nn.Module):
             'val_loss': []
         }
         # add hooks
-        self._on_epoch_end = []
-        self._on_epoch_start = []
+        self._on_epoch_end = HooksCollection(additional_hooks=self._additional_hooks)
+        self._on_epoch_start = HooksCollection(additional_hooks=self._additional_hooks)
 
     def __repr__(self):
         return self.__class__.__name__ + '\nStart hooks:\n' + '\n'.join(
