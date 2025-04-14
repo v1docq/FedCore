@@ -5,18 +5,22 @@ from inspect import signature, isclass
 from numbers import Number
 from pathlib import Path
 from typing import (
-    get_origin, get_args,
-    Any, Callable, Dict, Iterable, Literal, Optional, Union,
+    get_origin, get_args,   
+    Any, Callable, Dict, Iterable, Literal, Optional, Union, 
 )
+import logging
 
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch.nn import Module
-from fedcore.models.network_impl.hooks import Schedulers, Optimizers
+
 from fedcore.repository.constanst_repository import (
     FedotTaskEnum,
+    Schedulers, 
+    Optimizers, 
     PEFTStrategies,
+    SLRStrategiesEnum,
     TaskTypesEnum,
-    TorchLossesConstant
+    TorchLossesConstant,
 )
 
 __all__ = [
@@ -29,6 +33,7 @@ __all__ = [
     'APIConfigTemplate',
     'get_nested',
     'LookUp',
+    'LookUp',
 ]
 
 
@@ -36,6 +41,17 @@ def get_nested(root: object, k: str):
     """Func to allow subcrtiption like config['x.y.x']"""
     *path, last = k.split('.')
     return reduce(getattr, path, root), last
+
+class MisconfigurationError(BaseException):
+    def __init__(self, exs, *args):
+        super().__init__(*args)
+        self.exs = exs
+
+    def __repr__(self):
+        return '\n' + '\n'.join([f'\t{x.__class__.__name__}: {str(x)}' for x in self.exs])
+
+    def __str__(self):
+        return self.__repr__()
 
 
 @dataclass
@@ -55,7 +71,7 @@ class ConfigTemplate:
         if name.endswith('Template'):
             name = name[:-8]
         return name
-
+    
     @classmethod
     def get_annotation(cls, key):
         obj = cls if ConfigTemplate in cls.__bases__ else cls.__bases__[0]
@@ -65,17 +81,31 @@ class ConfigTemplate:
     def check(cls, key, val):
         # we don't check parental attr
         if key == '_parent':
-            return
+            return   
+
+        def _check_primal(annotation, key, val):
+            if isclass(annotation):
+                if issubclass(annotation, Enum):
+                    if val is not None and not hasattr(annotation, val):
+                        return ValueError(
+                            f'`{val}` not supported as {key} at config {cls.__name__}. Options: {annotation._member_names_}')
+                elif not isinstance(val, annotation):
+                    return TypeError(f'`Passed `{val}` at config: {cls.__name__}, field: {key}. Expected: {annotation}')
+            elif annotation is Callable and not hasattr(val, '__call__'):
+                return TypeError(f'`Passed `{val}` at config: {cls.__name__}, field: {key}, is not callable!')
+            elif get_origin(annotation) is Literal and not val in get_args(annotation):
+                return ValueError(f'Passed value `{val}` at config {cls.__name__}. Supported: {get_args(annotation)}')
+            return False
+
+        def _check(annotation, key, val):   
+            options = get_args(annotation) or (annotation,)
+            exs = [_check_primal(option, key, val)
+                               for option in options]
+            if exs and all(exs):
+                raise MisconfigurationError(exs)
+        
         annotation = cls.get_annotation(key)
-        if isclass(annotation):
-            if issubclass(annotation, Enum):
-                if val is not None and not hasattr(annotation, val):
-                    raise ValueError(
-                        f'`{val}` not supported as {key} at config {cls.__name__}. Options: {annotation._member_names_}')
-            elif not isinstance(val, annotation):
-                raise TypeError(f'`Passed `{val}` at config {cls.__name__}. Expected: {annotation}')
-        if get_origin(annotation) is Literal and not val in get_args(annotation):
-            raise ValueError(f'Passed value `{val}` at config {cls.__name__}. Supported: {get_args(annotation)}')
+        _check(annotation, key, val)
 
     def __new__(cls, *args, **kwargs):
         """We don't need template instances themselves. Only normalized parameters"""
@@ -88,13 +118,13 @@ class ConfigTemplate:
                                      args))
         allowed_parameters.update(complemented_args)
         return cls, allowed_parameters
-
+    
     def __repr__(self):
         params_str = '\n'.join(
             f'{k}: {getattr(self, k)}' for k in self.__slots__
         )
         return f'{self.get_default_name()}: \n{params_str}\n'
-
+    
     def get_parent(self):
         return getattr(self, '_parent')
 
@@ -141,10 +171,9 @@ class ExtendableConfigTemplate(ConfigTemplate):
 @dataclass
 class DeviceConfigTemplate(ConfigTemplate):
     """Training device specification. TODO check fields"""
-    device: Literal['cuda', 'cpu', 'gpu', 'mps'] = 'cuda'
+    device: Literal['cuda', 'cpu', 'gpu'] = 'cuda'
     inference: Literal['onnx'] = 'onnx'
-
-
+    
 @dataclass
 class EdgeConfigTemplate(ConfigTemplate):
     """Edge device specification"""
@@ -178,7 +207,6 @@ class FedotConfigTemplate(ConfigTemplate):
     pop_size: int = 5
     early_stopping_iterations: int = 10
     early_stopping_timeout: int = 10
-    optimizer: Optional[Any] = None
     with_tuning: bool = False
     problem: FedotTaskEnum = None
     task_params: Optional[TaskTypesEnum] = None
@@ -203,12 +231,10 @@ class NodeTemplate(ConfigTemplate):
     """Computational Node settings. May include hooks summon keys"""
     log_each: Optional[int] = LookUp(None)
     eval_each: Optional[int] = LookUp(None)
-    save_each: Optional[int] = LookUp(None)
     epochs: int = 15
     optimizer: Optimizers = 'adam'
     scheduler: Optional[Schedulers] = None
-    criterion: Union[TorchLossesConstant, Callable] = LookUp(
-        None)  # TODO add additional check for those fields which represent
+    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
 
 
 @dataclass
@@ -216,7 +242,7 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
     """Example of specific node template"""
     input_dim: Union[None, int] = None
     output_dim: Union[None, int] = None
-    depth: Union[dict, int] = 3
+    depth: int = 3
     custom_model_params: dict = None
 
 
@@ -254,6 +280,8 @@ class APIConfigTemplate(ExtendableConfigTemplate):
 @dataclass
 class LowRankTemplate(NeuralModelConfigTemplate):
     """Example of specific node template"""
+    strategy: SLRStrategiesEnum = 'quantile'
+    rank_prune_each: int = -1,
     custom_criterions: dict = None  # {'norm_loss':{...},
     non_adaptive_threshold: float = .5
     finetune_params: NeuralModelConfigTemplate = None
