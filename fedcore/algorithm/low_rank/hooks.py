@@ -13,6 +13,7 @@ from fedcore.models.network_impl.decomposed_layers import IDecomposed
 
 class OnetimeRankPruner(BaseHook):
     _SUMMON_KEY = ('rank_prune_each', 'strategy')
+    _hook_place = 50
 
     @classmethod
     def check_init(cls, params):
@@ -43,6 +44,7 @@ class OnetimeRankPruner(BaseHook):
 
 class DynamicRankPruner(BaseHook):
     _SUMMON_KEY = 'n_plateau'
+    _hook_place = 50
 
     def __init__(self, params, model):
         super().__init__(params, model)
