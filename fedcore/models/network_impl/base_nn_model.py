@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from functools import reduce
+from functools import reduce, partial
 from itertools import chain
 from typing import Iterable, Optional, Any, Union
 from pymonad.maybe import Maybe
@@ -15,7 +15,6 @@ from tqdm import tqdm
 
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import (
     ModelLearningHooks,
@@ -26,21 +25,10 @@ from fedcore.repository.constanst_repository import (
 
 from fedcore.models.network_impl.hooks import BaseHook
 
-from fedcore.repository.constanst_repository import (
-    ModelLearningHooks,
-    LoggingHooks,
-    StructureCriterions,
-    TorchLossesConstant,
-)
-
-from fedcore.models.network_impl.hooks import BaseHook
-
-
 def now_for_file():
     return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
 
 
-class BaseNeuralModel(torch.nn.Module):
 class BaseNeuralModel(torch.nn.Module):
     """Class responsible for NN model implementation.
 
@@ -65,14 +53,11 @@ class BaseNeuralModel(torch.nn.Module):
 
     def __init__(self, params: Optional[OperationParameters] = None):
         super().__init__()
-        super().__init__()
         self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_empty_object()
         self._init_null_object()
-        self.learning_params = self.params.get('custom_learning_params', {})
-        self._init_empty_object()
-        self._init_null_object()
+
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
         self.learning_rate = self.params.get("learning_rate", 0.001)
@@ -105,22 +90,13 @@ class BaseNeuralModel(torch.nn.Module):
         self.checkpoint_folder = self.params.get('checkpoint_folder', None)
         self.batch_limit = self.learning_params.get('batch_limit', None)
         self.calib_batch_limit = self.learning_params.get('calib_batch_limit', None)
-        self.calib_batch_limit = self.learning_params.get('calib_batch_limit', None)
         self.batch_type = self.learning_params.get('batch_type', None)
-        self.trainer_objects = {
-            'optimizer': None,
-            'scheduler': None,
-        }
         self.trainer_objects = {
             'optimizer': None,
             'scheduler': None,
         }
 
     def _init_empty_object(self):
-        self.history = {
-            'train_loss': [],
-            'val_loss': []
-        }
         self.history = {
             'train_loss': [],
             'val_loss': []
@@ -155,12 +131,7 @@ class BaseNeuralModel(torch.nn.Module):
         for hook_elem in chain(*self._hooks):
             hook: BaseHook = hook_elem.value
             if not hook.check_init(self.params):
-    def _init_hooks(self):
-        for hook_elem in chain(*self._hooks):
-            hook: BaseHook = hook_elem.value
-            if not hook.check_init(self.params):
                 continue
-            hook = hook(self.params, self.model)
             hook = hook(self.params, self.model)
             if hook._hook_place == 'post':
                 self._on_epoch_end.append(hook)
@@ -169,16 +140,7 @@ class BaseNeuralModel(torch.nn.Module):
 
     def register_additional_hooks(self, hooks: Iterable[Enum]):
         self._hooks.extend(hooks)
-    def register_additional_hooks(self, hooks: Iterable[Enum]):
-        self._hooks.extend(hooks)
 
-    def __get_criterion(self):
-        key = self.params.get('loss', None) or self.params.get('criterion', None)
-        if hasattr(TorchLossesConstant, key):
-            return TorchLossesConstant[key].value()
-        if hasattr(key, '__call__'):
-            return key
-        raise ValueError('No loss specified!')
     def __get_criterion(self):
         key = self.params.get('loss', None) or self.params.get('criterion', None)
         if hasattr(TorchLossesConstant, key):
@@ -216,18 +178,7 @@ class BaseNeuralModel(torch.nn.Module):
                 except:
                     self.criterion = criterion
                 print("Forcely substituted criterion[loss] to", self.criterion)
-        # TODO delete 
-        names = ['loss', 'criterion']
-        for name in names:
-            if (train_data.supplementary_data.col_type_ids is not None
-                    and train_data.supplementary_data.col_type_ids.get(name, None)
-            ):
-                criterion = train_data.supplementary_data.col_type_ids[name]
-                try:
-                    self.criterion = criterion()
-                except:
-                    self.criterion = criterion
-                print("Forcely substituted criterion[loss] to", self.criterion)
+
 
     def __substitute_device_quant(self):
         if getattr(self.model, '_is_quantized', False):
@@ -235,9 +186,6 @@ class BaseNeuralModel(torch.nn.Module):
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
 
-    def _compute_loss(self, criterion, model_output, target, stage='train', epoch=None):
-        if hasattr(model_output, 'loss'):
-            quality_loss = model_output.loss
     def _compute_loss(self, criterion, model_output, target, stage='train', epoch=None):
         if hasattr(model_output, 'loss'):
             quality_loss = model_output.loss
@@ -267,17 +215,14 @@ class BaseNeuralModel(torch.nn.Module):
         self.model.to(self.device)
         self.__check_and_substitute_loss(input_data)
         self._init_hooks()
-        self._init_hooks()
         self._train_loop(
             train_loader=train_loader,
             val_loader=val_loader,
-            loss_fn=self.criterion,
             loss_fn=self.criterion,
         )
         self._clear_cache()
         return self.model
 
-    def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
     def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
         self.model.train()
@@ -302,7 +247,6 @@ class BaseNeuralModel(torch.nn.Module):
         self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
 
     def _train_loop(self, train_loader, val_loader, loss_fn):
-    def _train_loop(self, train_loader, val_loader, loss_fn):
         train_loader = DataLoaderHandler.check_convert(dataloader=train_loader,
                                                        mode=self.batch_type,
                                                        max_batches=self.batch_limit,
@@ -315,14 +259,6 @@ class BaseNeuralModel(torch.nn.Module):
                                 dataloader=train_loader,
                                 loss_fn=loss_fn,
                                 optimizer=self.optimizer)
-            from functools import partial
-                hook(epoch=epoch, trainer_objects=self.trainer_objects,
-                     learning_rate=self.learning_rate)
-            self._run_one_epoch(epoch=epoch,
-                                dataloader=train_loader,
-                                loss_fn=loss_fn,
-                                optimizer=self.optimizer)
-            from functools import partial
             for hook in self._on_epoch_end:
                 hook(epoch=epoch, val_loader=val_loader,
                      criterion=partial(self._compute_loss, criterion=loss_fn),
@@ -333,20 +269,13 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
-        print('###', 'BNN predict')
-        print('###', 'BNN predict')
         self.__substitute_device_quant()
-        return self._predict_model(input_data, output_mode)
         return self._predict_model(input_data, output_mode)
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
-        print('###', 'BNN predict4fit')
-
-        print('###', 'BNN predict4fit')
-
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
@@ -357,13 +286,8 @@ class BaseNeuralModel(torch.nn.Module):
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
-        dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
-        for batch in tqdm(dataloader):  ###TODO why val_dataloader???
-            *inputs, targets = batch
-            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            prediction.append(model(*inputs))
         for batch in tqdm(dataloader):  ###TODO why val_dataloader???
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
@@ -422,14 +346,6 @@ class BaseNeuralModel(torch.nn.Module):
     def scheduler(self):
         return self.trainer_objects['scheduler']
 
-    @property
-    def optimizer(self):
-        return self.trainer_objects['optimizer']
-
-    @property
-    def scheduler(self):
-        return self.trainer_objects['scheduler']
-
 
 class BaseNeuralForecaster(BaseNeuralModel):
     """Class responsible for NN model implementation.
@@ -459,7 +375,6 @@ class BaseNeuralForecaster(BaseNeuralModel):
         self.use_exog_features = self.params.get('use_exog_features', False)
         self.forecasting_blocks = int(self.test_horizon / self.train_horizon)
         self.loss = self.params.get('loss', 'smape')
-        self.loss = self.params.get('loss', 'smape')
         self.val_interval = 5
 
     def out_of_sample_predict(self, tensor_endogen: Tensor, tensor_exogen: Tensor, target: Tensor):
@@ -487,11 +402,8 @@ class BaseNeuralForecaster(BaseNeuralModel):
         return in_sample_predict
 
     def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
-    def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
         self.model.train()
-        for batch in dataloader:
-            x_hist, x_fut, y = [b.to(self.device) for b in batch]
         for batch in dataloader:
             x_hist, x_fut, y = [b.to(self.device) for b in batch]
             predict = self.out_of_sample_predict(x_hist, x_fut, y)
@@ -507,7 +419,6 @@ class BaseNeuralForecaster(BaseNeuralModel):
 
         def predict_loop(batch):
             x_hist, x_fut, y = [b.to(self.device) for b in batch]
-            x_hist, x_fut, y = [b.to(self.device) for b in batch]
             if self.in_sample_regime:
                 predict = self.in_sample_predict(x_hist, x_fut, y)
             else:
@@ -516,7 +427,6 @@ class BaseNeuralForecaster(BaseNeuralModel):
             target = y.cpu().detach().numpy().squeeze()
             return predict, target
 
-        prediction = list(map(lambda batch: predict_loop(batch), input_data.test_dataloader))
         prediction = list(map(lambda batch: predict_loop(batch), input_data.test_dataloader))
         all_prediction = np.concatenate([x[0] for x in prediction])
         # all_target = np.concatenate([x[1] for x in prediction])
