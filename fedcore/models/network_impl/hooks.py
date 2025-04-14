@@ -12,10 +12,10 @@ from tqdm import tqdm
 
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
+from fedcore.architecture.comptutaional.devices import default_device, extract_device
+from fedcore.models.network_modules.layers.special import EarlyStopping
 
 VERBOSE = True
-
-
 
 
 def now_for_file():
@@ -34,6 +34,8 @@ class BaseHook(ABC):
         trigger_result = self.trigger(epoch, kws)
         if VERBOSE and trigger_result:
             self._verbose(epoch)
+        if VERBOSE and trigger_result:
+            self._verbose(epoch)
         if trigger_result:
             self.action(epoch, kws)
 
@@ -47,6 +49,20 @@ class BaseHook(ABC):
 
     def _filter_kw(self):
         pass
+
+    @classmethod
+    def check_init(cls, d: dict):
+        from fedot.core.operations.operation_parameters import OperationParameters
+        if isinstance(d, OperationParameters):
+            d = d.to_dict()
+        summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
+        return any(d[summon] is not None for summon in summons if summon in d.keys())
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def _verbose(self, epoch):
+        print(f'Triggered {repr(self)} at {epoch} epoch.')
 
     @classmethod
     def check_init(cls, d: dict):
@@ -106,13 +122,13 @@ class Saver(BaseHook):
                            path_pref.joinpath(f"model_{name}{now_for_file()}_{epoch}_state.pth")
                            )
 
-
 class FitReport(BaseHook):
     _SUMMON_KEY = 'log_each'
     _hook_place = 10
 
     def __init__(self, params, model):
         super().__init__(params, model)
+        self.log_interval = params.get('log_each', 1)
         self.log_interval = params.get('log_each', 1)
 
     def trigger(self, epoch, kw) -> bool:
@@ -124,12 +140,7 @@ class FitReport(BaseHook):
         val_losses = history['val_loss']
         
         (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
-        # if val_loss:
-        #     val_loss = torch.round(val_loss, decimals=4)
-        # if train_loss:
-        #     train_loss = torch.round(train_loss, decimals=4)
 
-        # TODO Any number of custom losses
         print(f'Train # epoch: {tr_e}, value: {train_loss}')
         if va_e:
             print(f'Valid # epoch: {va_e}, value: {val_loss}')
@@ -183,12 +194,12 @@ class EarlyStopping(BaseHook):
 
 class Evaluator(BaseHook):
     _SUMMON_KEY = 'eval_each'
-    _hook_place = 80
+    _hook_place = 80 
 
     def __init__(self, params, model):
         super().__init__(params, model)
         self.eval_each = params.get('eval_each', 1)
-        self.device = next(iter(self.model.parameters())).device
+        self.device = extract_device(self.model)
 
     def trigger(self, epoch, kws):
         return epoch % self.eval_each == 0 and kws['val_loader'] is not None
