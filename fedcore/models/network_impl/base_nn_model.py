@@ -1,9 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from functools import reduce
+from functools import reduce, partial
 from itertools import chain
-from typing import Iterable, Optional, Any, Union
-from pymonad.maybe import Maybe
+from typing import Iterable, Optional
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -54,22 +54,19 @@ class BaseNeuralModel(torch.nn.Module):
 
     def __init__(self, params: Optional[OperationParameters] = None):
         super().__init__()
-        if not isinstance(params, dict):
-            self.params = params.to_dict()
-        else:
-            self.params = params
+        self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_empty_object()
         self._init_null_object()
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
         self.learning_rate = self.params.get("learning_rate", 0.001)
-        self._init_custom_criterions(
-            self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer
+        self._init_custom_criterions(self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer
         self.criterion = self.__get_criterion()
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
+        
 
     def _init_custom_criterions(self, custom_criterions: dict):
         for name, coef in custom_criterions.items():
@@ -109,23 +106,23 @@ class BaseNeuralModel(torch.nn.Module):
         self._on_epoch_start = []
 
     def __repr__(self):
-        return self.__class__.__name__ + '\nStart hooks:\n' + '\n'.join(
+        return self.__class__.__name__ +'\nStart hooks:\n' + '\n'.join(
             str(hook) for hook in self._on_epoch_start
         ) + '\nEnd hooks:\n' + '\n'.join(
             str(hook) for hook in self._on_epoch_end
         )
-
+    
     def clear_hooks(self):
         self._hooks.clear()
         self._on_epoch_end.clear()
         self._on_epoch_start.clear()
-
-    @classmethod
-    def wrap(cls, model, params: Optional[OperationParameters] = None):
-        bnn = cls(params)
-        bnn.clear_hooks()
-        bnn.model = model
-        return bnn
+    
+    # @classmethod
+    # def wrap(cls, model, params: Optional[OperationParameters] = None):
+    #     bnn = cls(params)
+    #     bnn.clear_hooks()
+    #     bnn.model = model 
+    #     return bnn
 
     def _init_model(self):
         pass
@@ -150,7 +147,6 @@ class BaseNeuralModel(torch.nn.Module):
             return TorchLossesConstant[key].value()
         if hasattr(key, '__call__'):
             return key
-        return lambda *args, **kwargs: torch.zeros((1,))
         raise ValueError('No loss specified!')
 
     def save_model(self, path: str):
@@ -159,10 +155,7 @@ class BaseNeuralModel(torch.nn.Module):
     def load_model(self, path: str):
         if self.model is None:
             self._init_model()
-        try:  # path to state_dict
-            self.model.load_state_dict(torch.load(path, weights_only=False))
-        except Exception:  # path to model_impl
-            self.model = torch.load(path, map_location=self.device)
+        self.model.load_state_dict(torch.load(path, weights_only=True))
         self.model.eval()
 
         # add hooks
@@ -203,15 +196,14 @@ class BaseNeuralModel(torch.nn.Module):
                                       if hasattr(StructureCriterions, name)})
             for name, val in additional_losses.items():
                 self.history[f'{stage}_{name}_loss'].append((epoch, val))
-        final_loss = reduce(torch.add, additional_losses.values(), quality_loss)
-        return final_loss
+            
+        return reduce(torch.add, additional_losses.values(), quality_loss)
 
     def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
         self.custom_fit_process = supplementary_data is not None
         train_loader = getattr(input_data.features, f'{loader_type}_dataloader', 'train_dataloader')
         val_loader = getattr(input_data.features, 'val_dataloader', None)
-        self.task_type = input_data.task.task_type
         # define model for fit process
         self.model = input_data.target if self.model is None else self.model
         self.optimised_model = self.model
@@ -230,11 +222,9 @@ class BaseNeuralModel(torch.nn.Module):
         training_loss = 0.0
         self.model.train()
         for batch in tqdm(dataloader, desc='Batch #'):
-            # *inputs, targets = batch
-            # inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            inputs, targets = batch
-            output = self.model(inputs.to(self.device))
-            targets = targets.to(self.device).to(output.dtype)
+            *inputs, targets = batch
+            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            output = self.model(*inputs)
             loss = self._compute_loss(loss_fn, output,
                                       targets.to(self.device), epoch=epoch)
             loss.backward()
@@ -253,14 +243,15 @@ class BaseNeuralModel(torch.nn.Module):
             for hook in self._on_epoch_start:
                 hook(epoch=epoch, trainer_objects=self.trainer_objects,
                      learning_rate=self.learning_rate)
+            if self.trainer_objects['stop']:
+                break
             self._run_one_epoch(epoch=epoch,
                                 dataloader=train_loader,
                                 loss_fn=loss_fn,
                                 optimizer=self.optimizer)
-            from functools import partial
             for hook in self._on_epoch_end:
-                hook(epoch=epoch, val_loader=val_loader,
-                     criterion=partial(self._compute_loss, criterion=loss_fn),
+                hook(epoch=epoch, val_loader=val_loader, 
+                     criterion=partial(self._compute_loss, criterion=loss_fn), 
                      history=self.history)
         return self
 
@@ -279,38 +270,44 @@ class BaseNeuralModel(torch.nn.Module):
         return self._predict_model(input_data.features, output_mode)
 
     def _predict_model(
-            self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
+            self, x_test: CompressionInputData, output_mode: str = "default"
     ):
         model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
-        dataloader = x_test.val_dataloader if isinstance(x_test, CompressionInputData) else x_test.features.val_dataloader
-        dataloader = DataLoaderHandler.check_convert(dataloader,
+        dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
         for batch in tqdm(dataloader):  ###TODO why val_dataloader???
-            inputs, targets = batch
-            output = model(inputs.to(self.device))
-            prediction.append(output)
+            *inputs, targets = batch
+            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            prediction.append(model(*inputs))
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
         have_encoder = all([self.label_encoder is not None, output_mode == "labels"])
-        if self.task_type.name == 'regression':
-            self.is_regression_task = True
         output_is_clf_labels = all(
             [not self.is_regression_task, output_mode == "labels"]
         )
-        pred = Maybe.insert(pred). \
-            then(lambda predict: predict.cpu().detach().numpy() if self.is_regression_task else F.softmax(predict, dim=1)). \
-            then(lambda predict: torch.argmax(predict, dim=1).cpu().detach().numpy() if output_is_clf_labels else predict). \
-            then(lambda predict: self.label_encoder.inverse_transform(predict) if have_encoder else predict). \
-            maybe(None, lambda output: output)
+
+        pred = (
+            pred.cpu().detach().numpy()
+            if self.is_regression_task
+            else F.softmax(pred, dim=1)
+        )
+        y_pred = (
+            torch.argmax(pred, dim=1).cpu().detach().numpy()
+            if output_is_clf_labels
+            else pred
+        )
+        y_pred = (
+            self.label_encoder.inverse_transform(y_pred) if have_encoder else y_pred
+        )
 
         predict = OutputData(
-            idx=np.arange(len(pred)),
+            idx=np.arange(len(y_pred)),
             task=self.task_type,
-            predict=pred,
+            predict=y_pred,
             target=self.target,
             data_type=DataTypesEnum.table,
         )
@@ -319,11 +316,6 @@ class BaseNeuralModel(torch.nn.Module):
     def _clear_cache(self):
         with torch.no_grad():
             torch.cuda.empty_cache()
-
-    def __wrap(self, model):
-        if not isinstance(model, BaseNeuralModel):
-            return BaseNeuralModel.wrap(model, self.params)
-        return model
 
     @staticmethod
     def get_validation_frequency(epoch, lr):
@@ -414,7 +406,7 @@ class BaseNeuralForecaster(BaseNeuralModel):
             training_loss += loss.item()
         return optimizer, loss_fn, training_loss
 
-    def _predict_model(self, input_data: CompressionInputData, output_mode: str = 'default'):
+    def _predict_model(self, input_data:CompressionInputData, output_mode: str = 'default'):
         self.model.eval()
 
         def predict_loop(batch):
@@ -429,5 +421,5 @@ class BaseNeuralForecaster(BaseNeuralModel):
 
         prediction = list(map(lambda batch: predict_loop(batch), input_data.test_dataloader))
         all_prediction = np.concatenate([x[0] for x in prediction])
-        # all_target = np.concatenate([x[1] for x in prediction])
+        #all_target = np.concatenate([x[1] for x in prediction])
         return all_prediction
