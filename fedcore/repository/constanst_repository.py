@@ -53,7 +53,7 @@ from fedcore.models.network_modules.losses import (
 )
 
 from fedcore.repository.setups import QAT_1, PTQ_1
-from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen
+from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks # don't del
 from fedcore.algorithm.low_rank.hooks import LRHooks # don't del
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
@@ -144,29 +144,6 @@ class FedotGeneticMultiStrategy(Enum):
     parameter_free = GeneticSchemeTypesEnum.parameter_free
 
 class FedotOperationConstant(Enum):
-    # FEDOT_TASK = {
-    #     "classification": Task(TaskTypesEnum.classification),
-    #     "regression": Task(TaskTypesEnum.regression),
-    #     "ts_forecasting": Task(
-    #         TaskTypesEnum.ts_forecasting, TsForecastingParams(forecast_length=1)
-    #     ),
-    # }
-
-    # FEDCORE_TASK = [
-    #     "pruning",
-    #     "quantisation",
-    #     "distilation",
-    #     "low_rank",
-    #     "evo_composed",
-    # ]
-    # CV_TASK = ["classification", "segmentation", "object_detection"]
-    # FEDCORE_CV_DATASET = {
-    #     "classification": CustomDatasetForImages,
-    #     "segmentation": SegmentationDataset,
-    #     "semantic_segmentation": SemanticSegmentationDataset,
-    #     "object_detection": CustomDatasetForImages,
-    #     "object_detection_YOLO": YOLODataset,
-    # }
 
     FEDOT_GET_METRICS = {
         "regression": calculate_regression_metric,
@@ -176,33 +153,6 @@ class FedotOperationConstant(Enum):
         "computational_original": calculate_computational_metric
     }
     
-    # EXCLUDED_OPERATION_MUTATION = {
-    #     "regression": [
-    #         "one_hot_encoding",
-    #         "label_encoding",
-    #         "isolation_forest_class",
-    #         "tst_model",
-    #         "omniscale_model",
-    #         "isolation_forest_reg",
-    #         "inception_model",
-    #         "xcm_model",
-    #         "resnet_model",
-    #         "signal_extractor",
-    #         "recurrence_extractor",
-    #     ],
-    #     "classification": [
-    #         "isolation_forest_reg",
-    #         "tst_model",
-    #         "resnet_model",
-    #         "xcm_model",
-    #         "one_hot_encoding",
-    #         "label_encoding",
-    #         "isolation_forest_class",
-    #         "signal_extractor",
-    #         "knnreg",
-    #         "recurrence_extractor",
-    #     ],
-    # }
     FEDOT_API_PARAMS = default_param_values_dict
 
     FEDOT_TUNER_STRATEGY = EnumNoValue(FedotTunerStrategy)
@@ -439,20 +389,6 @@ class ONNX_CONFIG(Enum):
 class FedcoreInitialAssumptions(Enum):
     qat_1 = QAT_1
     ptq_1 = PTQ_1
-
-class LoggingHooks(Enum):
-    saver = Saver
-    fit_report = FitReport
-
-class ModelLearningHooks(Enum):
-    optimizer_gen = OptimizerGen
-    scheduler_renewal = SchedulerRenewal
-
-# Hooks = {
-#     'logging': LoggingHooks,
-#     'model_learning': ModelLearningHooks,
-#     'lr': LRHooks
-# }
 
 
 class StructureCriterions(Enum):

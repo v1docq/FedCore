@@ -133,11 +133,16 @@ class BaseNeuralModel(torch.nn.Module):
             if not hook.check_init(self.params):
                 continue
             hook = hook(self.params, self.model)
-            if hook._hook_place == 'post':
+            if hook._hook_place > 0:
                 self._on_epoch_end.append(hook)
+            elif hook._hook_place < 0:
+                self._on_epoch_start.append(hook)
             else:
                 self._on_epoch_start.append(hook)
-
+                self._on_epoch_end.append(hook)
+        self._on_epoch_start.sort(key=lambda x: x._hook_place)
+        self._on_epoch_end.sort(key=lambda x: x._hook_place)
+                
     def register_additional_hooks(self, hooks: Iterable[Enum]):
         self._hooks.extend(hooks)
 
