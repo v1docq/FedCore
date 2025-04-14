@@ -4,16 +4,18 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from inspect import isclass
+
+import numpy as np
 from pathlib import Path
 import torch
 from tqdm import tqdm
 
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
-from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.models.network_modules.layers.special import EarlyStopping
 
 VERBOSE = True
+
+
 
 
 def now_for_file():
@@ -118,7 +120,7 @@ class FitReport(BaseHook):
         history = kws['history']
         (tr_e, train_loss) = history['train_loss'][-1]
         val_losses = history['val_loss']
-
+        
         (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
         # if val_loss:
         #     val_loss = torch.round(val_loss, decimals=4)
@@ -139,48 +141,46 @@ class FitReport(BaseHook):
                 epoch, val = hist[-1]
                 print(f'\tCriterion `{name}`: {val}')
 
-        # if custom_loss is not None:
-        #     print(f"Epoch: {epoch}, Average loss {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}".
-        #           format(epoch, avg_loss, *custom_loss))
-        # else:
-        #     print("Epoch: {}, Average loss {}".format(epoch, avg_loss))
 
+class EarlyStopping(BaseHook):
+    _SUMMON_KEY = 'early_stop_after'
 
-# class Scheduler(BaseHook):
-#     _SUMMON_KEY = 'use_scheduler'
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.counts = params.get('early_stop_after', 5)
+        self.horizon = params.get('horizon', 15)
+        self.angle_tol = params.get('angle_tol', 2.5)
+        if Evaluator.check_init(params):
+            self._check_in_history = 'val_loss'
+        else:
+            self._check_in_history = 'train_loss'
+        self.__last_record = None 
 
-#     def __init__(self, params, model):
-#         super().__init__(params, model)
-#         self._init_scheduler(optimizer=params['optimizer'],
-#                              steps_per_epoch=max(1, len(params['train_loader'])),
-#                              epochs=params['epochs'],
-#                              learning_rate=params['learning_rate'],
-#                              )
-#         self._init_early_stop(learning_params=params['learning_params'])
-
-#     def _init_scheduler(self, optimizer, epochs, learning_rate, steps_per_epoch):
-#         self.scheduler = lr_scheduler.OneCycleLR(optimizer=optimizer,
-#                                                  steps_per_epoch=steps_per_epoch,
-#                                                  epochs=epochs,
-#                                                  max_lr=learning_rate)
-
-#     def _init_early_stop(self, learning_params):
-#         self.early_stopping = EarlyStopping(**learning_params['use_early_stopping'])
-
-#     def trigger(self, epoch, kw) -> bool:
-#         return True
-
-#     def action(self, epoch, kws):
-#         self.scheduler.step()
-#         self.early_stopping(loss=kws['train_loss'])
-#         if not self.early_stopping.early_stop:
-#             print('Updating learning rate to {}'.format(self.scheduler.get_last_lr()[0]))
-#         else:
-#             print("Early stopping")
+    def trigger(self, epoch, kws) -> bool:
+        if epoch < self.horizon:
+            return False
+        hist = kws['history'][self._check_in_history][-self.horizon:]
+        angle = self._estimate_angle(hist)
+        return -self.angle_tol <= angle <= self.angle_tol
+        
+    def action(self, epoch, kws):
+        last_record = kws['history'][self._check_in_history][-1]
+        if last_record is not self.__last_record:
+            self.counts -= 1
+        self.__last_record = last_record
+        if not self.count:
+            kws['trainer_objects']['stop'] = True
+    
+    def _estimate_angle(self, history):
+        x, y = np.array(list(zip(*history)))
+        slope = np.linalg.solve(x[..., None], y[..., None])[0]
+        angle = np.rad2deg(np.arctan(slope))
+        return angle
 
 
 class Evaluator(BaseHook):
     _SUMMON_KEY = 'eval_each'
+    _hook_place = 'pre'
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -294,6 +294,43 @@ class SchedulerRenewal(BaseHook):
         self._mode.clear()
 
 
+class Freezer(BaseHook):
+    _SUMMON_KEY = ('frozen_prop', 'refreeze_each')
+    _hook_place = 'pre'
+
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.frozen_prop = self.params.get('frozen_prop', 0.5)
+        self.approach = self.params.get('freeze_approach', 'random')
+        self.refreeze_each = self.params.get('refreeze_each', 1)
+        self.__criterions = {
+            'random': self.__uniform_mask,
+        }
+        self.criterion = self.__criterions[self.approach]
+
+    def __uniform_mask(self):
+        prob = np.random.random(1)[0]
+        return prob < self.frozen_prop
+
+    def __freeze(self):
+        for name, layer in self.model.named_modules():
+            if self.criterion(layer, name):
+                for p in layer.parameters():
+                    p.requires_grad = False
+
+    def __unfreeze(self):
+        for p in self.model.parameters():
+            p.requires_grad = True
+
+    def trigger(self, epoch, kws):
+        return self.refreeze_each and epoch % self.refreeze_each == 0
+
+    def action(self, epoch, kws):
+        self.__unfreeze()
+        if epoch != self.params.epochs:
+            self.__freeze()
+        
+
 class LoggingHooks(Enum):
     evaluator = Evaluator
     fit_report = FitReport
@@ -301,8 +338,10 @@ class LoggingHooks(Enum):
 
 
 class ModelLearningHooks(Enum):
+    freezer = Freezer
     optimizer_gen = OptimizerGen
     scheduler_renewal = SchedulerRenewal
+    early_stopping = EarlyStopping
 
 
 class Optimizers(Enum):

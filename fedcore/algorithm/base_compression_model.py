@@ -7,7 +7,7 @@ import torch_pruning as tp
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.comptutaional.devices import default_device, extract_device
 from fedcore.data.data import CompressionInputData
 
 
@@ -117,25 +117,25 @@ class BaseCompressionModel:
         self._fit_model(input_data)
         self._save_and_clear_cache()
 
-    def predict(
-            self, input_data: CompressionInputData, output_mode: str = "default"
-    ) -> Union[Any, torch.Tensor]:
-        """
-        Method for feature generation for all series
-        """
-        return self._predict_model(input_data, output_mode)
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
+        return (
+            self.optimised_model if output_mode == 'fedcore' else self.model
+        )  ### any case same model
 
-    def predict_for_fit(
-            self, input_data: CompressionInputData, output_mode: str = "default"
-    ) -> torch.nn.Module:
-        """
-        Method for feature generation for all series
-        """
-        return self._predict_model(input_data, output_mode)
-
-    def estimate_params(self, example_batch, model_before, model_after):
-        base_macs, base_nparams = tp.utils.count_ops_and_params(model_before, example_batch)
-        macs, nparams = tp.utils.count_ops_and_params(model_after, example_batch)
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
+        self.trainer.model = (
+            self.optimised_model if output_mode == 'fedcore' else self.model
+        )  ### any case same model
+        return self.trainer.predict(input_data, output_mode)
+    
+    def _estimate_params(self, model, example_batch):
+        base_macs, base_nparams = tp.utils.count_ops_and_params(model, example_batch)
+        return base_macs, base_nparams
+    
+    def _diagnose(self, model, example_batch, *previos_results, annotation=''):
+        print(annotation)
+        base_macs, base_nparams, *_ = previos_results
+        macs, nparams = self._estimate_params(model, example_batch.to(extract_device(model)))
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
         print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
