@@ -4,6 +4,9 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from inspect import isclass
+from enum import Enum
+from functools import partial
+from inspect import isclass
 from pathlib import Path
 import torch
 from tqdm import tqdm
@@ -12,6 +15,9 @@ from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_modules.layers.special import EarlyStopping
+
+VERBOSE = True
+
 
 VERBOSE = True
 
@@ -32,6 +38,8 @@ class BaseHook(ABC):
         trigger_result = self.trigger(epoch, kws)
         if VERBOSE and trigger_result:
             self._verbose(epoch)
+        if VERBOSE and trigger_result:
+            self._verbose(epoch)
         if trigger_result:
             self.action(epoch, kws)
 
@@ -45,6 +53,20 @@ class BaseHook(ABC):
 
     def _filter_kw(self):
         pass
+
+    @classmethod
+    def check_init(cls, d: dict):
+        from fedot.core.operations.operation_parameters import OperationParameters
+        if isinstance(d, OperationParameters):
+            d = d.to_dict()
+        summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
+        return any(d[summon] is not None for summon in summons if summon in d.keys())
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def _verbose(self, epoch):
+        print(f'Triggered {repr(self)} at {epoch} epoch.')
 
     @classmethod
     def check_init(cls, d: dict):
@@ -109,11 +131,36 @@ class FitReport(BaseHook):
     def __init__(self, params, model):
         super().__init__(params, model)
         self.log_interval = params.get('log_each', 1)
+        self.log_interval = params.get('log_each', 1)
 
     def trigger(self, epoch, kw) -> bool:
         return epoch % self.log_interval == 0
+        return epoch % self.log_interval == 0
 
     def action(self, epoch, kws):
+        history = kws['history']
+        (tr_e, train_loss) = history['train_loss'][-1]
+        val_losses = history['val_loss']
+        
+        (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
+        # if val_loss:
+        #     val_loss = torch.round(val_loss, decimals=4)
+        # if train_loss:
+        #     train_loss = torch.round(train_loss, decimals=4)
+
+        # TODO Any number of custom losses
+        print(f'Train # epoch: {tr_e}, value: {train_loss}')
+        if va_e:
+            print(f'Valid # epoch: {va_e}, value: {val_loss}')
+        if len(history) <= 2:
+            return
+        print('Including:')
+        for name, hist in history.items():
+            if name in ('train_loss', 'val_loss'):
+                continue
+            if hist:
+                epoch, val = hist[-1]
+                print(f'\tCriterion `{name}`: {val}')
         history = kws['history']
         (tr_e, train_loss) = history['train_loss'][-1]
         val_losses = history['val_loss']
@@ -147,12 +194,20 @@ class Evaluator(BaseHook):
         self.eval_each = params.get('eval_each', 1)
         self.device = next(iter(self.model.parameters())).device
 
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.eval_each = params.get('eval_each', 1)
+        self.device = next(iter(self.model.parameters())).device
+
     def trigger(self, epoch, kws):
+        return epoch % self.eval_each == 0 and kws['val_loader'] is not None
         return epoch % self.eval_each == 0 and kws['val_loader'] is not None
 
     @torch.no_grad()
     def action(self, epoch, kws):
         self.model.eval()
+        criterion = kws['criterion']
+        val_dataloader = kws['val_loader']
         criterion = kws['criterion']
         val_dataloader = kws['val_loader']
         loss_sum = 0
