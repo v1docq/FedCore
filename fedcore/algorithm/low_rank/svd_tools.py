@@ -8,6 +8,7 @@ from typing import Callable, Literal, Optional
 import torch
 from torch.nn.modules import Module
 
+from fedcore.architecture.comptutaional.devices import extract_device
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     DECOMPOSABLE_LAYERS, 
@@ -34,6 +35,7 @@ def decompose_module(
             If ``None`` replace layers without decomposition.
         compose_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
     """
+    device = extract_device(model)
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             decompose_module(
@@ -43,7 +45,7 @@ def decompose_module(
         if decomposed_analogue is not None:
             new_module = decomposed_analogue(
                 module, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
-            )
+            ).to(device)
             setattr(model, name, new_module)
 
 
