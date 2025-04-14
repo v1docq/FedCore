@@ -24,7 +24,7 @@ def now_for_file():
 
 class BaseHook(ABC):
     _SUMMON_KEY: str
-    _hook_place: str = 'post'
+    _hook_place: int = 1
 
     def __init__(self, params, model):
         self.params: dict = params
@@ -65,6 +65,7 @@ class BaseHook(ABC):
 
 class Saver(BaseHook):
     _SUMMON_KEY = 'save_each'
+    _hook_place = 100
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -108,6 +109,7 @@ class Saver(BaseHook):
 
 class FitReport(BaseHook):
     _SUMMON_KEY = 'log_each'
+    _hook_place = 10
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -144,6 +146,7 @@ class FitReport(BaseHook):
 
 class EarlyStopping(BaseHook):
     _SUMMON_KEY = 'early_stop_after'
+    _hook_place = 90
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -180,7 +183,7 @@ class EarlyStopping(BaseHook):
 
 class Evaluator(BaseHook):
     _SUMMON_KEY = 'eval_each'
-    _hook_place = 'pre'
+    _hook_place = 80
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -213,7 +216,7 @@ class Evaluator(BaseHook):
 
 class OptimizerGen(BaseHook):
     _check_field = '_structure_changed__'
-    _hook_place = 'pre'
+    _hook_place = -100
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -247,7 +250,7 @@ class OptimizerGen(BaseHook):
 
 
 class SchedulerRenewal(BaseHook):
-    _hook_place = 'pre'
+    _hook_place = -90
     _SUMMON_KEY = ('scheduler_step_each', 'scheduler')
 
     def __init__(self, params, model):
@@ -296,7 +299,7 @@ class SchedulerRenewal(BaseHook):
 
 class Freezer(BaseHook):
     _SUMMON_KEY = ('frozen_prop', 'refreeze_each')
-    _hook_place = 'pre'
+    _hook_place = -10
 
     def __init__(self, params, model):
         super().__init__(params, model)
