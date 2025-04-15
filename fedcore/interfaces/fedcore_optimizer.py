@@ -101,14 +101,54 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         self._update_population(next_population=init_population, evaluator=evaluator, label=label)
         return init_population, evaluator
 
+    def compare_dicts(self, dict1, dict2, path=None, differences=None):
+        """
+        Debug method
+        TODO: delete when release
+        """
+        if differences is None:
+            differences = []
+        if path is None:
+            path = []
+        if not (isinstance(dict1, dict) and isinstance(dict2, dict)):
+            differences.append('.'.join(path))
+            return differences
+
+        all_keys = set(dict1.keys()) | set(dict2.keys())
+
+        for key in all_keys:
+            current_path = path + [str(key)]
+            if key not in dict1:
+                differences.append('.'.join(current_path))
+                continue
+            if key not in dict2:
+                differences.append('.'.join(current_path))
+                continue
+
+            value1 = dict1[key]
+            value2 = dict2[key]
+            if isinstance(value1, dict) and isinstance(value2, dict):
+                self.compare_dicts(value1, value2, current_path, differences)
+            elif value1 != value2:
+                differences.append('.'.join(current_path))
+
+        return differences
+
     def _extend_population(self, pop: PopulationT, target_pop_size: int, mutation_prob: list = None) -> PopulationT:
         verifier, new_population, new_ind = self.graph_generation_params.verifier, list(pop), 'empty'
+        verifier._rules = FEDCORE_GRAPH_VALIDATION
         pop_graphs = [ind.graph for ind in new_population]
         for iter_num in range(self.graph_generation_attempts):
             for repr_attempt in range(self.min_reproduce_attempt):
                 random_ind = choice(pop)
                 new_ind = self.mutation(random_ind)
                 if isinstance(new_ind, Individual):
+                    mut_diff = self.compare_dicts(
+                        random_ind.graph.nodes[0].parameters,
+                        new_ind.graph.nodes[0].parameters
+                    )
+                    if mut_diff:
+                        print(f'\n\n>>> CATCHED MUTATION:\n{mut_diff}\n\n<<<<')
                     # self.log.message(f'Successful mutation at attempt number: {repr_attempt}. '
                     #                  f'Obtain new pipeline - {new_ind.graph.descriptive_id}')
                     break

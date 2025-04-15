@@ -262,8 +262,10 @@ class LowRankTemplate(NeuralModelConfigTemplate):
 @dataclass
 class PruningTemplate(NeuralModelConfigTemplate):
     """Example of specific node template"""
-    pruning_iterations: int = 1
-    importance: str = "MagnitudeImportance"
-    importance_norm: int = 2
-    pruning_ratio: float = 0.5
+    importance: str = "MagnitudeImportance" # main
+    importance_norm: int = 1 # main
+    pruning_ratio: float = 0.5 # main
+    importance_reduction: str = 'max' # drop 
+    importance_normalize: str = 'max' # drop
+    pruning_iterations: int = 1 # drop
     finetune_params: NeuralModelConfigTemplate = None

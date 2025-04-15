@@ -60,7 +60,7 @@ class FedcoreMutations:
                 try:
                     new_params = changer.get_new_operation_params()
                     if new_params is not None:
-                        node.parameters = new_params
+                        node.parameters.update(new_params)
                 except Exception as ex:
                     pipeline.log.error(ex)
         return pipeline
