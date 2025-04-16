@@ -15,7 +15,7 @@ from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeura
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import (
     PRUNERS,
-    PRUNING_IMPORTANCE
+    PRUNING_IMPORTANCE, TorchLossesConstant
 )
 
 
@@ -33,7 +33,9 @@ class BasePruner(BaseCompressionModel):
         self.learning_rate = params.get("lr", 0.0001)
 
         # pruning gradients params
-        self.ft_params['criterion_for_grad'] = params.get("loss", nn.CrossEntropyLoss())
+        finetune_params = params.get('finetune_params', None)
+        criterion_for_grad = TorchLossesConstant[finetune_params.get("criterion", 'cross_entropy')]
+        self.ft_params['criterion_for_grad'] = criterion_for_grad.value()
         self.ft_params['lr_for_grad'] = params.get("lr", 0.0001)
 
         # pruning params
@@ -42,16 +44,20 @@ class BasePruner(BaseCompressionModel):
 
         # pruning hyperparams
         self.pruning_ratio = params.get("pruning_ratio", 0.5)
-        self.pruning_iterations = params.get("pruning_iterations", 2)
+        self.pruning_iterations = params.get("pruning_iterations", 1)
         self.importance_norm = params.get("importance_norm", 1)
         self.importance_reduction = params.get("importance_reduction", "mean")
         self.importance_normalize = params.get("importance_normalize", "mean")
-
+        if self.importance_name == 'lamp':
+            self.importance_normalize = 'lamp'
         # importance criterion for parameter selections
-        self.importance = PRUNING_IMPORTANCE[self.importance_name](
-            group_reduction=self.importance_reduction,
-            normalizer=self.importance_normalize,
-        )
+        if self.importance_name == 'random':
+            self.importance = PRUNING_IMPORTANCE[self.importance_name]()
+        else:
+            self.importance = PRUNING_IMPORTANCE[self.importance_name](
+                group_reduction=self.importance_reduction,
+                normalizer=self.importance_normalize,
+            )
 
         self._hooks = [PruningHooks]
         self._init_empty_object()
@@ -93,10 +99,18 @@ class BasePruner(BaseCompressionModel):
         print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
         print(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
         # Pruner initialization
-        self.pruner = PRUNERS[self.pruner_name]
+        if self.importance_name.__contains__('group'):
+            self.pruner = PRUNERS["group_norm_pruner"]
+        elif self.importance_name in ['bn_scale']:
+            self.pruner = PRUNERS["batch_norm_pruner"]
+        elif not self.importance_name in ['random', 'lamp', 'magnitude']:
+            self.pruner = PRUNERS["growing_reg_pruner"]
+        else:
+            self.pruner = PRUNERS[self.pruner_name]
         self._check_before_prune(input_data)
         self.optimizer_for_grad = optim.Adam(self.model_after_pruning.parameters(),
                                              lr=self.ft_params['lr_for_grad'])
+        self.ft_params['optimizer_for_grad_acc'] = self.optimizer_for_grad
 
     def _check_before_prune(self, input_data):
         # list of tensors with dim size n_samples x n_channel x height x width
@@ -138,7 +152,7 @@ class BasePruner(BaseCompressionModel):
 
     def finetune(self, finetune_object, finetune_data):
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model_before_pruning, self.data_batch_for_calib)
-        print("==============After pruning=================")
+        print(f"==============After {self.importance_name} pruning=================")
         finetune_object = self.validator.validate_pruned_layers(finetune_object)
         macs, nparams = tp.utils.count_ops_and_params(finetune_object, self.data_batch_for_calib)
         print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))

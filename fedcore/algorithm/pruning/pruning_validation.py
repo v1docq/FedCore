@@ -31,6 +31,11 @@ class PruningValidator:
                 shape_after_pruning = layer.in_channels
                 if current_layer_shape != shape_after_pruning:
                     layer.weight = torch.nn.Parameter(layer.weight[:, :shape_after_pruning, :])
+            if isinstance(layer, torch.nn.Linear):
+                current_layer_shape = layer.weight.shape[1]
+                shape_after_pruning = layer.in_features
+                if current_layer_shape != shape_after_pruning:
+                    layer.weight = torch.nn.Parameter(layer.weight[:, :shape_after_pruning])
         return pruned_model
 
     def _filter_specified_layers(self, model_name, model, ignored_layers):

@@ -111,8 +111,7 @@ class FedCore(Fedot):
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
         pretrained_model = fedot_pipeline.fit(train_data)
         fedcore_trainer = fedot_pipeline.operator.root_node.operation.fitted_operation
-        path_to_save_pretrain = os.path.join(self.manager.compute_config.output_folder,
-                                             str(datetime.datetime.now()).split(':')[0])
+        path_to_save_pretrain = os.path.join(self.manager.compute_config.output_folder)
         os.makedirs(path_to_save_pretrain)
         path_to_model = os.path.join(path_to_save_pretrain,
                                      f'pretrain_model_checkpoint_at_{fedcore_trainer.epochs}_epoch.pt')
@@ -163,14 +162,6 @@ class FedCore(Fedot):
             x = self.__init_dask(x)
             x = self.__init_solver_no_evo(x)
             fitted_solver = self.manager.solver.fit(x)
-
-            # fitted_solver = (
-            #     Maybe.insert(self._process_input_data(input_data))
-            #     .then(self.__init_fedcore_backend)
-            #     .then(self.__init_solver)
-            #     .then(self.manager.solver.fit)
-            #     .maybe(None, lambda solver: solver)
-            # )
         self.optimised_model = fitted_solver.target
         return fitted_solver
 

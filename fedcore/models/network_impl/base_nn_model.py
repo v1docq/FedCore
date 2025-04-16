@@ -218,31 +218,39 @@ class BaseNeuralModel(torch.nn.Module):
         self.model.to(self.device)
         self.__check_and_substitute_loss(input_data)
         self._init_hooks()
-        self._train_loop(
-            train_loader=train_loader,
-            val_loader=val_loader,
-            loss_fn=self.criterion,
-        )
+        try:
+            self._train_loop(
+                train_loader=train_loader,
+                val_loader=val_loader,
+                loss_fn=self.criterion,
+            )
+        except Exception:
+            self._train_loop(
+                train_loader=train_loader,
+                val_loader=val_loader,
+                loss_fn=self.criterion,
+            )
         self._clear_cache()
         return self.model
 
     def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
         self.model.train()
-        for batch in tqdm(dataloader, desc='Batch #'):
-            # *inputs, targets = batch
-            # inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            inputs, targets = batch
-            output = self.model(inputs.to(self.device))
-            targets = targets.to(self.device).to(output.dtype)
-            loss = self._compute_loss(loss_fn, output,
-                                      targets.to(self.device), epoch=epoch)
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-            training_loss += loss.item()
-        avg_loss = training_loss / len(dataloader)
-        self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
+        with torch.set_grad_enabled(True):
+            for batch in tqdm(dataloader, desc='Batch #'):
+                # *inputs, targets = batch
+                # inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+                inputs, targets = batch
+                output = self.model(inputs.to(self.device))
+                targets = targets.to(self.device).to(output.dtype)
+                loss = self._compute_loss(loss_fn, output,
+                                          targets.to(self.device), epoch=epoch)
+                loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+                training_loss += loss.item()
+            avg_loss = training_loss / len(dataloader)
+            self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
 
     def _train_loop(self, train_loader, val_loader, loss_fn):
         train_loader = DataLoaderHandler.check_convert(dataloader=train_loader,

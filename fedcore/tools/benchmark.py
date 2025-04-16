@@ -15,7 +15,7 @@ from fedcore.api.main import FedCore
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.utils.paths import data_path
 from fedcore.data.data import CompressionInputData
-from fedcore.metrics.multi_objective import MultiobjectiveCompression
+from fedcore.metrics.multiobjective.multi_objective import MultiobjectiveCompression
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.tools.ruler import PerformanceEvaluator
 

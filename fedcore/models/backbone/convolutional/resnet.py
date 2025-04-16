@@ -93,14 +93,10 @@ class ResNet:
 class ResNetModel(BaseNeuralModel):
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
-        # self.input_dim = params.model_architecture.get("input_dim", 1)
-        # self.output_dim = params.model_architecture.get("output_dim", 1)
-        # self.depth = params.model_architecture.get("depth", BASE_RESNET_ARCH)
-        # self.custom_params = params.model_architecture.get("custom_params", BASE_RESNET_PARAMS)
-        self.input_dim = 1
-        self.output_dim = 1
-        self.depth = BASE_RESNET_ARCH
-        self.custom_params = BASE_RESNET_PARAMS
+        self.input_dim = params.model_architecture.get("input_dim", 1)
+        self.output_dim = params.model_architecture.get("output_dim", 1)
+        self.depth = params.model_architecture.get("depth", BASE_RESNET_ARCH)
+        self.custom_params = params.model_architecture.get("custom_params", BASE_RESNET_PARAMS)
         self._init_model()
 
     def _init_model(self):

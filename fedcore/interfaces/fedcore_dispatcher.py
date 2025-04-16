@@ -71,6 +71,19 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
                 successful_evals = None
         return successful_evals
 
+    def apply_evaluation_results(self, individuals: PopulationT, evaluation_results) -> PopulationT:
+        """Applies results of evaluation to the evaluated population.
+        Excludes individuals that weren't evaluated."""
+        evaluation_results = {res.uid_of_individual: res for res in evaluation_results if res}
+        individuals_evaluated = []
+        for ind in individuals:
+            eval_res = evaluation_results.get(ind.uid)
+            if not eval_res:
+                continue
+            ind.set_evaluation_result(eval_res)
+            individuals_evaluated.append(ind)
+        return individuals_evaluated
+
     def evaluate_population(self, individuals: PopulationT) -> PopulationT:
         individuals_to_evaluate, individuals_to_skip = self.split_individuals_to_evaluate(
             individuals)
@@ -122,11 +135,11 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
             FedcoreModels().setup_repository()
 
         graph = self.evaluation_cache.get(cache_key, graph)
-        #
-        # if with_time_limit and self.timer.is_time_limit_reached():
-        #     return None
         if logs_initializer is not None:
             # in case of multiprocessing run
             Log.setup_in_mp(*logs_initializer)
-
-        return self.eval_ind(graph, uid_of_individual)
+        try:
+            eval_ind = self.eval_ind(graph, uid_of_individual)
+        except Exception:
+            eval_ind = None
+        return eval_ind

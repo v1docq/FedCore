@@ -1,5 +1,6 @@
 from enum import Enum
-
+import torch
+from torch import nn, optim
 from tqdm import tqdm
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.hooks import BaseHook
@@ -38,9 +39,11 @@ class ZeroShotPruner(BaseHook):
 
     def _accumulate_grads(self, data, target):
         data, target = data.to(default_device()), target.to(default_device())
+        data, target = data.to(torch.float32), target.to(torch.float32)
         out = self.model(data)
         loss = self.criterion_for_grad(out, target)
         loss.backward()
+        return loss
 
     def trigger(self, callback_type, kw) -> bool:
         return callback_type.__contains__('ZeroShot')
@@ -91,6 +94,9 @@ class PrunerWithReg(ZeroShotPruner):
         super().__init__(params, model)
         self.optimizer_for_grad = params.get('optimizer_for_grad_acc', None)
         self.criterion_for_grad = params.get('criterion_for_grad', None)
+        if self.optimizer_for_grad is None:
+            self.optimizer_for_grad = optim.Adam(self.model.parameters(),
+                                                 lr=0.0001)
 
     def trigger(self, callback_type, kw) -> bool:
         return callback_type.__contains__('RegPruner')
@@ -105,16 +111,10 @@ class PrunerWithReg(ZeroShotPruner):
                   ) as pbar:
             for i, (data, target) in enumerate(pruner_metadata['input_data'].features.val_dataloader):
                 if i != 0:
-                    # we using 1 batch as example of pruning quality
-                    try:
-                        self.optimizer_for_grad.zero_grad()
-                        # pruner_metadata['optimizer_for_grad_acc'].zero_grad()
-                        loss = self._accumulate_grads(data, target)  # after loss.backward()
-                        pruner.regularize(self.model, loss)  # <== for sparse training
-                        self.optimizer_for_grad.step()
-                        # pruner_metadata['optimizer_for_grad_acc'].step()
-                    except Exception as er:
-                        print('Caught ex')
+                    self.optimizer_for_grad.zero_grad()
+                    loss = self._accumulate_grads(data, target)
+                    pruner.regularize(self.model)# after loss.backward()
+                    self.optimizer_for_grad.step()# <== for sparse training
                     pbar.update(1)
 
 

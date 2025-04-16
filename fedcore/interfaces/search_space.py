@@ -18,7 +18,7 @@ fedcore_search_space = {
                     "bn_scale",
                     "lamp",
                     "random",
-                    "group_norm",
+                    "group_magnitude",
                     "group_taylor",
                     "group_hessian",
                     "magnitude"
@@ -43,14 +43,14 @@ fedcore_search_space = {
         },
         "pruning_ratio": {
             "hyperopt-dist": hp.choice,
-            "sampling-scope": [np.linspace(0.1, 0.95, 15)],
+            "sampling-scope": [np.linspace(0.15, 0.95, 15)],
             "type": "continuous",
-        },
-        "pruning_iterations": {
-            "hyperopt-dist": hp.choice,
-            "sampling-scope": [[x for x in range(1, 5, 1)]],
-            "type": "categorical",
-        },
+        }
+        # "pruning_iterations": {
+        #     "hyperopt-dist": hp.choice,
+        #     "sampling-scope": [[x for x in range(1, 5, 1)]],
+        #     "type": "categorical",
+        # },
     }
 }
 

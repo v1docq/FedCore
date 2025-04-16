@@ -278,7 +278,7 @@ class ModelCompressionConstant(Enum):
     PRUNER_REQUIRED_REG = {
         "HessianImportance": tp.importance.HessianImportance,
         "BNScaleImportance": tp.importance.BNScaleImportance,
-        "GroupNormImportance": tp.importance.GroupNormImportance,
+        "GroupMagnitudeImportance": tp.importance.GroupMagnitudeImportance,
         "GroupHessianImportance": tp.importance.GroupHessianImportance,
     }
 
@@ -300,7 +300,7 @@ class ModelCompressionConstant(Enum):
     #     "GroupHessianImportance": tp.importance.GroupHessianImportance,
     # }
     GROUP_PRUNING_IMPORTANCE = {
-        "GroupNormImportance": tp.importance.GroupNormImportance,
+        "GroupNormImportance": tp.importance.GroupMagnitudeImportance,
         "GroupTaylorImportance": tp.importance.GroupTaylorImportance,
         "GroupHessianImportance": tp.importance.GroupHessianImportance,
     }
@@ -358,7 +358,7 @@ class PrunerImportances(Enum):
     bn_scale = tp.importance.BNScaleImportance
     lamp = tp.importance.LAMPImportance
     random = tp.importance.RandomImportance
-    group_norm = tp.importance.GroupNormImportance
+    group_magnitude = tp.importance.GroupMagnitudeImportance
     group_taylor = tp.importance.GroupTaylorImportance
     group_hessian = tp.importance.GroupHessianImportance
 

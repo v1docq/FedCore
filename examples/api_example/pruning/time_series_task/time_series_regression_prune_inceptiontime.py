@@ -10,6 +10,7 @@ from fedcore.api.api_configs import (
     APIConfigTemplate, DeviceConfigTemplate, AutoMLConfigTemplate,
     LearningConfigTemplate, NeuralModelConfigTemplate, ComputeConfigTemplate, FedotConfigTemplate,
     PruningTemplate, ModelArchitectureConfigTemplate)
+from fedcore.tools.viz import multiobjective_visualization
 
 ##########################################################################
 ### DEFINE ML PROBLEM (classification, object_detection, regression,   ###
@@ -49,7 +50,7 @@ def load_example_dataset():
 
 
 def create_usage_scenario(scenario: str, model: str, path_to_pretrain: str = None):
-    if path_to_pretrain is not None:
+    if path_to_pretrain is not None and scenario.__contains__('checkpoint'):
         initial_assumption = {'path_to_model': path_to_pretrain,
                               'model_type': model}
     else:
@@ -64,7 +65,7 @@ initial_assumption, learning_strategy = create_usage_scenario(PRETRAIN_SCENARIO,
 #######################################################################
 model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
-                                               depth=6)
+                                               depth=10)
 
 pretrain_config = NeuralModelConfigTemplate(epochs=200,
                                             log_each=10,
@@ -75,13 +76,13 @@ pretrain_config = NeuralModelConfigTemplate(epochs=200,
                                             custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                             'maximise_task': False,
                                                                                             'delta': 0.01}))
-finetune_config = NeuralModelConfigTemplate(epochs=15,
+finetune_config = NeuralModelConfigTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
                                             criterion=LOSS,
                                             )
 peft_config = PruningTemplate(importance="magnitude",
-                              pruning_ratio=0.8,
+                              pruning_ratio=0.5,
                               finetune_params=finetune_config
                               )
 ##################################################
@@ -90,7 +91,8 @@ peft_config = PruningTemplate(importance="magnitude",
 # subconfig for Fedot AutoML agent
 fedot_config = FedotConfigTemplate(problem=PROBLEM,
                                    metric=METRIC_TO_OPTIMISE,
-                                   pop_size=1,
+                                   pop_size=5,
+                                   n_jobs=1,
                                    timeout=1,
                                    initial_assumption=initial_assumption)
 # config for AutoML agent
@@ -112,3 +114,5 @@ if __name__ == "__main__":
     fedcore_train_data, fedcore_test_data = load_example_dataset()
     fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
+    multiobjective_visualization(fedcore_compressor)
+    _ = 1
