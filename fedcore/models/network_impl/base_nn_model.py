@@ -23,7 +23,11 @@ from fedcore.repository.constanst_repository import (
     TorchLossesConstant,
 )
 
-from fedcore.models.network_impl.hooks import BaseHook, HooksCollection
+from fedcore.models.network_impl.hooks import BaseHook
+
+def now_for_file():
+    return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
+
 
 class BaseNeuralModel(torch.nn.Module):
     """Class responsible for NN model implementation.
@@ -47,7 +51,7 @@ class BaseNeuralModel(torch.nn.Module):
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = None, additional_hooks=None):
+    def __init__(self, params: Optional[OperationParameters] = None):
         super().__init__()
         self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
@@ -63,7 +67,6 @@ class BaseNeuralModel(torch.nn.Module):
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
-        self._additional_hooks = additional_hooks
 
     def _init_custom_criterions(self, custom_criterions: dict):
         for name, coef in custom_criterions.items():
@@ -99,8 +102,8 @@ class BaseNeuralModel(torch.nn.Module):
             'val_loss': []
         }
         # add hooks
-        self._on_epoch_end = HooksCollection(additional_hooks=self._additional_hooks)
-        self._on_epoch_start = HooksCollection(additional_hooks=self._additional_hooks)
+        self._on_epoch_end = []
+        self._on_epoch_start = []
 
     def __repr__(self):
         return self.__class__.__name__ + '\nStart hooks:\n' + '\n'.join(
@@ -130,16 +133,11 @@ class BaseNeuralModel(torch.nn.Module):
             if not hook.check_init(self.params):
                 continue
             hook = hook(self.params, self.model)
-            if hook._hook_place > 0:
+            if hook._hook_place == 'post':
                 self._on_epoch_end.append(hook)
-            elif hook._hook_place < 0:
-                self._on_epoch_start.append(hook)
             else:
                 self._on_epoch_start.append(hook)
-                self._on_epoch_end.append(hook)
-        self._on_epoch_start.sort(key=lambda x: x._hook_place)
-        self._on_epoch_end.sort(key=lambda x: x._hook_place)
-                
+
     def register_additional_hooks(self, hooks: Iterable[Enum]):
         self._hooks.extend(hooks)
 
@@ -217,18 +215,13 @@ class BaseNeuralModel(torch.nn.Module):
         self.model.to(self.device)
         self.__check_and_substitute_loss(input_data)
         self._init_hooks()
-        try:
-            self._train_loop(
-                train_loader=train_loader,
-                val_loader=val_loader,
-                loss_fn=self.criterion,
-            )
-        except Exception:
-            self._train_loop(
-                train_loader=train_loader,
-                val_loader=val_loader,
-                loss_fn=self.criterion,
-            )
+        self._init_hooks()
+        self._train_loop(
+            train_loader=train_loader,
+            val_loader=val_loader,
+            loss_fn=self.criterion,
+            loss_fn=self.criterion,
+        )
         self._clear_cache()
         return self.model
 
@@ -272,6 +265,7 @@ class BaseNeuralModel(torch.nn.Module):
         Method for feature generation for all series
         """
         print('###', 'BNN predict')
+        print('###', 'BNN predict')
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
 
@@ -279,6 +273,8 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
+        print('###', 'BNN predict4fit')
+
         print('###', 'BNN predict4fit')
 
         self.__substitute_device_quant()

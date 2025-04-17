@@ -11,40 +11,13 @@ from pathlib import Path
 import torch
 from tqdm import tqdm
 
+from fedot.core.operations.operation_parameters import OperationParameters
+
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
 
 VERBOSE = True
 
-
-
-
-def now_for_file():
-    return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
-
-
-class HooksCollection:
-    def __init__(self, hooks=None, additional_hooks=None, **kwargs):
-        self.__hooks = hooks or []
-        self.__additional_hooks = additional_hooks or []
-        self.__sort()
-
-    def __sort(self):
-        self.__hooks.sort(key=lambda x: x._hook_place)
-    
-    def append(self, hook):
-        assert isinstance(hook, BaseHook)
-        self.__hooks.append(hook)
-
-    def check_specific(self):
-        hook_classes = tuple(hook.__class__ for hook in self.__hooks)
-        for specific_hook in chain(*self.__additional_hooks):
-            if specific_hook.value in hook_classes:
-                return True 
-        return False
-    
-    def __repr__(self):
-        return repr(self.__hooks)
 
 class BaseHook(ABC):
     _SUMMON_KEY: str
@@ -74,7 +47,6 @@ class BaseHook(ABC):
 
     @classmethod
     def check_init(cls, d: dict):
-        from fedot.core.operations.operation_parameters import OperationParameters
         if isinstance(d, OperationParameters):
             d = d.to_dict()
         summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
