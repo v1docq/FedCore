@@ -167,6 +167,9 @@ class ExtendableConfigTemplate(ConfigTemplate):
             return
         super().check(key, val)
 
+    def keys(self):
+        return [*tuple(slot for slot in self.__slots__ if slot != '_parent'), *list(self.__dict__)]
+
 
 @dataclass
 class DeviceConfigTemplate(ConfigTemplate):
@@ -212,8 +215,9 @@ class FedotConfigTemplate(ConfigTemplate):
     task_params: Optional[TaskTypesEnum] = None
     metric: Optional[Iterable[str]] = None  ###
     n_jobs: int = -1
-    initial_assumption: Union[Module, str] = None
+    initial_assumption: Union[Module, str, dict] = None
     available_operations: Optional[Iterable[str]] = None
+    optimizer: Optional[Any] = None
 
 
 @dataclass
@@ -231,6 +235,7 @@ class NodeTemplate(ConfigTemplate):
     """Computational Node settings. May include hooks summon keys"""
     log_each: Optional[int] = LookUp(None)
     eval_each: Optional[int] = LookUp(None)
+    save_each: Optional[int] = LookUp(None)
     epochs: int = 15
     optimizer: Optimizers = 'adam'
     scheduler: Optional[Schedulers] = None
@@ -242,7 +247,7 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
     """Example of specific node template"""
     input_dim: Union[None, int] = None
     output_dim: Union[None, int] = None
-    depth: int = 3
+    depth: Union[int, dict] = 3
     custom_model_params: dict = None
 
 
