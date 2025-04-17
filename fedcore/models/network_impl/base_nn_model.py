@@ -23,7 +23,8 @@ from fedcore.repository.constanst_repository import (
     TorchLossesConstant,
 )
 
-from fedcore.models.network_impl.hooks import BaseHook, HooksCollection
+from fedcore.models.network_impl.hooks import BaseHook
+from fedcore.models.network_impl.hooks_collection import HooksCollection
 
 class BaseNeuralModel(torch.nn.Module):
     """Class responsible for NN model implementation.
@@ -63,7 +64,7 @@ class BaseNeuralModel(torch.nn.Module):
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
-        self._additional_hooks = additional_hooks
+        self._additional_hooks = additional_hooks or []
 
     def _init_custom_criterions(self, custom_criterions: dict):
         for name, coef in custom_criterions.items():
@@ -99,28 +100,11 @@ class BaseNeuralModel(torch.nn.Module):
             'val_loss': []
         }
         # add hooks
-        self._on_epoch_end = HooksCollection(additional_hooks=self._additional_hooks)
-        self._on_epoch_start = HooksCollection(additional_hooks=self._additional_hooks)
+        self.hooks = HooksCollection()
 
     def __repr__(self):
-        return self.__class__.__name__ + '\nStart hooks:\n' + '\n'.join(
-            str(hook) for hook in self._on_epoch_start
-        ) + '\nEnd hooks:\n' + '\n'.join(
-            str(hook) for hook in self._on_epoch_end
-        )
-
-    def clear_hooks(self):
-        self._hooks.clear()
-        self._on_epoch_end.clear()
-        self._on_epoch_start.clear()
-
-    @classmethod
-    def wrap(cls, model, params: Optional[OperationParameters] = None):
-        bnn = cls(params)
-        bnn.clear_hooks()
-        bnn.model = model
-        return bnn
-
+        return self.__class__.__name__ + '\n' + repr(self.hooks)
+    
     def _init_model(self):
         pass
 
@@ -130,15 +114,7 @@ class BaseNeuralModel(torch.nn.Module):
             if not hook.check_init(self.params):
                 continue
             hook = hook(self.params, self.model)
-            if hook._hook_place > 0:
-                self._on_epoch_end.append(hook)
-            elif hook._hook_place < 0:
-                self._on_epoch_start.append(hook)
-            else:
-                self._on_epoch_start.append(hook)
-                self._on_epoch_end.append(hook)
-        self._on_epoch_start.sort(key=lambda x: x._hook_place)
-        self._on_epoch_end.sort(key=lambda x: x._hook_place)
+            self.hooks.append(hook)
                 
     def register_additional_hooks(self, hooks: Iterable[Enum]):
         self._hooks.extend(hooks)
@@ -163,9 +139,6 @@ class BaseNeuralModel(torch.nn.Module):
             self.model = torch.load(path, map_location=self.device)
         self.model.eval()
 
-        # add hooks
-        self._on_epoch_end = []
-        self._on_epoch_start = []
 
     def __check_and_substitute_loss(self, train_data: InputData):
         # TODO delete 
@@ -234,17 +207,10 @@ class BaseNeuralModel(torch.nn.Module):
             output = self.model(*inputs)
             loss = self._compute_loss(loss_fn, output,
                                       targets.to(self.device), epoch=epoch)
-            *inputs, targets = batch
-            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            output = self.model(*inputs)
-            loss = self._compute_loss(loss_fn, output,
-                                      targets.to(self.device), epoch=epoch)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
             training_loss += loss.item()
-        avg_loss = training_loss / len(dataloader)
-        self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
         avg_loss = training_loss / len(dataloader)
         self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
 
@@ -254,14 +220,14 @@ class BaseNeuralModel(torch.nn.Module):
                                                        max_batches=self.batch_limit,
                                                        enumerate=False)
         for epoch in range(1, self.epochs + 1):
-            for hook in self._on_epoch_start:
+            for hook in self.hooks.start:
                 hook(epoch=epoch, trainer_objects=self.trainer_objects,
                      learning_rate=self.learning_rate)
             self._run_one_epoch(epoch=epoch,
                                 dataloader=train_loader,
                                 loss_fn=loss_fn,
                                 optimizer=self.optimizer)
-            for hook in self._on_epoch_end:
+            for hook in self.hooks.end:
                 hook(epoch=epoch, val_loader=val_loader,
                      criterion=partial(self._compute_loss, criterion=loss_fn),
                      history=self.history)

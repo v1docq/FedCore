@@ -11,40 +11,14 @@ from pathlib import Path
 import torch
 from tqdm import tqdm
 
+from fedot.core.operations.operation_parameters import OperationParameters
+
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
 from fedcore.models.network_modules.layers.special import EarlyStopping
 
 VERBOSE = True
-
-
-def now_for_file():
-    return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
-
-
-class HooksCollection:
-    def __init__(self, hooks=None, additional_hooks=None, **kwargs):
-        self.__hooks = hooks or []
-        self.__additional_hooks = additional_hooks or []
-        self.__sort()
-
-    def __sort(self):
-        self.__hooks.sort(key=lambda x: x._hook_place)
-    
-    def append(self, hook):
-        assert isinstance(hook, BaseHook)
-        self.__hooks.append(hook)
-
-    def check_specific(self):
-        hook_classes = tuple(hook.__class__ for hook in self.__hooks)
-        for specific_hook in chain(*self.__additional_hooks):
-            if specific_hook.value in hook_classes:
-                return True 
-        return False
-    
-    def __repr__(self):
-        return repr(self.__hooks)
 
 class BaseHook(ABC):
     _SUMMON_KEY: str
@@ -56,8 +30,6 @@ class BaseHook(ABC):
 
     def __call__(self, epoch, **kws):
         trigger_result = self.trigger(epoch, kws)
-        if VERBOSE and trigger_result:
-            self._verbose(epoch)
         if VERBOSE and trigger_result:
             self._verbose(epoch)
         if trigger_result:
@@ -76,21 +48,6 @@ class BaseHook(ABC):
 
     @classmethod
     def check_init(cls, d: dict):
-        from fedot.core.operations.operation_parameters import OperationParameters
-        if isinstance(d, OperationParameters):
-            d = d.to_dict()
-        summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
-        return any(d[summon] is not None for summon in summons if summon in d.keys())
-
-    def __repr__(self):
-        return self.__class__.__name__
-
-    def _verbose(self, epoch):
-        print(f'Triggered {repr(self)} at {epoch} epoch.')
-
-    @classmethod
-    def check_init(cls, d: dict):
-        from fedot.core.operations.operation_parameters import OperationParameters
         if isinstance(d, OperationParameters):
             d = d.to_dict()
         summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
@@ -152,7 +109,6 @@ class FitReport(BaseHook):
 
     def __init__(self, params, model):
         super().__init__(params, model)
-        self.log_interval = params.get('log_each', 1)
         self.log_interval = params.get('log_each', 1)
 
     def trigger(self, epoch, kw) -> bool:
@@ -218,12 +174,12 @@ class EarlyStopping(BaseHook):
 
 class Evaluator(BaseHook):
     _SUMMON_KEY = 'eval_each'
-    _hook_place = 80 
+    _hook_place = 80
 
     def __init__(self, params, model):
         super().__init__(params, model)
         self.eval_each = params.get('eval_each', 1)
-        self.device = extract_device(self.model)
+        self.device = next(iter(self.model.parameters())).device
 
     def trigger(self, epoch, kws):
         return epoch % self.eval_each == 0 and kws['val_loader'] is not None
