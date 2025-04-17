@@ -53,6 +53,15 @@ class ConfigFactory:
         def __setattr__(self, key, value):
             self.check(key, value)
             ConfigTemplate.__setattr__(self, key, value)
+
+        def __setattr__ex(self, key, value):
+            if key in self.__slots__:
+                self.check(key, value)
+            elif not key in self.additional_features:
+                self.additional_features.append(key)
+                
+            ConfigTemplate.__setattr__(self, key, value)
+
                 
         def __setitem__(self, key, value):
             orig_type = type(getattr(self, key))
