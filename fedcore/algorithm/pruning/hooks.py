@@ -21,15 +21,21 @@ class ZeroShotPruner(BaseHook):
         zeroshot_cond_one = isinstance(importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values()))
         zeroshot_cond_two = any([str(importance).__contains__(x) for x in self.zeroshot_names])
         zeroshot_pruner = all([zeroshot_cond_one, zeroshot_cond_two])
-        pruner_with_grads = all([not zeroshot_pruner, str(importance).__contains__('Taylor')])
-        pruner_with_reg = all([not zeroshot_pruner, not pruner_with_grads])
-        if pruner_with_grads:
-            callback = 'GradPruner'
-        elif pruner_with_reg:
+        pruner_with_grads = all([not zeroshot_pruner, any([str(importance).__contains__('Taylor'),
+                                                           str(importance).__contains__('Hessian')
+                                                           ])])
+        pruner_with_reg = all([not zeroshot_pruner, any([str(importance).__contains__('BNScale'),
+                                                         str(importance).__contains__('Group')])])
+        if pruner_with_reg:
             callback = 'RegPruner'
+        elif pruner_with_grads:
+            callback = 'GradPruner'
         elif zeroshot_pruner:
             callback = 'ZeroShotPruner'
-        return callback
+        try:
+            return callback
+        except Exception:
+            _ = 1
 
     def __call__(self, importance, **kws):
         callback_type = self._define_pruner_type(importance)
@@ -41,7 +47,12 @@ class ZeroShotPruner(BaseHook):
         data, target = data.to(default_device()), target.to(default_device())
         data, target = data.to(torch.float32), target.to(torch.float32)
         out = self.model(data)
-        loss = self.criterion_for_grad(out, target)
+        if isinstance(self.criterion_for_grad, torch.nn.CrossEntropyLoss):  # classification task
+            target = target.to(torch.int64)  # convert probalistic output to labels)
+        try:
+            loss = self.criterion_for_grad(out, target)
+        except Exception:
+            loss = self.criterion_for_grad(out, target)
         loss.backward()
         return loss
 
@@ -58,8 +69,6 @@ class ZeroShotPruner(BaseHook):
                 pruning_fn = dep.pruning_fn
                 pruning_hist.append((layer, idxs, pruning_fn))
                 group.prune()
-                # valid_to_prune = kws['validator'].validate_pruned_layers(layer, pruning_fn)
-                # if valid_to_prune:
 
     def action(self, callback, kws):
         pruner_metadata = kws['pruner_objects']
@@ -98,24 +107,40 @@ class PrunerWithReg(ZeroShotPruner):
             self.optimizer_for_grad = optim.Adam(self.model.parameters(),
                                                  lr=0.0001)
 
+    def regularize_model_params(self, pruner, val_dataloader):
+        pruner.update_regularizer()  # <== initialize regularizer. Define model groups for pruning
+        val_batches = len(val_dataloader) - 1
+        with tqdm(total=val_batches, desc='Pruning reg', ) as pbar:
+            for i, (data, target) in enumerate(val_dataloader):
+                if i != 0:
+                    self.optimizer_for_grad.zero_grad()
+                    loss = self._accumulate_grads(data, target)
+                    pruner.regularize(self.model)  # after loss.backward()
+                    self.optimizer_for_grad.step()  # <== for sparse training
+                    pbar.update(1)
+        return pruner
+
+    def prune_after_reg(self, pruner, pruning_iter):
+        pruning_hist = []
+        for i in range(pruning_iter):
+            potential_groups_to_prune = pruner.step(interactive=True)
+            for group in potential_groups_to_prune:
+                dep, idxs = group[0]
+                layer = dep.layer
+                pruning_fn = dep.pruning_fn
+                pruning_hist.append((layer, idxs, pruning_fn))
+                group.prune()
+
     def trigger(self, callback_type, kw) -> bool:
         return callback_type.__contains__('RegPruner')
 
     def action(self, callback_type, kws):
         pruner_metadata = kws['pruner_objects']
         pruner = pruner_metadata['pruner_cls']
-        pruner.update_regularizer()
-        # <== initialize regularizer
-        with tqdm(total=len(pruner_metadata['input_data'].features.val_dataloader) - 1,
-                  desc='Pruning reg',
-                  ) as pbar:
-            for i, (data, target) in enumerate(pruner_metadata['input_data'].features.val_dataloader):
-                if i != 0:
-                    self.optimizer_for_grad.zero_grad()
-                    loss = self._accumulate_grads(data, target)
-                    pruner.regularize(self.model)# after loss.backward()
-                    self.optimizer_for_grad.step()# <== for sparse training
-                    pbar.update(1)
+        pruning_iter = pruner_metadata['pruning_iterations']
+        val_dataloader = pruner_metadata['input_data'].features.val_dataloader
+        pruner = self.regularize_model_params(pruner, val_dataloader)
+        self.prune_after_reg(pruner, pruning_iter)
 
 
 class PruningHooks(Enum):

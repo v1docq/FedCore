@@ -78,15 +78,6 @@ class BaseCompressionModel:
             return b[0]
         return b
 
-    # def _load_pretrain_model(self):
-    #     init_model_with_pretrain(label2id=label2id, id2label=id2label, pretrain_path=teacher_path)
-    #
-    # def evaluate_model(self,
-    #                    input_data: CompressionInputData):
-    #     evaluate_model(CompressionInputData.model,
-    #                    CompressionInputData.val_dataloader,
-    #                    CompressionInputData.target)
-
     def finetune(self, finetune_object: callable, finetune_data):
         self.optimizer = finetune_object.optimizer(
             finetune_object.model.parameters(), lr=finetune_object.learning_rate
@@ -127,7 +118,7 @@ class BaseCompressionModel:
         self._save_and_clear_cache()
 
     def predict(
-        self, input_data: CompressionInputData, output_mode: str = "default"
+            self, input_data: CompressionInputData, output_mode: str = "default"
     ) -> Union[Any, torch.Tensor]:
         """
         Method for feature generation for all series
@@ -135,15 +126,19 @@ class BaseCompressionModel:
         return self._predict_model(input_data, output_mode)
 
     def predict_for_fit(
-        self, input_data: CompressionInputData, output_mode: str = "default"
+            self, input_data: CompressionInputData, output_mode: str = "default"
     ) -> torch.nn.Module:
         """
         Method for feature generation for all series
         """
         return self._predict_model(input_data, output_mode)
-    
-    def _diagnose(self, example_batch, base_nparams, base_macs, stage):
-        print(stage)
-        macs, nparams = tp.utils.count_ops_and_params(self.optimised_model, example_batch)
+
+    def estimate_params(self, example_batch, model_before, model_after):
+        base_macs, base_nparams = tp.utils.count_ops_and_params(model_before, example_batch)
+        macs, nparams = tp.utils.count_ops_and_params(model_after, example_batch)
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+        print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
+        print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))
+        return dict(params_before=base_nparams, macs_before=base_macs,
+                    params_after=nparams, macs_after=macs)

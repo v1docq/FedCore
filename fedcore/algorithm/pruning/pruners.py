@@ -37,7 +37,7 @@ class BasePruner(BaseCompressionModel):
         finetune_params = params.get('finetune_params', dict())
         # finetune_params = params.get('finetune_params', None)
         criterion_for_grad = TorchLossesConstant[finetune_params.get("criterion", 'cross_entropy')]
-        
+
         self.ft_params.update({'criterion_for_grad': criterion_for_grad.value()})
         self.ft_params.update({'lr_for_grad': params.get("lr", 0.0001)})
 
@@ -159,14 +159,13 @@ class BasePruner(BaseCompressionModel):
         return self.model_after_pruning
 
     def finetune(self, finetune_object, finetune_data):
-        base_macs, base_nparams = tp.utils.count_ops_and_params(self.model_before_pruning, self.data_batch_for_calib)
+        validated_finetune_object = self.validator.validate_pruned_layers(finetune_object)
+        self.trainer.model = validated_finetune_object
         print(f"==============After {self.importance_name} pruning=================")
-        finetune_object = self.validator.validate_pruned_layers(finetune_object)
-        macs, nparams = tp.utils.count_ops_and_params(finetune_object, self.data_batch_for_calib)
-        print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))
+        params_dict = self.estimate_params(example_batch=self.data_batch_for_calib,
+                                           model_before=self.model_before_pruning,
+                                           model_after=validated_finetune_object)
         print("==============Finetune pruned model=================")
-        self.trainer.model = finetune_object
         self.model_after_pruning = self.trainer.fit(finetune_data)
         return self.model_after_pruning
 
