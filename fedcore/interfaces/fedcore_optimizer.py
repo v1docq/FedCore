@@ -136,6 +136,7 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
 
     def _extend_population(self, pop: PopulationT, target_pop_size: int, mutation_prob: list = None) -> PopulationT:
         verifier, new_population, new_ind = self.graph_generation_params.verifier, list(pop), 'empty'
+        # redefine golem's individual verification rules excluding unnecessary checks
         verifier._rules = FEDCORE_GRAPH_VALIDATION
         pop_graphs = [ind.graph for ind in new_population]
         for iter_num in range(self.graph_generation_attempts):

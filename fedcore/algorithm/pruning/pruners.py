@@ -28,15 +28,21 @@ class BasePruner(BaseCompressionModel):
         super().__init__(params)
         # finetune params
         self.epochs = params.get("epochs", 5)
-        self.ft_params = params.get("finetune_params", None)
+        self.ft_params = params.get("finetune_params", dict())
+        # self.ft_params = params.get("finetune_params", None)
         self.optimizer = params.get("optimizer", optim.Adam)
         self.learning_rate = params.get("lr", 0.0001)
 
         # pruning gradients params
-        finetune_params = params.get('finetune_params', None)
+        finetune_params = params.get('finetune_params', dict())
+        # finetune_params = params.get('finetune_params', None)
         criterion_for_grad = TorchLossesConstant[finetune_params.get("criterion", 'cross_entropy')]
-        self.ft_params['criterion_for_grad'] = criterion_for_grad.value()
-        self.ft_params['lr_for_grad'] = params.get("lr", 0.0001)
+        
+        self.ft_params.update({'criterion_for_grad': criterion_for_grad.value()})
+        self.ft_params.update({'lr_for_grad': params.get("lr", 0.0001)})
+
+        # self.ft_params['criterion_for_grad'] = criterion_for_grad.value()
+        # self.ft_params['lr_for_grad'] = params.get("lr", 0.0001)
 
         # pruning params
         self.pruner_name = params.get("pruner_name", "meta_pruner")
@@ -126,7 +132,7 @@ class BasePruner(BaseCompressionModel):
                                                                    str(self.model_after_pruning.__class__))
         self.channel_groups = self.validator.validate_channel_groups()
 
-    def fit(self, input_data: InputData):
+    def fit(self, input_data: InputData, finetune: bool = True):
         self._init_model(input_data)
         self._init_hooks()
         self.pruner = self.pruner(
@@ -148,7 +154,9 @@ class BasePruner(BaseCompressionModel):
                                'pruner_cls': self.pruner}
         for hook in self._on_epoch_end:
             hook(importance=self.importance, pruner_objects=self.pruner_objects)
-        return self.finetune(finetune_object=self.model_after_pruning, finetune_data=input_data)
+        if finetune:
+            return self.finetune(finetune_object=self.model_after_pruning, finetune_data=input_data)
+        return self.model_after_pruning
 
     def finetune(self, finetune_object, finetune_data):
         base_macs, base_nparams = tp.utils.count_ops_and_params(self.model_before_pruning, self.data_batch_for_calib)
