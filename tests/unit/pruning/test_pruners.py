@@ -25,8 +25,7 @@ def get_api_template(pruner_importance: str):
     LOSS = 'cross_entropy'
     PROBLEM = 'classification'
     PEFT_PROBLEM = 'pruning'
-    INITIAL_ASSUMPTION = {'path_to_model': 'examples/api_example/pruning/pretrain_model/pretrain_model_checkpoint_at_15_epoch.pt',
-                        'model_type': 'ResNet18'}
+    INITIAL_ASSUMPTION = 'ResNet18'
     PRETRAIN_SCENARIO = 'from_checkpoint'
     POP_SIZE = 1
 

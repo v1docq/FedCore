@@ -25,24 +25,21 @@ class LowRankModel(BaseCompressionModel):
 
     Args:
     """
+    _additional_hooks = [LRHooks]
 
     def __init__(self, params: Optional[OperationParameters] = {}):
+        super().__init__(params)
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
-        self.trainer = BaseNeuralModel(params)
-        self.trainer.register_additional_hooks([LRHooks])
         self.device = default_device()
 
     def _init_model(self, input_data):
-        model = input_data.target
+        model = super()._init_model(input_data, self._additional_hooks)
         decompose_module(
             model, self.decomposing_mode, self.decomposer, self.compose_mode
         )
         return model
-    
-    def _check_at_least_one(self, trainer):
-        pass
 
     def fit(self, input_data) -> None:
         """Run model training with optimization.
@@ -50,19 +47,18 @@ class LowRankModel(BaseCompressionModel):
         Args:
             input_data: An instance of the model class
         """
-        print(f'At {LowRankModel.__name__} passed {input_data.__class__.__name__}')
-        model = self._init_model(input_data)
-        example_batch = self._get_example_input(input_data).to(extract_device(model))
-        base_params = self._estimate_params(model, example_batch)
-        self.trainer.model = model
+        model_before = self._init_model(input_data)
+        example_batch = self._get_example_input(input_data).to(extract_device(model_before))
+        base_params = self._estimate_params(model_before, example_batch)
+        self.trainer.model = model_before
         self.model = self.trainer.fit(input_data)
-        self.optimised_model = model
-        self.compress(self.optimised_model)
+        self.model_after = model_before
+        self.compress(self.model_after)
         # check params
-        self._diagnose(self.optimised_model, example_batch, *base_params,
+        self._diagnose(self.model_after, example_batch, *base_params,
             "After low rank truncation".center(80, '='))
-        self.optimised_model._structure_changed__ = True
-        return self.optimised_model
+        self.model_after._structure_changed__ = True
+        return self.model_after
 
     def compress(self, model: nn.Module):
         for module in model.modules():

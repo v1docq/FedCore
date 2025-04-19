@@ -107,7 +107,11 @@ class FedCore(Fedot):
                              model=self.manager.automl_config.fedot_config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
-        train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
+        train_data = Either.insert(input_data).then(data_cls.check_input_data).value
+        ### TODO del workaround
+        train_data.train_dataloader = train_data.features.train_dataloader
+        train_data.val_dataloader = train_data.features.val_dataloader
+        ###
         return train_data
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
