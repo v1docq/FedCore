@@ -24,10 +24,7 @@ from fedcore.repository.constanst_repository import (
 )
 
 from fedcore.models.network_impl.hooks import BaseHook
-
-def now_for_file():
-    return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
-
+from fedcore.models.network_impl.hooks_collection import HooksCollection
 
 class BaseNeuralModel(torch.nn.Module):
     """Class responsible for NN model implementation.
@@ -51,7 +48,7 @@ class BaseNeuralModel(torch.nn.Module):
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = None):
+    def __init__(self, params: Optional[OperationParameters] = None, additional_hooks=None):
         super().__init__()
         self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
@@ -67,6 +64,7 @@ class BaseNeuralModel(torch.nn.Module):
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
+        self._additional_hooks = additional_hooks or []
 
     def _init_custom_criterions(self, custom_criterions: dict):
         for name, coef in custom_criterions.items():
@@ -102,28 +100,11 @@ class BaseNeuralModel(torch.nn.Module):
             'val_loss': []
         }
         # add hooks
-        self._on_epoch_end = []
-        self._on_epoch_start = []
+        self.hooks = HooksCollection()
 
     def __repr__(self):
-        return self.__class__.__name__ + '\nStart hooks:\n' + '\n'.join(
-            str(hook) for hook in self._on_epoch_start
-        ) + '\nEnd hooks:\n' + '\n'.join(
-            str(hook) for hook in self._on_epoch_end
-        )
-
-    def clear_hooks(self):
-        self._hooks.clear()
-        self._on_epoch_end.clear()
-        self._on_epoch_start.clear()
-
-    @classmethod
-    def wrap(cls, model, params: Optional[OperationParameters] = None):
-        bnn = cls(params)
-        bnn.clear_hooks()
-        bnn.model = model
-        return bnn
-
+        return self.__class__.__name__ + '\n' + repr(self.hooks)
+    
     def _init_model(self):
         pass
 
@@ -133,11 +114,8 @@ class BaseNeuralModel(torch.nn.Module):
             if not hook.check_init(self.params):
                 continue
             hook = hook(self.params, self.model)
-            if hook._hook_place == 'post':
-                self._on_epoch_end.append(hook)
-            else:
-                self._on_epoch_start.append(hook)
-
+            self.hooks.append(hook)
+                
     def register_additional_hooks(self, hooks: Iterable[Enum]):
         self._hooks.extend(hooks)
 
@@ -161,9 +139,6 @@ class BaseNeuralModel(torch.nn.Module):
             self.model = torch.load(path, map_location=self.device)
         self.model.eval()
 
-        # add hooks
-        self._on_epoch_end = []
-        self._on_epoch_start = []
 
     def __check_and_substitute_loss(self, train_data: InputData):
         # TODO delete 
@@ -247,14 +222,14 @@ class BaseNeuralModel(torch.nn.Module):
                                                        max_batches=self.batch_limit,
                                                        enumerate=False)
         for epoch in range(1, self.epochs + 1):
-            for hook in self._on_epoch_start:
+            for hook in self.hooks.start:
                 hook(epoch=epoch, trainer_objects=self.trainer_objects,
                      learning_rate=self.learning_rate)
             self._run_one_epoch(epoch=epoch,
                                 dataloader=train_loader,
                                 loss_fn=loss_fn,
                                 optimizer=self.optimizer)
-            for hook in self._on_epoch_end:
+            for hook in self.hooks.end:
                 hook(epoch=epoch, val_loader=val_loader,
                      criterion=partial(self._compute_loss, criterion=loss_fn),
                      history=self.history)

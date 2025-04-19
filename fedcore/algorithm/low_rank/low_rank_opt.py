@@ -9,14 +9,17 @@ from torch import nn
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
+from fedcore.architecture.comptutaional.devices import default_device, extract_device
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constanst_repository import (
     DECOMPOSE_MODE,
     LRHooks
+    LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
+
 
 
 
@@ -37,6 +40,7 @@ class LowRankModel(BaseCompressionModel):
     def _init_model(self, input_data):
         model = super()._init_model(input_data, self._additional_hooks)
         decompose_module(
+            model, self.decomposing_mode, self.decomposer, self.compose_mode
             model, self.decomposing_mode, self.decomposer, self.compose_mode
         )
         return model
@@ -63,6 +67,7 @@ class LowRankModel(BaseCompressionModel):
     def compress(self, model: nn.Module):
         for module in model.modules():
             if isinstance(module, IDecomposed):
+                # module.inference_mode = True
                 # module.inference_mode = True
                 module.compose_weight_for_inference()
 
