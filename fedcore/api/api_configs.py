@@ -48,7 +48,7 @@ class MisconfigurationError(BaseException):
         self.exs = exs
 
     def __repr__(self):
-        return '\n' + '\n'.join([f'\t{x.__class__.__name__}: {str(x)}' for x in self.exs])
+        return '\n'.join([f'\t{str(x)}' for x in self.exs])
 
     def __str__(self):
         return self.__repr__()

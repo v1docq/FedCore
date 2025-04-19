@@ -2,7 +2,7 @@ from enum import Enum
 from inspect import signature, isclass
 from typing import get_args, get_origin, Iterable, Literal, Optional, Union
 
-from .api_configs import ConfigTemplate, ExtendableConfigTemplate, get_nested, LookUp
+from .api_configs import ConfigTemplate, ExtendableConfigTemplate, get_nested, LookUp, MisconfigurationError
 
 
 __all__ = [
@@ -27,13 +27,25 @@ class ConfigFactory:
         def __init__(self, parent=None, **kwargs):
             object.__setattr__(self, '_parent', parent)
             content.update(kwargs)
+            misconf_errors = []
             for key, value in content.items():
-                value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
-                if need_check:
-                    self.__class__.check(key, value)
-                    setattr(self, key, value)
-                else:
-                    object.__setattr__(self, key, value)
+                try:
+                    value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
+                    if need_check:
+                        self.__class__.check(key, value)
+                        setattr(self, key, value)
+                    else:
+                        object.__setattr__(self, key, value)
+                except MisconfigurationError as e:
+                    misconf_errors.append(e)
+                except Exception as x:
+                    if not misconf_errors:
+                        raise x
+                    else:
+                        continue
+            if misconf_errors:
+                raise MisconfigurationError(misconf_errors)
+                    
             if not isinstance(self, ExtendableConfigTemplate):
                 delattr(self, '__dict__')
             self._parent = None
