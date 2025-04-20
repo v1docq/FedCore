@@ -286,7 +286,7 @@ class APIConfigTemplate(ExtendableConfigTemplate):
 class LowRankTemplate(NeuralModelConfigTemplate):
     """Example of specific node template"""
     strategy: SLRStrategiesEnum = 'quantile'
-    rank_prune_each: int = -1,
+    rank_prune_each: int = -1
     custom_criterions: dict = None  # {'norm_loss':{...},
     non_adaptive_threshold: float = .5
     finetune_params: NeuralModelConfigTemplate = None
