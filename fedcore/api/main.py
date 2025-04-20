@@ -75,7 +75,8 @@ class FedCore(Fedot):
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
         initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
-        initial_assumption = initial_assumption(params=self.manager.learning_config.peft_strategy_params.to_dict())
+        initial_assumption = initial_assumption(
+            params=self.manager.learning_config.peft_strategy_params.to_dict())
         initial_pipeline = initial_assumption.build()
         self.manager.solver.params.data.update({'initial_assumption': initial_pipeline})
         return input_data
@@ -95,8 +96,9 @@ class FedCore(Fedot):
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]()
-        initial_assumption.heads[0].parameters = self.manager.learning_config.peft_strategy_params.to_dict()
+        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](
+            params=self.manager.learning_config.peft_strategy_params.to_dict()
+        )
         self.manager.solver = initial_assumption.build()
         return input_data
 
@@ -105,7 +107,11 @@ class FedCore(Fedot):
                              model=self.manager.automl_config.fedot_config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
-        train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
+        train_data = Either.insert(input_data).then(data_cls.check_input_data).value
+        ### TODO del workaround
+        train_data.train_dataloader = train_data.features.train_dataloader
+        train_data.val_dataloader = train_data.features.val_dataloader
+        ###
         return train_data
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
@@ -134,26 +140,27 @@ class FedCore(Fedot):
         """
 
         def fit_function(train_data):
-            pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'].__contains__(
-                'scratch')
-            model_learning_pipeline = FEDOT_ASSUMPTIONS["training"]()
-            model_learning_pipeline.heads[
-                0].parameters = self.manager.learning_config.learning_strategy_params.to_dict()
-            model_learning_pipeline = model_learning_pipeline.build()
-            pretrain_func = lambda data: self._pretrain_before_optimise(model_learning_pipeline, data) \
-                if pretrain_before_optimise else data
-            fitted_solver = Maybe.insert(train_data).then(pretrain_func).then(self.manager.solver.fit). \
-                maybe(None, lambda solver: solver)
+            pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
+            if pretrain_before_optimise:
+                model_learning_pipeline = FEDOT_ASSUMPTIONS["training"](
+                    params=self.manager.learning_config.learning_strategy_params.to_dict()
+                )
+                model_learning_pipeline = model_learning_pipeline.build()
+                train_data = self._pretrain_before_optimise(model_learning_pipeline, train_data)
+            fitted_solver = self.manager.solver.fit(train_data)
             return fitted_solver
 
         # with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
-        self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
-            then(self.__init_fedcore_backend). \
-            then(self.__init_dask). \
-            then(self.__init_solver). \
-            then(fit_function). \
-            maybe(None, lambda solver: solver)
-        return self.fedcore_model
+        try:
+            self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
+                then(self.__init_fedcore_backend). \
+                then(self.__init_dask). \
+                then(self.__init_solver). \
+                then(fit_function). \
+                maybe(None, lambda solver: solver)
+            return self.fedcore_model
+        except KeyboardInterrupt:
+            return self.manager.solver
 
     def fit_no_evo(self, input_data: tuple, manually_done=False, **kwargs):
         with exception_handler(Exception, on_exception=self.shutdown, suppress=False):

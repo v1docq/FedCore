@@ -2,7 +2,7 @@ from enum import Enum
 from inspect import signature, isclass
 from typing import get_args, get_origin, Iterable, Literal, Optional, Union
 
-from .api_configs import ConfigTemplate, ExtendableConfigTemplate, get_nested, LookUp
+from .api_configs import ConfigTemplate, ExtendableConfigTemplate, get_nested, LookUp, MisconfigurationError
 
 
 __all__ = [
@@ -27,15 +27,28 @@ class ConfigFactory:
         def __init__(self, parent=None, **kwargs):
             object.__setattr__(self, '_parent', parent)
             content.update(kwargs)
+            misconf_errors = []
             for key, value in content.items():
-                value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
-                if not need_check:
-                    self.__class__.check(key, value)
-                    setattr(self, key, value)
-                else:
-                    object.__setattr__(self, key, value)
+                try:
+                    value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
+                    if need_check:
+                        self.__class__.check(key, value)
+                        setattr(self, key, value)
+                    else:
+                        object.__setattr__(self, key, value)
+                except MisconfigurationError as e:
+                    misconf_errors.append(e)
+                except Exception as x:
+                    if not misconf_errors:
+                        raise x
+                    else:
+                        continue
+            if misconf_errors:
+                raise MisconfigurationError(misconf_errors)
+                    
             if not isinstance(self, ExtendableConfigTemplate):
                 delattr(self, '__dict__')
+            self._parent = None
 
         def __new__(cls, *args, **kwargs):
             return object.__new__(cls)
@@ -45,10 +58,22 @@ class ConfigFactory:
             if isinstance(val, Enum):
                 return val.value
             return val
+        
+        def __contains__(self, obj):
+            return hasattr(self, str(obj))
             
         def __setattr__(self, key, value):
             self.check(key, value)
             ConfigTemplate.__setattr__(self, key, value)
+
+        def __setattr__ex(self, key, value):
+            if key in self.__slots__:
+                self.check(key, value)
+            elif not key in self.additional_features:
+                self.additional_features.append(key)
+                
+            ConfigTemplate.__setattr__(self, key, value)
+
                 
         def __setitem__(self, key, value):
             orig_type = type(getattr(self, key))

@@ -9,7 +9,7 @@ from fedcore.repository.constanst_repository import PRUNER_WITHOUT_REQUIREMENTS,
 
 class ZeroShotPruner(BaseHook):
     _SUMMON_KEY = 'pruning'
-    _hook_place = 'post'
+    _hook_place = 50
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -77,7 +77,7 @@ class ZeroShotPruner(BaseHook):
 
 class PrunerWithGrad(ZeroShotPruner):
     _SUMMON_KEY = 'pruning'
-    _hook_place = 'post'
+    _hook_place = 50
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -97,7 +97,7 @@ class PrunerWithGrad(ZeroShotPruner):
 
 class PrunerWithReg(ZeroShotPruner):
     _SUMMON_KEY = 'pruning'
-    _hook_place = 'post'
+    _hook_place = 50
 
     def __init__(self, params, model):
         super().__init__(params, model)

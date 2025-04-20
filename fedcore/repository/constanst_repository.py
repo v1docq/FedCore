@@ -53,12 +53,16 @@ from fedcore.models.network_modules.losses import (
 )
 
 from fedcore.repository.setups import QAT_1, PTQ_1
-from fedcore.models.network_impl.hooks import Saver, FitReport, SchedulerRenewal, OptimizerGen
-from fedcore.algorithm.low_rank.rank_pruning import DynamicRankPruner
+from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks # don't del
+from fedcore.algorithm.low_rank.hooks import LRHooks # don't del
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
-
 from fedcore.architecture.utils.misc import EnumNoValue
+
+from fedcore.models.network_impl.hooks import (
+    Optimizers, Schedulers, ModelLearningHooks, LoggingHooks,
+) # don't del
+from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum # don't del
 
 default_param_values_dict = dict(
         problem=None,
@@ -140,29 +144,6 @@ class FedotGeneticMultiStrategy(Enum):
     parameter_free = GeneticSchemeTypesEnum.parameter_free
 
 class FedotOperationConstant(Enum):
-    # FEDOT_TASK = {
-    #     "classification": Task(TaskTypesEnum.classification),
-    #     "regression": Task(TaskTypesEnum.regression),
-    #     "ts_forecasting": Task(
-    #         TaskTypesEnum.ts_forecasting, TsForecastingParams(forecast_length=1)
-    #     ),
-    # }
-
-    # FEDCORE_TASK = [
-    #     "pruning",
-    #     "quantisation",
-    #     "distilation",
-    #     "low_rank",
-    #     "evo_composed",
-    # ]
-    # CV_TASK = ["classification", "segmentation", "object_detection"]
-    # FEDCORE_CV_DATASET = {
-    #     "classification": CustomDatasetForImages,
-    #     "segmentation": SegmentationDataset,
-    #     "semantic_segmentation": SemanticSegmentationDataset,
-    #     "object_detection": CustomDatasetForImages,
-    #     "object_detection_YOLO": YOLODataset,
-    # }
 
     FEDOT_GET_METRICS = {
         "regression": calculate_regression_metric,
@@ -172,40 +153,13 @@ class FedotOperationConstant(Enum):
         "computational_original": calculate_computational_metric
     }
     
-    EXCLUDED_OPERATION_MUTATION = {
-        "regression": [
-            "one_hot_encoding",
-            "label_encoding",
-            "isolation_forest_class",
-            "tst_model",
-            "omniscale_model",
-            "isolation_forest_reg",
-            "inception_model",
-            "xcm_model",
-            "resnet_model",
-            "signal_extractor",
-            "recurrence_extractor",
-        ],
-        "classification": [
-            "isolation_forest_reg",
-            "tst_model",
-            "resnet_model",
-            "xcm_model",
-            "one_hot_encoding",
-            "label_encoding",
-            "isolation_forest_class",
-            "signal_extractor",
-            "knnreg",
-            "recurrence_extractor",
-        ],
-    }
     FEDOT_API_PARAMS = default_param_values_dict
 
     FEDOT_TUNER_STRATEGY = EnumNoValue(FedotTunerStrategy)
 
     FEDOT_EVO_MULTI_STRATEGY = EnumNoValue(FedotEvoMultiStrategy)
 
-    FEDOT_GENETIC_MULTI_STRATEGY = EnumNoValue(FedotEvoMultiStrategy)
+    FEDOT_GENETIC_MULTI_STRATEGY = EnumNoValue(FedotGeneticMultiStrategy)
 
     AVAILABLE_CLS_OPERATIONS = tuple()
 
@@ -247,6 +201,7 @@ class PEFTStrategies(Enum):
     distilation = partial(PipelineBuilder().add_node, operation_type="distilation_model")
     detection = partial(PipelineBuilder().add_node, operation_type="detection_model", params={"pretrained": True})
     training = partial(PipelineBuilder().add_node, operation_type="training_model")
+
 
 class ModelCompressionConstant(Enum):
     ENERGY_THR = [0.9, 0.95, 0.99, 0.999]
@@ -435,24 +390,6 @@ class FedcoreInitialAssumptions(Enum):
     qat_1 = QAT_1
     ptq_1 = PTQ_1
 
-class LoggingHooks(Enum):
-    saver = Saver
-    fit_report = FitReport
-
-class ModelLearningHooks(Enum):
-    optimizer_gen = OptimizerGen
-    scheduler_renewal = SchedulerRenewal
-
-class LRHooks(Enum):
-    cuttlefish = DynamicRankPruner
-
-
-Hooks = {
-    'logging': LoggingHooks,
-    'model_learning': ModelLearningHooks,
-    'lr': LRHooks
-}
-
 
 class StructureCriterions(Enum):
     hoer = HoyerLoss
@@ -467,7 +404,7 @@ class TorchvisionBenchmark(Enum):
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
-EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
+# EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
 # FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
 FEDOT_TASK = EnumNoValue(FedotTaskEnum)
 # FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value  ###

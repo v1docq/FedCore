@@ -18,7 +18,6 @@ __all__ = [
 ]
 
 def _diag_tensor_check(t: torch.Tensor):
-    print(t.size())
     return torch.diag(t) if t.ndim == 1 else t
     
 
@@ -55,7 +54,7 @@ class IDecomposed(abc.ABC):
     def compose_weight_for_inference(self):
         compose_mode = self.compose_mode or self._evaluate_compose_mode()
         self._compose_dict[compose_mode]()
-        self.inference_mode = True
+        # self.inference_mode = True
         self._current_forward = self._forward_dict[compose_mode]
 
     def _evaluate_compose_mode(self: nn.Module):
@@ -79,7 +78,7 @@ class IDecomposed(abc.ABC):
         self.set_U_S_Vh(U, S, Vh)
         ParameterPlaceHolder(self.weight).set_as(self, 'weight')
         # self.register_parameter('weight', None)
-        self.inference_mode = False
+        # self.inference_mode = False
 
     def compose(self: nn.Module):
         W = self._get_composed_weight()
@@ -123,7 +122,7 @@ class IDecomposed(abc.ABC):
 
     def _one_layer_compose(self):
         self.register_parameter('U', Parameter((self.U * self.S) @ self.Vh))
-        self._eliminate_extra_params(['weight', 'S', 'Vh'])
+        self._eliminate_extra_params(['S', 'Vh'])
 
     def _two_layers_compose(self: nn.Module):
         singular_diag = _diag_tensor_check(self.S)
@@ -274,7 +273,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
             **self.decomposing["Vh"],
         )
         x = conv2d(
-            input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"]
+            input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"],             
         )
         return x
     
@@ -283,14 +282,14 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return x
        
     def _one_layer_compose(self):
-        W = self.U @ _diag_tensor_check(self.S) @ self.Vh
+        W = (self.U * self.S) @ self.Vh
         self.register_parameter('U', Parameter(W.reshape(self.decomposing["compose_shape"]).permute(
             self.decomposing["permute"]
         )))
         self._eliminate_extra_params(['S', 'Vh'])
 
     def _two_layers_compose(self):
-        SVh = _diag_tensor_check(self.S) @ self.Vh
+        SVh = self.S * self.Vh
         self.register_parameter('Vh', Parameter(SVh.view(*self.decomposing["Vh4d"])))
         self.register_parameter('U', 
             Parameter(self.U.view(*self.decomposing["U4d"]).permute(0, 3, 1, 2)))
@@ -327,7 +326,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         # self._three_layers_compose()
 
     def get_U_S_Vh(self):
-        assert not self.inference_mode, 'Only model in training mode have all matrices intact'
+        # assert not self.inference_mode, 'Only model in training mode have all matrices intact'
         return (
             self.U.reshape(*self.decomposing['U2d']),
             self.S.squeeze(),
