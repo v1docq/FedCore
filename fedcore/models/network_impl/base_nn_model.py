@@ -190,11 +190,9 @@ class BaseNeuralModel(torch.nn.Module):
         self.model.to(self.device)
         self.__check_and_substitute_loss(input_data)
         self._init_hooks()
-        self._init_hooks()
         self._train_loop(
             train_loader=train_loader,
             val_loader=val_loader,
-            loss_fn=self.criterion,
             loss_fn=self.criterion,
         )
         self._clear_cache()
@@ -239,8 +237,6 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
-        print('###', 'BNN predict')
-        print('###', 'BNN predict')
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
 
@@ -248,9 +244,6 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
-        print('###', 'BNN predict4fit')
-
-        print('###', 'BNN predict4fit')
 
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)

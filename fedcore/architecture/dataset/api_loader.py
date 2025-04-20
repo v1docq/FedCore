@@ -29,7 +29,7 @@ class ApiLoader:
                                    'time_series': TimeSeriesDataset}
 
     def _update_loader_params(self):
-        self.loader_params = self.loader_params | self.default_loader_params
+        self.loader_params = {**self.default_loader_params, **self.loader_params,}
         unsupported_keys = ['split_ratio', 'data_type']
         for key in unsupported_keys:
             if key in self.loader_params.keys():

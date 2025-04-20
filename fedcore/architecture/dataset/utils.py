@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import chardet
 import pandas as pd
@@ -712,7 +712,7 @@ def read_ts_files(data_path: str):
 
 
 @staticmethod
-def read_arff_files(dataset_name, data_path) -> tuple[pd.DataFrame, np.array, pd.DataFrame, np.array]:
+def read_arff_files(dataset_name, data_path) -> Tuple[pd.DataFrame, np.array, pd.DataFrame, np.array]:
     """
     Reads multivariate data from ``.arff`` file
 

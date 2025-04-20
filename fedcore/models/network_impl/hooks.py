@@ -23,10 +23,11 @@ from fedcore.api.utils.data import DataLoaderHandler
 
 VERBOSE = True
 
+def now_for_file():
+    return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
 
 class BaseHook(ABC):
     _SUMMON_KEY: str
-    _hook_place: int = 1
     _hook_place: int = 1
 
     def __init__(self, params, model):
@@ -112,7 +113,6 @@ class Saver(BaseHook):
 class FitReport(BaseHook):
     _SUMMON_KEY = 'log_each'
     _hook_place = 10
-    _hook_place = 10
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -179,46 +179,9 @@ class EarlyStopping(BaseHook):
         angle = np.rad2deg(np.arctan(slope))
         return angle
 
-class EarlyStopping(BaseHook):
-    _SUMMON_KEY = 'early_stop_after'
-    _hook_place = 90
-
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.counts = params.get('early_stop_after', 5)
-        self.horizon = params.get('horizon', 15)
-        self.angle_tol = params.get('angle_tol', 2.5)
-        if Evaluator.check_init(params):
-            self._check_in_history = 'val_loss'
-        else:
-            self._check_in_history = 'train_loss'
-        self.__last_record = None 
-
-    def trigger(self, epoch, kws) -> bool:
-        if epoch < self.horizon:
-            return False
-        hist = kws['history'][self._check_in_history][-self.horizon:]
-        angle = self._estimate_angle(hist)
-        return -self.angle_tol <= angle <= self.angle_tol
-        
-    def action(self, epoch, kws):
-        last_record = kws['history'][self._check_in_history][-1]
-        if last_record is not self.__last_record:
-            self.counts -= 1
-        self.__last_record = last_record
-        if not self.count:
-            kws['trainer_objects']['stop'] = True
-    
-    def _estimate_angle(self, history):
-        x, y = np.array(list(zip(*history)))
-        slope = np.linalg.solve(x[..., None], y[..., None])[0]
-        angle = np.rad2deg(np.arctan(slope))
-        return angle
-
 
 class Evaluator(BaseHook):
     _SUMMON_KEY = 'eval_each'
-    _hook_place = 80
     _hook_place = 80
 
     def __init__(self, params, model):
@@ -252,7 +215,6 @@ class Evaluator(BaseHook):
 
 class OptimizerGen(BaseHook):
     _check_field = '_structure_changed__'
-    _hook_place = -100
     _hook_place = -100
 
     def __init__(self, params, model):
@@ -418,10 +380,8 @@ class LoggingHooks(Enum):
 
 class ModelLearningHooks(Enum):
     freezer = Freezer
-    freezer = Freezer
     optimizer_gen = OptimizerGen
     scheduler_renewal = SchedulerRenewal
-    early_stopping = EarlyStopping
     early_stopping = EarlyStopping
 
 
