@@ -29,10 +29,7 @@ def load_data(source: Union[str, Callable] = None, loader_params: dict = None):
     source_is_dir = isinstance(source, str)
     source_is_loader = isinstance(source, Callable)
     data_loader = ApiLoader(load_source=source, loader_params=loader_params)
-    loader_type = loader_params['data_type']
-    if source_is_dir:
-        if source in DEFAULT_TORCH_DATASET.keys():
-            loader_type = "benchmark"
+    loader_type = "benchmark" if source_is_dir and source in DEFAULT_TORCH_DATASET.keys() else loader_params['data_type']
 
     train_data = Either(value=loader_params, monoid=[loader_type, source_is_loader]). \
         either(left_function=data_loader.load_data, right_function=lambda custom_params: source(custom_params))

@@ -4,6 +4,7 @@ import warnings
 from copy import deepcopy
 from datetime import datetime
 from functools import partial
+from pathlib import Path
 from typing import Union, Optional, Callable
 import numpy as np
 import pandas as pd
@@ -30,6 +31,8 @@ from fedcore.repository.constanst_repository import (
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
+from fedcore.api.api_configs import ExportTemplate
+from fedcore.inference.export import BaseExporter
 
 warnings.filterwarnings("ignore")
 
@@ -120,7 +123,7 @@ class FedCore(Fedot):
         pretrained_model = fedot_pipeline.fit(train_data)
         fedcore_trainer = fedot_pipeline.operator.root_node.operation.fitted_operation
         path_to_save_pretrain = os.path.join(self.manager.compute_config.output_folder)
-        os.makedirs(path_to_save_pretrain)
+        os.makedirs(path_to_save_pretrain, exist_ok=True)
         path_to_model = os.path.join(path_to_save_pretrain,
                                      f'pretrain_model_checkpoint_at_{fedcore_trainer.epochs}_epoch.pt')
         fedcore_trainer.save_model(path_to_model)
@@ -397,30 +400,27 @@ class FedCore(Fedot):
             either(left_function=lambda api_manager: method_dict[mode](self.manager),
                    right_function=lambda api_manager: save_all(api_manager))
 
-    def export(
-            self,
-            framework: str = "ONNX",
-            framework_config: dict = None,
-            supplementary_data: dict = None,
-    ):
-        if self.framework_config is None and framework_config is None:
-            return self.logger.info(
-                "You must specify configuration for model convertation"
-            )
-        else:
-            if framework == "ONNX":
-                example_input = next(iter(self.train_data.features.val_dataloader))[
-                    0
-                ][0]
-                self.framework_config["example_inputs"] = torch.unsqueeze(
-                    example_input, dim=0
-                )
-                onnx_config = Torch2ONNXConfig(**self.framework_config)
-                supplementary_data["model_to_export"].export(
-                    "converted-model.onnx", onnx_config
-                )
-                converted_model = ONNXInferenceModel("converted-model.onnx")
-        return converted_model
+    def export(self,
+               input_data: np.ndarray,
+               export_params: Optional[ExportTemplate] = None):
+        export_params = export_params[0]
+        prediction = self.predict(input_data, output_mode='fedcore')
+        input_data = self._process_input_data(input_data)
+        export_params.data = input_data.features.val_dataloader
+        example = next(iter(export_params.data))[0][0]
+        # export_params.model_to_export = self.fedcore_model.operator.root_node \
+        #                                                   .fitted_operation \
+        #                                                   .model_after_pruning if export_params.model_to_export is None \
+        #     else export_params.model_to_export # TODO: add compat for pruned model w/ onnx
+        export_params.model_to_export = prediction.features.target if export_params.model_to_export is None \
+            else export_params.model_to_export
+        export_params.image_size = tuple(example.shape) if export_params.image_size is None \
+            else export_params.image_size
+        export_params.classes = getattr(input_data, "classes", [])
+        torch.cuda.empty_cache()
+        exported_model = BaseExporter(export_params).export().inference_model
+        self.manager.is_exported = True
+        self.manager.solver = exported_model
 
     def shutdown(self):
         """Shutdown Dask client"""

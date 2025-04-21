@@ -1,28 +1,37 @@
-import os
+from __future__ import annotations
+from pathlib import Path
+from typing import Sequence
 
-import onnxruntime as ort
 import torch
-from torch import nn
+import onnxruntime as ort
 
 
-class ONNXInferenceModel(nn.Module):
-    def __init__(self, model, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.model_name = model
-        self.providers = [
-            "CUDAExecutionProvider",
-            "CPUExecutionProvider",
-        ]
+__all__: Sequence[str] = ("ONNXInferenceModel", "load")
 
-        self.ort_session = ort.InferenceSession(model, providers=self.providers)
 
-    def forward(self, inputs):
-        inputs = inputs.cpu()
-        return torch.Tensor(self.ort_session.run(None, {"input": inputs.numpy()}))
+def load(path: str | Path) -> "ONNXInferenceModel":
+    return ONNXInferenceModel(str(path))
 
-    def to(self, device):
-        # onnx runtime chooses it's own way
+
+class ONNXInferenceModel(torch.nn.Module):
+    _providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+
+    def __init__(self, onnx_path: str):
+        super().__init__()
+        self.session = ort.InferenceSession(
+            onnx_path,
+            providers=self._providers,
+        )
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_name = self.session.get_outputs()[0].name
+
+    @torch.inference_mode()
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.session.run(
+            [self.output_name],
+            {self.input_name: x.detach().cpu().numpy()},
+        )[0]
+        return torch.as_tensor(out)
+
+    def to(self, *_, **__) -> "ONNXInferenceModel":  # «no‑op»
         return self
-
-    def size(self):
-        return os.path.getsize(self.model_name)

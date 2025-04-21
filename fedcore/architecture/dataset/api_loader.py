@@ -52,7 +52,7 @@ class ApiLoader:
         return model
 
     def _convert_to_fedcore(self, torch_dataset):
-        if 'split_ratio' in self.loader_params:
+        if hasattr(self.loader_params, 'split_ratio'):
             train_dataset, val_dataset = random_split(torch_dataset, self.loader_params['split_ratio'])
         else:
             train_dataset, val_dataset = torch_dataset, torch_dataset

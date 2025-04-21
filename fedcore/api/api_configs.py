@@ -6,12 +6,13 @@ from numbers import Number
 from pathlib import Path
 from typing import (
     get_origin, get_args,   
-    Any, Callable, Dict, Iterable, Literal, Optional, Union, 
+    Any, Callable, Dict, Iterable, Literal, Optional, Union, Tuple
 )
 import logging
 
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch.nn import Module
+from fedot.core.data.data import InputData
 
 from fedcore.repository.constanst_repository import (
     FedotTaskEnum,
@@ -31,6 +32,8 @@ __all__ = [
     'NeuralModelConfigTemplate',
     'LearningConfigTemplate',
     'APIConfigTemplate',
+    'PruningTemplate',
+    'exportParamsTemplate'
     'get_nested',
     'LookUp',
     'LookUp',
@@ -311,3 +314,21 @@ class QuantTemplate(NeuralModelConfigTemplate):
     allow_emb: bool = False
     allow_conv: bool = True
     qat_params: NeuralModelConfigTemplate = None
+
+@dataclass
+class ExportTemplate(ExtendableConfigTemplate):
+    """Example of params for BaseExporter"""
+    model_to_export: Optional[Union[Module, str]] = None
+    data: Optional[InputData] = None
+    image_size: Optional[Tuple[int, int, int]] = None
+    batch_size: int = 1
+    classes: Optional[list[str]] = None
+    framework: Literal['auto', 'onnx', 'tensorrt', 'openvino', 'rknn'] = 'auto'
+    device: Literal['auto', 'cpu', 'cuda', 'npu'] = 'auto'
+    output_path: Optional[Union[str, Path]] = ''
+    dynamic_axes: dict = None
+    tensorrt_precision: Literal['fp32', 'fp16', 'int8'] = 'fp16'
+    trt_workspace_gb: int = 10 # memory pool
+    trt_calib_dataset: Optional[Union[str, Path]] = None
+    trt_calib_max_imgs: int = 32
+    rknn_quantize: bool = False
