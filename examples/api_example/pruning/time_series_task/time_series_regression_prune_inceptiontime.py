@@ -76,7 +76,7 @@ pretrain_config = NeuralModelConfigTemplate(epochs=200,
                                             custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                             'maximise_task': False,
                                                                                             'delta': 0.01}))
-finetune_config = NeuralModelConfigTemplate(epochs=3,
+finetune_config = NeuralModelConfigTemplate(epochs=10,
                                             log_each=3,
                                             eval_each=3,
                                             criterion=LOSS,
@@ -93,7 +93,7 @@ fedot_config = FedotConfigTemplate(problem=PROBLEM,
                                    metric=METRIC_TO_OPTIMISE,
                                    pop_size=5,
                                    n_jobs=1,
-                                   timeout=1,
+                                   timeout=90,
                                    initial_assumption=initial_assumption)
 # config for AutoML agent
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
@@ -114,5 +114,6 @@ if __name__ == "__main__":
     fedcore_train_data, fedcore_test_data = load_example_dataset()
     fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
-    multiobjective_visualization(fedcore_compressor)
-    _ = 1
+    fedcore_history = fedcore_compressor.manager.solver.history
+    fedcore_history.save('./history_90_min.json')
+    multiobjective_visualization(fedcore_history)

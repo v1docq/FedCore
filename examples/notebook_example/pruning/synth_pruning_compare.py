@@ -144,7 +144,6 @@ def test_pruners(pruner_name):
                                              model_before=pruner.model_before_pruning,
                                              model_after=pruner.model_after_pruning)
     return params_dict
-    # assert f'{pruner_name} pruner doesnt reduce number of model parameters'
 
 pruner_with_reg = ['bn_scale','group_magnitude', 'group_taylor', 'group_hessian']
 pruner_with_grad = ['hessian', 'taylor']

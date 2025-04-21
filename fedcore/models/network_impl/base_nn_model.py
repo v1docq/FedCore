@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from functools import reduce, partial
 from itertools import chain
-from typing import Iterable, Optional, Any, Union
+from typing import Iterable, Optional, Any, Union, Callable
 from pymonad.maybe import Maybe
 import numpy as np
 import torch
@@ -25,6 +25,9 @@ from fedcore.repository.constanst_repository import (
 
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.models.network_impl.hooks_collection import HooksCollection
+
+BASE_REGRESSION_DTYPE = torch.float32
+
 
 class BaseNeuralModel(torch.nn.Module):
     """Class responsible for NN model implementation.
@@ -104,7 +107,7 @@ class BaseNeuralModel(torch.nn.Module):
 
     def __repr__(self):
         return self.__class__.__name__ + '\n' + repr(self.hooks)
-    
+
     def _init_model(self):
         pass
 
@@ -115,17 +118,18 @@ class BaseNeuralModel(torch.nn.Module):
                 continue
             hook = hook(self.params, self.model)
             self.hooks.append(hook)
-                
+
     def register_additional_hooks(self, hooks: Iterable[Enum]):
         self._hooks.extend(hooks)
 
     def __get_criterion(self):
         key = self.params.get('loss', None) or self.params.get('criterion', None)
-        if hasattr(TorchLossesConstant, key):
+        if isinstance(key, str):
             return TorchLossesConstant[key].value()
-        if hasattr(key, '__call__'):
+        elif isinstance(key, Callable):
             return key
-        raise ValueError('No loss specified!')
+        else:
+            return None
 
     def save_model(self, path: str):
         torch.save(self.model.state_dict(), path)
@@ -139,10 +143,12 @@ class BaseNeuralModel(torch.nn.Module):
             self.model = torch.load(path, map_location=self.device)
         self.model.eval()
 
-
     def __check_and_substitute_loss(self, train_data: InputData):
         # TODO delete 
         names = ['loss', 'criterion']
+        if self.criterion is None:
+            criterion_name = 'cross_entropy' if self.task_type.name == 'classification' else 'rmse'
+            self.criterion = TorchLossesConstant[criterion_name].value()
         for name in names:
             if (train_data.supplementary_data.col_type_ids is not None
                     and train_data.supplementary_data.col_type_ids.get(name, None)
@@ -153,7 +159,6 @@ class BaseNeuralModel(torch.nn.Module):
                 except:
                     self.criterion = criterion
                 print("Forcely substituted criterion[loss] to", self.criterion)
-
 
     def __substitute_device_quant(self):
         if getattr(self.model, '_is_quantized', False):
@@ -204,7 +209,11 @@ class BaseNeuralModel(torch.nn.Module):
         for batch in tqdm(dataloader, desc='Batch #'):
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            targets = targets.to(self.device)
             output = self.model(*inputs)
+            if self.task_type.name == 'regression' or self.task_type.name.__contains__('forecasting'):
+                targets = targets.to(BASE_REGRESSION_DTYPE)
+                output = output.to(BASE_REGRESSION_DTYPE)
             loss = self._compute_loss(loss_fn, output,
                                       targets.to(self.device), epoch=epoch)
             loss.backward()
@@ -271,8 +280,10 @@ class BaseNeuralModel(torch.nn.Module):
             [not self.is_regression_task, output_mode == "labels"]
         )
         pred = Maybe.insert(pred). \
-            then(lambda predict: predict.cpu().detach().numpy() if self.is_regression_task else F.softmax(predict, dim=1)). \
-            then(lambda predict: torch.argmax(predict, dim=1).cpu().detach().numpy() if output_is_clf_labels else predict). \
+            then(
+            lambda predict: predict.cpu().detach().numpy() if self.is_regression_task else F.softmax(predict, dim=1)). \
+            then(
+            lambda predict: torch.argmax(predict, dim=1).cpu().detach().numpy() if output_is_clf_labels else predict). \
             then(lambda predict: self.label_encoder.inverse_transform(predict) if have_encoder else predict). \
             maybe(None, lambda output: output)
 

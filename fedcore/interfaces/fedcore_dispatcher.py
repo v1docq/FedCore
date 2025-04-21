@@ -21,6 +21,7 @@ from joblib import wrap_non_picklable_objects
 from pymonad.maybe import Maybe
 from pymonad.either import Either
 from fedcore.repository.initializer_industrial_models import FedcoreModels
+from golem.core.optimisers.fitness import null_fitness
 
 
 class FedcoreDispatcher(MultiprocessingDispatcher):
@@ -39,6 +40,24 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
 
     def _multithread_eval(self, individuals_to_evaluate):
         log = Log().get_parameters()
+        if self.is_singlethread_regime:
+            evaluation_results = [self.fedcore_evaluate_single(self,
+                                                               graph=ind.graph,
+                                                               uid_of_individual=ind.uid,
+                                                               logs_initializer=log)
+                                  for ind in individuals_to_evaluate]
+        else:
+            evaluation_results = list(map(lambda ind:
+                                          self.fedcore_evaluate_single(self,
+                                                                       graph=ind.graph,
+                                                                       uid_of_individual=ind.uid,
+                                                                       logs_initializer=log),
+                                          individuals_to_evaluate))
+            evaluation_results = dask.compute(*evaluation_results)
+        return evaluation_results
+
+    def _singlethread_eval(self, individuals_to_evaluate):
+        log = Log().get_parameters()
         evaluation_results = list(map(lambda ind:
                                       self.fedcore_evaluate_single(self,
                                                                    graph=ind.graph,
@@ -49,11 +68,15 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
         return evaluation_results
 
     def _evaluate_graph(self, domain_graph):
-        fitness = self._objective_eval(domain_graph)
+        try:
+            fitness = self._objective_eval(domain_graph)
 
-        if self._post_eval_callback:
-            self._post_eval_callback(domain_graph)
-        gc.collect()
+            if self._post_eval_callback:
+                self._post_eval_callback(domain_graph)
+            gc.collect()
+        except Exception:
+            self.logger.warning('Exception during graph fitness eval')
+            fitness = null_fitness()
 
         return fitness, domain_graph
 
@@ -74,7 +97,7 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
     def apply_evaluation_results(self, individuals: PopulationT, evaluation_results) -> PopulationT:
         """Applies results of evaluation to the evaluated population.
         Excludes individuals that weren't evaluated."""
-        evaluation_results = {res.uid_of_individual: res for res in evaluation_results if res}
+        evaluation_results = {res.uid_of_individual: res for res in evaluation_results if res is not None}
         individuals_evaluated = []
         for ind in individuals:
             eval_res = evaluation_results.get(ind.uid)
@@ -90,7 +113,7 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
 
         # Evaluate individuals without valid fitness in parallel.
         self.n_jobs = determine_n_jobs(self._n_jobs, self.logger)
-
+        self.is_singlethread_regime = self._n_jobs == 1
         individuals_evaluated = Maybe(individuals,
                                       monoid=[individuals, True]).then(
             lambda generation: self._multithread_eval(generation)). \
@@ -107,8 +130,20 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
                             logging_level=logging.INFO)
         return successful_evals
 
-    @dask.delayed
     def eval_ind(self, graph, uid_of_individual):
+        if self.is_singlethread_regime:
+            return self.singlethread_eval_ind(graph, uid_of_individual)
+        else:
+            return self.multithread_eval_ind(graph, uid_of_individual)
+
+    @dask.delayed
+    def multithread_eval_ind(self, graph, uid_of_individual):
+        return self.__eval_ind(graph, uid_of_individual)
+
+    def singlethread_eval_ind(self, graph, uid_of_individual):
+        return self.__eval_ind(graph, uid_of_individual)
+
+    def __eval_ind(self, graph, uid_of_individual):
         adapted_evaluate = self._adapter.adapt_func(self._evaluate_graph)
         start_time = timeit.default_timer()
         fitness, graph = adapted_evaluate(graph)
@@ -131,15 +166,11 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
                                 cache_key: Optional[str] = None,
                                 logs_initializer: Optional[Tuple[int,
                                 pathlib.Path]] = None) -> GraphEvalResult:
-        if self._n_jobs != 1:
+        if not self.is_singlethread_regime:
             FedcoreModels().setup_repository()
-
         graph = self.evaluation_cache.get(cache_key, graph)
         if logs_initializer is not None:
             # in case of multiprocessing run
             Log.setup_in_mp(*logs_initializer)
-        try:
-            eval_ind = self.eval_ind(graph, uid_of_individual)
-        except Exception:
-            eval_ind = None
+        eval_ind = self.eval_ind(graph, uid_of_individual)
         return eval_ind

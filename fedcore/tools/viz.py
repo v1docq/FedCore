@@ -8,8 +8,8 @@ from golem.visualisation.opt_viz_extra import OptHistoryExtraVisualizer
 from fedot.core.repository.tasks import TaskTypesEnum, Task
 
 
-def multiobjective_visualization(fedcore_cls, folder:str = './multiobjective_vis'):
-    history = fedcore_cls.manager.solver.history
+def multiobjective_visualization(fedcore_history, folder:str = './multiobjective_vis'):
+    history = fedcore_history
     objective_names = history.objective.metric_names
     visualiser = OptHistoryExtraVisualizer(history=history,folder=folder)
     visualiser.visualise_history()

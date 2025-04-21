@@ -59,10 +59,12 @@ def evaluate_objective_fedcore(self, graph: Pipeline) -> Fitness:
         self._pipelines_cache = None # turn off cache
         try:
             prepared_pipeline = self.prepare_graph(graph, train_data, fold_id, self._eval_n_jobs)
+            evaluated_fitness = self._objective(prepared_pipeline,
+                                                reference_data=test_data,
+                                                validation_blocks=self._validation_blocks)
         except Exception as exec_during_fit:
             self._log.warning(f'Exception - {exec_during_fit} during pipeline learning process. '
                               f'Skipping the graph: {graph_id}', raise_if_test=True)
-            prepared_pipeline = self.prepare_graph(graph, train_data, fold_id, self._eval_n_jobs)
             break
         evaluated_fitness = self._objective(prepared_pipeline,
                                             reference_data=test_data,

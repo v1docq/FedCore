@@ -187,7 +187,6 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         def evolve_pop(population, evaluator):
             individuals_to_select = self.regularization(population, evaluator)
             new_population = self.reproducer.reproduce(individuals_to_select, evaluator)
-            #if self.reproducer.stop_condition or new_population is None:
             if new_population is None:
                 new_population = population
             else:
@@ -211,10 +210,10 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         Returned population may be not entirely unique, if the size of unique population is lower than MIN_POP_SIZE. """
         unique_population_with_ids = {ind.graph.descriptive_id: ind for ind in population}
         unique_population = list(unique_population_with_ids.values())
-        is_population_too_small = len(unique_population) < self.min_pop_size
+        is_population_too_small = len(unique_population) <= self.min_pop_size
         # if size of unique population is too small, then extend it to MIN_POP_SIZE by repeating individuals
-        if all([is_population_too_small, not self.reproducer.stop_condition]):
-            self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['unique_population_strategy']
+        if is_population_too_small:
+            self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['initial_population_diversity_strategy']
             unique_population = self._extend_population(pop=unique_population,
                                                         target_pop_size=self.min_pop_size)
             self.mutation.agent._probs = self.optimisation_mutation_probs

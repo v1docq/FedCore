@@ -84,7 +84,7 @@ class BasePruner(BaseCompressionModel):
         for hook_elem in chain(*self._hooks):
             hook: BaseHook = hook_elem.value
             hook = hook(self.ft_params, self.model_after_pruning)
-            if hook._hook_place == 'post':
+            if hook._hook_place >=0:
                 self._on_epoch_end.append(hook)
             else:
                 self._on_epoch_start.append(hook)
