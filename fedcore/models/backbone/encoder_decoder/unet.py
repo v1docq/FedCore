@@ -2,11 +2,20 @@
 
 import torch
 import torch.nn as nn
-from segmentation-models-pytorch import UnetPlusPlus
+from segmentation_models_pytorch import UnetPlusPlus
+from typing import Optional
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.layers import DoubleConv, Down, OutConv, Up
 
+
+BASE_UNET_PLUS_PLUS_PARAMS = {
+    'encoder_name': 'timm-efficientnet-b0',
+    'encoder_weights': 'imagenet',
+    'encoder_depth': 5,
+    'decoder_channels': (256, 128, 64, 32, 16),
+    'activation': None
+}
 
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes, bilinear=False):
@@ -63,15 +72,45 @@ class UNetwork:
         return self.model(x)
 
 
-class UNetPlusPlusNetwork:
-    def __init__(self, input_dim, output_dim, encoder: str = 'timm-efficientnet-b0', weights: str = 'imagenet'):
+class UNetPlusPlusNetwork(nn.Module):
+    """Unet++ realization with new parameters interface.
+
+    Args:
+        input_dim (int):  Input channels number.
+        output_dim (int): Output channels number.
+        depth (int): Encoder depth (redefines encoder_depth when it is absent at custom_params).
+        custom_params (dict): Additional parameters.
+    """
+
+    def __init__(
+            self,
+            input_dim: int,
+            output_dim: int,
+            depth: int = 6,
+            custom_params: Optional[dict] = None,
+            **kwargs
+    ):
+        super().__init__()
+
+        # Parameters union
+        params = BASE_UNET_PLUS_PLUS_PARAMS.copy()
+        if custom_params:
+            params.update(custom_params)
+        params.update(kwargs)
+
+        # Priority: custom_params > depth > base settings
+        params['encoder_depth'] = params.get('encoder_depth', depth)
+
         self.model = UnetPlusPlus(
-            encoder_name=encoder,
-            encoder_weights=weights,
+            encoder_name=params['encoder_name'],
+            encoder_weights=params['encoder_weights'],
+            encoder_depth=params['encoder_depth'],
+            decoder_channels=params['decoder_channels'],
             in_channels=input_dim,
             classes=output_dim,
-            activation=None)
+            activation=params['activation']
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x.to(default_device())
-        return self.model(x)
+        """Forward pass"""
+        return self.model(x.to(default_device()))
