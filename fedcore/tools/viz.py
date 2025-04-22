@@ -1,21 +1,8 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import seaborn as sns
-
 # from pygmo import hypervolume
-from golem.visualisation.opt_viz_extra import OptHistoryExtraVisualizer
-from fedot.core.repository.tasks import TaskTypesEnum, Task
-
-
-def multiobjective_visualization(fedcore_history, folder:str = './multiobjective_vis'):
-    history = fedcore_history
-    objective_names = history.objective.metric_names
-    visualiser = OptHistoryExtraVisualizer(history=history,folder=folder)
-    visualiser.visualise_history()
-    visualiser.pareto_gif_create(objectives_names=objective_names)
-    visualiser.boxplots_gif_create()
-
+import os
+import numpy as np
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 def viz_pareto_fronts_comparison(fronts, labels, objectives_order=(1, 0),
                                  objectives_names=('ROC-AUC penalty metric', 'Computation time'),

@@ -36,7 +36,7 @@ from fedcore.metrics.api_metric import (
     calculate_forecasting_metric,
     calculate_regression_metric,
 )
-from fedcore.models.network_impl.decomposed_layers import DecomposableLayers ### don't del
+from fedcore.models.network_impl.decomposed_layers import DecomposableLayers  ### don't del
 
 from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
 from fedcore.models.network_modules.losses import (
@@ -53,52 +53,53 @@ from fedcore.models.network_modules.losses import (
 )
 
 from fedcore.repository.setups import QAT_1, PTQ_1
-from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks # don't del
-from fedcore.algorithm.low_rank.hooks import LRHooks # don't del
+from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks  # don't del
+from fedcore.algorithm.low_rank.hooks import LRHooks  # don't del
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.architecture.utils.misc import EnumNoValue
 
 from fedcore.models.network_impl.hooks import (
     Optimizers, Schedulers, ModelLearningHooks, LoggingHooks,
-) # don't del
-from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum # don't del
+)  # don't del
+from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum  # don't del
 
 default_param_values_dict = dict(
-        problem=None,
-        task_params=None,
-        timeout=None,
-        n_jobs=-1,
-        logging_level=50,
-        seed=42,
-        parallelization_mode="populational",
-        show_progress=True,
-        max_depth=6,
-        max_arity=3,
-        pop_size=20,
-        num_of_generations=None,
-        keep_n_best=1,
-        available_operations=None,
-        metric=None,
-        cv_folds=2,
-        genetic_scheme=None,
-        early_stopping_iterations=None,
-        early_stopping_timeout=10,
-        optimizer=None,
-        collect_intermediate_metric=False,
-        max_pipeline_fit_time=None,
-        initial_assumption=None,
-        preset=None,
-        use_pipelines_cache=True,
-        use_preprocessing_cache=True,
-        use_input_preprocessing=True,
-        use_auto_preprocessing=False,
-        use_meta_rules=False,
-        cache_dir=None,
-        keep_history=True,
-        history_dir=None,
-        with_tuning=True,
-    )
+    problem=None,
+    task_params=None,
+    timeout=None,
+    n_jobs=-1,
+    logging_level=50,
+    seed=42,
+    parallelization_mode="populational",
+    show_progress=True,
+    max_depth=6,
+    max_arity=3,
+    pop_size=20,
+    num_of_generations=None,
+    keep_n_best=1,
+    available_operations=None,
+    metric=None,
+    cv_folds=2,
+    genetic_scheme=None,
+    early_stopping_iterations=None,
+    early_stopping_timeout=10,
+    optimizer=None,
+    collect_intermediate_metric=False,
+    max_pipeline_fit_time=None,
+    initial_assumption=None,
+    preset=None,
+    use_pipelines_cache=True,
+    use_preprocessing_cache=True,
+    use_input_preprocessing=True,
+    use_auto_preprocessing=False,
+    use_meta_rules=False,
+    cache_dir=None,
+    keep_history=True,
+    history_dir=None,
+    with_tuning=True,
+)
+
 
 class FedotTaskEnum(Enum):
     classification = Task(TaskTypesEnum.classification)
@@ -107,44 +108,51 @@ class FedotTaskEnum(Enum):
         TaskTypesEnum.ts_forecasting, TsForecastingParams(forecast_length=1)
     )
 
-class FedCoreTaskEnum(Enum): #FEDCORE_TASK
+
+class FedCoreTaskEnum(Enum):  # FEDCORE_TASK
     pruning = auto()
     quantisation = auto()
     distilation = auto()
     low_rank = auto()
     evo_composed = auto()
 
+
 class CVTasks(Enum):
     classification = auto()
     segmentation = auto()
     object_detection = auto()
 
-class FedCoreCVDataset(Enum): # FEDCORE_CV_DATASET
+
+class FedCoreCVDataset(Enum):  # FEDCORE_CV_DATASET
     classification = CustomDatasetForImages
     segmentation = SegmentationDataset
     semantic_segmentation = SemanticSegmentationDataset
     object_detection = CustomDatasetForImages
     object_detection_YOLO = YOLODataset
 
-class FedotTunerStrategy(Enum): #   FEDOT_TUNER_STRATEGY = {"optuna": OptunaTuner}
+
+class FedotTunerStrategy(Enum):  # FEDOT_TUNER_STRATEGY = {"optuna": OptunaTuner}
     optuna = OptunaTuner
+
 
 class FedotEvoMultiStrategy(Enum):
     spea2 = SelectionTypesEnum.spea2
     tournament = SelectionTypesEnum.tournament
 
-class FedotMutationStrategy(Enum): 
+
+class FedotMutationStrategy(Enum):
     params_mutation_strategy = [0.8, 0.2]
     growth_mutation_strategy = [0.3, 0.7]
-    initial_population_diversity_strategy = [1.0, 0.0]   
+    initial_population_diversity_strategy = [1.0, 0.0]
+
 
 class FedotGeneticMultiStrategy(Enum):
     steady_state = GeneticSchemeTypesEnum.steady_state
     generational = GeneticSchemeTypesEnum.generational
     parameter_free = GeneticSchemeTypesEnum.parameter_free
 
-class FedotOperationConstant(Enum):
 
+class FedotOperationConstant(Enum):
     FEDOT_GET_METRICS = {
         "regression": calculate_regression_metric,
         "ts_forecasting": calculate_forecasting_metric,
@@ -152,7 +160,7 @@ class FedotOperationConstant(Enum):
         "computational_fedcore": calculate_computational_metric,
         "computational_original": calculate_computational_metric
     }
-    
+
     FEDOT_API_PARAMS = default_param_values_dict
 
     FEDOT_TUNER_STRATEGY = EnumNoValue(FedotTunerStrategy)
@@ -191,6 +199,7 @@ class FedotOperationConstant(Enum):
     # }
 
     FEDOT_ENSEMBLE_ASSUMPTIONS = {}
+
 
 class PEFTStrategies(Enum):
     pruning = partial(PipelineBuilder().add_node, operation_type="pruning_model")
@@ -291,8 +300,6 @@ class ModelCompressionConstant(Enum):
                           MultiHeadAttention: 'FedCoreMHA'
                           }
 
-    
-
     PROHIBIT_TO_DECOMPOSE = {torch.nn.modules.linear.NonDynamicallyQuantizableLinear}
 
     QUANT_MODEL_TYPES = {
@@ -304,7 +311,7 @@ class ModelCompressionConstant(Enum):
         # "onnxrt_qdq": ONNXModel,
         # "onnxrt_integerops": ONNXModel,
     }
-    
+
 
 class PrunerImportances(Enum):
     magnitude = tp.importance.MagnitudeImportance
@@ -316,6 +323,7 @@ class PrunerImportances(Enum):
     group_magnitude = tp.importance.GroupMagnitudeImportance
     group_taylor = tp.importance.GroupTaylorImportance
     group_hessian = tp.importance.GroupHessianImportance
+
 
 class TorchLossesConstant(Enum):
     cross_entropy = nn.CrossEntropyLoss
@@ -402,6 +410,11 @@ class TorchvisionBenchmark(Enum):
     segmentation = ['VOCSegmentation']
 
 
+class HistoryVisualisationParams(Enum):
+    frame_duration = 0.5
+    pruning_params = ['importance', 'importance_norm', 'pruning_ratio']
+
+
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
 # EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
@@ -480,3 +493,5 @@ DEFAULT_TORCH_DATASET = {
     'VOCSegmentation': torchvision.datasets.VOCSegmentation,
     'VOCDetection': torchvision.datasets.VOCDetection
 }
+
+HISTORY_VIZ_PARAMS = HistoryVisualisationParams
