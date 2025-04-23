@@ -74,7 +74,7 @@ class PerformanceEvaluator:
 
     def eval(self):
         self.warm_up_cuda()
-        lat, thr = self.measure_latency_throughput(1, self.n_batches)
+        lat, thr = self.measure_latency_throughput(10, self.n_batches)
         result = dict(latency=lat, throughput=thr, model_size=self.measure_model_size())
         self.report()
         return result
@@ -83,28 +83,34 @@ class PerformanceEvaluator:
     def throughput_eval(self, num_iterations=30):
         self.model.eval()
         thr_list = []
+        steps_iter = range(num_iterations)
         for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
-            if isinstance(batch, (tuple, list)):
-                batch = batch[0]
+            batch = batch[0] if isinstance(batch, (tuple, list)) else batch
             is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
-            if is_already_cuda:
-                X = batch.cuda(non_blocking=True)
-            else:
-                X = batch.to(self.device)
-            batch_size = len(X)
-            if self.cuda_allowed:
-                torch.cuda.synchronize(self.device)
-            tic1 = time.time()
-            for i in range(num_iterations):
+            X = batch.cuda(non_blocking=True) if is_already_cuda else batch.to(self.device)
+            start_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
+            end_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
+            for i in steps_iter:
+                start_events[i].record()
                 self.model(X)
-            if self.cuda_allowed:
-                torch.cuda.synchronize(self.device)
-            tic2 = time.time()
-            thr_list.append(num_iterations * batch_size / (tic2 - tic1))
+                end_events[i].record()
+            torch.cuda.synchronize(self.device)
+            times = [s.elapsed_time(e) for s, e in zip(start_events, end_events)]
+            thr_list.append(times)
         return thr_list
 
     @torch.no_grad()
     def latency_eval(self, max_samples=None):
+        def cuda_latency_eval(sample_batch):
+            start_event = torch.cuda.Event(enable_timing=True)
+            end_event = torch.cuda.Event(enable_timing=True)
+            start_event.record()
+            self.model(sample_batch)
+            end_event.record()
+            torch.cuda.synchronize(self.device)
+            time = start_event.elapsed_time(end_event)
+            return time
+
         self.model.eval()
         lat_list = []
         for batch in tqdm(self.data_loader(max_batches=max_samples or self.batch_size)):
@@ -113,24 +119,11 @@ class PerformanceEvaluator:
                 if isinstance(features, torch.Tensor):
                     for sample in features:
                         is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
-                        if is_already_cuda:
-                            sample = sample.cuda(non_blocking=True)
-                        else:
-                            sample = sample.to(self.device)
+                        sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
                         sample_batch = sample[None, ...]
-                        tic1 = time.time()
-                        self.model(sample_batch)
-                        if self.cuda_allowed:
-                            torch.cuda.synchronize()
-                        tic2 = time.time()
-                        lat_list.append((tic2 - tic1))
+                        lat_list.append(cuda_latency_eval(sample_batch))
             else:
-                tic1 = time.time()
-                self.model(batch.to(self.device))
-                if self.cuda_allowed:
-                    torch.cuda.synchronize()
-                tic2 = time.time()
-                lat_list.append((tic2 - tic1))
+                lat_list.append(cuda_latency_eval(batch))
         return lat_list
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):

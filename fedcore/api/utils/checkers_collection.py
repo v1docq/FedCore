@@ -88,7 +88,7 @@ class DataCheck:
         input_data = InputData(
             features=compression_dataset,  # CompressionInputData object
             idx=self.fedot_dummy_idx,  # dummy value
-            task=self.fedot_dummy_task,  # dummy value
+            task=compression_dataset.task,
             data_type=self.fedot_dummy_datatype,  # dummy value
             supplementary_data=compression_dataset.supplementary_data,
         )

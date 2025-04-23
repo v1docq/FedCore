@@ -10,7 +10,7 @@ from fedcore.repository.model_repository import BACKBONE_MODELS
 from fedcore.architecture.dataset.task_specified.object_detection_datasets import *
 from fedcore.architecture.dataset.task_specified.classification_datasets import *
 from torch.utils.data import random_split
-
+from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 class ApiLoader:
     def __init__(self, load_source, loader_params: dict = None):
@@ -59,10 +59,12 @@ class ApiLoader:
         sample = next(iter(torch_dataset))[0]
         num_classes = len(torch_dataset.classes) if torch_dataset.classes is not None else 1
         input_dim = sample.shape[1] if len(sample.shape) > 2 else sample.shape[0]
+        task = Task(TaskTypesEnum.classification) if num_classes != 1 else Task(TaskTypesEnum.regression)
         fedcore_train_data = CompressionInputData(
             features=np.zeros((2, 2)),
             input_dim=input_dim,
             num_classes=num_classes,
+            task=task,
             val_dataloader=val_dataloader,
             train_dataloader=train_dataloader,
         )

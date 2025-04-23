@@ -20,6 +20,7 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
     FEDOT_API_PARAMS,
@@ -54,6 +55,7 @@ class FedCore(Fedot):
         api_config.update(kwargs)
         self.manager = api_config
         self.logger = logging.Logger('Fedcore')
+        self.fedcore_model = None
 
     def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
         self.logger.info('-' * 50)
@@ -125,7 +127,13 @@ class FedCore(Fedot):
         train_data.target = pretrained_model.predict
         return train_data
 
-    def __abstract_predict(self, predict_data, output_mode):
+    def __abstract_predict(self, predict_data: InputData, output_mode):
+        if self.fedcore_model is None:
+            learning_params = self.manager.learning_config.peft_strategy_params.to_dict()
+            learning_params['model'] = predict_data.target
+            # scenario where we load pretrain model and use it only for inference
+            self.fedcore_model = BaseNeuralModel(learning_params)
+            #predict_data = predict_data.features # InputData to CompressionInputData
         predict = self.fedcore_model.predict(predict_data, output_mode)
         return predict
 
@@ -300,11 +308,12 @@ class FedCore(Fedot):
 
         eval_regime = ['original', 'fedcore']
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
-        quality_metrics_list = [self.evaluate_metric(prediction=prediction.predict,
+        prediction_list = [x if isinstance(x, OutputData) else x.predict for x in prediction_list]
+        quality_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                      target=test_data.val_dataloader,
                                                      problem=self.manager.automl_config.fedot_config.problem)
                                 for prediction in prediction_list]
-        computational_metrics_list = [self.evaluate_metric(prediction=prediction.predict,
+        computational_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                            target=test_data.val_dataloader,
                                                            problem=f'computational_{regime}')
                                       for prediction, regime in zip(prediction_list, eval_regime)]
@@ -404,6 +413,6 @@ class FedCore(Fedot):
             self.manager.dask_client.close()
             del self.manager.dask_client
         if hasattr(self.manager, 'dask_cluster'):
-        # if self.manager.dask_cluster is not None:
+            # if self.manager.dask_cluster is not None:
             self.manager.dask_cluster.close()
             del self.manager.dask_cluster

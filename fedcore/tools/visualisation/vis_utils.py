@@ -99,15 +99,19 @@ def visualise_pareto(front: Sequence[Individual],
         plt.show()
     plt.cla()
     plt.clf()
+    plt.tight_layout()
     plt.close('all')
 
 
 
 def create_gif_using_images(gif_path: str, files: List[str]):
-    with get_writer(gif_path, mode='I', duration=DURATION) as writer:
-        for filename in files:
-            image = v2.imread(filename)
-            writer.append_data(image)
+    try:
+        with get_writer(gif_path, mode='I', duration=DURATION) as writer:
+            for filename in files:
+                image = v2.imread(filename)
+                writer.append_data(image)
+    except Exception:
+        _ = 1
 
 
 def extract_objectives(individuals: List[List[Any]], objectives_numbers: Tuple[int, ...] = None,

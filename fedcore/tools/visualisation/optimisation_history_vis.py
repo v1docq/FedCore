@@ -168,6 +168,7 @@ class OptHistoryVisualizer:
         if not os.path.isdir(f'{folder}'):
             os.mkdir(f'{folder}')
         path = f'{folder}/{file_name}'
+        plt.tight_layout()
         plt.savefig(path, bbox_inches='tight')
 
     def boxplots_gif_create(self, objectives_names: Tuple[str] = None):
@@ -185,6 +186,7 @@ class OptHistoryVisualizer:
                                  file_name=file_name, folder=folder, y_limits=(min_y, max_y))
             files.append(f'{folder}/{file_name}')
         create_gif_using_images(gif_path=f'{folder}/boxplots_history.gif', files=files)
+        plt.tight_layout()
         plt.cla()
         plt.clf()
         plt.close('all')

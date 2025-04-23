@@ -10,7 +10,6 @@ from fedcore.api.api_configs import (
     APIConfigTemplate, DeviceConfigTemplate, AutoMLConfigTemplate,
     LearningConfigTemplate, NeuralModelConfigTemplate, ComputeConfigTemplate, FedotConfigTemplate,
     PruningTemplate, ModelArchitectureConfigTemplate)
-from fedcore.tools.viz import multiobjective_visualization
 
 ##########################################################################
 ### DEFINE ML PROBLEM (classification, object_detection, regression,   ###
@@ -93,7 +92,7 @@ fedot_config = FedotConfigTemplate(problem=PROBLEM,
                                    metric=METRIC_TO_OPTIMISE,
                                    pop_size=5,
                                    n_jobs=1,
-                                   timeout=90,
+                                   timeout=5,
                                    initial_assumption=initial_assumption)
 # config for AutoML agent
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
@@ -114,6 +113,4 @@ if __name__ == "__main__":
     fedcore_train_data, fedcore_test_data = load_example_dataset()
     fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
-    fedcore_history = fedcore_compressor.manager.solver.history
-    fedcore_history.save('./history_90_min.json')
-    multiobjective_visualization(fedcore_history)
+

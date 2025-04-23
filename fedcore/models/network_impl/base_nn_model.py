@@ -61,6 +61,7 @@ class BaseNeuralModel(torch.nn.Module):
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
         self.learning_rate = self.params.get("learning_rate", 0.001)
+        self.model = self.params.get("model", None)
         self._init_custom_criterions(
             self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer
         self.criterion = self.__get_criterion()
@@ -85,7 +86,6 @@ class BaseNeuralModel(torch.nn.Module):
     def _init_null_object(self):
         self.label_encoder = None
         self.is_regression_task = False
-        self.model = None
         self.target = None
         self.task_type = None
         self.checkpoint_folder = self.params.get('checkpoint_folder', None)
@@ -266,6 +266,8 @@ class BaseNeuralModel(torch.nn.Module):
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
+        if self.task_type is None:
+            self.task_type = x_test.task.task_type
         for batch in tqdm(dataloader):  ###TODO why val_dataloader???
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))

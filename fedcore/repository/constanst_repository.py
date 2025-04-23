@@ -411,7 +411,7 @@ class TorchvisionBenchmark(Enum):
 
 
 class HistoryVisualisationParams(Enum):
-    frame_duration = 0.5
+    frame_duration = 3000
     pruning_params = ['importance', 'importance_norm', 'pruning_ratio']
 
 

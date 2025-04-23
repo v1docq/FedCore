@@ -209,7 +209,7 @@ class DatasetFromFolder(DatasetFolder):
             self.is_dir_with_images = False
             feature, target = self._default_ts_loader(data_folder)
             unique_target_val = np.unique(target)
-            if len(unique_target_val) < 50:
+            if len(unique_target_val) < 50 and not target.dtype == float:
                 self.class_names = unique_target_val
             if len(feature.shape) > 2:
                 self.files = [(feature[:, idx, :], target[idx]) for idx in range(target.shape[0])]
