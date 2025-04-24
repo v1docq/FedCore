@@ -51,6 +51,12 @@ from fedcore.models.network_modules.losses import (
     SMAPELoss,
     TweedieLoss,
 )
+from fedcore.losses.regularization_losses import (
+    LaiMAE,
+    LaiMSE,
+    NormLoss,
+    AdaptiveRegularizationLoss    
+)
 
 from fedcore.repository.setups import QAT_1, PTQ_1
 from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks  # don't del
@@ -340,6 +346,10 @@ class TorchLossesConstant(Enum):
     log_cosh = LogCoshLoss
     huber = HuberLoss
     exp_weighted = ExpWeightedLoss
+    lai_mae = LaiMAE
+    lai_mse = LaiMSE
+    norm_loss = NormLoss
+    ada_reg_loss = AdaptiveRegularizationLoss
 
 
 class DistilationMetricsEnum(QualityMetricsEnum):

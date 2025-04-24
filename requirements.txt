@@ -6,6 +6,9 @@ xgboost==1.4.0
 statsmodels
 
 fedot
+bokeh
+datasets
+datasetsforecast
 accelerate==0.31.0
 distributed==2023.5.0
 fastai==1.0.61
