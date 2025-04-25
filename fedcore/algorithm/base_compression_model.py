@@ -10,6 +10,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from torchinfo import summary
 
 
 class BaseCompressionModel:
@@ -145,8 +146,13 @@ class BaseCompressionModel:
 
     def estimate_params(self, example_batch, model_before, model_after):
         # in future we don't want to store both models simult.
-        base_macs, base_nparams = tp.utils.count_ops_and_params(model_before, example_batch)
-        macs, nparams = tp.utils.count_ops_and_params(model_after, example_batch)
+        # base_macs, base_nparams = tp.utils.count_ops_and_params(model_before, example_batch)
+        base_info = summary(model=model_before, input_data=example_batch, verbose=0)
+        base_macs, base_nparams = base_info.total_mult_adds, base_info.total_params
+
+        info = summary(model=model_after, input_data=example_batch, verbose=0)
+        macs, nparams = info.total_mult_adds, base_info.total_params
+
         print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
         print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))
         return dict(params_before=base_nparams, macs_before=base_macs,
