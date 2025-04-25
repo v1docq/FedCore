@@ -83,19 +83,19 @@ def test_lai_mae_factor_above_1():
     loss = loss_fn(y_pred, y_true)
     assert loss > 0
 
-def test_lai_mae_negative_residuals():
-    """Test with negative residuals."""
+def test_lai_mae_zero_residuals():
+    """Test with perfect predictions (zero residuals)."""
     loss_fn = LaiMAE(factor=0.5)
-    y_pred = torch.tensor([2.0, 3.0])
-    y_true = torch.tensor([1.0, 4.0])
+    y_pred = torch.tensor([1.0, 2.0])
+    y_true = torch.tensor([1.0, 2.0])
     loss = loss_fn(y_pred, y_true)
-    assert loss > 0
+    assert loss == 0.0
 
-def test_lai_mae_mixed_sign_residuals():
-    """Test with mixed positive and negative residuals."""
+def test_lai_mae_large_residuals():
+    """Test with large residuals."""
     loss_fn = LaiMAE(factor=0.5)
-    y_pred = torch.tensor([1.0, 2.0, 3.0])
-    y_true = torch.tensor([1.5, 1.5, 3.5])
+    y_pred = torch.tensor([0.0])
+    y_true = torch.tensor([100.0])
     loss = loss_fn(y_pred, y_true)
     assert loss > 0
 
@@ -167,5 +167,6 @@ def test_adaptive_reg_zero_gradients():
     with torch.no_grad():
         target = torch.randn(3, 2)
     main_loss = torch.nn.MSELoss()(dummy_output, target)
+    # With zero grads this loss should degenerate to L2
     reg_loss = loss_fn(model, main_loss)
     assert reg_loss > 0
