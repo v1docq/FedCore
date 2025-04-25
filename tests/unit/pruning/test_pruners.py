@@ -109,6 +109,12 @@ def get_small_dataset():
     return train_dataloader, val_dataloader
 
 
+def get_reduction(model_before, model_after):
+    
+    params_before = sum(p.numel() for p in model_before.parameters() if p.requires_grad)
+    params_after = sum(p.numel() for p in model_after.parameters() if p.requires_grad)
+    return params_after / params_before
+
 @pytest.mark.parametrize('pruner_name', ['magnitude', 'hessian', 'bn_scale', 
                                          'lamp', 'random', 'group_magnitude', 
                                          'group_taylor', 'group_hessian', 'taylor', ])
@@ -138,4 +144,5 @@ def test_pruners(pruner_name):
                                          model_before=pruner.model_before_pruning,
                                          model_after=pruner.model_after_pruning)
 
-    assert f'{pruner_name} pruner doesnt reduce number of model parameters'
+    reduction = get_reduction(model_after=pruned_model, model_before=pruner.model_before_pruning)
+    assert reduction < 1, f'{pruner_name} pruner doesnt reduce number of model parameters, reduction: {reduction}'
