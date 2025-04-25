@@ -25,7 +25,7 @@ PEFT_PROBLEM = 'pruning'
 ### or optimise pretrained model with PEFT strategies                        ###
 ################################################################################
 INITIAL_MODEL = 'ResNet'
-PATH_TO_PRETRAIN = 'pretrain_models/inceptiontime_pretrain_200_epoch.pth'
+PATH_TO_PRETRAIN = 'pretrain_models/pretrain_model_checkpoint_at_15_epoch.pth'
 SCRATCH_SCENARIO = 'from_scratch'
 PRETRAIN_SCENARIO = 'from_checkpoint'
 
@@ -91,7 +91,7 @@ peft_config = PruningTemplate(importance="magnitude",
 # subconfig for Fedot AutoML agent
 fedot_config = FedotConfigTemplate(problem=PROBLEM,
                                    metric=METRIC_TO_OPTIMISE,
-                                   pop_size=1,
+                                   pop_size=3,
                                    timeout=1,
                                    initial_assumption=initial_assumption)
 # config for AutoML agent

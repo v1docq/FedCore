@@ -113,4 +113,5 @@ if __name__ == "__main__":
     fedcore_train_data, fedcore_test_data = load_example_dataset()
     fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
+    _ = 1
 

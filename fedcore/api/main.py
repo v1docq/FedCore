@@ -326,7 +326,7 @@ class FedCore(Fedot):
         else:
             quality_metric = 'accuracy'
         quality_df = calculate_metric_changes(quality_df, metric=[quality_metric])
-        compute_df = calculate_metric_changes(compute_df, metric=['latency', 'throughput'])
+        compute_df = calculate_metric_changes(compute_df, metric=['latency'])
         return dict(quality_comparasion=quality_df, computational_comparasion=compute_df)
 
     def load(self, path):

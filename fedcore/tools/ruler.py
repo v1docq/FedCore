@@ -17,6 +17,36 @@ from fedcore.metrics.metric_impl import (
 )
 from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
+from fedcore.tools.edge_device import PowerEstimator
+from time import time
+
+
+def format_num(num: int, bytes=False):
+    """Scale bytes to its proper format, e.g. 1253656 => '1.20MB'"""
+    factor = 1024 if bytes else 1000
+    suffix = "B" if bytes else ""
+    for unit in ["", " K", " M", " G", " T", " P"]:
+        if num < factor:
+            return f"{num:.2f}{unit}{suffix}"
+        num /= factor
+
+
+def format_time(seconds, return_time=False):
+    """Defines how to format time in FunctionEvent"""
+    US_IN_SECOND = 1000.0 * 1000.0
+    US_IN_MS = 1000.0
+    prefix = 'us'
+    time_us = seconds * 1e6
+    if time_us >= US_IN_SECOND:
+        time_us = time_us / US_IN_SECOND
+        prefix = 's'
+    if time_us >= US_IN_MS:
+        time_us = time_us / US_IN_MS
+        prefix = 'ms'
+    if return_time:
+        return round(time_us,3)
+    else:
+        return f"{round(time_us,3)} {prefix}"
 
 
 class PerformanceEvaluator:
@@ -37,6 +67,7 @@ class PerformanceEvaluator:
 
         self.device = device
         self.cuda_allowed = True if self.device.type == 'cuda' else False
+        self.transfer_to_device_fn = torch.Tensor.to
         self._init_model(model)
 
         dataset_from_directory = isinstance(data, str)  ### where's func for string dataset loading
@@ -74,10 +105,133 @@ class PerformanceEvaluator:
 
     def eval(self):
         self.warm_up_cuda()
-        lat, thr = self.measure_latency_throughput(10, self.n_batches)
-        result = dict(latency=lat, throughput=thr, model_size=self.measure_model_size())
+        # lat, thr = self.measure_latency_throughput(10, self.n_batches)
+        lat = self.eval_detailed_latency()
+        result = dict(latency=lat,
+                      # throughput=thr,
+                      model_size=self.measure_model_size())
         self.report()
         return result
+
+    # def eval_detailed_latency(self, sample):
+    #     with torch.autograd.profiler.profile(use_cuda=(self.device.type == "cuda"), profile_memory=True) as prof:
+    #         self.transfer_to_device_fn(self.model(self.transfer_to_device_fn(sample, self.device)), "cpu")
+    #
+    #     detailed_timing = prof.key_averages().table(sort_by="self_cpu_time_total")
+    #     return detailed_timing
+
+    def eval_detailed_latency(self, num_runs=100):
+        t_cpu_2_gpu, t_device, t_gpu_2_cpu, t_total = [], [], [], []
+        for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
+            sample = batch[0] if isinstance(batch, (tuple, list)) else batch
+            break
+
+        for _ in tqdm(range(num_runs), desc=f"Measuring inference for batch_size={self.batch_size}"):
+            start_on_cpu = time()
+            device_sample = self.transfer_to_device_fn(sample, self.device)
+
+            if self.cuda_allowed:
+                start_event = torch.cuda.Event(enable_timing=True)
+                stop_event = torch.cuda.Event(enable_timing=True)
+                start_event.record()  # For GPU timing
+            start_on_device = time()  # For CPU timing
+
+            device_result = self.model(device_sample)
+
+            if self.cuda_allowed:
+                stop_event.record()
+                torch.cuda.synchronize()
+                elapsed_on_device = stop_event.elapsed_time(start_event)
+                stop_on_device = time()
+            else:
+                stop_on_device = time()
+                elapsed_on_device = stop_on_device - start_on_device
+
+            self.transfer_to_device_fn(device_result, "cpu")
+            stop_on_cpu = time()
+
+            t_cpu_2_gpu.append(start_on_device - start_on_cpu)
+            t_device.append(elapsed_on_device)
+            t_gpu_2_cpu.append(stop_on_cpu - stop_on_device)
+            t_total.append(stop_on_cpu - start_on_cpu)
+
+        results_dict = {}
+        for _ in [t_gpu_2_cpu, t_cpu_2_gpu, t_device, t_total]:
+            _.pop(0)  # delete first result in cycle, because of unstable
+        times_and_titles = [(t_device, "on_device_inference")]
+        if self.cuda_allowed:
+            times_and_titles.extend([(t_cpu_2_gpu, "cpu_to_gpu"), (t_gpu_2_cpu, "gpu_to_cpu"), (t_total, "total")])
+
+        for s_per_batch, title in times_and_titles:
+            s_per_batch = np.array(s_per_batch)
+            batches_per_s = 1 / s_per_batch
+
+            metrics = {
+                "batches_per_second_mean": float(batches_per_s.mean()),
+                "batches_per_second_std": float(batches_per_s.std()),
+                "batches_per_second_min": float(batches_per_s.min()),
+                "batches_per_second_max": float(batches_per_s.max()),
+                "seconds_per_batch_mean": float(s_per_batch.mean()),
+                "seconds_per_batch_std": float(s_per_batch.std()),
+                "seconds_per_batch_min": float(s_per_batch.min()),
+                "seconds_per_batch_max": float(s_per_batch.max()),
+            }
+
+            convert_to_report = {
+                "batches_per_second": f"{format_num(batches_per_s.mean())} "
+                                      f"+/- {format_num(batches_per_s.std())} [{format_num(batches_per_s.min())}, "
+                                      f"{format_num(batches_per_s.max())}]",
+
+                "batch_latency": f"{format_time(s_per_batch.mean())}"
+                                 f" +/- {format_time(s_per_batch.std())} [{format_time(s_per_batch.min())},"
+                                 f" {format_time(s_per_batch.max())}]",
+            }
+            if title.__contains__('total'):
+                mean_latency = format_time(s_per_batch.mean(), return_time=True)
+                std_latency = format_time(s_per_batch.std(), return_time=True)
+            results_dict[title] = {"metrics": metrics, "convert_to_report": convert_to_report}
+
+        return np.array([mean_latency,std_latency])
+
+    def measure_energy(
+            model,
+            sample,
+            model_device,
+            transfer_to_device_fn=torch.Tensor.to,
+            num_runs=100,
+            batch_size: int = None,
+            include_transfer_costs=True,
+            print_fn=None
+    ):
+        def test_with_transfer():
+            nonlocal model, sample
+            transfer_to_device_fn(
+                model(transfer_to_device_fn(sample, model_device)),
+                "cpu",
+            )
+
+        def test_without_transfer():
+            nonlocal model, sample
+            model(sample)
+
+        if include_transfer_costs:
+            test_fn = test_with_transfer
+        else:
+            test_fn = test_without_transfer
+            sample = sample.to(model_device)
+
+        # Try jetson power
+        try:
+            p_est = PowerEstimator(print_fn=print_fn)
+            # index 0 is total energy, index 1 is energy over idle consumption:
+            meas = []
+            for _ in tqdm(range(num_runs), desc=f"Measuring energy for batch_size={batch_size}"):
+                meas.append(p_est.estimate_fn_power(test_fn)[0] / 1000)
+            inference_joules = float(np.array(meas).mean())
+        except Exception:
+            pass
+
+        return inference_joules
 
     @torch.no_grad()
     def throughput_eval(self, num_iterations=30):

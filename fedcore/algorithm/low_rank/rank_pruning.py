@@ -9,17 +9,17 @@ from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.architecture.utils.misc import _contiguous, count_params
 from fedcore.architecture.utils.misc import EnumNoValue
 
-
 __all__ = [
     'rank_threshold_pruning',
     'S_STRATEGIES'
 ]
 
+
 def rank_threshold_pruning(
-    decomposed_module: IDecomposed,
-    threshold: float = 0.75,
-    strategy: str = "explained_variance",
-    module_name: str = "",
+        decomposed_module: IDecomposed,
+        threshold: float = 0.75,
+        strategy: str = "explained_variance",
+        module_name: str = "",
 ) -> None:
     """Prune the weight matrices to the threshold (in-place).
     Args:
@@ -33,7 +33,7 @@ def rank_threshold_pruning(
     if S is None:
         return
 
-    threshold = decomposed_module._get_threshold() or threshold # for cases of per-layer adaptive thresholds
+    threshold = decomposed_module._get_threshold() or threshold  # for cases of per-layer adaptive thresholds
 
     if strategy in SLRStrategies:
         indices = _apply_S_strategy(S, strategy, threshold)
@@ -52,37 +52,43 @@ def rank_threshold_pruning(
         )
     )
 
+
 def _apply_S_strategy(S, strategy, threshold, round_factor=1):
     n_cpu = cpu_count()
     S, indices = S.sort(descending=True)
     n_components = SLRStrategiesEnum[strategy].value(S, threshold)
     channels_per_device = max(floor(n_components / n_cpu), 1)
     n_components = channels_per_device * n_cpu
-    n_components = ceil(n_components / round_factor) * round_factor # for architecture 
+    n_components = ceil(n_components / round_factor) * round_factor  # for architecture
     return indices[:n_components]
+
 
 def _quantile_strategy(S, threshold) -> int:
     thr_value = torch.quantile(S, threshold)
     n_components = max((S > thr_value).sum().item(), 1)
     return n_components
 
+
 def _explained_variance_strategy(S, threshold):
-    explained_variance = torch.cumsum(torch.square(S), 0) #.div_(n_samples - 1) scaling by scalar doesn't matter
+    explained_variance = torch.cumsum(torch.square(S), 0)  # .div_(n_samples - 1) scaling by scalar doesn't matter
     explained_variance /= (explained_variance[-1].item())
     n_components = max(torch.where(explained_variance <= threshold)[0].max(0).values + 1, 1)
     return n_components
+
 
 def _energy_strategy(S, threshold):
     energies = torch.exp(S)
     energies = energies / torch.sum(energies)
     n_components = max(torch.where(energies > threshold)[0].max(0).values + 1, 1)
     return n_components
-    
+
+
 def _abssum_strategy(S, threshold):
     abssums = torch.cumsum(S, 0)
     abssums /= (abssums[-1].item())
     n_components = max(torch.where(abssums <= threshold)[0].max(0).values + 1, 1)
     return n_components
+
 
 # See no reason to explicitly demonstrate in in constant repository
 
@@ -92,5 +98,6 @@ class SLRStrategiesEnum(Enum):
     explained_variance = partial(_explained_variance_strategy)
     energy = partial(_energy_strategy)
     absolute_sum = partial(_abssum_strategy)
+
 
 SLRStrategies = EnumNoValue(SLRStrategiesEnum)

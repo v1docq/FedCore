@@ -19,6 +19,7 @@ from fedcore.repository.constanst_repository import (
 )
 
 
+
 class BasePruner(BaseCompressionModel):
     """Class responsible for Pruning model implementation.
     Example:
@@ -54,16 +55,17 @@ class BasePruner(BaseCompressionModel):
         self.importance_norm = params.get("importance_norm", 1)
         self.importance_reduction = params.get("importance_reduction", "mean")
         self.importance_normalize = params.get("importance_normalize", "mean")
+        self.importance = PRUNING_IMPORTANCE[self.importance_name]
         if self.importance_name == 'lamp':
             self.importance_normalize = 'lamp'
         # importance criterion for parameter selections
         if self.importance_name == 'random':
-            self.importance = PRUNING_IMPORTANCE[self.importance_name]()
+            self.importance = self.importance()
+        elif isinstance(self.importance, str):
+            self.importance = self.importance
         else:
-            self.importance = PRUNING_IMPORTANCE[self.importance_name](
-                group_reduction=self.importance_reduction,
-                normalizer=self.importance_normalize,
-            )
+            self.importance = self.importance(group_reduction=self.importance_reduction,
+                                              normalizer=self.importance_normalize)
 
         self._hooks = [PruningHooks]
         self._init_empty_object()
@@ -84,7 +86,7 @@ class BasePruner(BaseCompressionModel):
         for hook_elem in chain(*self._hooks):
             hook: BaseHook = hook_elem.value
             hook = hook(self.ft_params, self.model_after_pruning)
-            if hook._hook_place >=0:
+            if hook._hook_place >= 0:
                 self._on_epoch_end.append(hook)
             else:
                 self._on_epoch_start.append(hook)
@@ -105,7 +107,9 @@ class BasePruner(BaseCompressionModel):
         print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
         print(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
         # Pruner initialization
-        if self.importance_name.__contains__('group'):
+        if self.importance_name.__contains__('activation'):
+            self.pruner = None
+        elif self.importance_name.__contains__('group'):
             self.pruner = PRUNERS["group_norm_pruner"]
         elif self.importance_name in ['bn_scale']:
             self.pruner = PRUNERS["batch_norm_pruner"]
@@ -135,18 +139,19 @@ class BasePruner(BaseCompressionModel):
     def fit(self, input_data: InputData, finetune: bool = True):
         self._init_model(input_data)
         self._init_hooks()
-        self.pruner = self.pruner(
-            self.model_after_pruning,
-            self.data_batch_for_calib,
-            # global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
-            importance=self.importance,  # importance criterion for parameter selection
-            iterative_steps=self.pruning_iterations,  # the number of iterations to achieve target ratio
-            pruning_ratio=self.pruning_ratio,
-            ignored_layers=self.ignored_layers,
-            channel_groups=self.channel_groups,
-            round_to=None,
-            unwrapped_parameters=None,
-        )
+        if self.pruner is not None: # in case if we dont use torch_pruning as backbone
+            self.pruner = self.pruner(
+                self.model_after_pruning,
+                self.data_batch_for_calib,
+                # global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
+                importance=self.importance,  # importance criterion for parameter selection
+                iterative_steps=self.pruning_iterations,  # the number of iterations to achieve target ratio
+                pruning_ratio=self.pruning_ratio,
+                ignored_layers=self.ignored_layers,
+                channel_groups=self.channel_groups,
+                round_to=None,
+                unwrapped_parameters=None,
+            )
         self.pruner_objects = {'input_data': input_data,
                                'pruning_iterations': self.pruning_iterations,
                                'model_before_pruning': self.model_before_pruning,

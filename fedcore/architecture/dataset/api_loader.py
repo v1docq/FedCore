@@ -1,3 +1,5 @@
+from functools import partial
+
 from torch.utils.data import DataLoader
 
 from fedcore.architecture.comptutaional.devices import default_device
@@ -11,6 +13,7 @@ from fedcore.architecture.dataset.task_specified.object_detection_datasets impor
 from fedcore.architecture.dataset.task_specified.classification_datasets import *
 from torch.utils.data import random_split
 from fedot.core.repository.tasks import Task, TaskTypesEnum
+
 
 class ApiLoader:
     def __init__(self, load_source, loader_params: dict = None):
@@ -26,11 +29,12 @@ class ApiLoader:
 
         self.torch_dataset_dict = {'object_detection': ObjectDetectionDataset,
                                    'image': AbstractDataset,
-                                   'time_series': TimeSeriesDataset}
+                                   'time_series': TimeSeriesDataset,
+                                   'benchmark': partial(lambda bench_name: DEFAULT_TORCH_DATASET[bench_name])}
 
     def _update_loader_params(self):
-        self.loader_params = {**self.default_loader_params, **self.loader_params,}
-        unsupported_keys = ['split_ratio', 'data_type']
+        self.loader_params = {**self.default_loader_params, **self.loader_params}
+        unsupported_keys = ['split_ratio', 'data_type', 'is_train']
         for key in unsupported_keys:
             if key in self.loader_params.keys():
                 del self.loader_params[key]
@@ -43,9 +47,6 @@ class ApiLoader:
     def _init_pretrain_model(self, model_name):
         model = BACKBONE_MODELS[model_name](pretrained=True).to(default_device())
         return model
-
-    def _benchmark_loader(self, source):
-        train_dataloader, val_dataloader = self._init_pretrain_dataset(dataset=source)
 
     def _convert_to_fedcore(self, torch_dataset):
         if 'split_ratio' in self.loader_params:
@@ -73,5 +74,10 @@ class ApiLoader:
 
     def load_data(self, loader_type: str = None):
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)
+        if loader_type.__contains__('benchmark'):
+            torch_dataset = torch_dataset(data_path(self.source),
+                                          train=self.loader_params['is_train'],
+                                          download=True,
+                                          transform=self.transform)
         fedcore_data = self._convert_to_fedcore(torch_dataset)
         return fedcore_data

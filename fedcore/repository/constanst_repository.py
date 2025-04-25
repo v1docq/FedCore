@@ -315,6 +315,7 @@ class ModelCompressionConstant(Enum):
 
 class PrunerImportances(Enum):
     magnitude = tp.importance.MagnitudeImportance
+    activation_entropy = 'custom_depth'
     taylor = tp.importance.TaylorImportance
     hessian = tp.importance.HessianImportance
     bn_scale = tp.importance.BNScaleImportance
