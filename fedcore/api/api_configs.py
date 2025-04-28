@@ -309,4 +309,4 @@ class QuantTemplate(NeuralModelConfigTemplate):
     quant_type: str = "dynamic" # dynamic, static, qat
     allow_emb: bool = False
     allow_conv: bool = True
-    qat_params: dict = None
+    qat_params: NeuralModelConfigTemplate = None

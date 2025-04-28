@@ -29,6 +29,7 @@ from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
 from fedcore.repository.constanst_repository import TorchLossesConstant
+from fedcore.models.network_impl.hooks import Optimizers
 
 
 class BaseQuantizer(BaseCompressionModel):
@@ -47,22 +48,21 @@ class BaseQuantizer(BaseCompressionModel):
         self.device = default_device('cpu') if self.quant_type == 'qat' else self.device
         self.dtype = torch.float16 if self.device != torch.device("cpu") else self.dtype
         self.backend = 'onednn' if self.device != torch.device("cpu") else self.backend
+        self.allow_conv = False if self.dtype == torch.float16 else self.allow_conv
         torch.backends.quantized.engine = self.backend
         
         self.qconfig = params.get("qconfig", self.get_qconfig())
         self.allow = self._set_allow_mappings()
         
         # QAT params
-        self.qat_params = params.get("qat_params", {})
+        self.qat_params = params.get("qat_params", dict())
         if not self.qat_params:
             self.qat_params["epochs"] = 2
-            self.qat_params["optimizer"] = optim.Adam
-            self.qat_params["loss"] = nn.CrossEntropyLoss()
+            self.qat_params["optimizer"] = 'adam'
+            self.qat_params["criterion"] = 'cross_entropy'
             self.qat_params["lr"] = 0.001
-        if isinstance(self.qat_params["loss"], str):
-            key = self.qat_params["loss"]
-            if hasattr(TorchLossesConstant, key):
-                self.qat_params["loss"] = TorchLossesConstant[key].value()
+        self.optimizer = Optimizers[self.qat_params.get("optimizer", 'adam')]
+        self.criterion = TorchLossesConstant[self.qat_params.get("criterion", 'cross_entropy')]
 
         # Hooks initialization
         self._hooks = [QuantizationHooks]
@@ -85,12 +85,12 @@ class BaseQuantizer(BaseCompressionModel):
         self._on_epoch_start = []
 
         hook_params = {
-            'input_data': input_data,
-            'dtype': self.dtype,
-            'epochs': self.qat_params.get('epochs', 2),
-            'optimizer': self.qat_params.get('optimizer', optim.Adam),
-            'loss': self.qat_params.get('loss', nn.CrossEntropyLoss()),
-            'lr': self.qat_params.get('lr', 0.001)
+            "input_data": input_data,
+            "dtype": self.dtype,
+            "epochs": self.qat_params.get("epochs", 2),
+            "optimizer": self.optimizer.value,
+            "criterion": self.criterion.value(),
+            "lr": self.qat_params.get("lr", 0.001)
         }
 
         for hook_elem in QuantizationHooks:
@@ -101,18 +101,18 @@ class BaseQuantizer(BaseCompressionModel):
                 self._on_epoch_start.append(hook)
 
     def _set_allow_mappings(self):
-        mapping_set = {
+        mapping_dict = {
             'dynamic': DEFAULT_DYNAMIC_QUANT_MODULE_MAPPINGS,
             'static': DEFAULT_STATIC_QUANT_MODULE_MAPPINGS,
             'qat': DEFAULT_QAT_MODULE_MAPPINGS
-        }.get(self.quant_type, DEFAULT_STATIC_QUANT_MODULE_MAPPINGS)
-
+        }.get(self.quant_type)
         if self.allow_emb and self.quant_type == 'qat':
-            mapping_set.update(get_embedding_qat_module_mappings().keys())
+            mapping_dict.update(get_embedding_qat_module_mappings().keys())
         if not self.allow_conv:
-            mapping_set -= {nn.Conv1d, nn.Conv2d, nn.Conv3d,
-                            nn.ConvTranspose1d, nn.ConvTranspose2d, nn.ConvTranspose3d}
-        return set(mapping_set)
+            conv_set = {nn.Conv1d, nn.Conv2d, nn.Conv3d,
+                        nn.ConvTranspose1d, nn.ConvTranspose2d, nn.ConvTranspose3d}
+            mapping_dict = {k: v for k, v in mapping_dict.items() if k not in conv_set}
+        return set(mapping_dict)
 
     def get_qconfig(self):
         if self.dtype == torch.qint8:
@@ -143,13 +143,13 @@ class BaseQuantizer(BaseCompressionModel):
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
-        self.original_model = input_data.target.to(self.device)
+        self.model_before_quant = input_data.target.to(self.device)
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.qat_params)
         else:
             self.trainer = BaseNeuralModel(self.qat_params)
-        self.trainer.model = self.original_model
-        self.quant_model = deepcopy(self.original_model).eval()
+        self.trainer.model = self.model_before_quant
+        self.quant_model = deepcopy(self.model_before_quant).eval()
         print("[MODEL] Model initialized and copied for quantization.")
 
     def _prepare_model(self, input_data: InputData):
@@ -188,7 +188,7 @@ class BaseQuantizer(BaseCompressionModel):
         except Exception as e:
             print("[PREPARE ERROR] Exception during preparation:")
             traceback.print_exc()
-            return deepcopy(self.original_model).eval()
+            return deepcopy(self.model_before_quant).eval()
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
@@ -211,20 +211,20 @@ class BaseQuantizer(BaseCompressionModel):
                 convert(self.quant_model, inplace=True)
 
             print("[FIT] Quantization performed successfully.")
-            self.optimised_model = self.quant_model
+            self.model_after_quant = self.quant_model
             if self.quant_type == 'qat':
-                self.optimised_model._is_quantized = True 
+                self.model_after_quant._is_quantized = True 
 
         except Exception as e:
             print("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()
-            self.optimised_model = deepcopy(self.original_model).eval()
+            self.model_after_quant = deepcopy(self.model_before_quant).eval()
             
-        return self.optimised_model
+        return self.model_after_quant
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "fedcore"):
-        return self.optimised_model if output_mode == "fedcore" else self.original_model
+        return self.model_after_quant if output_mode == "fedcore" else self.model_before_quant
 
     def predict(self, input_data: InputData, output_mode: str = "fedcore"):
-        self.trainer.model = self.optimised_model if output_mode == "fedcore" else self.original_model
+        self.trainer.model = self.model_after_quant if output_mode == "fedcore" else self.model_before_quant
         return self.trainer.predict(input_data, output_mode)

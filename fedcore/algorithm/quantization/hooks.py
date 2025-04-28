@@ -47,7 +47,7 @@ class QATHook(BaseHook):
         super().__init__(params, model)
         self.epochs = params.get("epochs", 2)
         self.optimizer = params.get("optimizer", optim.Adam)
-        self.criterion = params.get("loss", nn.CrossEntropyLoss())
+        self.criterion = params.get("criterion", nn.CrossEntropyLoss())
         self.learning_rate = params.get("lr", 0.001)
         self.train_dataloader = params['input_data'].features.train_dataloader
         if isinstance(self.criterion, tuple):
