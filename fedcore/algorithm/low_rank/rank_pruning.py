@@ -72,25 +72,30 @@ def _quantile_strategy(S, threshold) -> int:
 def _explained_variance_strategy(S, threshold):
     explained_variance = torch.cumsum(torch.square(S), 0)  # .div_(n_samples - 1) scaling by scalar doesn't matter
     explained_variance /= (explained_variance[-1].item())
-    n_components = max(torch.where(explained_variance <= threshold)[0].max(0).values + 1, 1)
-    return n_components
-
+    idx = torch.where(explained_variance <= threshold)
+    if len(idx) and len(idx[0]):   
+        n_components = max(idx[0].max(0).values + 1, 1)
+        return n_components
+    return len(S)
 
 def _energy_strategy(S, threshold):
     energies = torch.exp(S)
     energies = energies / torch.sum(energies)
-    n_components = max(torch.where(energies > threshold)[0].max(0).values + 1, 1)
-    return n_components
-
-
+    idx = torch.where(energies > threshold)
+    if len(idx) and len(idx[0]):
+        n_components = max(idx[0].max(0).values + 1, 1)
+        return n_components
+    return len(S)
+    
 def _abssum_strategy(S, threshold):
     abssums = torch.cumsum(S, 0)
     abssums /= (abssums[-1].item())
-    n_components = max(torch.where(abssums <= threshold)[0].max(0).values + 1, 1)
-    return n_components
+    idx = torch.where(abssums <= threshold) 
+    if len(idx) and len(idx[0]):
+        n_components = max(idx[0].max(0).values + 1, 1)
+        return n_components
+    return len(S)
 
-
-# See no reason to explicitly demonstrate in in constant repository
 
 class SLRStrategiesEnum(Enum):
     """Rank pruning strategies based on singular values"""

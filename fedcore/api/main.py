@@ -168,7 +168,8 @@ class FedCore(Fedot):
                 maybe(None, lambda solver: solver)
             return self.fedcore_model
         except KeyboardInterrupt:
-            return self.manager.solver
+            self.fedcore_model = self.manager.solver
+            return self.fedcore_model
 
     def fit_no_evo(self, input_data: tuple, manually_done=False, **kwargs):
         with exception_handler(Exception, on_exception=self.shutdown, suppress=False):

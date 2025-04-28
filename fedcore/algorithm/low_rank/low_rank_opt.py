@@ -49,9 +49,8 @@ class LowRankModel(BaseCompressionModel):
         model_before = self._init_model(input_data)
         example_batch = self._get_example_input(input_data).to(extract_device(model_before))
         base_params = self._estimate_params(model_before, example_batch)
-        self.trainer.model = model_before
-        self.model = self.trainer.fit(input_data)
-        self.model_after = model_before
+        self.trainer.model = deepcopy(model_before)
+        self.model_after = self.trainer.fit(input_data)
         self.compress(self.model_after)
         # check params
         self._diagnose(self.model_after, example_batch, *base_params,
