@@ -200,9 +200,7 @@ class FedotOperationConstant(Enum):
 class PEFTStrategies(Enum):
     pruning = partial(PipelineBuilder().add_node, operation_type="pruning_model")
     low_rank = partial(PipelineBuilder().add_node, operation_type="low_rank_model")
-    post_quantization = partial(PipelineBuilder().add_node, operation_type='post_training_quant')
-    post_dynamic_quantisation = partial(PipelineBuilder().add_node, operation_type='post_dynamic_quant')
-    quantization_aware = partial(PipelineBuilder().add_node, operation_type='training_aware_quant')
+    quantization = partial(PipelineBuilder().add_node, operation_type='quantization_model')
     distilation = partial(PipelineBuilder().add_node, operation_type="distilation_model")
     detection = partial(PipelineBuilder().add_node, operation_type="detection_model", params={"pretrained": True})
     training = partial(PipelineBuilder().add_node, operation_type="training_model")
