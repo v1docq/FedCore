@@ -196,6 +196,7 @@ class FedotOperationConstant(Enum):
     #     "training": PipelineBuilder().add_node("training_model"),
     # }
 
+    FEDOT_ENSEMBLE_ASSUMPTIONS = {}
 
 class PEFTStrategies(Enum):
     pruning = partial(PipelineBuilder().add_node, operation_type="pruning_model")
