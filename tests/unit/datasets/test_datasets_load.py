@@ -1,42 +1,35 @@
-import unittest
 import os
+import pytest
 
-from fedcore.architecture.dataset.datasets_from_source import AbstractDataset, ObjectDetectionDataset, TimeSeriesDataset
-from fedcore.architecture.utils.paths import PROJECT_PATH, PATH_TO_DATA
-
-
-class MyTestCase(unittest.TestCase):
-    def __init__(self):
-        self.test_scenario = 'time_series'
-
-    def test_something(self):
-        self.assertEqual(True, False)  # add assertion here
-
-    def test_image_dataset(self):
-        image_clf_source = os.path.join(PATH_TO_DATA, 'image_segmentation', "train")
-        torch_dataset = AbstractDataset(data_source=image_clf_source)
-        return torch_dataset
-
-    def test_od_dataset(self):
-        image_od_source = os.path.join(PATH_TO_DATA, 'object_detection', 'chips.yaml')
-        image_od_annotation = os.path.join(PATH_TO_DATA, 'object_detection', "labels")
-        torch_dataset = ObjectDetectionDataset(data_source=image_od_source,
-                                               annotation_source=image_od_annotation)
-        return torch_dataset
-
-    def test_ts_dataset(self):
-        ts_source = os.path.join(PATH_TO_DATA, 'time_series_regression', 'multi_dim', 'AppliancesEnergy',
-                                 'AppliancesEnergy_TRAIN.ts')
-        torch_dataset = TimeSeriesDataset(data_source=ts_source)
-        return torch_dataset
-
-    def run_test(self):
-        scenario_dict = {'time_series': self.test_ts_dataset,
-                         'image_segmentation': self.test_image_dataset,
-                         'od_yolo_dataset': self.test_od_dataset}
-        torch_dataset = scenario_dict[self.test_scenario]()
-        image, target = next(iter(torch_dataset))
+from fedcore.architecture.dataset.datasets_from_source import (
+    AbstractDataset, 
+    ObjectDetectionDataset, 
+    TimeSeriesDataset
+    )
+from fedcore.architecture.utils.paths import PATH_TO_DATA
 
 
-if __name__ == '__main__':
-    unittest.main()
+def image_dataset():
+    image_clf_source = os.path.join(PATH_TO_DATA, 'image_segmentation', "train")
+    return AbstractDataset(data_source=image_clf_source)
+
+
+def od_dataset():
+    image_od_source = os.path.join(PATH_TO_DATA, 'object_detection', 'chips.yaml')
+    image_od_annotation = os.path.join(PATH_TO_DATA, 'object_detection', "labels")
+    return ObjectDetectionDataset(data_source=image_od_source, annotation_source=image_od_annotation)
+
+
+def ts_dataset():
+    ts_source = os.path.join(PATH_TO_DATA, 'time_series_forecasting', 'multi_dim', 'debet_forecasting',
+                             'train.csv')
+    return TimeSeriesDataset(data_source=ts_source)
+
+@pytest.mark.skip(reason="datasets aren't in their places yet")
+@pytest.mark.parametrize('dataset', (ts_dataset, image_dataset, od_dataset))
+def test_load_dataset(dataset):
+    
+    dataset = dataset()
+    image, target = next(iter(dataset))
+    assert image is not None
+    assert target is not None

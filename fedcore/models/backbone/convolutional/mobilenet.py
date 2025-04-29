@@ -244,6 +244,7 @@ class MobileNet(BaseNeuralModel):
         model_name: str = "MobileNetV3Small",
         **kwargs
     ):
+        super().__init__(**kwargs)
         self.model = MOBILENET_MODELS[model_name.lower()](
             input_dim=input_dim, num_classes=output_dim, **kwargs
         )
