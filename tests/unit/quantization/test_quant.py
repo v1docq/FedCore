@@ -26,7 +26,7 @@ def get_api_template(quant_type: str):
     METRIC_TO_OPTIMISE = ['accuracy', 'latency']
     LOSS = 'cross_entropy'
     PROBLEM = 'classification'
-    PEFT_PROBLEM = 'pruning'
+    PEFT_PROBLEM = 'quantization'
     INITIAL_ASSUMPTION = 'ResNet18'
     PRETRAIN_SCENARIO = 'from_checkpoint'
     POP_SIZE = 1
@@ -117,7 +117,7 @@ def get_reduction(model_before, model_after):
     return params_after / params_before
 
 @pytest.mark.parametrize('quant_type', ['dynamic', 'static', 'qat'])
-def test_pruners(quant_type):
+def test_quantizers(quant_type):
     api = get_api_template(quant_type=quant_type)
     APIConfig = ConfigFactory.from_template(api)
     api_config = APIConfig()
