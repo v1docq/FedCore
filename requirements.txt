@@ -5,7 +5,7 @@ contourpy==1.0.1
 xgboost==1.4.0
 statsmodels
 
-fedot
+fedot==0.7.5
 accelerate==0.31.0
 distributed==2023.5.0
 bokeh
