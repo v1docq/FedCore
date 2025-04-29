@@ -60,7 +60,7 @@ class QATHook(BaseHook):
         print("[HOOK] Performing QAT training hook.")
         model = kws['model']
         model.train()
-        model.to(default_device())
+        model.to(self.params['device'])
         optimizer = self.optimizer(model.parameters())
         criterion = self.criterion
 

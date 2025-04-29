@@ -57,6 +57,7 @@ class BaseQuantizer(BaseCompressionModel):
         # QAT params
         self.qat_params = params.get("qat_params", dict())
         if not self.qat_params:
+            self.qat_params = dict()
             self.qat_params["epochs"] = 2
             self.qat_params["optimizer"] = 'adam'
             self.qat_params["criterion"] = 'cross_entropy'
@@ -164,10 +165,10 @@ class BaseQuantizer(BaseCompressionModel):
             propagate_qconfig_(self.quant_model, self.qconfig)
             for name, module in self.quant_model.named_modules():
                 print(f"Module: {name}, qconfig: {module.qconfig}")
-            example_input = self._get_example_input(input_data)
+            self.data_batch_for_calib = self._get_example_input(input_data)
 
             QDQWrapper.add_quant_entry_exit(
-                self.quant_model, *(example_input,), allow=self.allow, mode=self.quant_type
+                self.quant_model, *(self.data_batch_for_calib,), allow=self.allow, mode=self.quant_type
             )
 
             if self.quant_type == 'dynamic':
