@@ -15,7 +15,7 @@ datasetsforecast
 datasets
 # fastai==1.0.61
 fastcore>=1.3.0
-huggingface_hub==0.23.4
+huggingface_hub==0.24.0
 mpi4py==3.1.6
 neural_insights
 # neural_insights==2.6
