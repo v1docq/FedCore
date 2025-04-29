@@ -2,7 +2,6 @@ import torch
 from torch import nn, optim
 from enum import Enum
 
-from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.hooks import BaseHook
 
 
@@ -21,7 +20,7 @@ class DynamicQuantizationHook(BaseHook):
         print("[HOOK] Performing Dynamic PTQ hook operations.")
         model = kws['model']
         model.eval()
-        model.to(default_device())
+        model.to(self.params['device'])
         print("[HOOK] Dynamic PTQ setup completed.")
 
 
@@ -33,10 +32,10 @@ class StaticQuantizationHook(BaseHook):
         return quant_type == 'static'
 
     def action(self, quant_type, kws):
-        model = kws['model'].eval().to(default_device())
+        model = kws['model'].eval().to(self.params['device'])
         with torch.no_grad():
             for data, _ in self.params['input_data'].features.val_dataloader:
-                model(data.to(default_device()))
+                model(data.to(self.params['device']))
 
 
 class QATHook(BaseHook):
@@ -67,7 +66,7 @@ class QATHook(BaseHook):
         for epoch in range(self.epochs):
             print(f"[HOOK] QAT epoch {epoch+1}/{self.epochs} started.")
             for batch_idx, (data, target) in enumerate(self.train_dataloader):
-                data, target = data.to(default_device()), target.to(default_device())
+                data, target = data.to(self.params['device']), target.to(self.params['device'])
                 optimizer.zero_grad()
                 output = model(data)
                 loss = criterion(output, target)
