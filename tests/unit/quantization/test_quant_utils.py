@@ -92,7 +92,8 @@ def test_qat_hook_train_loop(simple_dl):
         'epochs':1,
         'optimizer': torch.optim.SGD,
         'criterion': nn.CrossEntropyLoss(),
-        'lr':0.01
+        'lr': 0.01,
+        'device': torch.device('cpu')
     }
     hook = QATHook(params, model=nn.Sequential(nn.Flatten(), nn.Linear(3*8*8,2)))
     assert hook.trigger('qat')

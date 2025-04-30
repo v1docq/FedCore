@@ -91,7 +91,8 @@ class BaseQuantizer(BaseCompressionModel):
             "epochs": self.qat_params.get("epochs", 2),
             "optimizer": self.optimizer.value,
             "criterion": self.criterion.value(),
-            "lr": self.qat_params.get("lr", 0.001)
+            "lr": self.qat_params.get("lr", 0.001),
+            "device": self.device
         }
 
         for hook_elem in QuantizationHooks:
