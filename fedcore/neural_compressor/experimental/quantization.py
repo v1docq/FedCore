@@ -72,7 +72,7 @@ class Quantization(Component):
         seed = self.cfg.tuning.random_seed
         random.seed(seed)
         np.random.seed(seed)
-        self._calib_dataloader = None
+        self._val_dataloader = None
         self._calib_func = None
 
     def _create_eval_dataloader(self, cfg):
@@ -113,50 +113,50 @@ class Quantization(Component):
                 )
             )
 
-    def _create_calib_dataloader(self, cfg):
+    def _create_val_dataloader(self, cfg):
         """Create default calibration dataloader if train_func is not set."""
         approach_cfg = deep_get(cfg, "quantization.approach")
 
-        if self._calib_dataloader is None and self._calib_func is None:
+        if self._val_dataloader is None and self._calib_func is None:
             if approach_cfg in [
                 "post_training_static_quant",
                 "post_training_auto_quant",
             ]:
-                calib_dataloader_cfg = deep_get(
+                val_dataloader_cfg = deep_get(
                     cfg, "quantization.calibration.dataloader"
                 )
 
                 if (
                     approach_cfg == "post_training_auto_quant"
-                    and calib_dataloader_cfg is None
+                    and val_dataloader_cfg is None
                 ):
                     logger.error(
                         "dataloader is required for 'post_training_auto_quant'. "
                         "use 'post_training_dynamic_quant' instead if no dataloader provided."
                     )
-                assert calib_dataloader_cfg is not None, (
+                assert val_dataloader_cfg is not None, (
                     "dataloader field of calibration field of quantization section "
-                    "in yaml file should be configured as calib_dataloader property is NOT set!"
+                    "in yaml file should be configured as val_dataloader property is NOT set!"
                 )
 
-                if deep_get(calib_dataloader_cfg, "shuffle"):
+                if deep_get(val_dataloader_cfg, "shuffle"):
                     logger.warning(
                         "Reset `shuffle` field to False when post_training_static_quant"
                         " is selected."
                     )
-                    deep_set(calib_dataloader_cfg, "shuffle", False)
+                    deep_set(val_dataloader_cfg, "shuffle", False)
             elif approach_cfg == "quant_aware_training":
-                calib_dataloader_cfg = deep_get(cfg, "quantization.train.dataloader")
-                assert calib_dataloader_cfg is not None, (
+                val_dataloader_cfg = deep_get(cfg, "quantization.train.dataloader")
+                assert val_dataloader_cfg is not None, (
                     "dataloader field of train field of quantization section "
-                    "in yaml file should be configured as calib_dataloader property is NOT set!"
+                    "in yaml file should be configured as val_dataloader property is NOT set!"
                 )
             else:
-                calib_dataloader_cfg = None
+                val_dataloader_cfg = None
 
-            if calib_dataloader_cfg:
-                self._calib_dataloader = create_dataloader(
-                    self.framework, calib_dataloader_cfg
+            if val_dataloader_cfg:
+                self._val_dataloader = create_dataloader(
+                    self.framework, val_dataloader_cfg
                 )
 
     def pre_process(self):
@@ -167,7 +167,7 @@ class Quantization(Component):
         ), "need set your Model for quantization...."
 
         self._create_eval_dataloader(cfg)
-        self._create_calib_dataloader(cfg)
+        self._create_val_dataloader(cfg)
         strategy = cfg.tuning.strategy.name.lower()
         if cfg.quantization.quant_level == 0:
             strategy = "conservative"
@@ -209,7 +209,7 @@ class Quantization(Component):
         self.strategy = EXP_STRATEGIES[strategy](
             self._model,
             self.conf,
-            self._calib_dataloader,
+            self._val_dataloader,
             self._calib_func,
             self._eval_dataloader,
             self._eval_func,
@@ -217,7 +217,7 @@ class Quantization(Component):
             self.hooks,
         )
 
-        if getattr(self._calib_dataloader, "distributed", False):
+        if getattr(self._val_dataloader, "distributed", False):
             self.register_hook(
                 "on_train_begin", self.strategy.adaptor._pre_hook_for_hvd
             )
@@ -271,14 +271,14 @@ class Quantization(Component):
               with dataset as input parameter to create neural_compressor dataloader before calling this
               function.
 
-              After that, User specifies fp32 "model", calibration dataset "calib_dataloader"
+              After that, User specifies fp32 "model", calibration dataset "val_dataloader"
               and evaluation dataset "eval_dataloader".
               The calibrated and quantized model is evaluated with "eval_dataloader"
               with evaluation metrics specified in the configuration file. The evaluation tells
               the tuner whether the quantized model meets the accuracy criteria. If not,
               the tuner starts a new calibration and tuning flow.
 
-              For this usage, model, calib_dataloader and eval_dataloader parameters are mandatory.
+              For this usage, model, val_dataloader and eval_dataloader parameters are mandatory.
 
            c) Partial yaml configuration: User specifies dataloaders used in calibration phase
               by code.
@@ -288,7 +288,7 @@ class Quantization(Component):
               The "eval_func" tells the tuner whether the quantized model meets
               the accuracy criteria. If not, the Tuner starts a new calibration and tuning flow.
 
-              For this usage, model, calib_dataloader and eval_func parameters are mandatory.
+              For this usage, model, val_dataloader and eval_func parameters are mandatory.
 
         Returns:
             quantized model: best qanitized model found, otherwise return None
@@ -304,12 +304,12 @@ class Quantization(Component):
         return Datasets(self.framework)[dataset_type](*args, **kwargs)
 
     @property
-    def calib_dataloader(self):
-        """Get `calib_dataloader` attribute."""
-        return self._calib_dataloader
+    def val_dataloader(self):
+        """Get `val_dataloader` attribute."""
+        return self._val_dataloader
 
-    @calib_dataloader.setter
-    def calib_dataloader(self, dataloader):
+    @val_dataloader.setter
+    def val_dataloader(self, dataloader):
         """Set Data loader for calibration, mandatory for post-training quantization.
 
         It is iterable and the batched data should consists of a tuple like
@@ -318,7 +318,7 @@ class Quantization(Component):
         model inference, so it should satisfy the input format of specific model.
         In calibration process, label of data loader will not be used and
         neither the postprocess and metric. User only need to set
-        calib_dataloader when calib_dataloader can not be configured from yaml file.
+        val_dataloader when val_dataloader can not be configured from yaml file.
 
         Args:
             dataloader(generator): user are supported to set a user defined dataloader
@@ -329,7 +329,7 @@ class Quantization(Component):
                                     neural_compressor.experimental.common.DataLoader is just a wrapper of the
                                     information needed to build a dataloader, it can't yield
                                     batched data and only in this setter method
-                                    a 'real' calib_dataloader will be created,
+                                    a 'real' val_dataloader will be created,
                                     the reason is we have to know the framework info
                                     and only after the Quantization object created then
                                     framework information can be known.
@@ -338,7 +338,7 @@ class Quantization(Component):
         """
         from .common import _generate_common_dataloader
 
-        self._calib_dataloader = _generate_common_dataloader(dataloader, self.framework)
+        self._val_dataloader = _generate_common_dataloader(dataloader, self.framework)
 
     @property
     def metric(self):

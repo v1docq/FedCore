@@ -127,7 +127,7 @@ class MSETuneStrategy(TuneStrategy):
         current_best_tune_cfg = self._tune_cfg_converter(self.cur_best_tuning_cfg)
         fp32_dump_content = self.adaptor.inspect_tensor(
             fp32_model,
-            self.calib_dataloader,
+            self.val_dataloader,
             op_name_lst,
             [1],
             inspect_type="activation",
@@ -137,11 +137,11 @@ class MSETuneStrategy(TuneStrategy):
         )
         fp32_tensor_dict = fp32_dump_content["activation"][0]
         best_qmodel = self.adaptor.quantize(
-            current_best_tune_cfg, self.model, self.calib_dataloader, self.q_func
+            current_best_tune_cfg, self.model, self.val_dataloader, self.q_func
         )
         quant_dump_content = self.adaptor.inspect_tensor(
             best_qmodel,
-            self.calib_dataloader,
+            self.val_dataloader,
             op_name_lst,
             [1],
             inspect_type="activation",

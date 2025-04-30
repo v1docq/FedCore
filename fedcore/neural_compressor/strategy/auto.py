@@ -96,7 +96,7 @@ class AutoTuneStrategy(TuneStrategy):
             strategy = STRATEGIES[strategy_name](
                 model=self.model,
                 conf=self.conf,
-                q_dataloader=self.calib_dataloader,
+                q_dataloader=self.val_dataloader,
                 q_func=self.q_func,
                 eval_func=self.eval_func,
                 eval_dataloader=self.eval_dataloader,

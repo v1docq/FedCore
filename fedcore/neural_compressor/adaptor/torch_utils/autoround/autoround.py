@@ -1003,10 +1003,10 @@ def get_dataloader(
     calib_dataset = calib_dataset.shuffle(seed=seed)
     calib_dataset = calib_dataset.map(tokenizer_function, batched=True)
     calib_dataset.set_format(type="torch", columns=["input_ids"])
-    calib_dataloader = DataLoader(
+    val_dataloader = DataLoader(
         calib_dataset, batch_size=bs, shuffle=False, collate_fn=collate_batch
     )
-    return calib_dataloader
+    return val_dataloader
 
 
 class AutoRound(object):

@@ -2,8 +2,8 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from fedcore.architecture.dataset.dummy_clf import DummyDatasetCLF
-from fedcore.models.backbone.densenet import DENSE_MODELS, DenseNetwork
+from fedcore.architecture.dataset.task_specified.dummy_clf import DummyDatasetCLF
+from fedcore.models.backbone.convolutional.densenet import DENSE_MODELS, DenseNetwork
 
 
 @pytest.mark.parametrize('model_name, in_channels',

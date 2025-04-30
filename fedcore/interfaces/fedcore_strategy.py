@@ -7,11 +7,11 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionOutputData, CompressionInputData
-from fedcore.repository.constanst_repository import default_device
 from fedcore.repository.model_repository import (
     PRUNER_MODELS,
-    QUANTISATION_MODELS,
+    QUANTIZATION_MODELS,
     DISTILATION_MODELS,
     LOW_RANK_MODELS,
     DETECTION_MODELS,
@@ -30,7 +30,7 @@ class FedCoreStrategy(EvaluationStrategy):
         output_data = CompressionOutputData(
             features=predict_data.features,
             idx=[1, 2],
-            calib_dataloader=predict_data.features.calib_dataloader,
+            val_dataloader=predict_data.features.val_dataloader,
             task=predict_data.task,
             num_classes=predict_data.features.num_classes,
             target=predict_data.features.target,
@@ -55,8 +55,8 @@ class FedCoreStrategy(EvaluationStrategy):
     def predict(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
     ) -> OutputData:
-        pruned_model = trained_operation.predict(predict_data, output_mode)
-        converted = self._convert_to_output(pruned_model, predict_data)
+        prediction = trained_operation.predict(predict_data, output_mode)
+        converted = self._convert_to_output(prediction, predict_data)
         return converted
 
     def predict_for_fit(
@@ -71,7 +71,6 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
     _operations_by_types = TRAINING_MODELS
 
     def fit(self, train_data: InputData):
-        self.original_model = train_data.features.target
         self.trained_model = self.operation_impl.fit(train_data)
         return self.operation_impl
 
@@ -96,11 +95,11 @@ class FedcorePruningStrategy(FedCoreStrategy):
     _operations_by_types = PRUNER_MODELS
 
 
-class FedcoreQuantisationStrategy(FedCoreStrategy):
-    _operations_by_types = QUANTISATION_MODELS
+class FedcoreQuantizationStrategy(FedCoreStrategy):
+    _operations_by_types = QUANTIZATION_MODELS
 
 
-class FedcoreDistilationStrategy(FedcoreQuantisationStrategy):
+class FedcoreDistilationStrategy(FedcoreQuantizationStrategy):
     _operations_by_types = DISTILATION_MODELS
 
 
@@ -168,7 +167,7 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
             idx=[1, 2],
             features=predict_data.features,
             # train_dataloader=predict_data.train_dataloader,
-            # calib_dataloader=predict_data.calib_dataloader,
+            # val_dataloader=predict_data.val_dataloader,
             predict=prediction,
             task=predict_data.task,
             target=predict_data.target,

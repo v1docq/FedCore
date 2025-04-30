@@ -59,6 +59,8 @@ class OrthogonalLoss(SVDLoss):
                 r = Vh.size()[0]
                 E = torch.eye(r, device=Vh.device)
                 loss += matrix_norm(Vh @ Vh.transpose(0, 1) - E) ** 2 / r
+        if not n:
+            return 0
         return self.factor * loss / n
 
 
@@ -86,4 +88,6 @@ class HoyerLoss(SVDLoss):
                 n += 1
                 S = parameter
                 loss += vector_norm(S, ord=1) / vector_norm(S, ord=2)
+        if not n:
+            return 0
         return self.factor * loss / n

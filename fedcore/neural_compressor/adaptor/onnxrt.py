@@ -2308,7 +2308,7 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
 
             assert (
                 data_loader is not None
-            ), "GPTQ WOQ algorithm needs to pass 'calib_dataloader' to quantization.fit()"
+            ), "GPTQ WOQ algorithm needs to pass 'val_dataloader' to quantization.fit()"
             percdamp = self.recipes.get("gptq_args", {}).get("percdamp", 0.01)
             blocksize = self.recipes.get("gptq_args", {}).get("blocksize", 128)
             actorder = self.recipes.get("gptq_args", {}).get("actorder", False)
@@ -2332,7 +2332,7 @@ class ONNXRT_WeightOnlyAdaptor(ONNXRUNTIMEAdaptor):
         if "AWQ" in algos:
             assert (
                 data_loader is not None
-            ), "AWQ WOQ algorithm needs to pass 'calib_dataloader' to quantization.fit()"
+            ), "AWQ WOQ algorithm needs to pass 'val_dataloader' to quantization.fit()"
             enable_auto_scale = self.recipes.get("awq_args", {}).get(
                 "enable_auto_scale", True
             )

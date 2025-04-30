@@ -5,12 +5,12 @@ from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
 from torchvision.models.detection.faster_rcnn import fasterrcnn_mobilenet_v3_large_fpn
 
 from fedcore.algorithm.pruning.pruners import BasePruner
-from fedcore.algorithm.quantization.quant_aware_training import QuantAwareModel
-from fedcore.algorithm.quantization.quant_post_training import QuantPostModel, QuantDynamicModel
+from fedcore.algorithm.quantization.quantizers import BaseQuantizer
 
 # from fedcore.models.backbone.chronos import chronos_small
-from fedcore.models.backbone.mobilenet import MobileNetV3Small, MobileNetV3Large
-from fedcore.models.backbone.resnet import *
+from fedcore.models.backbone.convolutional.mobilenet import MobileNetV3Small, MobileNetV3Large
+from fedcore.models.backbone.convolutional.resnet import *
+from fedcore.models.backbone.custom.custom import CustomModel
 from torchvision.models.efficientnet import (
     efficientnet_b0,
     efficientnet_b1,
@@ -28,8 +28,9 @@ from torchvision.models.densenet import (
     densenet201,
 )
 
-from fedcore.models.backbone.segformer import segformer_pretrain
-
+from fedcore.models.backbone.pretrain_model.segformer import segformer_pretrain
+from fedcore.models.backbone.transformers.tst import TSTModel
+from fedcore.models.backbone.convolutional.inception import InceptionTimeModel
 
 class AtomizedModel(Enum):
     TRAINING_MODELS = {"training_model": BaseNeuralModel}
@@ -38,11 +39,7 @@ class AtomizedModel(Enum):
 
     LOW_RANK_MODELS = {"low_rank_model": LowRankModel}
 
-    QUANTISATION_MODELS = {
-        "post_training_quant": QuantPostModel,
-        "training_aware_quant": QuantAwareModel,
-        "post_dynamic_quant": QuantDynamicModel,
-    }
+    QUANTIZATION_MODELS = {"quantization_model": BaseQuantizer}
 
     DISTILATION_MODELS = {"distilation_model": BaseDistilator}
 
@@ -62,11 +59,15 @@ class AtomizedModel(Enum):
         "efficientnet_b7": efficientnet_b7,
     }
     RESNET_MODELS = {
+        "ResNet": ResNetModel,
         "ResNet18": resnet18,
         "ResNet34": resnet34,
         "ResNet50": resnet50,
         "ResNet101": resnet101,
         "ResNet152": resnet152,
+    }
+    INCEPTIONET_MODELS = {
+        "InceptionNet": InceptionTimeModel
     }
 
     SEGFORMER_MODELS = {"segformer": segformer_pretrain}
@@ -80,6 +81,8 @@ class AtomizedModel(Enum):
 
     # CHRONOS_MODELS = {'chronos-t5-small': chronos_small}
 
+    TRANSFORMER_MODELS = {'TST': TSTModel}
+
     PRUNED_RESNET_MODELS = {
         "ResNet18": pruned_resnet18,
         "ResNet34": pruned_resnet34,
@@ -90,9 +93,11 @@ class AtomizedModel(Enum):
 
     DETECTION_MODELS = {"detection_model": fasterrcnn_mobilenet_v3_large_fpn}
 
+    CUSTOM_MODEL = {"custom": CustomModel}
+
 
 PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
-QUANTISATION_MODELS = AtomizedModel.QUANTISATION_MODELS.value
+QUANTIZATION_MODELS = AtomizedModel.QUANTIZATION_MODELS.value
 DISTILATION_MODELS = AtomizedModel.DISTILATION_MODELS.value
 LOW_RANK_MODELS = AtomizedModel.LOW_RANK_MODELS.value
 TRAINING_MODELS = AtomizedModel.TRAINING_MODELS.value
@@ -100,37 +105,41 @@ TRAINING_MODELS = AtomizedModel.TRAINING_MODELS.value
 RESNET_MODELS = AtomizedModel.RESNET_MODELS.value
 DENSENET_MODELS = AtomizedModel.DENSENET_MODELS.value
 EFFICIENTNET_MODELS = AtomizedModel.EFFICIENTNET_MODELS.value
+INCEPTIONET_MODELS = AtomizedModel.INCEPTIONET_MODELS.value
 MOBILENET_MODELS = AtomizedModel.MOBILENET_MODELS.value
 # CHRONOS_MODELS = AtomizedModel.CHRONOS_MODELS.value
 SEGFORMER_MODELS = AtomizedModel.SEGFORMER_MODELS.value
+TRANSFORMER_MODELS = AtomizedModel.TRANSFORMER_MODELS.value
+CUSTOM_MODEL = AtomizedModel.CUSTOM_MODEL.value
 
 BACKBONE_MODELS = {
     **MOBILENET_MODELS,
+    **INCEPTIONET_MODELS,
     **EFFICIENTNET_MODELS,
     **DENSENET_MODELS,
     **RESNET_MODELS,
     #    **CHRONOS_MODELS,
     **SEGFORMER_MODELS,
+    **TRANSFORMER_MODELS,
+    **CUSTOM_MODEL
 }
 DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 
 def default_fedcore_availiable_operation(problem: str = "pruning"):
     all_operations = [
-        "training_aware_quant",
-        "post_training_quant",
+        "quantization_model",
         "low_rank_model",
         "pruning_model",
     ]
     operation_dict = {
         "pruning": PRUNER_MODELS.keys(),
         "composite_compression": all_operations,
-        "quantisation_aware": "training_aware_quant",
-        "post_quantisation": "post_training_quant",
+        "quantization": QUANTIZATION_MODELS.keys(),
         "distilation": DISTILATION_MODELS.keys(),
         "low_rank": LOW_RANK_MODELS.keys(),
         "detection": DETECTION_MODELS.keys(),
         "training": TRAINING_MODELS.keys(),
     }
 
-    return operation_dict[problem]
+    return list(operation_dict[problem])

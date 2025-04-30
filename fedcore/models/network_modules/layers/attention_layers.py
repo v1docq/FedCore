@@ -7,6 +7,8 @@ from fastai.torch_core import Module
 from torch import Tensor
 
 from fedcore.architecture.settings.computational import backend_methods as np
+from fedcore.architecture.utils.misc import default_value
+from fedcore.models.network_modules.other import init_tensor
 
 
 class ScaledDotProductAttention(Module):
@@ -188,9 +190,10 @@ class MultiHeadAttention(Module):
         # scores: [bs x n_heads x max_q_len x q_len]
 
         # back to the original inputs dimensions
-        output = (
-            output.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * self.d_v)
-        )
+        # output = (
+        #     output.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * self.d_v)
+        # )
+        output = output.view(bs, -1, self.n_heads * self.d_v).transpose(1, 2).contiguous()
         # output: [bs x q_len x n_heads * d_v]
         output = self.to_out(output)
 
@@ -198,3 +201,99 @@ class MultiHeadAttention(Module):
             return output, attn_weights, attn_scores
         else:
             return output, attn_weights
+
+
+class LinformerSelfAttention(Module):
+    """Self-attention implementation from Linformer.
+
+    Args:
+        dim (int): Dimensionality of input embeddings.
+        seq_len (int): Maximum sequence length.
+        k (int): Projection dimension of keys/values. Default: 256.
+        n_heads (int): Number of attention heads. Default: 8.
+        dim_head (int): Dimensionality of each head. Default: dim // n_heads.
+        one_kv_head (bool): Use one head for keys/values. Default: False.
+        share_kv (bool): Share projections of keys and values. Default: False.
+        dropout (float): Dropout probability. Default: 0.
+    """
+
+    def __init__(
+            self,
+            dim: int,
+            seq_len: int,
+            k: int = 256,
+            n_heads: int = 8,
+            dim_head: Optional[int] = None,
+            one_kv_head: bool = False,
+            share_kv: bool = False,
+            dropout: float = 0.
+    ):
+        super().__init__()
+        assert (dim % n_heads) == 0, 'dimension must be divisible by the number of heads'
+
+        self.seq_len = seq_len
+        self.k = k
+
+        self.heads = n_heads
+
+        dim_head = default_value(dim_head, dim // n_heads)
+        self.dim_head = dim_head
+
+        self.to_q = nn.Linear(dim, dim_head * n_heads, bias=False)
+
+        kv_dim = dim_head if one_kv_head else (dim_head * n_heads)
+        self.to_k = nn.Linear(dim, kv_dim, bias=False)
+        self.proj_k = nn.Parameter(init_tensor(torch.zeros(seq_len, k)))
+
+        self.share_kv = share_kv
+        if not share_kv:
+            self.to_v = nn.Linear(dim, kv_dim, bias=False)
+            self.proj_v = nn.Parameter(init_tensor(torch.zeros(seq_len, k)))
+
+        self.dropout = nn.Dropout(dropout)
+        self.to_out = nn.Linear(dim_head * n_heads, dim)
+
+    def forward(self, x, context=None, **kwargs):
+        b, n, d, d_h, h, k = *x.shape, self.dim_head, self.heads, self.k
+
+        kv_len = n if context is None else context.shape[1]
+        assert kv_len <= self.seq_len, f'the sequence length of the key / values must be {self.seq_len} - {kv_len} given'
+
+        queries = self.to_q(x)
+
+        proj_seq_len = lambda args: torch.einsum('bnd,nk->bkd', *args)
+
+        kv_input = x if context is None else context
+
+        keys = self.to_k(kv_input)
+        values = self.to_v(kv_input) if not self.share_kv else keys
+
+        kv_projs = (self.proj_k, self.proj_v if not self.share_kv else self.proj_k)
+
+        # allow for variable sequence lengths (less than maximum sequence length) by slicing projections
+
+        if kv_len < self.seq_len:
+            kv_projs = map(lambda t: t[:kv_len], kv_projs)
+
+        # project keys and values along the sequence length dimension to k
+
+        keys, values = map(proj_seq_len, zip((keys, values), kv_projs))
+
+        # merge head into batch for queries and key / values
+
+        queries = queries.reshape(b, n, h, -1).transpose(1, 2)
+
+        merge_key_values = lambda t: t.reshape(b, k, -1, d_h).transpose(1, 2).expand(-1, h, -1, -1)
+        keys, values = map(merge_key_values, (keys, values))
+
+        # attention
+        keys_transposed = keys.transpose(-1, -2)  # bhkd → bhdk
+        dots = torch.matmul(queries, keys_transposed)  # [bhnd] @ [bhdk] → [bhnk]
+        dots *= d_h ** -0.5
+        attn = dots.softmax(dim=-1)
+        attn = self.dropout(attn)
+        out = torch.matmul(attn, values)
+
+        # split heads
+        out = out.transpose(1, 2).reshape(b, n, -1)
+        return self.to_out(out)

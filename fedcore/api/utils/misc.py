@@ -1,3 +1,4 @@
+import torch
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch import Tensor
 from torch.nn import Module
@@ -43,3 +44,13 @@ def count_params(m: Module):
     for p in m.parameters():
         c += p.numel()
     return c
+
+
+def clear_device_cache(cls):
+    if cls.device == torch.device('mps'):
+        torch.mps.empty_cache()
+        print(f'{cls.device} cache cleaned during {cls} execution')
+    elif cls.device == torch.device('cuda'):
+        torch.cuda.empty_cache()
+        print(f'{cls.device} cache cleaned during {cls} execution')
+    

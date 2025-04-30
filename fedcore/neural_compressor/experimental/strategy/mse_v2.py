@@ -169,7 +169,7 @@ class MSE_V2TuneStrategy(TuneStrategy):
                 start = time()
                 ops_lst = self.adaptor.calculate_op_sensitivity(
                     self.model,
-                    self.calib_dataloader,
+                    self.val_dataloader,
                     deepcopy(self._tune_cfg_converter(tune_cfg)),
                     self.output_op_names,
                     self.confidence_batches,
@@ -213,7 +213,7 @@ class MSE_V2TuneStrategy(TuneStrategy):
                 start = time()
                 ops_lst = self.adaptor.calculate_op_sensitivity(
                     self.model,
-                    self.calib_dataloader,
+                    self.val_dataloader,
                     deepcopy(self._tune_cfg_converter(tune_cfg)),
                     self.output_op_names,
                     self.confidence_batches,

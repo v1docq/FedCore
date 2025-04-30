@@ -154,8 +154,8 @@ class TuneStrategy(metaclass=TuneStrategyMeta):
         self._set_quant_type(self.config)
         self.history_path = self._create_path(options.workspace, "./history.snapshot")
         self.deploy_path = self._create_path(options.workspace, "deploy.yaml")
-        self.calib_dataloader = q_dataloader
-        print('### self.calib_dataloader', self.calib_dataloader)
+        self.val_dataloader = q_dataloader
+        print('### self.val_dataloader', self.val_dataloader)
         self.eval_func = eval_func
         self.eval_dataloader = eval_dataloader
         self.eval_metric = eval_metric
@@ -346,7 +346,7 @@ class TuneStrategy(metaclass=TuneStrategyMeta):
     def _initial_pre_tuning_algo_scheduler(self):
         algo_scheduler = AlgorithmScheduler(None)
         # reuse the calibration iteration
-        algo_scheduler.dataloader = self.calib_dataloader
+        algo_scheduler.dataloader = self.val_dataloader
         algo_scheduler.origin_model = self.model
         algo_scheduler.calib_iter = (
             self.calib_iter[0] if isinstance(self.calib_iter, list) else self.calib_iter
@@ -375,14 +375,14 @@ class TuneStrategy(metaclass=TuneStrategyMeta):
     def _initialize_algo_scheduler(self):
         algo_scheduler = AlgorithmScheduler(self.config.recipes)
         # reuse the calibration iteration
-        algo_scheduler.dataloader = self.calib_dataloader
+        algo_scheduler.dataloader = self.val_dataloader
         algo_scheduler.origin_model = self.model
         algo_scheduler.adaptor = self.adaptor
         return algo_scheduler
 
     def _initial_adaptor(self):
         framework, framework_specific_info = self._set_framework_info(
-            self.calib_dataloader, self.q_func
+            self.val_dataloader, self.q_func
         )
         self.adaptor = self.adaptor or FRAMEWORKS[framework](framework_specific_info)
         self.framework = self.framework or framework
@@ -541,7 +541,7 @@ class TuneStrategy(metaclass=TuneStrategyMeta):
             logger.debug(tune_cfg)
             # quantize
             q_model = self.adaptor.quantize(
-                copy.deepcopy(tune_cfg), self.model, self.calib_dataloader, self.q_func
+                copy.deepcopy(tune_cfg), self.model, self.val_dataloader, self.q_func
             )
             assert self.adaptor.pre_optimized_model
             # set the parameter for post quantization algos and run
@@ -897,7 +897,7 @@ class TuneStrategy(metaclass=TuneStrategyMeta):
             self.best_qmodel = self.adaptor.quantize(
                 copy.deepcopy(self.tune_cfg_lst[self.best_tune_cfg_id]),
                 self.model,
-                self.calib_dataloader,
+                self.val_dataloader,
                 self.q_func,
             )
 
@@ -940,7 +940,7 @@ class TuneStrategy(metaclass=TuneStrategyMeta):
             )  # pylint: disable=E1102
             # quantize
             q_model = self.adaptor.quantize(
-                copy.deepcopy(tune_cfg), self.model, self.calib_dataloader, self.q_func
+                copy.deepcopy(tune_cfg), self.model, self.val_dataloader, self.q_func
             )
             assert self.adaptor.pre_optimized_model
             # set the parameter for post quantization algos and run

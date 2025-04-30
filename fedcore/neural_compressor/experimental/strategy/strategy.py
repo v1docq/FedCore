@@ -117,7 +117,7 @@ class TuneStrategy(object):
             self.cfg.tuning.workspace.path, "deploy.yaml"
         )
         self.eval_dataloader = eval_dataloader
-        self.calib_dataloader = q_dataloader
+        self.val_dataloader = q_dataloader
         self.q_func = q_func
         self.q_hooks = q_hooks
         self.eval_func = eval_func
@@ -175,7 +175,7 @@ class TuneStrategy(object):
         # For algo scheduler
         self.algo_scheduler = AlgorithmScheduler(self.cfg.quantization.recipes)
         self.algo_scheduler.dataloader = (
-            self.calib_dataloader
+            self.val_dataloader
         )  # reuse the calibration iteration
         self.algo_scheduler.origin_model = self.model
         self.algo_scheduler.adaptor = self.adaptor

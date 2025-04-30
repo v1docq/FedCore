@@ -10,12 +10,14 @@ from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 @dataclass
 class CompressionInputData:
-    features: np.ndarray = None
+    features: np.ndarray = np.zeros((2, 2))
     target: tp.Optional[np.ndarray] = None
     train_dataloader: torch.utils.data.DataLoader = None
-    calib_dataloader: torch.utils.data.DataLoader = None
+    val_dataloader: torch.utils.data.DataLoader = None
+    test_dataloader: torch.utils.data.DataLoader = None
     task: Task = Task(TaskTypesEnum.classification)
     num_classes: int = None
+    input_dim: int = None
     model = None
     supplementary_data: SupplementaryData = field(default_factory=SupplementaryData)
 
@@ -31,7 +33,7 @@ class CompressionOutputData:
     target: tp.Optional[np.ndarray] = None
     num_classes: int = None
     train_dataloader: torch.utils.data.DataLoader = None
-    calib_dataloader: torch.utils.data.DataLoader = None
+    val_dataloader: torch.utils.data.DataLoader = None
     task: Task = Task(TaskTypesEnum.classification)
     data_type: DataTypesEnum = DataTypesEnum.image
     model: callable = None

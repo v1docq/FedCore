@@ -27,7 +27,7 @@ from fedcore.metrics.metric_impl import (
 
 
 def calculate_regression_metric(
-    target, labels, rounding_order=3, metric_names=("r2", "rmse", "mae"), **kwargs
+        target, labels, rounding_order=3, metric_names=("r2", "rmse", "mae"), **kwargs
 ):
     target = target.astype(float)
 
@@ -59,7 +59,7 @@ def calculate_regression_metric(
 
 
 def calculate_forecasting_metric(
-    target, labels, rounding_order=3, metric_names=("smape", "rmse", "mape"), **kwargs
+        target, labels, rounding_order=3, metric_names=("smape", "rmse"), **kwargs
 ):
     target = target.astype(float)
 
@@ -71,8 +71,8 @@ def calculate_forecasting_metric(
         "mae": mean_absolute_error,
         "median_absolute_error": median_absolute_error,
         "smape": smape,
-        "mase": mase,
-        "mape": mape,
+        #"mase": mase,
+        #"mape": mape,
     }
 
     df = pd.DataFrame(
@@ -86,9 +86,7 @@ def calculate_forecasting_metric(
     return df.round(rounding_order)
 
 
-def calculate_classification_metric(
-    target, labels, probs, rounding_order=3, metric_names=("f1" "accuracy")
-):
+def calculate_classification_metric(target, labels, probs, rounding_order=3, metric_names=("f1" "accuracy")):
     metric_dict = {
         "accuracy": Accuracy,
         "f1": F1,
@@ -98,7 +96,7 @@ def calculate_classification_metric(
 
     df = pd.DataFrame(
         {
-            name: func(target, labels, probs).metric()
+            name: func().metric(target, labels)
             for name, func in metric_dict.items()
             if name in metric_names
         },
@@ -107,17 +105,6 @@ def calculate_classification_metric(
     return df.round(rounding_order)
 
 
-def calculate_computational_metric(
-    target, labels, probs, rounding_order=3, metric_names=("f1" "accuracy")
-):
-    metric_dict = CV_quality_metric()
-
-    df = pd.DataFrame(
-        {
-            name: func(target, labels, probs).metric()
-            for name, func in metric_dict.items()
-            if name in metric_names
-        },
-        index=[0],
-    )
-    return df.round(rounding_order)
+def calculate_computational_metric(model, dataset, model_regime):
+    metric_dict = CV_quality_metric().metric(model, dataset, model_regime)
+    return metric_dict

@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from torchvision import transforms
+from torchvision.transforms import v2
 from fedcore.architecture.comptutaional.devices import default_device
 
 
@@ -18,11 +18,11 @@ def collate(batch):
     return images, targets
 
 
-def transform():
-    transform = transforms.Compose(
+def image_transform():
+    transform = v2.Compose(
         [
-            transforms.ToPILImage(),
-            transforms.PILToTensor(),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=True)
         ]
     )
     return transform

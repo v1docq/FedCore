@@ -1,8 +1,6 @@
 from copy import deepcopy
-
-import numpy as np
+from itertools import chain
 from fedot.core.data.data import InputData
-from pymonad.either import Either
 from torch import nn, optim
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -10,17 +8,16 @@ import torch_pruning as tp
 from typing import Optional
 from fedot.core.operations.operation_parameters import OperationParameters
 
+from fedcore.algorithm.pruning.hooks import PruningHooks
 from fedcore.algorithm.pruning.pruning_validation import PruningValidator
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import (
     PRUNERS,
-    PRUNING_IMPORTANCE,
-    PRUNER_REQUIRED_REG,
-    PRUNER_WITHOUT_REQUIREMENTS,
-    PRUNING_FUNC,
-    # MANUAL_PRUNING_STRATEGY,
+    PRUNING_IMPORTANCE, TorchLossesConstant
 )
+
 
 
 class BasePruner(BaseCompressionModel):
@@ -32,18 +29,21 @@ class BasePruner(BaseCompressionModel):
         super().__init__(params)
         # finetune params
         self.epochs = params.get("epochs", 5)
-        self.ft_params = params.get("finetune_params", None)
-        if self.ft_params is None:
-            self.ft_params = {}
-            self.ft_params["custom_loss"] = None
-            self.ft_params["epochs"] = round(self.epochs / 3)
-        self.criterion = params.get("loss", nn.CrossEntropyLoss())
+        self.ft_params = params.get("finetune_params", dict())
+        # self.ft_params = params.get("finetune_params", None)
         self.optimizer = params.get("optimizer", optim.Adam)
-        self.learning_rate = params.get("lr", 0.001)
+        self.learning_rate = params.get("lr", 0.0001)
 
         # pruning gradients params
-        self.criterion_for_grad = params.get("loss", nn.CrossEntropyLoss())
-        self.learning_rate_for_grad = params.get("lr", 0.001)
+        finetune_params = params.get('finetune_params', dict())
+        # finetune_params = params.get('finetune_params', None)
+        criterion_for_grad = TorchLossesConstant[finetune_params.get("criterion", 'cross_entropy')]
+
+        self.ft_params.update({'criterion_for_grad': criterion_for_grad.value()})
+        self.ft_params.update({'lr_for_grad': params.get("lr", 0.0001)})
+
+        # self.ft_params['criterion_for_grad'] = criterion_for_grad.value()
+        # self.ft_params['lr_for_grad'] = params.get("lr", 0.0001)
 
         # pruning params
         self.pruner_name = params.get("pruner_name", "meta_pruner")
@@ -51,206 +51,135 @@ class BasePruner(BaseCompressionModel):
 
         # pruning hyperparams
         self.pruning_ratio = params.get("pruning_ratio", 0.5)
-        self.pruning_iterations = params.get("pruning_iterations", 2)
+        self.pruning_iterations = params.get("pruning_iterations", 1)
         self.importance_norm = params.get("importance_norm", 1)
         self.importance_reduction = params.get("importance_reduction", "mean")
         self.importance_normalize = params.get("importance_normalize", "mean")
-
+        self.importance = PRUNING_IMPORTANCE[self.importance_name]
+        if self.importance_name == 'lamp':
+            self.importance_normalize = 'lamp'
         # importance criterion for parameter selections
-        self.importance = PRUNING_IMPORTANCE[self.importance_name](
-            group_reduction=self.importance_reduction,
-            normalizer=self.importance_normalize,
-        )
-        self.trainer = BaseNeuralModel(params)
+        if self.importance_name == 'random':
+            self.importance = self.importance()
+        elif isinstance(self.importance, str):
+            self.importance = self.importance
+        else:
+            self.importance = self.importance(group_reduction=self.importance_reduction,
+                                              normalizer=self.importance_normalize)
+
+        self._hooks = [PruningHooks]
+        self._init_empty_object()
 
     def __repr__(self):
         return self.pruner_name
 
-    def _init_model(self, input_data):
-        print("==============Prepare original model for pruning=================")
-        self.model = input_data.target
-        self.trainer.model = self.model
-        print(
-            f"==============Initialisation of {self.pruner_name} pruning agent================="
-        )
-        print(
-            f"==============Pruning importance - {self.importance_name} ================="
-        )
-        print(f"==============Pruning ratio -  {self.pruning_ratio} =================")
-        print(
-            f"==============Pruning importance norm -  {self.importance_norm} ================="
-        )
-        # Pruner initialization
-        self.pruner = PRUNERS[self.pruner_name]
-        # list of tensors with dim size n_samples x n_channel x height x width
-        batch_generator = (b for b in input_data.features.calib_dataloader)
-        # take first batch
-        input, target = next(batch_generator)
-        self.data_batch_for_calib = input.to(self.trainer.device)
-        self.validator = PruningValidator(self.model, input_data.features.num_classes)
-        self.ignored_layers = self.validator.filter_ignored_layers(
-            self.model, str(self.model.__class__)
-        )
-        self.channel_groups = self.validator.validate_channel_groups()
-        self.optimizer_for_grad = optim.Adam(
-            self.model.parameters(), lr=self.learning_rate_for_grad
-        )
-
-    def _accumulate_grads(self, data, target, return_false=False):
-        data, target = data.to(default_device()), target.to(default_device())
-        out = self.model(data)
-        loss = self.criterion_for_grad(out, target)
-        loss.backward()
-        if return_false:
-            return loss
-
-    def _define_root_layer(self):
-        root_layer_dict = {
-            "manual_conv": self.optimised_model.conv1,
+    def _init_empty_object(self):
+        self.history = {
+            'train_loss': [],
+            'val_loss': []
         }
+        # add hooks
+        self._on_epoch_end = []
+        self._on_epoch_start = []
 
-        return root_layer_dict[self.pruner_name]
+    def _init_hooks(self):
+        for hook_elem in chain(*self._hooks):
+            hook: BaseHook = hook_elem.value
+            hook = hook(self.ft_params, self.model_after_pruning)
+            if hook._hook_place >= 0:
+                self._on_epoch_end.append(hook)
+            else:
+                self._on_epoch_start.append(hook)
 
-    def _pruner_step_with_grads(self, pruner, input_data):
-        for i, (data, target) in enumerate(input_data.features.calib_dataloader):
-            if i != 0:
-                print(f"Gradients accumulation iter- {i}")
-                print(f"==========================================")
-                # we using 1 batch as example of pruning quality
-                self._accumulate_grads(data, target)
-        return pruner
-
-    def _pruner_step_with_reg(self, pruner, input_data):
-        pruner.update_regularizer()
-        # <== initialize regularizer
-        for i, (data, target) in enumerate(input_data.features.calib_dataloader):
-            if i != 0:
-                print(f"Pruning reg iter- {i}")
-                print(f"==========================================")
-                # we using 1 batch as example of pruning quality
-                self.optimizer_for_grad.zero_grad()
-                loss = self._accumulate_grads(
-                    data, target, True
-                )  # after loss.backward()
-                pruner.regularize(self.optimised_model, loss)  # <== for sparse training
-                self.optimizer_for_grad.step()
-        return pruner
-
-    def _dependency_graph_pruner(self):
-        DG = tp.DependencyGraph().build_dependency(
-            self.optimised_model,
-            example_inputs=self.data_batch_for_calib,
-            ignored_layers=self.ignored_layers,
-        )
-        group = DG.get_pruning_group(
-            self.optimised_model.conv1, tp.prune_conv_out_channels, idxs=[2, 6, 9]
-        )
-
-        print(group.details())
-
-        if DG.check_pruning_group(group):  # avoid over-pruning, i.e., channels=0.
-            group.prune()
-
-    def pruner_step(self, pruner: callable, input_data):
-
-        pruner_without_grads = isinstance(
-            self.importance, tuple(PRUNER_WITHOUT_REQUIREMENTS.values())
-        )
-        pruner_with_reg = isinstance(
-            self.importance, tuple(PRUNER_REQUIRED_REG.values())
-        )
-        pruner_with_grads = not all([pruner_with_reg, pruner_without_grads])
-
-        pruner = Either(value=pruner, monoid=[input_data, pruner_without_grads]).either(
-            left_function=lambda data: (
-                self._pruner_step_with_grads(pruner, data)
-                if pruner_with_grads
-                else self._pruner_step_with_reg(pruner, data)
-            ),
-            right_function=lambda pruner_agent: pruner_agent,
-        )
-        return pruner
-
-    def fit(self, input_data: InputData):
-        self._init_model(input_data)
-        if input_data.target.training:
-            self.model = input_data.target
+    def _init_model(self, input_data):
+        print('Prepare original model for pruning'.center(80, '='))
+        self.model_before_pruning = input_data.target
+        if input_data.task.task_type.value.__contains__('forecasting'):
+            self.trainer = BaseNeuralForecaster(self.ft_params)
         else:
-            self.model = self.trainer.fit(input_data)
-        self.optimised_model = deepcopy(self.model)
-        self.compress(input_data=input_data)
-        return self.optimised_model
+            self.trainer = BaseNeuralModel(self.ft_params)
+        if hasattr(self.model_before_pruning, 'model'):
+            self.trainer.model = self.model_before_pruning.model
+        self.model_before_pruning.to(default_device())
+        self.model_after_pruning = deepcopy(self.model_before_pruning)
+        print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
+        print(f' Pruning importance - {self.importance_name} '.center(80, '='))
+        print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
+        print(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
+        # Pruner initialization
+        if self.importance_name.__contains__('activation'):
+            self.pruner = None
+        elif self.importance_name.__contains__('group'):
+            self.pruner = PRUNERS["group_norm_pruner"]
+        elif self.importance_name in ['bn_scale']:
+            self.pruner = PRUNERS["batch_norm_pruner"]
+        elif not self.importance_name in ['random', 'lamp', 'magnitude']:
+            self.pruner = PRUNERS["growing_reg_pruner"]
+        else:
+            self.pruner = PRUNERS[self.pruner_name]
+        self._check_before_prune(input_data)
+        self.optimizer_for_grad = optim.Adam(self.model_after_pruning.parameters(),
+                                             lr=self.ft_params['lr_for_grad'])
+        self.ft_params['optimizer_for_grad_acc'] = self.optimizer_for_grad
 
-    def _manual_pruning_iter(self, pruner):
-        for i in range(self.pruning_iterations):
-            for pruning_func in MANUAL_PRUNING_STRATEGY[self.pruner_name]:
-                root_layer = self._define_root_layer()
-                pruner.manual_prune(
-                    root_layer, PRUNING_FUNC[pruning_func], self.pruning_ratio
-                )
+    def _check_before_prune(self, input_data):
+        # list of tensors with dim size n_samples x n_channel x height x width
+        batch_generator = (b for b in input_data.features.val_dataloader)
+        # take first batch
+        batch_list = next(batch_generator)
+        self.data_batch_for_calib = batch_list[0].to(default_device())
+        n_classes = input_data.task.task_params['forecast_length'] \
+            if input_data.task.task_type.value.__contains__('forecasting') else input_data.features.num_classes
+        self.validator = PruningValidator(model=self.model_after_pruning,
+                                          output_dim=n_classes, input_dim=input_data.features.input_dim)
+        self.ignored_layers = self.validator.filter_ignored_layers(self.model_after_pruning,
+                                                                   str(self.model_after_pruning.__class__))
+        self.channel_groups = self.validator.validate_channel_groups()
 
-    def _default_pruning_iter(self, pruner):
-        pruning_hist = []
-        for i in range(self.pruning_iterations):
-            for group in pruner.step(interactive=True):
-                dep, idxs = group[0]
-                layer = dep.layer
-                pruning_fn = dep.pruning_fn
-                valid_to_prune = self.validator.validate_pruned_layers(
-                    layer, pruning_fn
-                )
-                if valid_to_prune:
-                    pruning_hist.append((layer, idxs, pruning_fn))
-                    group.prune()
-                else:
-                    continue
+    def fit(self, input_data: InputData, finetune: bool = True):
+        self._init_model(input_data)
+        self._init_hooks()
+        if self.pruner is not None: # in case if we dont use torch_pruning as backbone
+            self.pruner = self.pruner(
+                self.model_after_pruning,
+                self.data_batch_for_calib,
+                # global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
+                importance=self.importance,  # importance criterion for parameter selection
+                iterative_steps=self.pruning_iterations,  # the number of iterations to achieve target ratio
+                pruning_ratio=self.pruning_ratio,
+                ignored_layers=self.ignored_layers,
+                channel_groups=self.channel_groups,
+                round_to=None,
+                unwrapped_parameters=None,
+            )
+        self.pruner_objects = {'input_data': input_data,
+                               'pruning_iterations': self.pruning_iterations,
+                               'model_before_pruning': self.model_before_pruning,
+                               'optimizer_for_grad_acc': self.optimizer_for_grad,
+                               'pruner_cls': self.pruner}
+        for hook in self._on_epoch_end:
+            hook(importance=self.importance, pruner_objects=self.pruner_objects)
+        if finetune:
+            return self.finetune(finetune_object=self.model_after_pruning, finetune_data=input_data)
+        return self.model_after_pruning
 
-    def compress(self, input_data: InputData) -> np.array:
-        self.pruner = self.pruner(
-            self.optimised_model,
-            self.data_batch_for_calib,
-            # global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
-            importance=self.importance,  # importance criterion for parameter selection
-            iterative_steps=self.pruning_iterations,  # the number of iterations to achieve target ratio
-            pruning_ratio=self.pruning_ratio,
-            ignored_layers=self.ignored_layers,
-            channel_groups=self.channel_groups,
-            round_to=None,
-            unwrapped_parameters=None,
-        )
-
-        base_macs, base_nparams = tp.utils.count_ops_and_params(
-            self.model, self.data_batch_for_calib
-        )
-        manual_pruning = self.pruner_name.__contains__("manual")
-
-        self.pruner = self.pruner_step(self.pruner, input_data)
-        self.pruner = Either(
-            value=self.pruner, monoid=[self.pruner, manual_pruning]
-        ).either(
-            left_function=lambda pruner_agent: self._default_pruning_iter(pruner_agent),
-            right_function=lambda pruner_agent: self._manual_pruning_iter(pruner_agent),
-        )
-
+    def finetune(self, finetune_object, finetune_data):
+        validated_finetune_object = self.validator.validate_pruned_layers(finetune_object)
+        self.trainer.model = validated_finetune_object
+        print(f"==============After {self.importance_name} pruning=================")
+        params_dict = self.estimate_params(example_batch=self.data_batch_for_calib,
+                                           model_before=self.model_before_pruning,
+                                           model_after=validated_finetune_object)
         print("==============Finetune pruned model=================")
-        self.trainer.model = self.optimised_model
-        self.trainer.custom_loss = self.ft_params["custom_loss"]
-        self.trainer.epochs = self.ft_params["epochs"]
-        self.optimised_model = self.trainer.fit(input_data)
+        self.model_after_pruning = self.trainer.fit(finetune_data)
+        return self.model_after_pruning
 
-        print("==============After pruning=================")
-        macs, nparams = tp.utils.count_ops_and_params(
-            self.optimised_model, self.data_batch_for_calib
-        )
-        print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
-        return self.model
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
+        return self.model_after_pruning if output_mode == 'fedcore' else self.model_before_pruning
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "compress"):
-        return self.optimised_model if output_mode == "compress" else self.model
-
-    def predict(self, input_data: InputData, output_mode: str = "compress"):
-        self.trainer.model = (
-            self.optimised_model if output_mode == "compress" else self.model
-        )
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
+        if output_mode == 'fedcore':
+            self.trainer.model = self.model_after_pruning
+        else:
+            self.trainer.model = self.model_before_pruning
         return self.trainer.predict(input_data, output_mode)

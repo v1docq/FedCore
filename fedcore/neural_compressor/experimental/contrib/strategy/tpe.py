@@ -415,7 +415,7 @@ class TpeTuneStrategy(TuneStrategy):
             tune_cfg.update({k: tune_cfg.pop(k[0])})
         op_cfgs = self._tune_cfg_converter(tune_cfg)
         self.last_qmodel = self.adaptor.quantize(
-            op_cfgs, self.model, self.calib_dataloader
+            op_cfgs, self.model, self.val_dataloader
         )
         self.last_tune_cfg = copy.deepcopy(tune_cfg)
         self.last_tune_result = self._evaluate(self.last_qmodel)

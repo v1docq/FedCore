@@ -10,7 +10,7 @@ from torch import nn, Tensor
 from torch.autograd import Variable
 from fastai.torch_core import Module
 
-from fedcore.architecture.settings.computational import default_device
+from fedcore.architecture.comptutaional.devices import default_device
 
 
 def lambda_prepare(
@@ -262,8 +262,8 @@ class SMAPELoss(Module):
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
         return 100 * torch.mean(
-            2 * torch.abs(input - target) / (torch.abs(target) + torch.abs(input))
-            + 1e-8
+            2 * torch.abs(input - target) / (torch.abs(target) + torch.abs(input)
+            + 1e-8)
         )
 
 

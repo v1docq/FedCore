@@ -33,21 +33,21 @@ class BasicBlock(nn.Module):
     expansion: int = 1
 
     def __init__(
-        self,
-        sizes: Dict[str, Tensor],
-        stride: int = 1,
-        downsample: Optional[nn.Module] = None,
+            self,
+            input_dim,
+            output_dim,
+            stride: int = 1,
+            downsample: Optional[nn.Module] = None,
     ) -> None:
         super().__init__()
         norm_layer = nn.BatchNorm2d
-        self.conv1 = conv3x3(sizes["conv1"][1], sizes["conv1"][0], stride=stride)
-        self.bn1 = norm_layer(sizes["conv1"][0])
+        self.conv1 = conv3x3(input_dim, output_dim, stride=stride)
+        self.bn1 = norm_layer(output_dim)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(sizes["conv2"][1], sizes["conv2"][0])
-        self.bn2 = norm_layer(sizes["conv2"][0])
+        self.conv2 = conv3x3(output_dim, output_dim)
+        self.bn2 = norm_layer(output_dim)
         self.downsample = downsample
         self.stride = stride
-        self.register_buffer("indices", torch.zeros(sizes["indices"], dtype=torch.int))
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
@@ -72,10 +72,10 @@ class Bottleneck(nn.Module):
     expansion: int = 4
 
     def __init__(
-        self,
-        sizes: Dict[str, Tensor],
-        stride: int = 1,
-        downsample: Optional[nn.Module] = None,
+            self,
+            sizes: Dict[str, Tensor],
+            stride: int = 1,
+            downsample: Optional[nn.Module] = None,
     ) -> None:
         super().__init__()
         norm_layer = nn.BatchNorm2d
@@ -117,82 +117,94 @@ class PrunedResNet(nn.Module):
     """Pruned ResNet for soft filter pruning optimization.
 
     Args:
-        block: ``'BasicBlock'`` or ``'Bottleneck'``.
-        layers: Number of blocks on each layer.
-        sizes: Sizes of layers.
-        num_classes: Number of classes.
+
     """
 
     def __init__(
-        self,
-        block: Type[Union[BasicBlock, Bottleneck]],
-        layers: List[int],
-        sizes: Dict,
+            self,
+            input_dim: int,
+            output_dim: int,
+            depth: dict,
+            custom_params: dict
     ) -> None:
         super().__init__()
-        self.inplanes = 64
-        self.conv1 = nn.Conv2d(
-            sizes["conv1"][1],
-            sizes["conv1"][0],
-            kernel_size=7,
-            stride=2,
-            padding=3,
-            bias=False,
-        )
-        self.bn1 = nn.BatchNorm2d(sizes["conv1"][0])
+        # self.inplanes = 64
+        self.in_channels = custom_params['initial_conv_output_dim']
+        self._init_initial_conv_and_pool(input_dim, self.in_channels)
+        self.resnet_layers = nn.ModuleList()
+        for layer_idx in range(depth['layers']):
+            resnet_layer = self._make_layer(block=custom_params['block'],
+                                            blocks=depth['blocks_per_layer'][layer_idx],
+                                            output_dim=custom_params['sizes_per_layer'][layer_idx],
+                                            stride=custom_params['strides_per_layer'][layer_idx])
+            self.resnet_layers.append(resnet_layer)
+        input_fc = custom_params['sizes_per_layer'][layer_idx] * custom_params['block'].expansion
+        self._init_final_pool_and_predict(input_fc=1, output_dim=output_dim)
+
+    def _init_initial_conv_and_pool(self, input_dim, output_dim):
+        self.conv1 = nn.Conv2d(input_dim, output_dim,
+                               kernel_size=7,
+                               stride=2,
+                               padding=3,
+                               bias=False,
+                               )
+        self.bn1 = nn.BatchNorm2d(output_dim)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(
-            block=block, blocks=layers[0], sizes=sizes["layer1"]
-        )
-        self.layer2 = self._make_layer(
-            block=block, blocks=layers[1], sizes=sizes["layer2"], stride=2
-        )
-        self.layer3 = self._make_layer(
-            block=block, blocks=layers[2], sizes=sizes["layer3"], stride=2
-        )
-        self.layer4 = self._make_layer(
-            block=block, blocks=layers[3], sizes=sizes["layer4"], stride=2
-        )
+
+    def _init_final_pool_and_predict(self, input_fc, output_dim):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(sizes["fc"][1], sizes["fc"][0])
+        self.fc = nn.Linear(input_fc, output_dim)
 
     def _make_layer(
-        self,
-        block: Type[Union[BasicBlock, Bottleneck]],
-        blocks: int,
-        sizes: Dict,
-        stride: int = 1,
+            self,
+            block: Type[Union[BasicBlock, Bottleneck]],
+            blocks: int,
+            output_dim: int,
+            stride: int = 1,
     ) -> nn.Sequential:
         downsample = None
-        if "downsample" in sizes.keys():
+        layers = []
+        output_dim = output_dim * block.expansion
+        if stride != 1 or self.in_channels != output_dim:
             downsample = nn.Sequential(
-                conv1x1(sizes["downsample"][1], sizes["downsample"][0], stride=stride),
-                nn.BatchNorm2d(sizes["downsample"][0]),
+                nn.Conv2d(self.in_channels, output_dim, kernel_size=1, stride=stride),
+                nn.BatchNorm2d(output_dim)
             )
-        layers = [block(sizes=sizes[0], stride=stride, downsample=downsample)]
-        for i in range(1, blocks):
-            layers.append(block(sizes=sizes[i]))
+        first_block = block(input_dim=self.in_channels,
+                            output_dim=output_dim,
+                            downsample=downsample,
+                            stride=stride)
+        layers.append(first_block)
+        self.in_channels = output_dim
+        for i in range(blocks - 1):
+            layers.append(block(input_dim=self.in_channels, output_dim=output_dim))
         return nn.Sequential(*layers)
 
-    def _forward_impl(self, x: Tensor) -> Tensor:
+    def _initial_conv_and_pool(self, x: Tensor):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
+        return x
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-
+    def _final_pool_and_predict(self, x: Tensor):
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.fc(x)
         return x
 
     def forward(self, x: Tensor) -> Tensor:
-        return self._forward_impl(x)
+        # stage 1. Apply simple conv to initial signal, then after batchnorm and activation apply maxpooling to get
+        # embedding with lower_dim
+        x = self._initial_conv_and_pool(x)
+        # stage 2. Sequentially apply resnet_layers (conv+skip connection) to embedding
+        for idx, resnet_layer in enumerate(self.resnet_layers):
+            x = resnet_layer(x)
+        # stage 3. Sequentially apply resnet_layers (conv+skip connection) to embedding
+        x = self._final_pool_and_predict(x)
+
+        return x
 
 
 class DoubleConv(nn.Module):

@@ -47,7 +47,7 @@ class SmoothQuant:
     def __init__(
         self,
         config: SmoothQuantConfig,
-        calib_dataloader: Callable,
+        val_dataloader: Callable,
         calib_iteration: int = 1,
     ):
         """Convert the model by smooth quant.
@@ -61,7 +61,7 @@ class SmoothQuant:
             model: A smoothed Tensorflow model
         """
         self.config = config
-        self.calib_dataloader = calib_dataloader
+        self.val_dataloader = val_dataloader
         self.calib_iteration = calib_iteration
 
         self.new_api = tf.version.VERSION in SPR_BASE_VERSIONS
@@ -143,7 +143,7 @@ class SmoothQuant:
 
         calibration = SmoothQuantCalibration(
             model,
-            self.calib_dataloader,
+            self.val_dataloader,
             self.calib_iteration,
             self.op_types,
             self.percentile,
@@ -157,7 +157,7 @@ class SmoothQuant:
 
         # Calculate the smooth quant scaler and insert Mul op into the graph
         scaler = SmoothQuantScaler(
-            model, self.calib_dataloader, self.alpha, self.scales_per_op
+            model, self.val_dataloader, self.alpha, self.scales_per_op
         )
         model, mul_list = scaler.transform(
             max_vals_per_channel,
@@ -183,7 +183,7 @@ class SmoothQuant:
         # Run calibration to get max values per channel
         calibration = SmoothQuantCalibrationLLM(
             model._model,
-            self.calib_dataloader,
+            self.val_dataloader,
             self.calib_iteration,
             self.op_types,
             self.percentile,

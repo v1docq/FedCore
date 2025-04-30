@@ -1,4 +1,5 @@
 from hyperopt import hp
+import numpy as np
 
 from fedcore.repository.constanst_repository import (
     PRUNING_NORMALIZE,
@@ -12,12 +13,15 @@ fedcore_search_space = {
             "hyperopt-dist": hp.choice,
             "sampling-scope": [
                 [
-                    "MagnitudeImportance",
-                    "BNScaleImportance",
-                    "GroupNormImportance",
-                    "GroupTaylorImportance",
-                    "TaylorImportance",
-                    "HessianImportance",
+                    "taylor",
+                    "hessian",
+                    "bn_scale",
+                    "lamp",
+                    "random",
+                    "group_magnitude",
+                    "group_taylor",
+                    "group_hessian",
+                    "magnitude"
                 ]
             ],
             "type": "categorical",
@@ -38,15 +42,15 @@ fedcore_search_space = {
             "type": "categorical",
         },
         "pruning_ratio": {
-            "hyperopt-dist": hp.uniform,
-            "sampling-scope": [0.1, 1.0],
-            "type": "continuous",
-        },
-        "pruning_iterations": {
             "hyperopt-dist": hp.choice,
-            "sampling-scope": [[x for x in range(1, 5, 1)]],
-            "type": "categorical",
-        },
+            "sampling-scope": [np.linspace(0.15, 0.95, 15)],
+            "type": "continuous",
+        }
+        # "pruning_iterations": {
+        #     "hyperopt-dist": hp.choice,
+        #     "sampling-scope": [[x for x in range(1, 5, 1)]],
+        #     "type": "categorical",
+        # },
     }
 }
 

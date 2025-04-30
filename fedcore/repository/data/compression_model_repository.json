@@ -1,9 +1,9 @@
 {
   "metadata": {
     "fedcore_training": {
-      "input_type": "[DataTypesEnum.ts]",
+      "input_type": "[DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.table]",
-      "tasks": "[TaskTypesEnum.classification]", 
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
       "forbidden_node_types": "[]",
       "strategies": [
         "fedcore.interfaces.fedcore_strategy",
@@ -15,8 +15,8 @@
       "description": "Training node for composite pipelines"
     },
     "fedcore_pruning": {
-      "tasks": "[TaskTypesEnum.classification]",
-      "input_type": "[DataTypesEnum.ts]",
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
+      "input_type": "[DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.table]",
       "accepted_node_types": [
         "any"
@@ -32,8 +32,8 @@
       "description": "Implementations of FedCore Pruning strategy"
     },
         "fedcore_low_rank": {
-      "tasks": "[TaskTypesEnum.classification]",
-      "input_type": "[DataTypesEnum.ts]",
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
+      "input_type": "[DataTypesEnum.ts,DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.table]",
       "accepted_node_types": [
         "any"
@@ -48,8 +48,8 @@
       ],
       "description": "Implementations of FedCore Low Rank strategy"
     },
-    "fedcore_quantisation": {
-      "tasks": "[TaskTypesEnum.classification]",
+    "fedcore_quantization": {
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
       "input_type": "[DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.table]",
       "accepted_node_types": [
@@ -58,15 +58,15 @@
       "forbidden_node_types": "[]",
       "strategies": [
         "fedcore.interfaces.fedcore_strategy",
-        "FedcoreQuantisationStrategy"
+        "FedcoreQuantizationStrategy"
       ],
       "tags": [
         "non-default"
       ],
-      "description": "Implementations of FedCore Quantisation strategy"
+      "description": "Implementations of FedCore Quantization strategy"
     },
     "fedcore_detection": {
-      "tasks": "[TaskTypesEnum.classification]",
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
       "input_type": "[DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.table]",
       "accepted_node_types": [
@@ -91,8 +91,8 @@
         "non-default"
       ]
     },
-    "quantisation_model": {
-      "meta": "fedcore_quantisation",
+    "quantization_model": {
+      "meta": "fedcore_quantization",
       "presets": [],
       "tags": [
         "non-default"

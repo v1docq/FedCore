@@ -15,7 +15,7 @@ from fedcore.api.main import FedCore
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.utils.paths import data_path
 from fedcore.data.data import CompressionInputData
-from fedcore.metrics.multi_objective import MultiobjectiveCompression
+from fedcore.metrics.multiobjective.multi_objective import MultiobjectiveCompression
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.tools.ruler import PerformanceEvaluator
 
@@ -126,7 +126,7 @@ class CompressionBenchmark:
         model, performance = self.evaluate_loop(model, train_dataloader, val_dataloader)
         input_data = CompressionInputData(
             num_classes=10,
-            calib_dataloader=val_dataloader,
+            val_dataloader=val_dataloader,
             train_dataloader=train_dataloader,
             task=Task(TaskTypesEnum.classification),
             target=model,
