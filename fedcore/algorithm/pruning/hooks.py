@@ -169,17 +169,29 @@ class PrunerInDepth(ZeroShotPruner):
         super().__init__(params, model)
         self.optimizer_for_grad = params.get('optimizer_for_grad_acc', None)
         self.criterion_for_grad = params.get('criterion_for_grad', None)
-        self.pruning_ratio = 50
+        self.pruning_ratio = 0.5
         if self.optimizer_for_grad is None:
             self.optimizer_for_grad = optim.Adam(self.model.parameters(),
                                                  lr=0.0001)
         self.activation_replace_hooks = {}
-        for name, module in model.named_modules():
-            if any([type(module) == torch.nn.ReLU, type(module) == torch.nn.GELU]):
-                self.activation_replace_hooks.update({name: TorchModuleHook(module)})
+        self.conv_replace_hooks = {}
+        self.activation_to_replace = [torch.nn.ReLU, torch.nn.GELU]
+        self.conv_layer_to_replace = [torch.nn.Conv1d, torch.nn.Conv2d, torch.nn.Conv3d]
 
     def trigger(self, callback_type, kw) -> bool:
         return callback_type.__contains__('Depth')
+
+    def _collect_activation_val(self):
+        model_blocks = list(self.model.named_modules())
+        all_conv_layers = []
+        for name, module in model_blocks:
+            for conv in self.conv_layer_to_replace:
+                if type(module) == conv:
+                    all_conv_layers.append(name)
+            for act in self.activation_to_replace:
+                if type(module) == act:
+                    self.activation_replace_hooks.update({name: TorchModuleHook(module)})
+                    self.conv_replace_hooks.update({name: all_conv_layers[-1]})
 
     def _connect_activation_and_layers(self, layers_entropy):
         layers_to_prune = []
@@ -187,10 +199,12 @@ class PrunerInDepth(ZeroShotPruner):
             if key == 'relu':
                 layers_to_prune.append('conv1')
                 layers_entropy['conv1'] = layers_entropy.pop("relu")
+                del self.conv_replace_hooks[key]
             else:
-                layer_num = key.split('.relu')[0].split('layer')[1][0]
-                name = key.replace('relu', 'conv')
-                name = name + layer_num
+                # layer_num = key.split('.relu')[0].split('layer')[1]
+                # name = key.replace('relu', 'conv')
+                # name = name + layer_num
+                name = self.conv_replace_hooks[key]
                 layers_to_prune.append(name)
                 layers_entropy[name] = layers_entropy.pop(key)
         return layers_entropy, layers_to_prune
@@ -214,50 +228,44 @@ class PrunerInDepth(ZeroShotPruner):
             total_layers_entro_magni += layer_entro_magni[key].item()
         return layer_entro_magni, total_layers_entro_magni
 
-    def _iter_pruning(self, layers_to_prune, total_layers_entro_magni):
-        layer_entro_magni = {}
-        entropy_layer_head_expo = {}
-        wait_distri_paras = copy.deepcopy(layers_to_prune)
-        fix_prun_amount = {}
+    def _iter_pruning(self, layers_to_prune, layer_entro_magni, total_layers_entro_magni):
+        filtred_layers_to_prune = copy.deepcopy(layers_to_prune)
         left_amount = {}
         total_layers_weight_params = 0
+        entropy_layer_head_expo = {}
         for name, module in self.model.named_modules():
             if name in layers_to_prune:
                 total_layers_weight_params += torch.numel(module.weight[module.weight != 0])
         total_layers_weight_paras_to_prune = self.pruning_ratio * total_layers_weight_params
-
         while True:
             amout_changed = False
             total_entropy_layer_head_expo = 0
-            entropy_magni_layer_head = {}
-            for name, module in self.model.named_modules():
-                if name in wait_distri_paras:
-                    entropy_magni_layer_head[name] = total_layers_entro_magni / (layer_entro_magni[name])
-
+            entropy_magni_layer_head = {name: total_layers_entro_magni / (layer_entro_magni[name])
+                                        for name, module in self.model.named_modules() if name in filtred_layers_to_prune}
             max_value_entropy_magni_layer_head = max(entropy_magni_layer_head.values())
             for name, module in self.model.named_modules():
-                if name in wait_distri_paras:
-                    entropy_layer_head_expo[name] = torch.exp(
-                        entropy_magni_layer_head[name] - max_value_entropy_magni_layer_head).item()
+                if name in filtred_layers_to_prune:
+                    entropy_layer_head_expo.update({name: torch.exp(entropy_magni_layer_head[name] -
+                                                               max_value_entropy_magni_layer_head).item()})
+
                     total_entropy_layer_head_expo += entropy_layer_head_expo[name]
+            fix_prun_amount = {name: total_layers_weight_paras_to_prune * (entropy_layer_head_expo[name]
+                                                                           / total_entropy_layer_head_expo)
+                               for name, module in self.model.named_modules() if name in filtred_layers_to_prune}
 
             for name, module in self.model.named_modules():
-                if name in wait_distri_paras:
-                    fix_prun_amount[name] = (total_layers_weight_paras_to_prune * (
-                            entropy_layer_head_expo[name] / total_entropy_layer_head_expo))
-
-            for name, module in self.model.named_modules():
-                if name in wait_distri_paras:
+                if name in filtred_layers_to_prune:
                     left_amount[name] = torch.numel(module.weight[module.weight != 0])
                     if left_amount[name] < fix_prun_amount[name]:
                         fix_prun_amount[name] = left_amount[name]
                         total_layers_weight_paras_to_prune -= left_amount[name]
                         total_layers_entro_magni -= layer_entro_magni[name]
-                        wait_distri_paras.remove(name)
+                        filtred_layers_to_prune.remove(name)
                         amout_changed = True
             if not amout_changed:
                 break
-            return fix_prun_amount
+            return filtred_layers_to_prune, fix_prun_amount
+
     def action(self, callback, kws):
         # Step 1. Initialise data for predict loop and entropy monitoring
         pruner_metadata = kws['pruner_objects']
@@ -272,11 +280,19 @@ class PrunerInDepth(ZeroShotPruner):
     def iterative_prune(self, layers_entropy, layers_to_prune):
 
         layer_entro_magni, total_layers_entro_magni = self._get_layer_magnitude(layers_to_prune, layers_entropy)
-        fix_prun_amount = self._iter_pruning(layers_to_prune, total_layers_entro_magni)
-        for name, module in self.model.named_modules():
-            if name in layers_to_prune:
+        filtred_layers_to_prune, fix_prun_amount = self._iter_pruning(layers_to_prune,
+                                                                      layer_entro_magni, total_layers_entro_magni)
+        #implement depth prune using Identity blocks to replace conv and relu with low entropy?
+        temp_model = copy.deepcopy(self.model)
+        for name, module in temp_model.named_modules():
+            if name in filtred_layers_to_prune:
                 prune.l1_unstructured(module, name='weight', amount=int(fix_prun_amount[name]))
 
+        #finetune?
+        for name, module in temp_model.named_modules():
+            if name in filtred_layers_to_prune:
+                prune.remove(module, 'weight')
+        _ = 1
     def eval_action_entropy(self, train_loader):
         def eval_on_train(train_loader):
             total_loss = 0
@@ -317,6 +333,7 @@ class PrunerInDepth(ZeroShotPruner):
             return entropy
 
         self.model.eval()
+        self._collect_activation_val()
         train_loss = eval_on_train(train_loader)
         train_entropy = eval_entropy()
 

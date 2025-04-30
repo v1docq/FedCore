@@ -20,7 +20,7 @@ INITIAL_ASSUMPTION = {'path_to_model': 'pretrain_models/pretrain_model_checkpoin
                       'model_type': 'ResNet18'}
 INITIAL_MODEL = 'ResNet18'
 PRETRAIN_SCENARIO = 'from_checkpoint'
-SCRATCH = 'from_scratch'
+SCRATCH_SCENARIO = 'from_scratch'
 POP_SIZE = 1
 DATASET = 'CIFAR10'
 train_dataloader_params = {"batch_size": 64,
@@ -53,7 +53,7 @@ def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloade
 ### CREATE SCENARIO FOR FEDCORE AGENT (TRAIN AND OPTIMISE MODEL FROM SCRATCH ###
 ### or optimise pretrained model with PEFT strategies                        ###
 ################################################################################
-initial_assumption, learning_strategy = get_scenario_for_api(scenario_type=PRETRAIN_SCENARIO,
+initial_assumption, learning_strategy = get_scenario_for_api(scenario_type=SCRATCH_SCENARIO, #PRETRAIN_SCENARIO
                                                              initial_assumption=INITIAL_ASSUMPTION)
 
 model_config = ModelArchitectureConfigTemplate(input_dim=None,
@@ -84,7 +84,7 @@ finetune_config = NeuralModelConfigTemplate(epochs=3,
                                             criterion=LOSS,
                                             )
 peft_config = PruningTemplate(
-    importance="activation_entropy", #"magnitude",
+    importance="magnitude", #"activation_entropy"
     pruning_ratio=0.8,
     finetune_params=finetune_config
 )
