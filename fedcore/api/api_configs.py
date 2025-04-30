@@ -302,3 +302,11 @@ class PruningTemplate(NeuralModelConfigTemplate):
     importance_normalize: str = 'max' # drop
     pruning_iterations: int = 1 # drop
     finetune_params: NeuralModelConfigTemplate = None
+    
+@dataclass
+class QuantTemplate(NeuralModelConfigTemplate):
+    """Example of specific node template"""
+    quant_type: str = "dynamic" # dynamic, static, qat
+    allow_emb: bool = False
+    allow_conv: bool = True
+    qat_params: NeuralModelConfigTemplate = None

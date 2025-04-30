@@ -13,7 +13,9 @@ from torch.ao.quantization.quantize import (
 from torch.ao.quantization.qconfig import QConfigAny
 from torch.ao.quantization.stubs import QuantStub, DeQuantStub
 from torch.ao.quantization.utils import get_qconfig_dtypes
+from torch.nn.quantized import FloatFunctional
 import torch.nn as nn
+import torchvision.models.resnet as resnet
 
 from fedcore.models.network_impl.decomposed_layers import (
     IDecomposed, 
@@ -23,7 +25,7 @@ from fedcore.models.network_impl.decomposed_layers import (
 )
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.architecture.abstraction.delegator import IDelegator
-from fedcore.architecture.comptutaional.devices import extract_device
+from fedcore.architecture.comptutaional.devices import extract_device, default_device
 
 
 __all__ = [
@@ -81,7 +83,7 @@ def _recreate_embedding(module):
             module.scale_grad_by_freq,
             module.sparse,
             module.weight,
-            getattr(module.weight, 'device', torch.device('cpu')),
+            getattr(module.weight, 'device', default_device()),
             getattr(module.weight, 'dtype', torch.float32)
         )
         new.load_state_dict(module.state_dict())
@@ -156,12 +158,34 @@ def _recreate_decomposed_conv2d(C: DecomposedConv2d):
     new._is_recreated = True
     return new
 
+class ResidualAddWrapper(nn.Module):
+    def __init__(self, module):
+        super().__init__()
+        self.module = module
+        self.skip_add = FloatFunctional()
+
+        self.qconfig = getattr(module, 'qconfig', None)
+
+    def forward(self, x):
+        identity = x
+        out = self.module.conv1(x)
+        out = self.module.bn1(out)
+        out = self.module.relu(out)
+        out = self.module.conv2(out)
+        out = self.module.bn2(out)
+
+        if self.module.downsample is not None:
+            identity = self.module.downsample(x)
+
+        out = self.skip_add.add_relu(out, identity)
+        return out
 
 class ParentalReassembler(Accessor):    
-    supported_layers = {torch.nn.Embedding: _recreate_embedding,
-                        # torch.nn.Linear: _recreate_linear
-                        }
-    
+    supported_layers = {
+        torch.nn.Embedding: _recreate_embedding,
+        # torch.nn.Linear: _recreate_linear
+    }
+
     supported_decomposed_layers = {
         DecomposedLinear: _recreate_decomposed_linear,
         DecomposedEmbedding: _recreate_decomposed_embedding,
@@ -191,8 +215,8 @@ class ParentalReassembler(Accessor):
         return new_module
     
     @classmethod
-    def reassemble(cls, model: nn.Module, additional_mapping: dict=None):
-        """additional mapping for cases such as 'nn.ReLU6 -> nn.ReLU in format """
+    def reassemble(cls, model: nn.Module, additional_mapping: dict = None):
+        """additional mapping for cases such as 'nn.ReLU6 -> nn.ReLU' in format"""
         device = extract_device(model)
         if additional_mapping:
             for name, module in model.named_modules():
@@ -202,10 +226,14 @@ class ParentalReassembler(Accessor):
                 cls.set_module(model, name, additional_mapping[t]())
         for name, module in model.named_modules():
             new_module = cls.convert(module)
-            if new_module is None:
-                continue
-            cls.set_module(model, name, new_module.to(device))
-        assert all(device == p.device for p in model.parameters())
+            if new_module:
+                cls.set_module(model, name, new_module.to(device))
+            elif isinstance(module, (resnet.BasicBlock, resnet.Bottleneck)):
+                wrapped_module = ResidualAddWrapper(module)
+                cls.set_module(model, name, wrapped_module.to(device))
+                print(f"[ParentalReassembler] Residual block '{name}' wrapped with ResidualAddWrapper.")
+
+        assert all(device == p.device for p in model.parameters()), "[ParentalReassembler] Device mismatch!"
         return model
 
 
@@ -239,13 +267,13 @@ class QDQWrapper(Accessor):
     @classmethod
     def __qconfig_requires_qdq(cls, module):
         qconfig = getattr(module, 'qconfig', None)
-        need_entry = False
         try:
             act_type = get_qconfig_dtypes(qconfig)[0]
         except:
             act_type = None
-        return (need_entry or act_type is torch.float32)
+        return act_type is torch.float32
     
+    @staticmethod
     def is_leaf_quantizable(module: nn.Module, 
                             example_inputs: tuple, 
                             mode: Literal['qat', 'static', 'dynamic']):
@@ -253,7 +281,7 @@ class QDQWrapper(Accessor):
             return False
         module = deepcopy(module)
         module.train(mode == 'qat')
-        module.to('cpu')
+        module.to(default_device())
 
         def run_fn(model: nn.Module, *example_inputs: tuple):
             model(*example_inputs)
@@ -261,13 +289,11 @@ class QDQWrapper(Accessor):
         p_f = {
             'qat': partial(quantize_qat, run_fn=run_fn, run_args=example_inputs),
             'static': partial(quantize, run_fn=run_fn, run_args=example_inputs),
-            'dynamic': partial(quantize_dynamic, ),
+            'dynamic': quantize_dynamic,
         }[mode]
 
-        if (example_inputs is not None 
-            and isinstance(example_inputs[0], torch.Tensor) 
-            and example_inputs[0].dtype not in {torch.int16, torch.int32, torch.int64, torch.int8}
-        ):
+        if (example_inputs and isinstance(example_inputs[0], torch.Tensor) and 
+                example_inputs[0].dtype not in {torch.int16, torch.int32, torch.int64, torch.int8}):
             m = QDQWrapping(module, 'pre')
         else:
             m = module
@@ -277,7 +303,7 @@ class QDQWrapper(Accessor):
             qm = p_f(m)
             qm(*example_inputs)
             return True
-        except Exception as x:
+        except Exception:
             module.qconfig = None
             return False 
 
@@ -299,9 +325,11 @@ class QDQWrapper(Accessor):
     def add_quant_entry_exit(cls, m: nn.Module, *example_input, allow: set=None, mode='static'):
         allow = allow or set()
         m.eval()
+        device = next(m.parameters()).device
         example_input = tuple(
-            inp.to(m.device) if hasattr(inp, 'to') else inp for inp in example_input
+            inp.to(device) if hasattr(inp, 'to') else inp for inp in example_input
         )
+
         with torch.no_grad():
             modules_order = cls.get_layers_order(m, *example_input)
             names_order = cls.get_names_order(m, *example_input)
@@ -314,7 +342,7 @@ class QDQWrapper(Accessor):
                     (type(module) in allow
                     or
                     (has_no_children_ignoring_parametrizations(module) and not is_leaf
-                    or  is_leaf and cls.is_leaf_quantizable(module, name_input[name], mode)
+                    or is_leaf and cls.is_leaf_quantizable(module, name_input[name], mode)
                     ))
                     and bool(getattr(module, 'qconfig', None))
                 )
@@ -322,7 +350,7 @@ class QDQWrapper(Accessor):
             is_parametrizable = [
                 _is_parametrizable(name) for name in names_order
             ]
-          
+
             if len(is_parametrizable) > 1:
                 for i in range(1, len(is_parametrizable)):
                     if (not is_parametrizable[i - 1] and is_parametrizable[i] 
@@ -348,8 +376,8 @@ class QDQWrapper(Accessor):
 
 
 class QDQWrapping(nn.Module, IDelegator):
-    __non_redirect =  {'base', 'quant', 'dequant', '_order', 'qconfig', 'forward', '__call__'}
-        
+    __non_redirect = {'base', 'quant', 'dequant', '_order', 'qconfig', 'forward', '__call__'}
+
     def __init__(self, base, mode='pre', qconfig=None):
         super().__init__()
         self.mode = mode
@@ -358,8 +386,8 @@ class QDQWrapping(nn.Module, IDelegator):
                        'post': ['dequant', 'base'],
                        'both': ['quant', 'base', 'dequant'],
                        'last': ['base', 'dequant']}[mode]
-        self.quant = QuantStub(getattr(base, 'qconfig', None)) if 'quant' in self._order else None
-        self.dequant = DeQuantStub(getattr(base, 'qconfig', None)) if 'dequant' in self._order else None
+        self.quant = QuantStub(qconfig or getattr(self.base, 'qconfig', None)) if 'quant' in self._order else None
+        self.dequant = DeQuantStub(qconfig or getattr(self.base, 'qconfig', None)) if 'dequant' in self._order else None
         if mode == 'post':
             assert qconfig, 'For post mode you need to specify the previous layer\'s qconfig'
         self.qconfig = qconfig or getattr(self.base, 'qconfig', None)
@@ -376,7 +404,6 @@ class QDQWrapping(nn.Module, IDelegator):
         return d[self.mode]
     
     def forward(self, x, *args, **kwargs):
-        h = None
         for layer in self._order:
             module = getattr(self, layer)
             if layer == 'base':

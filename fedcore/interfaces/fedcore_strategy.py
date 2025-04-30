@@ -11,7 +11,7 @@ from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionOutputData, CompressionInputData
 from fedcore.repository.model_repository import (
     PRUNER_MODELS,
-    QUANTISATION_MODELS,
+    QUANTIZATION_MODELS,
     DISTILATION_MODELS,
     LOW_RANK_MODELS,
     DETECTION_MODELS,
@@ -95,11 +95,11 @@ class FedcorePruningStrategy(FedCoreStrategy):
     _operations_by_types = PRUNER_MODELS
 
 
-class FedcoreQuantisationStrategy(FedCoreStrategy):
-    _operations_by_types = QUANTISATION_MODELS
+class FedcoreQuantizationStrategy(FedCoreStrategy):
+    _operations_by_types = QUANTIZATION_MODELS
 
 
-class FedcoreDistilationStrategy(FedcoreQuantisationStrategy):
+class FedcoreDistilationStrategy(FedcoreQuantizationStrategy):
     _operations_by_types = DISTILATION_MODELS
 
 
