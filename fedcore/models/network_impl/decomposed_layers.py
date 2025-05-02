@@ -4,7 +4,7 @@ from typing import *
 import torch
 import torch.nn as nn
 from torch.nn import Conv2d, Parameter
-from torch.nn.functional import conv2d, conv_transpose2d, linear, embedding
+from torch.nn.functional import conv1d, conv2d, conv_transpose2d, linear, embedding
 
 from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
 from fedcore.architecture.utils.misc import count_params
@@ -576,8 +576,99 @@ class DecomposedConvTranspose2d(nn.ConvTranspose2d, DecomposedConv2d):
             self._decompose_transform(self.Vh, 'Vh4d')
         )
 
+class DecomposedConv1d(nn.Conv1d, IDecomposed):
+    def __init__(
+            self,
+            base_module: nn.Conv1d,
+            decomposing_mode = True,
+            decomposer: Optional[str] = 'svd',
+            compose_mode: str = None,
+            device=None,
+            dtype=None,
+    ) -> None:
+        super().__init__(
+            base_module.in_channels,
+            base_module.out_channels,
+            base_module.kernel_size,
+            base_module.stride,
+            base_module.padding,
+            base_module.dilation,
+            base_module.groups,
+            (base_module.bias is not None),
+            base_module.padding_mode,
+            device,
+            dtype,
+        )
+        self.load_state_dict(base_module.state_dict())
+        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode)
+
+    def _forward1(self, x):
+        return conv1d(
+            x, self.U, self.bias, self.stride, self.padding, self.dilation, self.groups
+        )
+    
+    def _forward2(self, x):
+        x = conv1d(
+            x, self.Vh, None, self.stride, self.padding, self.dilation, self.groups
+        )
+        x = conv1d(
+            x, self.U, self.bias
+        )
+        return x
+    
+    def _forward3(self, x):
+        x = conv1d(
+            x, (self.Vh), None, self.stride, self.padding, self.dilation, self.groups
+        )
+        x = conv1d(
+            x, (self.U * self.S), self.bias
+        )
+        return x
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = self._current_forward(input)
+        return x
+    
+    def decompose(self) -> None:
+        """Decomposes the weight matrix in singular value decomposition.
+        Replaces the weights with U, S, Vh matrices such that weights = U * S * Vh.
+        Args:
+            decomposing_mode: ``'channel'`` or ``'spatial'`` weights reshaping method.
+        Raises:
+            ValueError: If ``decomposing_mode`` not in valid values.
+        """
+        W = self.weight.reshape(self.out_channels, -1)
+        super().decompose(W)
+
+    def _one_layer_compose(self):
+        W = (self.U * self.S) @ self.Vh
+        self.register_parameter('U', Parameter(W.reshape((self.out_channels, self.in_channels, self.kernel_size[0]))))
+        self._eliminate_extra_params(['S', 'Vh'])
+
+    def _two_layers_compose(self):
+        SVh = torch.diag(self.S) @ self.Vh
+        self.register_parameter('Vh', Parameter(SVh.reshape((-1, self.in_channels, self.kernel_size[0]))))
+        self.register_parameter('U', 
+            Parameter(self.U.reshape((self.out_channels, -1, 1))))
+        self._eliminate_extra_params(['S'])
+
+    def _three_layers_compose(self):
+        self.set_U_S_Vh(
+            self.U.reshape((self.out_channels, -1, 1)),
+            self.S[..., None],
+            self.Vh.reshape((-1, self.in_channels, self.kernel_size[0]))
+        )
+
+    def _anti_three_layers_compose(self):
+        self.set_U_S_Vh(
+            self.U.reshape((self.out_channels, -1)),
+            self.S[..., 0],
+            self.Vh.reshape((-1, self.in_channels * self.kernel_size[0]))
+        )
+
 DecomposableLayers = {
     torch.nn.Linear: DecomposedLinear,
     torch.nn.Embedding: DecomposedEmbedding,
+    torch.nn.Conv1d: DecomposedConv1d,
     torch.nn.Conv2d: DecomposedConv2d
 }
