@@ -35,10 +35,12 @@ class LowRankModel(BaseCompressionModel):
 
     def _init_model(self, input_data):
         model = super()._init_model(input_data, self._additional_hooks)
+        self.model_before = model
+        self.model_after = deepcopy(model)
         decompose_module(
-            model, self.decomposing_mode, self.decomposer, self.compose_mode
+            self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
         )
-        return model
+        return self.model_after
 
     def fit(self, input_data) -> None:
         """Run model training with optimization.
@@ -46,15 +48,14 @@ class LowRankModel(BaseCompressionModel):
         Args:
             input_data: An instance of the model class
         """
-        model_before = self._init_model(input_data)
-        example_batch = self._get_example_input(input_data).to(extract_device(model_before))
-        base_params = self._estimate_params(model_before, example_batch)
-        self.trainer.model = deepcopy(model_before)
+        model_after = self._init_model(input_data)
+        example_batch = self._get_example_input(input_data).to(extract_device(self.model_before))
+        base_params = self._estimate_params(self.model_before, example_batch)
+        self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
         self.compress(self.model_after)
         # check params
-        self._diagnose(self.model_after, example_batch, *base_params,
-            "After low rank truncation".center(80, '='))
+        self.estimate_params(example_batch, self.model_before, self.model_after)
         self.model_after._structure_changed__ = True
         return self.model_after
 
