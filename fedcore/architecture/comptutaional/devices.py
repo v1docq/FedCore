@@ -36,4 +36,7 @@ def default_device(device_type: str = None):
 
 
 def extract_device(nn: torch.nn.Module):
-    return next(iter(nn.parameters())).device
+    try:
+        return next(iter(nn.parameters())).device
+    except StopIteration:
+        return default_device()

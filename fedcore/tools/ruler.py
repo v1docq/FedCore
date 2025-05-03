@@ -121,6 +121,8 @@ class PerformanceEvaluator:
     #     return detailed_timing
 
     def eval_detailed_latency(self, num_runs=100):
+        mean_latency = np.inf
+        std_latency = np.inf
         t_cpu_2_gpu, t_device, t_gpu_2_cpu, t_total = [], [], [], []
         for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
             sample = batch[0] if isinstance(batch, (tuple, list)) else batch

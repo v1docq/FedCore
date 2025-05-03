@@ -362,7 +362,6 @@ class DecomposedLinear(nn.Linear, IDecomposed):
             dtype=dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        assert self.bias is not None
         IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode)
 
     def decompose(self) -> None:
@@ -639,6 +638,7 @@ class DecomposedConv1d(nn.Conv1d, IDecomposed):
         """
         W = self.weight.reshape(self.out_channels, -1)
         super().decompose(W)
+        self._three_layers_compose()
 
     def _one_layer_compose(self):
         W = (self.U * self.S) @ self.Vh

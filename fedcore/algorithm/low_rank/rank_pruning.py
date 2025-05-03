@@ -30,9 +30,14 @@ def rank_threshold_pruning(
         Assertion Error: If ``threshold`` is not in (0, 1].
     """
     assert 0 < threshold <= 1, "Threshold must be in the range (0, 1]"
-    U, S, Vh = decomposed_module.get_U_S_Vh()
-    if S is None:
+
+    if hasattr(decomposed_module, 'S') and decomposed_module.S is None:
         return
+    if hasattr(decomposed_module, '_anti_three_layers_compose'):
+        decomposed_module._anti_three_layers_compose()
+
+    U, S, Vh = decomposed_module.get_U_S_Vh()
+    
 
     threshold = decomposed_module._get_threshold() or threshold  # for cases of per-layer adaptive thresholds
 
@@ -49,7 +54,7 @@ def rank_threshold_pruning(
     )
     print(
         "After rank pruning left only {} % of {} layer params".format(
-            100 * (count_params(decomposed_module) / initial_size), module_name
+            round(100 * (count_params(decomposed_module) / initial_size)), module_name
         )
     )
 
@@ -60,10 +65,8 @@ def _apply_S_strategy(S, strategy, threshold, round_to_times=1):
     # n_cpu = cpu_count()
     # channels_per_device = max(floor(n_components / n_cpu), 1)
     # n_components = channels_per_device * n_cpu
-    print('S strategy!', n_components)
     n_components = ceil(n_components / round_to_times) * round_to_times  # for architecture
     n_components = min(n_components, len(indices))
-    print('S strategy!', n_components)
     return indices[:n_components]
 
 
