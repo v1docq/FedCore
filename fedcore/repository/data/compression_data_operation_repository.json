@@ -122,6 +122,10 @@
     "training_model": {
       "meta": "fedcore_training",
       "presets": [],
+      "tags": [],
+    "pairwise_model": {
+      "meta": "fedcore_training",
+      "presets": [],
       "tags": []
     }
   }

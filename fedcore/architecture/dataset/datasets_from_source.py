@@ -145,16 +145,17 @@ class CustomDatasetForImages(Dataset):
         return self.labels_mask.shape[0]
 
 
-class DatasetFromNumpy(Dataset):
-    """Class for prediction on numpy arrays.
-
-    Args:
-        images: Numpy matrix of images.
-
+class DatasetFromExternalModel(Dataset):
+    """
     """
 
-    def __init__(self, data_array: np.ndarray, transform) -> None:
-        self.images = torch.from_numpy(data_array).float()
+    def __init__(self, data_array: Union[np.ndarray,list], transform) -> None:
+        if isinstance(data_array,np.ndarray):
+            self.files = torch.from_numpy(data_array).float()
+            self.dataset_size = self.files.shape[0]
+        else:
+            self.files = data_array
+            self.dataset_size = len(self.files)
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, int]:
         """Returns a sample from a dataset.
@@ -167,11 +168,11 @@ class DatasetFromNumpy(Dataset):
                 and id is integer.
 
         """
-        return self.images[idx], idx
+        return self.files[idx], idx
 
     def __len__(self) -> int:
         """Return length of dataset"""
-        return self.images.size()[0]
+        return self.dataset_size
 
 
 class DatasetFromFolder(DatasetFolder):
@@ -276,13 +277,13 @@ class DatasetFromFolder(DatasetFolder):
 
 class AbstractDataset(Dataset):
 
-    def __init__(self, data_source: Union[str, np.array],
+    def __init__(self, data_source: Union[str, np.array, list],
                  annotation_source: str = None,
                  transformation_func: Callable = TorchVisionTransforms.STANDART_IMG_TRANSFORM.value):
         if isinstance(data_source, str):
             self.dataset_impl = DatasetFromFolder(data_source, transformation_func)
-        elif isinstance(data_source, np.array):
-            self.dataset_impl = DatasetFromNumpy(data_source, transformation_func)
+        else:
+            self.dataset_impl = DatasetFromExternalModel(data_source, transformation_func)
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, str]:
         return self.dataset_impl.__getitem__(idx)
