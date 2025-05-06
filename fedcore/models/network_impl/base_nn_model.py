@@ -161,10 +161,11 @@ class BaseNeuralModel(torch.nn.Module):
                 print("Forcely substituted criterion[loss] to", self.criterion)
 
     def __substitute_device_quant(self):
-        if not getattr(self.model, '_is_quantized', False):
-            self.device = default_device('cpu')
-            self.model.to(self.device)
-            print('Quantized model inference supports CPU only')
+        if hasattr(self.model, '_is_quantized'):
+            if not getattr(self.model, '_is_quantized', False):
+                self.device = default_device('cpu')
+                self.model.to(self.device)
+                print('Quantized model inference supports CPU only')
 
     def _compute_loss(self, criterion, model_output, target, stage='train', epoch=None):
         if hasattr(model_output, 'loss'):
@@ -214,8 +215,7 @@ class BaseNeuralModel(torch.nn.Module):
             if self.task_type.name == 'regression' or self.task_type.name.__contains__('forecasting'):
                 targets = targets.to(BASE_REGRESSION_DTYPE)
                 output = output.to(BASE_REGRESSION_DTYPE)
-            loss = self._compute_loss(loss_fn, output,
-                                      targets.to(self.device), epoch=epoch)
+            loss = self._compute_loss(loss_fn, output, targets, epoch=epoch)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -263,7 +263,8 @@ class BaseNeuralModel(torch.nn.Module):
         model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
-        dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
+        dataloader = x_test.val_dataloader if isinstance(x_test,CompressionInputData) else x_test.features.val_dataloader
+        dataloader = DataLoaderHandler.check_convert(dataloader,
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
         if self.task_type is None:

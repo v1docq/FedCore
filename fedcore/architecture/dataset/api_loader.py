@@ -34,7 +34,7 @@ class ApiLoader:
 
     def _update_loader_params(self):
         self.loader_params = {**self.default_loader_params, **self.loader_params}
-        unsupported_keys = ['split_ratio', 'data_type', 'is_train']
+        unsupported_keys = ['split_ratio', 'data_type', 'is_train', 'subset']
         for key in unsupported_keys:
             if key in self.loader_params.keys():
                 del self.loader_params[key]
@@ -79,5 +79,9 @@ class ApiLoader:
                                           train=self.loader_params['is_train'],
                                           download=True,
                                           transform=self.transform)
+        if 'subset' in self.loader_params.keys():
+            subset_part = self.loader_params['subset']
+            torch_dataset.data = torch_dataset.data[:subset_part,]
+            torch_dataset.targets = torch_dataset.targets[:subset_part]
         fedcore_data = self._convert_to_fedcore(torch_dataset)
         return fedcore_data

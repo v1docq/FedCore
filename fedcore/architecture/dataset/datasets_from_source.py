@@ -149,12 +149,16 @@ class DatasetFromExternalModel(Dataset):
     """
     """
 
-    def __init__(self, data_array: Union[np.ndarray,list], transform) -> None:
-        if isinstance(data_array,np.ndarray):
-            self.files = torch.from_numpy(data_array).float()
-            self.dataset_size = self.files.shape[0]
+    def __init__(self, data_array: Union[tuple, list], transform) -> None:
+        self.is_nested_container = False
+        if isinstance(data_array, tuple):
+            self.features = data_array[0]
+            self.target = data_array[1]
+            self.dataset_size = self.features.shape[0]
+            self.is_nested_container = True
         else:
             self.files = data_array
+            self.is_nested_container = True
             self.dataset_size = len(self.files)
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, int]:
@@ -168,7 +172,11 @@ class DatasetFromExternalModel(Dataset):
                 and id is integer.
 
         """
-        return self.files[idx], idx
+        if self.is_nested_container:
+            sample, target = self.features[idx], self.target[idx]
+        else:
+            sample, target = self.files[idx], idx
+        return sample, target
 
     def __len__(self) -> int:
         """Return length of dataset"""
@@ -290,7 +298,7 @@ class AbstractDataset(Dataset):
 
     def __len__(self) -> int:
         """Return length of dataset"""
-        return len(self.dataset_impl.files)
+        return len(self.dataset_impl)
 
     @property
     def classes(self):

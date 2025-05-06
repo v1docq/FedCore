@@ -46,7 +46,7 @@ class DataCheck:
         self.fedot_dummy_idx = np.arange(1)
         self.fedot_dummy_datatype = DataTypesEnum.image
 
-    def _init_model_from_backbone(self, input_data):
+    def init_model_from_backbone(self, input_data: Union[CompressionInputData, InputData]):
         model_is_pretrain_torch_backbone = isinstance(self.model, str)
         model_is_pretrain_backbone_with_weights = isinstance(self.model, dict)
         model_is_custom_callable_object = isinstance(self.model, Callable)
@@ -68,7 +68,7 @@ class DataCheck:
 
         return torch_model
 
-    def _init_input_data(self, compression_dataset: CompressionInputData = None, manually_done=False) -> None:
+    def init_input_data(self, compression_dataset: CompressionInputData = None, manually_done=False) -> None:
         """Initializes the `input_data` attribute based on its type.
 
         If a tuple (X, y) is provided, it converts it to a Fedot InputData object
@@ -79,11 +79,11 @@ class DataCheck:
             ValueError: If the input data format is invalid.
 
         """
-
-        model_params = self.learning_params.model_architecture
-        if any([model_params.input_dim is None, model_params.output_dim is None]):
-            model_params.input_dim = compression_dataset.input_dim
-            model_params.output_dim = compression_dataset.num_classes
+        if self.learning_params is not None:
+            model_params = self.learning_params.model_architecture
+            if any([model_params.input_dim is None, model_params.output_dim is None]):
+                model_params.input_dim = compression_dataset.input_dim
+                model_params.output_dim = compression_dataset.num_classes
 
         input_data = InputData(
             features=compression_dataset,  # CompressionInputData object
@@ -92,7 +92,7 @@ class DataCheck:
             data_type=self.fedot_dummy_datatype,  # dummy value
             supplementary_data=compression_dataset.supplementary_data,
         )
-        torch_model = self._init_model_from_backbone(input_data)
+        torch_model = self.init_model_from_backbone(input_data)
 
         input_data.target = torch_model  # model for compression
         input_data.features.target = torch_model  # model for compression
@@ -108,7 +108,7 @@ class DataCheck:
         """
         return input_data
 
-    def _check_optimised_model(self, model: Callable, input_data: InputData):
+    def _check_optimised_model(self, model: Callable, input_data: Union[CompressionInputData, InputData]):
         """Checks and preprocesses the features in the input data.
 
         - Replaces NaN and infinite values with 0.
@@ -120,7 +120,10 @@ class DataCheck:
         else:
             model_layers = list(model.modules())
             output_layer = model_layers[-1]
-            n_classes = input_data.features.num_classes
+            if hasattr(input_data.features, 'num_classes'):
+                n_classes = input_data.features.num_classes
+            else:
+                n_classes = input_data.num_classes
             if output_layer.weight.shape[0] != n_classes:
                 output_layer.weight = torch.nn.Parameter(output_layer.weight[:n_classes, :])
                 output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
@@ -152,7 +155,7 @@ class DataCheck:
             InputData: The preprocessed and initialized Fedot InputData object.
 
         """
-        self.input_data = Maybe.insert(self._init_input_data(input_data)). \
+        self.input_data = Maybe.insert(self.init_input_data(input_data)). \
             then(self._check_dataloader). \
             maybe(None, lambda data: data)
         return self.input_data
