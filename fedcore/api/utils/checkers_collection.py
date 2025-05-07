@@ -80,7 +80,10 @@ class DataCheck:
 
         """
         if self.learning_params is not None:
-            model_params = self.learning_params.model_architecture
+            if hasattr(self.learning_params,'model_architecture'):
+                model_params = self.learning_params.model_architecture
+            else:
+                model_params = self.learning_params
             if any([model_params.input_dim is None, model_params.output_dim is None]):
                 model_params.input_dim = compression_dataset.input_dim
                 model_params.output_dim = compression_dataset.num_classes

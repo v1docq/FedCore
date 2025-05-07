@@ -16,7 +16,7 @@ def predict_encoding(file_path: Union[Path, str], n_lines: int = 20) -> str:
     return chardet.detect(rawdata)['encoding']
 
 
-def load_from_tsfile_to_dataframe(
+def _load_from_tsfile_to_dataframe(
         full_file_path_and_name,
         return_separate_X_and_y=True,
         replace_missing_vals_with='NaN'):
@@ -696,7 +696,7 @@ def read_ts_files(data_path: str):
                                                              return_separate_X_and_y=True)
         except Exception as e:
             print(f'Performing custom ts files reading due to {e}')
-            features, target = load_from_tsfile_to_dataframe(path_to_dataset,
+            features, target = _load_from_tsfile_to_dataframe(path_to_dataset,
                                                              return_separate_X_and_y=True)
         return features, target
 

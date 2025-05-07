@@ -489,5 +489,32 @@ DEFAULT_TORCH_DATASET = {
     'VOCSegmentation': torchvision.datasets.VOCSegmentation,
     'VOCDetection': torchvision.datasets.VOCDetection
 }
-
+TS_MULTI_CLF_BENCHMARK = [
+        "ArticularyWordRecognition",
+        "AtrialFibrillation",
+        "BasicMotions",
+        "Cricket",
+        "DuckDuckGeese",
+        "EigenWorms",
+        "Epilepsy",
+        "EthanolConcentration",
+        "ERing",
+        "FaceDetection",
+        "FingerMovements",
+        "HandMovementDirection",
+        "Handwriting",
+        "Heartbeat",
+        "Libras",
+        "LSST",
+        "MotorImagery",
+        "NATOPS",
+        "PenDigits",
+        "PEMS-SF",
+        "PhonemeSpectra",
+        "RacketSports",
+        "SelfRegulationSCP1",
+        "SelfRegulationSCP2",
+        "StandWalkJump",
+        "UWaveGestureLibrary",
+    ]
 HISTORY_VIZ_PARAMS = HistoryVisualisationParams

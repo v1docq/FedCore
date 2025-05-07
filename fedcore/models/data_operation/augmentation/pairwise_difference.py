@@ -27,6 +27,7 @@ class PairwiseDifferenceEstimator:
 
     def __init__(self):
         self.map_dict = {}
+        self.initial_classes = None
         self.device = default_device()
 
     def _create_label_dict(self, stacked_target: Tensor):
@@ -36,13 +37,12 @@ class PairwiseDifferenceEstimator:
         for diff_label, label_for_learning in zip(self.new_labels, range(self.num_new_labels)):
             self.map_dict.update({diff_label: label_for_learning})
 
-    def convert_to_dataloader(self, augmented_input: List[tuple], batch_size: int = 8, task:str = 'classification'):
-        all_features = [data_tuple[0] for idx, data_tuple in enumerate(augmented_input)]
-        all_targets = [data_tuple[1] for idx, data_tuple in enumerate(augmented_input)]
-        stacked_features = torch.vstack(all_features)
-        stacked_target = torch.hstack(all_targets)
+    def convert_to_dataloader(self, augmented_input: List[tuple], batch_size: int = 8, task: str = 'classification'):
+        stacked_features = torch.vstack([data_tuple[0] for idx, data_tuple in enumerate(augmented_input)])
+        stacked_target = torch.hstack([data_tuple[1] for idx, data_tuple in enumerate(augmented_input)])
         if task == 'classification':
             map_func = lambda x: 0 if x == 0 else 1
+            self.num_new_labels = 2
         else:
             map_func = lambda x: self.map_dict[x]
             if len(self.map_dict) == 0:
@@ -64,14 +64,7 @@ class PairwiseDifferenceEstimator:
         old_shape[0] = samples * samples
         diff = torch.reshape(diff, old_shape)  # (batch_size x batch_size x sample_shape(channel x width x height))
         # Create common feature space with original features
-        if with_difference:
-            tensor1_exp = tensor1.squeeze(1)
-            tensor2_exp = tensor2.squeeze(0)
-            result = torch.cat([tensor1_exp, tensor2_exp, diff], dim=-1)
-            return result
-        # Use feature space only with calculated "diff"
-        else:
-            return diff
+        return torch.concat([tensor1, diff], dim=0) if with_difference else diff
 
     def pair_input(self, X: Tensor, y: Tensor, with_difference: bool = False) -> Tensor:
         """
@@ -134,13 +127,9 @@ class PairwiseDifferenceEstimator:
     #     return sample_weight
 
     @staticmethod
-    def predict(y_prob: Tensor, output_mode: str = 'default', min_label_zero: bool = True):
-        if output_mode.__contains__('label'):
-            predicted_classes = torch.argmax(y_prob, 1)[..., torch.newaxis]
-            predicted_classes = predicted_classes if min_label_zero else predicted_classes + 1
-        else:
-            predicted_classes = y_prob
-        return predicted_classes
+    def predict(y_prob: Tensor, output_mode: str = 'default'):
+        labels_output = output_mode.__contains__('label')
+        return torch.argmax(y_prob, 1) if labels_output else y_prob
 
 
 class PairwiseDifferenceModel:
@@ -149,7 +138,7 @@ class PairwiseDifferenceModel:
 
     def __init__(self, params: Optional[OperationParameters] = {}):
         self.num_classes = None
-        self.proba_aggregate_method = params.get('aggregate_func', 'norm')
+        self.proba_aggregate_method = params.get('aggregate_func', 'softmax')
         self.use_prior = params.get('use_prior', False)
         self.ft_params = params.get('learning_strategy_params', None)
         self._hooks = [PairwiseAugmentationHook]
@@ -176,10 +165,13 @@ class PairwiseDifferenceModel:
         self.task_type = input_data.task
         self.is_regression_task = any([self.task_type.task_type.value == 'regression',
                                        input_data.task.task_type.value.__contains__('forecasting')])
+        try:
+            self.initial_classes = np.unique(input_data.features.train_dataloader.dataset.targets)
+        except Exception:
+            self.initial_classes = np.unique(input_data.features.train_dataloader.dataset.dataset.targets)
 
-        # self.target_start_zero = False if self.target.min() != 0 else True
-        # self.classes_ = sklearn.utils.multiclass.unique_labels(input_data.target)
-        # self._estimate_prior()
+        self.pdl_target = [i for i in self.initial_classes for rep in range(self.num_classes)]
+        self.min_label_zero = True if 0 in self.initial_classes else False
 
     def _init_model(self):
         self.pde = PairwiseDifferenceEstimator()
@@ -220,6 +212,7 @@ class PairwiseDifferenceModel:
         # augmented_val_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
         #                                                              batch[1].to(self.device)),
         #                            input_data.features.val_dataloader))
+
         input_data.features.train_dataloader = self.pde.convert_to_dataloader(augmented_input=augmented_train_data,
                                                                               batch_size=train_bs)
         input_data.features.val_dataloader = self.pde.convert_to_dataloader(augmented_input=augmented_val_data,
@@ -236,24 +229,12 @@ class PairwiseDifferenceModel:
         Beware that this function does not apply the weights at this level
         """
 
-        # def predict_proba(X) -> Tensor:
-        #     predictions = self.trainer.predict(X)
-        #     predictions = predictions.astype(int)
-        #     n_samples = len(predictions)
-        #     proba = np.zeros((n_samples, 2), dtype=float)
-        #     proba[range(n_samples), predictions] = 1.
-        #     return proba
-
-        # if X_anchors is None:
-        #     X_anchors = self.train_features
-
         test_bs = input_data.features.val_dataloader.batch_size
         augmented_test_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
-                                                                          batch[1].to(self.device)),
-                                        input_data.features.val_dataloader))
+                                                                         batch[1].to(self.device)),
+                                       input_data.features.val_dataloader))
         input_data.features.val_dataloader = self.pde.convert_to_dataloader(augmented_input=augmented_test_data,
-                                                                              batch_size=test_bs)
-
+                                                                            batch_size=test_bs)
 
         predictions_proba_difference: Tensor = self.trainer.predict(input_data)
         # get mean probability valus for case where ab_diff = ba_diff
@@ -261,37 +242,37 @@ class PairwiseDifferenceModel:
         # predictions_proba_similarity_ba = predictions_proba_difference.predict[:,input_data.features.num_classes-1:]
         # predictions_proba_similarity_ba = torch.flip(predictions_proba_similarity_ba,dims=[0,1])
         # predictions_proba_similarity = (predictions_proba_similarity_ab + predictions_proba_similarity_ba) / 2.
-        predictions_proba_similarity = predictions_proba_difference
+        predictions_proba_similarity = predictions_proba_difference.predict
+        dim_reshape = input_data.features.num_classes * input_data.features.num_classes
+        predictions_proba_similarity = predictions_proba_similarity.reshape((dim_reshape,dim_reshape,
+                                                                             predictions_proba_similarity.shape[1]))
         return predictions_proba_similarity
 
     def __predict_with_prior(self, input_data: Tensor, sample_weight):
         tests_trains_classes_likelihood = self.predict_proba_samples(input_data)
         tests_classes_likelihood = self._apply_weights(tests_trains_classes_likelihood, sample_weight)
-        np.finfo(tests_classes_likelihood.dtype).eps
         tests_classes_likelihood = tests_classes_likelihood / tests_classes_likelihood.sum(axis=1)[:, np.newaxis]
         tests_classes_likelihood = tests_classes_likelihood.clip(0, 1)
         return tests_classes_likelihood
 
     def __predict_without_prior(self, input_data: InputData, sample_weight=None):
         predictions_proba_similarity: Tensor = self.predict_similarity_samples(input_data)
-        #X = pd.DataFrame(input_data)
-
         def f(predictions_proba_similarity: pd.Series) -> pd.Series:
-            target = pd.Series(self.target.squeeze())
+            target = pd.Series(self.pdl_target)
             df = pd.DataFrame(
                 {'start': target.reset_index(drop=True), 'similarity': predictions_proba_similarity})
             df = df.fillna(0)
             mean = df.groupby('start', observed=False).mean()['similarity']
             return mean
 
-        tests_classes_likelihood_np = predictions_proba_similarity.apply(f, axis='columns')
+        predictions_proba_similarity_df = pd.DataFrame(predictions_proba_similarity[:,:,0])
+        original_classes_prob_matrix = predictions_proba_similarity_df.apply(f, axis='columns').values
+        original_classes_prob_matrix = Tensor(original_classes_prob_matrix)
         # without this normalization it should work for multiclass-multilabel
         if self.proba_aggregate_method == 'norm':
-            tests_classes_likelihood_np = tests_classes_likelihood_np.values \
-                                          / tests_classes_likelihood_np.values.sum(axis=-1)[:, np.newaxis]
+            tests_classes_likelihood_np = original_classes_prob_matrix/original_classes_prob_matrix.sum()
         elif self.proba_aggregate_method == 'softmax':
-            # tests_classes_likelihood_np = softmax(tests_classes_likelihood_np, axis=-1)
-            tests_classes_likelihood_np = nn.Softmax(tests_classes_likelihood_np, axis=-1)
+            tests_classes_likelihood_np = nn.Softmax(-1)(original_classes_prob_matrix)
         return tests_classes_likelihood_np
 
     def predict_proba_samples(self, X: Union[Tensor, pd.DataFrame]) -> Tensor:
@@ -345,7 +326,9 @@ class PairwiseDifferenceModel:
                                 monoid=[input_data, self.use_prior]).either(
             left_function=lambda features: self.__predict_without_prior(features, self.sample_weight_),
             right_function=lambda features: self.__predict_with_prior(features, self.sample_weight_))
-        return self.pde.predict(predict_output, output_mode, self.target_start_zero)
+        output = self.pde.predict(predict_output, output_mode)
+        output = output if self.min_label_zero else output + 1
+        return output
 
     def predict(self,
                 input_data: InputData,
