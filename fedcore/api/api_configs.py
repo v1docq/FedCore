@@ -206,7 +206,7 @@ class ComputeConfigTemplate(ConfigTemplate):
 @dataclass
 class FedotConfigTemplate(ConfigTemplate):
     """Evth for Fedot"""
-    timeout: int = 10
+    timeout: float = 10.0
     pop_size: int = 5
     early_stopping_iterations: int = 10
     early_stopping_timeout: int = 10
@@ -236,7 +236,7 @@ class NodeTemplate(ConfigTemplate):
     log_each: Optional[int] = LookUp(None)
     eval_each: Optional[int] = LookUp(None)
     save_each: Optional[int] = LookUp(None)
-    epochs: int = 15
+    epochs: int = 1
     optimizer: Optimizers = 'adam'
     scheduler: Optional[Schedulers] = None
     criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
