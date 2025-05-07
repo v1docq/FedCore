@@ -217,6 +217,7 @@ class DatasetFromFolder(DatasetFolder):
         elif self.files[0].lower().endswith(TIME_SERIES_EXTENSIONS):
             self.is_dir_with_images = False
             feature, target = self._default_ts_loader(data_folder)
+            target = target.astype(np.float32).astype(np.int8)
             unique_target_val = np.unique(target)
             if len(unique_target_val) < 50 and not target.dtype == float:
                 self.class_names = unique_target_val

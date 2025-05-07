@@ -171,7 +171,10 @@ class BaseNeuralModel(torch.nn.Module):
         if hasattr(model_output, 'loss'):
             quality_loss = model_output.loss
         else:
-            quality_loss = criterion(model_output, target)
+            try:
+                quality_loss = criterion(model_output, target)
+            except Exception:
+                quality_loss = criterion(model_output, target.type(torch.LongTensor).to(self.device))
         if isinstance(model_output, torch.Tensor):
             additional_losses = {name: coef * criterion(model_output, target)
                                  for name, (criterion, coef) in self.custom_criterions.items()

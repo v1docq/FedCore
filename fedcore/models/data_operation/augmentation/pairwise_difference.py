@@ -29,6 +29,7 @@ class PairwiseDifferenceEstimator:
         self.map_dict = {}
         self.initial_classes = None
         self.device = default_device()
+        self.pdl_train_target = []
 
     def _create_label_dict(self, stacked_target: Tensor):
         self.map_dict = {}
@@ -53,7 +54,10 @@ class PairwiseDifferenceEstimator:
         train_dataloader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=batch_size)
         return train_dataloader
 
-    def _eval_pair_diff(self, tensor1: Tensor, tensor2: Tensor, with_difference: bool = False):
+    def _eval_pair_diff(self, tensor1: Tensor, tensor2: Tensor, with_difference: bool = False,
+                        collect_target: bool = False):
+        if collect_target:
+            self.pdl_train_target.append(tensor1.cpu().detach().numpy())
         old_shape = list(tensor1.shape)
         samples = old_shape[0]
         # Add new axis
@@ -66,12 +70,13 @@ class PairwiseDifferenceEstimator:
         # Create common feature space with original features
         return torch.concat([tensor1, diff], dim=0) if with_difference else diff
 
-    def pair_input(self, X: Tensor, y: Tensor, with_difference: bool = False) -> Tensor:
+    def pair_input(self, X: Tensor, y: Tensor, with_difference: bool = False, collect_target: bool = False) -> Tensor:
         """
         Cross join с добавлением разностей между признаками.
         Возвращает тензор с парами и их разностями.
         """
-        return (self._eval_pair_diff(X, X, with_difference), self._eval_pair_diff(y, y, with_difference))
+        return (self._eval_pair_diff(X, X, with_difference), self._eval_pair_diff(y, y, with_difference,
+                                                                                  collect_target=collect_target))
 
     def pair_output(self,
                     y1: Tensor,
@@ -81,50 +86,6 @@ class PairwiseDifferenceEstimator:
         y_pair = torch.cross(y1, y2)
         y_pair_diff = y_pair[:, 1] - y_pair[:, 0]
         return y_pair_diff
-
-    def pair_output_difference(self,
-                               y1: Tensor,
-                               y2: Tensor) -> Tensor:
-        """For MultiClassClassification base on difference only"""
-
-        # y_pair = pd.DataFrame(y1).merge(y2, how="cross")
-        # y_pair_diff = (y_pair.iloc[:, 1] != y_pair.iloc[:, 0]).astype(int)
-        y_pair = torch.cross(y1, y2)
-        y_pair_diff = y_pair[y_pair[:, 1] != y_pair[:, 0]].to(torch.int8)
-        return y_pair_diff
-
-    # @staticmethod
-    # def check_sample_weight(sample_weight: pd.Series, y_train: pd.Series) -> None:
-    #     if sample_weight is None:
-    #         pass
-    #     elif isinstance(sample_weight, pd.Series):
-    #         # check
-    #         if len(sample_weight) != len(y_train):
-    #             raise ValueError(
-    #                 f'sample_weight size {len(sample_weight)} should be equal to the train size {len(y_train)}')
-    #         if not sample_weight.index.equals(y_train.index):
-    #             raise ValueError(
-    #                 f'sample_weight and y_train must have the same index\n{sample_weight.index}\n{y_train.index}')
-    #         if all(sample_weight.fillna(0) <= 0):
-    #             raise ValueError(f'sample_weight are all negative/Nans.\n{sample_weight}')
-    #
-    #         # norm
-    #         class_sums = np.bincount(y_train, sample_weight)
-    #         sample_weight = sample_weight / class_sums[y_train.astype(int)]
-    #     else:
-    #         raise NotImplementedError()
-    #
-    # @staticmethod
-    # def correct_sample_weight(sample_weight: pd.Series, y_train: pd.Series) -> pd.Series:
-    #     if sample_weight is not None:
-    #         sample_weight = sample_weight / sum(sample_weight)
-    #         # norm
-    #         # class_sums = np.bincount(y_train, sample_weight)
-    #         # sample_weight = sample_weight / class_sums[y_train.astype(int)]
-    #
-    #     #     # if sample_weight.min() < 0:  # dolla weight change : improvement +0.0032 bof
-    #     #     #     sample_weight = sample_weight - sample_weight.min()
-    #     return sample_weight
 
     @staticmethod
     def predict(y_prob: Tensor, output_mode: str = 'default'):
@@ -165,10 +126,13 @@ class PairwiseDifferenceModel:
         self.task_type = input_data.task
         self.is_regression_task = any([self.task_type.task_type.value == 'regression',
                                        input_data.task.task_type.value.__contains__('forecasting')])
-        try:
-            self.initial_classes = np.unique(input_data.features.train_dataloader.dataset.targets)
-        except Exception:
-            self.initial_classes = np.unique(input_data.features.train_dataloader.dataset.dataset.targets)
+        if hasattr(input_data.features.train_dataloader.dataset, 'dataset'):
+            self.initial_classes = input_data.features.train_dataloader.dataset.dataset.classes
+        else:
+            try:
+                self.initial_classes = np.unique(input_data.features.train_dataloader.dataset.targets)
+            except Exception:
+                self.initial_classes = np.unique(input_data.features.train_dataloader.dataset.dataset.targets)
 
         self.pdl_target = [i for i in self.initial_classes for rep in range(self.num_classes)]
         self.min_label_zero = True if 0 in self.initial_classes else False
@@ -204,11 +168,12 @@ class PairwiseDifferenceModel:
         train_bs = input_data.features.train_dataloader.batch_size
         val_bs = input_data.features.val_dataloader.batch_size
         augmented_train_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
-                                                                          batch[1].to(self.device)),
+                                                                          batch[1].to(self.device),
+                                                                          collect_target=True),
                                         input_data.features.train_dataloader))
         augmented_val_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
                                                                         batch[1].to(self.device)),
-                                      input_data.features.train_dataloader))
+                                      input_data.features.val_dataloader))
         # augmented_val_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
         #                                                              batch[1].to(self.device)),
         #                            input_data.features.val_dataloader))
@@ -220,7 +185,12 @@ class PairwiseDifferenceModel:
         # update output layer for model
         model_layers = list(self.trainer.model.modules())
         output_layer = model_layers[-1]
-        self.trainer.model.fc = nn.Linear(output_layer.weight.shape[1], self.pde.num_new_labels)
+        if hasattr(self.trainer.model, 'fc'):
+            self.trainer.model.fc = nn.Linear(output_layer.weight.shape[1], self.pde.num_new_labels)
+        else:
+            output_layer.weight = torch.nn.Parameter(output_layer.weight[:self.pde.num_new_labels, :])
+            output_layer.bias = torch.nn.Parameter(output_layer.bias[:self.pde.num_new_labels])
+            output_layer.out_features = self.pde.num_new_labels
         self.trainer.fit(input_data)
         return self
 
@@ -243,8 +213,10 @@ class PairwiseDifferenceModel:
         # predictions_proba_similarity_ba = torch.flip(predictions_proba_similarity_ba,dims=[0,1])
         # predictions_proba_similarity = (predictions_proba_similarity_ab + predictions_proba_similarity_ba) / 2.
         predictions_proba_similarity = predictions_proba_difference.predict
-        dim_reshape = input_data.features.num_classes * input_data.features.num_classes
-        predictions_proba_similarity = predictions_proba_similarity.reshape((dim_reshape,dim_reshape,
+        #dim_reshape = input_data.features.num_classes * input_data.features.num_classes
+        # reshape into tensor with dimensions [n_test_samples x train_bs_size x n_classes]
+        dim_reshape = int(predictions_proba_similarity.shape[0] / test_bs)
+        predictions_proba_similarity = predictions_proba_similarity.reshape((dim_reshape, test_bs,
                                                                              predictions_proba_similarity.shape[1]))
         return predictions_proba_similarity
 
@@ -257,20 +229,19 @@ class PairwiseDifferenceModel:
 
     def __predict_without_prior(self, input_data: InputData, sample_weight=None):
         predictions_proba_similarity: Tensor = self.predict_similarity_samples(input_data)
-        def f(predictions_proba_similarity: pd.Series) -> pd.Series:
-            target = pd.Series(self.pdl_target)
+        sample_classes_prob_matrix = []
+        for sample in predictions_proba_similarity:
+            probs = pd.Series(torch.concat([sample[:, 0]
+                                            for rep in range(len(self.pde.pdl_train_target))]).cpu().detach().numpy())
+            target = pd.Series(np.concatenate(self.pde.pdl_train_target))
             df = pd.DataFrame(
-                {'start': target.reset_index(drop=True), 'similarity': predictions_proba_similarity})
-            df = df.fillna(0)
+                {'start': target.reset_index(drop=True), 'similarity': probs})
             mean = df.groupby('start', observed=False).mean()['similarity']
-            return mean
-
-        predictions_proba_similarity_df = pd.DataFrame(predictions_proba_similarity[:,:,0])
-        original_classes_prob_matrix = predictions_proba_similarity_df.apply(f, axis='columns').values
-        original_classes_prob_matrix = Tensor(original_classes_prob_matrix)
+            sample_classes_prob_matrix.append(Tensor(mean.values))
+        original_classes_prob_matrix = torch.stack(sample_classes_prob_matrix,0)
         # without this normalization it should work for multiclass-multilabel
         if self.proba_aggregate_method == 'norm':
-            tests_classes_likelihood_np = original_classes_prob_matrix/original_classes_prob_matrix.sum()
+            tests_classes_likelihood_np = original_classes_prob_matrix / original_classes_prob_matrix.sum()
         elif self.proba_aggregate_method == 'softmax':
             tests_classes_likelihood_np = nn.Softmax(-1)(original_classes_prob_matrix)
         return tests_classes_likelihood_np
