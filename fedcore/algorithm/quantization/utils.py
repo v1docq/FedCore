@@ -194,8 +194,12 @@ class ParentalReassembler(Accessor):
             
     @classmethod
     def _fetch_module(cls, module: nn.Module):
+        device = default_device()
         is_decomposed = isinstance(module, IDecomposed)
         supported = cls.supported_decomposed_layers if is_decomposed else cls.supported_layers
+        if device.type == "cuda":
+            not_supported = {DecomposedLinear, DecomposedConv2d}
+            supported = {k: v for k, v in supported.items() if k not in not_supported}
         for supported in supported:
             if isinstance(module, supported) and (is_decomposed or not type(module) is supported):
                 return supported, is_decomposed
@@ -218,6 +222,10 @@ class ParentalReassembler(Accessor):
     def reassemble(cls, model: nn.Module, additional_mapping: dict = None):
         """additional mapping for cases such as 'nn.ReLU6 -> nn.ReLU' in format"""
         device = extract_device(model)
+        try:
+            device_type = device.type
+        except:
+            device_type = device
         if additional_mapping:
             for name, module in model.named_modules():
                 t = type(module)
@@ -228,7 +236,7 @@ class ParentalReassembler(Accessor):
             new_module = cls.convert(module)
             if new_module:
                 cls.set_module(model, name, new_module.to(device))
-            elif isinstance(module, (resnet.BasicBlock, resnet.Bottleneck)):
+            elif isinstance(module, (resnet.BasicBlock, resnet.Bottleneck)) and device_type != "cuda":
                 wrapped_module = ResidualAddWrapper(module)
                 cls.set_module(model, name, wrapped_module.to(device))
                 print(f"[ParentalReassembler] Residual block '{name}' wrapped with ResidualAddWrapper.")

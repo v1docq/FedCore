@@ -44,10 +44,10 @@ class BaseQuantizer(BaseCompressionModel):
         self.allow_emb = params.get("allow_emb", False)
         self.allow_conv = params.get("allow_conv", True)
         self.inplace = params.get("inplace", False)
-  
-        self.device = default_device('cpu') if self.quant_type == 'qat' else self.device
-        self.dtype = torch.float16 if self.device != torch.device("cpu") else self.dtype
-        self.backend = 'onednn' if self.device != torch.device("cpu") else self.backend
+        
+        # self.device = default_device('cpu') if self.quant_type == 'qat' else self.device
+        self.dtype = torch.float16 if self.device.type == "cuda" else self.dtype
+        self.backend = 'onednn' if self.device.type == ("cuda") else self.backend
         self.allow_conv = False if self.dtype == torch.float16 else self.allow_conv
         torch.backends.quantized.engine = self.backend
         

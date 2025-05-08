@@ -74,10 +74,20 @@ class ApiLoader:
 
     def load_data(self, loader_type: str = None):
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)
-        if loader_type.__contains__('benchmark'):
+        try:
+            if loader_type.__contains__('benchmark'):
+                if self.source.__contains__('CIFAR'):
+                    torch_dataset = torch_dataset(data_path(self.source),
+                                                train=self.loader_params['is_train'],
+                                                download=True,
+                                                transform=self.transform)
+                else:
+                    torch_dataset = torch_dataset(data_path(self.source),
+                                                download=True,
+                                                transform=self.transform)
+        except:
             torch_dataset = torch_dataset(data_path(self.source),
-                                          train=self.loader_params['is_train'],
-                                          download=True,
-                                          transform=self.transform)
+                                        download=False,
+                                        transform=self.transform)
         fedcore_data = self._convert_to_fedcore(torch_dataset)
         return fedcore_data

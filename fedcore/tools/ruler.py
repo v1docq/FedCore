@@ -97,10 +97,17 @@ class PerformanceEvaluator:
             model_attr_list = dir(model.operator.root_node.fitted_operation)
             model_attr_name = [x for x in model_attr_list if x.__contains__(self.model_regime)][0]
             self.model = getattr(model.operator.root_node.fitted_operation, model_attr_name)
+            try:
+                model_device = [x for x in model_attr_list if x.__contains__("device")][0]
+                self.device = getattr(model.operator.root_node.fitted_operation, model_device)
+                self.cuda_allowed = True if self.device.type == 'cuda' else False
+            except:
+                self.device = self.device
         elif is_class_container:
             self.model = model.model
         else:
             self.model = model
+            
         self.model.to(self.device)
 
     def eval(self):
@@ -276,6 +283,7 @@ class PerformanceEvaluator:
                     for sample in features:
                         is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
                         sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
+                        sample.to(self.device)
                         sample_batch = sample[None, ...]
                         lat_list.append(cuda_latency_eval(sample_batch))
             else:

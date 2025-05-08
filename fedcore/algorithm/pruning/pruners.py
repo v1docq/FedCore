@@ -2,6 +2,7 @@ from copy import deepcopy
 from itertools import chain
 from fedot.core.data.data import InputData
 from torch import nn, optim
+import traceback
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 import torch_pruning as tp
@@ -137,30 +138,34 @@ class BasePruner(BaseCompressionModel):
         self.channel_groups = self.validator.validate_channel_groups()
 
     def fit(self, input_data: InputData, finetune: bool = True):
-        self._init_model(input_data)
-        self._init_hooks()
-        if self.pruner is not None: # in case if we dont use torch_pruning as backbone
-            self.pruner = self.pruner(
-                self.model_after_pruning,
-                self.data_batch_for_calib,
-                # global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
-                importance=self.importance,  # importance criterion for parameter selection
-                iterative_steps=self.pruning_iterations,  # the number of iterations to achieve target ratio
-                pruning_ratio=self.pruning_ratio,
-                ignored_layers=self.ignored_layers,
-                channel_groups=self.channel_groups,
-                round_to=None,
-                unwrapped_parameters=None,
-            )
-        self.pruner_objects = {'input_data': input_data,
-                               'pruning_iterations': self.pruning_iterations,
-                               'model_before_pruning': self.model_before_pruning,
-                               'optimizer_for_grad_acc': self.optimizer_for_grad,
-                               'pruner_cls': self.pruner}
-        for hook in self._on_epoch_end:
-            hook(importance=self.importance, pruner_objects=self.pruner_objects)
-        if finetune:
-            return self.finetune(finetune_object=self.model_after_pruning, finetune_data=input_data)
+        try:
+            self._init_model(input_data)
+            self._init_hooks()
+            if self.pruner is not None: # in case if we dont use torch_pruning as backbone
+                self.pruner = self.pruner(
+                    self.model_after_pruning,
+                    self.data_batch_for_calib,
+                    # global_pruning=False,  # If False, a uniform ratio will be assigned to different layers.
+                    importance=self.importance,  # importance criterion for parameter selection
+                    iterative_steps=self.pruning_iterations,  # the number of iterations to achieve target ratio
+                    pruning_ratio=self.pruning_ratio,
+                    ignored_layers=self.ignored_layers,
+                    channel_groups=self.channel_groups,
+                    round_to=None,
+                    unwrapped_parameters=None,
+                )
+            self.pruner_objects = {'input_data': input_data,
+                                'pruning_iterations': self.pruning_iterations,
+                                'model_before_pruning': self.model_before_pruning,
+                                'optimizer_for_grad_acc': self.optimizer_for_grad,
+                                'pruner_cls': self.pruner}
+            for hook in self._on_epoch_end:
+                hook(importance=self.importance, pruner_objects=self.pruner_objects)
+            if finetune:
+                return self.finetune(finetune_object=self.model_after_pruning, finetune_data=input_data)
+        except Exception as e:
+            traceback.print_exc()
+            self.model_after_pruning = self.model_before_pruning
         return self.model_after_pruning
 
     def finetune(self, finetune_object, finetune_data):

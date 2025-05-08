@@ -486,6 +486,7 @@ DEFAULT_TORCH_DATASET = {
     "MNIST": torchvision.datasets.MNIST,
     'COCO': torchvision.datasets.CocoDetection,
     'ImageNet': torchvision.datasets.ImageNet,
+    'Imagenette': torchvision.datasets.Imagenette,
     'VOCSegmentation': torchvision.datasets.VOCSegmentation,
     'VOCDetection': torchvision.datasets.VOCDetection
 }
