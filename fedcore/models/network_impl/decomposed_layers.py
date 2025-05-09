@@ -14,7 +14,8 @@ __all__ = [
     'IDecomposed',
     'DecomposedConv2d',
     'DecomposedLinear',
-    'DecomposedEmbedding'
+    'DecomposedEmbedding',
+    'DecomposedConv1d'
 ]
 
 def _diag_tensor_check(t: torch.Tensor):
@@ -54,7 +55,6 @@ class IDecomposed(abc.ABC):
     def compose_weight_for_inference(self):
         compose_mode = self.compose_mode or self._evaluate_compose_mode()
         self._compose_dict[compose_mode]()
-        # self.inference_mode = True
         self._current_forward = self._forward_dict[compose_mode]
 
     def _evaluate_compose_mode(self: nn.Module):
@@ -63,7 +63,7 @@ class IDecomposed(abc.ABC):
         ]
         l1 = self._initial_params_num
         l2 = nparams[0] + nparams[-1]
-        return 'two_layers' if l2 > l1 else 'one_layer'
+        return 'two_layers' if l2 < l1 else 'one_layer'
 
     def _get_weights(self):
         return self.weight
@@ -83,7 +83,6 @@ class IDecomposed(abc.ABC):
     def compose(self: nn.Module):
         W = self._get_composed_weight()
         self.register_parameter('weight', Parameter(W))
-        # self.weight = Parameter(W.reshape(self.decomposing['compose_shape']).permute(self.decomposing['permute']))
         self.register_parameter('U', None)
         self.register_parameter('S', None)
         self.register_parameter('Vh', None)
@@ -131,6 +130,9 @@ class IDecomposed(abc.ABC):
     
     def _three_layers_compose(self): 
         self._eliminate_extra_params([])
+
+    def _anti_three_layers_compose(self):
+        pass
 
 
 class DecomposedConv2d(Conv2d, IDecomposed):
@@ -282,14 +284,14 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return x
        
     def _one_layer_compose(self):
-        W = (self.U * self.S) @ self.Vh
+        W = (self.U * self.S.unsqueeze(0)) @ self.Vh
         self.register_parameter('U', Parameter(W.reshape(self.decomposing["compose_shape"]).permute(
             self.decomposing["permute"]
         )))
         self._eliminate_extra_params(['S', 'Vh'])
 
     def _two_layers_compose(self):
-        SVh = self.S * self.Vh
+        SVh = self.S.unsqueeze(-1) * self.Vh
         self.register_parameter('Vh', Parameter(SVh.view(*self.decomposing["Vh4d"])))
         self.register_parameter('U', 
             Parameter(self.U.view(*self.decomposing["U4d"]).permute(0, 3, 1, 2)))

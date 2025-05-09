@@ -55,17 +55,18 @@ class PerformanceEvaluator:
             model: callable,
             model_regime: str = 'model_after',
             data: Union[DataLoader, str] = None,
-            device=None,
             batch_size=32,
             n_batches=8,
             collate_fn=None,
+            device=None,
     ):
+        print('###, device', device)
         self.model_regime = model_regime
         self.n_batches = n_batches
         self.batch_size = batch_size  # or self.data_loader.batch_size
         self._init_null_object()
 
-        self.device = device
+        self.device = device or default_device()
         self.cuda_allowed = True if self.device.type == 'cuda' else False
         self.transfer_to_device_fn = torch.Tensor.to
         self._init_model(model)

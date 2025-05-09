@@ -161,7 +161,7 @@ class BaseNeuralModel(torch.nn.Module):
                 print("Forcely substituted criterion[loss] to", self.criterion)
 
     def __substitute_device_quant(self):
-        if not getattr(self.model, '_is_quantized', False):
+        if getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
@@ -246,6 +246,7 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
+        self.model.to(self.device)
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
 
@@ -253,7 +254,7 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
-
+        self.model.to(self.device)
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
