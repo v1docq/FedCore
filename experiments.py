@@ -19,8 +19,11 @@ from fedcore.algorithm.quantization.utils import ParentalReassembler
 from fedcore.architecture.utils.paths import PATH_TO_DATA
 from fedcore.architecture.comptutaional.devices import default_device
 
+assert torch.cuda.is_available()
+
 if default_device().type == "cuda":
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = ""
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 
 task_problems = {
@@ -70,9 +73,12 @@ class TemplateLoader:
     def get_peft_config(self, peft_dict):
         ptype = peft_dict['peft_problem']
         qtype = peft_dict.get('quant_type')
-        base_config = NeuralModelConfigTemplate(epochs=1, log_each=1, eval_each=1, criterion=self.loss)
+        epochs_per_stage = 5
+        base_config = NeuralModelConfigTemplate(epochs=epochs_per_stage, log_each=1, eval_each=1, criterion=self.loss)
         if ptype == 'low_rank':
-            return ptype, LowRankTemplate(custom_criterions={'hoer': 0.5, 'orthogonal': 0.2}, non_adaptive_threshold=0.2, finetune_params=base_config)
+            return ptype, LowRankTemplate(custom_criterions={'hoer': 10, 'orthogonal': 0.2}, 
+                                          rank_prune_each=epochs_per_stage // 2 + 1,
+                                          non_adaptive_threshold=0.2, finetune_params=base_config)
         if ptype == 'pruning':
             return ptype, PruningTemplate(importance='magnitude', pruning_ratio=0.5, finetune_params=base_config)
         if ptype == 'quantization':
@@ -175,14 +181,15 @@ if __name__ == "__main__":
                         model_attr_name = [x for x in model_attr_list if x.__contains__('model_after')][0]
                         model = getattr(model.fedcore_model.operator.root_node.fitted_operation, model_attr_name)
                         save_results(model, metrics, loader.model, loader.dataset, combo, step)
-                        if peft_problems[peft_key]['peft_problem'] == 'pruning':
-                            print("Reassembling pruned model")
-                            ParentalReassembler.reassemble(model)
+                        # if peft_problems[peft_key]['peft_problem'] == 'pruning':
+                        #     print("Reassembling pruned model")
+                        #     ParentalReassembler.reassemble(model)
                         current_model = model
                 except Exception as e:
                     print(f"Failed step {combo[step]} for {loader.model} on {loader.dataset}")
                     traceback.print_exc()
                     save_log(buffer.getvalue(), loader.model, loader.dataset, combo, step)
+                finally:
                     buffer.close()
             del model
         del loader, train_data, test_data
