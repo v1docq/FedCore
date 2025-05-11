@@ -113,17 +113,15 @@ class PerformanceEvaluator:
 
     def eval(self):
         self.warm_up_cuda()
-        # lat, thr = self.measure_latency_throughput(10, self.n_batches)
-        lat = self.eval_detailed_latency()
+        # lat = self.eval_detailed_latency()
+        lats = self.latency_eval()
+        thrs = self.throughput_eval()
         result = dict(
-            # latency=-1,
-            # througput=-1,
-            # model_size=-1,
-            latency=lat,
-                      # throughput=thr,
-                      model_size=self.measure_model_size()
-                      )
-        self.report()
+            latency=[np.mean(lats), np.std(lats)],
+            throughput=[np.mean(thrs), np.std(thrs)],
+            model_size=[self.measure_model_size(), 0.],
+        )
+        # self.report()
         return result
 
     # def eval_detailed_latency(self, sample):
@@ -174,7 +172,7 @@ class PerformanceEvaluator:
         results_dict = {}
         for _ in [t_gpu_2_cpu, t_cpu_2_gpu, t_device, t_total]:
             _.pop(0)  # delete first result in cycle, because of unstable
-        times_and_titles = [(t_device, "on_device_inference")]
+        times_and_titles = [(t_device, "on_host_inference")]
         if self.cuda_allowed:
             times_and_titles.extend([(t_cpu_2_gpu, "cpu_to_gpu"), (t_gpu_2_cpu, "gpu_to_cpu"), (t_total, "total")])
 
@@ -202,9 +200,8 @@ class PerformanceEvaluator:
                                  f" +/- {format_time(s_per_batch.std())} [{format_time(s_per_batch.min())},"
                                  f" {format_time(s_per_batch.max())}]",
             }
-            if title == 'total':
-                mean_latency = format_time(s_per_batch.mean(), return_time=True)
-                std_latency = format_time(s_per_batch.std(), return_time=True)
+            mean_latency = format_time(s_per_batch.mean(), return_time=True)
+            std_latency = format_time(s_per_batch.std(), return_time=True)
             results_dict[title] = {"metrics": metrics, "convert_to_report": convert_to_report}
 
         return np.array([mean_latency, std_latency])
@@ -251,29 +248,23 @@ class PerformanceEvaluator:
 
     @torch.no_grad()
     def throughput_eval(self, num_iterations=30):
-        print('@@@ PE THR', )
-        try:
-            self.model.eval()
-            thr_list = []
-            steps_iter = range(num_iterations)
-            for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
-                batch = batch[0] if isinstance(batch, (tuple, list)) else batch
-                is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
-                X = batch.cuda(non_blocking=True) if is_already_cuda else batch.to(self.device)
-                start_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
-                end_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
-                for i in steps_iter:
-                    start_events[i].record()
-                    self.model(X)
-                    end_events[i].record()
-                torch.cuda.synchronize(self.device)
-                times = ([s.elapsed_time(e) for s, e in zip(start_events, end_events)])
-                thr_list.extend(times)
-        except Exception as x:
-            print('@@@, throughput', x)
-        else:
-            print('@@@ No exception!', thr_list)
-        return np.array(thr_list)
+        self.model.eval()
+        thr_list = []
+        steps_iter = range(num_iterations)
+        for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
+            batch = batch[0] if isinstance(batch, (tuple, list)) else batch
+            is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
+            X = batch.cuda(non_blocking=True) if is_already_cuda else batch.to(self.device)
+            start_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
+            end_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
+            for i in steps_iter:
+                start_events[i].record()
+                self.model(X)
+                end_events[i].record()
+            torch.cuda.synchronize(self.device)
+            times = ([s.elapsed_time(e) for s, e in zip(start_events, end_events)])
+            thr_list.extend(times)
+        return len(batch) / np.array(thr_list)
 
     @torch.no_grad()
     def latency_eval(self, max_samples=None):
@@ -305,7 +296,6 @@ class PerformanceEvaluator:
         return np.array(lat_list)
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):
-        print('@@@ MLT')
         timings_lat = []
         timings_thr = []
         with tqdm(
@@ -315,14 +305,11 @@ class PerformanceEvaluator:
                 timings_thr.append(self.throughput_eval(reps))
                 timings_lat.append(self.latency_eval())
                 pbar.update(1)
-        print('@@@ afret reps')
         latency = np.array([[np.mean(x), np.std(x)] for x in timings_lat])
         throughput = np.array([[np.mean(x), np.std(x)] for x in timings_thr])
-        print('@@@ after first agg')
         self.latency, self.throughput = np.mean(np.array(latency), axis=0), np.mean(
             np.array(throughput), axis=0
         )
-        print('@@@ after second agg')
         return self.latency, self.throughput
 
     def measure_model_size(self):
