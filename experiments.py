@@ -76,9 +76,11 @@ class TemplateLoader:
         epochs_per_stage = 5
         base_config = NeuralModelConfigTemplate(epochs=epochs_per_stage, log_each=1, eval_each=1, criterion=self.loss)
         if ptype == 'low_rank':
-            return ptype, LowRankTemplate(custom_criterions={'hoer': 10, 'orthogonal': 0.2}, 
-                                          rank_prune_each=epochs_per_stage // 2 + 1,
-                                          non_adaptive_threshold=0.2, finetune_params=base_config)
+            return ptype, LowRankTemplate(custom_criterions={'hoer': 10,}, 
+                                          compose_mode='two_layers',
+                                          strategy='quantile',
+                                          rank_prune_each=max(1, int(0.3 * epochs_per_stage)),
+                                          non_adaptive_threshold=0.8, finetune_params=base_config)
         if ptype == 'pruning':
             return ptype, PruningTemplate(importance='magnitude', pruning_ratio=0.5, finetune_params=base_config)
         if ptype == 'quantization':
@@ -177,13 +179,11 @@ if __name__ == "__main__":
                         model = FedCore(config)
                         model.fit(train_data)
                         metrics = model.get_report(test_data)
-                        model_attr_list = dir(model.fedcore_model.operator.root_node.fitted_operation)
-                        model_attr_name = [x for x in model_attr_list if x.__contains__('model_after')][0]
-                        model = getattr(model.fedcore_model.operator.root_node.fitted_operation, model_attr_name)
+                        model = model.fedcore_model.operator.root_node.fitted_operation.model_after
                         save_results(model, metrics, loader.model, loader.dataset, combo, step)
-                        # if peft_problems[peft_key]['peft_problem'] == 'pruning':
-                        #     print("Reassembling pruned model")
-                        #     ParentalReassembler.reassemble(model)
+                        if peft_problems[peft_key]['peft_problem'] == 'pruning':
+                            print("Reassembling pruned model")
+                            ParentalReassembler.reassemble(model)
                         current_model = model
                 except Exception as e:
                     print(f"Failed step {combo[step]} for {loader.model} on {loader.dataset}")

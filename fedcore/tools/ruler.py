@@ -4,6 +4,7 @@ from typing import Union
 import numpy as np
 import torch
 import torch.utils
+from torchinfo import summary
 from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
@@ -308,7 +309,11 @@ class PerformanceEvaluator:
         return self.latency, self.throughput
 
     def measure_model_size(self):
-        size_constant = 1024 ** 2
+        size = summary(self.model).total_param_bytes
+        size_constant = 1 << 20
+        size /= size_constant
+        self.model_size = round(size, 3)
+        return self.model_size
         if isinstance(self.model, ONNXInferenceModel):
             size_all_mb = round(self.model.size(), 3) / size_constant
         else:
