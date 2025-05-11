@@ -36,7 +36,6 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
         """Return handler to this object that hides all details
         and allows only to evaluate population with provided objective."""
         super().dispatch(objective, timer)
-        print('@@@ eval with cache', self.evaluate_with_cache)
         return self.evaluate_with_cache
 
     def _multithread_eval(self, individuals_to_evaluate):
@@ -98,22 +97,17 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
     def apply_evaluation_results(self, individuals: PopulationT, evaluation_results) -> PopulationT:
         """Applies results of evaluation to the evaluated population.
         Excludes individuals that weren't evaluated."""
-        print('@@@ FEDC appl_eval_res:', individuals, evaluation_results)
         evaluation_results = {res.uid_of_individual: res for res in evaluation_results if res is not None}
-        print('@@@', evaluation_results)
         individuals_evaluated = []
         for ind in individuals:
             if not ind.uid in evaluation_results: 
                 continue
             eval_res = evaluation_results[ind.uid]
-            # if not eval_res:
-            #     continue
             ind.set_evaluation_result(eval_res)
             individuals_evaluated.append(ind)
         return individuals_evaluated
 
     def evaluate_population(self, individuals: PopulationT) -> PopulationT:
-        print('@@@ FEDC eval pop', individuals)
         individuals_to_evaluate, individuals_to_skip = self.split_individuals_to_evaluate(
             individuals)
 
@@ -121,14 +115,7 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
         self.n_jobs = determine_n_jobs(self._n_jobs, self.logger)
         self.is_singlethread_regime = self._n_jobs == 1
         eval_res = self._multithread_eval(individuals)
-        print('@@@ FEDC eval res', eval_res)
         individuals_evaluated = self.apply_evaluation_results(individuals_to_evaluate, eval_res)
-        print('@@@ FEDC individuals_evaluated', individuals_evaluated)
-
-        # individuals_evaluated = Maybe(individuals,
-        #                               monoid=[individuals, True]).then(
-        #     lambda generation: self._multithread_eval(generation)). \
-        #     then(lambda eval_res: self.apply_evaluation_results(individuals_to_evaluate, eval_res)).value
 
         successful_evals = individuals_evaluated + individuals_to_skip
         self.population_evaluation_info(evaluated_pop_size=len(successful_evals), pop_size=len(individuals))
@@ -137,7 +124,6 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
                                   monoid=[individuals_evaluated, not successful_evals]).either(
             left_function=lambda x: x,
             right_function=lambda y: self._eval_at_least_one(y))
-        print('@@@ FEDC susccm val', successful_evals)
 
         MemoryAnalytics.log(self.logger, additional_info='parallel evaluation of population',
                             logging_level=logging.INFO)

@@ -60,7 +60,6 @@ class PerformanceEvaluator:
             n_batches=8,
             collate_fn=None,
     ):
-        print('###, device', device)
         self.model_regime = model_regime
         self.n_batches = n_batches
         self.batch_size = batch_size  # or self.data_loader.batch_size
@@ -130,7 +129,6 @@ class PerformanceEvaluator:
     #     return detailed_timing
 
     def eval_detailed_latency(self, num_runs=100):
-        print('@@@ PE DET LAT')
         mean_latency = np.inf
         std_latency = np.inf
         t_cpu_2_gpu, t_device, t_gpu_2_cpu, t_total = [], [], [], []
@@ -290,7 +288,6 @@ class PerformanceEvaluator:
                         lat_list.append(cuda_latency_eval(sample_batch))
             else:
                 lat_list.append(cuda_latency_eval(batch))
-        print('@@@ Lat eval', lat_list)
         return np.array(lat_list)
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):
