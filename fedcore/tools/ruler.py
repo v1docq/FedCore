@@ -95,12 +95,9 @@ class PerformanceEvaluator:
         is_pipeline_class = isinstance(model, Pipeline)
 
         if is_pipeline_class:
-            model_attr_list = dir(model.operator.root_node.fitted_operation)
-            model_attr_name = [x for x in model_attr_list if x.__contains__(self.model_regime)][0]
-            self.model = getattr(model.operator.root_node.fitted_operation, model_attr_name)
+            self.model = getattr(model.operator.root_node.fitted_operation, self.model_regime)
             try:
-                model_device = [x for x in model_attr_list if x.__contains__("device")][0]
-                self.device = getattr(model.operator.root_node.fitted_operation, model_device)
+                self.device = getattr(model.operator.root_node.fitted_operation, 'device', default_device())
                 self.cuda_allowed = True if self.device.type == 'cuda' else False
             except:
                 self.device = self.device
@@ -113,6 +110,7 @@ class PerformanceEvaluator:
 
     def eval(self):
         self.warm_up_cuda()
+        # lat, thr = self.measure_latency_throughput(10, self.n_batches)
         # lat = self.eval_detailed_latency()
         lats = self.latency_eval()
         thrs = self.throughput_eval()

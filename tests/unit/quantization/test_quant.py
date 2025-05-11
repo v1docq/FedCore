@@ -140,10 +140,10 @@ def test_quantizers(quant_type):
     quant_model = quantizer.fit(input_data=train_data)
     assert quant_model is not None
     params_dict = quantizer.estimate_params(example_batch=quantizer.data_batch_for_calib,
-                                         model_before=quantizer.model_before_quant,
-                                         model_after=quantizer.model_after_quant)
+                                         model_before=quantizer.model_before,
+                                         model_after=quantizer.model_after)
     assert params_dict is not None
-    reduction = get_reduction(model_after=quant_model, model_before=quantizer.model_before_quant)
+    reduction = get_reduction(model_after=quant_model, model_before=quantizer.model_before)
     if default_device() == torch.device('cpu'):
         assert reduction < 1, f'{quant_type} quantization doesnt reduce number of model parameters, reduction: {reduction}'
     else:

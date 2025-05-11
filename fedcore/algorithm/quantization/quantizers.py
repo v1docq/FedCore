@@ -145,13 +145,13 @@ class BaseQuantizer(BaseCompressionModel):
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
-        self.model_before_quant = input_data.target.to(self.device)
+        self.model_before = input_data.target.to(self.device)
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.qat_params)
         else:
             self.trainer = BaseNeuralModel(self.qat_params)
-        self.trainer.model = self.model_before_quant
-        self.quant_model = deepcopy(self.model_before_quant).eval()
+        self.trainer.model = self.model_before
+        self.quant_model = deepcopy(self.model_before).eval()
         print("[MODEL] Model initialized and copied for quantization.")
 
     def _prepare_model(self, input_data: InputData):
@@ -190,7 +190,7 @@ class BaseQuantizer(BaseCompressionModel):
         except Exception as e:
             print("[PREPARE ERROR] Exception during preparation:")
             traceback.print_exc()
-            return deepcopy(self.model_before_quant).eval()
+            return deepcopy(self.model_before).eval()
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
@@ -213,20 +213,20 @@ class BaseQuantizer(BaseCompressionModel):
                 convert(self.quant_model, inplace=True)
 
             print("[FIT] Quantization performed successfully.")
-            self.model_after_quant = self.quant_model
+            self.model_after = self.quant_model
             if self.quant_type == 'qat':
-                self.model_after_quant._is_quantized = True 
+                self.model_after._is_quantized = True 
 
         except Exception as e:
             print("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()
-            self.model_after_quant = deepcopy(self.model_before_quant).eval()
+            self.model_after = deepcopy(self.model_before).eval()
             
-        return self.model_after_quant
+        return self.model_after
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "fedcore"):
-        return self.model_after_quant if output_mode == "fedcore" else self.model_before_quant
+        return self.model_after if output_mode == "fedcore" else self.model_before
 
     def predict(self, input_data: InputData, output_mode: str = "fedcore"):
-        self.trainer.model = self.model_after_quant if output_mode == "fedcore" else self.model_before_quant
+        self.trainer.model = self.model_after if output_mode == "fedcore" else self.model_before
         return self.trainer.predict(input_data, output_mode)

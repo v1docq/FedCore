@@ -50,8 +50,10 @@ class DataCheck:
         model_is_pretrain_torch_backbone = isinstance(self.model, str)
         model_is_pretrain_backbone_with_weights = isinstance(self.model, dict)
         model_is_custom_callable_object = isinstance(self.model, Callable)
-
-        if model_is_pretrain_torch_backbone or model_is_pretrain_backbone_with_weights:
+        if model_is_pretrain_torch_backbone:
+            torch_model = load_backbone(torch_model=self.model)
+            torch_model = self._check_optimised_model(torch_model, input_data)
+        elif model_is_pretrain_backbone_with_weights:
             if self.model['path_to_model'].__contains__('.pth'):
                     torch_model = torch.load(self.model['path_to_model'], weights_only=False,
                                                    map_location=default_device())

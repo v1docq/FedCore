@@ -206,7 +206,7 @@ class ComputeConfigTemplate(ConfigTemplate):
 @dataclass
 class FedotConfigTemplate(ConfigTemplate):
     """Evth for Fedot"""
-    timeout: float = 10.0
+    timeout: Union[int, float] = 10.0
     pop_size: int = 5
     early_stopping_iterations: int = 10
     early_stopping_timeout: int = 10
