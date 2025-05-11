@@ -307,7 +307,7 @@ class FedCore(Fedot):
         def calculate_metric_changes(metric_df: pd.DataFrame, metric: list = None):
             orig = metric_df[(metric_df['mode'] != 'fedcore')].drop('mode', axis=1)
             opt = metric_df[metric_df['mode'] == 'fedcore'].drop('mode', axis=1)
-            change_val = ((orig - opt) / orig * 100).round(2)
+            change_val = ((opt - orig) / orig * 100).round(2)
             change_val['mode'] = 'change'
             return change_val
 
