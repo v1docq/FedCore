@@ -53,9 +53,9 @@ class IDecomposed(abc.ABC):
                                'three_layers': self._forward3}
 
     def compose_weight_for_inference(self):
-        compose_mode = self.compose_mode or self._evaluate_compose_mode()
-        self._compose_dict[compose_mode]()
-        self._current_forward = self._forward_dict[compose_mode]
+        self.compose_mode = self.compose_mode or self._evaluate_compose_mode()
+        self._compose_dict[self.compose_mode]()
+        self._current_forward = self._forward_dict[self.compose_mode]
 
     def _evaluate_compose_mode(self: nn.Module):
         nparams = [

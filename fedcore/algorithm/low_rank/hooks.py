@@ -15,6 +15,10 @@ class OnetimeRankPruner(BaseHook):
     _SUMMON_KEY = ('rank_prune_each', 'strategy')
     _hook_place = 50
 
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.__done = False
+
     @classmethod
     def check_init(cls, params):
         strategy = params.get('strategy', '') 
@@ -23,6 +27,8 @@ class OnetimeRankPruner(BaseHook):
         return False
 
     def trigger(self, epoch, kws) -> bool:
+        if self.__done:
+            return False
         rank_prune_each = self.params.get('rank_prune_each', -1)
         if not rank_prune_each:
             return False
@@ -32,6 +38,7 @@ class OnetimeRankPruner(BaseHook):
             return epoch == self.params.get('epochs', 1)
     
     def action(self, epoch, kws):
+        self.__done = True
         non_adaptive_threshold = self.params.get('non_adaptive_threshold', .75)
         strategy = self.params.get('strategy', 'explained_variance')
         for name, module in self.model.named_modules():

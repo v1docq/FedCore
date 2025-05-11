@@ -288,6 +288,7 @@ class LowRankTemplate(NeuralModelConfigTemplate):
     strategy: SLRStrategiesEnum = 'quantile'
     rank_prune_each: int = -1
     custom_criterions: dict = None  # {'norm_loss':{...},
+    compose_mode: Optional[Literal['one_layer', 'two_layers', 'three_layers']] = None
     non_adaptive_threshold: float = .5
     finetune_params: NeuralModelConfigTemplate = None
 
