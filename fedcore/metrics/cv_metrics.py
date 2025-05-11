@@ -85,10 +85,11 @@ class Throughput(CompressionMetric):
 
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
-        print('@@@', cls.__name__)
-        return 1. # @@@
+        # print('@@@', cls.__name__)
+        # return 1. # @@@
         evaluator = PerformanceEvaluator(model=model, data=dataset, device=device, batch_size=batch_size)
-        return evaluator.throughput_eval()
+        throughputs = evaluator.throughput_eval()
+        return np.mean(throughputs)
 
 
 class Latency(CompressionMetric):
@@ -100,8 +101,6 @@ class Latency(CompressionMetric):
                device=default_device(), 
                batch_size=32, 
                ):
-        print('@@@', cls.__name__)
-        return 1 # @@@
         evaluator = PerformanceEvaluator(model=model, model_regime=model_regime,
                                          data=dataset, device=device, batch_size=batch_size)
         latency_list = evaluator.latency_eval()
@@ -121,8 +120,6 @@ class CV_quality_metric(CompressionMetric):
                model_regime='model_after', 
                device=default_device(), 
                batch_size=32):
-        print('@@@', cls.__name__)
-        # return 1 # @@@
         evaluator = PerformanceEvaluator(model=model,
                                          model_regime=model_regime,
                                          data=dataset,
