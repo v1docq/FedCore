@@ -427,12 +427,12 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
 
     def _forward2(self, x):
         x = embedding(x, self.U)
-        x = linear(x, self.Vh)
+        x = linear(x, self.Vh.T)
         return x
     
     def _forward3(self, x):
         x = embedding(x, (self.U * self.S))
-        x = linear(x, self.Vh)
+        x = linear(x, self.Vh.T)
         return x
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -643,12 +643,13 @@ class DecomposedConv1d(nn.Conv1d, IDecomposed):
         self._three_layers_compose()
 
     def _one_layer_compose(self):
-        W = (self.U * self.S) @ self.Vh
+        W = (self.U * self.S.unsqueeze(0)) @ self.Vh
         self.register_parameter('U', Parameter(W.reshape((self.out_channels, self.in_channels, self.kernel_size[0]))))
         self._eliminate_extra_params(['S', 'Vh'])
 
     def _two_layers_compose(self):
-        SVh = torch.diag(self.S) @ self.Vh
+        SVh = self.S.unsqueeze(-1) * self.Vh
+        # SVh = torch.diag(self.S) @ self.Vh
         self.register_parameter('Vh', Parameter(SVh.reshape((-1, self.in_channels, self.kernel_size[0]))))
         self.register_parameter('U', 
             Parameter(self.U.reshape((self.out_channels, -1, 1))))
