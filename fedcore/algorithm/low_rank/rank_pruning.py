@@ -33,8 +33,7 @@ def rank_threshold_pruning(
 
     if hasattr(decomposed_module, 'S') and decomposed_module.S is None:
         return
-    if hasattr(decomposed_module, '_anti_three_layers_compose'):
-        decomposed_module._anti_three_layers_compose()
+    decomposed_module._anti_three_layers_compose()
 
     U, S, Vh = decomposed_module.get_U_S_Vh()
     

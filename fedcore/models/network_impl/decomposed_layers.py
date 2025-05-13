@@ -291,7 +291,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         self._eliminate_extra_params(['S', 'Vh'])
 
     def _two_layers_compose(self):
-        SVh = self.S.unsqueeze(-1) * self.Vh
+        SVh = torch.diag(self.S) @ self.Vh
         self.register_parameter('Vh', Parameter(SVh.view(*self.decomposing["Vh4d"])))
         self.register_parameter('U', 
             Parameter(self.U.view(*self.decomposing["U4d"]).permute(0, 3, 1, 2)))

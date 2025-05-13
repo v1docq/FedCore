@@ -47,6 +47,7 @@ class OnetimeRankPruner(BaseHook):
                                        threshold=non_adaptive_threshold,
                                        strategy=strategy,
                                        module_name=name)
+                module.compose_weight_for_inference()
 
 
 class DynamicRankPruner(BaseHook):
