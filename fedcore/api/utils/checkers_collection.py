@@ -63,9 +63,9 @@ class DataCheck:
                                             model_params=self.learning_params)
                 torch_model = self._check_optimised_model(torch_model, input_data)
                 if model_is_pretrain_backbone_with_weights:
-                    if hasattr(torch_model, 'load_model'):
+                    try:
                         torch_model.load_model(self.model['path_to_model'])
-                    else:
+                    except:
                         loaded_state_dict = torch.load(self.model['path_to_model'], weights_only=True,
                                                     map_location=default_device())
                         verified_state_dict = self._check_state_dict(loaded_state_dict, input_data)

@@ -252,14 +252,23 @@ class PerformanceEvaluator:
             batch = batch[0] if isinstance(batch, (tuple, list)) else batch
             is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
             X = batch.cuda(non_blocking=True) if is_already_cuda else batch.to(self.device)
-            start_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
-            end_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
-            for i in steps_iter:
-                start_events[i].record()
-                self.model(X)
-                end_events[i].record()
-            torch.cuda.synchronize(self.device)
-            times = ([s.elapsed_time(e) for s, e in zip(start_events, end_events)])
+            if is_already_cuda:
+                start_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
+                end_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
+                for i in steps_iter:
+                    start_events[i].record()
+                    self.model(X)
+                    end_events[i].record()
+                torch.cuda.synchronize(self.device)
+                times = ([s.elapsed_time(e) for s, e in zip(start_events, end_events)])
+            else:
+                times = list()
+                for i in steps_iter:
+                    start_events = time()
+                    self.model(X)
+                    end_events = time()
+                    times.append(end_events - start_events)
+                times = (times)
             thr_list.extend(times)
         return len(batch) / np.array(thr_list)
 
@@ -274,6 +283,13 @@ class PerformanceEvaluator:
             torch.cuda.synchronize(self.device)
             time = start_event.elapsed_time(end_event)
             return time
+        
+        def cpu_latency_eval(sample_batch):
+            start_on_device = time()
+            self.model(sample_batch)
+            stop_on_device = time()
+            elapsed_on_device = stop_on_device - start_on_device
+            return elapsed_on_device
 
         self.model.eval()
         lat_list = []
@@ -286,7 +302,8 @@ class PerformanceEvaluator:
                         sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
                         sample.to(self.device)
                         sample_batch = sample[None, ...]
-                        lat_list.append(cuda_latency_eval(sample_batch))
+                        lat_list.append(cuda_latency_eval(sample_batch)) if is_already_cuda else \
+                        lat_list.append(cpu_latency_eval(sample_batch))
             else:
                 lat_list.append(cuda_latency_eval(batch))
         return np.array(lat_list)

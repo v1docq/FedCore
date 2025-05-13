@@ -19,7 +19,7 @@ from fedcore.algorithm.quantization.utils import ParentalReassembler
 from fedcore.architecture.utils.paths import PATH_TO_DATA
 from fedcore.architecture.comptutaional.devices import default_device
 
-assert torch.cuda.is_available()
+# assert torch.cuda.is_available()
 
 if default_device().type == "cuda":
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = ""
@@ -34,11 +34,11 @@ task_problems = {
 }
 
 peft_problems = {
-    'low_rank': {'peft_problem': 'low_rank'},
+    'low-rank': {'peft_problem': 'low_rank'},
     'pruning': {'peft_problem': 'pruning'},
-    'quant_dynamic': {'peft_problem': 'quantization', 'quant_type': 'dynamic'},
-    'quant_static': {'peft_problem': 'quantization', 'quant_type': 'static'},
-    'quant_qat': {'peft_problem': 'quantization', 'quant_type': 'qat'}
+    'quant-dynamic': {'peft_problem': 'quantization', 'quant_type': 'dynamic'},
+    'quant-static': {'peft_problem': 'quantization', 'quant_type': 'static'},
+    'quant-qat': {'peft_problem': 'quantization', 'quant_type': 'qat'}
 }
 
 
@@ -54,19 +54,19 @@ class TemplateLoader:
         if self.problem == 'classification':
             try:
                 train_loader = {"batch_size": 64, "shuffle": True, "is_train": True, "data_type": "image", "split_ratio": [0.8, 0.2], "num_workers": 0}
-                test_loader = {"batch_size": 100, "shuffle": True, "is_train": False, "data_type": "image", "num_workers": 0}
+                test_loader = {"batch_size": 100, "shuffle": False, "is_train": False, "data_type": "image", "num_workers": 0}
                 return load_data(self.dataset, train_loader), load_data(self.dataset, test_loader)
             except:
                 train_path = os.path.join(PATH_TO_DATA, 'time_series_classification', 'one_dim', f'{self.dataset}', f'{self.dataset}_TRAIN.tsv')
                 test_path = os.path.join(PATH_TO_DATA, 'time_series_classification', 'one_dim', f'{self.dataset}', f'{self.dataset}_TEST.tsv')
                 train_loader = {"batch_size": 8, "shuffle": True, "data_type": "time_series", "split_ratio": [0.8, 0.2], "num_workers": 0}
-                test_loader = {"batch_size": 8, "shuffle": True, "data_type": "time_series", "num_workers": 0}
+                test_loader = {"batch_size": 8, "shuffle": False, "data_type": "time_series", "num_workers": 0}
                 return load_data(train_path, train_loader), load_data(test_path, test_loader)
         elif self.problem == 'regression':
             train_path = os.path.join(PATH_TO_DATA, 'time_series_regression', 'multi_dim', f'{self.dataset}', f'{self.dataset}_TRAIN.ts')
             test_path = os.path.join(PATH_TO_DATA, 'time_series_regression', 'multi_dim', f'{self.dataset}', f'{self.dataset}_TEST.ts')
             train_loader = {"batch_size": 8, "shuffle": True, "data_type": "time_series", "split_ratio": [0.8, 0.2], "num_workers": 0}
-            test_loader = {"batch_size": 8, "shuffle": True, "data_type": "time_series", "num_workers": 0}
+            test_loader = {"batch_size": 8, "shuffle": False, "data_type": "time_series", "num_workers": 0}
             return load_data(train_path, train_loader), load_data(test_path, test_loader)
 
 
@@ -90,10 +90,11 @@ class TemplateLoader:
     def build_config(self, peft_dict, current_model):
         initial, strategy = get_scenario_for_api('from_checkpoint', current_model)
         peft_type, peft_config = self.get_peft_config(peft_dict)
+        pop_size = 10
         model_cfg = ModelArchitectureConfigTemplate(input_dim=None, output_dim=None, depth=1)
         pretrain_cfg = NeuralModelConfigTemplate(epochs=1, log_each=1, eval_each=1, save_each=1,
                                                  criterion=self.loss, model_architecture=model_cfg)
-        fedot = FedotConfigTemplate(problem=self.problem, metric=self.metrics, pop_size=1,
+        fedot = FedotConfigTemplate(problem=self.problem, metric=self.metrics, pop_size=pop_size,
                                     timeout=0.1, initial_assumption=initial, n_jobs=1)
         automl = AutoMLConfigTemplate(fedot_config=fedot)
         learning = LearningConfigTemplate(criterion=self.loss, learning_strategy=strategy,
@@ -117,8 +118,8 @@ def save_results(model, metrics, model_name, dataset_name, combo, step):
         quality_df = pd.DataFrame(metrics['quality_comparison'])
         compute_df = pd.DataFrame(metrics['computational_comparison'])
         with pd.ExcelWriter(metrics_path) as writer:
-            quality_df.to_excel(writer, sheet_name='quality_comparison', index=False)
-            compute_df.to_excel(writer, sheet_name='computational_comparison', index=False)
+            quality_df.to_excel(writer, sheet_name='quality_comparison')
+            compute_df.to_excel(writer, sheet_name='computational_comparison')
     except:
         metrics_path = Path(result_dir, f"{step}_{combo_list[step]}_metrics.txt")
         with open(metrics_path, 'w') as f:

@@ -157,12 +157,10 @@ class BaseQuantizer(BaseCompressionModel):
     def _prepare_model(self, input_data: InputData):
         try:
             uninplace(self.quant_model)
-
+            self.quant_model = ParentalReassembler.reassemble(self.quant_model)
             if hasattr(self.quant_model, 'fuse_model'):
                 self.quant_model.fuse_model()
                 print("[PREPARE] fuse_model executed.")
-
-            self.quant_model = ParentalReassembler.reassemble(self.quant_model)
             propagate_qconfig_(self.quant_model, self.qconfig)
             for name, module in self.quant_model.named_modules():
                 print(f"Module: {name}, qconfig: {module.qconfig}")
