@@ -215,6 +215,7 @@ class ParentalReassembler(Accessor):
         DecomposedLinear: _recreate_decomposed_linear,
         DecomposedEmbedding: _recreate_decomposed_embedding,
         DecomposedConv2d: _recreate_decomposed_conv2d,
+        DecomposedConv1d: _recreate_decomposed_conv1d,
     }
             
     @classmethod
@@ -222,14 +223,11 @@ class ParentalReassembler(Accessor):
         device = default_device()
         is_decomposed = isinstance(module, IDecomposed)
         supported = cls.supported_decomposed_layers if is_decomposed else cls.supported_layers
-        if device.type == "cuda":
-            not_supported = {DecomposedLinear, DecomposedConv2d}
-            supported = {k: v for k, v in supported.items() if k not in not_supported}
         for supported in supported:
             if isinstance(module, supported) and (is_decomposed or not type(module) is supported):
                 return supported, is_decomposed
         return None, is_decomposed
-    
+     
     @classmethod
     def _handle(cls, module, type):
         supported = cls.supported_decomposed_layers if issubclass(type, IDecomposed) else cls.supported_layers
