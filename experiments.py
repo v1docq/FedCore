@@ -1,3 +1,30 @@
+import random
+import numpy as np
+import torch
+import os
+
+def set_all_seeds(seed=42, multi_gpu=False):
+    """
+    Set seeds for all major random number generators in Python libraries
+    to ensure reproducible results in AI/ML experiments.
+    
+    Parameters:
+        seed (int): Seed value to use (default: 42)
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    if multi_gpu:
+        torch.cuda.manual_seed_all(seed)  # if using multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    
+    print(f"All seeds set to {seed} for random, numpy, torch")
+
+set_all_seeds(42)
+
 import os
 import torch
 import gc
@@ -183,6 +210,9 @@ if __name__ == "__main__":
                 try:
                     with redirect_stdout(buffer), redirect_stderr(buffer):
                         print(f"\n>>> PEFT step {step+1}: {peft_key}")
+                        if peft_problems[peft_key]['peft_problem'] in ('pruning',):
+                            print("Reassembling pruned model")
+                            ParentalReassembler.reassemble(current_model)
                         api_template = loader.build_config(peft_problems[peft_key], current_model)
                         config = ConfigFactory.from_template(api_template)()
                         model = FedCore(config)
@@ -191,9 +221,7 @@ if __name__ == "__main__":
                         hist = model.manager.solver.history
                         model = model.fedcore_model.operator.root_node.fitted_operation.model_after
                         save_results(model, metrics, loader.model, loader.dataset, combo, step, hist)
-                        if peft_problems[peft_key]['peft_problem'] == 'pruning':
-                            print("Reassembling pruned model")
-                            ParentalReassembler.reassemble(model)
+                        
                         current_model = model
                 except Exception as e:
                     print(f"Failed step {combo[step]} for {loader.model} on {loader.dataset}")
