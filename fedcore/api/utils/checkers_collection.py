@@ -59,10 +59,14 @@ class DataCheck:
                 if hasattr(torch_model, 'load_model'):
                     torch_model.load_model(self.model['path_to_model'])
                 else:
-                    loaded_state_dict = torch.load(self.model['path_to_model'], weights_only=True,
-                                                   map_location=default_device())
-                    verified_state_dict = self._check_state_dict(loaded_state_dict, input_data)
-                    torch_model.load_state_dict(verified_state_dict)
+                    try:
+                        torch_model = torch.load(self.model['path_to_model'], weights_only=False,
+                                                 map_location=default_device())
+                    except Exception:
+                        loaded_state_dict = torch.load(self.model['path_to_model'], weights_only=True,
+                                                       map_location=default_device())
+                        verified_state_dict = self._check_state_dict(loaded_state_dict, input_data)
+                        torch_model.load_state_dict(verified_state_dict)
         elif model_is_custom_callable_object:
             torch_model = self.model
 
@@ -80,7 +84,7 @@ class DataCheck:
 
         """
         if self.learning_params is not None:
-            if hasattr(self.learning_params,'model_architecture'):
+            if hasattr(self.learning_params, 'model_architecture'):
                 model_params = self.learning_params.model_architecture
             else:
                 model_params = self.learning_params

@@ -59,8 +59,7 @@ class BaseNeuralModel(torch.nn.Module):
         self._init_null_object()
 
         self.epochs = self.params.get("epochs", 1)
-        self.batch_size = self.params.get("batch_size", 16)
-        self.learning_rate = self.params.get("learning_rate", 0.001)
+        self.learning_rate = self.learning_params.get("learning_rate", 0.001)
         self.model = self.params.get("model", None)
         self._init_custom_criterions(
             self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer

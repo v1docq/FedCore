@@ -75,13 +75,23 @@ class ApiLoader:
     def load_data(self, loader_type: str = None):
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)
         if loader_type.__contains__('benchmark'):
-            torch_dataset = torch_dataset(data_path(self.source),
-                                          train=self.loader_params['is_train'],
-                                          download=True,
-                                          transform=self.transform)
+            if str(torch_dataset).__contains__('Imagenette'):
+                split = 'train' if self.loader_params['is_train'] else 'val'
+                download = False if os.path.exists(data_path(self.source)) else True
+                self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((320,320))])
+                torch_dataset = torch_dataset(data_path(self.source),
+                                              split=split,
+                                              download=download,
+                                              size='320px',
+                                              transform=self.transform)
+            else:
+                torch_dataset = torch_dataset(data_path(self.source),
+                                              train=self.loader_params['is_train'],
+                                              download=True,
+                                              transform=self.transform)
         if 'subset' in self.loader_params.keys():
             subset_part = self.loader_params['subset']
-            torch_dataset.data = torch_dataset.data[:subset_part,]
+            torch_dataset.data = torch_dataset.data[:subset_part, ]
             torch_dataset.targets = torch_dataset.targets[:subset_part]
         fedcore_data = self._convert_to_fedcore(torch_dataset)
         return fedcore_data
