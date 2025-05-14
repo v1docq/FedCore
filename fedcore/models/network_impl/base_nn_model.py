@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from gc import collect
 from functools import reduce, partial
 from itertools import chain
 from typing import Iterable, Optional, Any, Union, Callable
@@ -57,6 +58,8 @@ class BaseNeuralModel(torch.nn.Module):
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_empty_object()
         self._init_null_object()
+
+        self._clear_each = 10
 
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
@@ -206,6 +209,7 @@ class BaseNeuralModel(torch.nn.Module):
     def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
         self.model.train()
+        gc_count = 0
         for batch in tqdm(dataloader, desc='Batch #'):
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
@@ -220,6 +224,12 @@ class BaseNeuralModel(torch.nn.Module):
             optimizer.step()
             optimizer.zero_grad()
             training_loss += loss.item()
+            del inputs
+            del output
+            del targets
+            gc_count += 1
+            if gc_count % self._clear_each == 0:
+                self._clear_cache() 
         avg_loss = training_loss / len(dataloader)
         self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
 
@@ -258,6 +268,7 @@ class BaseNeuralModel(torch.nn.Module):
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
+    @torch.no_grad()
     def _predict_model(
             self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
     ):
@@ -269,10 +280,14 @@ class BaseNeuralModel(torch.nn.Module):
                                                      max_batches=self.calib_batch_limit)
         if self.task_type is None:
             self.task_type = x_test.task.task_type
-        for batch in tqdm(dataloader):  ###TODO why val_dataloader???
+        for i, batch in tqdm(enumerate(dataloader, 1), total=len(dataloader)):  ###TODO why val_dataloader???
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
             prediction.append(model(*inputs))
+            del inputs
+            del batch
+            if i % self._clear_each == 0:
+                self._clear_cache()
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
@@ -302,6 +317,7 @@ class BaseNeuralModel(torch.nn.Module):
     def _clear_cache(self):
         with torch.no_grad():
             torch.cuda.empty_cache()
+            collect()
 
     def __wrap(self, model):
         if not isinstance(model, BaseNeuralModel):

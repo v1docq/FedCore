@@ -118,6 +118,7 @@ def _recreate_decomposed_linear(
         nn.Linear(L.in_features, h, bias=False),
         nn.Linear(h, L.out_features, bias=True),
         routing={'out_features': ('out_features', '1'), 
+                 'weight': ('weight', '1'),
                  'bias': ('bias', '1')}
     )
     new[0].weight.data = Vh
@@ -133,6 +134,7 @@ def _recreate_decomposed_embedding(E: DecomposedEmbedding):
         nn.Embedding(E.num_embeddings, h),
         nn.Linear(h, E.embedding_dim, False),
         routing={'embedding_dim': ('out_features', '1'),
+                 'weight': ('weight', '1'),
                  'bias': ('bias', '1'),}
     )
     new[0].weight.data = U
@@ -152,6 +154,7 @@ def _recreate_decomposed_conv2d(C: DecomposedConv2d):
             'in_channels': ('in_channels', '0'),
             'out_channels': ('out_channels', '1'),
             'groups': ('groups', '0'),
+            'weight': ('weight', '1'),
             'bias': ('bias', '1'),
         }
     )
@@ -176,6 +179,7 @@ def _recreate_decomposed_conv1d(C: DecomposedConv1d):
         C2,
         routing={
             'out_channels': ('out_channels', '1'),
+            'weight': ('weight', '1'),
             'bias': ('bias', '1'),
         }
     )
