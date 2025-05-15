@@ -1,3 +1,4 @@
+import gc
 from datetime import datetime
 from enum import Enum
 from functools import reduce, partial
@@ -265,16 +266,18 @@ class BaseNeuralModel(torch.nn.Module):
         model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
-        dataloader = x_test.val_dataloader if isinstance(x_test,CompressionInputData) else x_test.features.val_dataloader
+        dataloader = x_test.val_dataloader if isinstance(x_test,
+                                                         CompressionInputData) else x_test.features.val_dataloader
         dataloader = DataLoaderHandler.check_convert(dataloader,
                                                      mode=self.batch_type,
                                                      max_batches=self.calib_batch_limit)
         if self.task_type is None:
             self.task_type = x_test.task.task_type
-        for batch in tqdm(dataloader):  ###TODO why val_dataloader???
-            *inputs, targets = batch
-            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            prediction.append(model(*inputs))
+        for batch in tqdm(dataloader):
+            with torch.no_grad():  ###TODO why val_dataloader???
+                *inputs, targets = batch
+                inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+                prediction.append(model(*inputs))
         return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
@@ -302,6 +305,7 @@ class BaseNeuralModel(torch.nn.Module):
         return predict
 
     def _clear_cache(self):
+        gc.collect()
         with torch.no_grad():
             torch.cuda.empty_cache()
 

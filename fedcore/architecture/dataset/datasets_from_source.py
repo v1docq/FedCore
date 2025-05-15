@@ -6,7 +6,7 @@ import os
 from enum import Enum
 
 from typing import Callable, Tuple, Union
-
+from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
@@ -19,7 +19,6 @@ import torchvision
 from torchvision import transforms
 from torchvision.datasets.folder import DatasetFolder
 from torchvision.transforms import v2
-
 from fedcore.architecture.dataset.custom_loader import TimeSeriesLoader
 from fedcore.architecture.dataset.task_specified.object_detection_datasets import YOLODataset, COCODataset
 from fedcore.architecture.utils.paths import PROJECT_PATH, PATH_TO_DATA
@@ -172,10 +171,8 @@ class DatasetFromExternalModel(Dataset):
                 and id is integer.
 
         """
-        if self.is_nested_container:
-            sample, target = self.features[idx], self.target[idx]
-        else:
-            sample, target = self.files[idx], idx
+        target = self.target[idx] if self.target is not None else idx
+        sample = self.features[idx] if self.is_nested_container else self.files[idx]
         return sample, target
 
     def __len__(self) -> int:
@@ -209,6 +206,7 @@ class DatasetFromFolder(DatasetFolder):
         self.root = data_folder
         self.transform = transform
         self.class_names = None
+        self.encoder = None
         self._define_data_source(data_folder)
 
     def _define_data_source(self, data_folder):
@@ -217,8 +215,17 @@ class DatasetFromFolder(DatasetFolder):
         elif self.files[0].lower().endswith(TIME_SERIES_EXTENSIONS):
             self.is_dir_with_images = False
             feature, target = self._default_ts_loader(data_folder)
-            target = target.astype(np.float32).astype(np.int8)
+            try:
+                target = target.astype(np.float32).astype(np.int8)
+            except Exception:
+                target = target
+
             unique_target_val = np.unique(target)
+            if self.encoder is None:
+                self.encoder = LabelEncoder()
+                self.encoder.fit(target)
+
+            target = self.encoder.transform(target) + 1 # dont start target at 0
             if len(unique_target_val) < 50 and not target.dtype == float:
                 self.class_names = unique_target_val
             if len(feature.shape) > 2:

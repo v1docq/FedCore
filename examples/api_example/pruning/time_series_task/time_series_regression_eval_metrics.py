@@ -41,7 +41,7 @@ def load_example_dataset():
                                'data_type': 'time_series',
                                'split_ratio': [0.8, 0.2]}
     test_dataloader_params = {"batch_size": 8,
-                              'shuffle': True,
+                              'shuffle': False,
                               'data_type': 'time_series'}
     fedcore_train_data = load_data(source=PATH_TO_TRAIN, loader_params=train_dataloader_params)
     fedcore_test_data = load_data(source=PATH_TO_TEST, loader_params=test_dataloader_params)

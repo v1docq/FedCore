@@ -1,3 +1,4 @@
+import gc
 from itertools import chain
 
 from typing import Optional, Union, List
@@ -30,6 +31,7 @@ class PairwiseDifferenceEstimator:
         self.initial_classes = None
         self.device = default_device()
         self.pdl_train_target = []
+        self.pdl_train_features = []
 
     def _create_label_dict(self, stacked_target: Tensor):
         self.map_dict = {}
@@ -54,29 +56,45 @@ class PairwiseDifferenceEstimator:
         train_dataloader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=batch_size)
         return train_dataloader
 
-    def _eval_pair_diff(self, tensor1: Tensor, tensor2: Tensor, with_difference: bool = False,
-                        collect_target: bool = False):
-        if collect_target:
-            self.pdl_train_target.append(tensor1.cpu().detach().numpy())
+    def _eval_pair_diff(self, tensor1: Tensor, tensor2: Tensor, with_difference: bool = False):
+        def eval_diff(tensor1, tensor2):  # create set of functions to eval "difference"?
+            tensor1_exp = tensor1.unsqueeze(1)  # (n, m, d)
+            tensor2_exp = tensor2.unsqueeze(0)  # (n, m, d)
+            # Diff calc
+            diff = tensor1_exp - tensor2_exp
+            return diff
+
         old_shape = list(tensor1.shape)
         samples = old_shape[0]
-        # Add new axis
-        tensor1_exp = tensor1.unsqueeze(1)  # (n, m, d)
-        tensor2_exp = tensor2.unsqueeze(0)  # (n, m, d)
-        # Diff calc
-        diff = tensor1_exp - tensor2_exp  # create set of functions to eval "difference"?
-        old_shape[0] = samples * samples
-        diff = torch.reshape(diff, old_shape)  # (batch_size x batch_size x sample_shape(channel x width x height))
+        is_inference_stage = tensor1.shape[0] != tensor2.shape[0]
+        if is_inference_stage:
+            diff = torch.concat([eval_diff(tensor1, sample) for sample in tensor2], 1)
+            diff = diff.swapaxes(0, 1)
+        else:
+            diff = eval_diff(tensor1, tensor2)
+            old_shape[0] = samples * samples
+            diff = torch.reshape(diff, old_shape)  # (batch_size x batch_size x sample_shape(channel x width x height))
         # Create common feature space with original features
         return torch.concat([tensor1, diff], dim=0) if with_difference else diff
 
-    def pair_input(self, X: Tensor, y: Tensor, with_difference: bool = False, collect_target: bool = False) -> Tensor:
+    def pair_input(self, X: Tensor, y: Tensor,
+                   with_difference: bool = False,
+                   collect_target: bool = False,
+                   collect_features: bool = False,
+                   inference_stage: bool = False) -> Tensor:
         """
         Cross join с добавлением разностей между признаками.
         Возвращает тензор с парами и их разностями.
         """
-        return (self._eval_pair_diff(X, X, with_difference), self._eval_pair_diff(y, y, with_difference,
-                                                                                  collect_target=collect_target))
+        tensor1, tensor2 = X, X
+        if collect_target:
+            self.pdl_train_target.append(y.cpu().detach().numpy())
+        if collect_features:
+            self.pdl_train_features.append(X)
+        if inference_stage:
+            tensor1 = torch.concat(self.pdl_train_features)
+
+        return (self._eval_pair_diff(tensor1, tensor2, with_difference), self._eval_pair_diff(y, y, with_difference))
 
     def pair_output(self,
                     y1: Tensor,
@@ -169,14 +187,12 @@ class PairwiseDifferenceModel:
         val_bs = input_data.features.val_dataloader.batch_size
         augmented_train_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
                                                                           batch[1].to(self.device),
+                                                                          collect_features=True,
                                                                           collect_target=True),
                                         input_data.features.train_dataloader))
         augmented_val_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
                                                                         batch[1].to(self.device)),
                                       input_data.features.val_dataloader))
-        # augmented_val_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
-        #                                                              batch[1].to(self.device)),
-        #                            input_data.features.val_dataloader))
 
         input_data.features.train_dataloader = self.pde.convert_to_dataloader(augmented_input=augmented_train_data,
                                                                               batch_size=train_bs)
@@ -198,26 +214,37 @@ class PairwiseDifferenceModel:
         """ For each input sample, output C probabilities for each N train pair.
         Beware that this function does not apply the weights at this level
         """
+        test_bs = 0
 
-        test_bs = input_data.features.val_dataloader.batch_size
+        def predict_sample_similarity(batch):
+            batch_predict = []
+            for sample in batch[0]:
+                train_dataset = AbstractDataset(data_source=(sample, None))
+                train_dataloader = DataLoader(dataset=train_dataset, shuffle=False, batch_size=sample.shape[0])
+                input_data.features.val_dataloader = train_dataloader
+                del train_dataloader, train_dataset
+                batch_predict.append(self.trainer.predict(input_data).predict.unsqueeze(0))
+                torch.cuda.empty_cache()
+                gc.collect()
+            return torch.concat(batch_predict,0)
+
         augmented_test_data = list(map(lambda batch: self.pde.pair_input(batch[0].to(self.device),
-                                                                         batch[1].to(self.device)),
+                                                                         batch[1].to(self.device),
+                                                                         inference_stage=True),
                                        input_data.features.val_dataloader))
-        input_data.features.val_dataloader = self.pde.convert_to_dataloader(augmented_input=augmented_test_data,
-                                                                            batch_size=test_bs)
-
-        predictions_proba_difference: Tensor = self.trainer.predict(input_data)
+        predictions = list(map(lambda batch: predict_sample_similarity(batch), augmented_test_data))
+        predictions_proba_similarity = torch.concat(predictions,0)
         # get mean probability valus for case where ab_diff = ba_diff
         # predictions_proba_similarity_ab = predictions_proba_difference.predict[:,:input_data.features.num_classes]
         # predictions_proba_similarity_ba = predictions_proba_difference.predict[:,input_data.features.num_classes-1:]
         # predictions_proba_similarity_ba = torch.flip(predictions_proba_similarity_ba,dims=[0,1])
         # predictions_proba_similarity = (predictions_proba_similarity_ab + predictions_proba_similarity_ba) / 2.
-        predictions_proba_similarity = predictions_proba_difference.predict
-        #dim_reshape = input_data.features.num_classes * input_data.features.num_classes
-        # reshape into tensor with dimensions [n_test_samples x train_bs_size x n_classes]
-        dim_reshape = int(predictions_proba_similarity.shape[0] / test_bs)
-        predictions_proba_similarity = predictions_proba_similarity.reshape((dim_reshape, test_bs,
-                                                                             predictions_proba_similarity.shape[1]))
+        # predictions_proba_similarity = predictions_proba_difference
+        # # dim_reshape = input_data.features.num_classes * input_data.features.num_classes
+        # # reshape into tensor with dimensions [n_test_samples x train_bs_size x n_classes]
+        # dim_reshape = int(predictions_proba_similarity.shape[0] / test_bs)
+        # predictions_proba_similarity = predictions_proba_similarity.reshape((dim_reshape, test_bs,
+        #                                                                      predictions_proba_similarity.shape[1]))
         return predictions_proba_similarity
 
     def __predict_with_prior(self, input_data: Tensor, sample_weight):
@@ -231,14 +258,13 @@ class PairwiseDifferenceModel:
         predictions_proba_similarity: Tensor = self.predict_similarity_samples(input_data)
         sample_classes_prob_matrix = []
         for sample in predictions_proba_similarity:
-            probs = pd.Series(torch.concat([sample[:, 0]
-                                            for rep in range(len(self.pde.pdl_train_target))]).cpu().detach().numpy())
             target = pd.Series(np.concatenate(self.pde.pdl_train_target))
+            probs = pd.Series(sample[:,0].cpu().detach().numpy())
             df = pd.DataFrame(
                 {'start': target.reset_index(drop=True), 'similarity': probs})
             mean = df.groupby('start', observed=False).mean()['similarity']
             sample_classes_prob_matrix.append(Tensor(mean.values))
-        original_classes_prob_matrix = torch.stack(sample_classes_prob_matrix,0)
+        original_classes_prob_matrix = torch.stack(sample_classes_prob_matrix, 0)
         # without this normalization it should work for multiclass-multilabel
         if self.proba_aggregate_method == 'norm':
             tests_classes_likelihood_np = original_classes_prob_matrix / original_classes_prob_matrix.sum()
@@ -297,8 +323,7 @@ class PairwiseDifferenceModel:
                                 monoid=[input_data, self.use_prior]).either(
             left_function=lambda features: self.__predict_without_prior(features, self.sample_weight_),
             right_function=lambda features: self.__predict_with_prior(features, self.sample_weight_))
-        output = self.pde.predict(predict_output, output_mode)
-        output = output if self.min_label_zero else output + 1
+        output = self.pde.predict(predict_output, output_mode) + 1 # we dont have labels with 0 val
         return output
 
     def predict(self,

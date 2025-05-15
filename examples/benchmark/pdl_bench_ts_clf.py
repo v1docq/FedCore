@@ -8,7 +8,7 @@ from fedcore.data.dataloader import load_data
 from fedcore.models.data_operation.augmentation.pairwise_difference import PairwiseDifferenceModel
 from fedcore.repository.constanst_repository import TS_MULTI_CLF_BENCHMARK
 import torch
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score
 
 # DATASET = 'CIFAR10'
 INITIAL_MODEL = 'InceptionNet'
@@ -24,7 +24,7 @@ train_dataloader_params = {"batch_size": 10,
 test_dataloader_params = {"batch_size": 10,
                           'shuffle': False,
                           'is_train': False,
-                          #'subset': 100,
+                          # 'subset': 100,
                           'data_type': 'time_series'}
 
 
@@ -42,10 +42,10 @@ def load_benchmark_data(dataset_name, backbone_model, train_dataloader_params, t
 
 
 def build_config(model_config):
-    pretrain_config = NeuralModelConfigTemplate(epochs=1,
-                                                log_each=3,
-                                                eval_each=100,
-                                                save_each=100,
+    pretrain_config = NeuralModelConfigTemplate(epochs=100,
+                                                log_each=10,
+                                                eval_each=200,
+                                                save_each=200,
                                                 criterion=LOSS,
                                                 model_architecture=model_config,
                                                 custom_learning_params=dict(use_early_stopping={'patience': 30,
@@ -57,15 +57,19 @@ def build_config(model_config):
     model_learning_config = ConfigFactory.from_template(learning_config)()
     pretrain_config = ConfigFactory.from_template(pretrain_config)()
     return model_learning_config, pretrain_config
-def eval_score(input_test, predict):
 
+
+def eval_score(input_test, predict):
     target = list(input_test.features.train_dataloader)
     pred = predict.cpu().detach().numpy()
     target = torch.concat([x[1] for x in target])
-    score = f1_score(target, pred, average='weighted')
+    f1 = f1_score(target, pred, average='weighted')
+    acc = accuracy_score(target, pred)
+    return (f1, acc)
 
-    return score
+
 if __name__ == "__main__":
+    dict_result = {}
     for dataset_name in TS_MULTI_CLF_BENCHMARK:
         PATH_TO_TRAIN = os.path.join(PATH_TO_DATA, 'time_series_classification', 'multi_dim', dataset_name,
                                      f'{dataset_name}_TRAIN.ts')
@@ -73,16 +77,17 @@ if __name__ == "__main__":
                                     f'{dataset_name}_TEST.ts')
         if not os.path.exists(PATH_TO_TRAIN):
             break
-        dataset_name = {'train_path': PATH_TO_TRAIN,
+        dataset_path = {'train_path': PATH_TO_TRAIN,
                         'test_path': PATH_TO_TEST}
         model_learning_config, pretrain_config = build_config(model_config)
-        input_train, input_test = load_benchmark_data(dataset_name, INITIAL_MODEL,
+        input_train, input_test = load_benchmark_data(dataset_path, INITIAL_MODEL,
                                                       train_dataloader_params, test_dataloader_params,
                                                       pretrain_config)
-
 
         pdl_model = PairwiseDifferenceModel(params=model_learning_config)
         fitted = pdl_model.fit(input_train)
         predict = pdl_model.predict(input_test)
-        score = eval_score(input_test,predict)
-        _ = 1
+        score = eval_score(input_test, predict)
+        dict_result.update({dataset_name: score})
+        print(dict_result)
+    _ = 1

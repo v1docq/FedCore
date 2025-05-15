@@ -21,7 +21,7 @@ class ApiLoader:
                                              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
                                             )
         self.source = load_source
-
+        self.encoder = None
         self.default_loader_params = {'batch_size': 8,
                                       'shuffle': True,
                                       'num_workers': 1}
@@ -74,6 +74,9 @@ class ApiLoader:
 
     def load_data(self, loader_type: str = None):
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)
+        if hasattr(torch_dataset,'dataset_impl'):
+            if torch_dataset.dataset_impl.encoder is not None:
+                self.encoder = torch_dataset.dataset_impl.encoder
         if loader_type.__contains__('benchmark'):
             if str(torch_dataset).__contains__('Imagenette'):
                 split = 'train' if self.loader_params['is_train'] else 'val'
