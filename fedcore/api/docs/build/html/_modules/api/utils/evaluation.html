@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>api.utils.evaluation &#8212; FedCore API 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for api.utils.evaluation</h1><div class="highlight"><pre>
+<div class="viewcode-block" id="evaluate_original_model">
+<a class="viewcode-back" href="../../../api.utils.html#api.utils.evaluation.evaluate_original_model">[docs]</a>
+<span></span><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_original_model</span><span class="p">(</span><span class="n">fedcore_compressor</span><span class="p">,</span> <span class="n">input_data</span><span class="p">):</span>
+    <span class="n">original_prediction</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">output_mode</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
+    <span class="n">original_output</span> <span class="o">=</span> <span class="n">original_prediction</span><span class="o">.</span><span class="n">predict</span>
+    <span class="n">original_model</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">original_model</span>
+    <span class="n">original_quality_metrics</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">evaluate_metric</span><span class="p">(</span>
+        <span class="n">predicton</span><span class="o">=</span><span class="n">original_output</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">target</span>
+    <span class="p">)</span>
+    <span class="n">original_inference_metrics</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">evaluate_metric</span><span class="p">(</span>
+        <span class="n">predicton</span><span class="o">=</span><span class="n">original_output</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+        <span class="n">metric_type</span><span class="o">=</span><span class="s2">&quot;original_computational&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">original_model</span><span class="o">=</span><span class="n">original_model</span><span class="p">,</span>
+        <span class="n">quality_metrics</span><span class="o">=</span><span class="n">original_quality_metrics</span><span class="p">,</span>
+        <span class="n">inference_metrics</span><span class="o">=</span><span class="n">original_inference_metrics</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_optimised_model">
+<a class="viewcode-back" href="../../../api.utils.html#api.utils.evaluation.evaluate_optimised_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_optimised_model</span><span class="p">(</span><span class="n">fedcore_compressor</span><span class="p">,</span> <span class="n">input_data</span><span class="p">):</span>
+    <span class="n">low_rank_prediction</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">output_mode</span><span class="o">=</span><span class="s1">&#39;fedcore&#39;</span><span class="p">)</span>
+    <span class="n">low_rank_output</span> <span class="o">=</span> <span class="n">low_rank_prediction</span><span class="o">.</span><span class="n">predict</span>
+    <span class="n">low_rank_model</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">optimised_model</span>
+    <span class="n">low_rank_quality_metrics</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">evaluate_metric</span><span class="p">(</span>
+        <span class="n">predicton</span><span class="o">=</span><span class="n">low_rank_output</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">target</span>
+    <span class="p">)</span>
+    <span class="n">low_rank_inference_metrics</span> <span class="o">=</span> <span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">evaluate_metric</span><span class="p">(</span>
+        <span class="n">predicton</span><span class="o">=</span><span class="n">low_rank_output</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">fedcore_compressor</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+        <span class="n">metric_type</span><span class="o">=</span><span class="s2">&quot;optimised_computational&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">optimised_model</span><span class="o">=</span><span class="n">low_rank_model</span><span class="p">,</span>
+        <span class="n">quality_metrics</span><span class="o">=</span><span class="n">low_rank_quality_metrics</span><span class="p">,</span>
+        <span class="n">inference_metrics</span><span class="o">=</span><span class="n">low_rank_inference_metrics</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">FedCore API</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">api package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.utils.html">api.utils package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Ivan Monnar.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>api.main &#8212; FedCore API 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=01f34227"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for api.main</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedot.api.main</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fedot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedot.core.data.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">OutputData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedot.core.pipelines.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pymonad.either</span><span class="w"> </span><span class="kn">import</span> <span class="n">Either</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pymonad.maybe</span><span class="w"> </span><span class="kn">import</span> <span class="n">Maybe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.api.utils.checkers_collection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataCheck</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.architecture.abstraction.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">DaskServer</span><span class="p">,</span> <span class="n">exception_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.data.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompressionInputData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.inference.onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">ONNXInferenceModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.models.network_impl.base_nn_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseNeuralModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.neural_compressor.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Torch2ONNXConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.repository.constanst_repository</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FEDOT_API_PARAMS</span><span class="p">,</span>
+    <span class="n">FEDOT_ASSUMPTIONS</span><span class="p">,</span>
+    <span class="n">FEDOT_GET_METRICS</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.repository.initializer_industrial_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">FedcoreModels</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.api.api_configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigTemplate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fedcore.interfaces.fedcore_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">FedcoreEvoOptimizer</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="FedCore">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FedCore</span><span class="p">(</span><span class="n">Fedot</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class is used to run Fedot in model compression mode as FedCore.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        input_config: dictionary with the parameters of the experiment.</span>
+<span class="sd">        output_folder: path to the folder where the results will be saved.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        First, configure experiment and instantiate FedotIndustrial class::</span>
+
+<span class="sd">            from fedcore.api.main import FedCore</span>
+
+<span class="sd">            model = FedCore()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_config</span><span class="p">:</span> <span class="n">ConfigTemplate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Fedot</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">api_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span> <span class="o">=</span> <span class="n">api_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="s1">&#39;Fedcore&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_fedcore_backend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InputData</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initialising Fedcore Repository&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initialising Fedcore Evolutionary Optimisation params&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="n">FedcoreModels</span><span class="p">()</span><span class="o">.</span><span class="n">setup_repository</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">partial</span><span class="p">):</span>
+            <span class="n">fedcore_opt</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">FedcoreEvoOptimizer</span><span class="p">,</span> <span class="n">optimisation_params</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;mutation_strategy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">mutation_strategy</span><span class="p">,</span>
+                <span class="s1">&#39;mutation_agent&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">mutation_agent</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">fedcore_opt</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">fedcore_opt</span>
+            <span class="c1"># self.manager.automl_config.config.update({&#39;optimizer&#39;: fedcore_opt})</span>
+        <span class="k">return</span> <span class="n">input_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">InputData</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initialising solver&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">Fedot</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="p">,</span>
+                                    <span class="n">use_input_preprocessing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">use_auto_preprocessing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">initial_assumption</span> <span class="o">=</span> <span class="n">FEDOT_ASSUMPTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">peft_strategy</span><span class="p">]</span>
+        <span class="n">initial_assumption</span> <span class="o">=</span> <span class="n">initial_assumption</span><span class="p">(</span>
+            <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">peft_strategy_params</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+        <span class="n">initial_pipeline</span> <span class="o">=</span> <span class="n">initial_assumption</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;initial_assumption&#39;</span><span class="p">:</span> <span class="n">initial_pipeline</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">input_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_dask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initialising Dask Server&#39;</span><span class="p">)</span>
+        <span class="n">dask_server</span> <span class="o">=</span> <span class="n">DaskServer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">distributed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">dask_client</span> <span class="o">=</span> <span class="n">dask_server</span><span class="o">.</span><span class="n">client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">dask_cluster</span> <span class="o">=</span> <span class="n">dask_server</span><span class="o">.</span><span class="n">cluster</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Link Dask Server - </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">dask_client</span><span class="o">.</span><span class="n">dashboard_link</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">input_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_solver_no_evo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">InputData</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Initialising solver&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">Fedot</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="p">,</span>
+                                    <span class="n">use_input_preprocessing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">use_auto_preprocessing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">initial_assumption</span> <span class="o">=</span> <span class="n">FEDOT_ASSUMPTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">peft_strategy</span><span class="p">](</span>
+            <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">peft_strategy_params</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">initial_assumption</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">input_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_input_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">):</span>
+        <span class="n">data_cls</span> <span class="o">=</span> <span class="n">DataCheck</span><span class="p">(</span><span class="n">peft_task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;peft_strategy&#39;</span><span class="p">],</span>
+                             <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="p">[</span><span class="s1">&#39;initial_assumption&#39;</span><span class="p">],</span>
+                             <span class="n">learning_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">learning_strategy_params</span>
+                             <span class="p">)</span>
+        <span class="n">train_data</span> <span class="o">=</span> <span class="n">Either</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span><span class="o">.</span><span class="n">then</span><span class="p">(</span><span class="n">data_cls</span><span class="o">.</span><span class="n">check_input_data</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="c1">### TODO del workaround</span>
+        <span class="n">train_data</span><span class="o">.</span><span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">train_data</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">train_dataloader</span>
+        <span class="n">train_data</span><span class="o">.</span><span class="n">val_dataloader</span> <span class="o">=</span> <span class="n">train_data</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">val_dataloader</span>
+        <span class="c1">###</span>
+        <span class="k">return</span> <span class="n">train_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pretrain_before_optimise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fedot_pipeline</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">train_data</span><span class="p">:</span> <span class="n">InputData</span><span class="p">):</span>
+        <span class="n">pretrained_model</span> <span class="o">=</span> <span class="n">fedot_pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span>
+        <span class="n">fedcore_trainer</span> <span class="o">=</span> <span class="n">fedot_pipeline</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">root_node</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">fitted_operation</span>
+        <span class="n">path_to_save_pretrain</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">output_folder</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path_to_save_pretrain</span><span class="p">)</span>
+        <span class="n">path_to_model</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_save_pretrain</span><span class="p">,</span>
+                                     <span class="sa">f</span><span class="s1">&#39;pretrain_model_checkpoint_at_</span><span class="si">{</span><span class="n">fedcore_trainer</span><span class="o">.</span><span class="n">epochs</span><span class="si">}</span><span class="s1">_epoch.pt&#39;</span><span class="p">)</span>
+        <span class="n">fedcore_trainer</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">path_to_model</span><span class="p">)</span>
+        <span class="n">train_data</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">pretrained_model</span><span class="o">.</span><span class="n">predict</span>
+        <span class="k">return</span> <span class="n">train_data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__abstract_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predict_data</span><span class="p">:</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">output_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">learning_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">peft_strategy_params</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="n">learning_params</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">predict_data</span><span class="o">.</span><span class="n">target</span>
+            <span class="c1"># scenario where we load pretrain model and use it only for inference</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span> <span class="o">=</span> <span class="n">BaseNeuralModel</span><span class="p">(</span><span class="n">learning_params</span><span class="p">)</span>
+            <span class="c1">#predict_data = predict_data.features # InputData to CompressionInputData</span>
+        <span class="n">predict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">predict_data</span><span class="p">,</span> <span class="n">output_mode</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">predict</span>
+
+<div class="viewcode-block" id="FedCore.fit">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.fit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">CompressionInputData</span><span class="p">,</span> <span class="n">manually_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for training Industrial model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_data: tuple with train_features and train_target</span>
+<span class="sd">            **kwargs: additional parameters</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">fit_function</span><span class="p">(</span><span class="n">train_data</span><span class="p">):</span>
+            <span class="n">pretrain_before_optimise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;learning_strategy&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;from_scratch&#39;</span>
+            <span class="k">if</span> <span class="n">pretrain_before_optimise</span><span class="p">:</span>
+                <span class="n">model_learning_pipeline</span> <span class="o">=</span> <span class="n">FEDOT_ASSUMPTIONS</span><span class="p">[</span><span class="s2">&quot;training&quot;</span><span class="p">](</span>
+                    <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">learning_config</span><span class="o">.</span><span class="n">learning_strategy_params</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="n">model_learning_pipeline</span> <span class="o">=</span> <span class="n">model_learning_pipeline</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+                <span class="n">train_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrain_before_optimise</span><span class="p">(</span><span class="n">model_learning_pipeline</span><span class="p">,</span> <span class="n">train_data</span><span class="p">)</span>
+            <span class="n">fitted_solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">fitted_solver</span>
+
+        <span class="c1"># with exception_handler(Exception, on_exception=self.shutdown, suppress=False):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span> <span class="o">=</span> <span class="n">Maybe</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_process_input_data</span><span class="p">(</span><span class="n">input_data</span><span class="p">))</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__init_fedcore_backend</span><span class="p">)</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__init_dask</span><span class="p">)</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__init_solver</span><span class="p">)</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="n">fit_function</span><span class="p">)</span><span class="o">.</span> \
+                <span class="n">maybe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">solver</span><span class="p">:</span> <span class="n">solver</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span></div>
+
+
+<div class="viewcode-block" id="FedCore.fit_no_evo">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.fit_no_evo">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_no_evo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">manually_done</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">exception_handler</span><span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">on_exception</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_input_data</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_fedcore_backend</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_dask</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_solver_no_evo</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">fitted_solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimised_model</span> <span class="o">=</span> <span class="n">fitted_solver</span><span class="o">.</span><span class="n">target</span>
+        <span class="k">return</span> <span class="n">fitted_solver</span></div>
+
+
+<div class="viewcode-block" id="FedCore.predict">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.predict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predict_data</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">output_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;fedcore&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to obtain prediction labels from trained Industrial model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            predict_data: tuple with test_features and test_target</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the array with prediction values</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">predicted_labels</span> <span class="o">=</span> <span class="n">Maybe</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_process_input_data</span><span class="p">(</span><span class="n">predict_data</span><span class="p">))</span><span class="o">.</span> \
+            <span class="n">then</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__init_fedcore_backend</span><span class="p">)</span><span class="o">.</span> \
+            <span class="n">then</span><span class="p">(</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__abstract_predict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">output_mode</span><span class="p">))</span><span class="o">.</span> \
+            <span class="n">maybe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">output</span><span class="p">:</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">predicted_labels</span></div>
+
+
+<div class="viewcode-block" id="FedCore.finetune">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.finetune">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">finetune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">,</span> <span class="n">tuning_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to obtain prediction probabilities from trained Industrial model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            train_data: raw train data</span>
+<span class="sd">            tuning_params: dictionary with tuning parameters</span>
+<span class="sd">            mode: str, ``default=&#39;full&#39;``. Defines the mode of fine-tuning. Could be &#39;full&#39; or &#39;head&#39;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_fit_pipeline</span><span class="p">(</span><span class="n">data_dict</span><span class="p">):</span>
+            <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;model_to_tune&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;train_data&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">data_dict</span>
+
+        <span class="n">is_fedot_datatype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">condition_check</span><span class="o">.</span><span class="n">input_data_is_fedot_type</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span>
+        <span class="n">tuning_params</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FEDOT_TUNING_METRICS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="p">[</span><span class="s1">&#39;task&#39;</span><span class="p">]]</span>
+        <span class="n">tuning_params</span><span class="p">[</span><span class="s1">&#39;tuner&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FEDOT_TUNER_STRATEGY</span><span class="p">[</span><span class="n">tuning_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tuner&#39;</span><span class="p">,</span> <span class="s1">&#39;sequential&#39;</span><span class="p">)]</span>
+
+        <span class="k">with</span> <span class="n">exception_handler</span><span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">on_exception</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">model_to_tune</span> <span class="o">=</span> <span class="n">Either</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_input_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_fedot_datatype</span> <span class="k">else</span> <span class="n">data</span><span class="p">)</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_fedcore_backend</span><span class="p">(</span><span class="n">data</span><span class="p">))</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="k">lambda</span> <span class="n">processed_data</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;train_data&#39;</span><span class="p">:</span> <span class="n">processed_data</span><span class="p">}</span> <span class="o">|</span>
+                                            <span class="p">{</span><span class="s1">&#39;model_to_tune&#39;</span><span class="p">:</span> <span class="n">model_to_tune</span><span class="o">.</span><span class="n">build</span><span class="p">()}</span> <span class="o">|</span>
+                                            <span class="p">{</span><span class="s1">&#39;tuning_params&#39;</span><span class="p">:</span> <span class="n">tuning_params</span><span class="p">})</span><span class="o">.</span> \
+                <span class="n">then</span><span class="p">(</span><span class="k">lambda</span> <span class="n">dict_for_tune</span><span class="p">:</span> <span class="n">_fit_pipeline</span><span class="p">(</span><span class="n">dict_for_tune</span><span class="p">)[</span><span class="s1">&#39;model_to_tune&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">return_only_fitted</span>
+            <span class="k">else</span> <span class="n">build_tuner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">dict_for_tune</span><span class="p">))</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">is_finetuned</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">model_to_tune</span></div>
+
+
+<div class="viewcode-block" id="FedCore.evaluate_metric">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.evaluate_metric">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_metric</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">prediction</span><span class="p">:</span> <span class="n">OutputData</span><span class="p">,</span>
+            <span class="n">target</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+            <span class="n">problem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;computational&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to calculate metrics.</span>
+
+<span class="sd">        Available metrics for classification task: &#39;f1&#39;, &#39;accuracy&#39;, &#39;precision&#39;, &#39;roc_auc&#39;, &#39;logloss&#39;.</span>
+
+<span class="sd">        Available metrics for regression task: &#39;r2&#39;, &#39;rmse&#39;, &#39;mse&#39;, &#39;mae&#39;, &#39;median_absolute_error&#39;,</span>
+<span class="sd">        &#39;explained_variance_score&#39;, &#39;max_error&#39;, &#39;d2_absolute_error_score&#39;, &#39;msle&#39;, &#39;mape&#39;.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metric_type:</span>
+<span class="sd">            predicton:</span>
+<span class="sd">            target: target values</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas DataFrame with calculated metrics</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_inference_metric</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="s2">&quot;computational&quot;</span><span class="p">)</span>
+        <span class="n">is_fedcore_model</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="s1">&#39;fedcore&#39;</span><span class="p">)</span>
+        <span class="n">model_regime</span> <span class="o">=</span> <span class="s1">&#39;model_after&#39;</span> <span class="k">if</span> <span class="n">is_fedcore_model</span> <span class="k">else</span> <span class="s1">&#39;model_before&#39;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">preproc_predict</span><span class="p">(</span><span class="n">prediction</span><span class="p">):</span>
+            <span class="n">prediction</span> <span class="o">=</span> <span class="n">prediction</span><span class="o">.</span><span class="n">predict</span>
+            <span class="n">model_output</span> <span class="o">=</span> <span class="n">prediction</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">prediction</span>
+            <span class="n">model_output_is_probs</span> <span class="o">=</span> <span class="nb">all</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">model_output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">model_output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">model_output_is_probs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span>
+                    <span class="s1">&#39;forecasting&#39;</span><span class="p">):</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">model_output</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">predicted_probs</span> <span class="o">=</span> <span class="n">model_output</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">model_output</span>
+                <span class="n">predicted_probs</span> <span class="o">=</span> <span class="n">model_output</span>
+            <span class="k">return</span> <span class="n">labels</span><span class="p">,</span> <span class="n">predicted_probs</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">preproc_target</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">):</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">targets</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iter_object</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">iter_object</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">target</span>
+
+        <span class="n">preproc_labels</span><span class="p">,</span> <span class="n">preproc_probs</span> <span class="o">=</span> <span class="n">preproc_predict</span><span class="p">(</span><span class="n">prediction</span><span class="p">)</span>
+        <span class="n">preproc_target</span> <span class="o">=</span> <span class="n">preproc_target</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_inference_metric</span><span class="p">:</span>
+            <span class="n">prediction_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fedcore_model</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">model_regime</span><span class="o">=</span><span class="n">model_regime</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prediction_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">preproc_target</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">preproc_labels</span><span class="p">,</span> <span class="n">probs</span><span class="o">=</span><span class="n">preproc_probs</span><span class="p">)</span>
+        <span class="n">prediction_dataframe</span> <span class="o">=</span> <span class="n">FEDOT_GET_METRICS</span><span class="p">[</span><span class="n">problem</span><span class="p">](</span><span class="o">**</span><span class="n">prediction_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prediction_dataframe</span></div>
+
+
+<div class="viewcode-block" id="FedCore.get_report">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.get_report">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_data</span><span class="p">:</span> <span class="n">CompressionInputData</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">create_df</span><span class="p">(</span><span class="n">iterator</span><span class="p">):</span>
+            <span class="n">df_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">metric_dict</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">metric_dict</span><span class="p">)</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+                <span class="n">df_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">df_list</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">calculate_metric_changes</span><span class="p">(</span><span class="n">metric_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">metric</span><span class="p">:</span>
+                <span class="n">change_val</span> <span class="o">=</span> <span class="p">(</span><span class="n">metric_df</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;original_</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">metric_df</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;fedcore_</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">])</span> <span class="o">/</span> \
+                             <span class="n">metric_df</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;original_</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span>
+                <span class="n">change_val</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">change_val</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;throughput&#39;</span><span class="p">:</span>
+                    <span class="n">change_val</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">change_val</span><span class="p">)</span>
+                <span class="n">metric_df</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s1">_change&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">change_val</span>
+            <span class="k">return</span> <span class="n">metric_df</span>
+
+        <span class="n">eval_regime</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;original&#39;</span><span class="p">,</span> <span class="s1">&#39;fedcore&#39;</span><span class="p">]</span>
+        <span class="n">prediction_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_data</span><span class="p">,</span> <span class="n">output_mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span> <span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">eval_regime</span><span class="p">]</span>
+        <span class="n">prediction_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">OutputData</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="o">.</span><span class="n">predict</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">prediction_list</span><span class="p">]</span>
+        <span class="n">quality_metrics_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluate_metric</span><span class="p">(</span><span class="n">prediction</span><span class="o">=</span><span class="n">prediction</span><span class="p">,</span>
+                                                     <span class="n">target</span><span class="o">=</span><span class="n">test_data</span><span class="o">.</span><span class="n">val_dataloader</span><span class="p">,</span>
+                                                     <span class="n">problem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">prediction</span> <span class="ow">in</span> <span class="n">prediction_list</span><span class="p">]</span>
+        <span class="n">computational_metrics_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluate_metric</span><span class="p">(</span><span class="n">prediction</span><span class="o">=</span><span class="n">prediction</span><span class="p">,</span>
+                                                           <span class="n">target</span><span class="o">=</span><span class="n">test_data</span><span class="o">.</span><span class="n">val_dataloader</span><span class="p">,</span>
+                                                           <span class="n">problem</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;computational_</span><span class="si">{</span><span class="n">regime</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                                      <span class="k">for</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">regime</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">prediction_list</span><span class="p">,</span> <span class="n">eval_regime</span><span class="p">)]</span>
+
+        <span class="n">quality_df</span> <span class="o">=</span> <span class="n">create_df</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">quality_metrics_list</span><span class="p">,</span> <span class="n">eval_regime</span><span class="p">))</span>
+        <span class="n">compute_df</span> <span class="o">=</span> <span class="n">create_df</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">computational_metrics_list</span><span class="p">,</span> <span class="n">eval_regime</span><span class="p">))</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">automl_config</span><span class="o">.</span><span class="n">fedot_config</span><span class="o">.</span><span class="n">problem</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">problem</span> <span class="o">==</span> <span class="s1">&#39;ts_forecasting&#39;</span><span class="p">,</span> <span class="n">problem</span> <span class="o">==</span> <span class="s1">&#39;regression&#39;</span><span class="p">]):</span>
+            <span class="n">quality_metric</span> <span class="o">=</span> <span class="s1">&#39;rmse&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">quality_metric</span> <span class="o">=</span> <span class="s1">&#39;accuracy&#39;</span>
+        <span class="n">quality_df</span> <span class="o">=</span> <span class="n">calculate_metric_changes</span><span class="p">(</span><span class="n">quality_df</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="p">[</span><span class="n">quality_metric</span><span class="p">])</span>
+        <span class="n">compute_df</span> <span class="o">=</span> <span class="n">calculate_metric_changes</span><span class="p">(</span><span class="n">compute_df</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;latency&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">quality_comparasion</span><span class="o">=</span><span class="n">quality_df</span><span class="p">,</span> <span class="n">computational_comparasion</span><span class="o">=</span><span class="n">compute_df</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FedCore.load">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.load">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads saved Industrial model from disk</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str): path to the model</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="FedCore.save">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">is_fedot_solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">condition_check</span><span class="o">.</span><span class="n">solver_is_fedot_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">save_model</span><span class="p">(</span><span class="n">api_manager</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Either</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">api_manager</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span>
+                          <span class="n">monoid</span><span class="o">=</span><span class="p">[</span><span class="n">api_manager</span><span class="o">.</span><span class="n">solver</span><span class="p">,</span>
+                                  <span class="n">api_manager</span><span class="o">.</span><span class="n">condition_check</span><span class="o">.</span><span class="n">solver_is_fedot_class</span><span class="p">(</span>
+                                      <span class="n">api_manager</span><span class="o">.</span><span class="n">solver</span><span class="p">)])</span><span class="o">.</span> \
+                <span class="n">either</span><span class="p">(</span><span class="n">left_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pipeline</span><span class="p">:</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">api_manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">output_folder</span><span class="p">,</span>
+                                                                    <span class="n">create_subdir</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_datetime_in_path</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                       <span class="n">right_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">solver</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">current_pipeline</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+                           <span class="n">path</span><span class="o">=</span><span class="n">api_manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">output_folder</span><span class="p">,</span>
+                           <span class="n">create_subdir</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">is_datetime_in_path</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">save_opt_hist</span><span class="p">(</span><span class="n">api_manager</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">output_folder</span><span class="si">}</span><span class="s2">/optimization_history.json&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">save_metrics</span><span class="p">(</span><span class="n">api_manager</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_dict</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">output_folder</span><span class="si">}</span><span class="s1">/metrics.csv&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">save_preds</span><span class="p">(</span><span class="n">api_manager</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">api_manager</span><span class="o">.</span><span class="n">predicted_labels</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">output_folder</span><span class="si">}</span><span class="s1">/labels.csv&#39;</span><span class="p">)</span>
+
+        <span class="n">method_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;metrics&#39;</span><span class="p">:</span> <span class="n">save_metrics</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="n">save_model</span><span class="p">,</span> <span class="s1">&#39;opt_hist&#39;</span><span class="p">:</span> <span class="n">save_opt_hist</span><span class="p">,</span>
+                       <span class="s1">&#39;prediction&#39;</span><span class="p">:</span> <span class="n">save_preds</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">create_folder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">compute_config</span><span class="o">.</span><span class="n">output_folder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_fedot_solver</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">method_dict</span><span class="p">[</span><span class="s1">&#39;opt_hist&#39;</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">save_all</span><span class="p">(</span><span class="n">api_manager</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">method_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">method</span><span class="p">(</span><span class="n">api_manager</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error during saving. Exception - </span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">Either</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="n">monoid</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="n">mode</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)])</span><span class="o">.</span> \
+            <span class="n">either</span><span class="p">(</span><span class="n">left_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">api_manager</span><span class="p">:</span> <span class="n">method_dict</span><span class="p">[</span><span class="n">mode</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">),</span>
+                   <span class="n">right_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">api_manager</span><span class="p">:</span> <span class="n">save_all</span><span class="p">(</span><span class="n">api_manager</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="FedCore.export">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.export">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">framework</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ONNX&quot;</span><span class="p">,</span>
+            <span class="n">framework_config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">supplementary_data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">framework_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">framework_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;You must specify configuration for model convertation&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">framework</span> <span class="o">==</span> <span class="s2">&quot;ONNX&quot;</span><span class="p">:</span>
+                <span class="n">example_input</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">val_dataloader</span><span class="p">))[</span>
+                    <span class="mi">0</span>
+                <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">framework_config</span><span class="p">[</span><span class="s2">&quot;example_inputs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
+                    <span class="n">example_input</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">)</span>
+                <span class="n">onnx_config</span> <span class="o">=</span> <span class="n">Torch2ONNXConfig</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">framework_config</span><span class="p">)</span>
+                <span class="n">supplementary_data</span><span class="p">[</span><span class="s2">&quot;model_to_export&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+                    <span class="s2">&quot;converted-model.onnx&quot;</span><span class="p">,</span> <span class="n">onnx_config</span>
+                <span class="p">)</span>
+                <span class="n">converted_model</span> <span class="o">=</span> <span class="n">ONNXInferenceModel</span><span class="p">(</span><span class="s2">&quot;converted-model.onnx&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">converted_model</span></div>
+
+
+<div class="viewcode-block" id="FedCore.shutdown">
+<a class="viewcode-back" href="../../api.html#api.main.FedCore.shutdown">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shutdown Dask client&quot;&quot;&quot;</span>
+        <span class="c1"># if self.manager.dask_client is not None:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="s1">&#39;dask_client&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">dask_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">dask_client</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="s1">&#39;dask_cluster&#39;</span><span class="p">):</span>
+            <span class="c1"># if self.manager.dask_cluster is not None:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">dask_cluster</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">dask_cluster</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">FedCore API</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">api package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.utils.html">api.utils package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Ivan Monnar.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
