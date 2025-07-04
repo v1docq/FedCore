@@ -2,6 +2,35 @@ import json, threading, os
 from collections import OrderedDict, namedtuple
 import torch, tensorrt as trt, pycuda.driver as cuda, pycuda.autoinit
 
+
+class _EntropyCalibrator(trt.IInt8EntropyCalibrator2):
+    def __init__(self, batches, cache_file):
+        super().__init__()
+        self.batches, self.idx = batches, 0
+        self.cache_file = str(cache_file)
+        self.device_mem = cuda.mem_alloc(batches[0].nbytes)
+
+    def get_batch_size(self):
+        return self.batches[0].shape[0]
+
+    def get_batch(self, names):
+        if self.idx >= len(self.batches):
+            return None
+        cuda.memcpy_htod(self.device_mem, np.ascontiguousarray(self.batches[self.idx]))
+        self.idx += 1
+        return [int(self.device_mem)]
+
+    def read_calibration_cache(self):
+        if os.path.exists(self.cache_file):
+            with open(self.cache_file, "rb") as f:
+                return f.read()
+
+    def write_calibration_cache(self, cache):
+        with open(self.cache_file, "wb") as f:
+            f.write(cache)
+
+
+
 class TensorRTInferenceModel(torch.nn.Module):
     def __init__(self, engine_path: str):
         super().__init__()

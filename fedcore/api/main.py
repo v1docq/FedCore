@@ -1,10 +1,10 @@
 import logging
 import os
 import warnings
+from pathlib import Path
 from copy import deepcopy
 from datetime import datetime
 from functools import partial
-from pathlib import Path
 from typing import Union, Optional, Callable
 import numpy as np
 import pandas as pd
@@ -401,8 +401,8 @@ class FedCore(Fedot):
                    right_function=lambda api_manager: save_all(api_manager))
 
     def export(self,
-               input_data: np.ndarray,
-               export_params: Optional[ExportTemplate] = None):
+            input_data: np.ndarray,
+            export_params: Optional[ExportTemplate] = None):
         export_params = export_params[0]
         prediction = self.predict(input_data, output_mode='fedcore')
         input_data = self._process_input_data(input_data)

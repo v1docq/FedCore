@@ -12,23 +12,26 @@ import numpy as np
 
 import torch
 from torch import nn
-import tensorrt as trt
-import pycuda.driver as cuda
-import pycuda.autoinit
 
 from fedcore.api.api_configs import ExportTemplate
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.inference.openvino import OpenVINOInferenceModel
-from fedcore.inference.rknn import RKNNInferenceModel
-from fedcore.inference.trt import TensorRTInferenceModel
 
-# Optional
+from fedcore.inference.rknn import RKNNInferenceModel
+from fedcore.architecture.comptutaional.devices import default_device
+
+if default_device() == 'cuda':
+    import tensorrt as trt
+    import pycuda.driver as cuda
+    import pycuda.autoinit
+    from fedcore.inference.trt import TensorRTInferenceModel, _EntropyCalibrator
+
 try:
     from openvino.tools.mo import convert as openvino_convert
+    from fedcore.inference.openvino import OpenVINOInferenceModel
 except ImportError:
     openvino_convert = None
 
-# Optional, NPU only!
+# NPU only
 try:
     from rknn.api import RKNN
 except ImportError:
@@ -41,33 +44,6 @@ class ExportResult:
     inference_model: torch.nn.Module
     framework: str
     classes: List[str]
-
-
-class _EntropyCalibrator(trt.IInt8EntropyCalibrator2):
-    def __init__(self, batches, cache_file):
-        super().__init__()
-        self.batches, self.idx = batches, 0
-        self.cache_file = str(cache_file)
-        self.device_mem = cuda.mem_alloc(batches[0].nbytes)
-
-    def get_batch_size(self):
-        return self.batches[0].shape[0]
-
-    def get_batch(self, names):
-        if self.idx >= len(self.batches):
-            return None
-        cuda.memcpy_htod(self.device_mem, np.ascontiguousarray(self.batches[self.idx]))
-        self.idx += 1
-        return [int(self.device_mem)]
-
-    def read_calibration_cache(self):
-        if os.path.exists(self.cache_file):
-            with open(self.cache_file, "rb") as f:
-                return f.read()
-
-    def write_calibration_cache(self, cache):
-        with open(self.cache_file, "wb") as f:
-            f.write(cache)
 
 
 class BaseExporter:
