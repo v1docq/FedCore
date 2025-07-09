@@ -100,9 +100,9 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
         evaluation_results = {res.uid_of_individual: res for res in evaluation_results if res is not None}
         individuals_evaluated = []
         for ind in individuals:
-            eval_res = evaluation_results.get(ind.uid)
-            if not eval_res:
+            if not ind.uid in evaluation_results: 
                 continue
+            eval_res = evaluation_results[ind.uid]
             ind.set_evaluation_result(eval_res)
             individuals_evaluated.append(ind)
         return individuals_evaluated
@@ -114,13 +114,12 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
         # Evaluate individuals without valid fitness in parallel.
         self.n_jobs = determine_n_jobs(self._n_jobs, self.logger)
         self.is_singlethread_regime = self._n_jobs == 1
-        individuals_evaluated = Maybe(individuals,
-                                      monoid=[individuals, True]).then(
-            lambda generation: self._multithread_eval(generation)). \
-            then(lambda eval_res: self.apply_evaluation_results(individuals_to_evaluate, eval_res)).value
+        eval_res = self._multithread_eval(individuals)
+        individuals_evaluated = self.apply_evaluation_results(individuals_to_evaluate, eval_res)
 
         successful_evals = individuals_evaluated + individuals_to_skip
         self.population_evaluation_info(evaluated_pop_size=len(successful_evals), pop_size=len(individuals))
+
         successful_evals = Either(successful_evals,
                                   monoid=[individuals_evaluated, not successful_evals]).either(
             left_function=lambda x: x,

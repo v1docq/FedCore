@@ -85,17 +85,22 @@ class Throughput(CompressionMetric):
 
     @classmethod
     def metric(cls, model, dataset, device=default_device(), batch_size=32):
-        evaluator = PerformanceEvaluator(model, dataset, device, batch_size)
-        return evaluator.throughput_eval()
+        evaluator = PerformanceEvaluator(model=model, data=dataset, device=device, batch_size=batch_size)
+        throughputs = evaluator.throughput_eval()
+        return np.mean(throughputs)
 
 
 class Latency(CompressionMetric):
     need_to_minimize = False
 
     @classmethod
-    def metric(cls, model, dataset):
-        evaluator = PerformanceEvaluator(model=model, model_regime='after',
-                                         data=dataset, device=default_device(), batch_size=32)
+    def metric(cls, model, dataset, 
+               model_regime='model_after',
+               device=default_device(), 
+               batch_size=32, 
+               ):
+        evaluator = PerformanceEvaluator(model=model, model_regime=model_regime,
+                                         data=dataset, device=device, batch_size=batch_size)
         latency_list = evaluator.latency_eval()
         avg_lat = np.mean(latency_list)
         return avg_lat
@@ -109,11 +114,14 @@ class CV_quality_metric(CompressionMetric):
         """Fedcore_compression_quality_metric"""
 
     @classmethod
-    def metric(cls, model, dataset, model_regime):
+    def metric(cls, model, dataset, 
+               model_regime='model_after', 
+               device=default_device(), 
+               batch_size=32):
         evaluator = PerformanceEvaluator(model=model,
                                          model_regime=model_regime,
                                          data=dataset,
-                                         device=default_device(),
-                                         batch_size=32)
+                                         device=device,
+                                         batch_size=batch_size)
         metric_dict = evaluator.eval()
         return metric_dict
