@@ -40,6 +40,7 @@ class LowRankModel(BaseCompressionModel):
         decompose_module(
             self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
         )
+        self.model_after.to(self.device)
         return self.model_after
 
     def fit(self, input_data) -> None:
@@ -49,12 +50,12 @@ class LowRankModel(BaseCompressionModel):
             input_data: An instance of the model class
         """
         model_after = self._init_model(input_data)
-        example_batch = self._get_example_input(input_data).to(extract_device(self.model_before))
-        base_params = self._estimate_params(self.model_before, example_batch)
+        # base_params = self._estimate_params(self.model_before, example_batch)
         self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
-        self.compress(self.model_after)
+        # self.compress(self.model_after)
         # check params
+        example_batch = self._get_example_input(input_data)#.to(extract_device(self.model_before))
         self.estimate_params(example_batch, self.model_before, self.model_after)
         self.model_after._structure_changed__ = True
         return self.model_after

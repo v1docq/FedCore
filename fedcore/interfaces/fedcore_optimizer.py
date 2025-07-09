@@ -90,7 +90,6 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         label = 'initial_assumptions'
         initial_individuals = [Individual(graph, metadata=self.requirements.static_individual_metadata)
                                for graph in self.initial_graphs]
-
         if len(initial_individuals) <= pop_size and pop_size != 1:  # in case we have only one init assumption
             # change strategy of init assumption creation. Set max probability to node change mutation
             self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['initial_population_diversity_strategy']
@@ -183,27 +182,27 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
                            population: PopulationT,
                            evaluator: EvaluationOperator) -> PopulationT:
         """ Method realizing full evolution cycle """
-
-        def evolve_pop(population, evaluator):
-            individuals_to_select = self.regularization(population, evaluator)
+        individuals_to_select = self.regularization(population, evaluator)
+        try: 
             new_population = self.reproducer.reproduce(individuals_to_select, evaluator)
-            if new_population is None:
-                new_population = population
-            else:
-                self.log.message(f'Successful reproduction')
+        except Exception as x:
+            print(x)
+            new_population = None
+        if new_population is None:
+            new_population = population
+        else:
+            self.log.message(f'Successful reproduction')
 
-            # Adaptive agent experience collection & learning
-            # Must be called after reproduction (that collects the new experience)
-            experience = self.mutation.agent_experience
-            experience.collect_results(new_population)
-            self.mutation.agent.partial_fit(experience)
+        # Adaptive agent experience collection & learning
+        # Must be called after reproduction (that collects the new experience)
+        experience = self.mutation.agent_experience
+        experience.collect_results(new_population)
+        self.mutation.agent.partial_fit(experience)
 
-            # Use some part of previous pop in the next pop
-            new_population = self.inheritance(population, new_population)
-            new_population = self.elitism(self.generations.best_individuals, new_population)
-            return new_population, evaluator
-
-        return evolve_pop(population, evaluator)
+        # Use some part of previous pop in the next pop
+        new_population = self.inheritance(population, new_population)
+        new_population = self.elitism(self.generations.best_individuals, new_population)
+        return new_population, evaluator
 
     def get_structure_unique_population(self, population: PopulationT, evaluator: EvaluationOperator) -> PopulationT:
         """ Increases structurally uniqueness of population to prevent stagnation in optimization process.
@@ -239,22 +238,24 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         return population, evaluator
 
     def _optimise_loop(self, population_to_eval, evaluator):
-        evaluated_population = Either.insert((population_to_eval, evaluator)). \
-            then(lambda opt_data: self._update_requirements(*opt_data)). \
-            then(lambda opt_data: self._evolve_population(*opt_data)). \
-            then(lambda fitness_data: self.get_structure_unique_population(*fitness_data)). \
-            then(lambda reg_data: self._update_population(*reg_data)).value
+        opt_data = (population_to_eval, evaluator)
+        opt_data = self._update_requirements(*opt_data)
+        fitness_data = self._evolve_population(*opt_data)
+        reg_data = self.get_structure_unique_population(*fitness_data)
+        evaluated_population = self._update_population(*reg_data)
         return evaluated_population
 
     def optimise(self, objective: ObjectiveFunction) -> Sequence[Graph]:
         with self.timer, self._progressbar as pbar:
+            evaluator = self.eval_dispatcher.dispatch(objective, self.timer)
+            population_to_eval, evaluator = self._initial_population(evaluator)
             population_to_eval, evaluator = Either.insert(objective). \
                 then(lambda objective: self.eval_dispatcher.dispatch(objective, self.timer)). \
                 then(lambda evaluator: self._initial_population(evaluator)).value
             self.evaluated_population.append(population_to_eval)
             while not self.stop_optimization():
                 population_to_eval = self._optimise_loop(population_to_eval=population_to_eval,
-                                                         evaluator=evaluator)
+                                                        evaluator=evaluator)
                 self.evaluated_population.append(population_to_eval)
                 pbar.update()
             pbar.close()

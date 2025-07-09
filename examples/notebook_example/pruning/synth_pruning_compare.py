@@ -135,14 +135,14 @@ def test_pruners(pruner_name):
 
     pruned_model = pruner.fit(input_data=train_data, finetune=False)
     params_dict = pruner.estimate_params(example_batch=pruner.data_batch_for_calib,
-                                         model_before=pruner.model_before_pruning,
-                                         model_after=pruner.model_after_pruning)
+                                         model_before=pruner.model_before,
+                                         model_after=pruner.model_after)
     if params_dict['params_before'] == params_dict['params_after']:
         print(f'Pruning operator - {pruner_name} working incorrect')
         pruned_model = pruner.fit(input_data=train_data, finetune=False)
         params_dict = pruner.estimate_params(example_batch=pruner.data_batch_for_calib,
-                                             model_before=pruner.model_before_pruning,
-                                             model_after=pruner.model_after_pruning)
+                                             model_before=pruner.model_before,
+                                             model_after=pruner.model_after)
     return params_dict
 
 pruner_with_reg = ['bn_scale','group_magnitude', 'group_taylor', 'group_hessian']

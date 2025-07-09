@@ -236,6 +236,7 @@ class FedCore(Fedot):
             prediction: OutputData,
             target: DataLoader,
             problem: str = "computational",
+            metrics: list = ['latency']
     ) -> pd.DataFrame:
         """
         Method to calculate metrics.
@@ -278,13 +279,12 @@ class FedCore(Fedot):
                 iter_object = iter(target.dataset)
                 target = np.array([batch[1] for batch in iter_object])
             return target
-
-        preproc_labels, preproc_probs = preproc_predict(prediction)
-        preproc_target = preproc_target(target)
         if is_inference_metric:
             prediction_dict = dict(model=self.fedcore_model, dataset=target, model_regime=model_regime)
         else:
-            prediction_dict = dict(target=preproc_target, labels=preproc_labels, probs=preproc_probs)
+            preproc_labels, preproc_probs = preproc_predict(prediction)
+            preproc_target = preproc_target(target)
+            prediction_dict = dict(target=preproc_target, labels=preproc_labels, probs=preproc_probs, metric_names=metrics)
         prediction_dataframe = FEDOT_GET_METRICS[problem](**prediction_dict)
         return prediction_dataframe
 
@@ -292,43 +292,58 @@ class FedCore(Fedot):
         def create_df(iterator):
             df_list = []
             for metric_dict, col in iterator:
-                df = pd.DataFrame.from_dict(metric_dict)
-                df.columns = [f'{col}_{x}' for x in df.columns]
+                if isinstance(metric_dict, dict):
+                    df = pd.DataFrame.from_dict(metric_dict).T
+                elif isinstance(metric_dict, pd.DataFrame):
+                    df = metric_dict
+                    df = df.T
+                else:
+                    raise TypeError('Unknown type of metrics passed')
+                df['mode'] = col
                 df_list.append(df)
-            return pd.concat(df_list, axis=1)
+            df_total = pd.concat(df_list, axis=0)
+            return df_total
 
         def calculate_metric_changes(metric_df: pd.DataFrame, metric: list = None):
-            for metric_name in metric:
-                change_val = (metric_df[f'original_{metric_name}'] - metric_df[f'fedcore_{metric_name}']) / \
-                             metric_df[f'original_{metric_name}'] * 100
-                change_val = round(change_val, 1)
-                if metric_name == 'throughput':
-                    change_val = abs(change_val)
-                metric_df[f'{metric_name}_change'] = change_val
-            return metric_df
+            orig = metric_df[(metric_df['mode'] != 'fedcore')].drop('mode', axis=1)
+            opt = metric_df[metric_df['mode'] == 'fedcore'].drop('mode', axis=1)
+            change_val = ((opt - orig) / orig * 100).round(2)
+            change_val['mode'] = 'change'
+            return change_val
 
         eval_regime = ['original', 'fedcore']
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
         prediction_list = [x if isinstance(x, OutputData) else x.predict for x in prediction_list]
+        problem = self.manager.automl_config.fedot_config.problem
+        if any([problem == 'ts_forecasting', problem == 'regression']):
+            quality_metrics = ["r2", "mse", "rmse", "mae", "msle", "mape", 
+                               "median_absolute_error", "explained_variance_score", 
+                               "max_error", "d2_absolute_error_score"]
+        else:
+            quality_metrics = ["accuracy", "f1", "precision"]
+        computational_metrics = ["latency", "throughput"]
         quality_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                      target=test_data.val_dataloader,
-                                                     problem=self.manager.automl_config.fedot_config.problem)
+                                                     problem=self.manager.automl_config.fedot_config.problem,
+                                                     metrics=quality_metrics)
                                 for prediction in prediction_list]
         computational_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                            target=test_data.val_dataloader,
-                                                           problem=f'computational_{regime}')
+                                                           problem=f'computational_{regime}',
+                                                           metrics=computational_metrics)
                                       for prediction, regime in zip(prediction_list, eval_regime)]
-
+        
         quality_df = create_df(zip(quality_metrics_list, eval_regime))
         compute_df = create_df(zip(computational_metrics_list, eval_regime))
-        problem = self.manager.automl_config.fedot_config.problem
-        if any([problem == 'ts_forecasting', problem == 'regression']):
-            quality_metric = 'rmse'
-        else:
-            quality_metric = 'accuracy'
-        quality_df = calculate_metric_changes(quality_df, metric=[quality_metric])
-        compute_df = calculate_metric_changes(compute_df, metric=['latency'])
-        return dict(quality_comparasion=quality_df, computational_comparasion=compute_df)
+        result = dict(quality_comparison=quality_df, computational_comparison=compute_df)
+        for tp, df in result.items():
+            result[tp] = (pd.concat([df, calculate_metric_changes(df)], axis=0)
+                          .reset_index()
+                          .rename(columns={'index': 'metric'})
+                          .pivot(index='metric', columns='mode')
+                          .reindex(columns=['original', 'fedcore', 'change'], level=1)
+            )
+        return result
 
     def load(self, path):
         """Loads saved Industrial model from disk

@@ -17,9 +17,12 @@ from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 class ApiLoader:
     def __init__(self, load_source, loader_params: dict = None):
-        self.transform = transforms.Compose([transforms.ToTensor(),
-                                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-                                            )
+        transforms_ = [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        if 'resize' in loader_params:
+            transforms_.insert(1, 
+                transforms.Resize(loader_params['resize'])
+            )
+        self.transform = transforms.Compose(transforms_)
         self.source = load_source
 
         self.default_loader_params = {'batch_size': 8,
@@ -55,8 +58,12 @@ class ApiLoader:
             train_dataset, val_dataset = torch_dataset, torch_dataset
 
         self._update_loader_params()
-        train_dataloader = DataLoader(dataset=train_dataset, **self.loader_params)
-        val_dataloader = DataLoader(dataset=val_dataset, **self.loader_params)
+        from torch.ao.quantization.utils import _normalize_kwargs
+        train_dataloader = DataLoader(dataset=train_dataset, 
+                                      **_normalize_kwargs(DataLoader.__init__, self.loader_params)
+        )
+        val_dataloader = DataLoader(dataset=val_dataset,**_normalize_kwargs(DataLoader.__init__, self.loader_params)
+        )
         sample = next(iter(torch_dataset))[0]
         num_classes = len(torch_dataset.classes) if torch_dataset.classes is not None else 1
         input_dim = sample.shape[1] if len(sample.shape) > 2 else sample.shape[0]
@@ -74,10 +81,20 @@ class ApiLoader:
 
     def load_data(self, loader_type: str = None):
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)
-        if loader_type.__contains__('benchmark'):
+        try:
+            if loader_type.__contains__('benchmark'):
+                if self.source.__contains__('CIFAR'):
+                    torch_dataset = torch_dataset(data_path(self.source),
+                                                train=self.loader_params['is_train'],
+                                                download=True,
+                                                transform=self.transform)
+                else:
+                    torch_dataset = torch_dataset(data_path(self.source),
+                                                download=True,
+                                                transform=self.transform)
+        except:
             torch_dataset = torch_dataset(data_path(self.source),
-                                          train=self.loader_params['is_train'],
-                                          download=True,
-                                          transform=self.transform)
+                                        download=False,
+                                        transform=self.transform)
         fedcore_data = self._convert_to_fedcore(torch_dataset)
         return fedcore_data
