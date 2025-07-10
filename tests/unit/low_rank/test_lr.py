@@ -1,7 +1,7 @@
 from copy import deepcopy
 import pytest
 from pymonad.either import Either
-
+import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
 from fedcore.api.api_configs import (
@@ -19,6 +19,8 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.repository.constanst_repository import SLRStrategiesEnum
+from fedcore.algorithm.low_rank.hooks import DynamicRankPruner
+from fedcore.architecture.abstraction.accessor import Accessor
 
 
 METRIC_TO_OPTIMISE = ['accuracy', 'latency']
@@ -78,3 +80,39 @@ def test_lrs(low_rank_strategy):
     lr = LowRankModel(peft_params.to_dict())
 
     lr_model = lr.fit(input_data=train_data)
+
+    pruner_params = {
+        'n_plateau': 3,
+        'pl_thr': 0.03,
+        'sv_thr': 1e-5
+    }
+    
+    pruner = DynamicRankPruner(
+        params=pruner_params,
+        model=lr_model
+    )
+    
+    assert hasattr(pruner, 'traced_layers')
+    assert len(pruner.traced_layers) > 0
+
+    test_input = torch.randn(1, 3, 32, 32)  
+    history_ranks = [50.3, 50.1, 50.05, 50.01, 50.005] 
+    
+    for epoch, rank in enumerate(history_ranks, 1):
+        for name in pruner.traced_layers:
+            layer = Accessor.get_module(lr_model, name)
+            with torch.no_grad():
+                layer.S.fill_(rank)
+        
+        pruner._update_stable_ranks()
+        
+        if epoch >= pruner.n_plateau:
+            to_prune = pruner.trigger(epoch, {})
+            if epoch == len(history_ranks):
+                assert len(to_prune) > 0 
+                pruner.action(epoch, {})
+                
+                for name in to_prune:
+                    layer = Accessor.get_module(lr_model, name)
+                    assert hasattr(layer, '_effective_rank')
+                     
