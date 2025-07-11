@@ -25,6 +25,7 @@ from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.algorithm.quantization.utils import (
     ParentalReassembler, QDQWrapper, uninplace, get_flattened_qconfig_dict)
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from fedcore.models.network_impl.trainer_factory import create_trainer_from_input_data
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
@@ -146,10 +147,7 @@ class BaseQuantizer(BaseCompressionModel):
 
     def _init_model(self, input_data):
         self.model_before_quant = input_data.target.to(self.device)
-        if input_data.task.task_type.value.__contains__('forecasting'):
-            self.trainer = BaseNeuralForecaster(self.qat_params)
-        else:
-            self.trainer = BaseNeuralModel(self.qat_params)
+        self.trainer = create_trainer_from_input_data(input_data, self.qat_params)
         self.trainer.model = self.model_before_quant
         self.quant_model = deepcopy(self.model_before_quant).eval()
         print("[MODEL] Model initialized and copied for quantization.")

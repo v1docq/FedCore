@@ -25,11 +25,12 @@ from fedcore.repository.constanst_repository import (
 
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.models.network_impl.hooks_collection import HooksCollection
+from fedcore.models.network_impl.interfaces import ITrainer, IHookable
 
 BASE_REGRESSION_DTYPE = torch.float32
 
 
-class BaseNeuralModel(torch.nn.Module):
+class BaseNeuralModel(torch.nn.Module, ITrainer, IHookable):
     """Class responsible for NN model implementation.
 
     Attributes:

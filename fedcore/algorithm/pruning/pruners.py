@@ -2,6 +2,7 @@ from copy import deepcopy
 from itertools import chain
 from fedot.core.data.data import InputData
 from torch import nn, optim
+from transformers import Trainer
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 import torch_pruning as tp
@@ -12,6 +13,7 @@ from fedcore.algorithm.pruning.hooks import PruningHooks
 from fedcore.algorithm.pruning.pruning_validation import PruningValidator
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from fedcore.models.network_impl.trainer_factory import create_trainer_from_input_data
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import (
     PRUNERS,
@@ -94,10 +96,7 @@ class BasePruner(BaseCompressionModel):
     def _init_model(self, input_data):
         print('Prepare original model for pruning'.center(80, '='))
         self.model_before_pruning = input_data.target
-        if input_data.task.task_type.value.__contains__('forecasting'):
-            self.trainer = BaseNeuralForecaster(self.ft_params)
-        else:
-            self.trainer = BaseNeuralModel(self.ft_params)
+        self.trainer = create_trainer_from_input_data(input_data, self.ft_params)
         if hasattr(self.model_before_pruning, 'model'):
             self.trainer.model = self.model_before_pruning.model
         self.model_before_pruning.to(default_device())

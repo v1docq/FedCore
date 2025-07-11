@@ -10,6 +10,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from fedcore.models.network_impl.trainer_factory import create_trainer_from_input_data
 from torchinfo import summary
 
 
@@ -70,11 +71,8 @@ class BaseCompressionModel:
     def _init_model(self, input_data, additional_hooks=tuple()):
         model = input_data.target
         self.model_before = model
-        is_forecaster = input_data.task.task_type.value.__contains__('forecasting')
-        if is_forecaster:
-            self.trainer = BaseNeuralForecaster(self.params)
-        else:
-            self.trainer = BaseNeuralModel(self.params)
+        # Create trainer using factory
+        self.trainer = create_trainer_from_input_data(input_data, self.params)
         self.trainer.register_additional_hooks(additional_hooks)
         self.trainer.model = model
         return model
