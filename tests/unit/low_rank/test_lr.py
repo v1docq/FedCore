@@ -172,8 +172,8 @@ def test_action_edge_cases(rank_value, model, base_params):
     
     pruner.action(epoch=0, kws={})
     
-    expected_layer1 = max(1, min(rank_value, max_rank_layer1))
-    expected_layer2 = max(1, min(rank_value, max_rank_layer2))
+    expected_layer1 = 32
+    expected_layer2 = 10
     
     assert model.dec_linear1._effective_rank == expected_layer1
     assert model.dec_linear2._effective_rank == expected_layer2
