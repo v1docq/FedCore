@@ -2,14 +2,13 @@ from enum import Enum
 from functools import partial
 from joblib import cpu_count
 from math import floor, ceil
-import numpy as np
 
 import torch
 
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.architecture.utils.misc import _contiguous, count_params
 from fedcore.architecture.utils.misc import EnumNoValue
-
+from fedcore.algorithm.low_rank.hooks import DynamicRankPruner
 __all__ = [
     'rank_threshold_pruning',
     'S_STRATEGIES'
@@ -62,7 +61,7 @@ def rank_attr_pruning (
         decomposed_module: IDecomposed,
         strategy: str = "explained_variance",
         module_name: str = "",
-        rank_attr: Optional[int] = None
+        rank_attr: Optional[int] = DynamicRankPruner.rank_attr
 ) -> None:
     """Prune the weight matrices to the rank_attr (in-place).
     Args:
@@ -80,18 +79,17 @@ def rank_attr_pruning (
     assert isinstance(rank_attr, int), "Rank must be an integer"
 
     U, S, Vh = decomposed_module.get_U_S_Vh()
+    S, indices = S.sort(descending=True)
+    n_components = min(rank_attr, len(indices))
+    indices = indices[:n_components]
+    initial_size = count_params(decomposed_module)
 
-    if strategy in SLRStrategies:
-        indices = rank_attr
-        initial_size = count_params(decomposed_module)
-    else:
-        # TODO Grad-based & approx. error
-        raise ValueError(f'Unknown strategy: `{strategy}`')
     decomposed_module.set_U_S_Vh(
         _contiguous(U[:, indices]),
         _contiguous(S[indices]),
         _contiguous(Vh[indices, :]),
     )
+    decomposed_module.compose_weight_for_inference()
     print(
         "After rank pruning left only {} of {} layer params".format(
             round(100 * (count_params(decomposed_module) / initial_size)), module_name
