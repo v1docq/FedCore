@@ -4,7 +4,7 @@ from joblib import cpu_count
 from math import floor, ceil
 
 import torch
-
+from typing import Optional
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.architecture.utils.misc import _contiguous, count_params
 from fedcore.architecture.utils.misc import EnumNoValue
