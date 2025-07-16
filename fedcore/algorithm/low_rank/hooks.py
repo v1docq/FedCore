@@ -86,7 +86,7 @@ class DynamicRankPruner(BaseHook):
 
 
     def trigger(self, epoch, kws) -> dict:
-        self._update_stable_ranks()
+        self._update_stable_ranks(self, epoch)
         to_prune = {}
         for n, history in self.traced_layers:
             if (npabs(diff(history)) < self.pl_thr).all():
@@ -98,14 +98,9 @@ class DynamicRankPruner(BaseHook):
         for name, rank in self.trigger_result.items():
             layer_name = '.'.join(name.split('.')[:-1])
             layer = Accessor.get_module(self.model, layer_name)
-            setattr(layer, self.rank_attr, rank)
-            strategy = self.params.get('strategy', 'explained_variance')
-            if isinstance(layer, IDecomposed): 
-                rank_attr_pruning(decomposed_module=layer,
-                                    strategy=strategy,
-                                    module_name=layer_name,
-                                    rank_attr=rank)
-            layer.compose_weight_for_inference() 
+            setattr(layer, self.rank_attr, rank) #записывает в слой значение до которого нужно обрезать
+            rank_attr_pruning(layer)  
+            self.traced_layers.pop(name, None)
             
 
 class LRHooks(Enum):
