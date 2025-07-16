@@ -98,7 +98,7 @@ class DynamicRankPruner(BaseHook):
         for name, rank in self.trigger_result.items():
             layer_name = '.'.join(name.split('.')[:-1])
             layer = Accessor.get_module(self.model, layer_name)
-            setattr(layer, self.rank_attr, rank) #записывает в слой значение до которого нужно обрезать
+            setattr(layer, self.rank_attr, rank)
             rank_attr_pruning(layer)  
             self.traced_layers.pop(name, None)
             
