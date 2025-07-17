@@ -59,9 +59,9 @@ def rank_threshold_pruning(
 
 def rank_attr_pruning (
         decomposed_module: IDecomposed,
-        strategy: str = "explained_variance",
+        rank: int,
         module_name: str = "",
-        rank_attr: Optional[int] = DynamicRankPruner.rank_attr
+        rank_attr = '_effective_rank'
 ) -> None:
     """Prune the weight matrices to the rank_attr (in-place).
     Args:
@@ -73,14 +73,13 @@ def rank_attr_pruning (
     if hasattr(decomposed_module, 'S') and decomposed_module.S is None:
         return
     
-    if rank_attr is None and hasattr(decomposed_module, 'rank_attr'):
-        rank_attr = decomposed_module.rank_attr
+    if not hasattr(decomposed_module, rank_attr):
+        raise ValueError(f"Layer has no attribute '{rank_attr}' to determine rank")
     decomposed_module._anti_three_layers_compose()
-    assert isinstance(rank_attr, int), "Rank must be an integer"
 
     U, S, Vh = decomposed_module.get_U_S_Vh()
     S, indices = S.sort(descending=True)
-    n_components = min(rank_attr, len(indices))
+    n_components = min(rank, len(indices))
     indices = indices[:n_components]
     initial_size = count_params(decomposed_module)
 
