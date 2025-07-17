@@ -99,7 +99,7 @@ class DynamicRankPruner(BaseHook):
             layer_name = '.'.join(name.split('.')[:-1])
             layer = Accessor.get_module(self.model, layer_name)
             setattr(layer, self.rank_attr, rank)
-            rank_attr_pruning(layer)  
+            rank_attr_pruning(layer, rank=self.rank_attr, module_name=layer_name, rank_attr='_effective_rank')  
             self.traced_layers.pop(name, None)
             
 
