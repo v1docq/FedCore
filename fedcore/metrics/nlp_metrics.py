@@ -1,60 +1,136 @@
-# fedcore/metrics/nlp.py
+"""
+NLP-specific metrics implemented as thin wrappers over the HuggingFace `evaluate` package.
+
+Each metric is exposed as a class with a unified interface:
+    m = SacreBLEU()
+    result = m.compute(y_true=references, y_pred=predictions)
+
+The wrapper ensures consistent naming and lightweight lazy import of `evaluate`.
+"""
+
 from __future__ import annotations
-from typing import Any, Callable, Dict, Sequence
+from typing import Any, Dict, Sequence
 import importlib
 
-_EVALUATE = None  # lazy
+# cache for lazy import
+_EVALUATE = None
+
+
 def _get_evaluate():
+    """Lazy import of the `evaluate` package."""
     global _EVALUATE
     if _EVALUATE is None:
         try:
             _EVALUATE = importlib.import_module("evaluate")
         except Exception as e:
             raise ImportError(
-                "Библиотека 'evaluate' не установлена. "
-                "Установи: pip install evaluate"
+                "The 'evaluate' package is required for NLP metrics. "
+                "Install it with: pip install evaluate"
             ) from e
     return _EVALUATE
 
+
 class EvaluateMetric:
     """
-    Универсальная обёртка над любой метрикой из evaluate.
-    Пример:
-        acc = EvaluateMetric("accuracy")
-        acc.compute(y_true=[0,1], y_pred=[0,1]) -> {"accuracy": 1.0}
+    Base class for NLP metrics powered by HuggingFace `evaluate`.
+
+    Subclasses must define `metric_name` and may override `load_kwargs`.
+    Provides a unified `.compute(y_true, y_pred, ...)` method.
     """
-    def __init__(self, name: str, **load_kwargs: Any) -> None:
-        self.name = name
-        self.load_kwargs = load_kwargs
+
+    metric_name: str = ""
+    load_kwargs: dict[str, Any] = {}
+
+    def __init__(self, **override_load_kwargs: Any) -> None:
         evaluate = _get_evaluate()
-        self._module = evaluate.load(self.name, **self.load_kwargs)  # type: ignore
+        params = dict(self.load_kwargs)
+        params.update(override_load_kwargs)
+        self._metric = evaluate.load(self.metric_name, **params)
 
     def compute(
         self,
         y_true: Sequence[Any] | None = None,
         y_pred: Sequence[Any] | None = None,
         *,
-        predictions: Sequence[Any] | None = None,
         references: Sequence[Any] | None = None,
-        **kwargs: Any
+        predictions: Sequence[Any] | None = None,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
-        if predictions is None and y_pred is not None:
-            predictions = y_pred
+        """
+        Compute the metric.
+
+        Accepts both (y_true, y_pred) and (references, predictions).
+        Extra keyword args are passed through to the underlying `evaluate` metric.
+        """
         if references is None and y_true is not None:
             references = y_true
-        if predictions is None or references is None:
-            raise ValueError("Нужно передать predictions/y_pred и references/y_true")
-        return self._module.compute(predictions=predictions, references=references, **kwargs)  # type: ignore
+        if predictions is None and y_pred is not None:
+            predictions = y_pred
+        if references is None or predictions is None:
+            raise ValueError("Both references (y_true) and predictions (y_pred) must be provided.")
+        return self._metric.compute(predictions=predictions, references=references, **kwargs)
 
-def available_nlp_metrics() -> Dict[str, Callable[..., EvaluateMetric]]:
-    return {
-        "accuracy":  lambda **kw: EvaluateMetric("accuracy", **kw),
-        "precision": lambda **kw: EvaluateMetric("precision", **kw),
-        "recall":    lambda **kw: EvaluateMetric("recall", **kw),
-        "f1":        lambda **kw: EvaluateMetric("f1", **kw),
-        "sacrebleu": lambda **kw: EvaluateMetric("sacrebleu", **kw),
-        "bleu":      lambda **kw: EvaluateMetric("sacrebleu", **kw),  # алиас
-        "rouge":     lambda **kw: EvaluateMetric("rouge", **kw),
-        "meteor":    lambda **kw: EvaluateMetric("meteor", **kw),
-        "bertscore": lambda **kw: EvaluateMetric("bertscore", **kw),
-    }
+
+# ---------------------------------------------------------------------------
+# Concrete metrics
+# ---------------------------------------------------------------------------
+
+class NLPAccuracy(EvaluateMetric):
+    """Classification accuracy for NLP tasks."""
+    metric_name = "accuracy"
+
+
+class NLPPrecision(EvaluateMetric):
+    """Macro-averaged precision for NLP classification."""
+    metric_name = "precision"
+
+
+class NLPRecall(EvaluateMetric):
+    """Macro-averaged recall for NLP classification."""
+    metric_name = "recall"
+
+
+class NLPF1(EvaluateMetric):
+    """Macro-averaged F1 score for NLP classification."""
+    metric_name = "f1"
+
+
+class SacreBLEU(EvaluateMetric):
+    """SacreBLEU metric for machine translation and text generation."""
+    metric_name = "sacrebleu"
+
+
+class BLEU(SacreBLEU):
+    """BLEU alias (maps to SacreBLEU)."""
+    # Inherits metric_name = "sacrebleu"
+
+
+class ROUGE(EvaluateMetric):
+    """ROUGE metric (L/SU/F variants) for text summarization overlap."""
+    metric_name = "rouge"
+
+
+class METEOR(EvaluateMetric):
+    """METEOR metric for machine translation quality."""
+    metric_name = "meteor"
+
+
+class BERTScore(EvaluateMetric):
+    """BERTScore metric based on contextual embeddings."""
+    metric_name = "bertscore"
+
+__all__ = [
+    "EvaluateMetric",
+    "NLPAccuracy",
+    "NLPPrecision",
+    "NLPRecall",
+    "NLPF1",
+    "SacreBLEU",
+    "BLEU",
+    "ROUGE",
+    "METEOR",
+    "BERTScore",
+]
+
+# Backward-compatibility alias
+SacreBleu = SacreBLEU
