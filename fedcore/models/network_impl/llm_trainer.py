@@ -5,6 +5,7 @@ Real integration with transformers.Trainer
 
 from typing import Any, Dict, Optional, Iterable, Union
 from enum import Enum
+from itertools import chain
 import torch
 import os
 from pathlib import Path
@@ -19,37 +20,27 @@ from transformers.trainer_callback import EarlyStoppingCallback
 from datasets import Dataset
 import numpy as np
 
-from fedcore.models.network_impl.interfaces import ITrainer, IHookable
+from fedcore.models.network_impl._base import BaseTrainer
 from fedcore.models.network_impl.hooks_collection import HooksCollection
+from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks
 
 
-class LLMTrainer(ITrainer, IHookable):
+class LLMTrainer(BaseTrainer):
     """
     LLM Trainer that implements our interfaces with real transformers.Trainer integration
     """
     
     def __init__(self, model, training_args: Optional[Dict] = None, train_dataset=None, eval_dataset=None, tokenizer=None, **kwargs):
+        BaseTrainer.__init__(self, params=training_args)
+        
         self.model = model
         self._hooks = []
         self._additional_hooks = []
-        self.hooks = HooksCollection()
-        self.trainer_objects = {
-            'optimizer': None,
-            'scheduler': None,
-        }
         
-        # Store datasets and tokenizer
         self._train_dataset = train_dataset
         self._eval_dataset = eval_dataset
         self._tokenizer = tokenizer
         
-        # Initialize history for hooks
-        self.history = {
-            'train_loss': [],
-            'val_loss': []
-        }
-        
-        # Default training arguments
         self.default_training_args = {
             'output_dir': './llm_output',
             'num_train_epochs': 3,
@@ -69,11 +60,9 @@ class LLMTrainer(ITrainer, IHookable):
             'greater_is_better': False,
         }
         
-        # Merge with provided arguments
         if training_args:
             self.default_training_args.update(training_args)
         
-        # Create transformers trainer
         self._transformers_trainer = None
         self._training_args = None
         self._data_collator = None
@@ -84,11 +73,7 @@ class LLMTrainer(ITrainer, IHookable):
         
     def _init_hooks(self) -> None:
         """Initialize hooks for the model"""
-        print("Initializing LLM hooks...")
-        
-        # Initializing hooks as in BaseNeuralModel
-        from itertools import chain
-        from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks
+        print("Initializing LLM hooks...")        
         
         # Adding standard hooks
         self._hooks = [LoggingHooks, ModelLearningHooks]
@@ -209,37 +194,36 @@ class LLMTrainer(ITrainer, IHookable):
         }
 
     def _create_transformers_trainer(self, datasets: Dict[str, Dataset]):
-        # Deleting hooks custom keys and parameters
-        training_args_dict = dict(self.default_training_args)
-        custom_opt = training_args_dict.pop("custom_optimizer", None)
-        
-        # List of hook parameters that should not be passed to TrainingArguments
-        hook_params = {
-            'save_each', 'checkpoint_folder', 'name', 'save_only',
-            'log_each', 'eval_each', 'early_stop_after', 'horizon', 'angle_tol',
-            'frozen_prop', 'refreeze_each', 'freeze_approach',
-            'scheduler_step_each', 'sch_type', 'test_hook', 'order_test'
+        """Create transformers trainer with parameter filtering"""
+        allowed_training_args = {
+            'output_dir', 'num_train_epochs', 'per_device_train_batch_size',
+            'per_device_eval_batch_size', 'warmup_steps', 'lr_scheduler_type',
+            'weight_decay', 'logging_dir', 'logging_steps', 'save_steps',
+            'eval_steps', 'evaluation_strategy', 'save_strategy',
+            'load_best_model_at_end', 'metric_for_best_model', 'greater_is_better'
         }
         
-        # Remove hook parameters
-        for param in hook_params:
-            training_args_dict.pop(param, None)
-
-        self._training_args = TrainingArguments(**training_args_dict)
+        filtered_args = self._normalize_kwargs(self.default_training_args, allowed_training_args)
+        custom_opt = filtered_args.pop("custom_optimizer", None)
+        
+        self._training_args = TrainingArguments(**filtered_args)
         self._transformers_trainer = Trainer(
             model=self.model,
             args=self._training_args,
             train_dataset=datasets.get('train_dataset'),
             eval_dataset=datasets.get('eval_dataset'),
             data_collator=self._data_collator,
-            callbacks=self._callbacks
+            callbacks=getattr(self, '_callbacks', [])
         )
+        
         if custom_opt is not None:
             def _custom_create_optimizer():
                 opt = custom_opt(self.model)
                 self._transformers_trainer.optimizer = opt
+                self.trainer_objects['optimizer'] = opt
                 return opt
             self._transformers_trainer.create_optimizer = _custom_create_optimizer
+
 
     def fit(self, input_data: Any, supplementary_data: Optional[Dict] = None, loader_type: str = 'train') -> Any:
         print(f"Training LLM model with {loader_type} data...")
