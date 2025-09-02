@@ -2,12 +2,16 @@
 Trainer Factory for creating appropriate trainers based on task type
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type
+import logging
 from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
 from fedcore.models.network_impl.interfaces import ITrainer
+
+logger = logging.getLogger(__name__)
+
 
 def _analyze_model_architecture(model: Any) -> str:
     """
@@ -40,7 +44,7 @@ def _analyze_model_architecture(model: Any) -> str:
         
         transformer_config_patterns = [
             'bert', 'gpt', 'transformer', 't5', 'roberta', 'distilbert',
-            'albert', 'xlnet', 'electra', 'bart', 'llama'
+            'albert', 'xlnet', 'electra', 'bart', 'llama', 'vit'
         ]
         
         for pattern in transformer_config_patterns:
@@ -70,6 +74,7 @@ def _analyze_model_architecture(model: Any) -> str:
             if any(pattern in module_name for pattern in ['lstm', 'gru', 'rnn', 'tcn']):
                 return 'forecasting'
     
+    logger.debug("No specific architecture detected, returning 'general'")
     return 'general'
 
 
@@ -86,25 +91,35 @@ def _get_trainer_class(model: Any, task_type: str, params: Dict) -> Type[ITraine
         Type[ITrainer]: Appropriate trainer class
     """
     architecture_type = _analyze_model_architecture(model)
+    task_type_lower = task_type.lower()
+    
+    logger.info(f"Determining trainer class for architecture: {architecture_type}, task: {task_type}")
+    
+    decision_log = []
     
     if architecture_type == 'llm':
-        print(f"Creating LLMTrainer based on transformer architecture")
+        decision_log.append("LLM architecture detected")
+        logger.info("Creating LLMTrainer based on transformer architecture")
         return LLMTrainer
     
     elif architecture_type == 'forecasting':
-        print(f"Creating BaseNeuralForecaster based on forecasting architecture")
+        decision_log.append("Forecasting architecture detected")
+        logger.info("Creating BaseNeuralForecaster based on forecasting architecture")
         return BaseNeuralForecaster
     
-    elif 'forecasting' in task_type.lower():
-        print(f"Creating BaseNeuralForecaster based on task type: {task_type}")
+    elif 'forecasting' in task_type_lower:
+        decision_log.append(f"Forecasting task type detected: {task_type}")
+        logger.info(f"Creating BaseNeuralForecaster based on task type: {task_type}")
         return BaseNeuralForecaster
     
-    elif 'llm' in task_type.lower() or 'transformer' in task_type.lower():
-        print(f"Creating LLMTrainer based on task type: {task_type}")
+    elif 'llm' in task_type_lower or 'transformer' in task_type_lower:
+        decision_log.append(f"LLM/Transformer task type detected: {task_type}")
+        logger.info(f"Creating LLMTrainer based on task type: {task_type}")
         return LLMTrainer
     
     else:
-        print(f"Creating BaseNeuralModel for general task: {task_type}")
+        decision_log.append("General task type, using default trainer")
+        logger.info(f"Creating BaseNeuralModel for general task: {task_type}")
         return BaseNeuralModel
 
 
@@ -127,7 +142,6 @@ def create_trainer(
         ITrainer: Appropriate trainer instance
     """
     
-    # Convert params to dict if needed
     if params is not None and hasattr(params, 'to_dict'):
         params_dict = params.to_dict()
     else:
@@ -160,13 +174,16 @@ def create_trainer_from_input_data(
         ITrainer: Appropriate trainer instance
     """
     
-    # Extract task type from input_data
     if hasattr(input_data, 'task') and hasattr(input_data.task, 'task_type'):
         task_type = input_data.task.task_type.value
     else:
-        task_type = 'classification'  # default fallback
+        task_type = 'classification' 
+        logger.warning(f"Could not extract task type from input_data, using default: {task_type}")
     
     if model is None and hasattr(input_data, 'target'):
         model = input_data.target
+        logger.debug("Using model from input_data.target")
+    
+    logger.debug(f"Final parameters - task_type: {task_type}, model: {type(model).__name__ if model else 'None'}")
     
     return create_trainer(task_type, params, model, **kwargs)

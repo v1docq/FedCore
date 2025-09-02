@@ -4,8 +4,10 @@ from enum import Enum
 import torch
 import os
 from pathlib import Path
+from typing import Literal
 
 from fedcore.models.network_impl.interfaces import ITrainer, IHookable
+from fedcore.architecture.comptutaional.devices import default_device
 
 
 class BaseTrainer(ITrainer, IHookable):
@@ -32,7 +34,7 @@ class BaseTrainer(ITrainer, IHookable):
             'learning_rates': []
         }
         self.model = None
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = default_device()
     
     def register_additional_hooks(self, hooks: Iterable[Enum]) -> None:
         self._additional_hooks.extend(hooks)
@@ -40,7 +42,9 @@ class BaseTrainer(ITrainer, IHookable):
     def _init_hooks(self) -> None:
         raise NotImplementedError("Subclasses must implement _init_hooks")
     
-    def execute_hooks(self, hook_type: str, epoch: int, **kwargs) -> None:
+    HookType = Literal['start', 'end', 'batch_start', 'batch_end', 'validation']
+
+    def execute_hooks(self, hook_type: HookType, epoch: int, **kwargs) -> None:
         for hook in self.hooks_collection[hook_type]:
             try:
                 hook(epoch=epoch, trainer_objects=self.trainer_objects, 

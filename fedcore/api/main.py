@@ -150,6 +150,12 @@ class FedCore(Fedot):
         Raises:
             ValueError: If no suitable trainer is found for the given strategy
         """
+        if not strategy or not isinstance(strategy, str):
+            raise ValueError(f"Invalid strategy: {strategy}. Strategy must be a non-empty string.")
+        
+        if not self.available_trainers:
+            raise ValueError("No trainers available. Please check your installation.")
+    
         if strategy.startswith('llm_'):
             if 'llm' in self.available_trainers:
                 self.logger.info(f"Selected LLMTrainer for strategy: {strategy}")
@@ -203,16 +209,16 @@ class FedCore(Fedot):
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
             if pretrain_before_optimise:
                 strategy = self.manager.learning_config.config['learning_strategy']
-                trainer_class = self._select_trainer(strategy, 
-                                                   self.manager.learning_config.learning_strategy_params.to_dict())
+                trainer_class = self._select_trainer(strategy)
                 
-                model_learning_pipeline = FEDOT_ASSUMPTIONS["training"](
-                    params=self.manager.learning_config.learning_strategy_params.to_dict()
-                )
-                model_learning_pipeline = model_learning_pipeline.build()
+                trainer_params = self.manager.learning_config.learning_strategy_params.to_dict()
+                trainer = trainer_class(trainer_params)
+                
+                model_learning_pipeline = self._create_custom_pipeline(trainer)
                 train_data = self._pretrain_before_optimise(model_learning_pipeline, train_data)
             fitted_solver = self.manager.solver.fit(train_data)
             return fitted_solver
+        
 
         # with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
         try:
