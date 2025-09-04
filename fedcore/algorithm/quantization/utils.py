@@ -320,14 +320,36 @@ class Reassembler(Accessor):
                 cls.set_module(model, name, additional_mapping[module_type]())
 
     @classmethod
-    def _convert_modules(cls, model: nn.Module):
-        """Converts all supported modules in the model"""
+    def _traverse_modules(cls, model: nn.Module, pre_hook=None, post_hook=None):
+        """
+        Unified method for traversing model modules with optional hooks
+        
+        Args:
+            model: Model to traverse
+            pre_hook: Function called before processing each module (name, module) -> bool
+                     Returns True to continue processing, False to skip
+            post_hook: Function called after processing each module (name, module, result) -> None
+        """
         device = extract_device(model)
-
+        
         for name, module in model.named_modules():
+            # Pre-processing hook
+            if pre_hook and not pre_hook(name, module):
+                continue
+                
+            # Main conversion logic
             new_module = cls.convert(module)
             if new_module:
                 cls.set_module(model, name, new_module.to(device))
+                
+            # Post-processing hook
+            if post_hook:
+                post_hook(name, module, new_module)
+
+    @classmethod
+    def _convert_modules(cls, model: nn.Module):
+        """Converts all supported modules in the model"""
+        cls._traverse_modules(model)
 
     @classmethod
     def _validate_device_consistency(cls, model: nn.Module):
@@ -358,18 +380,27 @@ class ParentalReassembler(Reassembler):
     }
 
     @classmethod
-    def _convert_modules(cls, model: nn.Module):
-        """Converts modules with additional ResNet block processing"""
-        device = extract_device(model)
-
-        for name, module in model.named_modules():
-            new_module = cls.convert(module)
-            if new_module:
-                cls.set_module(model, name, new_module.to(device))
-            elif isinstance(module, (resnet.BasicBlock, resnet.Bottleneck)):
-                wrapped_module = ResidualAddWrapper(module)
-                cls.set_module(model, name, wrapped_module.to(device))
+    def _resnet_post_hook(cls, name: str, original_module: nn.Module, converted_module: nn.Module):
+        """Post-processing hook for ResNet blocks"""
+        if converted_module is None and isinstance(original_module, (resnet.BasicBlock, resnet.Bottleneck)):
+            device = extract_device(original_module)
+            wrapped_module = ResidualAddWrapper(original_module)
+            # Получаем модель из контекста (будет передана через замыкание)
+            if hasattr(cls, '_current_model'):
+                cls.set_module(cls._current_model, name, wrapped_module.to(device))
                 print(f"[ParentalReassembler] Residual block '{name}' wrapped with ResidualAddWrapper.")
+
+    @classmethod
+    def _convert_modules(cls, model: nn.Module):
+        """Converts modules with additional ResNet block processing using hooks"""
+        # Сохраняем ссылку на модель для использования в хуках
+        cls._current_model = model
+        try:
+            cls._traverse_modules(model, post_hook=cls._resnet_post_hook)
+        finally:
+            # Очищаем ссылку после использования
+            if hasattr(cls, '_current_model'):
+                delattr(cls, '_current_model')
 
 
 class TransMLAConfig:
@@ -544,6 +575,12 @@ class LLMReassembler(Reassembler):
         nn.Linear: _convert_linear_to_mla_compatible,
     }
 
+    # Strategy registry for different reassembly types
+    _strategy_registry = {
+        'mla': '_handle_mla_strategy',
+        'standard': '_handle_standard_strategy',
+    }
+
     @classmethod
     def _get_reassembly_mapping(cls, reassembly_type: str):
         """Returns mapping for specific reassembly type"""
@@ -564,24 +601,136 @@ class LLMReassembler(Reassembler):
         return mappings[reassembly_type]
 
     @classmethod
-    def _convert_modules_with_type(cls, model: nn.Module, reassembly_type: str):
-        """Converts modules according to specified reassembly type"""
-        device = extract_device(model)
-        type_mapping = cls._get_reassembly_mapping(reassembly_type)
-
-        for name, module in model.named_modules():
-            # Сначала пытаемся стандартную конвертацию
-            new_module = cls.convert(module)
-            if new_module:
-                cls.set_module(model, name, new_module.to(device))
-                continue
-
-            # Then try type-specific conversion
-            module_type = type(module)
+    def _type_specific_post_hook(cls, name: str, original_module: nn.Module, converted_module: nn.Module, type_mapping: dict):
+        """Post-processing hook for type-specific conversions"""
+        if converted_module is None:
+            module_type = type(original_module)
             if module_type in type_mapping:
-                converted_module = type_mapping[module_type](module)
-                if converted_module != module:  # If module was changed
-                    cls.set_module(model, name, converted_module.to(device))
+                device = extract_device(original_module)
+                type_converted_module = type_mapping[module_type](original_module)
+                if type_converted_module != original_module:  # If module was changed
+                    if hasattr(cls, '_current_model'):
+                        cls.set_module(cls._current_model, name, type_converted_module.to(device))
+
+    @classmethod
+    def _handle_mla_strategy(cls, model: nn.Module, tokenizer, mla_config: Optional[TransMLAConfig], 
+                            save_path: Optional[str], success_info: dict, **kwargs):
+        """
+        Handles MLA conversion strategy
+        
+        Args:
+            model: Model for conversion
+            tokenizer: Tokenizer (required for MLA)
+            mla_config: MLA configuration
+            save_path: Path for saving model
+            success_info: Success information dictionary
+            **kwargs: Additional parameters
+            
+        Returns:
+            Converted model
+        """
+        if not TRANSMLA_AVAILABLE:
+            print(f"[Warning] TransMLA not available: {TRANSMLA_ERROR}")
+            status = get_transmla_status()
+            print("[Info] To solve the problem:")
+            for rec in status['recommendations']:
+                print(f"  • {rec}")
+            print("[Warning] Using stubs instead of full MLA conversion.")
+            cls._convert_modules_with_type(model, 'mla')
+            return model
+            
+        if tokenizer is None:
+            print("[Warning] MLA conversion requires tokenizer. Using stubs.")
+            cls._convert_modules_with_type(model, 'mla')
+            return model
+            
+        # Full MLA conversion with TransMLA
+        if mla_config is None:
+            mla_config = TransMLAConfig()
+            print("[Info] Using default MLA configuration")
+
+        # Update configuration from kwargs
+        for key, value in kwargs.items():
+            if hasattr(mla_config, key):
+                setattr(mla_config, key, value)
+
+        model = _convert_model_to_mla(model, tokenizer, mla_config, save_path)
+
+        # Check if MLA conversion was successful
+        if hasattr(model, '_mla_conversion_failed') and model._mla_conversion_failed:
+            print("[LLMReassembler] MLA conversion failed - model remains unchanged")
+            success_info["successful"] = False
+            success_info["error"] = "MLA conversion failed"
+            # Remove flag to avoid cluttering the model
+            delattr(model, '_mla_conversion_failed')
+        else:
+            print("[LLMReassembler] MLA conversion completed successfully")
+            
+        return model
+
+    @classmethod
+    def _handle_standard_strategy(cls, model: nn.Module):
+        """
+        Handles standard conversion strategy
+        
+        Args:
+            model: Model for conversion
+            
+        Returns:
+            Converted model
+        """
+        cls._convert_modules(model)
+        return model
+
+    @classmethod
+    def _handle_typed_strategy(cls, model: nn.Module, reassembly_type: str):
+        """
+        Handles typed conversion strategy
+        
+        Args:
+            model: Model for conversion
+            reassembly_type: Type of reassembly
+            
+        Returns:
+            Converted model
+        """
+        cls._convert_modules_with_type(model, reassembly_type)
+        return model
+
+    @classmethod
+    def _convert_modules_with_type(cls, model: nn.Module, reassembly_type: str):
+        """Converts modules according to specified reassembly type using hooks"""
+        type_mapping = cls._get_reassembly_mapping(reassembly_type)
+        
+        # Создаем специфичный хук для данного типа
+        def post_hook(name, original_module, converted_module):
+            cls._type_specific_post_hook(name, original_module, converted_module, type_mapping)
+        
+        # Сохраняем ссылку на модель для использования в хуках
+        cls._current_model = model
+        try:
+            cls._traverse_modules(model, post_hook=post_hook)
+        finally:
+            # Очищаем ссылку после использования
+            if hasattr(cls, '_current_model'):
+                delattr(cls, '_current_model')
+
+    @classmethod
+    def _get_strategy_handler(cls, reassembly_type: str):
+        """
+        Gets strategy handler for given reassembly type
+        
+        Args:
+            reassembly_type: Type of reassembly strategy
+            
+        Returns:
+            Strategy handler method
+        """
+        if reassembly_type in cls._strategy_registry:
+            return getattr(cls, cls._strategy_registry[reassembly_type])
+        else:
+            # Fallback to typed strategy for unknown types
+            return cls._handle_typed_strategy
 
     @classmethod
     def reassemble(cls, model: nn.Module, reassembly_type: str = 'standard', 
@@ -612,46 +761,15 @@ class LLMReassembler(Reassembler):
         # Apply additional mappings
         cls._apply_additional_mapping(model, additional_mapping)
 
-        # Special handling for MLA
+        # Get and execute strategy handler
+        strategy_handler = cls._get_strategy_handler(reassembly_type)
+        
         if reassembly_type == 'mla':
-            if not TRANSMLA_AVAILABLE:
-                print(f"[Warning] TransMLA not available: {TRANSMLA_ERROR}")
-                status = get_transmla_status()
-                print("[Info] To solve the problem:")
-                for rec in status['recommendations']:
-                    print(f"  • {rec}")
-                print("[Warning] Using stubs instead of full MLA conversion.")
-                cls._convert_modules_with_type(model, reassembly_type)
-            elif tokenizer is None:
-                print("[Warning] MLA conversion requires tokenizer. Using stubs.")
-                cls._convert_modules_with_type(model, reassembly_type)
-            else:
-                # Full MLA conversion with TransMLA
-                if mla_config is None:
-                    mla_config = TransMLAConfig()
-                    print("[Info] Using default MLA configuration")
-
-                # Update configuration from kwargs
-                for key, value in kwargs.items():
-                    if hasattr(mla_config, key):
-                        setattr(mla_config, key, value)
-
-                model = _convert_model_to_mla(model, tokenizer, mla_config, save_path)
-
-                # Check if MLA conversion was successful
-                if hasattr(model, '_mla_conversion_failed') and model._mla_conversion_failed:
-                    print("[LLMReassembler] MLA conversion failed - model remains unchanged")
-                    success_info["successful"] = False
-                    success_info["error"] = "MLA conversion failed"
-                    # Remove flag to avoid cluttering the model
-                    delattr(model, '_mla_conversion_failed')
-                else:
-                    print("[LLMReassembler] MLA conversion completed successfully")
-
+            model = strategy_handler(model, tokenizer, mla_config, save_path, success_info, **kwargs)
         elif reassembly_type == 'standard':
-            cls._convert_modules(model)
+            model = strategy_handler(model)
         else:
-            cls._convert_modules_with_type(model, reassembly_type)
+            model = strategy_handler(model, reassembly_type)
 
         # Check device consistency
         cls._validate_device_consistency(model)
