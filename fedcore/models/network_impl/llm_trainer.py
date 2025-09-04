@@ -20,9 +20,10 @@ from transformers.trainer_callback import EarlyStoppingCallback
 from datasets import Dataset
 import numpy as np
 
-from fedcore.models.network_impl._base import BaseTrainer
-from fedcore.models.network_impl.hooks_collection import HooksCollection
-from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks
+from fedcore.models.network_impl.utils._base import BaseTrainer
+from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
+from fedcore.models.network_impl.utils.hooks import LoggingHooks, ModelLearningHooks
+from fedcore.models.network_impl.utils.hooks_impl import FedCoreTransformersTrainer
 
 
 class LLMTrainer(BaseTrainer):
@@ -207,7 +208,7 @@ class LLMTrainer(BaseTrainer):
         custom_opt = filtered_args.pop("custom_optimizer", None)
         
         self._training_args = TrainingArguments(**filtered_args)
-        self._transformers_trainer = Trainer(
+        self._transformers_trainer = FedCoreTransformersTrainer(
             model=self.model,
             args=self._training_args,
             train_dataset=datasets.get('train_dataset'),
@@ -215,6 +216,7 @@ class LLMTrainer(BaseTrainer):
             data_collator=self._data_collator,
             callbacks=getattr(self, '_callbacks', [])
         )
+        self.trainer_objects['trainer'] = self._transformers_trainer
         
         if custom_opt is not None:
             def _custom_create_optimizer():
