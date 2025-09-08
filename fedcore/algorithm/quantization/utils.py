@@ -32,66 +32,72 @@ from fedcore.architecture.comptutaional.devices import extract_device, default_d
 import sys
 import os
 from pathlib import Path
+from typing import Optional, Tuple
 
-# Add TransMLA to Python path
-TRANSMLA_PATH = Path(__file__).parent.parent.parent.parent / "external" / "TransMLA"
+# TransMLA configuration
+TRANSMLA_PATH = Path(__file__).parent.parent.parent.parent / "external" / "transmla_core"
 TRANSMLA_AVAILABLE = False
 TRANSMLA_ERROR = None
 
-if TRANSMLA_PATH.exists():
-    original_path = sys.path.copy()
-    transmla_path = str(TRANSMLA_PATH)
+# TransMLA function placeholders
+partial_rope = None
+low_rank_qkv = None
+modify_config = None
+get_dataset = None
+prepare_dataloader = None
+prepare_test_dataloader = None
+evaluate_ppl = None
 
-    if transmla_path not in sys.path:
-        sys.path.insert(0, transmla_path)
 
-    try:
-        import transformers
-        from packaging import version
+class TransMLAImporter:
+    """Simple TransMLA import handler"""
+    
+    @staticmethod
+    def initialize() -> Tuple[bool, Optional[str]]:
+        """Initialize TransMLA imports"""
+        transmla_path = TRANSMLA_PATH
+        
+        # Check if path exists
+        path_exists = transmla_path.exists()
+        assert path_exists, "TransMLA core module not found in external/transmla_core"
+        
+        # Setup paths
+        transmla_str = str(transmla_path)
+        
+        transmla_str not in sys.path and sys.path.insert(0, transmla_str)
+        
+        # Import modules
+        import utils as transmla_utils
+        import partial_rope as transmla_partial_rope
+        import lora_qkv as transmla_lora_qkv
+        import modify_config as transmla_modify_config
 
-        required_version = "4.52.0"
-        current_version = transformers.__version__
+        # Make functions globally available
+        global partial_rope, low_rank_qkv, modify_config
+        global get_dataset, prepare_dataloader, prepare_test_dataloader, evaluate_ppl
+        
+        partial_rope = transmla_partial_rope.partial_rope
+        low_rank_qkv = transmla_lora_qkv.low_rank_qkv
+        modify_config = transmla_modify_config.modify_config
+        get_dataset = transmla_utils.get_dataset
+        prepare_dataloader = transmla_utils.prepare_dataloader
+        prepare_test_dataloader = transmla_utils.prepare_test_dataloader
+        evaluate_ppl = transmla_utils.evaluate_ppl
 
-        if version.parse(current_version) < version.parse(required_version):
-            TRANSMLA_ERROR = f"TransMLA requires transformers>={required_version}, current version: {current_version}"
-        else:
-            # Add path to transmla directory for direct import
-            transmla_dir = str(TRANSMLA_PATH / 'transmla')
-            if transmla_dir not in sys.path:
-                sys.path.insert(0, transmla_dir)
+        return True, None
 
-            # Direct import of modules (works according to debugging)
-            import utils as transmla_utils
-            import partial_rope as transmla_partial_rope
-            import lora_qkv as transmla_lora_qkv
-            import modify_config as transmla_modify_config
 
-            # Extract needed functions
-            partial_rope = transmla_partial_rope.partial_rope
-            low_rank_qkv = transmla_lora_qkv.low_rank_qkv
-            modify_config = transmla_modify_config.modify_config
-            get_dataset = transmla_utils.get_dataset
-            prepare_dataloader = transmla_utils.prepare_dataloader
-            prepare_test_dataloader = transmla_utils.prepare_test_dataloader
-            evaluate_ppl = transmla_utils.evaluate_ppl
-
-            TRANSMLA_AVAILABLE = True
-
-    except ImportError as e:
-        TRANSMLA_ERROR = f"TransMLA import failed: {e}"
-    except Exception as e:
-        TRANSMLA_ERROR = f"TransMLA initialization error: {e}"
-    finally:
-        if not TRANSMLA_AVAILABLE:
-            sys.path = original_path
-else:
-    TRANSMLA_ERROR = "TransMLA submodule not found in external/TransMLA"
+# Initialize TransMLA
+TRANSMLA_AVAILABLE, TRANSMLA_ERROR = TransMLAImporter.initialize()
 
 
 __all__ = [
     'Reassembler',
     'ParentalReassembler',
-    'LLMReassembler',
+    'AttentionReassembler',
+    'TransMLA',
+    'DeferredConversion',
+    'ReassemblerFactory',
     'TransMLAConfig',
     'QDQWrapper',
     'QDQWrapping',
@@ -101,7 +107,9 @@ __all__ = [
     'get_flattened_qconfig_dict',
     'TRANSMLA_AVAILABLE',
     'TRANSMLA_ERROR',
-    'get_transmla_status'
+    'get_transmla_status',
+    # Backward compatibility
+    'LLMReassembler'
 ]
 
 QConfigMapping = QConfigAny
@@ -117,23 +125,32 @@ def get_transmla_status():
     status = {
         'available': TRANSMLA_AVAILABLE,
         'error': TRANSMLA_ERROR,
-        'path_exists': TRANSMLA_PATH.exists() if 'TRANSMLA_PATH' in globals() else False,
+        'path_exists': TRANSMLA_PATH.exists(),
         'recommendations': []
     }
 
-    if not TRANSMLA_AVAILABLE:
-        if "transformers" in str(TRANSMLA_ERROR):
+    if TRANSMLA_AVAILABLE:
+        return status
+    
+    # Generate recommendations based on error type
+    error_str = str(TRANSMLA_ERROR) if TRANSMLA_ERROR else ""
+    
+    recommendation_map = {
+        "transformers": ["Update transformers: pip install transformers>=4.52.4"],
+        "core module not found": [
+                "Create transmla_core module: mkdir external/transmla_core",
+                "Copy required files to external/transmla_core/"
+        ]
+    }
+    
+    for error_key, recommendations in recommendation_map.items():
+        if error_key in error_str:
+            status['recommendations'].extend(recommendations)
+            break
+    else:
+        # Default recommendation if no specific error matched
             status['recommendations'].append(
-                "Update transformers: pip install transformers>=4.52.4"
-            )
-        if "submodule not found" in str(TRANSMLA_ERROR):
-            status['recommendations'].extend([
-                "Initialize submodule: git submodule update --init --recursive",
-                "Or clone TransMLA manually to external/TransMLA"
-            ])
-        if not status['recommendations']:
-            status['recommendations'].append(
-                "Install TransMLA dependencies: pip install -r external/TransMLA/requirements.txt"
+                "Install TransMLA dependencies: pip install -e external/transmla_core/"
             )
 
     return status
@@ -337,8 +354,8 @@ class Reassembler(Accessor):
             if pre_hook and not pre_hook(name, module):
                 continue
                 
-            # Main conversion logic
-            new_module = cls.convert(module)
+            # Main conversion logic - use base Reassembler convert method
+            new_module = Reassembler.convert(module)
             if new_module:
                 cls.set_module(model, name, new_module.to(device))
                 
@@ -447,98 +464,67 @@ class TransMLAConfig:
 def _convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, save_path: Optional[str] = None):
     """
     Complete MLA conversion of model using TransMLA
-    
-    Args:
-        model: Source model for conversion
-        tokenizer: Model tokenizer
-        config: TransMLA configuration
-        save_path: Path for saving (optional)
-    
-    Returns:
-        Model converted to MLA
+    Simple implementation without try/except blocks
     """
-    if not TRANSMLA_AVAILABLE:
-        print(f"[Warning] TransMLA not available: {TRANSMLA_ERROR}")
-        status = get_transmla_status()
-        print("[Info] Recommendations for fixing:")
-        for rec in status['recommendations']:
-            print(f"  • {rec}")
-        print("[Warning] Returning original model without conversion.")
-        return model
-
     print("[TransMLA] Starting MLA conversion...")
-
-    try:
-        # Prepare calibration data
-        print("[TransMLA] Preparing calibration data...")
-        dataset = get_dataset(config.cal_dataset)
-        train_loader = prepare_dataloader(
-            dataset=dataset["train"],
-            tokenizer=tokenizer,
-            max_seqlen=config.cal_max_seqlen,
-            batch_size=config.cal_batch_size,
-            nsamples=config.cal_nsamples,
-            seed=config.seed,
-        )
-
-        # test_loader always needed for auto freqfold detection, even if eval disabled
-        test_loader = prepare_test_dataloader(
-            dataset=dataset["test"], 
-            tokenizer=tokenizer, 
-            batch_size=max(1, config.ppl_eval_batch_size)  # Minimum 1 for auto detection
-        )
-
-        # Stage 1: Partial RoPE
-        print("[TransMLA] Stage 1: Applying Partial RoPE...")
-        config_dict = config.to_dict()
-
-        # Automatic collapse calculation if needed
-        if config.collapse == "auto":
-            head_dim = (model.config.head_dim if hasattr(model.config, "head_dim") and 
-                       model.config.head_dim is not None else 
-                       model.config.hidden_size // model.config.num_attention_heads)
-            model.config.head_dim = head_dim
-            config_dict["collapse"] = head_dim // config.qk_mqa_dim
-            print(f"[TransMLA] Auto collapse: {config_dict['collapse']} (head_dim={head_dim} / qk_mqa_dim={config.qk_mqa_dim})")
-        else:
-            config_dict["collapse"] = int(config.collapse)
-
-        model = partial_rope(model, tokenizer, train_loader, test_loader, **config_dict)
-
-        # Process partial_rope result
-        if isinstance(model, tuple):
-            if config.freqfold == "auto":
-                config_dict["freqfold"] = model[1]
-                print(f"[TransMLA] Auto freqfold: {config_dict['freqfold']}")
-            model = model[0]
-
-        # Stage 2: Low-rank QKV
-        print("[TransMLA] Stage 2: Applying Low-rank QKV...")
-        model = low_rank_qkv(model, tokenizer, train_loader, test_loader, **config_dict)
-
-        # Save model if path specified
-        if save_path:
-            print(f"[TransMLA] Saving model to {save_path}...")
-            os.makedirs(save_path, exist_ok=True)
-            model.save_pretrained(save_path)
-            tokenizer.save_pretrained(save_path)
-
-            # Modify configuration
-            config_path = os.path.join(save_path, "config.json")
-            modify_config(model, config_path, argparse.Namespace(**config_dict))
-
-        print("[TransMLA] MLA conversion completed successfully!")
-        return model
-
-    except Exception as e:
-        print(f"[TransMLA Error] Error during conversion: {e}")
-        print("[TransMLA] Returning original model...")
-        # Mark model as unconverted
-        if hasattr(model, '_mla_conversion_failed'):
-            model._mla_conversion_failed = True
-        else:
-            setattr(model, '_mla_conversion_failed', True)
-        return model
+    
+    # Prepare calibration data
+    dataset = get_dataset(config.cal_dataset)
+    train_loader = prepare_dataloader(
+        dataset=dataset["train"],
+        tokenizer=tokenizer,
+        max_seqlen=config.cal_max_seqlen,
+        batch_size=config.cal_batch_size,
+        nsamples=config.cal_nsamples,
+        seed=config.seed,
+    )
+    test_loader = prepare_test_dataloader(
+        dataset=dataset["test"], 
+        tokenizer=tokenizer, 
+        batch_size=max(1, config.ppl_eval_batch_size)
+    )
+    
+    # Stage 1: Partial RoPE
+    config_dict = config.to_dict()
+    
+    # Handle automatic collapse calculation
+    collapse_value = config.collapse
+    if collapse_value == "auto":
+        head_dim = getattr(model.config, 'head_dim', model.config.hidden_size // model.config.num_attention_heads)
+        model.config.head_dim = head_dim
+        collapse_value = head_dim // config.qk_mqa_dim
+        print(f"[TransMLA] Auto collapse: {collapse_value}")
+    
+    config_dict["collapse"] = int(collapse_value)
+    
+    model = partial_rope(model, tokenizer, train_loader, test_loader, **config_dict)
+    
+    # Process partial_rope result
+    freqfold_value = config.freqfold
+    if isinstance(model, tuple):
+        if freqfold_value == "auto":
+            freqfold_value = model[1]
+            print(f"[TransMLA] Auto freqfold: {freqfold_value}")
+        model = model[0]
+    
+    config_dict["freqfold"] = freqfold_value
+    
+    # Stage 2: Low-rank QKV
+    model = low_rank_qkv(model, tokenizer, train_loader, test_loader, **config_dict)
+    
+    # Save model if path specified
+    if save_path:
+        print(f"[TransMLA] Saving model to {save_path}...")
+        os.makedirs(save_path, exist_ok=True)
+        model.save_pretrained(save_path)
+        tokenizer.save_pretrained(save_path)
+        
+        import argparse
+        config_path = os.path.join(save_path, "config.json")
+        modify_config(model, config_path, argparse.Namespace(**config_dict))
+    
+    print("[TransMLA] MLA conversion completed successfully!")
+    return model
 
 
 def _convert_attention_to_mla(module: nn.Module):
@@ -557,228 +543,151 @@ def _convert_linear_to_mla_compatible(module: nn.Linear):
     return module
 
 
-class LLMReassembler(Reassembler):
-    """Reassembler for large language models with support for various reassembly types"""
+class AttentionReassembler(Reassembler):
+    """
+    Simple attention reassembler following Zen of Python principles
+    """
 
-    # Basic supported layers (inherited from Reassembler)
     supported_layers = {}
     supported_decomposed_layers = {}
 
-    # MLA-specific mappings
-    mla_attention_layers = {
-        # Here will be various types of attention layers
-        # nn.MultiheadAttention: _convert_attention_to_mla,
-        # Add as needed
-    }
-
-    mla_linear_layers = {
-        nn.Linear: _convert_linear_to_mla_compatible,
-    }
-
-    # Strategy registry for different reassembly types
-    _strategy_registry = {
-        'mla': '_handle_mla_strategy',
-        'standard': '_handle_standard_strategy',
-    }
-
     @classmethod
-    def _get_reassembly_mapping(cls, reassembly_type: str):
-        """Returns mapping for specific reassembly type"""
-        mappings = {
-            'mla': {
-                **cls.mla_attention_layers,
-                **cls.mla_linear_layers,
-            },
-            # Can add other reassembly types:
-            # 'gqa': {...},
-            # 'standard': {...},
+    def convert(cls, model: nn.Module, mode: str = 'standard', **kwargs):
+        """Simple conversion method without complex conditions"""
+        conversion_map = {
+            'standard': cls._convert_standard,
+            'trans-mla': cls._convert_trans_mla
         }
-
-        if reassembly_type not in mappings:
-            raise ValueError(f"Unsupported reassembly type: {reassembly_type}. "
-                           f"Available types: {list(mappings.keys())}")
-
-        return mappings[reassembly_type]
-
-    @classmethod
-    def _type_specific_post_hook(cls, name: str, original_module: nn.Module, converted_module: nn.Module, type_mapping: dict):
-        """Post-processing hook for type-specific conversions"""
-        if converted_module is None:
-            module_type = type(original_module)
-            if module_type in type_mapping:
-                device = extract_device(original_module)
-                type_converted_module = type_mapping[module_type](original_module)
-                if type_converted_module != original_module:  # If module was changed
-                    if hasattr(cls, '_current_model'):
-                        cls.set_module(cls._current_model, name, type_converted_module.to(device))
-
-    @classmethod
-    def _handle_mla_strategy(cls, model: nn.Module, tokenizer, mla_config: Optional[TransMLAConfig], 
-                            save_path: Optional[str], success_info: dict, **kwargs):
-        """
-        Handles MLA conversion strategy
         
-        Args:
-            model: Model for conversion
-            tokenizer: Tokenizer (required for MLA)
-            mla_config: MLA configuration
-            save_path: Path for saving model
-            success_info: Success information dictionary
-            **kwargs: Additional parameters
-            
-        Returns:
-            Converted model
-        """
-        if not TRANSMLA_AVAILABLE:
-            print(f"[Warning] TransMLA not available: {TRANSMLA_ERROR}")
-            status = get_transmla_status()
-            print("[Info] To solve the problem:")
-            for rec in status['recommendations']:
-                print(f"  • {rec}")
-            print("[Warning] Using stubs instead of full MLA conversion.")
-            cls._convert_modules_with_type(model, 'mla')
-            return model
-            
-        if tokenizer is None:
-            print("[Warning] MLA conversion requires tokenizer. Using stubs.")
-            cls._convert_modules_with_type(model, 'mla')
-            return model
-            
-        # Full MLA conversion with TransMLA
-        if mla_config is None:
-            mla_config = TransMLAConfig()
-            print("[Info] Using default MLA configuration")
-
-        # Update configuration from kwargs
-        for key, value in kwargs.items():
-            if hasattr(mla_config, key):
-                setattr(mla_config, key, value)
-
-        model = _convert_model_to_mla(model, tokenizer, mla_config, save_path)
-
-        # Check if MLA conversion was successful
-        if hasattr(model, '_mla_conversion_failed') and model._mla_conversion_failed:
-            print("[LLMReassembler] MLA conversion failed - model remains unchanged")
-            success_info["successful"] = False
-            success_info["error"] = "MLA conversion failed"
-            # Remove flag to avoid cluttering the model
-            delattr(model, '_mla_conversion_failed')
-        else:
-            print("[LLMReassembler] MLA conversion completed successfully")
-            
-        return model
+        converter = conversion_map.get(mode)
+        assert converter, f"Unknown mode: {mode}"
+        
+        return converter(model, **kwargs)
 
     @classmethod
-    def _handle_standard_strategy(cls, model: nn.Module):
-        """
-        Handles standard conversion strategy
-        
-        Args:
-            model: Model for conversion
-            
-        Returns:
-            Converted model
-        """
+    def _convert_standard(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
+        """Standard conversion"""
+        additional_mapping and cls._apply_additional_mapping(model, additional_mapping)
         cls._convert_modules(model)
-        return model
-
-    @classmethod
-    def _handle_typed_strategy(cls, model: nn.Module, reassembly_type: str):
-        """
-        Handles typed conversion strategy
-        
-        Args:
-            model: Model for conversion
-            reassembly_type: Type of reassembly
-            
-        Returns:
-            Converted model
-        """
-        cls._convert_modules_with_type(model, reassembly_type)
-        return model
-
-    @classmethod
-    def _convert_modules_with_type(cls, model: nn.Module, reassembly_type: str):
-        """Converts modules according to specified reassembly type using hooks"""
-        type_mapping = cls._get_reassembly_mapping(reassembly_type)
-        
-        # Создаем специфичный хук для данного типа
-        def post_hook(name, original_module, converted_module):
-            cls._type_specific_post_hook(name, original_module, converted_module, type_mapping)
-        
-        # Сохраняем ссылку на модель для использования в хуках
-        cls._current_model = model
-        try:
-            cls._traverse_modules(model, post_hook=post_hook)
-        finally:
-            # Очищаем ссылку после использования
-            if hasattr(cls, '_current_model'):
-                delattr(cls, '_current_model')
-
-    @classmethod
-    def _get_strategy_handler(cls, reassembly_type: str):
-        """
-        Gets strategy handler for given reassembly type
-        
-        Args:
-            reassembly_type: Type of reassembly strategy
-            
-        Returns:
-            Strategy handler method
-        """
-        if reassembly_type in cls._strategy_registry:
-            return getattr(cls, cls._strategy_registry[reassembly_type])
-        else:
-            # Fallback to typed strategy for unknown types
-            return cls._handle_typed_strategy
-
-    @classmethod
-    def reassemble(cls, model: nn.Module, reassembly_type: str = 'standard', 
-                   additional_mapping: dict = None, tokenizer=None, 
-                   mla_config: Optional[TransMLAConfig] = None,
-                   save_path: Optional[str] = None, return_success_info: bool = False, **kwargs):
-        """
-        Main method for model reassembly with support for various types.
-        
-        Args:
-            model: Model for reassembly
-            reassembly_type: Reassembly type ('mla', 'standard', etc.)
-            additional_mapping: Additional module mappings
-            tokenizer: Tokenizer (required for MLA conversion)
-            mla_config: Configuration for MLA conversion
-            save_path: Path for saving MLA model
-            return_success_info: If True, returns (model, success_info)
-            **kwargs: Additional parameters
-        
-        Returns:
-            Reassembled model or (model, success_info) if return_success_info=True
-        """
-        print(f"[LLMReassembler] Starting model reassembly with type: {reassembly_type}")
-
-        # Initialize success information
-        success_info = {"type": reassembly_type, "successful": True, "error": None}
-
-        # Apply additional mappings
-        cls._apply_additional_mapping(model, additional_mapping)
-
-        # Get and execute strategy handler
-        strategy_handler = cls._get_strategy_handler(reassembly_type)
-        
-        if reassembly_type == 'mla':
-            model = strategy_handler(model, tokenizer, mla_config, save_path, success_info, **kwargs)
-        elif reassembly_type == 'standard':
-            model = strategy_handler(model)
-        else:
-            model = strategy_handler(model, reassembly_type)
-
-        # Check device consistency
         cls._validate_device_consistency(model)
-
-        print(f"[LLMReassembler] Model reassembly completed")
-
-        if return_success_info:
-            return model, success_info
         return model
+
+    @classmethod
+    def _convert_trans_mla(cls, model: nn.Module, tokenizer=None, config: Optional[TransMLAConfig] = None,
+                          save_path: Optional[str] = None, additional_mapping: dict = None, **kwargs):
+        """TransMLA conversion - simple implementation"""
+        assert tokenizer, "TransMLA conversion requires tokenizer"
+        assert TRANSMLA_AVAILABLE, f"TransMLA not available: {TRANSMLA_ERROR}"
+        
+        # Apply mappings
+        additional_mapping and cls._apply_additional_mapping(model, additional_mapping)
+        
+        # Prepare config
+        config = config or TransMLAConfig()
+        
+        # Update config with kwargs
+        for key, value in kwargs.items():
+            hasattr(config, key) and setattr(config, key, value)
+        
+        # Convert
+        model = _convert_model_to_mla(model, tokenizer, config, save_path)
+        cls._validate_device_consistency(model)
+        return model
+
+
+class DeferredConversion:
+    """Simple deferred conversion container"""
+    
+    def __init__(self, conversion_type: str, model: nn.Module, **kwargs):
+        self.conversion_type = conversion_type
+        self.model = model
+        self.kwargs = kwargs
+        self.executed = False
+        self.result = None
+    
+    def execute(self):
+        """Execute the deferred conversion"""
+        assert not self.executed, "Conversion already executed"
+        
+        conversion_map = {
+            'trans-mla': TransMLA._execute_conversion
+        }
+        
+        converter = conversion_map.get(self.conversion_type)
+        assert converter, f"Unknown conversion type: {self.conversion_type}"
+        
+        self.result = converter(self.model, **self.kwargs)
+        self.executed = True
+        return self.result
+
+
+class TransMLA(AttentionReassembler):
+    """Specialized TransMLA reassembler"""
+
+    @classmethod
+    def convert(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
+                save_path: Optional[str] = None, deferred: bool = False, **kwargs):
+        """TransMLA conversion with optional deferred execution"""
+        conversion_args = {
+            'model': model,
+            'tokenizer': tokenizer,
+            'config': config,
+            'save_path': save_path,
+            **kwargs
+        }
+        
+        return DeferredConversion('trans-mla', **conversion_args) if deferred else cls._execute_conversion(**conversion_args)
+
+    @classmethod
+    def _execute_conversion(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
+                           save_path: Optional[str] = None, **kwargs):
+        """Execute TransMLA conversion immediately"""
+        return cls._convert_trans_mla(
+            model=model,
+            tokenizer=tokenizer,
+            config=config,
+            save_path=save_path,
+            **kwargs
+        )
+
+
+# Backward compatibility alias - will be deprecated
+LLMReassembler = AttentionReassembler
+
+
+class ReassemblerFactory:
+    """Simple factory for reassemblers"""
+    
+    _reassemblers = {
+        'attention': AttentionReassembler,
+        'trans-mla': TransMLA,
+        'standard': ParentalReassembler,
+        'parental': ParentalReassembler,
+    }
+    
+    @classmethod
+    def get_reassembler(cls, reassembler_type: str = 'standard'):
+        """Get reassembler class"""
+        reassembler = cls._reassemblers.get(reassembler_type)
+        assert reassembler, f"Unknown reassembler type: {reassembler_type}"
+        return reassembler
+    
+    @classmethod
+    def convert_model(cls, model: nn.Module, reassembler_type: str = 'standard', **kwargs):
+        """Convert model with specified reassembler"""
+        reassembler_class = cls.get_reassembler(reassembler_type)
+        
+        conversion_methods = {
+            'attention': lambda: reassembler_class.convert(model, **kwargs),
+            'trans-mla': lambda: reassembler_class.convert(model, **kwargs),
+            'standard': lambda: reassembler_class.reassemble(model, **kwargs),
+            'parental': lambda: reassembler_class.reassemble(model, **kwargs)
+        }
+        
+        converter = conversion_methods.get(reassembler_type)
+        assert converter, f"No converter for type: {reassembler_type}"
+        
+        return converter()
 
 
 def uninplace(model):
@@ -813,7 +722,7 @@ class QDQWrapper(Accessor):
         qconfig = getattr(module, 'qconfig', None)
         try:
             act_type = get_qconfig_dtypes(qconfig)[0]
-        except:
+        except (TypeError, IndexError, AttributeError):
             act_type = None
         return act_type is torch.float32
 
@@ -847,7 +756,9 @@ class QDQWrapper(Accessor):
             qm = p_f(m)
             qm(*example_inputs)
             return True
-        except Exception:
+        except (RuntimeError, ValueError, TypeError) as e:
+            # Log the specific error for debugging
+            print(f"[QDQWrapper] Quantization failed for module {type(module).__name__}: {e}")
             module.qconfig = None
             return False 
 
