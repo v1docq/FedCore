@@ -4,9 +4,11 @@ from enum import Enum
 import torch
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Union
+from transformers import PreTrainedModel
+from torch.nn import Module
 
-from fedcore.models.network_impl.interfaces import ITrainer, IHookable
+from fedcore.models.network_impl.utils.interfaces import ITrainer, IHookable
 from fedcore.architecture.comptutaional.devices import default_device
 
 
@@ -33,7 +35,7 @@ class BaseTrainer(ITrainer, IHookable):
             'val_loss': [],
             'learning_rates': []
         }
-        self.model = None
+        self.model: Union['PreTrainedModel', 'Module', None] = None
         self.device = default_device()
     
     def register_additional_hooks(self, hooks: Iterable[Enum]) -> None:
