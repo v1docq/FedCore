@@ -559,22 +559,6 @@ def _convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, s
     return model
 
 
-def _convert_attention_to_mla(module: nn.Module):
-    """
-    Compatibility stub. Real conversion is performed in _convert_model_to_mla
-    """
-    print(f"[MLA] Attention layer detected: {type(module).__name__}")
-    return module
-
-
-def _convert_linear_to_mla_compatible(module: nn.Linear):
-    """
-    Compatibility stub. Real conversion is performed in _convert_model_to_mla
-    """
-    print(f"[MLA] Linear layer detected: {module}")
-    return module
-
-
 class AttentionReassembler(Reassembler):
     """
     Simple attention reassembler following Zen of Python principles
