@@ -97,7 +97,8 @@ __all__ = [
     'ParentalReassembler',
     'AttentionReassembler',
     'TransMLA',
-    'ReassemblerFactory',
+    'get_reassembler',
+    'convert_model',
     'TransMLAConfig',
     'QDQWrapper',
     'QDQWrapping',
@@ -624,39 +625,32 @@ class TransMLA(AttentionReassembler):
         )
 
 
-class ReassemblerFactory:
-    """Simple factory for reassemblers"""
+# Simple reassembler registry - no class needed
+REASSEMBLERS = {
+    'attention': AttentionReassembler,
+    'trans-mla': TransMLA,
+    'standard': ParentalReassembler,
+    'parental': ParentalReassembler,  # Alias for backward compatibility
+}
+
+
+def get_reassembler(reassembler_type: str = 'standard'):
+    """Get reassembler class by type"""
+    if reassembler_type not in REASSEMBLERS:
+        available = list(REASSEMBLERS.keys())
+        raise ValueError(f"Unknown reassembler type '{reassembler_type}'. Available: {available}")
+    return REASSEMBLERS[reassembler_type]
+
+
+def convert_model(model: nn.Module, reassembler_type: str = 'standard', **kwargs):
+    """Convert model using specified reassembler"""
+    reassembler_class = get_reassembler(reassembler_type)
     
-    _reassemblers = {
-        'attention': AttentionReassembler,
-        'trans-mla': TransMLA,
-        'standard': ParentalReassembler,
-        'parental': ParentalReassembler,
-    }
-    
-    @classmethod
-    def get_reassembler(cls, reassembler_type: str = 'standard'):
-        """Get reassembler class"""
-        reassembler = cls._reassemblers.get(reassembler_type)
-        assert reassembler, f"Unknown reassembler type: {reassembler_type}"
-        return reassembler
-    
-    @classmethod
-    def convert_model(cls, model: nn.Module, reassembler_type: str = 'standard', **kwargs):
-        """Convert model with specified reassembler"""
-        reassembler_class = cls.get_reassembler(reassembler_type)
-        
-        conversion_methods = {
-            'attention': lambda: reassembler_class.convert(model, **kwargs),
-            'trans-mla': lambda: reassembler_class.convert(model, **kwargs),
-            'standard': lambda: reassembler_class.reassemble(model, **kwargs),
-            'parental': lambda: reassembler_class.reassemble(model, **kwargs)
-        }
-        
-        converter = conversion_methods.get(reassembler_type)
-        assert converter, f"No converter for type: {reassembler_type}"
-        
-        return converter()
+    # Use convert() for modern reassemblers, reassemble() for legacy ones
+    if reassembler_type in ['attention', 'trans-mla']:
+        return reassembler_class.convert(model, **kwargs)
+    else:
+        return reassembler_class.reassemble(model, **kwargs)
 
 
 def uninplace(model):

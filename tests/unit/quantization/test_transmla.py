@@ -9,7 +9,8 @@ from unittest.mock import Mock, patch, MagicMock
 from fedcore.algorithm.quantization.utils import (
     AttentionReassembler,
     TransMLA,
-    ReassemblerFactory,
+    get_reassembler,
+    convert_model,
     TransMLAConfig,
     TRANSMLA_AVAILABLE
 )
@@ -91,23 +92,6 @@ class TestAttentionReassembler:
 class TestTransMLA:
     """Test TransMLA functionality"""
 
-    def test_convert_immediate_execution(self):
-        """Test immediate execution (deferred=False)"""
-        model = SimpleModel()
-        tokenizer = Mock()
-        
-        with patch.object(TransMLA, '_execute_conversion') as mock_execute:
-            mock_execute.return_value = model
-            
-            result = TransMLA.convert(
-                model, 
-                tokenizer=tokenizer, 
-                deferred=False
-            )
-            
-            assert result == model
-            mock_execute.assert_called_once()
-
     def test_convert_direct_execution(self):
         """Test direct execution"""
         model = SimpleModel()
@@ -125,40 +109,39 @@ class TestTransMLA:
             mock_convert.assert_called_once()
 
     @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
-    def test_execute_conversion_success(self):
-        """Test successful conversion execution"""
+    def test_convert_with_mla_available(self):
+        """Test successful conversion when TransMLA is available"""
         model = SimpleModel()
         tokenizer = Mock()
         
         with patch('fedcore.algorithm.quantization.utils._convert_model_to_mla') as mock_convert:
             mock_convert.return_value = model
             
-            result = TransMLA._execute_conversion(
+            result = TransMLA.convert(
                 model=model,
                 tokenizer=tokenizer
             )
             
             assert result == model
-            mock_convert.assert_called_once()
 
 
 
 
-class TestReassemblerFactory:
-    """Test ReassemblerFactory functionality"""
+class TestReassemblerFunctions:
+    """Test reassembler functions functionality"""
 
     def test_get_reassembler_valid_types(self):
         """Test getting valid reassembler types"""
         valid_types = ['attention', 'trans-mla', 'standard', 'parental']
         
         for reassembler_type in valid_types:
-            reassembler = ReassemblerFactory.get_reassembler(reassembler_type)
+            reassembler = get_reassembler(reassembler_type)
             assert reassembler is not None
 
     def test_get_reassembler_invalid_type(self):
-        """Test getting invalid reassembler type raises assertion error"""
-        with pytest.raises(AssertionError, match="Unknown reassembler type"):
-            ReassemblerFactory.get_reassembler('invalid_type')
+        """Test getting invalid reassembler type raises ValueError"""
+        with pytest.raises(ValueError, match="Unknown reassembler type"):
+            get_reassembler('invalid_type')
 
     def test_convert_model_attention(self):
         """Test converting model with attention reassembler"""
@@ -167,7 +150,7 @@ class TestReassemblerFactory:
         with patch.object(AttentionReassembler, 'convert') as mock_convert:
             mock_convert.return_value = model
             
-            result = ReassemblerFactory.convert_model(
+            result = convert_model(
                 model, 
                 'attention', 
                 mode='standard'
@@ -184,7 +167,7 @@ class TestReassemblerFactory:
         with patch.object(TransMLA, 'convert') as mock_convert:
             mock_convert.return_value = model
             
-            result = ReassemblerFactory.convert_model(
+            result = convert_model(
                 model, 
                 'trans-mla',
                 tokenizer=tokenizer
@@ -195,18 +178,16 @@ class TestReassemblerFactory:
 
     def test_convert_model_standard(self):
         """Test converting model with standard reassembler"""
+        from fedcore.algorithm.quantization.utils import ParentalReassembler
         model = SimpleModel()
         
-        with patch('fedcore.algorithm.quantization.utils.ParentalReassembler') as mock_reassembler:
-            mock_instance = Mock()
-            mock_reassembler.return_value = mock_instance
-            mock_instance.reassemble.return_value = model
+        with patch.object(ParentalReassembler, 'reassemble') as mock_reassemble:
+            mock_reassemble.return_value = model
             
-            result = ReassemblerFactory.convert_model(model, 'standard')
+            result = convert_model(model, 'standard')
             
-            # Note: Factory calls class method, not instance method
-            # So we need to patch the class method
-            assert result is not None
+            assert result == model
+            mock_reassemble.assert_called_once_with(model)
 
 
 class TestTransMLAConfig:
@@ -267,15 +248,15 @@ class TestIntegration:
             mock_convert.assert_called_once()
 
     def test_factory_workflow(self):
-        """Test using factory for TransMLA conversion"""
+        """Test using convert_model function for TransMLA conversion"""
         model = SimpleModel()
         tokenizer = Mock()
         
-        # Use factory to create TransMLA conversion
+        # Use convert_model function for TransMLA conversion
         with patch.object(TransMLA, 'convert') as mock_convert:
             mock_convert.return_value = model
             
-            result = ReassemblerFactory.convert_model(
+            result = convert_model(
                 model,
                 'trans-mla',
                 tokenizer=tokenizer
