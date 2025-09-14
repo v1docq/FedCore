@@ -35,6 +35,7 @@ import os
 from pathlib import Path
 from typing import Optional, Tuple
 
+
 # TransMLA configuration
 def get_transmla_path() -> Path:
     """
@@ -61,17 +62,59 @@ def get_transmla_path() -> Path:
     # Strategy 3: Fallback to relative path (for development)
     fallback_path = Path(__file__).parent.parent.parent.parent / "external" / "transmla_core"
     return fallback_path
+
+
 TRANSMLA_AVAILABLE = False
 TRANSMLA_ERROR = None
 
-# TransMLA function placeholders
-partial_rope = None
-low_rank_qkv = None
-modify_config = None
-get_dataset = None
-prepare_dataloader = None
-prepare_test_dataloader = None
-evaluate_ppl = None
+class TransMLAFunctions:
+    """Container for TransMLA functions - eliminates global state for scalability."""
+    
+    def __init__(self):
+        self.partial_rope = None
+        self.low_rank_qkv = None
+        self.modify_config = None
+        self.get_dataset = None
+        self.prepare_dataloader = None
+        self.prepare_test_dataloader = None
+        self.evaluate_ppl = None
+        self._initialized = False
+    
+    def initialize(self, transmla_path: Path) -> None:
+        """Initialize TransMLA functions from given path."""
+        if self._initialized:
+            return  # Already initialized
+            
+        # Setup paths
+        transmla_str = str(transmla_path)
+        if transmla_str not in sys.path:
+            sys.path.insert(0, transmla_str)
+        
+        # Import modules
+        import utils as transmla_utils
+        import partial_rope as transmla_partial_rope
+        import lora_qkv as transmla_lora_qkv
+        import modify_config as transmla_modify_config
+
+        # Store functions in instance (no global state!)
+        self.partial_rope = transmla_partial_rope.partial_rope
+        self.low_rank_qkv = transmla_lora_qkv.low_rank_qkv
+        self.modify_config = transmla_modify_config.modify_config
+        self.get_dataset = transmla_utils.get_dataset
+        self.prepare_dataloader = transmla_utils.prepare_dataloader
+        self.prepare_test_dataloader = transmla_utils.prepare_test_dataloader
+        self.evaluate_ppl = transmla_utils.evaluate_ppl
+        
+        self._initialized = True
+    
+    @property
+    def is_initialized(self) -> bool:
+        """Check if functions are initialized."""
+        return self._initialized
+
+
+# Global instance (but with encapsulated state)
+_transmla_functions = TransMLAFunctions()
 
 
 class TransMLAImporter:
@@ -79,12 +122,11 @@ class TransMLAImporter:
     
     @staticmethod
     def initialize() -> Tuple[bool, Optional[str]]:
-        """Initialize TransMLA imports"""
+        """Initialize TransMLA imports using encapsulated container"""
         transmla_path = get_transmla_path()
         
         # Check if path exists
-        path_exists = transmla_path.exists()
-        if not path_exists:
+        if not transmla_path.exists():
             raise ImportError(
                 f"TransMLA core module not found at: {transmla_path}\n"
                 f"Try one of the following:\n"
@@ -93,29 +135,9 @@ class TransMLAImporter:
                 f"3. Ensure external/transmla_core exists in project root"
             )
         
-        # Setup paths
-        transmla_str = str(transmla_path)
+        # Initialize functions container (no global state!)
+        _transmla_functions.initialize(transmla_path)
         
-        transmla_str not in sys.path and sys.path.insert(0, transmla_str)
-        
-        # Import modules
-        import utils as transmla_utils
-        import partial_rope as transmla_partial_rope
-        import lora_qkv as transmla_lora_qkv
-        import modify_config as transmla_modify_config
-
-        # Make functions globally available
-        global partial_rope, low_rank_qkv, modify_config
-        global get_dataset, prepare_dataloader, prepare_test_dataloader, evaluate_ppl
-        
-        partial_rope = transmla_partial_rope.partial_rope
-        low_rank_qkv = transmla_lora_qkv.low_rank_qkv
-        modify_config = transmla_modify_config.modify_config
-        get_dataset = transmla_utils.get_dataset
-        prepare_dataloader = transmla_utils.prepare_dataloader
-        prepare_test_dataloader = transmla_utils.prepare_test_dataloader
-        evaluate_ppl = transmla_utils.evaluate_ppl
-
         return True, None
 
 
@@ -529,9 +551,9 @@ def _convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, s
     """
     print("[TransMLA] Starting MLA conversion...")
     
-    # Prepare calibration data
-    dataset = get_dataset(config.cal_dataset)
-    train_loader = prepare_dataloader(
+    # Prepare calibration data using encapsulated functions
+    dataset = _transmla_functions.get_dataset(config.cal_dataset)
+    train_loader = _transmla_functions.prepare_dataloader(
         dataset=dataset["train"],
         tokenizer=tokenizer,
         max_seqlen=config.cal_max_seqlen,
@@ -539,7 +561,7 @@ def _convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, s
         nsamples=config.cal_nsamples,
         seed=config.seed,
     )
-    test_loader = prepare_test_dataloader(
+    test_loader = _transmla_functions.prepare_test_dataloader(
         dataset=dataset["test"], 
         tokenizer=tokenizer, 
         batch_size=max(1, config.ppl_eval_batch_size)
@@ -558,7 +580,7 @@ def _convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, s
     
     config_dict["collapse"] = int(collapse_value)
     
-    model = partial_rope(model, tokenizer, train_loader, test_loader, **config_dict)
+    model = _transmla_functions.partial_rope(model, tokenizer, train_loader, test_loader, **config_dict)
     
     # Process partial_rope result
     freqfold_value = config.freqfold
@@ -571,7 +593,7 @@ def _convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, s
     config_dict["freqfold"] = freqfold_value
     
     # Stage 2: Low-rank QKV
-    model = low_rank_qkv(model, tokenizer, train_loader, test_loader, **config_dict)
+    model = _transmla_functions.low_rank_qkv(model, tokenizer, train_loader, test_loader, **config_dict)
     
     # Save model if path specified
     if save_path:
@@ -582,7 +604,7 @@ def _convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, s
         
         import argparse
         config_path = os.path.join(save_path, "config.json")
-        modify_config(model, config_path, argparse.Namespace(**config_dict))
+        _transmla_functions.modify_config(model, config_path, argparse.Namespace(**config_dict))
     
     print("[TransMLA] MLA conversion completed successfully!")
     return model
