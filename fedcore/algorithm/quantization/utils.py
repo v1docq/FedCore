@@ -634,7 +634,8 @@ class AttentionReassembler(Reassembler):
     @classmethod
     def _convert_standard(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
         """Standard conversion"""
-        additional_mapping and cls._apply_additional_mapping(model, additional_mapping)
+        if additional_mapping:
+            cls._apply_additional_mapping(model, additional_mapping)
         cls._convert_modules(model)
         cls._validate_device_consistency(model)
         return model
@@ -647,14 +648,16 @@ class AttentionReassembler(Reassembler):
         assert TRANSMLA_AVAILABLE, f"TransMLA not available: {TRANSMLA_ERROR}"
         
         # Apply mappings
-        additional_mapping and cls._apply_additional_mapping(model, additional_mapping)
+        if additional_mapping:
+            cls._apply_additional_mapping(model, additional_mapping)
         
         # Prepare config
         config = config or TransMLAConfig()
         
         # Update config with kwargs
         for key, value in kwargs.items():
-            hasattr(config, key) and setattr(config, key, value)
+            if hasattr(config, key):
+                setattr(config, key, value)
         
         # Convert
         model = _convert_model_to_mla(model, tokenizer, config, save_path)
