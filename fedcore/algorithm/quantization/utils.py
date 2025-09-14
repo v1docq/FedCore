@@ -36,7 +36,31 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 # TransMLA configuration
-TRANSMLA_PATH = Path(__file__).parent.parent.parent.parent / "external" / "transmla_core"
+def get_transmla_path() -> Path:
+    """
+    Get TransMLA path with multiple fallback strategies for scalability.
+    
+    Priority order:
+    1. Environment variable TRANSMLA_PATH
+    2. Installed package location
+    3. Relative path from current file (fallback)
+    """
+    # Strategy 1: Check environment variable (highest priority)
+    if env_path := os.environ.get('TRANSMLA_PATH'):
+        path = Path(env_path)
+        if path.exists():
+            return path
+    
+    # Strategy 2: Try to find installed package
+    try:
+        import transmla_core
+        return Path(transmla_core.__file__).parent
+    except ImportError:
+        pass
+    
+    # Strategy 3: Fallback to relative path (for development)
+    fallback_path = Path(__file__).parent.parent.parent.parent / "external" / "transmla_core"
+    return fallback_path
 TRANSMLA_AVAILABLE = False
 TRANSMLA_ERROR = None
 
@@ -56,11 +80,18 @@ class TransMLAImporter:
     @staticmethod
     def initialize() -> Tuple[bool, Optional[str]]:
         """Initialize TransMLA imports"""
-        transmla_path = TRANSMLA_PATH
+        transmla_path = get_transmla_path()
         
         # Check if path exists
         path_exists = transmla_path.exists()
-        assert path_exists, "TransMLA core module not found in external/transmla_core"
+        if not path_exists:
+            raise ImportError(
+                f"TransMLA core module not found at: {transmla_path}\n"
+                f"Try one of the following:\n"
+                f"1. Set TRANSMLA_PATH environment variable\n"
+                f"2. Install transmla_core package\n"
+                f"3. Ensure external/transmla_core exists in project root"
+            )
         
         # Setup paths
         transmla_str = str(transmla_path)
@@ -124,7 +155,7 @@ def get_transmla_status():
     status = {
         'available': TRANSMLA_AVAILABLE,
         'error': TRANSMLA_ERROR,
-        'path_exists': TRANSMLA_PATH.exists(),
+        'path_exists': get_transmla_path().exists(),
         'recommendations': []
     }
 
