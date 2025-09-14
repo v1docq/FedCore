@@ -107,9 +107,7 @@ __all__ = [
     'get_flattened_qconfig_dict',
     'TRANSMLA_AVAILABLE',
     'TRANSMLA_ERROR',
-    'get_transmla_status',
-    # Backward compatibility
-    'LLMReassembler'
+    'get_transmla_status'
 ]
 
 QConfigMapping = QConfigAny
@@ -624,10 +622,6 @@ class TransMLA(AttentionReassembler):
             save_path=save_path,
             **kwargs
         )
-
-
-# Backward compatibility alias - will be deprecated
-LLMReassembler = AttentionReassembler
 
 
 class ReassemblerFactory:
