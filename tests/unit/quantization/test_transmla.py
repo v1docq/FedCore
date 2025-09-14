@@ -9,7 +9,6 @@ from unittest.mock import Mock, patch, MagicMock
 from fedcore.algorithm.quantization.utils import (
     AttentionReassembler,
     TransMLA,
-    DeferredConversion,
     ReassemblerFactory,
     TransMLAConfig,
     TRANSMLA_AVAILABLE
@@ -109,21 +108,21 @@ class TestTransMLA:
             assert result == model
             mock_execute.assert_called_once()
 
-    def test_convert_deferred_execution(self):
-        """Test deferred execution (deferred=True)"""
+    def test_convert_direct_execution(self):
+        """Test direct execution"""
         model = SimpleModel()
         tokenizer = Mock()
         
-        result = TransMLA.convert(
-            model, 
-            tokenizer=tokenizer, 
-            deferred=True
-        )
-        
-        assert isinstance(result, DeferredConversion)
-        assert result.conversion_type == 'trans-mla'
-        assert result.model == model
-        assert 'tokenizer' in result.kwargs
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
+            mock_convert.return_value = model
+            
+            result = TransMLA.convert(
+                model, 
+                tokenizer=tokenizer
+            )
+            
+            assert result == model
+            mock_convert.assert_called_once()
 
     @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
     def test_execute_conversion_success(self):
@@ -143,64 +142,6 @@ class TestTransMLA:
             mock_convert.assert_called_once()
 
 
-class TestDeferredConversion:
-    """Test DeferredConversion functionality"""
-
-    def test_init(self):
-        """Test DeferredConversion initialization"""
-        model = SimpleModel()
-        tokenizer = Mock()
-        
-        deferred = DeferredConversion(
-            'trans-mla',
-            model=model,
-            tokenizer=tokenizer,
-            config=None
-        )
-        
-        assert deferred.conversion_type == 'trans-mla'
-        assert deferred.model == model
-        assert deferred.kwargs['tokenizer'] == tokenizer
-        assert not deferred.executed
-        assert deferred.result is None
-
-    def test_execute_success(self):
-        """Test successful deferred execution"""
-        model = SimpleModel()
-        tokenizer = Mock()
-        
-        deferred = DeferredConversion(
-            'trans-mla',
-            model=model,
-            tokenizer=tokenizer
-        )
-        
-        with patch.object(TransMLA, '_execute_conversion') as mock_execute:
-            mock_execute.return_value = model
-            
-            result = deferred.execute()
-            
-            assert result == model
-            assert deferred.executed
-            assert deferred.result == model
-            mock_execute.assert_called_once_with(model, tokenizer=tokenizer)
-
-    def test_execute_already_executed(self):
-        """Test that executing twice raises assertion error"""
-        model = SimpleModel()
-        deferred = DeferredConversion('trans-mla', model=model)
-        deferred.executed = True  # Mark as already executed
-        
-        with pytest.raises(AssertionError, match="Conversion already executed"):
-            deferred.execute()
-
-    def test_execute_unknown_conversion_type(self):
-        """Test unknown conversion type raises assertion error"""
-        model = SimpleModel()
-        deferred = DeferredConversion('unknown_type', model=model)
-        
-        with pytest.raises(AssertionError, match="Unknown conversion type"):
-            deferred.execute()
 
 
 class TestReassemblerFactory:
@@ -308,47 +249,40 @@ class TestTransMLAConfig:
 class TestIntegration:
     """Integration tests for the complete workflow"""
 
-    def test_end_to_end_deferred_workflow(self):
-        """Test complete deferred conversion workflow"""
+    def test_end_to_end_workflow(self):
+        """Test complete conversion workflow"""
         model = SimpleModel()
         tokenizer = Mock()
         
-        # Step 1: Create deferred conversion
-        deferred = TransMLA.convert(
-            model, 
-            tokenizer=tokenizer, 
-            deferred=True
-        )
-        
-        assert isinstance(deferred, DeferredConversion)
-        assert not deferred.executed
-        
-        # Step 2: Execute when ready
-        with patch.object(TransMLA, '_execute_conversion') as mock_execute:
-            mock_execute.return_value = model
+        # Direct conversion workflow
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
+            mock_convert.return_value = model
             
-            result = deferred.execute()
+            result = TransMLA.convert(
+                model, 
+                tokenizer=tokenizer
+            )
             
             assert result == model
-            assert deferred.executed
-            mock_execute.assert_called_once()
+            mock_convert.assert_called_once()
 
-    def test_factory_to_deferred_workflow(self):
-        """Test using factory to create deferred conversion"""
+    def test_factory_workflow(self):
+        """Test using factory for TransMLA conversion"""
         model = SimpleModel()
         tokenizer = Mock()
         
         # Use factory to create TransMLA conversion
-        result = ReassemblerFactory.convert_model(
-            model,
-            'trans-mla',
-            tokenizer=tokenizer,
-            deferred=True
-        )
-        
-        # Should return deferred conversion if TransMLA supports it
-        # (This test may need adjustment based on actual factory implementation)
-        assert result is not None
+        with patch.object(TransMLA, 'convert') as mock_convert:
+            mock_convert.return_value = model
+            
+            result = ReassemblerFactory.convert_model(
+                model,
+                'trans-mla',
+                tokenizer=tokenizer
+            )
+            
+            assert result == model
+            mock_convert.assert_called_once_with(model, tokenizer=tokenizer)
 
 
 if __name__ == '__main__':

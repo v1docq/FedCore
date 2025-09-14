@@ -97,7 +97,6 @@ __all__ = [
     'ParentalReassembler',
     'AttentionReassembler',
     'TransMLA',
-    'DeferredConversion',
     'ReassemblerFactory',
     'TransMLAConfig',
     'QDQWrapper',
@@ -611,53 +610,13 @@ class AttentionReassembler(Reassembler):
         return model
 
 
-class DeferredConversion:
-    """Simple deferred conversion container"""
-    
-    def __init__(self, conversion_type: str, model: nn.Module, **kwargs):
-        self.conversion_type = conversion_type
-        self.model = model
-        self.kwargs = kwargs
-        self.executed = False
-        self.result = None
-    
-    def execute(self):
-        """Execute the deferred conversion"""
-        assert not self.executed, "Conversion already executed"
-        
-        conversion_map = {
-            'trans-mla': TransMLA._execute_conversion
-        }
-        
-        converter = conversion_map.get(self.conversion_type)
-        assert converter, f"Unknown conversion type: {self.conversion_type}"
-        
-        self.result = converter(self.model, **self.kwargs)
-        self.executed = True
-        return self.result
-
-
 class TransMLA(AttentionReassembler):
     """Specialized TransMLA reassembler"""
 
     @classmethod
     def convert(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
-                save_path: Optional[str] = None, deferred: bool = False, **kwargs):
-        """TransMLA conversion with optional deferred execution"""
-        conversion_args = {
-            'model': model,
-            'tokenizer': tokenizer,
-            'config': config,
-            'save_path': save_path,
-            **kwargs
-        }
-        
-        return DeferredConversion('trans-mla', **conversion_args) if deferred else cls._execute_conversion(**conversion_args)
-
-    @classmethod
-    def _execute_conversion(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
-                           save_path: Optional[str] = None, **kwargs):
-        """Execute TransMLA conversion immediately"""
+                save_path: Optional[str] = None, **kwargs):
+        """TransMLA conversion - direct execution"""
         return cls._convert_trans_mla(
             model=model,
             tokenizer=tokenizer,

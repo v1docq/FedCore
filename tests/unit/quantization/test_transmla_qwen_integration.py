@@ -12,7 +12,6 @@ import os
 from fedcore.algorithm.quantization.utils import (
     AttentionReassembler,
     TransMLA,
-    DeferredConversion,
     TransMLAConfig,
     TRANSMLA_AVAILABLE
 )
@@ -95,48 +94,46 @@ class TestTransMLAQwenIntegration:
         assert expected_collapse == 1  # 64 // 64 = 1
 
     @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
-    def test_qwen_transmla_deferred_conversion(self, mock_qwen_model, mock_tokenizer, transmla_config):
-        """Test deferred TransMLA conversion for Qwen2.5-0.5B"""
+    def test_qwen_transmla_direct_conversion(self, mock_qwen_model, mock_tokenizer, transmla_config):
+        """Test direct TransMLA conversion for Qwen2.5-0.5B"""
         model = mock_qwen_model
         tokenizer = mock_tokenizer
         
-        # Create deferred conversion
-        deferred = TransMLA.convert(
-            model=model,
-            tokenizer=tokenizer,
-            config=transmla_config,
-            deferred=True
-        )
-        
-        # Verify deferred conversion was created
-        assert isinstance(deferred, DeferredConversion)
-        assert deferred.conversion_type == 'trans-mla'
-        assert deferred.model == model
-        assert deferred.kwargs['tokenizer'] == tokenizer
-        assert deferred.kwargs['config'] == transmla_config
-        assert not deferred.executed
-
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
-    def test_qwen_transmla_immediate_conversion(self, mock_qwen_model, mock_tokenizer, transmla_config):
-        """Test immediate TransMLA conversion for Qwen2.5-0.5B"""
-        model = mock_qwen_model
-        tokenizer = mock_tokenizer
-        
-        # Mock the entire conversion process to avoid validation issues
-        with patch.object(TransMLA, '_execute_conversion') as mock_execute:
-            mock_execute.return_value = model
+        # Mock the conversion process to avoid validation issues
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
+            mock_convert.return_value = model
             
-            # Perform immediate conversion
+            # Perform direct conversion
             result = TransMLA.convert(
                 model=model,
                 tokenizer=tokenizer,
-                config=transmla_config,
-                deferred=False
+                config=transmla_config
             )
             
             # Verify conversion was called
             assert result == model
-            mock_execute.assert_called_once_with(
+            mock_convert.assert_called_once()
+
+    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
+    def test_qwen_transmla_with_config(self, mock_qwen_model, mock_tokenizer, transmla_config):
+        """Test TransMLA conversion with custom config for Qwen2.5-0.5B"""
+        model = mock_qwen_model
+        tokenizer = mock_tokenizer
+        
+        # Mock the entire conversion process to avoid validation issues
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
+            mock_convert.return_value = model
+            
+            # Perform conversion with custom config
+            result = TransMLA.convert(
+                model=model,
+                tokenizer=tokenizer,
+                config=transmla_config
+            )
+            
+            # Verify conversion was called with config
+            assert result == model
+            mock_convert.assert_called_once_with(
                 model=model, tokenizer=tokenizer, config=transmla_config, save_path=None
             )
 
@@ -185,20 +182,19 @@ class TestTransMLAQwenIntegration:
             save_path = os.path.join(temp_dir, "qwen_mla_model")
             
             # Mock the execution to avoid validation
-            with patch.object(TransMLA, '_execute_conversion') as mock_execute:
-                mock_execute.return_value = model
+            with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
+                mock_convert.return_value = model
                 
                 # Convert with save path
                 result = TransMLA.convert(
                     model=model,
                     tokenizer=tokenizer,
                     config=transmla_config,
-                    save_path=save_path,
-                    deferred=False
+                    save_path=save_path
                 )
                 
                 # Verify conversion was called with save path
-                mock_execute.assert_called_once_with(
+                mock_convert.assert_called_once_with(
                     model=model, tokenizer=tokenizer, config=transmla_config, save_path=save_path
                 )
 
@@ -209,19 +205,18 @@ class TestTransMLAQwenIntegration:
         tokenizer = mock_tokenizer
         
         # Mock the entire execution process to test workflow
-        with patch.object(TransMLA, '_execute_conversion') as mock_execute:
-            mock_execute.return_value = model
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
+            mock_convert.return_value = model
             
             # Perform conversion
             result = TransMLA.convert(
                 model=model,
                 tokenizer=tokenizer,
-                config=transmla_config,
-                deferred=False
+                config=transmla_config
             )
             
             # Verify conversion was called
-            mock_execute.assert_called_once_with(
+            mock_convert.assert_called_once_with(
                 model=model, tokenizer=tokenizer, config=transmla_config, save_path=None
             )
             assert result == model
@@ -276,31 +271,26 @@ class TestTransMLAQwenIntegration:
         assert config.cal_batch_size == 4
         assert config.cal_max_seqlen == 128
 
-    def test_qwen_deferred_to_immediate_execution(self, mock_qwen_model, mock_tokenizer, transmla_config):
-        """Test converting deferred execution to immediate for Qwen2.5-0.5B"""
+    def test_qwen_direct_execution_workflow(self, mock_qwen_model, mock_tokenizer, transmla_config):
+        """Test direct execution workflow for Qwen2.5-0.5B"""
         model = mock_qwen_model
         tokenizer = mock_tokenizer
         
-        # Create deferred conversion
-        deferred = DeferredConversion(
-            'trans-mla',
-            model=model,
-            tokenizer=tokenizer,
-            config=transmla_config
-        )
-        
         # Mock the execution
-        with patch.object(TransMLA, '_execute_conversion') as mock_execute:
-            mock_execute.return_value = model
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
+            mock_convert.return_value = model
             
-            # Execute deferred conversion
-            result = deferred.execute()
+            # Execute direct conversion
+            result = TransMLA.convert(
+                model=model,
+                tokenizer=tokenizer,
+                config=transmla_config
+            )
             
             # Verify execution
             assert result == model
-            assert deferred.executed
-            mock_execute.assert_called_once_with(
-                model, tokenizer=tokenizer, config=transmla_config
+            mock_convert.assert_called_once_with(
+                model=model, tokenizer=tokenizer, config=transmla_config, save_path=None
             )
 
 
