@@ -55,6 +55,7 @@ from fedcore.models.network_modules.losses import (
 from fedcore.repository.setups import QAT_1, PTQ_1
 from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks  # don't del
 from fedcore.algorithm.low_rank.hooks import LRHooks  # don't del
+# from fedcore.algorithm.reassembly.hooks import ReassemblyHooks  # don't del - moved to avoid circular import
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.architecture.utils.misc import EnumNoValue
@@ -114,6 +115,7 @@ class FedCoreTaskEnum(Enum):  # FEDCORE_TASK
     quantization = auto()
     distilation = auto()
     low_rank = auto()
+    reassembly = auto()
     evo_composed = auto()
 
 
@@ -203,6 +205,7 @@ class PEFTStrategies(Enum):
     low_rank = partial(PipelineBuilder().add_node, operation_type="low_rank_model")
     quantization = partial(PipelineBuilder().add_node, operation_type='quantization_model')
     distilation = partial(PipelineBuilder().add_node, operation_type="distilation_model")
+    reassembly = partial(PipelineBuilder().add_node, operation_type="reassembly_model")
     detection = partial(PipelineBuilder().add_node, operation_type="detection_model", params={"pretrained": True})
     training = partial(PipelineBuilder().add_node, operation_type="training_model")
 
