@@ -69,7 +69,6 @@ class BaseHook(ABC):
 class Saver(BaseHook):
     _SUMMON_KEY = 'save_each'
     _hook_place = 100
-    _hook_place = 100
 
     def __init__(self, params, model):
         super().__init__(params, model)
@@ -250,7 +249,6 @@ class OptimizerGen(BaseHook):
 
 class SchedulerRenewal(BaseHook):
     _hook_place = -90
-    _hook_place = -90
     _SUMMON_KEY = ('scheduler_step_each', 'scheduler')
 
     def __init__(self, params, model):
@@ -295,44 +293,6 @@ class SchedulerRenewal(BaseHook):
         if 'step' in self._mode:
             kws['trainer_objects']['scheduler'].step()
         self._mode.clear()
-
-
-class Freezer(BaseHook):
-    _SUMMON_KEY = ('frozen_prop', 'refreeze_each')
-    _hook_place = -10
-
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.frozen_prop = self.params.get('frozen_prop', 0.5)
-        self.approach = self.params.get('freeze_approach', 'random')
-        self.refreeze_each = self.params.get('refreeze_each', 1)
-        self.__criterions = {
-            'random': self.__uniform_mask,
-        }
-        self.criterion = self.__criterions[self.approach]
-
-    def __uniform_mask(self):
-        prob = np.random.random(1)[0]
-        return prob < self.frozen_prop
-
-    def __freeze(self):
-        for name, layer in self.model.named_modules():
-            if self.criterion(layer, name):
-                for p in layer.parameters():
-                    p.requires_grad = False
-
-    def __unfreeze(self):
-        for p in self.model.parameters():
-            p.requires_grad = True
-
-    def trigger(self, epoch, kws):
-        return self.refreeze_each and epoch % self.refreeze_each == 0
-
-    def action(self, epoch, kws):
-        self.__unfreeze()
-        if epoch != self.params.epochs:
-            self.__freeze()
-        
 
 
 class Freezer(BaseHook):
