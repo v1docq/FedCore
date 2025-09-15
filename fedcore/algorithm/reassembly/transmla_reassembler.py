@@ -91,32 +91,26 @@ class TransMLAFunctions:
             raise ImportError(f"Failed to import TransMLA modules from {transmla_path}: {e}")
 
 
-class TransMLAImporter:
-    """Simple TransMLA import handler."""
-    
-    @staticmethod
-    def try_import():
-        """Try to import and initialize TransMLA."""
-        global TRANSMLA_AVAILABLE, TRANSMLA_ERROR, _transmla_functions
-        
-        try:
-            transmla_path = get_transmla_path()
-            _transmla_functions = TransMLAFunctions()
-            _transmla_functions.initialize(transmla_path)
-            TRANSMLA_AVAILABLE = True
-            TRANSMLA_ERROR = None
-            return True
-        except Exception as e:
-            TRANSMLA_AVAILABLE = False
-            TRANSMLA_ERROR = str(e)
-            return False
-
-
 # Global TransMLA functions instance
 _transmla_functions = None
 
-# Try to initialize TransMLA on import
-TransMLAImporter.try_import()
+def _initialize_transmla():
+    """Initialize TransMLA if available (called lazily)."""
+    global TRANSMLA_AVAILABLE, TRANSMLA_ERROR, _transmla_functions
+    
+    if _transmla_functions is not None:
+        return  # Already initialized or attempted
+        
+    try:
+        transmla_path = get_transmla_path()
+        _transmla_functions = TransMLAFunctions()
+        _transmla_functions.initialize(transmla_path)
+        TRANSMLA_AVAILABLE = True
+        TRANSMLA_ERROR = None
+    except Exception as e:
+        TRANSMLA_AVAILABLE = False
+        TRANSMLA_ERROR = str(e)
+        _transmla_functions = False  # Mark as attempted but failed
 
 
 def get_transmla_status():
@@ -126,11 +120,12 @@ def get_transmla_status():
     Returns:
         dict: Status information including availability, error, and path
     """
+    _initialize_transmla()  # Lazy initialization
     return {
         'available': TRANSMLA_AVAILABLE,
         'error': TRANSMLA_ERROR,
         'path': str(get_transmla_path()) if get_transmla_path().exists() else None,
-        'initialized': _transmla_functions is not None and _transmla_functions._initialized
+        'initialized': _transmla_functions is not False and _transmla_functions is not None and _transmla_functions._initialized
     }
 
 
@@ -180,6 +175,7 @@ def convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig):
     Complete MLA conversion of model using TransMLA.
     Simple implementation without try/except blocks.
     """
+    _initialize_transmla()  # Ensure TransMLA is initialized
     assert TRANSMLA_AVAILABLE, f"TransMLA not available: {TRANSMLA_ERROR}"
     
     # Prepare calibration data using encapsulated functions
@@ -250,6 +246,7 @@ class TransMLA(AttentionReassembler):
     def _convert_trans_mla(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
                           additional_mapping: dict = None, **kwargs):
         """TransMLA conversion - simple implementation."""
+        _initialize_transmla()  # Ensure TransMLA is initialized
         assert TRANSMLA_AVAILABLE, f"TransMLA not available: {TRANSMLA_ERROR}"
         
         # Apply mappings
