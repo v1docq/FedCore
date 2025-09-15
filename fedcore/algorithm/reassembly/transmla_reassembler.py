@@ -6,11 +6,9 @@ Contains TransMLA-specific reassembly logic moved from quantization utils.
 
 import sys
 import os
-import argparse
 from pathlib import Path
 from typing import Optional, Union
 
-import torch
 import torch.nn as nn
 
 from .core_reassemblers import AttentionReassembler
@@ -249,10 +247,9 @@ class TransMLA(AttentionReassembler):
         )
 
     @classmethod
-    def _convert_trans_mla(cls, model: nn.Module, tokenizer=None, config: Optional[TransMLAConfig] = None,
+    def _convert_trans_mla(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
                           additional_mapping: dict = None, **kwargs):
         """TransMLA conversion - simple implementation."""
-        assert tokenizer, "TransMLA conversion requires tokenizer"
         assert TRANSMLA_AVAILABLE, f"TransMLA not available: {TRANSMLA_ERROR}"
         
         # Apply mappings
