@@ -4,11 +4,52 @@ from math import floor, ceil
 import torch
 from numpy import diff, abs as npabs
 
-
+from fedcore.repository.constanst_repository import DECOMPOSE_MODE
+from fedcore.algorithm.low_rank.svd_tools import decompose_module
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
+
+
+class Decomposer(BaseHook):
+    _hook_place = -110
+    _SUMMON_KEY = 'rank_prune_each'
+
+    _gathering = ('asvd',)
+
+    @classmethod
+    def check_init(cls, d):
+        return True
+    
+    def __init__(self, params, model):
+        super().__init__(params, model)
+        self.__done = False
+        self.__gathered = False
+        self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
+        self.decomposer = params.get('decomposer', 'svd')
+        self.compose_mode = params.get("compose_mode", None)
+
+    def trigger(self, epoch, kws):
+        if self.__done:
+            return False
+        if self.decomposer != 'asvd' or epoch >= 1: # check numeration of epochs . here assumed 0-based
+            return True
+        return False
+        
+    def action(self, epoch, kws):
+        if self.decomposer in self._gathering and not self.__gathered:
+            # logic
+            
+            self._hook_place = 1
+            self.__gathered = True
+        decompose_module(self.model, decomposer=self.decomposer, 
+                         decomposing_mode=self.decomposing_mode,
+                         compose_mode=self.compose_mode)
+            
+        self.__done = True
+        
+    
 
 
 class OnetimeRankPruner(BaseHook):
@@ -103,6 +144,64 @@ class DynamicRankPruner(BaseHook):
             layer = Accessor.get_module(self.model, layer_name)
             setattr(layer, self.rank_attr, rank)
             self.traced_layers.pop(name, None)  
+
+
+class ASVDPruner(OnetimeRankPruner):
+    _SUMMON_KEY = ('rank_prune_each', 'strategy')
+    _hook_place = 0
+
+    rank_attr = 'channel_activation'
+
+    def __init__(self, params, model: torch.nn.Module):
+        super().__init__(params, model)
+        self.__name_to_activation_sum = {}
+        self.__name_to_activation_num = {}
+        self.__handles = []
+        self._gathered = False
+
+
+    def __aggregate_activations(self, module, args, output, name):
+        self.__name_to_activation_sum[name] = self.__name_to_activation_sum.get(name, 0.) + torch.sum(torch.abs(output), dim=0)
+        self.__name_to_activation_num[name] = self.__name_to_activation_num.get(name, 0) + output.size(0)
+
+    def __register_activation_gatherer(self):
+        for name, layer in self.model.named_modules():
+            if not isinstance(layer, IDecomposed):
+                continue
+            layer: torch.nn.Module = layer
+            from functools import partial
+            self.__handles.append(
+                layer.register_forward_hook(partial(self.__aggregate_activations, name=name))
+            )
+            self._gathered = True
+
+
+    def action(self, epoch, kws):
+        if not self._gathered:
+            self.__register_activation_gatherer()
+        else:
+            for name in self.__name_to_activation_sum:
+                layer = self.model.get_submodule(name)
+                layer._spectrum_source = self.rank_attr
+                setattr(layer, self.rank_attr, self.__name_to_activation_sum[name] / self.__name_to_activation_num[name])
+            super().action(epoch, kws)
+            self._reset()
+                
+
+    def _reset(self):
+        for layer in self.model.modules():
+            if not isinstance(layer, IDecomposed):
+                continue
+            delattr(layer, self.rank_attr)
+            layer._spectrum_source = 'S'
+        for handle in self.__handles:
+            handle.remove() 
+        self.__handles.clear()
+        self.__name_to_activation_num.clear()
+        self.__name_to_activation_sum.clear()
+        self._gathered = False
+        
+
 
 class LRHooks(Enum):
     onetime = OnetimeRankPruner
