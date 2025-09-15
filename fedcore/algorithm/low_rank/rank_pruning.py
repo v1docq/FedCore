@@ -15,6 +15,7 @@ __all__ = [
 ]
 
 
+
 def rank_threshold_pruning(
         decomposed_module: IDecomposed,
         threshold: float = 0.75,
@@ -36,12 +37,13 @@ def rank_threshold_pruning(
     decomposed_module._anti_three_layers_compose()
 
     U, S, Vh = decomposed_module.get_U_S_Vh()
-    
 
     threshold = decomposed_module._get_threshold() or threshold  # for cases of per-layer adaptive thresholds
 
+    spectrum = getattr(decomposed_module, '_spectrum_source', S)
+
     if strategy in SLRStrategies:
-        indices = _apply_S_strategy(S, strategy, threshold, round_to_times=round_to_times)
+        indices = _apply_S_strategy(spectrum, strategy, threshold, round_to_times=round_to_times)
         initial_size = count_params(decomposed_module)
     else:
         # TODO Grad-based & approx. error
@@ -56,14 +58,12 @@ def rank_threshold_pruning(
             round(100 * (count_params(decomposed_module) / initial_size)), module_name
         )
     )
-
+    
 
 def _apply_S_strategy(S, strategy, threshold, round_to_times=1):
     S, indices = S.sort(descending=True)
     n_components = SLRStrategiesEnum[strategy].value(S, threshold)
-    # n_cpu = cpu_count()
-    # channels_per_device = max(floor(n_components / n_cpu), 1)
-    # n_components = channels_per_device * n_cpu
+
     n_components = ceil(n_components / round_to_times) * round_to_times  # for architecture
     n_components = min(n_components, len(indices))
     return indices[:n_components]

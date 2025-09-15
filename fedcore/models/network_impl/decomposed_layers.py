@@ -29,14 +29,15 @@ class IDecomposed(abc.ABC):
         'two_layers': ['U', 'Vh'],
         'three_layers': ['U', 'S', 'Vh']
     }
+    _spectrum_source = 'S'
 
-    def __init__(self, decomposing_mode, method: Literal['svd', 'rsvd', 'cur']='svd', compose_mode=None):
+    def __init__(self, decomposing_mode, method: Literal['svd', 'rsvd', 'cur']='svd', compose_mode=None, preconditioner=None):
         self.compose_mode : str = compose_mode
         self.inference_mode = False
         self.decomposing_mode = decomposing_mode
         self.method = method
         if decomposing_mode is not None:
-            self.decompose()
+            self.decompose(preconditioner=preconditioner)
             self._current_forward = self._forward3
         else:
             self.U = None
@@ -71,7 +72,7 @@ class IDecomposed(abc.ABC):
     def _get_threshold(self):
         return None
 
-    def decompose(self, W):
+    def decompose(self, W, preconditioner=None):
         decomposer = DECOMPOSERS[self.method]()
         U, S, Vh = decomposer.decompose(W)
         assert U.device.type == W.device.type
