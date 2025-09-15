@@ -8,9 +8,10 @@ from fedcore.algorithm.quantization.hooks import (
     DynamicQuantizationHook, StaticQuantizationHook, QATHook
 )
 from fedcore.algorithm.quantization.utils import (
-    ParentalReassembler, uninplace, get_flattened_qconfig_dict,
+    uninplace, get_flattened_qconfig_dict,
     QDQWrapper, QDQWrapping
 )
+from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
 
 
 def test_uninplace_recursively():

@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn 
 
 from fedcore.algorithm.low_rank.svd_tools import decompose_module
-from fedcore.algorithm.quantization.utils import (
+from fedcore.algorithm.reassembly.decomposed_recreation import (
     _recreate_decomposed_conv1d, 
     _recreate_decomposed_embedding,
     _recreate_embedding,
