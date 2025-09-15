@@ -7,7 +7,7 @@ from torch import nn
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.algorithm.reassembly.hooks import ReassemblyHooks
-from fedcore.algorithm.quantization.utils import AttentionReassembler
+from .core_reassemblers import AttentionReassembler
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
 
 

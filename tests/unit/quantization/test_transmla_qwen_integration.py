@@ -9,12 +9,8 @@ import tempfile
 import shutil
 import os
 
-from fedcore.algorithm.quantization.utils import (
-    AttentionReassembler,
-    TransMLA,
-    TransMLAConfig,
-    TRANSMLA_AVAILABLE
-)
+from fedcore.algorithm.reassembly.core_reassemblers import AttentionReassembler
+from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
 
 
 class TestTransMLAQwenIntegration:
@@ -93,7 +89,7 @@ class TestTransMLAQwenIntegration:
         expected_collapse = expected_head_dim // transmla_config.qk_mqa_dim
         assert expected_collapse == 1  # 64 // 64 = 1
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_qwen_transmla_direct_conversion(self, mock_qwen_model, mock_tokenizer, transmla_config):
         """Test direct TransMLA conversion for Qwen2.5-0.5B"""
         model = mock_qwen_model
@@ -114,7 +110,7 @@ class TestTransMLAQwenIntegration:
             assert result == model
             mock_convert.assert_called_once()
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_qwen_transmla_with_config(self, mock_qwen_model, mock_tokenizer, transmla_config):
         """Test TransMLA conversion with custom config for Qwen2.5-0.5B"""
         model = mock_qwen_model
@@ -137,7 +133,7 @@ class TestTransMLAQwenIntegration:
                 model=model, tokenizer=tokenizer, config=transmla_config, save_path=None
             )
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_qwen_attention_reassembler_transmla_mode(self, mock_qwen_model, mock_tokenizer, transmla_config):
         """Test AttentionReassembler with TransMLA mode for Qwen2.5-0.5B"""
         model = mock_qwen_model
@@ -172,7 +168,7 @@ class TestTransMLAQwenIntegration:
             expected_collapse = head_dim // config.qk_mqa_dim
             assert expected_collapse == 1  # For Qwen2.5-0.5B: 64 // 64 = 1
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_qwen_transmla_with_save_path(self, mock_qwen_model, mock_tokenizer, transmla_config):
         """Test TransMLA conversion with model saving for Qwen2.5-0.5B"""
         model = mock_qwen_model
@@ -198,7 +194,7 @@ class TestTransMLAQwenIntegration:
                     model=model, tokenizer=tokenizer, config=transmla_config, save_path=save_path
                 )
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True) 
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_qwen_full_conversion_workflow(self, mock_qwen_model, mock_tokenizer, transmla_config):
         """Test complete TransMLA conversion workflow for Qwen2.5-0.5B"""
         model = mock_qwen_model
@@ -241,7 +237,7 @@ class TestTransMLAQwenIntegration:
         # Should be approximately 0.5B parameters (allowing for some variance)
         assert 400_000_000 < total_params < 600_000_000
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', False)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', False)
     def test_qwen_transmla_unavailable_fallback(self, mock_qwen_model, mock_tokenizer):
         """Test fallback behavior when TransMLA is unavailable"""
         model = mock_qwen_model

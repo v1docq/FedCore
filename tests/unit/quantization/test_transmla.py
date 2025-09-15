@@ -6,14 +6,8 @@ import torch
 import torch.nn as nn
 from unittest.mock import Mock, patch, MagicMock
 
-from fedcore.algorithm.quantization.utils import (
-    AttentionReassembler,
-    TransMLA,
-    get_reassembler,
-    convert_model,
-    TransMLAConfig,
-    TRANSMLA_AVAILABLE
-)
+from fedcore.algorithm.reassembly.core_reassemblers import AttentionReassembler, get_reassembler, convert_model
+from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
 
 
 class SimpleModel(nn.Module):
@@ -50,13 +44,13 @@ class TestAttentionReassembler:
         with pytest.raises(AssertionError, match="Unknown mode"):
             AttentionReassembler.convert(model, mode='unknown_mode')
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_convert_transmla_mode_success(self):
         """Test TransMLA conversion mode when TransMLA is available"""
         model = SimpleModel()
         tokenizer = Mock()
         
-        with patch('fedcore.algorithm.quantization.utils._convert_model_to_mla') as mock_convert:
+        with patch('fedcore.algorithm.reassembly.transmla_reassembler.convert_model_to_mla') as mock_convert:
             mock_convert.return_value = model
             
             result = AttentionReassembler.convert(
@@ -75,7 +69,7 @@ class TestAttentionReassembler:
         with pytest.raises(AssertionError, match="TransMLA conversion requires tokenizer"):
             AttentionReassembler.convert(model, mode='trans-mla')
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', False)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', False)
     def test_convert_transmla_mode_unavailable(self):
         """Test TransMLA mode when TransMLA is not available"""
         model = SimpleModel()
@@ -108,13 +102,13 @@ class TestTransMLA:
             assert result == model
             mock_convert.assert_called_once()
 
-    @patch('fedcore.algorithm.quantization.utils.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_convert_with_mla_available(self):
         """Test successful conversion when TransMLA is available"""
         model = SimpleModel()
         tokenizer = Mock()
         
-        with patch('fedcore.algorithm.quantization.utils._convert_model_to_mla') as mock_convert:
+        with patch('fedcore.algorithm.reassembly.transmla_reassembler.convert_model_to_mla') as mock_convert:
             mock_convert.return_value = model
             
             result = TransMLA.convert(
@@ -178,7 +172,7 @@ class TestReassemblerFunctions:
 
     def test_convert_model_standard(self):
         """Test converting model with standard reassembler"""
-        from fedcore.algorithm.quantization.utils import ParentalReassembler
+        from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
         model = SimpleModel()
         
         with patch.object(ParentalReassembler, 'reassemble') as mock_reassemble:
