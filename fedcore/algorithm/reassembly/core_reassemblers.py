@@ -139,8 +139,7 @@ class AttentionReassembler(Reassembler):
             'trans-mla': cls._convert_trans_mla
         }
         
-        converter = conversion_map.get(mode)
-        assert converter, f"Unknown mode: {mode}"
+        converter = conversion_map[mode]
         
         return converter(model, **kwargs)
 
