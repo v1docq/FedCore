@@ -130,7 +130,7 @@ class TestTransMLAQwenIntegration:
             # Verify conversion was called with config
             assert result == model
             mock_convert.assert_called_once_with(
-                model=model, tokenizer=tokenizer, config=transmla_config, save_path=None
+                model=model, tokenizer=tokenizer, config=transmla_config
             )
 
     @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
@@ -169,32 +169,6 @@ class TestTransMLAQwenIntegration:
             assert expected_collapse == 1  # For Qwen2.5-0.5B: 64 // 64 = 1
 
     @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
-    def test_qwen_transmla_with_save_path(self, mock_qwen_model, mock_tokenizer, transmla_config):
-        """Test TransMLA conversion with model saving for Qwen2.5-0.5B"""
-        model = mock_qwen_model
-        tokenizer = mock_tokenizer
-        
-        with tempfile.TemporaryDirectory() as temp_dir:
-            save_path = os.path.join(temp_dir, "qwen_mla_model")
-            
-            # Mock the execution to avoid validation
-            with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
-                mock_convert.return_value = model
-                
-                # Convert with save path
-                result = TransMLA.convert(
-                    model=model,
-                    tokenizer=tokenizer,
-                    config=transmla_config,
-                    save_path=save_path
-                )
-                
-                # Verify conversion was called with save path
-                mock_convert.assert_called_once_with(
-                    model=model, tokenizer=tokenizer, config=transmla_config, save_path=save_path
-                )
-
-    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_qwen_full_conversion_workflow(self, mock_qwen_model, mock_tokenizer, transmla_config):
         """Test complete TransMLA conversion workflow for Qwen2.5-0.5B"""
         model = mock_qwen_model
@@ -213,7 +187,7 @@ class TestTransMLAQwenIntegration:
             
             # Verify conversion was called
             mock_convert.assert_called_once_with(
-                model=model, tokenizer=tokenizer, config=transmla_config, save_path=None
+                model=model, tokenizer=tokenizer, config=transmla_config
             )
             assert result == model
 
@@ -286,7 +260,7 @@ class TestTransMLAQwenIntegration:
             # Verify execution
             assert result == model
             mock_convert.assert_called_once_with(
-                model=model, tokenizer=tokenizer, config=transmla_config, save_path=None
+                model=model, tokenizer=tokenizer, config=transmla_config
             )
 
 

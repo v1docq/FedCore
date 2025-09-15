@@ -4,7 +4,6 @@ Functions for recreating decomposed layers.
 Contains utilities to recreate standard layers from their decomposed counterparts.
 """
 
-import torch
 import torch.nn as nn
 from fedcore.models.network_impl.decomposed_layers import (
     DecomposedLinear, DecomposedEmbedding, DecomposedConv2d, DecomposedConv1d
@@ -114,7 +113,3 @@ RECREATION_FUNCTIONS = {
     DecomposedConv1d: _recreate_decomposed_conv1d,
 }
 
-
-def get_recreation_function(layer_type):
-    """Get recreation function for given layer type."""
-    return RECREATION_FUNCTIONS.get(layer_type)

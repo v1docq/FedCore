@@ -108,7 +108,7 @@ def create_transmla_config():
     )
 
 
-def demo_deferred_conversion(model, tokenizer, config, save_path=None):
+def demo_deferred_conversion(model, tokenizer, config):
     """Demonstrate deferred TransMLA conversion"""
     print("\n" + "="*60)
     print("DEFERRED CONVERSION DEMO")
@@ -120,7 +120,6 @@ def demo_deferred_conversion(model, tokenizer, config, save_path=None):
         model=model,
         tokenizer=tokenizer,
         config=config,
-        save_path=save_path,
         deferred=True
     )
     
@@ -151,7 +150,7 @@ def demo_deferred_conversion(model, tokenizer, config, save_path=None):
         return None
 
 
-def demo_immediate_conversion(model, tokenizer, config, save_path=None):
+def demo_immediate_conversion(model, tokenizer, config):
     """Demonstrate immediate TransMLA conversion"""
     print("\n" + "="*60)
     print("IMMEDIATE CONVERSION DEMO")
@@ -170,7 +169,6 @@ def demo_immediate_conversion(model, tokenizer, config, save_path=None):
             model=model,
             tokenizer=tokenizer,
             config=config,
-            save_path=save_path,
             deferred=False
         )
         
@@ -279,10 +277,10 @@ def main():
         
         # Run demos based on mode
         if args.mode in ["deferred", "all"]:
-            demo_deferred_conversion(model, tokenizer, config, args.save_path)
+            demo_deferred_conversion(model, tokenizer, config)
         
         if args.mode in ["immediate", "all"]:
-            demo_immediate_conversion(model, tokenizer, config, args.save_path)
+            demo_immediate_conversion(model, tokenizer, config,)
         
         if args.mode in ["reassembler", "all"]:
             demo_attention_reassembler(model, tokenizer, config)

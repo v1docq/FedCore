@@ -177,14 +177,12 @@ class TransMLAConfig:
         return {k: v for k, v in self.__dict__.items()}
 
 
-def convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, save_path: Optional[str] = None):
+def convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig):
     """
     Complete MLA conversion of model using TransMLA.
     Simple implementation without try/except blocks.
     """
     assert TRANSMLA_AVAILABLE, f"TransMLA not available: {TRANSMLA_ERROR}"
-    
-    config_dict = config.to_dict()
     
     # Prepare calibration data using encapsulated functions
     dataset = _transmla_functions.get_dataset(config.cal_dataset)
@@ -197,39 +195,41 @@ def convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig, sa
         seed=config.seed,
     )
     
-    test_loader = None
-    if config.ppl_eval_batch_size > 0:
-        test_loader = _transmla_functions.prepare_test_dataloader(
-            dataset=dataset["test"],
-            tokenizer=tokenizer,
-            batch_size=config.ppl_eval_batch_size,
-            max_seqlen=config.cal_max_seqlen,
-        )
+    test_loader = _transmla_functions.prepare_test_dataloader(
+        dataset=dataset["test"], 
+        tokenizer=tokenizer, 
+        batch_size=max(1, config.ppl_eval_batch_size)
+    )
     
     print("[TransMLA] Starting MLA conversion...")
     
     # Stage 1: Partial RoPE
+    config_dict = config.to_dict()
+    
+    # Handle automatic collapse calculation
+    collapse_value = config.collapse
+    if collapse_value == "auto":
+        head_dim = getattr(model.config, 'head_dim', model.config.hidden_size // model.config.num_attention_heads)
+        model.config.head_dim = head_dim
+        collapse_value = head_dim // config.qk_mqa_dim
+        print(f"[TransMLA] Auto collapse: {collapse_value}")
+    
+    config_dict["collapse"] = int(collapse_value)
+    
     model = _transmla_functions.partial_rope(model, tokenizer, train_loader, test_loader, **config_dict)
     
     # Process partial_rope result
     freqfold_value = config.freqfold
-    if freqfold_value == "auto":
-        freqfold_value = getattr(model.config, 'freqfold', 8)
-        config_dict['freqfold'] = freqfold_value
-        print(f"[TransMLA] Auto-detected freqfold: {freqfold_value}")
+    if isinstance(model, tuple):
+        if freqfold_value == "auto":
+            freqfold_value = model[1]
+            print(f"[TransMLA] Auto freqfold: {freqfold_value}")
+        model = model[0]
+    
+    config_dict["freqfold"] = freqfold_value
     
     # Stage 2: Low-rank QKV
     model = _transmla_functions.low_rank_qkv(model, tokenizer, train_loader, test_loader, **config_dict)
-    
-    # Save model if path specified
-    if save_path:
-        os.makedirs(save_path, exist_ok=True)
-        model.save_pretrained(save_path)
-        tokenizer.save_pretrained(save_path)
-        
-        # Update config
-        config_path = os.path.join(save_path, "config.json")
-        _transmla_functions.modify_config(model, config_path, argparse.Namespace(**config_dict))
     
     print("[TransMLA] MLA conversion completed successfully!")
     return model
@@ -239,20 +239,18 @@ class TransMLA(AttentionReassembler):
     """Specialized TransMLA reassembler."""
 
     @classmethod
-    def convert(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
-                save_path: Optional[str] = None, **kwargs):
+    def convert(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None, **kwargs):
         """TransMLA conversion - direct execution."""
         return cls._convert_trans_mla(
             model=model,
             tokenizer=tokenizer,
             config=config,
-            save_path=save_path,
             **kwargs
         )
 
     @classmethod
     def _convert_trans_mla(cls, model: nn.Module, tokenizer=None, config: Optional[TransMLAConfig] = None,
-                          save_path: Optional[str] = None, additional_mapping: dict = None, **kwargs):
+                          additional_mapping: dict = None, **kwargs):
         """TransMLA conversion - simple implementation."""
         assert tokenizer, "TransMLA conversion requires tokenizer"
         assert TRANSMLA_AVAILABLE, f"TransMLA not available: {TRANSMLA_ERROR}"
@@ -270,6 +268,7 @@ class TransMLA(AttentionReassembler):
                 setattr(config, key, value)
         
         # Convert
-        model = convert_model_to_mla(model, tokenizer, config, save_path)
+        model = convert_model_to_mla(model, tokenizer, config)
         cls._validate_device_consistency(model)
         return model
+

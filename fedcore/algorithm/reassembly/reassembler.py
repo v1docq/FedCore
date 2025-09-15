@@ -26,7 +26,6 @@ class BaseReassembler(BaseCompressionModel):
         reassemble_mode: Reassembly mode ('standard', 'trans-mla', 'custom')
         reassemble_config: Configuration object (e.g., TransMLAConfig)
         tokenizer: Tokenizer (required for trans-mla mode)
-        save_path: Path to save reassembled model
         additional_mapping: Additional module mappings
     """
     
@@ -37,7 +36,6 @@ class BaseReassembler(BaseCompressionModel):
         self.reassemble_mode = params.get("reassemble_mode", "standard")
         self.reassemble_config = params.get("reassemble_config", None)
         self.tokenizer = params.get("tokenizer", None)
-        self.save_path = params.get("save_path", None)
         self.additional_mapping = params.get("additional_mapping", None)
         
         # Device for computations
@@ -154,7 +152,6 @@ class BaseReassembler(BaseCompressionModel):
         reassemble_kwargs = {
             'tokenizer': self.tokenizer,
             'config': self.reassemble_config,
-            'save_path': self.save_path,
             'additional_mapping': self.additional_mapping
         }
         
@@ -224,7 +221,6 @@ class BaseReassembler(BaseCompressionModel):
                            base_params: Optional[OperationParameters] = None,
                            config = None,
                            tokenizer = None,
-                           save_path: Optional[str] = None,
                            additional_mapping: Optional[Dict] = None) -> 'BaseReassembler':
         """Factory method for creating TransMLA reassembler.
         
@@ -232,7 +228,6 @@ class BaseReassembler(BaseCompressionModel):
             base_params: Base parameters
             config: TransMLA configuration
             tokenizer: Tokenizer
-            save_path: Path for saving
             additional_mapping: Additional mappings
             
         Returns:
@@ -252,7 +247,6 @@ class BaseReassembler(BaseCompressionModel):
             'reassemble_mode': 'trans-mla',
             'reassemble_config': config,
             'tokenizer': tokenizer,
-            'save_path': save_path,
             'additional_mapping': additional_mapping
         })
         

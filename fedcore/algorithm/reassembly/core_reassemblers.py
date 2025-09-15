@@ -91,11 +91,6 @@ class Reassembler(Accessor):
                 post_hook(name, module, new_module)
 
     @classmethod
-    def _convert_modules(cls, model: nn.Module):
-        """Converts all supported modules in the model."""
-        cls._traverse_modules(model)
-
-    @classmethod
     def _validate_device_consistency(cls, model: nn.Module):
         """Validates device consistency of model parameters."""
         devices = {p.device for p in model.parameters()}
@@ -106,7 +101,7 @@ class Reassembler(Accessor):
     def reassemble(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
         """Main method for model reassembly."""
         cls._apply_additional_mapping(model, additional_mapping)
-        cls._convert_modules(model)
+        cls._traverse_modules(model)
         cls._validate_device_consistency(model)
         return model
 
@@ -154,13 +149,12 @@ class AttentionReassembler(Reassembler):
         """Standard conversion."""
         if additional_mapping:
             cls._apply_additional_mapping(model, additional_mapping)
-        cls._convert_modules(model)
+        cls._traverse_modules(model)
         cls._validate_device_consistency(model)
         return model
 
     @classmethod
-    def _convert_trans_mla(cls, model: nn.Module, tokenizer=None, config=None,
-                          save_path: Optional[str] = None, additional_mapping: dict = None, **kwargs):
+    def _convert_trans_mla(cls, model: nn.Module, tokenizer=None, config=None, additional_mapping: dict = None, **kwargs):
         """TransMLA conversion - delegates to TransMLA module."""
         from .transmla_reassembler import convert_model_to_mla
         
@@ -171,7 +165,7 @@ class AttentionReassembler(Reassembler):
             cls._apply_additional_mapping(model, additional_mapping)
         
         # Convert using TransMLA
-        model = convert_model_to_mla(model, tokenizer, config, save_path)
+        model = convert_model_to_mla(model, tokenizer, config)
         cls._validate_device_consistency(model)
         return model
 
