@@ -18,12 +18,12 @@ class BaseReassembler(BaseCompressionModel):
     targeting various architectures, including TransMLA.
     
     Supported reassembly modes:
-        - 'standard': Standard reassembly of decomposed layers
+        - 'parental': Parental reassembly of decomposed layers
         - 'trans-mla': Conversion to TransMLA architecture with attention optimization
         - 'custom': Custom reassembly with additional mappings
     
     Args:
-        reassemble_mode: Reassembly mode ('standard', 'trans-mla', 'custom')
+        reassemble_mode: Reassembly mode ('parental', 'trans-mla', 'custom')
         reassemble_config: Configuration object (e.g., TransMLAConfig)
         tokenizer: Tokenizer (required for trans-mla mode)
         additional_mapping: Additional module mappings
@@ -33,7 +33,7 @@ class BaseReassembler(BaseCompressionModel):
         super().__init__(params or {})
         
         # Main reassembly parameters
-        self.reassemble_mode = params.get("reassemble_mode", "standard")
+        self.reassemble_mode = params.get("reassemble_mode", "parental")
         self.reassemble_config = params.get("reassemble_config", None)
         self.tokenizer = params.get("tokenizer", None)
         self.additional_mapping = params.get("additional_mapping", None)
@@ -49,7 +49,7 @@ class BaseReassembler(BaseCompressionModel):
     
     def _validate_params(self) -> None:
         """Validate reassembly parameters."""
-        valid_modes = {'standard', 'trans-mla', 'custom'}
+        valid_modes = {'parental', 'trans-mla', 'custom'}
         if self.reassemble_mode not in valid_modes:
             raise ValueError(
                 f"Unsupported reassembly mode '{self.reassemble_mode}'. "
@@ -110,8 +110,8 @@ class BaseReassembler(BaseCompressionModel):
         Returns:
             Reassembled model
         """
-        if self.reassemble_mode == 'standard':
-            return self._reassemble_standard(model)
+        if self.reassemble_mode == 'parental':
+            return self._reassemble_parental(model)
         elif self.reassemble_mode == 'trans-mla':
             return self._reassemble_transmla(model)
         elif self.reassemble_mode == 'custom':
@@ -119,8 +119,8 @@ class BaseReassembler(BaseCompressionModel):
         else:
             raise ValueError(f"Unsupported reassembly mode: {self.reassemble_mode}")
     
-    def _reassemble_standard(self, model: nn.Module) -> nn.Module:
-        """Standard model reassembly.
+    def _reassemble_parental(self, model: nn.Module) -> nn.Module:
+        """Parental model reassembly.
         
         Args:
             model: Model for reassembly
@@ -133,7 +133,7 @@ class BaseReassembler(BaseCompressionModel):
         
         reassembled_model = AttentionReassembler.convert(
             model, 
-            mode='standard',
+            mode='parental',
             **reassemble_kwargs
         )
         

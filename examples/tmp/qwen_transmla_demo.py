@@ -30,7 +30,7 @@ except ImportError:
     TRANSFORMERS_AVAILABLE = False
 
 from fedcore.algorithm.reassembly.core_reassemblers import AttentionReassembler
-from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
+from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, get_transmla_status
 
 
 def load_qwen_model(model_name="Qwen/Qwen2.5-0.5B", device="auto"):
@@ -185,22 +185,22 @@ def demo_immediate_conversion(model, tokenizer, config):
         return None
 
 
-def demo_attention_reassembler(model, tokenizer, config):
+def demo_attention_reassembler(model, tokenizer, config, transmla_status):
     """Demonstrate AttentionReassembler usage"""
     print("\n" + "="*60)
     print("ATTENTION REASSEMBLER DEMO")
     print("="*60)
     
-    # Test standard mode (should work without TransMLA)
-    print("Testing AttentionReassembler in standard mode:")
+    # Test parental mode (should work without TransMLA)
+    print("Testing AttentionReassembler in parental mode:")
     try:
-        standard_result = AttentionReassembler.convert(model, mode='standard')
-        print("Standard mode conversion successful")
+        parental_result = AttentionReassembler.convert(model, mode='parental')
+        print("Parental mode conversion successful")
     except Exception as e:
-        print(f"Standard mode failed: {e}")
+        print(f"Parental mode failed: {e}")
     
     # Test TransMLA mode
-    if TRANSMLA_AVAILABLE:
+    if transmla_status['available']:
         print("\nTesting AttentionReassembler in TransMLA mode:")
         try:
             transmla_result = AttentionReassembler.convert(
@@ -253,15 +253,18 @@ def main():
     # Check dependencies
     print("Checking dependencies...")
     print(f"Transformers available: {TRANSFORMERS_AVAILABLE}")
-    print(f"TransMLA available: {TRANSMLA_AVAILABLE}")
+    transmla_status = get_transmla_status()
+    print(f"TransMLA available: {transmla_status['available']}")
     print(f"CUDA available: {torch.cuda.is_available()}")
     
     if not TRANSFORMERS_AVAILABLE:
         print("transformers not available. Install with: pip install transformers")
         return
     
-    if not TRANSMLA_AVAILABLE:
+    if not transmla_status['available']:
         print("TransMLA not available. Some features will be limited.")
+        if transmla_status['error']:
+            print(f"Error: {transmla_status['error']}")
     
     try:
         # Load model
@@ -283,7 +286,7 @@ def main():
             demo_immediate_conversion(model, tokenizer, config,)
         
         if args.mode in ["reassembler", "all"]:
-            demo_attention_reassembler(model, tokenizer, config)
+            demo_attention_reassembler(model, tokenizer, config, transmla_status)
         
         print("\nDemo completed!")
         

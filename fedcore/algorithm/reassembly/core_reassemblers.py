@@ -132,10 +132,10 @@ class AttentionReassembler(Reassembler):
     supported_decomposed_layers = {}
 
     @classmethod
-    def convert(cls, model: nn.Module, mode: str = 'standard', **kwargs):
+    def convert(cls, model: nn.Module, mode: str = 'parental', **kwargs):
         """Simple conversion method without complex conditions."""
         conversion_map = {
-            'standard': cls._convert_standard,
+            'parental': cls._convert_parental,
             'trans-mla': cls._convert_trans_mla
         }
         
@@ -144,7 +144,7 @@ class AttentionReassembler(Reassembler):
         return converter(model, **kwargs)
 
     @classmethod
-    def _convert_standard(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
+    def _convert_parental(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
         """Standard conversion."""
         if additional_mapping:
             cls._apply_additional_mapping(model, additional_mapping)
@@ -177,13 +177,12 @@ def _get_transmla_class():
 
 REASSEMBLERS = {
     'attention': AttentionReassembler,
-    'standard': ParentalReassembler,
-    'parental': ParentalReassembler,  # Alias for backward compatibility
-    'trans-mla': _get_transmla_class,  # Lazy loading
+    'parental': ParentalReassembler,
+    'trans-mla': _get_transmla_class,
 }
 
 
-def get_reassembler(reassembler_type: str = 'standard'):
+def get_reassembler(reassembler_type: str = 'parental'):
     """Get reassembler class by type."""
     if reassembler_type not in REASSEMBLERS:
         available = list(REASSEMBLERS.keys())
@@ -198,7 +197,7 @@ def get_reassembler(reassembler_type: str = 'standard'):
     return reassembler
 
 
-def convert_model(model: nn.Module, reassembler_type: str = 'standard', **kwargs):
+def convert_model(model: nn.Module, reassembler_type: str = 'parental', **kwargs):
     """Convert model using specified reassembler."""
     reassembler_cls = get_reassembler(reassembler_type)
     

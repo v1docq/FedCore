@@ -212,6 +212,7 @@ class TestTransMLAQwenIntegration:
         assert 400_000_000 < total_params < 600_000_000
 
     @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', False)
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler._initialize_transmla')
     def test_qwen_transmla_unavailable_fallback(self, mock_qwen_model, mock_tokenizer):
         """Test fallback behavior when TransMLA is unavailable"""
         model = mock_qwen_model

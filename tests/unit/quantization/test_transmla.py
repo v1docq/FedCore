@@ -27,21 +27,21 @@ class SimpleModel(nn.Module):
 class TestAttentionReassembler:
     """Test AttentionReassembler functionality"""
 
-    def test_convert_standard_mode(self):
-        """Test standard conversion mode"""
+    def test_convert_parental_mode(self):
+        """Test parental conversion mode"""
         model = SimpleModel()
         
         # Should work without any special dependencies
-        result = AttentionReassembler.convert(model, mode='standard')
+        result = AttentionReassembler.convert(model, mode='parental')
         
         assert result is not None
         assert isinstance(result, nn.Module)
 
     def test_convert_unknown_mode(self):
-        """Test that unknown mode raises assertion error"""
+        """Test that unknown mode raises key error"""
         model = SimpleModel()
         
-        with pytest.raises(AssertionError, match="Unknown mode"):
+        with pytest.raises(KeyError):
             AttentionReassembler.convert(model, mode='unknown_mode')
 
     @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
@@ -70,15 +70,16 @@ class TestAttentionReassembler:
             AttentionReassembler.convert(model, mode='trans-mla')
 
     @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', False)
-    def test_convert_transmla_mode_unavailable(self):
+    @patch('fedcore.algorithm.reassembly.transmla_reassembler._initialize_transmla')
+    def test_convert_transmla_mode_unavailable(self, mock_init_transmla):
         """Test TransMLA mode when TransMLA is not available"""
         model = SimpleModel()
         tokenizer = Mock()
-        
+
         with pytest.raises(AssertionError, match="TransMLA not available"):
             AttentionReassembler.convert(
-                model, 
-                mode='trans-mla', 
+                model,
+                mode='trans-mla',
                 tokenizer=tokenizer
             )
 
@@ -126,7 +127,7 @@ class TestReassemblerFunctions:
 
     def test_get_reassembler_valid_types(self):
         """Test getting valid reassembler types"""
-        valid_types = ['attention', 'trans-mla', 'standard', 'parental']
+        valid_types = ['attention', 'trans-mla', 'parental']
         
         for reassembler_type in valid_types:
             reassembler = get_reassembler(reassembler_type)
@@ -147,11 +148,11 @@ class TestReassemblerFunctions:
             result = convert_model(
                 model, 
                 'attention', 
-                mode='standard'
+                mode='parental'
             )
             
             assert result == model
-            mock_convert.assert_called_once_with(model, mode='standard')
+            mock_convert.assert_called_once_with(model, mode='parental')
 
     def test_convert_model_transmla(self):
         """Test converting model with TransMLA reassembler"""
@@ -170,15 +171,15 @@ class TestReassemblerFunctions:
             assert result == model
             mock_convert.assert_called_once_with(model, tokenizer=tokenizer)
 
-    def test_convert_model_standard(self):
-        """Test converting model with standard reassembler"""
+    def test_convert_model_parental(self):
+        """Test converting model with parental reassembler"""
         from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
         model = SimpleModel()
         
         with patch.object(ParentalReassembler, 'reassemble') as mock_reassemble:
             mock_reassemble.return_value = model
             
-            result = convert_model(model, 'standard')
+            result = convert_model(model, 'parental')
             
             assert result == model
             mock_reassemble.assert_called_once_with(model)
