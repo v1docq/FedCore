@@ -23,9 +23,9 @@ from fedcore.repository.constanst_repository import (
     TorchLossesConstant,
 )
 
-from fedcore.models.network_impl.hooks import BaseHook
-from fedcore.models.network_impl.hooks_collection import HooksCollection
-from fedcore.models.network_impl._base import BaseTrainer
+from fedcore.models.network_impl.utils.hooks import BaseHook
+from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
+from fedcore.models.network_impl.utils._base import BaseTrainer
 
 BASE_REGRESSION_DTYPE = torch.float32
 
@@ -65,7 +65,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self.learning_rate = self.params.get("learning_rate", 0.001)
         self.model = self.params.get("model", None)
         self._init_custom_criterions(
-            self.params.get("custom_criterions", {}))
+            self.params.get("custom_criterions", {})) # let it be dict[name : coef], let nodes add it to trainer
         self.criterion = self.__get_criterion()
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
@@ -267,10 +267,43 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         if self.task_type is None:
             self.task_type = x_test.task.task_type
         for batch in tqdm(dataloader):  ###TODO why val_dataloader???
-            *inputs, targets = batch
-            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            prediction.append(model(*inputs))
-        return self._convert_predict(torch.concat(prediction), output_mode)
+            if isinstance(batch, dict):
+                inputs_dict = {}
+                if 'input_ids' in batch and batch['input_ids'] is not None:
+                    inputs_dict['input_ids'] = batch['input_ids'].to(self.device)
+                if 'attention_mask' in batch and batch['attention_mask'] is not None:
+                    inputs_dict['attention_mask'] = batch['attention_mask'].to(self.device)
+                # Do NOT pass labels or inputs_embeds during inference
+                pred = model(**inputs_dict)
+            else:
+                # Tuple/list batches: infer correct kwargs for HF models
+                seq = list(batch)
+                # drop target if present as last element and is tensor of labels
+                if len(seq) >= 2 and hasattr(seq[-1], 'dtype'):
+                    seq_inputs = seq[:-1]
+                else:
+                    seq_inputs = seq
+
+                inputs_dict = {}
+                if len(seq_inputs) >= 1 and hasattr(seq_inputs[0], 'dtype'):
+                    t0 = seq_inputs[0].to(self.device)
+                    if t0.dtype in (torch.int32, torch.int64):
+                        inputs_dict['input_ids'] = t0
+                    else:
+                        inputs_dict['inputs_embeds'] = t0
+                if len(seq_inputs) >= 2 and hasattr(seq_inputs[1], 'dtype'):
+                    t1 = seq_inputs[1].to(self.device)
+                    # Only set attention_mask if we are not using inputs_embeds
+                    if 'inputs_embeds' not in inputs_dict and t1.dtype in (torch.int32, torch.int64, torch.bool):
+                        inputs_dict['attention_mask'] = t1
+                pred = model(**inputs_dict)
+            # Extract tensor from HF ModelOutput
+            if hasattr(pred, 'logits'):
+                pred_tensor = pred.logits
+            else:
+                pred_tensor = pred
+            prediction.append(pred_tensor)
+        return self._convert_predict(torch.cat(prediction, dim=0), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
         have_encoder = all([self.label_encoder is not None, output_mode == "labels"])

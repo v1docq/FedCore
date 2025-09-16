@@ -8,7 +8,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
-from fedcore.models.network_impl.interfaces import ITrainer
+from fedcore.models.network_impl.utils.interfaces import ITrainer
 
 logger = logging.getLogger(__name__)
 
@@ -146,13 +146,13 @@ def create_trainer(
         params_dict = params.to_dict()
     else:
         params_dict = params or {}
+
+    if model is not None:
+        params_dict['model'] = model
     
     trainer_class = _get_trainer_class(model, task_type, params_dict)
     
-    if trainer_class == LLMTrainer:
-        return LLMTrainer(model=model, training_args=params_dict, **kwargs)
-    else:
-        return trainer_class(params_dict, **kwargs)
+    return trainer_class(params=params_dict, **kwargs)
 
 
 def create_trainer_from_input_data(
@@ -173,12 +173,7 @@ def create_trainer_from_input_data(
     Returns:
         ITrainer: Appropriate trainer instance
     """
-    
-    if hasattr(input_data, 'task') and hasattr(input_data.task, 'task_type'):
-        task_type = input_data.task.task_type.value
-    else:
-        task_type = 'classification' 
-        logger.warning(f"Could not extract task type from input_data, using default: {task_type}")
+    task_type = input_data.task.task_type.value
     
     if model is None and hasattr(input_data, 'target'):
         model = input_data.target

@@ -11,10 +11,11 @@ from torch.nn import Module
 from fedcore.models.network_impl.utils.interfaces import ITrainer, IHookable
 from fedcore.architecture.comptutaional.devices import default_device
 
+HookType = Literal['start', 'end', 'batch_start', 'batch_end', 'validation']
 
 class BaseTrainer(ITrainer, IHookable):
     
-    def __init__(self, params: Optional[Dict] = None):
+    def __init__(self, model=None, params: Optional[Dict] = None):
         self.params = params or {}
         self._hooks = []
         self._additional_hooks = []
@@ -35,7 +36,7 @@ class BaseTrainer(ITrainer, IHookable):
             'val_loss': [],
             'learning_rates': []
         }
-        self.model: Union['PreTrainedModel', 'Module', None] = None
+        self.model: Union['PreTrainedModel', 'Module', None] = model
         self.device = default_device()
     
     def register_additional_hooks(self, hooks: Iterable[Enum]) -> None:
@@ -43,8 +44,6 @@ class BaseTrainer(ITrainer, IHookable):
     
     def _init_hooks(self) -> None:
         raise NotImplementedError("Subclasses must implement _init_hooks")
-    
-    HookType = Literal['start', 'end', 'batch_start', 'batch_end', 'validation']
 
     def execute_hooks(self, hook_type: HookType, epoch: int, **kwargs) -> None:
         for hook in self.hooks_collection[hook_type]:

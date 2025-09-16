@@ -18,7 +18,7 @@ from fedcore.repository.model_repository import (
     TRAINING_MODELS,
 )
 
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
+from fedcore.models.network_impl.llm_trainer import LLMTrainer
 
 class FedCoreStrategy(EvaluationStrategy):
     def _convert_to_output(
@@ -41,14 +41,58 @@ class FedCoreStrategy(EvaluationStrategy):
         return output_data
 
     def __init__(
-        self, operation_type: str, params: Optional[OperationParameters] = None
+        self, operation_type: str, is_llm: bool, params: Optional[OperationParameters] = None
     ):
         super().__init__(operation_type, params)
-        self.operation_impl = self._convert_to_operation(operation_type)(
-            self.params_for_fit
-        )
+        # self.is_llm = self._is_llm if is_llm is None else self.is_llm = is_llm
+        self.is_llm = is_llm
+        params_dict = {}
+        if params is not None:
+            try:
+                params_dict = params.to_dict()
+            except AttributeError:
+                params_dict = params
+
+        def _deep_find(dct, keys):
+            if not isinstance(dct, dict):
+                return None
+            for k in keys:
+                if k in dct and dct[k] is not None:
+                    return dct[k]
+            for v in dct.values():
+                if isinstance(v, dict):
+                    found = _deep_find(v, keys)
+                    if found is not None:
+                        return found
+            return None
+
+        model = None
+        if 'model' in params_dict:
+            model = params_dict['model']
+        elif hasattr(params, 'model') and params.model is not None:
+            model = params.model
+        elif hasattr(self, 'fitted_operation') and hasattr(self.fitted_operation, 'model'):
+            model = self.fitted_operation.model
+        elif isinstance(params_dict, dict):
+            model = _deep_find(params_dict, keys=('model', 'initial_assumption', 'original_model'))
+        
+        if is_llm:
+            self.operation_impl = LLMTrainer(model=model, params=params_dict)
+        else:
+            self.operation_impl = self._convert_to_operation(operation_type)(
+                self.params_for_fit
+            )
 
     def fit(self, train_data: InputData):
+        if hasattr(self.operation_impl, 'model') and self.operation_impl.model is None:
+            candidate_model = getattr(train_data, 'target', None)
+            if candidate_model is None and hasattr(train_data, 'features'):
+                candidate_model = getattr(train_data.features, 'target', None)
+            if candidate_model is not None:
+                try:
+                    self.operation_impl.model = candidate_model
+                except Exception:
+                    pass
         self.operation_impl.fit(train_data)
         return self.operation_impl
 

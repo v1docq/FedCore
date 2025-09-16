@@ -31,13 +31,6 @@ from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 
-try:
-    from fedcore.models.network_impl.llm_trainer import LLMTrainer
-    LLM_TRAINER_AVAILABLE = True
-except ImportError:
-    LLM_TRAINER_AVAILABLE = False
-    LLMTrainer = None
-
 warnings.filterwarnings("ignore")
 
 
@@ -56,14 +49,13 @@ class FedCore(Fedot):
             model = FedCore()
 
     """
-    
+
     def __init__(self, api_config: ConfigTemplate, **kwargs):
         super(Fedot, self).__init__()
         api_config.update(kwargs)
         self.manager = api_config
         self.logger = logging.Logger('Fedcore')
         self.fedcore_model = None
-        self.available_trainers = self._get_available_trainers()
 
     def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
         self.logger.info('-' * 50)
@@ -123,56 +115,6 @@ class FedCore(Fedot):
         train_data.val_dataloader = train_data.features.val_dataloader
         ###
         return train_data
-    
-    def _get_available_trainers(self) -> dict:
-        trainers = {
-            'base_nn': {
-                'class': BaseNeuralModel
-            }
-        }
-        
-        if LLM_TRAINER_AVAILABLE:
-            trainers['llm'] = {
-                'class': LLMTrainer
-            }
-        return trainers
-    
-    def _select_trainer(self, strategy: str) -> Callable:
-        """Select appropriate trainer based on strategy.
-        
-        Args:
-            strategy: Learning strategy (e.g., 'from_scratch', 'llm_fine_tuning')
-            model_config: Configuration parameters for the model
-            
-        Returns:
-            Appropriate trainer class
-            
-        Raises:
-            ValueError: If no suitable trainer is found for the given strategy
-        """
-        if not strategy or not isinstance(strategy, str):
-            raise ValueError(f"Invalid strategy: {strategy}. Strategy must be a non-empty string.")
-        
-        if not self.available_trainers:
-            raise ValueError("No trainers available. Please check your installation.")
-    
-        if strategy.startswith('llm_'):
-            if 'llm' in self.available_trainers:
-                self.logger.info(f"Selected LLMTrainer for strategy: {strategy}")
-                return self.available_trainers['llm']['class']
-            else:
-                raise ValueError(f"LLM trainer requested but not available for strategy: {strategy}")
-        
-        if 'base_nn' in self.available_trainers:
-            self.logger.info(f"Selected BaseNeuralModel for strategy: {strategy}")
-            return self.available_trainers['base_nn']['class']
-        
-        if self.available_trainers:
-            first_trainer = list(self.available_trainers.values())[0]['class']
-            self.logger.info(f"Selected {first_trainer.__name__} as fallback for strategy: {strategy}")
-            return first_trainer
-        
-        raise ValueError(f"No trainers available. Available trainers: {list(self.available_trainers.keys())}")
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
         pretrained_model = fedot_pipeline.fit(train_data)
@@ -208,17 +150,13 @@ class FedCore(Fedot):
         def fit_function(train_data):
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
             if pretrain_before_optimise:
-                strategy = self.manager.learning_config.config['learning_strategy']
-                trainer_class = self._select_trainer(strategy)
-                
-                trainer_params = self.manager.learning_config.learning_strategy_params.to_dict()
-                trainer = trainer_class(trainer_params)
-                
-                model_learning_pipeline = self._create_custom_pipeline(trainer)
+                model_learning_pipeline = FEDOT_ASSUMPTIONS["training"](
+                    params=self.manager.learning_config.learning_strategy_params.to_dict()
+                )
+                model_learning_pipeline = model_learning_pipeline.build()
                 train_data = self._pretrain_before_optimise(model_learning_pipeline, train_data)
             fitted_solver = self.manager.solver.fit(train_data)
             return fitted_solver
-        
 
         # with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
         try:
@@ -298,6 +236,7 @@ class FedCore(Fedot):
             prediction: OutputData,
             target: DataLoader,
             problem: str = "computational",
+            metrics: list = ['latency']
     ) -> pd.DataFrame:
         """
         Method to calculate metrics.
@@ -340,13 +279,12 @@ class FedCore(Fedot):
                 iter_object = iter(target.dataset)
                 target = np.array([batch[1] for batch in iter_object])
             return target
-
-        preproc_labels, preproc_probs = preproc_predict(prediction)
-        preproc_target = preproc_target(target)
         if is_inference_metric:
             prediction_dict = dict(model=self.fedcore_model, dataset=target, model_regime=model_regime)
         else:
-            prediction_dict = dict(target=preproc_target, labels=preproc_labels, probs=preproc_probs)
+            preproc_labels, preproc_probs = preproc_predict(prediction)
+            preproc_target = preproc_target(target)
+            prediction_dict = dict(target=preproc_target, labels=preproc_labels, probs=preproc_probs, metric_names=metrics)
         prediction_dataframe = FEDOT_GET_METRICS[problem](**prediction_dict)
         return prediction_dataframe
 
@@ -354,43 +292,58 @@ class FedCore(Fedot):
         def create_df(iterator):
             df_list = []
             for metric_dict, col in iterator:
-                df = pd.DataFrame.from_dict(metric_dict)
-                df.columns = [f'{col}_{x}' for x in df.columns]
+                if isinstance(metric_dict, dict):
+                    df = pd.DataFrame.from_dict(metric_dict).T
+                elif isinstance(metric_dict, pd.DataFrame):
+                    df = metric_dict
+                    df = df.T
+                else:
+                    raise TypeError('Unknown type of metrics passed')
+                df['mode'] = col
                 df_list.append(df)
-            return pd.concat(df_list, axis=1)
+            df_total = pd.concat(df_list, axis=0)
+            return df_total
 
         def calculate_metric_changes(metric_df: pd.DataFrame, metric: list = None):
-            for metric_name in metric:
-                change_val = (metric_df[f'original_{metric_name}'] - metric_df[f'fedcore_{metric_name}']) / \
-                             metric_df[f'original_{metric_name}'] * 100
-                change_val = round(change_val, 1)
-                if metric_name == 'throughput':
-                    change_val = abs(change_val)
-                metric_df[f'{metric_name}_change'] = change_val
-            return metric_df
+            orig = metric_df[(metric_df['mode'] != 'fedcore')].drop('mode', axis=1)
+            opt = metric_df[metric_df['mode'] == 'fedcore'].drop('mode', axis=1)
+            change_val = ((opt - orig) / orig * 100).round(2)
+            change_val['mode'] = 'change'
+            return change_val
 
         eval_regime = ['original', 'fedcore']
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
         prediction_list = [x if isinstance(x, OutputData) else x.predict for x in prediction_list]
+        problem = self.manager.automl_config.fedot_config.problem
+        if any([problem == 'ts_forecasting', problem == 'regression']):
+            quality_metrics = ["r2", "mse", "rmse", "mae", "msle", "mape", 
+                               "median_absolute_error", "explained_variance_score", 
+                               "max_error", "d2_absolute_error_score"]
+        else:
+            quality_metrics = ["accuracy", "f1", "precision"]
+        computational_metrics = ["latency", "throughput"]
         quality_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                      target=test_data.val_dataloader,
-                                                     problem=self.manager.automl_config.fedot_config.problem)
+                                                     problem=self.manager.automl_config.fedot_config.problem,
+                                                     metrics=quality_metrics)
                                 for prediction in prediction_list]
         computational_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                            target=test_data.val_dataloader,
-                                                           problem=f'computational_{regime}')
+                                                           problem=f'computational_{regime}',
+                                                           metrics=computational_metrics)
                                       for prediction, regime in zip(prediction_list, eval_regime)]
-
+        
         quality_df = create_df(zip(quality_metrics_list, eval_regime))
         compute_df = create_df(zip(computational_metrics_list, eval_regime))
-        problem = self.manager.automl_config.fedot_config.problem
-        if any([problem == 'ts_forecasting', problem == 'regression']):
-            quality_metric = 'rmse'
-        else:
-            quality_metric = 'accuracy'
-        quality_df = calculate_metric_changes(quality_df, metric=[quality_metric])
-        compute_df = calculate_metric_changes(compute_df, metric=['latency'])
-        return dict(quality_comparasion=quality_df, computational_comparasion=compute_df)
+        result = dict(quality_comparison=quality_df, computational_comparison=compute_df)
+        for tp, df in result.items():
+            result[tp] = (pd.concat([df, calculate_metric_changes(df)], axis=0)
+                          .reset_index()
+                          .rename(columns={'index': 'metric'})
+                          .pivot(index='metric', columns='mode')
+                          .reindex(columns=['original', 'fedcore', 'change'], level=1)
+            )
+        return result
 
     def load(self, path):
         """Loads saved Industrial model from disk

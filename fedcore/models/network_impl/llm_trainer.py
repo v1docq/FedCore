@@ -28,9 +28,33 @@ class LLMTrainer(BaseTrainer):
     LLM Trainer that implements our interfaces with real transformers.Trainer integration
     """
     
-    def __init__(self, model, training_args: Optional[Dict] = None, **kwargs):
-        super.__init__(self, params=training_args)
+    def __init__(self, model=None, params: Optional[Dict] = None, **kwargs):
+        def _find_in_params(p: Optional[Dict], keys: Iterable[str]) -> Optional[Any]:
+            if not isinstance(p, dict):
+                return None
+            for k in keys:
+                if k in p and p[k] is not None:
+                    return p[k]
+            for v in p.values():
+                if isinstance(v, dict):
+                    found = _find_in_params(v, keys)
+                    if found is not None:
+                        return found
+            return None
+        if model is None and params and 'model' in params:
+            model = params['model']
         
+        if model is None and params and 'initial_assumption' in params:
+            model = params['initial_assumption']
+
+        if model is None and params and isinstance(params.get('custom_learning_params'), dict):
+            nested = params.get('custom_learning_params')
+            model = nested.get('model', model)
+
+        if model is None and params:
+            model = _find_in_params(params, keys=('model', 'initial_assumption', 'original_model'))
+        
+        super().__init__(model=model, params=params)
         self.model = model
         self._hooks = []
         self._additional_hooks = []
@@ -54,8 +78,10 @@ class LLMTrainer(BaseTrainer):
             'greater_is_better': False,
         }
         
-        if training_args:
-            self.default_training_args.update(training_args)
+        if params:
+            training_params = {k: v for k, v in params.items() 
+                             if k not in ['model', 'tokenizer', 'custom_learning_params']}
+            self.default_training_args.update(training_params)
         
         self._trainer = None
         self._training_args = None
@@ -83,31 +109,74 @@ class LLMTrainer(BaseTrainer):
         
     def _prepare_data(self, input_data: Union[InputData, CompressionInputData]) -> Dict[str, Dataset]:
         """Convert InputData/CompressionInputData to transformers Dataset format"""
-        train_data = self._dataloader_to_dataset(input_data.features.train_dataloader)
-        eval_data = self._dataloader_to_dataset(input_data.features.val_dataloader)
+        train_data = self._dataloader_to_dataset(input_data.train_dataloader)
+        eval_data = self._dataloader_to_dataset(input_data.val_dataloader)
             
         return {
             'train_dataset': train_data,
             'eval_dataset': eval_data
         }
-            
-    def _dataloader_to_dataset(self, dataloader) -> Dataset:
-        """Convert PyTorch DataLoader to transformers Dataset"""
+    def _prepare_text_generation_data(self, dataloader) -> Dataset:
+        """Prepare data specifically for text generation"""
         data = []
         for batch in dataloader:
-            if isinstance(batch, (list, tuple)) and len(batch) >= 2:
-                inputs, labels = batch[0], batch[1]
-                inputs = inputs.cpu().numpy()
-                labels = labels.cpu().numpy()
-                    
-                data.append({
-                    'input_ids': inputs,
-                    'labels': labels
-                })
+            if isinstance(batch, dict):
+                input_ids = batch.get('input_ids', batch.get('inputs'))
+                attention_mask = batch.get('attention_mask')
+                labels = batch.get('labels', batch.get('targets'))
+
+                if input_ids is None:
+                    continue
+
+                batch_size = input_ids.shape[0]
+                for i in range(batch_size):
+                    data.append({
+                        'input_ids': input_ids[i].cpu().tolist(),
+                        'attention_mask': None if attention_mask is None else attention_mask[i].cpu().tolist(),
+                        'labels': None if labels is None else labels[i].cpu().tolist(),
+                    })
+        return Dataset.from_list(data)
+            
+    def _dataloader_to_dataset(self, dataloader) -> Dataset:
+        data = []
+        for batch in dataloader:
+            if isinstance(batch, dict):
+                input_ids = batch.get('input_ids')
+                labels = batch.get('labels') if 'labels' in batch else batch.get('targets')
+                attention_mask = batch.get('attention_mask')
+
+                if input_ids is None:
+                    continue
+
+                batch_size = input_ids.shape[0]
+                for i in range(batch_size):
+                    data.append({
+                        'input_ids': input_ids[i].cpu().tolist(),
+                        'labels': None if labels is None else labels[i].cpu().tolist(),
+                        'attention_mask': None if attention_mask is None else attention_mask[i].cpu().tolist(),
+                    })
+            elif isinstance(batch, (list, tuple)):
+                # Expecting (inputs, labels, attention_mask) style tuples
+                inputs = batch[0] if len(batch) >= 1 else None
+                labels = batch[1] if len(batch) >= 2 else None
+                attention_mask = batch[2] if len(batch) >= 3 else None
+
+                if inputs is None:
+                    continue
+
+                batch_size = inputs.shape[0]
+                for i in range(batch_size):
+                    data.append({
+                        'input_ids': inputs[i].cpu().tolist(),
+                        'labels': None if labels is None else labels[i].cpu().tolist(),
+                        'attention_mask': None if attention_mask is None else attention_mask[i].cpu().tolist(),
+                    })
         return Dataset.from_list(data)
 
     def _create_trainer(self, datasets: Dict[str, Dataset]):
         """Create transformers trainer with FedCore integration"""
+        # if self.model is None:
+        #     raise ValueError("Model is None. Cannot create Trainer without a model.")
         allowed_training_args = {
             'output_dir', 'num_train_epochs', 'per_device_train_batch_size',
             'per_device_eval_batch_size', 'warmup_steps', 'lr_scheduler_type',
@@ -127,6 +196,9 @@ class LLMTrainer(BaseTrainer):
             callbacks.append(self._fedcore_callback)
         callbacks.append(EarlyStoppingCallback(early_stopping_patience=3))
         
+        if self.model is None:
+            raise ValueError("LLMTrainer initialization failed: model is None after parameter resolution. Ensure 'model' or 'initial_assumption' is provided in config (including inside 'custom_learning_params').")
+
         self._trainer = Trainer(
             model=self.model,
             args=self._training_args,
@@ -150,6 +222,14 @@ class LLMTrainer(BaseTrainer):
         if not hasattr(self, '_fedcore_callback'):
             self._init_hooks()
         
+        # Final fallback: pull model from input_data if still missing
+        if self.model is None:
+            candidate_model = getattr(input_data, 'target', None)
+            if candidate_model is None and hasattr(input_data, 'features'):
+                candidate_model = getattr(input_data.features, 'target', None)
+            if candidate_model is not None:
+                self.model = candidate_model
+
         datasets = self._prepare_data(input_data)
         self._create_trainer(datasets)
         self.execute_hooks('start', epoch=0)
@@ -214,10 +294,3 @@ class LLMTrainer(BaseTrainer):
         if self._fedcore_callback and 'scheduler' in self._fedcore_callback.trainer_objects:
             return self._fedcore_callback.trainer_objects['scheduler']
         return None
-    
-    @property
-    def history(self) -> Dict:
-        """Get training history from FedCore callback"""
-        if self._fedcore_callback:
-            return self._fedcore_callback.history
-        return {}
