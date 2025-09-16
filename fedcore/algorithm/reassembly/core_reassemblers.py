@@ -9,7 +9,13 @@ import torch
 import torch.nn as nn
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.architecture.comptutaional.devices import extract_device
-from fedcore.models.network_impl.decomposed_layers import IDecomposed
+from fedcore.models.network_impl.decomposed_layers import (
+    IDecomposed, 
+    DecomposedLinear,
+    DecomposedEmbedding, 
+    DecomposedConv1d,
+    DecomposedConv2d
+)
 
 
 class RecreatedDecomposed(nn.Sequential):
@@ -113,7 +119,7 @@ class ParentalReassembler(Reassembler):
         # Import here to avoid circular imports
         from .decomposed_recreation import (
             _recreate_embedding, _recreate_decomposed_linear,
-            _recreate_decomposed_embedding, _recreate_decomposed_conv2d
+            _recreate_decomposed_embedding, _recreate_decomposed_conv2d, _recreate_decomposed_conv1d
         )
         
         self.supported_layers = {
@@ -121,7 +127,10 @@ class ParentalReassembler(Reassembler):
         }
 
         self.supported_decomposed_layers = {
-            # These will be imported from decomposed_recreation module
+            DecomposedLinear: _recreate_decomposed_linear,
+            DecomposedEmbedding: _recreate_decomposed_embedding,
+            DecomposedConv2d: _recreate_decomposed_conv2d,
+            DecomposedConv1d: _recreate_decomposed_conv1d,
         }
 
 
