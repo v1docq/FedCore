@@ -233,8 +233,8 @@ class TransMLA(AttentionReassembler):
     """Specialized TransMLA reassembler."""
 
     @classmethod
-    def convert(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None, **kwargs):
-        """TransMLA conversion - direct execution."""
+    def reassemble(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None, **kwargs):
+        """TransMLA reassembly - direct execution."""
         return cls._convert_trans_mla(
             model=model,
             tokenizer=tokenizer,

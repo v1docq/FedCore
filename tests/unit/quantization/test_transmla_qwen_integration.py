@@ -96,11 +96,11 @@ class TestTransMLAQwenIntegration:
         tokenizer = mock_tokenizer
         
         # Mock the conversion process to avoid validation issues
-        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
-            mock_convert.return_value = model
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_reassemble:
+            mock_reassemble.return_value = model
             
             # Perform direct conversion
-            result = TransMLA.convert(
+            result = TransMLA.reassemble(
                 model=model,
                 tokenizer=tokenizer,
                 config=transmla_config
@@ -108,7 +108,7 @@ class TestTransMLAQwenIntegration:
             
             # Verify conversion was called
             assert result == model
-            mock_convert.assert_called_once()
+            mock_reassemble.assert_called_once()
 
     @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_qwen_transmla_with_config(self, mock_qwen_model, mock_tokenizer, transmla_config):
@@ -117,11 +117,11 @@ class TestTransMLAQwenIntegration:
         tokenizer = mock_tokenizer
         
         # Mock the entire conversion process to avoid validation issues
-        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
-            mock_convert.return_value = model
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_reassemble:
+            mock_reassemble.return_value = model
             
             # Perform conversion with custom config
-            result = TransMLA.convert(
+            result = TransMLA.reassemble(
                 model=model,
                 tokenizer=tokenizer,
                 config=transmla_config
@@ -129,7 +129,7 @@ class TestTransMLAQwenIntegration:
             
             # Verify conversion was called with config
             assert result == model
-            mock_convert.assert_called_once_with(
+            mock_reassemble.assert_called_once_with(
                 model=model, tokenizer=tokenizer, config=transmla_config
             )
 
@@ -140,11 +140,11 @@ class TestTransMLAQwenIntegration:
         tokenizer = mock_tokenizer
         
         # Mock the conversion method to avoid validation
-        with patch.object(AttentionReassembler, '_convert_trans_mla') as mock_convert:
-            mock_convert.return_value = model
+        with patch.object(AttentionReassembler, '_convert_trans_mla') as mock_reassemble:
+            mock_reassemble.return_value = model
             
             # Use AttentionReassembler with trans-mla mode
-            result = AttentionReassembler.convert(
+            result = AttentionReassembler.reassemble(
                 model=model,
                 mode='trans-mla',
                 tokenizer=tokenizer,
@@ -153,7 +153,7 @@ class TestTransMLAQwenIntegration:
             
             # Verify conversion was performed
             assert result == model
-            mock_convert.assert_called_once_with(
+            mock_reassemble.assert_called_once_with(
                 model, tokenizer=tokenizer, config=transmla_config
             )
 
@@ -175,18 +175,18 @@ class TestTransMLAQwenIntegration:
         tokenizer = mock_tokenizer
         
         # Mock the entire execution process to test workflow
-        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
-            mock_convert.return_value = model
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_reassemble:
+            mock_reassemble.return_value = model
             
             # Perform conversion
-            result = TransMLA.convert(
+            result = TransMLA.reassemble(
                 model=model,
                 tokenizer=tokenizer,
                 config=transmla_config
             )
             
             # Verify conversion was called
-            mock_convert.assert_called_once_with(
+            mock_reassemble.assert_called_once_with(
                 model=model, tokenizer=tokenizer, config=transmla_config
             )
             assert result == model
@@ -219,7 +219,7 @@ class TestTransMLAQwenIntegration:
         tokenizer = mock_tokenizer
         
         with pytest.raises(AssertionError, match="TransMLA not available"):
-            AttentionReassembler.convert(
+            AttentionReassembler.reassemble(
                 model=model,
                 mode='trans-mla',
                 tokenizer=tokenizer
@@ -248,11 +248,11 @@ class TestTransMLAQwenIntegration:
         tokenizer = mock_tokenizer
         
         # Mock the execution
-        with patch.object(TransMLA, '_convert_trans_mla') as mock_convert:
-            mock_convert.return_value = model
+        with patch.object(TransMLA, '_convert_trans_mla') as mock_reassemble:
+            mock_reassemble.return_value = model
             
             # Execute direct conversion
-            result = TransMLA.convert(
+            result = TransMLA.reassemble(
                 model=model,
                 tokenizer=tokenizer,
                 config=transmla_config
@@ -260,7 +260,7 @@ class TestTransMLAQwenIntegration:
             
             # Verify execution
             assert result == model
-            mock_convert.assert_called_once_with(
+            mock_reassemble.assert_called_once_with(
                 model=model, tokenizer=tokenizer, config=transmla_config
             )
 

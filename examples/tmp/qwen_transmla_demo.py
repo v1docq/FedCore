@@ -116,7 +116,7 @@ def demo_deferred_conversion(model, tokenizer, config):
     
     # Create deferred conversion
     print("Creating deferred conversion...")
-    deferred = TransMLA.convert(
+    deferred = TransMLA.reassemble(
         model=model,
         tokenizer=tokenizer,
         config=config,
@@ -165,11 +165,10 @@ def demo_immediate_conversion(model, tokenizer, config):
     print("Note: This may take several minutes for calibration and conversion...")
     
     try:
-        converted_model = TransMLA.convert(
+        converted_model = TransMLA.reassemble(
             model=model,
             tokenizer=tokenizer,
-            config=config,
-            deferred=False
+            config=config
         )
         
         print("Immediate conversion completed successfully!")
@@ -194,7 +193,7 @@ def demo_attention_reassembler(model, tokenizer, config, transmla_status):
     # Test parental mode (should work without TransMLA)
     print("Testing AttentionReassembler in parental mode:")
     try:
-        parental_result = AttentionReassembler.convert(model, mode='parental')
+        parental_result = AttentionReassembler.reassemble(model, mode='parental')
         print("Parental mode conversion successful")
     except Exception as e:
         print(f"Parental mode failed: {e}")
@@ -203,7 +202,7 @@ def demo_attention_reassembler(model, tokenizer, config, transmla_status):
     if transmla_status['available']:
         print("\nTesting AttentionReassembler in TransMLA mode:")
         try:
-            transmla_result = AttentionReassembler.convert(
+            transmla_result = AttentionReassembler.reassemble(
                 model=model,
                 mode='trans-mla',
                 tokenizer=tokenizer,

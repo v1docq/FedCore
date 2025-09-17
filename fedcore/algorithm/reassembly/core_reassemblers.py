@@ -141,8 +141,8 @@ class AttentionReassembler(Reassembler):
     supported_decomposed_layers = {}
 
     @classmethod
-    def convert(cls, model: nn.Module, mode: str = 'parental', **kwargs):
-        """Simple conversion method without complex conditions."""
+    def reassemble(cls, model: nn.Module, mode: str = 'parental', **kwargs):
+        """Model reassembly with specified mode."""
         conversion_map = {
             'parental': cls._convert_parental,
             'trans-mla': cls._convert_trans_mla
@@ -154,12 +154,8 @@ class AttentionReassembler(Reassembler):
 
     @classmethod
     def _convert_parental(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
-        """Standard conversion."""
-        if additional_mapping:
-            cls._apply_additional_mapping(model, additional_mapping)
-        cls._traverse_modules(model)
-        cls._validate_device_consistency(model)
-        return model
+        """Parental conversion - delegates to base reassemble method."""
+        return super().reassemble(model, additional_mapping, **kwargs)
 
     @classmethod
     def _convert_trans_mla(cls, model: nn.Module, tokenizer=None, config=None, additional_mapping: dict = None, **kwargs):
@@ -206,12 +202,3 @@ def get_reassembler(reassembler_type: str = 'parental'):
     return reassembler
 
 
-def convert_model(model: nn.Module, reassembler_type: str = 'parental', **kwargs):
-    """Convert model using specified reassembler."""
-    reassembler_cls = get_reassembler(reassembler_type)
-    
-    # Use convert() for modern reassemblers, reassemble() for legacy ones
-    if reassembler_type in ['attention', 'trans-mla']:
-        return reassembler_cls.convert(model, **kwargs)
-    else:
-        return reassembler_cls.reassemble(model, **kwargs)
