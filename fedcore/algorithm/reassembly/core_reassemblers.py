@@ -134,46 +134,6 @@ class ParentalReassembler(Reassembler):
         }
 
 
-class AttentionReassembler(Reassembler):
-    """Simple attention reassembler following Zen of Python principles."""
-
-    supported_layers = {}
-    supported_decomposed_layers = {}
-
-    @classmethod
-    def reassemble(cls, model: nn.Module, mode: str = 'parental', **kwargs):
-        """Model reassembly with specified mode."""
-        conversion_map = {
-            'parental': cls._convert_parental,
-            'trans-mla': cls._convert_trans_mla
-        }
-        
-        converter = conversion_map[mode]
-        
-        return converter(model, **kwargs)
-
-    @classmethod
-    def _convert_parental(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
-        """Parental conversion - delegates to base reassemble method."""
-        return super().reassemble(model, additional_mapping, **kwargs)
-
-    @classmethod
-    def _convert_trans_mla(cls, model: nn.Module, tokenizer=None, config=None, additional_mapping: dict = None, **kwargs):
-        """TransMLA conversion - delegates to TransMLA module."""
-        from .transmla_reassembler import convert_model_to_mla
-        
-        assert tokenizer, "TransMLA conversion requires tokenizer"
-        
-        # Apply mappings
-        if additional_mapping:
-            cls._apply_additional_mapping(model, additional_mapping)
-        
-        # Convert using TransMLA
-        model = convert_model_to_mla(model, tokenizer, config)
-        cls._validate_device_consistency(model)
-        return model
-
-
 # Simple reassembler registry with lazy loading for TransMLA
 def _get_transmla_class():
     """Lazy import of TransMLA to avoid circular imports."""
@@ -181,7 +141,6 @@ def _get_transmla_class():
     return TransMLA
 
 REASSEMBLERS = {
-    'attention': AttentionReassembler,
     'parental': ParentalReassembler,
     'trans-mla': _get_transmla_class,
 }
@@ -191,7 +150,7 @@ def get_reassembler(reassembler_type: str = 'parental'):
     """Get reassembler class by type."""
     if reassembler_type not in REASSEMBLERS:
         available = list(REASSEMBLERS.keys())
-        raise ValueError(f"Unknown reassembler type '{reassembler_type}'. Available: {available}")
+        raise KeyError(f"Unknown reassembler type '{reassembler_type}'. Available: {available}")
     
     reassembler = REASSEMBLERS[reassembler_type]
     

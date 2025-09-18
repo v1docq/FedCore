@@ -7,7 +7,8 @@ from torch import nn
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.algorithm.reassembly.hooks import ReassemblyHooks
-from .core_reassemblers import AttentionReassembler
+from .core_reassemblers import ParentalReassembler
+from .transmla_reassembler import TransMLA
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
 
 
@@ -131,9 +132,8 @@ class BaseReassembler(BaseCompressionModel):
         
         reassemble_kwargs = {'additional_mapping': self.additional_mapping}
         
-        reassembled_model = AttentionReassembler.convert(
-            model, 
-            mode='parental',
+        reassembled_model = ParentalReassembler.reassemble(
+            model,
             **reassemble_kwargs
         )
         
@@ -155,9 +155,8 @@ class BaseReassembler(BaseCompressionModel):
             'additional_mapping': self.additional_mapping
         }
         
-        reassembled_model = AttentionReassembler.convert(
-            model, 
-            mode='trans-mla',
+        reassembled_model = TransMLA.reassemble(
+            model,
             **reassemble_kwargs
         )
         

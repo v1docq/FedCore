@@ -6,7 +6,7 @@ This script shows how to:
 1. Load Qwen2.5-0.5B model and tokenizer
 2. Apply TransMLA conversion (deferred and immediate)
 3. Test text generation before and after conversion
-4. Save and load converted models
+4. Save and load reassembled models
 
 Requirements:
 - transformers>=4.40.0
@@ -29,7 +29,7 @@ try:
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
 
-from fedcore.algorithm.reassembly.core_reassemblers import AttentionReassembler
+from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
 from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, get_transmla_status
 
 
@@ -119,8 +119,7 @@ def demo_deferred_conversion(model, tokenizer, config):
     deferred = TransMLA.reassemble(
         model=model,
         tokenizer=tokenizer,
-        config=config,
-        deferred=True
+        config=config
     )
     
     print(f"Deferred conversion created: {deferred}")
@@ -136,14 +135,14 @@ def demo_deferred_conversion(model, tokenizer, config):
     print("Note: This may take several minutes for calibration and conversion...")
     
     try:
-        converted_model = deferred.execute()
+        reassembled_model = deferred.execute()
         print("Deferred conversion completed successfully!")
         
-        # Test converted model
-        print("\nTesting converted model:")
-        test_text_generation(converted_model, tokenizer)
+        # Test reassembled model
+        print("\nTesting reassembled model:")
+        test_text_generation(reassembled_model, tokenizer)
         
-        return converted_model
+        return reassembled_model
         
     except Exception as e:
         print(f"Deferred conversion failed: {e}")
@@ -165,7 +164,7 @@ def demo_immediate_conversion(model, tokenizer, config):
     print("Note: This may take several minutes for calibration and conversion...")
     
     try:
-        converted_model = TransMLA.reassemble(
+        reassembled_model = TransMLA.reassemble(
             model=model,
             tokenizer=tokenizer,
             config=config
@@ -173,45 +172,44 @@ def demo_immediate_conversion(model, tokenizer, config):
         
         print("Immediate conversion completed successfully!")
         
-        # Test converted model
-        print("\nTesting converted model:")
-        test_text_generation(converted_model, tokenizer)
+        # Test reassembled model
+        print("\nTesting reassembled model:")
+        test_text_generation(reassembled_model, tokenizer)
         
-        return converted_model
+        return reassembled_model
         
     except Exception as e:
         print(f"Immediate conversion failed: {e}")
         return None
 
 
-def demo_attention_reassembler(model, tokenizer, config, transmla_status):
-    """Demonstrate AttentionReassembler usage"""
+def demo_reassembler(model, tokenizer, config, transmla_status):
+    """Demonstrate Reassembler usage"""
     print("\n" + "="*60)
-    print("ATTENTION REASSEMBLER DEMO")
+    print("REASSEMBLER DEMO")
     print("="*60)
     
-    # Test parental mode (should work without TransMLA)
-    print("Testing AttentionReassembler in parental mode:")
+    # Test ParentalReassembler (should work without TransMLA)
+    print("Testing ParentalReassembler:")
     try:
-        parental_result = AttentionReassembler.reassemble(model, mode='parental')
-        print("Parental mode conversion successful")
+        parental_result = ParentalReassembler.reassemble(model)
+        print("Parental reassembly successful")
     except Exception as e:
-        print(f"Parental mode failed: {e}")
+        print(f"Parental reassembly failed: {e}")
     
-    # Test TransMLA mode
+    # Test TransMLA
     if transmla_status['available']:
-        print("\nTesting AttentionReassembler in TransMLA mode:")
+        print("\nTesting TransMLA:")
         try:
-            transmla_result = AttentionReassembler.reassemble(
+            transmla_result = TransMLA.reassemble(
                 model=model,
-                mode='trans-mla',
                 tokenizer=tokenizer,
                 config=config
             )
-            print("TransMLA mode conversion successful")
+            print("TransMLA reassembly successful")
             return transmla_result
         except Exception as e:
-            print(f"TransMLA mode failed: {e}")
+            print(f"TransMLA reassembly failed: {e}")
     else:
         print("TransMLA not available, skipping TransMLA mode test")
     
@@ -285,7 +283,7 @@ def main():
             demo_immediate_conversion(model, tokenizer, config,)
         
         if args.mode in ["reassembler", "all"]:
-            demo_attention_reassembler(model, tokenizer, config, transmla_status)
+            demo_reassembler(model, tokenizer, config, transmla_status)
         
         print("\nDemo completed!")
         

@@ -11,7 +11,7 @@ from typing import Optional, Union
 
 import torch.nn as nn
 
-from .core_reassemblers import AttentionReassembler
+from .core_reassemblers import Reassembler
 
 
 # TransMLA configuration
@@ -229,21 +229,11 @@ def convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig):
     return model
 
 
-class TransMLA(AttentionReassembler):
+class TransMLA(Reassembler):
     """Specialized TransMLA reassembler."""
 
     @classmethod
-    def reassemble(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None, **kwargs):
-        """TransMLA reassembly - direct execution."""
-        return cls._convert_trans_mla(
-            model=model,
-            tokenizer=tokenizer,
-            config=config,
-            **kwargs
-        )
-
-    @classmethod
-    def _convert_trans_mla(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
+    def reassemble(cls, model: nn.Module, tokenizer, config: Optional[TransMLAConfig] = None,
                           additional_mapping: dict = None, **kwargs):
         """TransMLA conversion - simple implementation."""
         _initialize_transmla()  # Ensure TransMLA is initialized

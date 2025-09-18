@@ -7,7 +7,7 @@ for various architectures (TransMLA, standard reassembly).
 
 from .reassembler import BaseReassembler
 from .core_reassemblers import (
-    Reassembler, ParentalReassembler, AttentionReassembler,
+    Reassembler, ParentalReassembler,
     get_reassembler, REASSEMBLERS
 )
 from .transmla_reassembler import TransMLA, TransMLAConfig, get_transmla_status
@@ -16,8 +16,7 @@ from .decomposed_recreation import RECREATION_FUNCTIONS
 __all__ = [
     'BaseReassembler',
     'Reassembler', 
-    'ParentalReassembler', 
-    'AttentionReassembler',
+    'ParentalReassembler',
     'TransMLA',
     'TransMLAConfig',
     'get_reassembler',
