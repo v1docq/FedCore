@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Dict, Optional
+from typing import Optional
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 import torch_pruning as tp
@@ -21,13 +21,19 @@ from fedcore.algorithm.base_compression_model import BaseCompressionModel
 
 class LowRankModel(BaseCompressionModel):
     """Singular value decomposition for model structure optimization.
-
+    
+    This class performs low-rank decomposition of models for compression.
+    Reassembly logic is moved to a separate pipeline node BaseReassembler.
+    
     Args:
+        decomposing_mode: Decomposition mode ('channel' or 'spatial')
+        decomposer: Decomposition method ('svd', 'cur', 'rsvd')
+        compose_mode: Composition mode ('one_layer', 'two_layers', 'three_layers')
     """
     _additional_hooks = [LRHooks]
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
-        super().__init__(params)
+    def __init__(self, params: Optional[OperationParameters] = None):
+        super().__init__(params or {})
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
@@ -44,34 +50,33 @@ class LowRankModel(BaseCompressionModel):
         return self.model_after
 
     def fit(self, input_data) -> None:
-        """Run model training with optimization.
+        """Perform low-rank decomposition and model training.
 
         Args:
-            input_data: An instance of the model class
+            input_data: Instance of model class
         """
         model_after = self._init_model(input_data)
-        # base_params = self._estimate_params(self.model_before, example_batch)
         self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
-        # self.compress(self.model_after)
-        # check params
-        example_batch = self._get_example_input(input_data)#.to(extract_device(self.model_before))
+        
+        # Parameter check
+        example_batch = self._get_example_input(input_data)
         self.estimate_params(example_batch, self.model_before, self.model_after)
         self.model_after._structure_changed__ = True
         return self.model_after
 
     def compress(self, model: nn.Module):
+        """Model compression by composing weights for inference."""
         for module in model.modules():
             if isinstance(module, IDecomposed):
-                # module.inference_mode = True
                 module.compose_weight_for_inference()
 
     def load_model(self, model, state_dict_path: str) -> None:
-        """Loads the optimized model into the experimenter.
+        """Load optimized model.
 
         Args:
-            exp: An instance of the experimenter class, e.g. ``ClassificationExperimenter``.
-            state_dict_path: Path to state_dict file.
+            model: Model to load
+            state_dict_path: Path to state dict file
         """
         load_svd_state_dict(
             model=model,
@@ -80,3 +85,15 @@ class LowRankModel(BaseCompressionModel):
             compose_mode=self.compose_mode,
         )
         model.to(self.device)
+    
+    def predict_for_fit(self, input_data, output_mode: str = 'fedcore'):
+        """Return model after training."""
+        return self.model_after if output_mode == 'fedcore' else self.model_before
+
+    def predict(self, input_data, output_mode: str = 'fedcore'):
+        """Prediction using compressed model."""
+        if output_mode == 'fedcore':
+            self.trainer.model = self.model_after
+        else:
+            self.trainer.model = self.model_before
+        return self.trainer.predict(input_data, output_mode)
