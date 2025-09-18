@@ -5,15 +5,13 @@ import numpy as np
 from fedcore.data.custom.load_data import load_benchmark_data, split_benchmark_data
 from fedcore.models.backbone.custom.boosting_model import FedcoreBoostingModel
 from py_boost import GradientBoosting
-from py_boost import SketchBoost
 from fedcore.repository.data.custom.boosting_config import BOOSTING_MODEL_PARAMS
 
 
 class ExperimentPipeline:
     def __init__(self):
         self.models_impl = dict(pyboost=GradientBoosting,
-                                fedcore_boosting=FedcoreBoostingModel
-                                )
+                                fedcore_boosting=FedcoreBoostingModel)
 
     def init_boosting_model(self, model_name, model_params):
         self.model = self.models_impl[model_name](**model_params)
