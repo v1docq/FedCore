@@ -38,7 +38,7 @@ This module is automatically used by `fedcore.algorithm.quantization.utils` when
 from fedcore.algorithm.quantization.utils import AttentionReassembler
 
 # Standard conversion
-model = AttentionReassembler.convert(model, mode='standard')
+model = AttentionReassembler.convert(model, mode='parental')
 
 # TransMLA conversion (uses transmla_core)
 model = AttentionReassembler.convert(model, mode='trans-mla', tokenizer=tokenizer)

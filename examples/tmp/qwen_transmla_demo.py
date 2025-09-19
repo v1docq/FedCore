@@ -11,7 +11,7 @@ This script shows how to:
 Requirements:
 - transformers>=4.40.0
 - torch>=2.0.0
-- TransMLA dependencies (see external/transmla_core/)
+- TransMLA dependencies (see external/transmlacore/)
 
 Usage:
     python examples/qwen_transmla_demo.py [--mode deferred|immediate] [--save-path PATH]

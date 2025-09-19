@@ -32,13 +32,13 @@ def get_transmla_path() -> Path:
     
     # Strategy 2: Try to find installed package
     try:
-        import transmla_core
-        return Path(transmla_core.__file__).parent
+        import transmlacore
+        return Path(transmlacore.__file__).parent
     except ImportError:
         pass
     
     # Strategy 3: Fallback to relative path (for development)
-    fallback_path = Path(__file__).parent.parent.parent.parent / "external" / "transmla_core"
+    fallback_path = Path(__file__).parent.parent.parent.parent / "external" / "transmlacore"
     return fallback_path
 
 

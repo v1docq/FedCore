@@ -5,7 +5,7 @@ Setup script for TransMLA Core module
 from setuptools import setup, find_packages
 
 setup(
-    name="transmla-core",
+    name="transmlacore",
     version="1.0.0",
     description="Minimal TransMLA implementation for Multi-head Latent Attention",
     author="FedCore Team",

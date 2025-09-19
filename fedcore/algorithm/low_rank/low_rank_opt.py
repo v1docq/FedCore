@@ -6,6 +6,8 @@ import torch_pruning as tp
 import torch
 from torch import nn
 
+from transformers import AutoTokenizer
+
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
@@ -17,6 +19,8 @@ from fedcore.repository.constanst_repository import (
     LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
+from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA
+from external.transmlacore.modify_config import settings
 
 
 class LowRankModel(BaseCompressionModel):
@@ -58,7 +62,7 @@ class LowRankModel(BaseCompressionModel):
         model_after = self._init_model(input_data)
         self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
-        
+        # self.compress(self.model_after)
         # Parameter check
         example_batch = self._get_example_input(input_data)
         self.estimate_params(example_batch, self.model_before, self.model_after)
@@ -70,6 +74,18 @@ class LowRankModel(BaseCompressionModel):
         for module in model.modules():
             if isinstance(module, IDecomposed):
                 module.compose_weight_for_inference()
+
+        model_type = getattr(getattr(model, 'config', None), 'model_type', None)
+        if model_type in settings:
+            from transformers import AutoTokenizer
+
+            model_name = getattr(model.config, "name_or_path", None)
+            if model_name is None:
+                raise ValueError("Can't find model name in config to load tokenizer")
+
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            trans_mla = TransMLA()
+            model = trans_mla.reassemble(model, tokenizer=tokenizer)
 
     def load_model(self, model, state_dict_path: str) -> None:
         """Load optimized model.

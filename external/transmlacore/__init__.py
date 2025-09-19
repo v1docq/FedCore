@@ -8,7 +8,7 @@ This module contains only the essential components needed for TransMLA functiona
 - modify_config: Configuration modifications
 
 Usage:
-    from external.transmla_core import utils, partial_rope, lora_qkv, modify_config
+    from external.transmlacore import utils, partial_rope, lora_qkv, modify_config
 """
 
 __version__ = "1.0.0"
