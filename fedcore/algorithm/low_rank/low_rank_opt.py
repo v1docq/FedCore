@@ -27,7 +27,6 @@ class LowRankModel(BaseCompressionModel):
     """Singular value decomposition for model structure optimization.
     
     This class performs low-rank decomposition of models for compression.
-    Reassembly logic is moved to a separate pipeline node BaseReassembler.
     
     Args:
         decomposing_mode: Decomposition mode ('channel' or 'spatial')
