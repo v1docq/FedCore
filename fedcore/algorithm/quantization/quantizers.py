@@ -24,7 +24,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.algorithm.quantization.utils import (
     QDQWrapper, uninplace, get_flattened_qconfig_dict)
-from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.architecture.comptutaional.devices import default_device

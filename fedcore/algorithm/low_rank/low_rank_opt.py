@@ -19,7 +19,7 @@ from fedcore.repository.constanst_repository import (
     LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA
+from fedcore.algorithm.low_rank.reassembly.transmla_reassembler import TransMLA
 from external.transmlacore.modify_config import settings
 
 

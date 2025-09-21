@@ -9,8 +9,8 @@ import tempfile
 import shutil
 import os
 
-from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
-from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
+from fedcore.algorithm.low_rank.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
 
 
 class TestTransMLAQwenIntegration:

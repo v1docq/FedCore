@@ -29,8 +29,8 @@ try:
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
 
-from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
-from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, get_transmla_status
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
+from fedcore.algorithm.low_rank.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, get_transmla_status
 
 
 def load_qwen_model(model_name="Qwen/Qwen2.5-0.5B", device="auto"):

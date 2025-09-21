@@ -11,7 +11,7 @@ from fedcore.algorithm.quantization.utils import (
     uninplace, get_flattened_qconfig_dict,
     QDQWrapper, QDQWrapping
 )
-from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
 
 
 def test_uninplace_recursively():

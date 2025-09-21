@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 from unittest.mock import Mock, patch, MagicMock
 
-from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler, get_reassembler
-from fedcore.algorithm.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler, get_reassembler
+from fedcore.algorithm.low_rank.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
 
 
 class SimpleModel(nn.Module):
@@ -168,7 +168,7 @@ class TestReassemblerFunctions:
 
     def test_reassemble_model_parental(self):
         """Test converting model with parental reassembler"""
-        from fedcore.algorithm.reassembly.core_reassemblers import ParentalReassembler
+        from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
         model = SimpleModel()
         
         with patch.object(ParentalReassembler, 'reassemble') as mock_reassemble:
