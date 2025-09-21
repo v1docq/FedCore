@@ -55,7 +55,6 @@ from fedcore.models.network_modules.losses import (
 from fedcore.repository.setups import QAT_1, PTQ_1
 from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks  # don't del
 from fedcore.algorithm.low_rank.hooks import LRHooks  # don't del
-# from fedcore.algorithm.reassembly.hooks import ReassemblyHooks  # don't del - moved to avoid circular import
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.architecture.utils.misc import EnumNoValue
