@@ -44,13 +44,13 @@ class TestParentalReassembler:
         with pytest.raises(KeyError):
             get_reassembler('unknown')
 
-    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_reassemble_transmla_mode_success(self):
         """Test TransMLA conversion mode when TransMLA is available"""
         model = SimpleModel()
         tokenizer = Mock()
         
-        with patch('fedcore.algorithm.reassembly.transmla_reassembler.convert_model_to_mla') as mock_reassemble:
+        with patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.convert_model_to_mla') as mock_reassemble:
             mock_reassemble.return_value = model
             
             result = TransMLA.reassemble(
@@ -68,8 +68,8 @@ class TestParentalReassembler:
         with pytest.raises(TypeError):
             TransMLA.reassemble(model)
 
-    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', False)
-    @patch('fedcore.algorithm.reassembly.transmla_reassembler._initialize_transmla')
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', False)
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler._initialize_transmla')
     def test_reassemble_transmla_mode_unavailable(self, mock_init_transmla):
         """Test TransMLA mode when TransMLA is not available"""
         model = SimpleModel()
@@ -101,13 +101,13 @@ class TestTransMLA:
             assert result == model
             mock_reassemble.assert_called_once()
 
-    @patch('fedcore.algorithm.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
     def test_reassemble_with_mla_available(self):
         """Test successful conversion when TransMLA is available"""
         model = SimpleModel()
         tokenizer = Mock()
         
-        with patch('fedcore.algorithm.reassembly.transmla_reassembler.convert_model_to_mla') as mock_reassemble:
+        with patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.convert_model_to_mla') as mock_reassemble:
             mock_reassemble.return_value = model
             
             result = TransMLA.reassemble(
