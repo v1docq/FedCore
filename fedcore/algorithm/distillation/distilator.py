@@ -11,6 +11,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import TrainParams
+from fedcore.tools.model_registry import ModelRegistry
 from fedcore.metrics.cv_metrics import (
     LastLayer,
     IntermediateAttention,
@@ -35,7 +36,12 @@ class BaseDistilator(BaseCompressionModel):
         return "Distilation_model"
 
     def _init_distil_model(self, teacher_model):
-        student_model = deepcopy(teacher_model)
+        try:
+            student_model = type(teacher_model)() if hasattr(type(teacher_model), '__call__') else deepcopy(teacher_model)
+            if hasattr(student_model, 'load_state_dict') and hasattr(teacher_model, 'state_dict'):
+                student_model.load_state_dict(teacher_model.state_dict())
+        except Exception:
+            student_model = deepcopy(teacher_model)
         for module in student_model.segformer.encoder.block:
             del module[0]
         return student_model
@@ -153,7 +159,11 @@ class BaseDistilator(BaseCompressionModel):
         self.base_model = input_data.target
         self.num_classes = input_data.features.num_classes
         self.student_model = self._init_distil_model(self.base_model)
+        registry = ModelRegistry().get_instance(model=self.base_model)
+        self._model_registry = registry
+        ModelRegistry.register_changes(metrics={"stage": "before_distill"})
         self._fit_distil_model(input_data)
+        ModelRegistry.register_changes(metrics={"stage": "after_distill"})
         self.model.cpu().eval()
 
     def predict_for_fit(

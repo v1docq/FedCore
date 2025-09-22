@@ -18,6 +18,7 @@ from fedcore.repository.constanst_repository import (
     PRUNERS,
     PRUNING_IMPORTANCE, TorchLossesConstant
 )
+from fedcore.tools.model_registry import ModelRegistry
 
 
 
@@ -48,7 +49,7 @@ class BasePruner(BaseCompressionModel):
 
         # pruning params
         self.pruner_name = params.get("pruner_name", "meta_pruner")
-        self.importance_name = params.get("importance", "MagnitudeImportance")
+        self.importance_name = params.get("importance", "magnitude")
 
         # pruning hyperparams
         self.pruning_ratio = params.get("pruning_ratio", 0.5)
@@ -102,7 +103,10 @@ class BasePruner(BaseCompressionModel):
         if hasattr(self.model_before, 'model'):
             self.trainer.model = self.model_before.model
         self.model_before.to(default_device())
-        self.model_after = deepcopy(self.model_before)
+        self.model_after = self.model_before
+        registry = ModelRegistry().get_instance(model=self.model_before)
+        self._model_registry = registry
+        ModelRegistry.register_changes(metrics={"stage": "before_pruning"})
         print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
         print(f' Pruning importance - {self.importance_name} '.center(80, '='))
         print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
@@ -127,8 +131,16 @@ class BasePruner(BaseCompressionModel):
         # list of tensors with dim size n_samples x n_channel x height x width
         batch_generator = (b for b in input_data.features.val_dataloader)
         # take first batch
-        batch_list = next(batch_generator)
-        self.data_batch_for_calib = batch_list[0].to(default_device())
+        batch_dict = next(batch_generator)
+        # Handle dict-like batches (e.g., LLM) by picking the first value or a specific key
+        if isinstance(batch_dict, dict):
+            if 'input_ids' in batch_dict:
+                self.data_batch_for_calib = batch_dict['input_ids'].to(default_device())
+            else:
+                self.data_batch_for_calib = next(iter(batch_dict.values())).to(default_device())
+        else:
+            # legacy: assume batch is a list/tuple and pick first element
+            self.data_batch_for_calib = batch_dict[0].to(default_device())
         n_classes = input_data.task.task_params['forecast_length'] \
             if input_data.task.task_type.value.__contains__('forecasting') else input_data.features.num_classes
         self.validator = PruningValidator(model=self.model_after,
@@ -162,7 +174,10 @@ class BasePruner(BaseCompressionModel):
             for hook in self._on_epoch_end:
                 hook(importance=self.importance, pruner_objects=self.pruner_objects)
             if finetune:
-                return self.finetune(finetune_object=self.model_after, finetune_data=input_data)
+                result_model = self.finetune(finetune_object=self.model_after, finetune_data=input_data)
+                # Record post-pruning state in registry
+                ModelRegistry.register_changes(metrics={"stage": "after_pruning"})
+                return result_model
         except Exception as e:
             traceback.print_exc()
             self.model_after = self.model_before

@@ -20,6 +20,7 @@ from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.tools.edge_device import PowerEstimator
 from time import time
+from fedcore.tools.model_registry import ModelRegistry
 
 
 def format_num(num: int, bytes=False):
@@ -95,7 +96,24 @@ class PerformanceEvaluator:
         is_pipeline_class = isinstance(model, Pipeline)
 
         if is_pipeline_class:
-            self.model = getattr(model.operator.root_node.fitted_operation, self.model_regime)
+            fitted = model.operator.root_node.fitted_operation
+            try:
+                registry = getattr(fitted, '_model_registry', None)
+                model_from_attr = getattr(fitted, self.model_regime, None)
+                if registry and getattr(fitted, '_model_id', None):
+                    # Use latest checkpoint path or in-memory model if needed
+                    latest = ModelRegistry.get_latest_record(fitted._model_id)
+                    if latest and latest.get('checkpoint_path') and hasattr(model_from_attr, 'load_state_dict'):
+                        ckpt = torch.load(latest['checkpoint_path'], map_location=self.device)
+                        if isinstance(ckpt, dict) and 'state_dict' in ckpt:
+                            model_from_attr.load_state_dict(ckpt['state_dict'])
+                        elif isinstance(ckpt, dict):
+                            model_from_attr.load_state_dict(ckpt)
+                    self.model = model_from_attr
+                else:
+                    self.model = model_from_attr
+            except Exception:
+                self.model = getattr(fitted, self.model_regime)
             try:
                 self.device = getattr(model.operator.root_node.fitted_operation, 'device', default_device())
                 self.cuda_allowed = True if self.device.type == 'cuda' else False

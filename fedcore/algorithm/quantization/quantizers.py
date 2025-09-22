@@ -30,6 +30,7 @@ from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
 from fedcore.repository.constanst_repository import TorchLossesConstant
 from fedcore.models.network_impl.hooks import Optimizers
+from fedcore.tools.model_registry import ModelRegistry
 
 
 class BaseQuantizer(BaseCompressionModel):
@@ -151,8 +152,11 @@ class BaseQuantizer(BaseCompressionModel):
         else:
             self.trainer = BaseNeuralModel(self.qat_params)
         self.trainer.model = self.model_before
-        self.quant_model = deepcopy(self.model_before).eval()
-        print("[MODEL] Model initialized and copied for quantization.")
+        self.quant_model = self.model_before.eval()
+        registry = ModelRegistry().get_instance(model=self.model_before)
+        self._model_registry = registry
+        ModelRegistry.register_changes(metrics={"stage": "before_quant"})
+        print("[MODEL] Model initialized for quantization (no deepcopy).")
 
     def _prepare_model(self, input_data: InputData):
         try:
@@ -188,7 +192,7 @@ class BaseQuantizer(BaseCompressionModel):
         except Exception as e:
             print("[PREPARE ERROR] Exception during preparation:")
             traceback.print_exc()
-            return deepcopy(self.model_before).eval()
+            return self.model_before.eval()
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
@@ -214,11 +218,12 @@ class BaseQuantizer(BaseCompressionModel):
             self.model_after = self.quant_model
             if self.quant_type == 'qat':
                 self.model_after._is_quantized = True 
+            ModelRegistry.register_changes(metrics={"stage": "after_quant"})
 
         except Exception as e:
             print("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()
-            self.model_after = deepcopy(self.model_before).eval()
+            self.model_after = self.model_before.eval()
             
         return self.model_after
 
