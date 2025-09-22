@@ -134,15 +134,21 @@ class ParentalReassembler(Reassembler):
         }
 
 
-# Simple reassembler registry with lazy loading for TransMLA
+# Simple reassembler registry with lazy loading
 def _get_transmla_class():
     """Lazy import of TransMLA to avoid circular imports."""
     from .transmla_reassembler import TransMLA
     return TransMLA
 
+def _get_flatllm_class():
+    """Lazy import of FlatLLM to avoid circular imports."""
+    from .flatllm_reassembler import FlatLLM
+    return FlatLLM
+
 REASSEMBLERS = {
     'parental': ParentalReassembler,
     'trans-mla': _get_transmla_class,
+    'flat-llm': _get_flatllm_class,
 }
 
 
@@ -154,8 +160,8 @@ def get_reassembler(reassembler_type: str = 'parental'):
     
     reassembler = REASSEMBLERS[reassembler_type]
     
-    # Handle lazy loading for trans-mla
-    if callable(reassembler) and reassembler_type == 'trans-mla':
+    # Handle lazy loading for special reassemblers
+    if callable(reassembler) and reassembler_type in ['trans-mla', 'flat-llm']:
         return reassembler()  # Call the lazy loader function
     
     return reassembler
