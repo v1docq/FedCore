@@ -38,7 +38,7 @@ def get_transmla_path() -> Path:
         pass
     
     # Strategy 3: Fallback to relative path (for development)
-    fallback_path = Path(__file__).parent.parent.parent.parent / "external" / "transmlacore"
+    fallback_path = Path(__file__).parent.parent.parent.parent.parent / "external" / "transmlacore"
     return fallback_path
 
 
