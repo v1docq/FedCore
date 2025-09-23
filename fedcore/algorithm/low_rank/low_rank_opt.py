@@ -19,7 +19,7 @@ from fedcore.repository.constanst_repository import (
     LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from fedcore.algorithm.low_rank.reassembly.transmla_reassembler import TransMLA
+from fedcore.algorithm.low_rank.reassembly.transmla_reassembler import TransMLA, FlatLLM
 from external.transmlacore.modify_config import settings
 
 
@@ -75,6 +75,7 @@ class LowRankModel(BaseCompressionModel):
                 module.compose_weight_for_inference()
 
         model_type = getattr(getattr(model, 'config', None), 'model_type', None)
+
         if model_type in settings:
             from transformers import AutoTokenizer
 
@@ -85,6 +86,17 @@ class LowRankModel(BaseCompressionModel):
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             trans_mla = TransMLA()
             model = trans_mla.reassemble(model, tokenizer=tokenizer)
+
+        if model_type in ['llama', 'mistral']:
+            from transformers import AutoTokenizer
+
+            model_name = getattr(model.config, "name_or_path", None)
+            if model_name is None:
+                raise ValueError("Can't find model name in config to load tokenizer")
+
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            flat_llm = FlatLLM()
+            model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
 
     def load_model(self, model, state_dict_path: str) -> None:
         """Load optimized model.
