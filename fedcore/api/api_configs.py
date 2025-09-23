@@ -22,6 +22,7 @@ from fedcore.repository.constanst_repository import (
     TaskTypesEnum,
     TorchLossesConstant,
 )
+from fedcore.api.nlp_configs import QAConfigTemplate, SummarizationConfigTemplate
 
 __all__ = [
     'ConfigTemplate',
@@ -258,54 +259,6 @@ class NeuralModelConfigTemplate(NodeTemplate):
     custom_criterions: dict = None
     model_architecture: ModelArchitectureConfigTemplate = None
 
-@dataclass
-class LLMConfigTemplate(NeuralModelConfigTemplate):
-    """Configuration template for LLM-specific parameters"""
-    use_llm_trainer: bool = False
-    is_llm: bool = False
-    vocab_size: Optional[int] = None
-    num_attention_heads: Optional[int] = None
-    num_hidden_layers: Optional[int] = None
-    hidden_size: Optional[int] = None
-    max_position_embeddings: Optional[int] = None
-    llm_specific_params: Dict[str, Any] = None
-
-@dataclass
-class NLPConfigTemplate(NeuralModelConfigTemplate):
-    """Base configuration template for NLP tasks"""
-    tokenizer_name: Optional[str] = None
-    max_length: int = 512
-    padding: str = 'max_length'
-    truncation: bool = True
-    return_tensors: str = 'pt'
-    special_tokens: Dict[str, str] = None
-    preprocessing_fn: Optional[Callable] = None
-
-
-@dataclass
-class QuestionAnsweringConfigTemplate(NLPConfigTemplate):
-    """Configuration for Question Answering tasks"""
-    context_column: str = 'context'
-    question_column: str = 'question'
-    answer_column: str = 'answers'
-    doc_stride: int = 128
-    max_answer_length: int = 30
-    n_best_size: int = 20
-    null_score_diff_threshold: float = 0.0
-
-
-@dataclass
-class SummarizationConfigTemplate(NLPConfigTemplate):
-    """Configuration for Summarization tasks"""
-    text_column: str = 'text'
-    summary_column: str = 'summary'
-    max_source_length: int = 1024
-    max_target_length: int = 128
-    val_max_target_length: int = 128
-    num_beams: int = 4
-    length_penalty: float = 0.6
-    early_stopping: bool = True
-
 
 @dataclass
 class LearningConfigTemplate(ConfigTemplate):
@@ -316,7 +269,7 @@ class LearningConfigTemplate(ConfigTemplate):
     peft_strategy_params: NeuralModelConfigTemplate = None
     learning_strategy_params: NeuralModelConfigTemplate = None
     nlp_task_type: Optional[str] = None
-    nlp_task_params: Optional[Union[QuestionAnsweringConfigTemplate, 
+    nlp_task_params: Optional[Union[QAConfigTemplate, 
                                    SummarizationConfigTemplate]] = None
 
 
