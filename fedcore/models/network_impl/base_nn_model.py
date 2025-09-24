@@ -16,7 +16,7 @@ from tqdm import tqdm
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     ModelLearningHooks,
     LoggingHooks,
     StructureCriterions,

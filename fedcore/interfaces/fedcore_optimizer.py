@@ -18,7 +18,7 @@ from golem.core.optimisers.populational_optimizer import _try_unfit_graph
 from pymonad.either import Either
 
 from fedcore.interfaces.fedcore_dispatcher import FedcoreDispatcher
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     FEDCORE_MUTATION_STRATEGY,
     FEDCORE_GRAPH_VALIDATION,
 )

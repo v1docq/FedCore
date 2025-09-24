@@ -26,7 +26,7 @@ from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from fedcore.api.llm_config import LLMConfigTemplate
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import FedotTaskEnum
+from fedcore.repository.constant_repository import FedotTaskEnum
 
 ##########################################################################
 ### DEFINE ML PROBLEM (classification, object_detection, regression,   ###

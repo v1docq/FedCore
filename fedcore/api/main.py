@@ -22,7 +22,7 @@ from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.neural_compressor.config import Torch2ONNXConfig
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,
     FEDOT_GET_METRICS,

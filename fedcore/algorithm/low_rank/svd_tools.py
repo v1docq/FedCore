@@ -10,7 +10,7 @@ from torch.nn.modules import Module
 
 from fedcore.architecture.comptutaional.devices import extract_device
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     DECOMPOSABLE_LAYERS, 
     COMPOSE_MODE, 
     PROHIBIT_TO_DECOMPOSE

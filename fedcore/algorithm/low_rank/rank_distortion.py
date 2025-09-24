@@ -7,8 +7,8 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from torch import nn
 
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.models.network_impl.trainer_factory import create_trainer_from_input_data
-from fedcore.repository.constanst_repository import default_device
+from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
+from fedcore.repository.constant_repository import default_device
 
 
 class LoraTrainer:

@@ -31,7 +31,7 @@ from fedcore.metrics.cv_metrics import (
     Throughput,
     CV_quality_metric,
 )
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     DistilationMetricsEnum,
     InferenceMetricsEnum,
     CVMetricsEnum,

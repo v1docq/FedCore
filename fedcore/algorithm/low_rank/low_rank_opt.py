@@ -12,7 +12,7 @@ from fedcore.architecture.comptutaional.devices import default_device, extract_d
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     DECOMPOSE_MODE,
     LRHooks
 )

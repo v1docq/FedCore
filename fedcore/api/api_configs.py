@@ -13,7 +13,7 @@ import logging
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch.nn import Module
 
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     FedotTaskEnum,
     Schedulers, 
     Optimizers, 
@@ -22,7 +22,7 @@ from fedcore.repository.constanst_repository import (
     TaskTypesEnum,
     TorchLossesConstant,
 )
-from fedcore.api.nlp_configs import QAConfigTemplate, SummarizationConfigTemplate
+# Avoid importing NLP-specific templates here to prevent circular imports
 
 __all__ = [
     'ConfigTemplate',
@@ -269,8 +269,8 @@ class LearningConfigTemplate(ConfigTemplate):
     peft_strategy_params: NeuralModelConfigTemplate = None
     learning_strategy_params: NeuralModelConfigTemplate = None
     nlp_task_type: Optional[str] = None
-    nlp_task_params: Optional[Union[QAConfigTemplate, 
-                                   SummarizationConfigTemplate]] = None
+    # Accept any params to avoid circular import with NLP templates
+    nlp_task_params: Optional[Any] = None
 
 
 @dataclass

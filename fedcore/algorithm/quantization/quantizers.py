@@ -25,12 +25,12 @@ from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.algorithm.quantization.utils import (
     ParentalReassembler, QDQWrapper, uninplace, get_flattened_qconfig_dict)
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
-from fedcore.models.network_impl.trainer_factory import create_trainer_from_input_data
-from fedcore.models.network_impl.hooks import BaseHook
+from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
+from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
-from fedcore.repository.constanst_repository import TorchLossesConstant
-from fedcore.models.network_impl.hooks import Optimizers
+from fedcore.repository.constant_repository import TorchLossesConstant
+from fedcore.models.network_impl.utils.hooks import Optimizers
 
 
 class BaseQuantizer(BaseCompressionModel):

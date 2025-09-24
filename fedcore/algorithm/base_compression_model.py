@@ -10,7 +10,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.comptutaional.devices import default_device, extract_device
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
-from fedcore.models.network_impl.trainer_factory import create_trainer_from_input_data
+from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 from torchinfo import summary
 
 

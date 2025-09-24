@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torchvision.models import VisionTransformer
 
-from fedcore.repository.constanst_repository import PRUNING_FUNC, PRUNING_LAYER_TYPE
+from fedcore.repository.constant_repository import PRUNING_FUNC, PRUNING_LAYER_TYPE
 from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
 
 

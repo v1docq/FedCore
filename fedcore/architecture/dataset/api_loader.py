@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.architecture.dataset.datasets_from_source import AbstractDataset, ObjectDetectionDataset, TimeSeriesDataset
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     DEFAULT_TORCH_DATASET,
 )
 from fedcore.repository.model_repository import BACKBONE_MODELS

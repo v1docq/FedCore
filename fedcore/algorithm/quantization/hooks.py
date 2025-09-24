@@ -2,7 +2,7 @@ import torch
 from torch import nn, optim
 from enum import Enum
 
-from fedcore.models.network_impl.hooks import BaseHook
+from fedcore.models.network_impl.utils.hooks import BaseHook
 
 
 class DynamicQuantizationHook(BaseHook):
