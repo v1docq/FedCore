@@ -255,6 +255,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
+    @torch.no_grad()
     def _predict_model(
             self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
     ):
@@ -266,44 +267,15 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
                                                      max_batches=self.calib_batch_limit)
         if self.task_type is None:
             self.task_type = x_test.task.task_type
-        for batch in tqdm(dataloader):  ###TODO why val_dataloader???
-            if isinstance(batch, dict):
-                inputs_dict = {}
-                if 'input_ids' in batch and batch['input_ids'] is not None:
-                    inputs_dict['input_ids'] = batch['input_ids'].to(self.device)
-                if 'attention_mask' in batch and batch['attention_mask'] is not None:
-                    inputs_dict['attention_mask'] = batch['attention_mask'].to(self.device)
-                # Do NOT pass labels or inputs_embeds during inference
-                pred = model(**inputs_dict)
-            else:
-                # Tuple/list batches: infer correct kwargs for HF models
-                seq = list(batch)
-                # drop target if present as last element and is tensor of labels
-                if len(seq) >= 2 and hasattr(seq[-1], 'dtype'):
-                    seq_inputs = seq[:-1]
-                else:
-                    seq_inputs = seq
-
-                inputs_dict = {}
-                if len(seq_inputs) >= 1 and hasattr(seq_inputs[0], 'dtype'):
-                    t0 = seq_inputs[0].to(self.device)
-                    if t0.dtype in (torch.int32, torch.int64):
-                        inputs_dict['input_ids'] = t0
-                    else:
-                        inputs_dict['inputs_embeds'] = t0
-                if len(seq_inputs) >= 2 and hasattr(seq_inputs[1], 'dtype'):
-                    t1 = seq_inputs[1].to(self.device)
-                    # Only set attention_mask if we are not using inputs_embeds
-                    if 'inputs_embeds' not in inputs_dict and t1.dtype in (torch.int32, torch.int64, torch.bool):
-                        inputs_dict['attention_mask'] = t1
-                pred = model(**inputs_dict)
-            # Extract tensor from HF ModelOutput
-            if hasattr(pred, 'logits'):
-                pred_tensor = pred.logits
-            else:
-                pred_tensor = pred
-            prediction.append(pred_tensor)
-        return self._convert_predict(torch.cat(prediction, dim=0), output_mode)
+        for i, batch in tqdm(enumerate(dataloader, 1), total=len(dataloader)):  ###TODO why val_dataloader???
+            *inputs, targets = batch
+            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
+            prediction.append(model(*inputs))
+            del inputs
+            del batch
+            if i % self._clear_each == 0:
+                self._clear_cache()
+        return self._convert_predict(torch.concat(prediction), output_mode)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
         have_encoder = all([self.label_encoder is not None, output_mode == "labels"])

@@ -2,9 +2,11 @@
 LLM Trainer implementation using transformers library
 Real integration with transformers.Trainer
 """
-
+import torch
 from typing import Any, Dict, Optional, Iterable, Union
 from enum import Enum
+from tqdm import tqdm
+
 
 # Transformers imports
 from torch.utils.data import Dataset
@@ -16,7 +18,10 @@ from transformers.trainer_callback import EarlyStoppingCallback
 from datasets import Dataset
 import numpy as np
 from fedot.core.data.data import InputData
+from fedot.core.data.data import OutputData
+from fedot.core.repository.dataset_types import DataTypesEnum
 
+from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.utils._base import BaseTrainer
 from fedcore.models.network_impl.utils.hooks_impl import FedCoreTransformersTrainer
@@ -172,11 +177,16 @@ class LLMTrainer(BaseTrainer):
                         'attention_mask': None if attention_mask is None else attention_mask[i].cpu().tolist(),
                     })
         return Dataset.from_list(data)
+    
+    def _convert_predict(self, predictions: torch.Tensor, output_mode: str = "default") -> torch.Tensor:
+        """Convert predictions to appropriate format"""
+        if isinstance(predictions, torch.Tensor):
+            return predictions
+        
+        return torch.tensor(predictions)
 
     def _create_trainer(self, datasets: Dict[str, Dataset]):
         """Create transformers trainer with FedCore integration"""
-        # if self.model is None:
-        #     raise ValueError("Model is None. Cannot create Trainer without a model.")
         allowed_training_args = {
             'output_dir', 'num_train_epochs', 'per_device_train_batch_size',
             'per_device_eval_batch_size', 'warmup_steps', 'lr_scheduler_type',
@@ -185,8 +195,7 @@ class LLMTrainer(BaseTrainer):
             'load_best_model_at_end', 'metric_for_best_model', 'greater_is_better'
         }
         
-        filtered_args = {k: v for k, v in self.default_training_args.items() 
-                        if k in allowed_training_args}
+        filtered_args = self._normalize_kwargs(self.default_training_args, allowed_training_args)
         
         self._training_args = TrainingArguments(**filtered_args)
         
@@ -247,14 +256,28 @@ class LLMTrainer(BaseTrainer):
         """Make predictions using InputData/CompressionInputData"""
         print(f"Making LLM predictions with {output_mode} mode...")
         
-        if self._trainer is None:
+        
+        has_val_loader = hasattr(input_data, 'features') and hasattr(input_data.features, 'val_dataloader')
+        if self._trainer is None and has_val_loader:
             datasets = self._prepare_data(input_data)
             self._create_trainer(datasets)
-            
-        eval_dataset = self._dataloader_to_dataset(input_data.features.val_dataloader)
-        predictions = self._trainer.predict(eval_dataset)
+
+        if self._trainer is not None and has_val_loader:
+            eval_dataset = self._dataloader_to_dataset(input_data.features.val_dataloader)
+            return self._trainer.predict(eval_dataset)
+
+        predictions_output = self._predict_model(input_data, output_mode)
+        pred_values = torch.tensor(predictions_output.predictions)
         
-        return predictions
+        output_data = OutputData(
+            idx=torch.arange(len(pred_values)),
+            task=input_data.task,
+            predict=pred_values,
+            target=None,
+            data_type=DataTypesEnum.table,
+        )
+        
+        return output_data
         
     def predict_for_fit(self, input_data: Union[InputData, CompressionInputData], 
                        output_mode: str = "default") -> Any:
@@ -275,6 +298,69 @@ class LLMTrainer(BaseTrainer):
         print(f"Loading LLM model from {path}...")
 
         super().load_model(path)
+    
+    @torch.no_grad()
+    def _predict_model(
+            self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
+    ):
+        model: torch.nn.Module = self.model or x_test.target
+        model.eval()
+        prediction = []
+        
+        dataloader = DataLoaderHandler.check_convert(
+            getattr(x_test, 'test_dataloader', None) or getattr(x_test, 'val_dataloader', None),
+            mode=self.batch_type,
+            max_batches=self.calib_batch_limit
+        )
+        
+        if self.task_type is None:
+            self.task_type = x_test.task.task_type
+            
+        for i, batch in tqdm(enumerate(dataloader, 1), total=len(dataloader)):
+            if isinstance(batch, dict):
+                inputs_dict = {}
+                input_ids = batch.get('input_ids')
+                attention_mask = batch.get('attention_mask')
+                inputs_embeds = batch.get('inputs_embeds')
+
+                if input_ids is not None:
+                    inputs_dict['input_ids'] = input_ids.to(self.device)
+                    if attention_mask is not None:
+                        inputs_dict['attention_mask'] = attention_mask.to(self.device)
+                elif inputs_embeds is not None:
+                    inputs_dict['inputs_embeds'] = inputs_embeds.to(self.device)
+                    if attention_mask is not None:
+                        inputs_dict['attention_mask'] = attention_mask.to(self.device)
+
+                pred = model(**inputs_dict) if len(inputs_dict) > 0 else model()
+            else:
+                seq = list(batch)
+                if len(seq) >= 2 and hasattr(seq[-1], 'dtype'):
+                    seq_inputs = seq[:-1]
+                else:
+                    seq_inputs = seq
+
+                inputs_dict = {}
+                if len(seq_inputs) >= 1 and hasattr(seq_inputs[0], 'dtype'):
+                    t0 = seq_inputs[0].to(self.device)
+                    if t0.dtype in (torch.int32, torch.int64):
+                        inputs_dict['input_ids'] = t0
+                    else:
+                        inputs_dict['inputs_embeds'] = t0
+                if len(seq_inputs) >= 2 and hasattr(seq_inputs[1], 'dtype'):
+                    t1 = seq_inputs[1].to(self.device)
+                    if 'inputs_embeds' not in inputs_dict and t1.dtype in (torch.int32, torch.int64, torch.bool):
+                        inputs_dict['attention_mask'] = t1
+                
+                pred = model(**inputs_dict)
+            
+            pred_tensor = getattr(pred, 'logits', pred)
+            prediction.append(pred_tensor)
+            
+            if i % getattr(self, '_clear_each', 10) == 0:
+                self._clear_cache()
+                
+        return self._convert_predict(torch.cat(prediction), output_mode)
     
     @property
     def is_quantised(self) -> bool:

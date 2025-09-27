@@ -12,6 +12,8 @@ import torch.nn
 from fedot.api.main import Fedot
 from fedot.core.data.data import InputData, OutputData
 from fedot.core.pipelines.pipeline import Pipeline
+from fedot.core.repository.dataset_types import DataTypesEnum
+
 from pymonad.either import Either
 from pymonad.maybe import Maybe
 from torch import Tensor
@@ -20,7 +22,7 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
+from fedcore.models.network_impl.utils.trainer_factory import create_trainer
 from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constant_repository import (
     FEDOT_API_PARAMS,
@@ -132,7 +134,8 @@ class FedCore(Fedot):
             learning_params = self.manager.learning_config.peft_strategy_params.to_dict()
             learning_params['model'] = predict_data.target
             # scenario where we load pretrain model and use it only for inference
-            self.fedcore_model = BaseNeuralModel(learning_params)
+            task_type = learning_params.get('task_type', 'training')
+            self.fedcore_model = create_trainer(task_type=task_type, params=learning_params, model=learning_params['model'])
             #predict_data = predict_data.features # InputData to CompressionInputData
         predict = self.fedcore_model.predict(predict_data, output_mode)
         return predict
@@ -192,10 +195,36 @@ class FedCore(Fedot):
             the array with prediction values
 
         """
-        self.manager.predicted_labels = Maybe.insert(self._process_input_data(predict_data)). \
+        result = Maybe.insert(self._process_input_data(predict_data)). \
             then(self.__init_fedcore_backend). \
             then(lambda data: self.__abstract_predict(data, output_mode)). \
             maybe(None, lambda output: output)
+        
+        if hasattr(result, 'predictions') and hasattr(result, 'label_ids'):
+            pred_values = torch.tensor(result.predictions)
+            target_values = torch.tensor(result.label_ids) if result.label_ids is not None else None
+            
+            self.manager.predicted_labels = OutputData(
+            idx=torch.arange(len(pred_values)),
+            task=getattr(predict_data, 'task', None),
+            predict=pred_values,
+            target=target_values,
+            data_type=DataTypesEnum.table,
+            )
+            
+        elif isinstance(result, OutputData):
+            self.manager.predicted_labels = result
+        elif hasattr(result, 'predict'):
+            self.manager.predicted_labels = result.predict
+        else:
+            pred_values = torch.tensor(result) if not isinstance(result, torch.Tensor) else result
+            self.manager.predicted_labels = OutputData(
+                idx=torch.arange(len(pred_values)),
+                task=getattr(predict_data, 'task', None),
+                predict=pred_values,
+                target=None,
+                data_type=DataTypesEnum.table,
+            )
 
         return self.manager.predicted_labels
 
@@ -275,10 +304,27 @@ class FedCore(Fedot):
         def preproc_target(target):
             if hasattr(target, 'targets'):
                 target = target.dataset.targets
-            else:
-                iter_object = iter(target.dataset)
-                target = np.array([batch[1] for batch in iter_object])
-            return target
+            # else:
+            #     iter_object = iter(target.dataset)
+            #     target = np.array([batch[1] for batch in iter_object])
+            # return target
+            all_targets = []
+            for batch in target:
+                labels = None
+                if isinstance(batch, dict):
+                    labels = batch.get('labels')
+                    if labels is None:
+                        labels = batch.get('targets')
+                elif isinstance(batch, (list, tuple)) and len(batch) >= 2:
+                    labels = batch[1]
+                elif hasattr(batch, 'labels'):
+                    labels = batch.labels
+                
+                if labels is not None:
+                    all_targets.append(labels.cpu())
+            
+            return torch.cat(all_targets) if all_targets else None         
+        
         if is_inference_metric:
             prediction_dict = dict(model=self.fedcore_model, dataset=target, model_regime=model_regime)
         else:

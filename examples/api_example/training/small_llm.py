@@ -160,31 +160,37 @@ model_arch_config = ModelArchitectureConfigTemplate(
     depth=3
 )
 
-pretrain_config = NeuralModelConfigTemplate(
+pretrain_config = LLMConfigTemplate(
     model_architecture=model_arch_config,
     epochs=15,
     optimizer='adam',
     criterion=LOSS,
+    is_llm=True,
+    model=INITIAL_ASSUMPTION,
+    tokenizer=TOKENIZER,
     custom_learning_params={
-        'model': INITIAL_ASSUMPTION,
-        'tokenizer': TOKENIZER,
-        'is_llm': True,
-        'batch_size': 4
+        'batch_size': 4,
+        'learning_rate': 5e-5,
+        'warmup_steps': 100,
+        'logging_steps': 50,
+        'save_steps': 500
     }
 )
 
-peft_neural_config = NeuralModelConfigTemplate(
+peft_neural_config = LLMConfigTemplate(
     model_architecture=model_arch_config,
     epochs=15,
     optimizer='adam',
     criterion=LOSS,
+    is_llm=True,
+    model=INITIAL_ASSUMPTION,
+    tokenizer=TOKENIZER,
     custom_learning_params={
-        'model': INITIAL_ASSUMPTION,
-        'tokenizer': TOKENIZER,
-        'is_llm': True,
-        'batch_size': 4
+        'batch_size': 4,
+        'learning_rate': 5e-5
     }
 )
+
 
 fedot_config = FedotConfigTemplate(
     problem=PROBLEM,
@@ -221,5 +227,13 @@ if __name__ == "__main__":
     APIConfig = ConfigFactory.from_template(api_template)
     api_config = APIConfig()
     fedcore_compressor = FedCore(api_config)
+    
     fedcore_compressor.fit_no_evo(compression_data)
+    if hasattr(fedcore_compressor, 'fedcore_model'):
+        model_class = fedcore_compressor.fedcore_model.__class__.__name__
+        print(f"Trainer: {model_class}")
+        
+        if hasattr(fedcore_compressor.fedcore_model, 'operation_impl'):
+            trainer_type = type(fedcore_compressor.fedcore_model.operation_impl).__name__
+            print(f"Trainer type: {trainer_type}")
     model_comparison = fedcore_compressor.get_report(compression_data)
