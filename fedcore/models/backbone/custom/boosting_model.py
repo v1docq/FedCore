@@ -89,20 +89,12 @@ class FedcoreGradHessHistory(GradSketch):
         else:
             self._hist_grad, self._hist_hess = None, None
 
-    def _define_approximation_regime(self, tensor):
-        max_num_rows = 10000
-        is_matrix_big = any([tensor.shape[0] > max_num_rows, tensor.shape[1] > max_num_rows])
-        if is_matrix_big:
-            self.approximation = True
-        else:
-            self.approximation = False
-
     def _scheduler(self, counter: int) -> bool:
         if self.history_period <= 0:
             return False
         return (counter % self.history_period) == 0
 
-    def use_historic(self, grad, hess):
+    def perform_historic_approximation(self, grad, hess):
         # if self._hist_grad is not None and self._hist_grad.shape[1] == grad.shape[1]:
         #     grad_tensor = cp.concatenate([self._hist_grad, grad], axis=0)
         # else:
@@ -138,8 +130,6 @@ class FedcoreGradHessHistory(GradSketch):
         return grad_approx, hess_approx
 
     def __call__(self, grad: cp.ndarray, hess: cp.ndarray):
-        self._define_approximation_regime(grad)
         if self._collect_history:
-            return self.use_historic(grad, hess)
-        else:
-            return grad, hess
+            return self.perform_historic_approximation(grad, hess)
+        return grad, hess
