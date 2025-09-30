@@ -7,8 +7,10 @@ Contains TransMLA-specific reassembly logic moved from quantization utils.
 import sys
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Literal
+from enum import Enum
 
+import torch
 import torch.nn as nn
 
 from .core_reassemblers import Reassembler
@@ -168,6 +170,264 @@ class TransMLAConfig:
 
     def to_dict(self):
         return {k: v for k, v in self.__dict__.items()}
+    
+    @classmethod
+    def auto_from_model(cls, 
+                       model: nn.Module,
+                       priority: Literal["quality", "speed", "memory", "balanced"] = "balanced",
+                       compression: Literal["light", "medium", "aggressive"] = "medium",
+                       hardware_budget: Literal["auto", "low", "high"] = "auto",
+                       **kwargs):
+        """
+        Automatically configure TransMLA parameters based on model analysis.
+        
+        This method analyzes the model architecture and available hardware resources
+        to automatically determine optimal TransMLA configuration parameters.
+        
+        Args:
+            model: The transformer model to be converted
+            priority: Optimization priority
+                - "quality": Maximize model quality, slower conversion
+                - "speed": Maximize inference speed, may reduce quality
+                - "memory": Minimize memory usage
+                - "balanced": Balance between quality, speed and memory (default)
+            compression: Compression level
+                - "light": ~20% compression, best quality
+                - "medium": ~50% compression, balanced (default)
+                - "aggressive": ~70% compression, maximum size reduction
+            hardware_budget: Hardware resource assumption
+                - "auto": Automatically detect available resources (default)
+                - "low": Assume limited resources (<8GB GPU memory)
+                - "high": Assume high-end hardware (>24GB GPU memory)
+            **kwargs: Additional parameters to override automatic settings
+            
+        Returns:
+            TransMLAConfig: Automatically configured TransMLA configuration
+            
+        Example:
+            >>> config = TransMLAConfig.auto_from_model(model, priority="quality")
+            >>> config = TransMLAConfig.auto_from_model(model, compression="aggressive")
+        """
+        # Analyze model characteristics
+        model_info = cls._analyze_model(model)
+        hardware_info = cls._analyze_hardware(hardware_budget)
+        
+        # Calculate automatic parameters
+        auto_params = cls._calculate_auto_parameters(
+            model_info, hardware_info, priority, compression
+        )
+        
+        # Override with any user-provided kwargs
+        auto_params.update(kwargs)
+        
+        return cls(**auto_params)
+    
+    @staticmethod
+    def _analyze_model(model: nn.Module) -> dict:
+        """
+        Analyze model architecture and extract relevant characteristics.
+        
+        Args:
+            model: The transformer model to analyze
+            
+        Returns:
+            dict: Model characteristics including size, architecture, dimensions
+        """
+        config = getattr(model, 'config', None)
+        if config is None:
+            raise ValueError("Model must have a config attribute")
+        
+        # Extract basic model information
+        model_info = {
+            'model_type': getattr(config, 'model_type', 'unknown'),
+            'hidden_size': getattr(config, 'hidden_size', 768),
+            'num_attention_heads': getattr(config, 'num_attention_heads', 12),
+            'num_hidden_layers': getattr(config, 'num_hidden_layers', 12),
+            'vocab_size': getattr(config, 'vocab_size', 32000),
+        }
+        
+        # Get num_key_value_heads for GQA models (important for TransMLA!)
+        model_info['num_key_value_heads'] = getattr(
+            config, 'num_key_value_heads', model_info['num_attention_heads']
+        )
+        
+        # Calculate derived characteristics
+        model_info['head_dim'] = model_info['hidden_size'] // model_info['num_attention_heads']
+        model_info['total_params'] = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        
+        # Calculate latent_dim for TransMLA (num_kv_heads * head_dim)
+        model_info['latent_dim'] = model_info['num_key_value_heads'] * model_info['head_dim']
+        
+        # Check if model uses GQA (Grouped Query Attention)
+        model_info['uses_gqa'] = model_info['num_key_value_heads'] < model_info['num_attention_heads']
+        
+        # Determine model size category
+        if model_info['total_params'] < 1e9:
+            model_info['size_category'] = 'small'  # <1B params
+        elif model_info['total_params'] < 10e9:
+            model_info['size_category'] = 'medium'  # 1B-10B params
+        else:
+            model_info['size_category'] = 'large'  # >10B params
+            
+        return model_info
+    
+    @staticmethod
+    def _analyze_hardware(hardware_budget: str) -> dict:
+        """
+        Analyze available hardware resources.
+        
+        Args:
+            hardware_budget: Hardware assumption ("auto", "low", "high")
+            
+        Returns:
+            dict: Hardware characteristics and resource constraints
+        """
+        hardware_info = {
+            'cuda_available': torch.cuda.is_available(),
+            'device_count': torch.cuda.device_count() if torch.cuda.is_available() else 0,
+        }
+        
+        if hardware_budget == "auto" and torch.cuda.is_available():
+            # Auto-detect GPU memory
+            gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+            if gpu_memory_gb < 8:
+                hardware_info['budget'] = 'low'
+            elif gpu_memory_gb > 24:
+                hardware_info['budget'] = 'high'
+            else:
+                hardware_info['budget'] = 'medium'
+            hardware_info['gpu_memory_gb'] = gpu_memory_gb
+        else:
+            hardware_info['budget'] = hardware_budget if hardware_budget != "auto" else 'medium'
+            hardware_info['gpu_memory_gb'] = {
+                'low': 6, 'medium': 16, 'high': 32
+            }.get(hardware_info['budget'], 16)
+        
+        return hardware_info
+    
+    @staticmethod
+    def _calculate_auto_parameters(model_info: dict, hardware_info: dict, 
+                                 priority: str, compression: str) -> dict:
+        """
+        Calculate optimal TransMLA parameters based on model and hardware analysis.
+        
+        Args:
+            model_info: Model characteristics from _analyze_model()
+            hardware_info: Hardware characteristics from _analyze_hardware()
+            priority: Optimization priority
+            compression: Compression level
+            
+        Returns:
+            dict: Calculated TransMLA parameters
+        """
+        params = {}
+        
+        # Base parameters from model architecture
+        hidden_size = model_info['hidden_size']
+        head_dim = model_info['head_dim']
+        num_heads = model_info['num_attention_heads']
+        size_category = model_info['size_category']
+        
+        # Get num_key_value_heads (for GQA models)
+        num_kv_heads = model_info.get('num_key_value_heads', num_heads)
+        
+        # Calculate correct latent_dim for TransMLA
+        # latent_dim = num_key_value_heads * head_dim (per TransMLA implementation)
+        latent_dim = num_kv_heads * head_dim
+        
+        # Calculate qk_mqa_dim based on head_dim
+        # qk_mqa_dim should be a divisor of head_dim for proper collapse calculation
+        # Common values: 32, 64, 128
+        if head_dim >= 128:
+            params['qk_mqa_dim'] = 64  # Standard for larger models
+        elif head_dim >= 64:
+            params['qk_mqa_dim'] = 64  # Match head_dim for Qwen2.5-0.5B
+        else:
+            params['qk_mqa_dim'] = 32  # For very small models
+        
+        # Ensure qk_mqa_dim divides head_dim evenly
+        if head_dim % params['qk_mqa_dim'] != 0:
+            # Find largest divisor <= 64
+            for candidate in [64, 32, 16, 8]:
+                if head_dim % candidate == 0 and candidate <= head_dim:
+                    params['qk_mqa_dim'] = candidate
+                    break
+        
+        # Calculate kv_lora_rank based on compression level
+        # Constraint: kv_lora_rank < 2*latent_dim - qk_mqa_dim
+        max_kv_rank = 2 * latent_dim - params['qk_mqa_dim']
+        
+        compression_factors = {
+            'light': 0.7,      # 70% of max_kv_rank
+            'medium': 0.5,     # 50% of max_kv_rank
+            'aggressive': 0.3  # 30% of max_kv_rank
+        }
+        factor = compression_factors[compression]
+        target_rank = int(max_kv_rank * factor)
+        
+        # Apply reasonable bounds (adaptive minimum based on model size)
+        # For small models (<1B params), allow lower minimum rank for better compression
+        min_rank = 32 if size_category == 'small' else (64 if size_category == 'medium' else 128)
+        params['kv_lora_rank'] = max(min_rank, min(target_rank, 1024))
+        
+        # Ensure constraint is satisfied with safety margin
+        if params['kv_lora_rank'] >= max_kv_rank:
+            params['kv_lora_rank'] = int(max_kv_rank * 0.9)  # 90% of max for safety
+        
+        # Always use auto-detection for freqfold and collapse - they depend on each other
+        params['freqfold'] = "auto"
+        params['collapse'] = "auto"
+        
+        # Calibration parameters based on model size and hardware
+        cal_params = {
+            'small': {'nsamples': 16, 'batch_size': 2, 'seqlen': 128},
+            'medium': {'nsamples': 32, 'batch_size': 2, 'seqlen': 128},
+            'large': {'nsamples': 64, 'batch_size': 2, 'seqlen': 256}
+        }
+        
+        base_cal = cal_params[size_category]
+        
+        # Adjust based on priority
+        if priority == "speed":
+            params['cal_nsamples'] = max(8, base_cal['nsamples'] // 2)
+            params['cal_batch_size'] = min(base_cal['batch_size'] * 2, 8)
+            params['ppl_eval_batch_size'] = 0  # Skip evaluation for speed
+        elif priority == "quality":
+            params['cal_nsamples'] = base_cal['nsamples'] * 2
+            params['cal_batch_size'] = max(base_cal['batch_size'] // 2, 1)
+            params['ppl_eval_batch_size'] = 2
+        else:  # balanced or memory
+            params['cal_nsamples'] = base_cal['nsamples']
+            params['cal_batch_size'] = base_cal['batch_size']
+            params['ppl_eval_batch_size'] = 1 if priority == "balanced" else 0
+        
+        params['cal_max_seqlen'] = base_cal['seqlen']
+        
+        # Adjust batch sizes based on hardware budget
+        if hardware_info['budget'] == 'low':
+            params['cal_batch_size'] = max(params['cal_batch_size'] // 2, 1)
+            params['ppl_eval_batch_size'] = min(params['ppl_eval_batch_size'], 1)
+        elif hardware_info['budget'] == 'high':
+            params['cal_batch_size'] = min(params['cal_batch_size'] * 2, 8)
+        
+        # Memory optimization for memory priority
+        if priority == "memory":
+            params['cal_batch_size'] = 1
+            params['cal_max_seqlen'] = min(params['cal_max_seqlen'], 128)
+            params['dtype'] = "fp16"  # fp16 saves more memory
+        else:
+            params['dtype'] = "auto"
+        
+        # Other parameters
+        params['q_lora_rank'] = None  # Keep disabled by default
+        params['balance_kv_ratio'] = 1.0
+        params['use_qkv_norm'] = False
+        params['cal_dataset'] = "wikitext2"
+        params['deepseek_style'] = True
+        params['device'] = "auto"
+        params['seed'] = 42
+        
+        return params
 
 
 def convert_model_to_mla(model: nn.Module, tokenizer, config: TransMLAConfig):
@@ -250,6 +510,17 @@ class TransMLA(Reassembler):
         for key, value in kwargs.items():
             if hasattr(config, key):
                 setattr(config, key, value)
+        
+        # Handle auto-values
+        if config.dtype == "auto":
+            if torch.cuda.is_available():
+                # Check if bfloat16 is supported
+                if torch.cuda.is_bf16_supported():
+                    config.dtype = "bf16"
+                else:
+                    config.dtype = "fp16"
+            else:
+                config.dtype = "fp32"
         
         # Convert
         model = convert_model_to_mla(model, tokenizer, config)
