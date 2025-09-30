@@ -102,7 +102,7 @@ class FedcoreGradHessHistory(GradSketch):
             return False
         return (counter % self.history_period) == 0
 
-    def approximate(self, grad, hess):
+    def use_historic(self, grad, hess):
         # if self._hist_grad is not None and self._hist_grad.shape[1] == grad.shape[1]:
         #     grad_tensor = cp.concatenate([self._hist_grad, grad], axis=0)
         # else:
