@@ -1,11 +1,3 @@
-"""
-Computational and compression-related metrics.
-
-These metrics are evaluated on model internals (features, attentions, logits)
-or on runtime characteristics (throughput, latency). All inherit from
-`CompressionMetric`, which follows the common metric interface.
-"""
-
 from __future__ import annotations
 from abc import abstractmethod
 from typing import Optional
@@ -15,8 +7,6 @@ from torch import nn
 from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
 from fedot.core.pipelines.pipeline import Pipeline
-from fedot.utilities.custom_errors import AbstractMethodNotImplementError
-
 from fedcore.architecture.computational.devices import default_device
 from fedcore.tools.ruler import PerformanceEvaluator
 
@@ -40,7 +30,7 @@ class CompressionMetric(Metric):
     @abstractmethod
     def metric(**kwargs) -> float:
         """Compute the metric from provided arguments."""
-        raise AbstractMethodNotImplementError
+        pass  # Simply define abstract method without explicit error
 
     def simple_prediction(self, pipeline, reference_data):
         """Convenience wrapper to get pipeline predictions and pass-through data."""

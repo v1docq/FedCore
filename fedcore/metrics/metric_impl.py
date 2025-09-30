@@ -1,11 +1,3 @@
-"""
-Core implementations of regression, classification, and time series metrics.
-
-All metrics inherit from `QualityMetric` base class and provide a unified
-interface: `metric(target, predict) -> float` plus `.get_value(...)` to
-integrate with pipelines.
-"""
-
 from __future__ import annotations
 from typing import Any
 import numpy as np

@@ -1,0 +1,22 @@
+{
+  "model_id": "Qwen/Qwen3-0.6B-Base",
+  "task": "summarization",
+  "dataset": "samsum",
+  "experiment": "LLM-LoRA",
+  "run_name": "qwen0.6b_samsum_fast",
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "epochs": 1,
+  "lr": 0.0002,
+  "batch_size": 2,
+  "grad_accum": 8,
+  "warmup_steps": 100,
+  "eval_steps": 50,
+  "max_input_len": 512,
+  "max_target_len": 128,
+  "train_samples": 2000,
+  "eval_samples": 500,
+  "out_dir": "outputs",
+  "tracking_uri": "file:mlruns"
+}

@@ -1,10 +1,3 @@
-"""
-Public API functions for computing metrics on regression, forecasting,
-classification and computational tasks.
-
-Each function returns a one-row pandas DataFrame with rounded metric values.
-"""
-
 from __future__ import annotations
 import numpy as np
 import pandas as pd
@@ -26,6 +19,15 @@ from fedcore.metrics.metric_impl import (
     mape,
 )
 
+# Define constants for metric names
+METRIC_NAMES = {
+    "r2": r2_score,
+    "mse": mean_squared_error,
+    "rmse": lambda a, b: float(np.sqrt(mean_squared_error(a, b))),
+    "mae": mean_absolute_error,
+    "msle": mean_squared_log_error,
+    "mape": mean_absolute_percentage_error,
+}
 
 def _to_df(values: dict, rounding: int = 3) -> pd.DataFrame:
     """Convert dict of metric values into a one-row DataFrame with rounding."""
@@ -58,16 +60,8 @@ def calculate_regression_metric(
     if "msle" in metric_names and ((target < 0).any() or (predict < 0).any()):
         raise ValueError("MSLE requires non-negative target and prediction.")
 
-    rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
-    metrics = {
-        "r2": r2_score,
-        "mse": mean_squared_error,
-        "rmse": rmse,
-        "mae": mean_absolute_error,
-        "msle": mean_squared_log_error,
-        "mape": mean_absolute_percentage_error,
-    }
-    values = {n: metrics[n](target, predict) for n in metric_names if n in metrics}
+    # Use constants for metric calculation
+    values = {n: METRIC_NAMES[n](target, predict) for n in metric_names if n in METRIC_NAMES}
     return _to_df(values, rounding_order)
 
 
@@ -94,15 +88,7 @@ def calculate_forecasting_metric(
     target = np.asarray(target, dtype=float)
     predict = np.asarray(predict, dtype=float)
 
-    rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
-    metrics = {
-        "rmse": rmse,
-        "mae": mean_absolute_error,
-        "smape": smape,
-        "mase": mase,
-        "mape": mape,
-    }
-    values = {n: metrics[n](target, predict) for n in metric_names if n in metrics}
+    values = {n: METRIC_NAMES[n](target, predict) for n in metric_names if n in METRIC_NAMES}
     return _to_df(values, rounding_order)
 
 
@@ -158,9 +144,7 @@ def calculate_computational_metric(model, dataset, model_regime):
     """
     try:
         from fedcore.metrics.cv_metrics import CV_quality_metric
-    except Exception as e:
-        raise ImportError(
-            "Computational metrics require additional dependencies."
-        ) from e
+    except ImportError as e:
+        raise ImportError("Computational metrics require additional dependencies.") from e
 
     return CV_quality_metric().metric(model, dataset, model_regime)

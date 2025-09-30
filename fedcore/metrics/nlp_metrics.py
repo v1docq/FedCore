@@ -12,9 +12,8 @@ from __future__ import annotations
 from typing import Any, Dict, Sequence
 import importlib
 
-# cache for lazy import
+# Cache for lazy import
 _EVALUATE = None
-
 
 def _get_evaluate():
     """Lazy import of the `evaluate` package."""

@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/%D0%B5/Documents/FedCore/experiments/llm-lora-mlflow/mlruns/397260298375578244/a125c104da8c4818a0fb074a1e939f1c/artifacts
+end_time: 1756211965129
+entry_point_name: ''
+experiment_id: '397260298375578244'
+lifecycle_stage: active
+run_id: a125c104da8c4818a0fb074a1e939f1c
+run_name: qwen0.6b_samsum_gpu
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756211930983
+status: 4
+tags: []
+user_id: е

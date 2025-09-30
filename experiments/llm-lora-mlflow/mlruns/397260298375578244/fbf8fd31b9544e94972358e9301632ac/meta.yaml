@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/%D0%B5/Documents/FedCore/experiments/llm-lora-mlflow/mlruns/397260298375578244/fbf8fd31b9544e94972358e9301632ac/artifacts
+end_time: 1756215406222
+entry_point_name: ''
+experiment_id: '397260298375578244'
+lifecycle_stage: active
+run_id: fbf8fd31b9544e94972358e9301632ac
+run_name: qwen0.6b_samsum_fast
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756215348078
+status: 4
+tags: []
+user_id: е
