@@ -71,6 +71,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
         self._additional_hooks = additional_hooks or []
+        self._clear_each = self.learning_params.get('clear_each', 10)
 
     def _init_custom_criterions(self, custom_criterions: dict):
         for name, coef in custom_criterions.items():

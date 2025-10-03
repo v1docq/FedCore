@@ -284,6 +284,24 @@ class FedCore(Fedot):
             pandas DataFrame with calculated metrics
 
         """
+
+        print("=== EVALUATE METRIC DEBUG ===")
+        print(f"Problem type: {problem}")
+        print(f"Prediction type: {type(prediction)}")
+        
+        if hasattr(prediction, 'predict'):
+            pred_value = prediction.predict
+        else:
+            pred_value = prediction
+            
+        if hasattr(pred_value, 'shape'):
+            print(f"Prediction shape: {pred_value.shape}")
+            print(f"Prediction sample: {pred_value[:2]}")
+        
+        # Проверяем target
+        target_sample = next(iter(target)) if hasattr(target, '__iter__') else target
+        print(f"Target sample type: {type(target_sample)}")
+        print("=============================")
         is_inference_metric = problem.__contains__("computational")
         is_fedcore_model = problem.__contains__('fedcore')
         model_regime = 'model_after' if is_fedcore_model else 'model_before'

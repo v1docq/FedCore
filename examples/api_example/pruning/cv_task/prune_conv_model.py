@@ -1,3 +1,10 @@
+import sys
+import os
+import torch
+
+# Правильный путь с учетом вложенности
+correct_path = "/home/user/projects/FedCore/FedCore"
+sys.path.insert(0, correct_path)
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
@@ -16,7 +23,7 @@ METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'pruning'
-INITIAL_ASSUMPTION = {'path_to_model': 'pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
+INITIAL_ASSUMPTION = {'path_to_model': '/home/user/projects/FedCore/FedCore/examples/api_example/pruning/cv_task/pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
                       'model_type': 'ResNet18'}
 INITIAL_MODEL = 'ResNet18'
 PRETRAIN_SCENARIO = 'from_checkpoint'
@@ -104,6 +111,8 @@ if __name__ == "__main__":
     fedcore_compressor = FedCore(api_config)
     fedcore_train_data, fedcore_test_data = load_benchmark_dataset(DATASET, train_dataloader_params,
                                                                    test_dataloader_params)
-    fedcore_compressor.fit(fedcore_train_data)
+    fitted_model = fedcore_compressor.fit_no_evo(fedcore_train_data)
+    print(f"   Тип: {type(fitted_model)}")
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
+    print(f"Тип model_comparison: {type(model_comparison)}")
     _ = 1
