@@ -2,6 +2,8 @@ import io
 import os
 import uuid
 import torch
+import json
+import yaml
 from datetime import datetime
 from typing import Optional, Dict
 
@@ -27,7 +29,7 @@ class ModelRegistry:
         checkpoint_path - path to saved checkpoint file
         checkpoint_bytes - serialized checkpoint bytes
         metrics - dictionary of metrics
-        note - optional short note
+        pipeline_params - serialized pipeline parameters
     """
 
     _registries: Dict[str, pd.DataFrame] = {}
@@ -42,7 +44,7 @@ class ModelRegistry:
         "checkpoint_path",  
         "checkpoint_bytes",  
         "metrics",  
-        "note",  
+        "pipeline_params",  
     ]
     _default_base_dir = os.environ.get(
         "FEDCORE_MODEL_REGISTRY_PATH",
@@ -71,6 +73,21 @@ class ModelRegistry:
         cls._registries[fedcore_id] = df
 
     @classmethod
+    def _get_pipeline_params_base_dir(cls, fedcore_id: str) -> str:
+        """Get pipeline parameters base directory for specific fedcore_id."""
+        return os.path.join(cls._default_base_dir, "pipeline_params", fedcore_id)
+    
+    @classmethod
+    def _serialize_pipeline_params(cls, params: Dict[str, Any], format: str = 'yaml') -> str:
+        """Serialize pipeline parameters to YAML or JSON string."""
+        if format.lower() == 'yaml':
+            return yaml.dump(params, default_flow_style=False, allow_unicode=True)
+        elif format.lower() == 'json':
+            return json.dumps(params, indent=2, ensure_ascii=False)
+        else:
+            raise ValueError(f"Unsupported format: {format}. Use 'yaml' or 'json'.")
+
+    @classmethod
     def load_registry(cls, fedcore_id: str):
         """Load the registry DataFrame from disk into memory for specific fedcore_id."""
         target_path = cls._get_registry_path(fedcore_id)
@@ -87,6 +104,49 @@ class ModelRegistry:
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         df = cls._get_registry(fedcore_id)
         df.to_pickle(target_path)
+
+    @classmethod
+    def _serialize_pipeline_params(cls, params: Dict[str, Any], format: str = 'yaml') -> str:
+        """Serialize pipeline parameters to YAML or JSON string."""
+        if format.lower() == 'yaml':
+            return yaml.dump(params, default_flow_style=False, allow_unicode=True)
+        elif format.lower() == 'json':
+            return json.dumps(params, indent=2, ensure_ascii=False)
+        else:
+            raise ValueError(f"Unsupported format: {format}. Use 'yaml' or 'json'.")
+
+    @classmethod
+    def _deserialize_pipeline_params(cls, params_str: str, format: str = 'yaml') -> Dict[str, Any]:
+        """Deserialize pipeline parameters from YAML or JSON string."""
+        if not params_str:
+            return {}
+            
+        if format.lower() == 'yaml':
+            return yaml.safe_load(params_str)
+        elif format.lower() == 'json':
+            return json.loads(params_str)
+        else:
+            raise ValueError(f"Unsupported format: {format}. Use 'yaml' or 'json'.")
+
+    @classmethod
+    def _save_pipeline_params_to_file(cls, params: Dict[str, Any], fedcore_id: str, 
+                                    model_id: str, timestamp: str, format: str = 'yaml') -> str:
+        """Save pipeline parameters to file and return the file path."""
+        base_dir = cls._get_pipeline_params_base_dir(fedcore_id)
+        os.makedirs(base_dir, exist_ok=True)
+        
+        safe_model_id = model_id.replace('/', '_').replace('\\', '_')
+        filename = f"{safe_model_id}_{timestamp}.{format}"
+        filepath = os.path.join(base_dir, filename)
+        
+        if format == 'yaml':
+            with open(filepath, 'w', encoding='utf-8') as f:
+                yaml.dump(params, f, default_flow_style=False, allow_unicode=True)
+        elif format == 'json':
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(params, f, indent=2, ensure_ascii=False, ensure_ascii=False)
+        
+        return filepath
 
     @classmethod
     def _generate_model_id(cls, model=None, model_path: Optional[str] = None) -> str:
@@ -140,15 +200,18 @@ class ModelRegistry:
 
     @classmethod
     def register_model(cls, fedcore_id: str, model=None, model_path: str = None, 
-                      metrics: Optional[dict] = None, note: str = "initial") -> str:
+                      pipeline_params: Dict[str, Any] = None,
+                      metrics: Optional[dict] = None, note: str = "initial",
+                      params_format: str = 'yaml') -> str:
         """Register a new model in the specified fedcore registry.
 
         Args:
             fedcore_id: Identifier of the fedcore instance
             model: Model object (optional)
             model_path: Path to model file (optional)
+            pipeline_params: Dictionary of pipeline parameters to save
             metrics: Dictionary of metrics
-            note: Description note
+            params_format: Format for saving pipeline params ('yaml' or 'json')
 
         Returns:
             model_id: Generated model identifier
@@ -160,9 +223,18 @@ class ModelRegistry:
         checkpoint_bytes = cls._serialize_checkpoint_to_bytes(model, model_path)
         
         version = cls._get_next_version(fedcore_id, model_id)
-        checkpoint_path = model_path if (model_path and os.path.isfile(model_path)) else cls._default_checkpoint_path(fedcore_id, model_id, version.replace(':', '-'))
+        safe_timestamp = version.replace(':', '-')
+        checkpoint_path = model_path if (model_path and os.path.isfile(model_path)) else cls._default_checkpoint_path(fedcore_id, model_id, safe_timestamp)
         
         cls._materialize_checkpoint(checkpoint_bytes, checkpoint_path)
+        
+        pipeline_params_str = None
+        pipeline_params_path = None
+        if pipeline_params:
+            pipeline_params_str = cls._serialize_pipeline_params(pipeline_params, params_format)
+            pipeline_params_path = cls._save_pipeline_params_to_file(
+                pipeline_params, fedcore_id, model_id, safe_timestamp, params_format
+            )
         
         record = {
             "record_id": str(uuid.uuid4()),
@@ -174,7 +246,7 @@ class ModelRegistry:
             "checkpoint_path": checkpoint_path,
             "checkpoint_bytes": checkpoint_bytes,
             "metrics": metrics if metrics is not None else {},
-            "note": note,
+            "pipeline_params": pipeline_params_str,
         }
 
         new_df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
@@ -232,29 +304,40 @@ class ModelRegistry:
 
     @classmethod
     def register_changes(cls, fedcore_id: str, model_id: str, model=None,
-                        metrics: Optional[dict] = None, note: str = "update"):
+                        pipeline_params: Dict[str, Any] = None,
+                        metrics: Optional[dict] = None, note: str = "update",
+                        params_format: str = 'yaml'):
         """Register changes to an existing model in the registry.
 
         Args:
             fedcore_id: Identifier of the fedcore instance
             model_id: Existing model identifier
             model: Updated model object
+            pipeline_params: Updated pipeline parameters
             metrics: Updated metrics dictionary
-            note: Description note
+            params_format: Format for saving pipeline params ('yaml' or 'json')
         """
         df = cls._get_registry(fedcore_id)
         
         existing_records = df[df["model_id"] == model_id]
         if existing_records.empty:
-            cls.register_model(fedcore_id, model, None, metrics, note)
+            cls.register_model(fedcore_id, model, None, pipeline_params, metrics, note, params_format)
             return
 
         checkpoint_bytes = cls._serialize_checkpoint_to_bytes(model, None)
         
         version = cls._get_next_version(fedcore_id, model_id)
-        checkpoint_path = cls._default_checkpoint_path(fedcore_id, model_id, version.replace(':', '-'))
+        safe_timestamp = version.replace(':', '-')
+        checkpoint_path = cls._default_checkpoint_path(fedcore_id, model_id, safe_timestamp)
         
         cls._materialize_checkpoint(checkpoint_bytes, checkpoint_path)
+        
+        pipeline_params_str = None
+        if pipeline_params:
+            pipeline_params_str = cls._serialize_pipeline_params(pipeline_params, params_format)
+            cls._save_pipeline_params_to_file(
+                pipeline_params, fedcore_id, model_id, safe_timestamp, params_format
+            )
         
         record = {
             "record_id": str(uuid.uuid4()),
@@ -262,16 +345,26 @@ class ModelRegistry:
             "model_id": model_id,
             "version": version,
             "created_at": datetime.utcnow().isoformat(),
-            "model_path": None,  
+            "model_path": None,  # For updates, we don't have an original path
             "checkpoint_path": checkpoint_path,
             "checkpoint_bytes": checkpoint_bytes,
             "metrics": metrics if metrics is not None else {},
-            "note": note,
+            "pipeline_params": pipeline_params_str,
         }
 
         new_df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
         cls._set_registry(fedcore_id, new_df)
         cls.save_registry(fedcore_id)
+
+    classmethod
+    def get_pipeline_params(cls, fedcore_id: str, model_id: str, version: str = None, 
+                          format: str = 'yaml') -> Optional[Dict[str, Any]]:
+        """Get pipeline parameters for a specific model version."""
+        record = cls.get_record(fedcore_id, model_id, version)
+        if not record or not record.get('pipeline_params'):
+            return None
+            
+        return cls._deserialize_pipeline_params(record['pipeline_params'], format)
 
     @classmethod
     def list_models(cls, fedcore_id: str) -> list:
