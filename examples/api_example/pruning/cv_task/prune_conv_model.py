@@ -1,3 +1,11 @@
+import sys
+import os
+
+correct_path = "/home/user/projects/FedCore/FedCore"
+sys.path.insert(0, correct_path)
+
+print("Обновленный sys.path:")
+print(sys.path[0])
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
@@ -16,7 +24,7 @@ METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'pruning'
-INITIAL_ASSUMPTION = {'path_to_model': 'pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
+INITIAL_ASSUMPTION = {'path_to_model': '/home/user/projects/FedCore/FedCore/examples/api_example/pruning/cv_task/pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
                       'model_type': 'ResNet18'}
 INITIAL_MODEL = 'ResNet18'
 PRETRAIN_SCENARIO = 'from_checkpoint'
@@ -60,7 +68,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=6)
 
-pretrain_config = NeuralModelConfigTemplate(epochs=200,
+pretrain_config = NeuralModelConfigTemplate(epochs=15,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,
@@ -104,6 +112,6 @@ if __name__ == "__main__":
     fedcore_compressor = FedCore(api_config)
     fedcore_train_data, fedcore_test_data = load_benchmark_dataset(DATASET, train_dataloader_params,
                                                                    test_dataloader_params)
-    fedcore_compressor.fit(fedcore_train_data)
+    fedcore_compressor.fit_no_evo(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
     _ = 1

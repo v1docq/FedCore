@@ -97,28 +97,30 @@ class PerformanceEvaluator:
 
         if is_pipeline_class:
             fitted = model.operator.root_node.fitted_operation
-            try:
-                registry = getattr(fitted, '_model_registry', None)
-                model_from_attr = getattr(fitted, self.model_regime, None)
-                if registry and getattr(fitted, '_model_id', None):
-                    # Use latest checkpoint path or in-memory model if needed
-                    latest = ModelRegistry.get_latest_record(fitted._model_id)
-                    if latest and latest.get('checkpoint_path') and hasattr(model_from_attr, 'load_state_dict'):
-                        ckpt = torch.load(latest['checkpoint_path'], map_location=self.device)
-                        if isinstance(ckpt, dict) and 'state_dict' in ckpt:
-                            model_from_attr.load_state_dict(ckpt['state_dict'])
-                        elif isinstance(ckpt, dict):
-                            model_from_attr.load_state_dict(ckpt)
-                    self.model = model_from_attr
-                else:
-                    self.model = model_from_attr
-            except Exception:
-                self.model = getattr(fitted, self.model_regime)
-            try:
-                self.device = getattr(model.operator.root_node.fitted_operation, 'device', default_device())
-                self.cuda_allowed = True if self.device.type == 'cuda' else False
-            except:
-                self.device = self.device
+            model_from_attr = getattr(fitted, self.model_regime, None)
+            
+            if model_from_attr is None:
+                raise ValueError(f"Model regime '{self.model_regime}' not found in fitted operation")
+            
+            fedcore_id = getattr(fitted, '_fedcore_id', None)
+            model_id = getattr(fitted, '_model_id', None)
+            
+            if fedcore_id and model_id:
+                self.model = ModelRegistry.get_model_with_fallback(
+                    fedcore_id=fedcore_id,
+                    model_id=model_id,
+                    fallback_model=model_from_attr,
+                    device=self.device
+                )
+            else:
+                print("No fedcore_id or model_id found, using model from operation attributes")
+                self.model = model_from_attr
+            
+            operation_device = getattr(fitted, 'device', None)
+            if operation_device:
+                self.device = operation_device
+                self.cuda_allowed = (self.device.type == 'cuda')
+                
         elif is_class_container:
             self.model = model.model
         else:

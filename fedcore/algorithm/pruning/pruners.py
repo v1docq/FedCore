@@ -71,6 +71,7 @@ class BasePruner(BaseCompressionModel):
 
         self._hooks = [PruningHooks]
         self._init_empty_object()
+        self._pruning_index = 0
 
     def __repr__(self):
         return self.pruner_name
@@ -106,7 +107,12 @@ class BasePruner(BaseCompressionModel):
         self.model_after = self.model_before
         registry = ModelRegistry().get_instance(model=self.model_before)
         self._model_registry = registry
-        ModelRegistry.register_changes(metrics={"stage": "before_pruning"})
+        self._pruning_index += 1
+        metrics_before = {
+            "stage": f"pruning_{self._pruning_index}",
+            "is_processed": False,
+        }
+        ModelRegistry.register_changes(metrics=metrics_before)
         print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
         print(f' Pruning importance - {self.importance_name} '.center(80, '='))
         print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
@@ -176,7 +182,11 @@ class BasePruner(BaseCompressionModel):
             if finetune:
                 result_model = self.finetune(finetune_object=self.model_after, finetune_data=input_data)
                 # Record post-pruning state in registry
-                ModelRegistry.register_changes(metrics={"stage": "after_pruning"})
+                metrics_after = {
+                    "stage": f"pruning_{self._pruning_index}",
+                    "is_processed": True,
+                }
+                ModelRegistry.register_changes(metrics=metrics_after)
                 return result_model
         except Exception as e:
             traceback.print_exc()

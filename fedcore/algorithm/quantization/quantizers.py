@@ -69,6 +69,7 @@ class BaseQuantizer(BaseCompressionModel):
         # Hooks initialization
         self._hooks = [QuantizationHooks]
         self._init_empty_object()
+        self._quantization_index = 0
 
         print(f"[INIT] quant_type: {self.quant_type}, backend: {self.backend}, device: {self.device}")
         print(f"[INIT] dtype: {self.dtype}, allow_embedding: {self.allow_emb}, allow_convolution: {self.allow_conv}")
@@ -155,7 +156,12 @@ class BaseQuantizer(BaseCompressionModel):
         self.quant_model = self.model_before.eval()
         registry = ModelRegistry().get_instance(model=self.model_before)
         self._model_registry = registry
-        ModelRegistry.register_changes(metrics={"stage": "before_quant"})
+        self._quantization_index += 1
+        metrics_before = {
+            "stage": f"quantization_{self._pruning_index}",
+            "is_processed": False,
+        }
+        ModelRegistry.register_changes(metrics=metrics_before)
         print("[MODEL] Model initialized for quantization (no deepcopy).")
 
     def _prepare_model(self, input_data: InputData):
@@ -218,8 +224,11 @@ class BaseQuantizer(BaseCompressionModel):
             self.model_after = self.quant_model
             if self.quant_type == 'qat':
                 self.model_after._is_quantized = True 
-            ModelRegistry.register_changes(metrics={"stage": "after_quant"})
-
+            metrics_before = {
+                "stage": f"quantization_{self._pruning_index}",
+                "is_processed": False,
+            }
+            ModelRegistry.register_changes(metrics=metrics_before)
         except Exception as e:
             print("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()

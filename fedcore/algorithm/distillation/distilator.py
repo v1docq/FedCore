@@ -31,6 +31,7 @@ class BaseDistilator(BaseCompressionModel):
         self.criterion = params.get("loss", nn.CrossEntropyLoss())
         self.optimizer = params.get("optimizer", optim.Adam)
         self.learning_rate = params.get("lr", 0.001)
+        self._distill_index = 0
 
     def __repr__(self):
         return "Distilation_model"
@@ -161,9 +162,21 @@ class BaseDistilator(BaseCompressionModel):
         self.student_model = self._init_distil_model(self.base_model)
         registry = ModelRegistry().get_instance(model=self.base_model)
         self._model_registry = registry
-        ModelRegistry.register_changes(metrics={"stage": "before_distill"})
+        self._distill_index += 1
+        metrics_before = {
+            "stage": f"distill_{self._distill_index}",
+            "is_processed": False,
+        }
+        ModelRegistry.register_changes(metrics=metrics_before)
+        
         self._fit_distil_model(input_data)
-        ModelRegistry.register_changes(metrics={"stage": "after_distill"})
+        
+        metrics_after = {
+            "stage": f"distill_{self._distill_index}",
+            "is_processed": True,
+        }
+        ModelRegistry.register_changes(metrics=metrics_after)
+        
         self.model.cpu().eval()
 
     def predict_for_fit(

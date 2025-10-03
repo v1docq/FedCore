@@ -3,7 +3,7 @@ import os
 import uuid
 import torch
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict
 
 import pandas as pd
 
@@ -19,18 +19,22 @@ class ModelRegistry:
 
     DataFrame fields:
         record_id - unique id per registry record
-        model_id - logical model identifier (stable across versions)
-        version - monotonically increasing per model_id
+        fedcore_id - identifier of the fedcore instance
+        model_id - logical model identifier (id(model) or hash of model_path)
+        version - timestamp-based version for chronological ordering
         created_at - ISO timestamp
         model_path - optional path used when provided
+        checkpoint_path - path to saved checkpoint file
         checkpoint_bytes - serialized checkpoint bytes
+        metrics - dictionary of metrics
         note - optional short note
     """
 
-    _instance: Optional["ModelRegistry"] = None
+    _registries: Dict[str, pd.DataFrame] = {}
     _df: Optional[pd.DataFrame] = None
     _columns = [
         "record_id",  
+        "fedcore_id",  
         "model_id",  
         "version",  
         "created_at",  
@@ -40,105 +44,129 @@ class ModelRegistry:
         "metrics",  
         "note",  
     ]
-    _default_registry_path = os.environ.get(
+    _default_base_dir = os.environ.get(
         "FEDCORE_MODEL_REGISTRY_PATH",
-        os.path.join("llm_output", "model_registry.pkl"),
+        "llm_output",
     )
 
-    def __init__(self, model=None):
-        self.model = model
-        if ModelRegistry._df is None:
-            ModelRegistry._df = pd.DataFrame(columns=ModelRegistry._columns)
-            try:
-                ModelRegistry.load_registry()
-            except Exception:
-                ModelRegistry._df = pd.DataFrame(columns=ModelRegistry._columns)
-        self._current_model_id: Optional[str] = None
+    @classmethod
+    def _get_registry_path(cls, fedcore_id: str) -> str:
+        return os.path.join(cls._default_base_dir, "registries", f"{fedcore_id}_registry.pkl")
 
-    def get_instance(self, model=None):
-        """Return a process-wide instance, optionally updating attached model."""
-        if ModelRegistry._instance is None:
-            ModelRegistry._instance = ModelRegistry(model=model)
-        else:
-            if model is not None:
-                ModelRegistry._instance.model = model
-        return ModelRegistry._instance
+    @classmethod
+    def _get_checkpoint_base_dir(cls, fedcore_id: str) -> str:
+        """Get checkpoint base directory for specific fedcore_id."""
+        return os.path.join(cls._default_base_dir, "checkpoints", fedcore_id)
+    
+    @classmethod
+    def _get_registry(cls, fedcore_id: str) -> pd.DataFrame:
+        """Get or load registry for specific fedcore_id."""
+        if fedcore_id not in cls._registries:
+            cls.load_registry(fedcore_id)
+        return cls._registries[fedcore_id]
 
-    @staticmethod
-    def save_registry():
-        """Persist the in-memory registry DataFrame to disk (pickle).
+    @classmethod
+    def _set_registry(cls, fedcore_id: str, df: pd.DataFrame):
+        """Set registry for specific fedcore_id."""
+        cls._registries[fedcore_id] = df
 
-        Uses FEDCORE_MODEL_REGISTRY_PATH or defaults to llm_output/model_registry.pkl
-        """
-        target_path = ModelRegistry._default_registry_path
-        os.makedirs(os.path.dirname(target_path), exist_ok=True)
-        if ModelRegistry._df is None:
-            ModelRegistry._df = pd.DataFrame(columns=ModelRegistry._columns)
-        ModelRegistry._df.to_pickle(target_path)
-
-    @staticmethod
-    def load_registry():
-        """Load the registry DataFrame from disk into memory if file exists."""
-        target_path = ModelRegistry._default_registry_path
+    @classmethod
+    def load_registry(cls, fedcore_id: str):
+        """Load the registry DataFrame from disk into memory for specific fedcore_id."""
+        target_path = cls._get_registry_path(fedcore_id)
         if os.path.isfile(target_path):
-            ModelRegistry._df = pd.read_pickle(target_path)
+            df = pd.read_pickle(target_path)
+            cls._set_registry(fedcore_id, df)
         else:
-            ModelRegistry._df = pd.DataFrame(columns=ModelRegistry._columns)
+            cls._set_registry(fedcore_id, pd.DataFrame(columns=cls._columns))
 
-    def _serialize_checkpoint_to_bytes(self, model_path: Optional[str]) -> Optional[bytes]:
-        """Serialize checkpoint either from a file path or from the attached model."""
+    @classmethod
+    def save_registry(cls, fedcore_id: str):
+        """Persist the in-memory registry DataFrame to disk for specific fedcore_id."""
+        target_path = cls._get_registry_path(fedcore_id)
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        df = cls._get_registry(fedcore_id)
+        df.to_pickle(target_path)
+
+    @classmethod
+    def _generate_model_id(cls, model=None, model_path: Optional[str] = None) -> str:
+        """Generate model_id from model object or model path."""
+        if model is not None:
+            return f"model_{id(model)}"
+        elif model_path is not None:
+            import hashlib
+            return f"path_{hashlib.md5(model_path.encode()).hexdigest()[:16]}"
+        else:
+            return str(uuid.uuid4())
+        
+    @classmethod
+    def _serialize_checkpoint_to_bytes(cls, model=None, model_path: Optional[str] = None) -> Optional[bytes]:
+        """Serialize checkpoint either from a file path or from the model object."""
         if model_path and os.path.isfile(model_path):
             with open(model_path, "rb") as f:
                 return f.read()
 
-        if self.model is not None:
+        if model is not None:
             buffer = io.BytesIO()
-            if hasattr(self.model, "state_dict"):
-                torch.save(self.model.state_dict(), buffer)
+            if hasattr(model, "state_dict"):
+                torch.save(model.state_dict(), buffer)
             else:
-                torch.save(self.model, buffer)
+                torch.save(model, buffer)
             return buffer.getvalue()
 
         return None
 
-    def _default_checkpoint_path(self, model_id: str, version: int) -> str:
-        base_dir = os.environ.get(
-            "FEDCORE_CHECKPOINT_DIR",
-            os.path.join("llm_output", "checkpoints"),
-        )
+    @classmethod
+    def _default_checkpoint_path(cls, fedcore_id: str, model_id: str, timestamp: str) -> str:
+        """Generate checkpoint path with timestamp for uniqueness."""
+        base_dir = cls._get_checkpoint_base_dir(fedcore_id)
         os.makedirs(base_dir, exist_ok=True)
-        return os.path.join(base_dir, f"{model_id}_v{version}.pt")
+        safe_model_id = model_id.replace('/', '_').replace('\\', '_')
+        return os.path.join(base_dir, f"{safe_model_id}_{timestamp}.pt")
 
-    def _materialize_checkpoint(self, checkpoint_bytes: Optional[bytes], target_path: str) -> None:
+    @classmethod
+    def _materialize_checkpoint(cls, checkpoint_bytes: Optional[bytes], target_path: str) -> None:
+        """Save checkpoint bytes to file."""
         if checkpoint_bytes is None:
             return
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         with open(target_path, "wb") as f:
             f.write(checkpoint_bytes)
 
-    def _next_version_for(self, model_id: str) -> int:
-        """Compute next version number for given model_id based on existing rows."""
-        if ModelRegistry._df is None or ModelRegistry._df.empty:
-            return 1
-        rows = ModelRegistry._df[ModelRegistry._df["model_id"] == model_id]
-        if rows.empty:
-            return 1
-        return int(rows["version"].max()) + 1
+    @classmethod
+    def _get_next_version(cls, fedcore_id: str, model_id: str) -> str:
+        """Generate timestamp-based version for chronological ordering."""
+        return datetime.utcnow().isoformat()
 
-    def register_model(self, model_path: str = None, metrics: Optional[dict] = None, note: str = "initial"):
-        """Register a new logical model and its initial checkpoint.
+    @classmethod
+    def register_model(cls, fedcore_id: str, model=None, model_path: str = None, 
+                      metrics: Optional[dict] = None, note: str = "initial") -> str:
+        """Register a new model in the specified fedcore registry.
 
-        Returns the newly created model_id.
+        Args:
+            fedcore_id: Identifier of the fedcore instance
+            model: Model object (optional)
+            model_path: Path to model file (optional)
+            metrics: Dictionary of metrics
+            note: Description note
+
+        Returns:
+            model_id: Generated model identifier
         """
-        model_id = str(uuid.uuid4())
-        self._current_model_id = model_id
-
-        checkpoint_bytes = self._serialize_checkpoint_to_bytes(model_path)
-        version = 1
-        checkpoint_path = model_path if (model_path and os.path.isfile(model_path)) else self._default_checkpoint_path(model_id, version)
-        self._materialize_checkpoint(checkpoint_bytes, checkpoint_path)
+        model_id = cls._generate_model_id(model, model_path)
+        
+        df = cls._get_registry(fedcore_id)
+        
+        checkpoint_bytes = cls._serialize_checkpoint_to_bytes(model, model_path)
+        
+        version = cls._get_next_version(fedcore_id, model_id)
+        checkpoint_path = model_path if (model_path and os.path.isfile(model_path)) else cls._default_checkpoint_path(fedcore_id, model_id, version.replace(':', '-'))
+        
+        cls._materialize_checkpoint(checkpoint_bytes, checkpoint_path)
+        
         record = {
             "record_id": str(uuid.uuid4()),
+            "fedcore_id": fedcore_id,
             "model_id": model_id,
             "version": version,
             "created_at": datetime.utcnow().isoformat(),
@@ -149,90 +177,141 @@ class ModelRegistry:
             "note": note,
         }
 
-        ModelRegistry._df = pd.concat(
-            [ModelRegistry._df, pd.DataFrame([record])], ignore_index=True
-        )
+        new_df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
+        cls._set_registry(fedcore_id, new_df)
+        cls.save_registry(fedcore_id)
+        
+        return model_id
 
-        ModelRegistry.save_registry()
-
-    @staticmethod
-    def update_metrics(model_id: str, metrics: dict, version: Optional[int] = None) -> None:
-        if ModelRegistry._df is None or ModelRegistry._df.empty:
-            return
-        df = ModelRegistry._df
-        rows = df[df["model_id"] == model_id]
-        if rows.empty:
-            return
-        if version is None:
-            version = int(rows["version"].max())
-        mask = (df["model_id"] == model_id) & (df["version"] == version)
-        if not mask.any():
-            return
-        current_metrics = df.loc[mask, "metrics"].iloc[0]
-        if not isinstance(current_metrics, dict):
-            current_metrics = {}
-        new_metrics = dict(current_metrics)
-        new_metrics.update(metrics)
-        ModelRegistry._df.loc[mask, "metrics"] = [new_metrics]
-        ModelRegistry.save_registry()
-
-    @staticmethod
-    def get_latest_record(model_id: str) -> Optional[dict]:
-        if ModelRegistry._df is None or ModelRegistry._df.empty:
+    @classmethod
+    def get_latest_record(cls, fedcore_id: str, model_id: str) -> Optional[dict]:
+        """Get the latest record for a specific model in fedcore registry."""
+        df = cls._get_registry(fedcore_id)
+        if df.empty:
             return None
-        rows = ModelRegistry._df[ModelRegistry._df["model_id"] == model_id]
-        if rows.empty:
+        
+        records = df[df["model_id"] == model_id]
+        if records.empty:
             return None
-        latest = rows.sort_values("version", ascending=False).iloc[0]
+            
+        latest = records.sort_values("version", ascending=False).iloc[0]
         return latest.to_dict()
+    
+    @classmethod
+    def get_model_history(cls, fedcore_id: str, model_id: str) -> pd.DataFrame:
+        """Get complete history of a model in chronological order."""
+        df = cls._get_registry(fedcore_id)
+        if df.empty:
+            return pd.DataFrame(columns=cls._columns)
+            
+        history = df[df["model_id"] == model_id].sort_values("version")
+        return history
 
-    @staticmethod
-    def get_best_checkpoint(metric_name: str, mode: str = "max") -> Optional[dict]:
-        if ModelRegistry._df is None or ModelRegistry._df.empty:
+    @classmethod
+    def get_best_checkpoint(cls, fedcore_id: str, metric_name: str, mode: str = "max") -> Optional[dict]:
+        """Get the best checkpoint based on a specific metric."""
+        df = cls._get_registry(fedcore_id)
+        if df.empty:
             return None
+            
         def extract_metric(row):
             m = row.get("metrics", {})
             return m.get(metric_name, None) if isinstance(m, dict) else None
-        df = ModelRegistry._df.copy()
-        df["_metric_val"] = df.apply(lambda r: extract_metric(r), axis=1)
-        df = df[df["_metric_val"].notnull()]
-        if df.empty:
+            
+        df_copy = df.copy()
+        df_copy["_metric_val"] = df_copy.apply(lambda r: extract_metric(r), axis=1)
+        df_copy = df_copy[df_copy["_metric_val"].notnull()]
+        
+        if df_copy.empty:
             return None
-        ascending = True if mode == "min" else False
-        best = df.sort_values(["_metric_val", "version"], ascending=[ascending, False]).iloc[0]
+            
+        ascending = (mode == "min")
+        best = df_copy.sort_values(["_metric_val", "version"], ascending=[ascending, False]).iloc[0]
         result = best.drop(labels=["_metric_val"]).to_dict()
         return result
 
-    def register_changes(metrics: Optional[dict] = None, note: str = "update"):
-        """Append a new checkpoint version for the last registered model.
+    @classmethod
+    def register_changes(cls, fedcore_id: str, model_id: str, model=None,
+                        metrics: Optional[dict] = None, note: str = "update"):
+        """Register changes to an existing model in the registry.
 
-        Uses the instance's currently attached model (or a previously provided path)
-        to capture the latest weights. If no model has been registered yet, the call
-        is a no-op.
+        Args:
+            fedcore_id: Identifier of the fedcore instance
+            model_id: Existing model identifier
+            model: Updated model object
+            metrics: Updated metrics dictionary
+            note: Description note
         """
-        instance = ModelRegistry._instance
-        if instance is None or instance._current_model_id is None:
+        df = cls._get_registry(fedcore_id)
+        
+        existing_records = df[df["model_id"] == model_id]
+        if existing_records.empty:
+            cls.register_model(fedcore_id, model, None, metrics, note)
             return
 
-        model_id = instance._current_model_id
-        checkpoint_bytes = instance._serialize_checkpoint_to_bytes(model_path=None)
-        version = instance._next_version_for(model_id)
-        checkpoint_path = instance._default_checkpoint_path(model_id, version)
-        instance._materialize_checkpoint(checkpoint_bytes, checkpoint_path)
+        checkpoint_bytes = cls._serialize_checkpoint_to_bytes(model, None)
+        
+        version = cls._get_next_version(fedcore_id, model_id)
+        checkpoint_path = cls._default_checkpoint_path(fedcore_id, model_id, version.replace(':', '-'))
+        
+        cls._materialize_checkpoint(checkpoint_bytes, checkpoint_path)
+        
         record = {
             "record_id": str(uuid.uuid4()),
+            "fedcore_id": fedcore_id,
             "model_id": model_id,
             "version": version,
             "created_at": datetime.utcnow().isoformat(),
-            "model_path": None,
+            "model_path": None,  
             "checkpoint_path": checkpoint_path,
             "checkpoint_bytes": checkpoint_bytes,
             "metrics": metrics if metrics is not None else {},
             "note": note,
         }
 
-        ModelRegistry._df = pd.concat(
-            [ModelRegistry._df, pd.DataFrame([record])], ignore_index=True
-        )
+        new_df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
+        cls._set_registry(fedcore_id, new_df)
+        cls.save_registry(fedcore_id)
 
-        ModelRegistry.save_registry()
+    @classmethod
+    def list_models(cls, fedcore_id: str) -> list:
+        """List all unique model_ids in the registry."""
+        df = cls._get_registry(fedcore_id)
+        if df.empty:
+            return []
+        return df["model_id"].unique().tolist()
+    
+    @classmethod
+    def load_model_from_latest_checkpoint(cls, fedcore_id: str, model_id: str, 
+                                        device: torch.device = None) -> Optional[torch.nn.Module]:
+        """Load model from the latest checkpoint in registry."""
+        latest = cls.get_latest_record(fedcore_id, model_id)
+        if not latest or not latest.get('checkpoint_path'):
+            return None
+            
+        checkpoint_path = latest['checkpoint_path']
+        
+        if not os.path.exists(checkpoint_path):
+            print(f"Checkpoint file not found: {checkpoint_path}")
+            return None
+            
+        ckpt = torch.load(checkpoint_path, map_location=device)
+        
+        if 'model' in ckpt and isinstance(ckpt['model'], torch.nn.Module):
+            return ckpt['model']
+        elif 'state_dict' in ckpt:
+            print(f"Warning: Only state_dict found in {checkpoint_path}. Need model architecture to load.")
+            return ckpt
+        else:
+            print(f"Warning: Unknown checkpoint format in {checkpoint_path}")
+            return ckpt
+
+    @classmethod
+    def get_model_with_fallback(cls, fedcore_id: str, model_id: str, 
+                              fallback_model: torch.nn.Module,
+                              device: torch.device = None) -> torch.nn.Module:
+        loaded_model = cls.load_model_from_latest_checkpoint(fedcore_id, model_id, device)
+        if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
+            return loaded_model
+        else:
+            return fallback_model

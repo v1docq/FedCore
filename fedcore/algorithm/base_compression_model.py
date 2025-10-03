@@ -45,6 +45,7 @@ class BaseCompressionModel:
         self.model_for_inference = None
         # self.optimizer = None
         self.params = params
+        self._fedcore_id = params.get("fedcore_id")
 
     def _save_and_clear_cache(self):
         try:
@@ -72,14 +73,14 @@ class BaseCompressionModel:
         model = input_data.target
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
-            try:
-                loaded = torch.load(model, map_location=torch.device("cpu"))
-                if isinstance(loaded, dict) and "model" in loaded:
-                    model = loaded["model"]
-                else:
-                    model = loaded
-            except Exception as _e:
-                raise RuntimeError(f"Failed to load model from path: {model}")
+            loaded = torch.load(model, map_location=torch.device("cpu"))
+            if isinstance(loaded, dict) and "model" in loaded:
+                model = loaded["model"]
+            else:
+                model = loaded
+        
+        if not isinstance(model, torch.nn.Module):
+            raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
 
         self.model_before = model
         is_forecaster = input_data.task.task_type.value.__contains__('forecasting')
@@ -95,11 +96,18 @@ class BaseCompressionModel:
         # If a string path was provided originally, persist that; otherwise serialize current model
         orig_target = input_data.target
         if isinstance(orig_target, str):
-            registry.register_model(model_path=orig_target, metrics={})
+            self._model_id = ModelRegistry.register_model(
+                fedcore_id=self._fedcore_id,
+                model_path=orig_target,
+                metrics={}
+            )
         else:
-            registry.register_model(model_path=None, metrics={})
-        self._model_registry = registry
-        self._model_id = registry._current_model_id
+            self._model_id = ModelRegistry.register_model(
+                fedcore_id=self._fedcore_id,
+                model=model,
+                metrics={}
+            )
+
         return model
 
     def _fit_model(self, ts: CompressionInputData, split_data: bool = False):
@@ -171,9 +179,16 @@ class BaseCompressionModel:
         # in future we don't want to store both models simult.
         # base_macs, base_nparams = tp.utils.count_ops_and_params(model_before, example_batch)
         
-        if hasattr(model_before, 'config') and hasattr(model_before.config, 'model_type'):
-            base_nparams = sum(p.numel() for p in model_before.parameters())
-            nparams = sum(p.numel() for p in model_after.parameters())
+        is_huggingface = (
+            hasattr(model_before, 'config') and 
+            hasattr(model_before.config, 'model_type') and
+            hasattr(model_before, 'base_model')  
+        )
+        
+        if is_huggingface:
+            base_nparams = model_before.num_parameters()  
+            nparams = model_after.num_parameters()
+            
             base_macs, macs = 0, 0  
         else:
             base_info = summary(model=model_before, input_data=example_batch.to(extract_device(model_before)), verbose=0)
@@ -181,12 +196,7 @@ class BaseCompressionModel:
 
             info = summary(model=model_after, input_data=example_batch.to(extract_device(model_after)), verbose=0)
             macs, nparams = info.total_mult_adds, info.total_params
-
-        print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))
-        return dict(params_before=base_nparams, macs_before=base_macs,
-                    params_after=nparams, macs_after=macs)
-    
+        
     # don't del its for New Year
     def _estimate_params(self, model, example_batch):
         base_macs, base_nparams = tp.utils.count_ops_and_params(model, example_batch)
