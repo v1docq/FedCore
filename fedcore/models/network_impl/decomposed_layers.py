@@ -257,12 +257,19 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return W
     
     def _forward1(self, x):
-        return torch.nn.functional.conv2d(x, self.U, self.bias, 
-            self.stride, self.padding, self.dilation, self.groups)
+        if self.bias is not None:
+            return torch.nn.functional.conv2d(x, self.U, self.bias, 
+                self.stride, self.padding, self.dilation, self.groups)
+        else:
+            return torch.nn.functional.conv2d(x, self.U, None,
+                self.stride, self.padding, self.dilation, self.groups)
     
     def _forward2(self, x):
         x = conv2d(input=x, weight=self.Vh, groups=self.groups, **self.decomposing['Vh'])
-        x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+        if self.bias is not None:
+            x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+        else:
+            x = conv2d(input=x, weight=self.U, bias=None, **self.decomposing['U'])
         return x
     
     def _forward3(self, x):
@@ -272,9 +279,14 @@ class DecomposedConv2d(Conv2d, IDecomposed):
             groups=self.groups,
             **self.decomposing["Vh"],
         )
-        x = conv2d(
-            input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"],             
-        )
+        if self.bias is not None:
+            x = conv2d(
+                input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"],             
+            )
+        else:
+            x = conv2d(
+                input=x, weight=self.S * self.U, bias=None, **self.decomposing["U"],             
+            )
         return x
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -362,7 +374,7 @@ class DecomposedLinear(nn.Linear, IDecomposed):
             dtype=dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        assert self.bias is not None
+        # assert self.bias is not None
         IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode)
 
     def decompose(self) -> None:
@@ -371,12 +383,18 @@ class DecomposedLinear(nn.Linear, IDecomposed):
     
     def _forward2(self, x):
         x = linear(x, self.Vh)
-        x = linear(x, self.U, self.bias)
+        if self.bias is not None:
+            x = linear(x, self.U, self.bias)
+        else:
+            x = linear(x, self.U)
         return x 
     
     def _forward3(self, x):
         x = linear(x, self.Vh)
-        x = linear(x, (self.U * self.S), self.bias)
+        if self.bias is not None:
+            x = linear(x, (self.U * self.S), self.bias)
+        else:
+            x = linear(x, (self.U * self.S))
         return x 
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -384,7 +402,10 @@ class DecomposedLinear(nn.Linear, IDecomposed):
         return x
     
     def _forward1(self, x):
-        return torch.nn.functional.linear(x, self.U, self.bias)
+        if self.bias is not None:
+            return torch.nn.functional.linear(x, self.U, self.bias)
+        else:
+            return torch.nn.functional.linear(x, self.U)
     
 
 class DecomposedEmbedding(nn.Embedding, IDecomposed):
