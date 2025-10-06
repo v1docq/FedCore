@@ -5,7 +5,7 @@ import torch
 import json
 import yaml
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 import pandas as pd
 
@@ -144,7 +144,7 @@ class ModelRegistry:
                 yaml.dump(params, f, default_flow_style=False, allow_unicode=True)
         elif format == 'json':
             with open(filepath, 'w', encoding='utf-8') as f:
-                json.dump(params, f, indent=2, ensure_ascii=False, ensure_ascii=False)
+                json.dump(params, f, indent=2, ensure_ascii=False)
         
         return filepath
 
