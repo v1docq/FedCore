@@ -356,11 +356,11 @@ class ModelRegistry:
         cls._set_registry(fedcore_id, new_df)
         cls.save_registry(fedcore_id)
 
-    classmethod
+    @classmethod
     def get_pipeline_params(cls, fedcore_id: str, model_id: str, version: str = None, 
                           format: str = 'yaml') -> Optional[Dict[str, Any]]:
         """Get pipeline parameters for a specific model version."""
-        record = cls.get_record(fedcore_id, model_id, version)
+        record = cls.get_latest_record(fedcore_id, model_id, version)
         if not record or not record.get('pipeline_params'):
             return None
             
