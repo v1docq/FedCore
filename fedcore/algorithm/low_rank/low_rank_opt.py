@@ -32,6 +32,20 @@ class LowRankModel(BaseCompressionModel):
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
         self.device = default_device()
+        
+        self.decomposer_params = self._extract_decomposer_params(params)
+    
+    def _extract_decomposer_params(self, params: OperationParameters) -> dict:
+        """Extract decomposer parameters from operation parameters.
+        
+        Args:
+            params: Operation parameters from config
+            
+        Returns:
+            dict: Parameters for tdecomp decomposer (rank, distortion_factor, etc.)
+        """
+        decomposer_keys = {'rank', 'distortion_factor', 'random_init', 'power'}
+        return {k: params.get(k) for k in decomposer_keys if params.get(k) is not None}
 
     def _get_example_input(self, input_data):
         """Override to handle tuples/lists with 2 or 3 elements (for LLM data).
@@ -52,7 +66,8 @@ class LowRankModel(BaseCompressionModel):
     def _init_model(self, input_data):
         model = super()._init_model(input_data, self._additional_hooks)
         decompose_module(
-            model, self.decomposing_mode, self.decomposer, self.compose_mode
+            model, self.decomposing_mode, self.decomposer, self.compose_mode,
+            self.decomposer_params
         )
         return model
 
@@ -92,5 +107,6 @@ class LowRankModel(BaseCompressionModel):
             state_dict_path=state_dict_path,
             decomposing_mode=self.decomposing_mode,
             compose_mode=self.compose_mode,
+            decomposer_params=self.decomposer_params,
         )
         model.to(self.device)

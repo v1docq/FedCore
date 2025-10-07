@@ -14,8 +14,9 @@ from pathlib import Path
 import torch
 from tqdm import tqdm
 
-from fedot.core.operations.operation_parameters import OperationParameters
+from tdecomp.grad_proj.tensorgrad.prepared_tg import ULTG, ParallelTG
 
+from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
 
@@ -394,6 +395,8 @@ class Optimizers(Enum):
     rmsprop = torch.optim.RMSprop
     sgd = torch.optim.SGD
     adadelta = torch.optim.Adadelta
+    ultg = ULTG
+    paralleltg = ParallelTG
 
 
 class Schedulers(Enum):

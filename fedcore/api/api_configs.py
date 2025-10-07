@@ -294,6 +294,12 @@ class LowRankTemplate(NeuralModelConfigTemplate):
     custom_criterions: dict = None  # {'norm_loss':{...},
     non_adaptive_threshold: float = .5
     finetune_params: NeuralModelConfigTemplate = None
+    # Decomposition parameters (tdecomp API)
+    decomposer: Literal['svd', 'rsvd', 'two_sided', 'cur'] = 'svd'
+    rank: Optional[Union[int, float]] = None  # Initial rank for decomposition (None = auto-estimate)
+    distortion_factor: float = 0.6  # For stable rank estimation (0 < distortion_factor <= 1)
+    random_init: Literal['normal', 'ortho', 'lean_walsh'] = 'normal'  # Random initialization for randomized methods
+    power: int = 3  # Power parameter for RandomizedSVD
 
 
 @dataclass

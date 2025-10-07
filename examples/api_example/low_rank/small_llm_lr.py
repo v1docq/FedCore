@@ -173,7 +173,7 @@ model_arch_config = ModelArchitectureConfigTemplate(
 pretrain_config = LLMConfigTemplate(
     model_architecture=model_arch_config,
     epochs=5,  
-    optimizer='adam',
+    optimizer='ultg',
     criterion=LOSS,
     is_llm=True,
     model=INITIAL_ASSUMPTION,
@@ -190,7 +190,7 @@ pretrain_config = LLMConfigTemplate(
 finetune_config = LLMConfigTemplate(
     model_architecture=model_arch_config,
     epochs=2,
-    optimizer='adam',
+    optimizer='ultg',
     criterion=LOSS,
     is_llm=True,
     model=INITIAL_ASSUMPTION,
@@ -212,11 +212,11 @@ peft_config = LowRankTemplate(
     eval_each=1,
     criterion=LOSS,
     model_architecture=model_arch_config,
-    custom_learning_params={
-        'skip_layers_without_bias': True,  
-        'apply_to_linear_only': True,     
-        'min_parameters_for_decomposition': 1000, 
-    }
+    decomposer='rsvd', 
+    rank=None,  
+    distortion_factor=0.6, 
+    random_init='normal',  
+    power=3,  
 )
 
 fedot_config = FedotConfigTemplate(
