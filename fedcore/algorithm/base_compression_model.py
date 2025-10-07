@@ -73,7 +73,8 @@ class BaseCompressionModel:
         model = input_data.target
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
-            loaded = torch.load(model, map_location=torch.device("cpu"))
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            loaded = torch.load(model, map_location=device)
             if isinstance(loaded, dict) and "model" in loaded:
                 model = loaded["model"]
             else:
@@ -196,6 +197,9 @@ class BaseCompressionModel:
 
             info = summary(model=model_after, input_data=example_batch.to(extract_device(model_after)), verbose=0)
             macs, nparams = info.total_mult_adds, info.total_params
+        
+        return dict(params_before=base_nparams, macs_before=base_macs,
+                    params_after=nparams, macs_after=macs)
         
     # don't del its for New Year
     def _estimate_params(self, model, example_batch):
