@@ -13,10 +13,10 @@ import pandas as pd
 
 class ModelRegistry:
     """
-    In-memory model registry.
+    In-memory model registry with Singleton pattern.
 
     - Stores checkpoints directly inside the DataFrame as bytes (not in a DB).
-    - Provides simple singleton-style access.
+    - Implements proper singleton pattern to ensure only one instance exists.
     - Persists the registry to disk via pickle by default (optional).
 
     DataFrame fields:
@@ -32,6 +32,9 @@ class ModelRegistry:
         pipeline_params - serialized pipeline parameters
     """
 
+    _instance = None
+    _initialized = False
+    
     _registries: Dict[str, pd.DataFrame] = {}
     _df: Optional[pd.DataFrame] = None
     _columns = [
@@ -50,6 +53,17 @@ class ModelRegistry:
         "FEDCORE_MODEL_REGISTRY_PATH",
         "llm_output",
     )
+
+    def __new__(cls):
+        """Ensure only one instance of ModelRegistry exists."""
+        if cls._instance is None:
+            cls._instance = super(ModelRegistry, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        """Initialize the registry only once."""
+        if not ModelRegistry._initialized:
+            ModelRegistry._initialized = True
 
     @classmethod
     def _get_registry_path(cls, fedcore_id: str) -> str:
@@ -104,16 +118,6 @@ class ModelRegistry:
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         df = cls._get_registry(fedcore_id)
         df.to_pickle(target_path)
-
-    @classmethod
-    def _serialize_pipeline_params(cls, params: Dict[str, Any], format: str = 'yaml') -> str:
-        """Serialize pipeline parameters to YAML or JSON string."""
-        if format.lower() == 'yaml':
-            return yaml.dump(params, default_flow_style=False, allow_unicode=True)
-        elif format.lower() == 'json':
-            return json.dumps(params, indent=2, ensure_ascii=False)
-        else:
-            raise ValueError(f"Unsupported format: {format}. Use 'yaml' or 'json'.")
 
     @classmethod
     def _deserialize_pipeline_params(cls, params_str: str, format: str = 'yaml') -> Dict[str, Any]:
@@ -360,7 +364,7 @@ class ModelRegistry:
     def get_pipeline_params(cls, fedcore_id: str, model_id: str, version: str = None, 
                           format: str = 'yaml') -> Optional[Dict[str, Any]]:
         """Get pipeline parameters for a specific model version."""
-        record = cls.get_latest_record(fedcore_id, model_id, version)
+        record = cls.get_latest_record(fedcore_id, model_id)
         if not record or not record.get('pipeline_params'):
             return None
             
