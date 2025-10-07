@@ -402,24 +402,25 @@ class FedCore(Fedot):
             framework_config: dict = None,
             supplementary_data: dict = None,
     ):
-        if self.framework_config is None and framework_config is None:
-            return self.logger.info(
-                "You must specify configuration for model convertation"
-            )
-        else:
-            if framework == "ONNX":
-                example_input = next(iter(self.train_data.features.val_dataloader))[
-                    0
-                ][0]
-                self.framework_config["example_inputs"] = torch.unsqueeze(
-                    example_input, dim=0
-                )
-                onnx_config = Torch2ONNXConfig(**self.framework_config)
-                supplementary_data["model_to_export"].export(
-                    "converted-model.onnx", onnx_config
-                )
-                converted_model = ONNXInferenceModel("converted-model.onnx")
-        return converted_model
+        # if self.framework_config is None and framework_config is None:
+        #     return self.logger.info(
+        #         "You must specify configuration for model convertation"
+        #     )
+        # else:
+        #     if framework == "ONNX":
+        #         example_input = next(iter(self.train_data.features.val_dataloader))[
+        #             0
+        #         ][0]
+        #         self.framework_config["example_inputs"] = torch.unsqueeze(
+        #             example_input, dim=0
+        #         )
+        #         onnx_config = Torch2ONNXConfig(**self.framework_config)
+        #         supplementary_data["model_to_export"].export(
+        #             "converted-model.onnx", onnx_config
+        #         )
+        #         converted_model = ONNXInferenceModel("converted-model.onnx")
+        # return converted_model
+        pass
 
     def shutdown(self):
         """Shutdown Dask client"""

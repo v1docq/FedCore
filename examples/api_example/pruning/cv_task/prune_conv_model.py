@@ -1,12 +1,3 @@
-import sys
-import os
-
-correct_path = "/home/user/projects/FedCore/FedCore"
-sys.path.insert(0, correct_path)
-
-print("Обновленный sys.path:")
-print(sys.path[0])
-
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
