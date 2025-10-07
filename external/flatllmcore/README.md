@@ -1,219 +1,76 @@
-# FLAT-LLM Core Module
-
-**Fine-grained Low-rank Activation Space Transformation for Large Language Model Compression**
-
-This module provides a minimal implementation of FLAT-LLM algorithm integrated with FedCore's reassembly framework.
-
-## Overview
-
-FLAT-LLM applies fine-grained low-rank transformations in the activation space of large language models, using:
-
-- **Importance-Preserving Rank Selection (IPRS)**: Adaptive rank allocation based on layer importance
-- **Head-wise PCA**: Individual PCA transformations for each attention head  
-- **Selective Pruning**: Preserves Q,K projections while compressing V,O,MLP layers
-
-## Features
-
-- ✅ Support for Llama-2, Llama-3, and Mistral architectures
-- ✅ Configurable compression ratios (20% to 90%)
-- ✅ Head-wise attention transformations
-- ✅ Integration with FedCore reassembly framework
-- ✅ Calibration-based importance scoring
-- ✅ Memory-efficient layer-by-layer processing
-
-## Quick Start
-
-### Basic Usage
+# FLAT-LLM Quick Start Guide
 
 ```python
-from flatllmcore import FlatLLMReassembler, FlatLLMConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from external.flatllmcore.core import AbsorptionCompressor
 
-# Load model and tokenizer
-model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
-tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+# 1. Load model
+model = AutoModelForCausalLM.from_pretrained(
+    "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    torch_dtype=torch.float16,
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 
-# Create configuration
-config = FlatLLMConfig(
-    target_sparsity=0.5,    # 50% compression
-    tolerance=0.96,         # 96% variance preservation
-    cal_nsamples=128        # Calibration samples
+# 2. Prepare calibration data
+texts = ["Hello, how are you?", "The quick brown fox...", ...]  # 8-16 texts are enough
+inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
+calibration_inputs = inputs.input_ids
+
+# 3. Create compressor
+compressor = AbsorptionCompressor(
+    model=model,
+    target_sparsity=0.7,  # 70% retention = 30% compression
+    tolerance=0.96,
+    device="cuda"
 )
 
-# Apply FLAT-LLM transformation
-compressed_model = FlatLLMReassembler.reassemble(model, tokenizer, config)
-```
+# 4. Choose layers to compress (every 3rd layer)
+num_layers = len(model.model.layers)
+layers_to_compress = list(range(0, num_layers, 3))
 
-### Convenience Functions
-
-```python
-from flatllmcore import apply_flat_llm, compute_layer_importance
-
-# Quick compression
-compressed_model = apply_flat_llm(
-    model, tokenizer, 
-    target_sparsity=0.6,
-    cal_dataset="wikitext2"
+# 5. Collect activations (one forwarded pass)
+compressor.collect_all_activations(
+    layer_indices=layers_to_compress,
+    calibration_input_ids=calibration_inputs
 )
 
-# Analyze layer importance
-importance_scores = compute_layer_importance(model, tokenizer)
-print(f"Layer importance scores: {importance_scores}")
+# 6. Apply compression
+for layer_idx in layers_to_compress:
+    compressor.apply_absorption_mlp(layer_idx, sparsity_ratio=0.7)
+    compressor.apply_absorption_attention(layer_idx, sparsity_ratio=0.7)
+
+# 7. Patch for inference
+compressor.patch_compressed_layers(layers_to_compress)
+
+# 8. Generation
+output = model.generate(**tokenizer("Hello, I am", return_tensors="pt"), max_length=50)
+print(tokenizer.decode(output[0]))
 ```
 
-## Configuration Options
+## Expexted Results
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `target_sparsity` | Target compression ratio (0.0-1.0) | 0.5 |
-| `tolerance` | Eigenvalue preservation threshold | 0.96 |
-| `cal_dataset` | Calibration dataset name | "wikitext2" |
-| `cal_nsamples` | Number of calibration samples | 128 |
-| `importance_method` | Importance computation method | "angular" |
-| `preserve_qk_layers` | Preserve Q,K layers (FLAT-LLM strategy) | True |
+### TinyLlama 1.1B
+- **Reduction**: 8-10% of the initial size
+- **Quality**: Slightly worse than an original model
+- **Time**: ~90 seconds
 
-## Architecture Components
+### Llama-2 7B (assumption)
+- **Reduction**: 15-20% of the initial size
+- **Quality**: <2% degradation on benchmarks
+- **Time**: ~5-10 minutes
 
-### Core Algorithms (`core/`)
+## Recommended params
 
-- **`FlatLLMPruner`**: Main pruning algorithm implementation
-- **`ImportancePreservingRankSelector`**: IPRS algorithm for rank allocation
+| Model | Layers | Sparsity | Tolerance | Expected Reduction |
+|-------|--------|----------|-----------|--------------------|
+| 1B    | 30-40% | 0.7      | 0.96      | 8-12%              |
+| 7B    | 25-35% | 0.8      | 0.98      | 15-20%             |
+| 13B+  | 20-30% | 0.85     | 0.99      | 12-18%             |
 
-### Custom Layers (`layers/`)
+## Main files
 
-- **`FlatLlamaAttention`**: FLAT-LLM optimized Llama attention
-- **`FlatMistralAttention`**: FLAT-LLM optimized Mistral attention
-- **Decoder Layers**: Corresponding decoder layer implementations
+- `external/flatllmcore/core/absorption.py` - main realization
+- `apply_flatllm_absorption.py` - working example
 
-### Utilities (`utils/`)
 
-- **`layer_utils.py`**: Layer discovery and analysis functions
-- **`data_utils.py`**: Calibration data preparation and statistics
-
-## Integration with FedCore
-
-The `FlatLLMReassembler` class extends FedCore's `Reassembler` base class:
-
-```python
-from fedcore.algorithm.low_rank.reassembly.core_reassemblers import get_reassembler
-
-# Register FLAT-LLM reassembler (add to core_reassemblers.py)
-REASSEMBLERS['flat-llm'] = FlatLLMReassembler
-
-# Use via FedCore interface
-reassembler = get_reassembler('flat-llm')
-compressed_model = reassembler.reassemble(model, tokenizer=tokenizer)
-```
-
-## Model Support
-
-### Supported Architectures
-
-- **Llama-2** (7B, 13B, 70B)
-- **Llama-3** (8B)
-- **Mistral** (7B)
-
-### Architecture Detection
-
-The module automatically detects model architecture and applies appropriate transformations:
-
-```python
-# Automatic detection based on model.config
-architecture = FlatLLMReassembler._detect_model_architecture(model)
-print(f"Detected: {architecture}")  # "llama" or "mistral"
-```
-
-## Advanced Usage
-
-### Custom Importance Computation
-
-```python
-# Compute importance scores separately
-importance_scores = FlatLLMReassembler.compute_importance_scores(
-    model, tokenizer,
-    config=FlatLLMConfig(importance_method="gradient")
-)
-
-# Allocate ranks based on importance
-rank_allocation = FlatLLMReassembler.allocate_ranks(
-    importance_scores,
-    target_sparsity=0.4
-)
-
-print(f"Rank allocation per layer: {rank_allocation}")
-```
-
-### Layer-specific Analysis
-
-```python
-from external.flatllmcore.utils import check_sparsity, get_layer_dimensions
-
-# Analyze current sparsity
-sparsity = check_sparsity(model)
-print(f"Current sparsity: {sparsity:.4f}")
-
-# Get model dimensions
-dimensions = get_layer_dimensions(model, "llama")
-print(f"Model dimensions: {dimensions}")
-```
-
-### Compression Statistics
-
-```python
-# After applying FLAT-LLM
-pruner = FlatLLMPruner(model, tokenizer, target_sparsity=0.5)
-pruned_model = pruner.prune_model()
-
-stats = pruner.get_compression_stats()
-print(f"Compression ratio: {stats['compression_ratio']:.2f}x")
-print(f"Parameter reduction: {stats['sparsity']:.1%}")
-```
-
-## Performance Considerations
-
-### Memory Optimization
-
-- Processes layers individually to minimize memory usage
-- Moves layers to CPU during processing
-- Supports multi-GPU models via device mapping
-
-### Calibration Efficiency
-
-- Uses 128 samples by default (adjustable)
-- Supports batch processing for efficiency
-- Caches calibration data between layers
-
-## Implementation Notes
-
-### Key Differences from Original
-
-1. **Modular Design**: Separated into reusable components
-2. **FedCore Integration**: Implements `Reassembler` interface
-3. **Architecture Agnostic**: Supports multiple model types
-4. **Memory Efficient**: Layer-by-layer processing
-5. **Configurable**: Extensive configuration options
-
-### FLAT-LLM Algorithm Steps
-
-1. **Importance Scoring**: Compute layer-wise importance using angular method
-2. **Rank Allocation**: Apply IPRS algorithm for adaptive rank distribution  
-3. **Layer Replacement**: Replace standard attention with FLAT-LLM versions
-4. **Head-wise Pruning**: Apply PCA transformations per attention head
-5. **Validation**: Ensure device consistency and compression targets
-
-## Citation
-
-If you use this implementation, please cite the original FLAT-LLM paper:
-
-```bibtex
-@article{tian2025flat,
-    title={FLAT-LLM: Fine-grained Low-rank Activation Space Transformation for Large Language Model Compression},
-    author={Tian, Jiayi and Solgi, Ryan and Lu, Jinming and Yang, Yifan and Li, Hai and Zhang, Zheng},
-    journal={arXiv preprint arXiv:2505.23966},
-    year={2025}
-}
-```
-
-## License
-
-This implementation follows the MIT License of the original FLAT-LLM repository.

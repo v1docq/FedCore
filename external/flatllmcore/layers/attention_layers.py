@@ -11,17 +11,55 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import List, Optional, Tuple, Union
 
-from transformers.models.llama.modeling_llama import (
-    LlamaSdpaAttention, LlamaConfig, LlamaDecoderLayer, 
-    apply_rotary_pos_emb, repeat_kv
-)
-from transformers.models.mistral.modeling_mistral import (
-    MistralSdpaAttention, MistralConfig, MistralDecoderLayer
-)
+# Transformers compatibility: try SDPA classes first, fall back to generic classes.
+try:
+    # newer or older installs that still expose SDPA names
+    from transformers.models.llama.modeling_llama import (
+        LlamaSdpaAttention, LlamaConfig, LlamaDecoderLayer,
+        apply_rotary_pos_emb, repeat_kv
+    )
+except Exception:
+    # fallback mapping: if SDPA variant disappeared, use the generic LlamaAttention
+    from transformers.models.llama.modeling_llama import (
+        LlamaAttention as LlamaSdpaAttention,
+        LlamaConfig, LlamaDecoderLayer,
+        apply_rotary_pos_emb, repeat_kv
+    )
+
+# Mistral compatibility (same approach)
+try:
+    from transformers.models.mistral.modeling_mistral import (
+        MistralSdpaAttention, MistralConfig, MistralDecoderLayer
+    )
+except Exception:
+    from transformers.models.mistral.modeling_mistral import (
+        MistralAttention as MistralSdpaAttention,
+        MistralConfig, MistralDecoderLayer
+    )
+
 from transformers.cache_utils import Cache
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
+
+# Helper to call rotary embedding in a version-tolerant way.
+# Some transformers versions expect (value_states, position_ids) -> (cos, sin)
+# others expect (value_states, seq_len=...) -> (cos, sin). Wrap both.
+def _rotary_cos_sin(rotary_emb, value_states, position_ids=None, seq_len=None):
+    try:
+        # preferred: (value_states, position_ids=...) or (value_states, seq_len=...)
+        if position_ids is not None:
+            return rotary_emb(value_states, position_ids)
+        if seq_len is not None:
+            # some rotary implementations accept seq_len keyword
+            return rotary_emb(value_states, seq_len=seq_len)
+        return rotary_emb(value_states)
+    except TypeError:
+        # fallback: try positional seq_len
+        if seq_len is not None:
+            return rotary_emb(value_states, seq_len)
+        # last resort: call without extras
+        return rotary_emb(value_states)
 
 
 class FlatLlamaAttention(LlamaSdpaAttention):
@@ -101,8 +139,13 @@ class FlatLlamaAttention(LlamaSdpaAttention):
         value_states = value_states.view(bsz, q_len, self.num_key_value_heads, head_dim).transpose(1, 2)
 
         # Apply RoPE
-        cos, sin = self.rotary_emb(value_states, position_ids)
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin)
+        rotary_out = _rotary_cos_sin(self.rotary_emb, value_states, position_ids=position_ids)
+        if rotary_out is not None:
+            cos, sin = rotary_out
+            query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin)
+        else:
+            # Newer transformers versions handle RoPE internally
+            query_states, key_states = apply_rotary_pos_emb(query_states, key_states)
 
         # Cache handling
         if past_key_value is not None:
@@ -248,8 +291,12 @@ class FlatMistralAttention(MistralSdpaAttention):
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
-        cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        rotary_out = _rotary_cos_sin(self.rotary_emb, value_states, seq_len=kv_seq_len)
+        if rotary_out is not None:
+            cos, sin = rotary_out
+            query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        else:
+            query_states, key_states = apply_rotary_pos_emb(query_states, key_states, position_ids=position_ids)
 
         # Cache handling
         if past_key_value is not None:
