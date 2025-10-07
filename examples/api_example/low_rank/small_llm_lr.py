@@ -84,34 +84,21 @@ def tokenize_function(examples):
 tokenized_dataset = dataset.map(tokenize_function, batched=True)
 
 class WikitextDataset(torch.utils.data.Dataset):
+    """Dataset that returns tuples (input_ids, labels, attention_mask) for compatibility with LowRankModel and LLMTrainer"""
     def __init__(self, hf_dataset):
         self.hf_dataset = hf_dataset
-        
+
     def __len__(self):
         return len(self.hf_dataset)
-    
+
     def __getitem__(self, idx):
         item = self.hf_dataset[idx]
-        
-        # def safe_flatten(data):
-        #     if isinstance(data, torch.Tensor):
-        #         return data.flatten()
-        #     elif isinstance(data, list):
-        #         return torch.tensor(data).flatten()
-        #     else:
-        #         return torch.tensor([data]).flatten()
-        
-        # return {
-        #     'input_ids': safe_flatten(item['input_ids']),
-        #     'attention_mask': safe_flatten(item['attention_mask']),
-        #     'labels': safe_flatten(item['labels'])
-        # }
-    
-        return {
-            'input_ids': item['input_ids'],
-            'attention_mask': item['attention_mask'],
-            'labels': item['labels']
-        }
+
+        return (
+            item['input_ids'], 
+            item['labels'],            
+            item['attention_mask']    
+        )
 
 wikitext_dataset = WikitextDataset(tokenized_dataset)
 
@@ -123,21 +110,49 @@ train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(
     wikitext_dataset, [train_size, val_size, test_size]
 )
 
-train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=False)
-test_dataloader = DataLoader(test_dataset, batch_size=4, shuffle=False)
+def collate_fn(batch):
+    """
+    Custom collate function that handles batching for LLM data.
+    Converts tuple format (input_ids, labels, attention_mask) to stacked tensors.
+    
+    LLMTrainer will convert this back to dict format in _dataloader_to_dataset.
+    """
+    input_ids_list = []
+    labels_list = []
+    attention_mask_list = []
+    
+    for item in batch:
+        input_ids = torch.tensor(item[0]) if isinstance(item[0], list) else item[0]
+        labels = torch.tensor(item[1]) if isinstance(item[1], list) else item[1]
+        attention_mask = torch.tensor(item[2]) if isinstance(item[2], list) else item[2]
+        
+        input_ids_list.append(input_ids)
+        labels_list.append(labels)
+        attention_mask_list.append(attention_mask)
+    
+    input_ids_batch = torch.stack(input_ids_list)
+    labels_batch = torch.stack(labels_list)
+    attention_mask_batch = torch.stack(attention_mask_list)
+ 
+    return input_ids_batch, labels_batch, attention_mask_batch
 
-example_batch = next(iter(train_dataloader))
-example_input = example_batch['input_ids']
+train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=collate_fn)
+val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=False, collate_fn=collate_fn)
+test_dataloader = DataLoader(test_dataset, batch_size=4, shuffle=False, collate_fn=collate_fn)
+
+
+example_batch = next(iter(val_dataloader))
+example_input = example_batch[0]  
+
 
 compression_data = CompressionInputData(
     features=example_input,  
-    target=None,  
+    target=INITIAL_ASSUMPTION, 
     train_dataloader=train_dataloader,
     val_dataloader=val_dataloader,
     test_dataloader=test_dataloader,
     task=Task(TaskTypesEnum.classification),  
-    input_dim=TOKENIZER.vocab_size, 
+    input_dim=TOKENIZER.vocab_size,
 )
 
 ################################################################################
@@ -243,7 +258,7 @@ if __name__ == "__main__":
     if hasattr(fedcore_compressor, 'fedcore_model'):
         model_class = fedcore_compressor.fedcore_model.__class__.__name__
         print(f"Trainer: {model_class}")
-        
+
         if hasattr(fedcore_compressor.fedcore_model, 'operation_impl'):
             trainer_type = type(fedcore_compressor.fedcore_model.operation_impl).__name__
             print(f"Trainer type: {trainer_type}")

@@ -33,6 +33,22 @@ class LowRankModel(BaseCompressionModel):
         self.compose_mode = params.get("compose_mode", None)
         self.device = default_device()
 
+    def _get_example_input(self, input_data):
+        """Override to handle tuples/lists with 2 or 3 elements (for LLM data).
+        
+        Args:
+            input_data: InputData or CompressionInputData with dataloader
+            
+        Returns:
+            Tensor that can be used as model input
+        """
+        batch = super()._get_example_input(input_data)
+        
+        if isinstance(batch, (list, tuple)) and len(batch) >= 2:
+            return batch[0]  
+        
+        return batch
+
     def _init_model(self, input_data):
         model = super()._init_model(input_data, self._additional_hooks)
         decompose_module(
