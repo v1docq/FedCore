@@ -1,6 +1,8 @@
+import ctypes
+import inspect
+
 from py_boost import GradientBoosting
 import cupy as cp
-from py_boost.callbacks.callback import CallbackPipeline
 from py_boost.gpu.tree import DepthwiseTreeBuilder
 from py_boost.multioutput.sketching import FilterSketch, GradSketch
 
@@ -20,6 +22,7 @@ class FedcoreBoostingModel(GradientBoosting):
         self.params['multioutput_sketch'] = self.sketch_method
 
     def _fit(self, builder: DepthwiseTreeBuilder, build_info: dict) -> None:
+        # from py_boost.callbacks.callback import CallbackPipeline
         # try:
         #     if hasattr(self, 'callbacks') and getattr(self, 'callbacks') is not None:
         #         existing = list(self.callbacks.callbacks)
@@ -94,37 +97,40 @@ class FedcoreGradHessHistory(GradSketch):
             return False
         return (counter % self.history_period) == 0
 
+    def get_indexers_from_decomposition(self, tensor: cp.ndarray, top_fraction: float):
+        U, s, Vh = cp.linalg.svd(tensor, full_matrices=False)
+        s_diag_root = cp.diag(cp.sqrt(s))
+
+        row_norms = cp.linalg.norm(U @ s_diag_root, axis=1)
+        k_row = max(1, int(len(row_norms) * top_fraction))
+        row_indexer = cp.sort(cp.argsort(row_norms)[-k_row:]).astype(cp.uint64)
+
+        col_norms = cp.linalg.norm(s_diag_root @ Vh, axis=0)
+        k_col = max(1, int(len(col_norms) * top_fraction))
+        col_indexer = cp.sort(cp.argsort(col_norms)[-k_col:]).astype(cp.uint64)
+
+        return row_indexer, col_indexer
+
     def perform_historic_approximation(self, grad, hess):
-        # if self._hist_grad is not None and self._hist_grad.shape[1] == grad.shape[1]:
-        #     grad_tensor = cp.concatenate([self._hist_grad, grad], axis=0)
-        # else:
-        #     grad_tensor = grad
-        #
-        # grad_low = self.solver.rsvd(tensor=grad_tensor.get(),
-        #                             approximation=self.approximation,
-        #                             reg_type=self.regularisation,
-        #                             regularized_rank=self.rank,
-        #                             return_svd=False,
-        #                             sampling_regime='column_sampling')
-        # grad_approx = cp.asarray(grad_low[-grad.shape[0]:].astype('float32'))
-        #
-        # if hess.shape[1] > 1:
-        #     if self._hist_hess is not None and self._hist_hess.shape[1] == hess.shape[1]:
-        #         hess_tensor = cp.concatenate([self._hist_hess, hess], axis=0)
-        #     else:
-        #         hess_tensor = hess
-        #
-        #     hess_low = self.solver.rsvd(tensor=hess_tensor.get(),
-        #                                 approximation=self.approximation,
-        #                                 reg_type=self.regularisation,
-        #                                 regularized_rank=self.rank,
-        #                                 return_svd=False)
-        #     hess_curr = cp.asarray(hess_low[-hess.shape[0]:].astype('float32'))
-        #     hess_approx = cp.clip(hess_curr, 0.01, None)
-        # else:
-        #     hess_approx = hess
-        #     # hess_approx = self.solver.random_projection @ hess.get()
-        #     # hess_approx = cp.asarray(hess_approx.astype('float32'))
+
+        row_indexer, col_indexer = self.get_indexers_from_decomposition(grad, top_fraction=0.5)
+
+        stack = inspect.stack()
+        target_method = 'build_tree'
+
+        for frame_info in stack[1:]:
+
+            if frame_info.function == target_method:
+                frame = frame_info.frame
+                try:
+                    frame.f_locals['row_indexer'] = row_indexer
+                    ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
+                    frame.f_locals['col_indexer'] = col_indexer
+                    ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
+                except Exception as _:
+                    pass
+                break
+
         grad_approx = grad
         hess_approx = hess
         return grad_approx, hess_approx
