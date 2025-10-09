@@ -4,7 +4,7 @@ import torch
 from operator import itemgetter
 from torch import nn, Tensor
 from torch.autograd import Function
-from fedcore.architecture.comptutaional.deterministic import Deterministic
+from fedcore.architecture.computational.deterministic import Deterministic
 
 
 def route_args(

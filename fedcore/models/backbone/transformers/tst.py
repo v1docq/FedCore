@@ -9,7 +9,7 @@ from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 from torch import nn, optim, Tensor
 from fedcore.repository.constant_repository import RMSE, TorchLossesConstant
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralForecaster
 from fedcore.models.network_modules.activation import get_activation_fn
 from fedcore.models.network_modules.layers.attention_layers import \

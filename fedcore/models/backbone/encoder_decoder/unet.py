@@ -5,7 +5,7 @@ import torch.nn as nn
 from segmentation_models_pytorch import UnetPlusPlus
 from typing import Optional
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.layers import DoubleConv, Down, OutConv, Up
 
 

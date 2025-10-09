@@ -8,7 +8,7 @@ from typing import Literal, Optional
 import torch
 from torch.nn.modules import Module
 
-from fedcore.architecture.comptutaional.devices import extract_device
+from fedcore.architecture.computational.devices import extract_device
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constant_repository import (
     DECOMPOSABLE_LAYERS, 

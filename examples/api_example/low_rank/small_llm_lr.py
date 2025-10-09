@@ -28,12 +28,13 @@ from fedcore.api.main import FedCore
 from fedcore.api.llm_config import LLMConfigTemplate
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constant_repository import FedotTaskEnum
+from fedcore.metrics.nlp_metrics import NLPAccuracy, NLPF1, SacreBLEU, ROUGE
 
 ##########################################################################
 ### CONFIGURATION ###
 ##########################################################################
 
-METRIC_TO_OPTIMISE = ['perplexity', 'latency']
+METRIC_TO_OPTIMISE = ['accuracy', 'f1']  
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'low_rank'  

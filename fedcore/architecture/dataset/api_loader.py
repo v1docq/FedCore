@@ -2,7 +2,7 @@ from functools import partial
 
 from torch.utils.data import DataLoader
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.architecture.dataset.datasets_from_source import AbstractDataset, ObjectDetectionDataset, TimeSeriesDataset
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constant_repository import (

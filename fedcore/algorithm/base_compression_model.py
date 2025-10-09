@@ -7,7 +7,7 @@ import torch_pruning as tp
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 
-from fedcore.architecture.comptutaional.devices import default_device, extract_device
+from fedcore.architecture.computational.devices import default_device, extract_device
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data

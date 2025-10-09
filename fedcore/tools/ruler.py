@@ -7,18 +7,20 @@ import torch.utils
 from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
+from sklearn.metrics import accuracy_score
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.inference.onnx import ONNXInferenceModel
-from fedcore.metrics.metric_impl import (
-    ClassificationMetricCounter,
-    MetricCounter,
-    ObjectDetectionMetricCounter,
-)
 from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.tools.edge_device import PowerEstimator
 from time import time
+
+try:
+    from fedcore.metrics.nlp_metrics import NLPAccuracy, NLPF1
+    NLP_METRICS_AVAILABLE = True
+except ImportError:
+    NLP_METRICS_AVAILABLE = False
 
 
 def format_num(num: int, bytes=False):
@@ -49,7 +51,58 @@ def format_time(seconds, return_time=False):
         return f"{round(time_us,3)} {prefix}"
 
 
-class PerformanceEvaluator:
+class BasePerformanceEvaluator:
+    """Base class with common functionality for performance evaluators."""
+    
+    SIZE_CONSTANT_MB = 1024 ** 2
+    
+    def measure_model_size(self):
+        """Measure model size in MB."""
+        if isinstance(self.model, ONNXInferenceModel):
+            size_all_mb = round(self.model.size(), 3) / self.SIZE_CONSTANT_MB
+        else:
+            param_size = sum(param.nelement() * param.element_size() for param in self.model.parameters())
+            buffer_size = sum(buffer.nelement() * buffer.element_size() for buffer in self.model.buffers())
+            size_all_mb = (param_size + buffer_size) / self.SIZE_CONSTANT_MB
+        
+        self.model_size = round(size_all_mb, 3)
+        return self.model_size
+    
+    def report(self):
+        """Print performance metrics."""
+        print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
+        print(f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}")
+        print(f"Model size: {self.model_size} MB")
+    
+    @staticmethod
+    def _extract_batch(batch):
+        """Extract first element from batch if it's a tuple/list."""
+        return batch[0] if isinstance(batch, (tuple, list)) else batch
+    
+    @staticmethod
+    def _transfer_to_cpu(result):
+        """Transfer model output to CPU (handles Tensors, HuggingFace outputs, etc.)."""
+        if hasattr(result, 'to'):
+            result.to("cpu")
+        elif hasattr(result, 'logits'):
+            result.logits.to("cpu")
+    
+    @staticmethod
+    def _compute_timing_stats(times_array):
+        """Compute statistics for timing measurements."""
+        return {
+            "batches_per_second_mean": float((1 / times_array).mean()),
+            "batches_per_second_std": float((1 / times_array).std()),
+            "batches_per_second_min": float((1 / times_array).min()),
+            "batches_per_second_max": float((1 / times_array).max()),
+            "seconds_per_batch_mean": float(times_array.mean()),
+            "seconds_per_batch_std": float(times_array.std()),
+            "seconds_per_batch_min": float(times_array.min()),
+            "seconds_per_batch_max": float(times_array.max()),
+        }
+
+
+class PerformanceEvaluator(BasePerformanceEvaluator):
     def __init__(
             self,
             model: callable,
@@ -123,7 +176,7 @@ class PerformanceEvaluator:
     def eval_detailed_latency(self, num_runs=100):
         t_cpu_2_gpu, t_device, t_gpu_2_cpu, t_total = [], [], [], []
         for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
-            sample = batch[0] if isinstance(batch, (tuple, list)) else batch
+            sample = self._extract_batch(batch)
             break
 
         for _ in tqdm(range(num_runs), desc=f"Measuring inference for batch_size={self.batch_size}"):
@@ -147,7 +200,7 @@ class PerformanceEvaluator:
                 stop_on_device = time()
                 elapsed_on_device = stop_on_device - start_on_device
 
-            self.transfer_to_device_fn(device_result, "cpu")
+            self._transfer_to_cpu(device_result)
             stop_on_cpu = time()
 
             t_cpu_2_gpu.append(start_on_device - start_on_cpu)
@@ -164,18 +217,8 @@ class PerformanceEvaluator:
 
         for s_per_batch, title in times_and_titles:
             s_per_batch = np.array(s_per_batch)
+            metrics = self._compute_timing_stats(s_per_batch)
             batches_per_s = 1 / s_per_batch
-
-            metrics = {
-                "batches_per_second_mean": float(batches_per_s.mean()),
-                "batches_per_second_std": float(batches_per_s.std()),
-                "batches_per_second_min": float(batches_per_s.min()),
-                "batches_per_second_max": float(batches_per_s.max()),
-                "seconds_per_batch_mean": float(s_per_batch.mean()),
-                "seconds_per_batch_std": float(s_per_batch.std()),
-                "seconds_per_batch_min": float(s_per_batch.min()),
-                "seconds_per_batch_max": float(s_per_batch.max()),
-            }
 
             convert_to_report = {
                 "batches_per_second": f"{format_num(batches_per_s.mean())} "
@@ -239,7 +282,7 @@ class PerformanceEvaluator:
         thr_list = []
         steps_iter = range(num_iterations)
         for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
-            batch = batch[0] if isinstance(batch, (tuple, list)) else batch
+            batch = self._extract_batch(batch)
             is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
             X = batch.cuda(non_blocking=True) if is_already_cuda else batch.to(self.device)
             start_events = [torch.cuda.Event(enable_timing=True) for _ in steps_iter]
@@ -268,16 +311,15 @@ class PerformanceEvaluator:
         self.model.eval()
         lat_list = []
         for batch in tqdm(self.data_loader(max_batches=max_samples or self.batch_size)):
-            if isinstance(batch, tuple) or isinstance(batch, list):
-                features = batch[0]
-                if isinstance(features, torch.Tensor):
-                    for sample in features:
-                        is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
-                        sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
-                        sample_batch = sample[None, ...]
-                        lat_list.append(cuda_latency_eval(sample_batch))
+            features = self._extract_batch(batch)
+            if isinstance(features, torch.Tensor):
+                for sample in features:
+                    is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
+                    sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
+                    sample_batch = sample[None, ...]
+                    lat_list.append(cuda_latency_eval(sample_batch))
             else:
-                lat_list.append(cuda_latency_eval(batch))
+                lat_list.append(cuda_latency_eval(features))
         return lat_list
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):
@@ -298,40 +340,16 @@ class PerformanceEvaluator:
         )
         return self.latency, self.throughput
 
-    def measure_model_size(self):
-        size_constant = 1024 ** 2
-        if isinstance(self.model, ONNXInferenceModel):
-            size_all_mb = round(self.model.size(), 3) / size_constant
-        else:
-            param_size = 0
-            for param in self.model.parameters():
-                param_size += param.nelement() * param.element_size()
-            buffer_size = 0
-            for buffer in self.model.buffers():
-                buffer_size += buffer.nelement() * buffer.element_size()
-
-            size_all_mb = (param_size + buffer_size) / size_constant
-        self.model_size = round(size_all_mb, 3)
-        return self.model_size
-
     @torch.no_grad()
     def warm_up_cuda(self, n_batches=3):
         """Warm up CUDA by performing some dummy computations"""
         if self.cuda_allowed:
             for batch in tqdm(self.data_loader(max_batches=n_batches), desc="warming"):
-                if isinstance(batch, tuple) or isinstance(batch, list):
-                    inputs = batch[0]
+                inputs = self._extract_batch(batch)
                 _ = self.model(inputs.to(self.device))
 
-    def report(self):
-        print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
-        print(
-            f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"
-        )
-        print(f"Model size: {self.model_size} MB")
 
-
-class PerformanceEvaluatorOD:
+class PerformanceEvaluatorOD(BasePerformanceEvaluator):
     def __init__(self, model, data_loader, device=None, batch_size=32):
         self.model = model.model if hasattr(model, "model") else model
         self.data_loader = data_loader
@@ -348,13 +366,29 @@ class PerformanceEvaluatorOD:
         self.model_size = None
         self.target_metrics = None
 
-    def eval(self):
-
+    def eval(self, metric_class=None, metric_names=None, is_nlp=False, tokenizer=None):
+        """
+        Evaluate model performance.
+        
+        Args:
+            metric_class: Metric class to use for evaluation.
+            metric_names: List of metric names (for NLP tasks).
+            is_nlp: Whether this is an NLP task.
+            tokenizer: Tokenizer for NLP tasks.
+        
+        Returns:
+            dict: Performance metrics
+        """
         result = dict(
             latency=self.measure_latency(),
             throughput=self.measure_throughput(),
             model_size=self.measure_model_size(),
-            target_metrics=self.measure_target_metric(),
+            target_metrics=self.measure_target_metric(
+                metric_class=metric_class,
+                metric_names=metric_names,
+                is_nlp=is_nlp,
+                tokenizer=tokenizer
+            ),
         )
         self.report()
         return result
@@ -399,36 +433,130 @@ class PerformanceEvaluatorOD:
         self.throughput = round(total_data_size / total_time, 0)
         return self.throughput
 
-    def measure_target_metric(self, metric_counter: MetricCounter = None):
-        if not metric_counter:
-            metric_counter = ObjectDetectionMetricCounter()
+    def _extract_batch_data(self, batch):
+        """Extract inputs and targets from batch."""
+        if isinstance(batch, (list, tuple)) and len(batch) >= 2:
+            return batch[0], batch[1]
+        return (batch[0] if isinstance(batch, (list, tuple)) else batch), None
+    
+    def _move_to_device(self, inputs):
+        """Move inputs to device and get predictions."""
+        if isinstance(inputs, list):
+            inputs = [inp.to(self.device) for inp in inputs]
+        elif isinstance(inputs, torch.Tensor):
+            inputs = inputs.to(self.device)
+        return self.model(inputs)
+    
+    def _process_nlp_batch(self, prediction, targets, tokenizer):
+        """Process NLP predictions and targets."""
+        logits = prediction.logits if hasattr(prediction, 'logits') else prediction
+        pred_ids = torch.argmax(logits, dim=-1)
+        
+        pred_texts, target_texts = [], []
+        for i in range(pred_ids.shape[0]):
+            pred_texts.append(tokenizer.decode(pred_ids[i], skip_special_tokens=True))
+            if targets is not None and isinstance(targets, torch.Tensor):
+                target_ids = targets[i][targets[i] != -100]
+                target_texts.append(tokenizer.decode(target_ids, skip_special_tokens=True))
+        
+        return pred_ids.cpu(), targets.cpu() if isinstance(targets, torch.Tensor) else None, pred_texts, target_texts
+    
+    def _compute_nlp_metrics(self, predictions, targets, pred_texts, target_texts, metric_names):
+        """Compute NLP metrics from predictions."""
+        metrics = {}
+        metric_names = metric_names or ['accuracy', 'f1']
+        
+        if predictions and targets:
+            flat_preds = torch.cat([p.flatten() for p in predictions]).numpy()
+            flat_targets = torch.cat([t.flatten() for t in targets]).numpy()
+            valid_mask = flat_targets != -100
+            flat_preds, flat_targets = flat_preds[valid_mask], flat_targets[valid_mask]
+            
+            metric_map = {'accuracy': NLPAccuracy, 'f1': NLPF1}
+            for name in metric_names:
+                if name in metric_map:
+                    try:
+                        result = metric_map[name]().compute(y_pred=flat_preds.tolist(), y_true=flat_targets.tolist())
+                        metrics[name] = result.get(name, 0.0)
+                    except Exception as e:
+                        print(f"Warning: Could not compute {name}: {e}")
+        
+        if pred_texts and target_texts:
+            if any(m in metric_names for m in ['sacrebleu', 'bleu']):
+                try:
+                    from fedcore.metrics.nlp_metrics import SacreBLEU
+                    result = SacreBLEU().compute(y_pred=pred_texts, y_true=[[t] for t in target_texts])
+                    metrics['bleu'] = result.get('score', 0.0)
+                except Exception as e:
+                    print(f"Warning: Could not compute BLEU: {e}")
+            
+            if 'rouge' in metric_names:
+                try:
+                    from fedcore.metrics.nlp_metrics import ROUGE
+                    result = ROUGE().compute(y_pred=pred_texts, y_true=target_texts)
+                    metrics.update({k: result.get(k, 0.0) for k in ['rouge1', 'rougeL']})
+                except Exception as e:
+                    print(f"Warning: Could not compute ROUGE: {e}")
+        
+        return metrics
+    
+    def _compute_standard_metrics(self, predictions, targets, metric_class):
+        """Compute standard metrics from predictions."""
+        if not (predictions and targets):
+            return {}
+        
+        preds = torch.cat(predictions).numpy() if isinstance(predictions[0], torch.Tensor) else np.array(predictions)
+        targs = torch.cat(targets).numpy() if isinstance(targets[0], torch.Tensor) else np.array(targets)
+        
+        if metric_class and hasattr(metric_class, 'metric'):
+            return {metric_class.__name__.lower(): metric_class.metric(targs, preds)}
+        
+        return {'accuracy': accuracy_score(targs, preds)}
+    
+    def measure_target_metric(self, metric_class=None, metric_names=None, is_nlp=False, tokenizer=None):
+        """
+        Measure target metrics for the model.
+        
+        Args:
+            metric_class: Metric class (QualityMetric subclass). Default: Accuracy
+            metric_names: List of metric names for NLP tasks ['accuracy', 'f1', 'sacrebleu', 'rouge']
+            is_nlp: Whether this is an NLP task
+            tokenizer: Tokenizer for NLP text-based metrics
+        
+        Returns:
+            dict: Computed metrics
+        """
+        all_preds, all_targets, pred_texts, target_texts = [], [], [], []
+        
         with torch.no_grad():
-            with tqdm(desc="Measuring target metric", unit="batch") as pbar:
-                for batch in self.data_loader:
-                    inputs, targets = batch
-                    inputs = list(input.to(self.device) for input in inputs)
-                    prediction = self.model(inputs)
-                    metric_counter.update(prediction, targets)
-                    pbar.update(1)
+            for batch in tqdm(self.data_loader, desc="Measuring target metric", unit="batch"):
+                inputs, targets = self._extract_batch_data(batch)
+                prediction = self._move_to_device(inputs)
+                
+                if is_nlp and tokenizer:
+                    pred_ids, targ_ids, p_texts, t_texts = self._process_nlp_batch(prediction, targets, tokenizer)
+                    all_preds.append(pred_ids)
+                    if targ_ids is not None:
+                        all_targets.append(targ_ids)
+                    pred_texts.extend(p_texts)
+                    target_texts.extend(t_texts)
+                else:
+                    pred = prediction.cpu() if isinstance(prediction, torch.Tensor) else prediction
+                    all_preds.extend(pred) if isinstance(pred, list) else all_preds.append(pred)
+                    if targets is not None:
+                        targ = targets.cpu() if isinstance(targets, torch.Tensor) else targets
+                        all_targets.extend(targ) if isinstance(targ, list) else all_targets.append(targ)
+        
         if self.device == "cuda":
             torch.cuda.synchronize()
-        self.target_metrics = metric_counter.compute()
-        return self.target_metrics
 
-    def measure_model_size(self):
-        if isinstance(self.model, ONNXInferenceModel):
-            size_all_mb = round(self.model.size(), 3) / 1024 ** 2
+        if is_nlp and NLP_METRICS_AVAILABLE:
+            metrics = self._compute_nlp_metrics(all_preds, all_targets, pred_texts, target_texts, metric_names)
         else:
-            param_size = 0
-            for param in self.model.parameters():
-                param_size += param.nelement() * param.element_size()
-            buffer_size = 0
-            for buffer in self.model.buffers():
-                buffer_size += buffer.nelement() * buffer.element_size()
-
-            size_all_mb = (param_size + buffer_size) / 1024 ** 2
-        self.model_size = round(size_all_mb, 3)
-        return self.model_size
+            metrics = self._compute_standard_metrics(all_preds, all_targets, metric_class)
+        
+        self.target_metrics = metrics
+        return metrics
 
     def warm_up_cuda(self, num_iterations=10):
         """Warm up CUDA by performing some dummy computations"""
@@ -437,10 +565,3 @@ class PerformanceEvaluatorOD:
                 inputs, _ = next(iter(self.data_loader))
                 inputs = list(input.to(self.device) for input in inputs)
                 _ = self.model(inputs)
-
-    def report(self):
-        print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
-        print(
-            f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"
-        )
-        print(f"Model size: {self.model_size} MB")

@@ -3,7 +3,7 @@ from enum import Enum
 import torch
 from torch import nn, optim
 from tqdm import tqdm
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.repository.constant_repository import PRUNER_WITHOUT_REQUIREMENTS, PRUNER_REQUIRED_REG
 import torch.nn.utils.prune as prune

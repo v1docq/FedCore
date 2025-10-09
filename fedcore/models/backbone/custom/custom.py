@@ -4,7 +4,7 @@ from torch import nn, optim, Tensor
 
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.data.data import InputData
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.repository.constant_repository import (
     CROSS_ENTROPY,

@@ -27,7 +27,7 @@ from fedcore.algorithm.quantization.utils import (
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 from fedcore.models.network_impl.utils.hooks import BaseHook
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
 from fedcore.repository.constant_repository import TorchLossesConstant
 from fedcore.models.network_impl.utils.hooks import Optimizers

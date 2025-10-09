@@ -12,7 +12,7 @@ from torchvision import transforms
 from torchvision.models import resnet18
 
 from fedcore.api.main import FedCore
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.architecture.utils.paths import data_path
 from fedcore.data.data import CompressionInputData
 from fedcore.metrics.multiobjective.multi_objective import MultiobjectiveCompression

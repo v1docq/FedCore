@@ -11,7 +11,7 @@ from fedot.core.repository.tasks import (
     TaskTypesEnum,
 )
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.models.backbone.backbone_loader import load_backbone
 from fedcore.repository.config_repository import TASK_MAPPING

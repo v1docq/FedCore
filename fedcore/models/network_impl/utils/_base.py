@@ -9,7 +9,7 @@ from transformers import PreTrainedModel
 from torch.nn import Module
 
 from fedcore.models.network_impl.utils.interfaces import ITrainer, IHookable
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 HookType = Literal['start', 'end', 'batch_start', 'batch_end', 'validation']
 
