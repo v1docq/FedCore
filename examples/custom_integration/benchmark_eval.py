@@ -52,4 +52,5 @@ def run_benchmark(dataset_id: int = 110, model_name: str = 'pyboost', model_para
     return
 
 if __name__ == "__main__":
-    run_benchmark()
+    model_params = {**BOOSTING_MODEL_PARAMS, 'industrial_strategy': {'history_period': 4}}
+    run_benchmark(model_name='fedcore_boosting', model_params=model_params)
