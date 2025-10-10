@@ -11,10 +11,11 @@ from tqdm import tqdm
 # Transformers imports
 from torch.utils.data import Dataset
 from transformers import (
-    Trainer, 
-    TrainingArguments, 
+    Trainer,
+    TrainerCallback,
+    TrainingArguments,
 )
-from transformers.trainer_callback import EarlyStoppingCallback
+from transformers.trainer_callback import EarlyStoppingCallback, TrainerCallback
 from datasets import Dataset
 import numpy as np
 from fedot.core.data.data import InputData
@@ -24,8 +25,153 @@ from fedot.core.repository.dataset_types import DataTypesEnum
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.utils._base import BaseTrainer
-from fedcore.models.network_impl.utils.hooks_impl import FedCoreTransformersTrainer
+from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
+from fedcore.models.network_impl.utils.hooks import LoggingHooks, ModelLearningHooks, OptimizerGen, SchedulerRenewal
 
+
+class FedCoreTransformersTrainer(TrainerCallback):
+    """
+    Transformers Callback with FedCore hooks integration.
+    
+    Combines HuggingFace Transformers callbacks with FedCore's hook system for
+    OptimizerGen, SchedulerRenewal, and other training hooks.
+    """
+    
+    def __init__(
+        self,
+        model=None,
+        hooks_collection: Optional[HooksCollection] = None,
+        hooks_params: Optional[Dict] = None,
+        additional_hooks: Optional[Iterable[Enum]] = None,
+    ):
+        super().__init__()
+        self.model = model
+        self.hooks_collection = hooks_collection or HooksCollection()
+        self.hooks_params = hooks_params or {}
+        self._hooks = [LoggingHooks, ModelLearningHooks]
+        if additional_hooks:
+            self._hooks.extend(additional_hooks)
+        
+        self.trainer_objects = {
+            'model': model,
+            'optimizer': None,
+            'scheduler': None,
+            'stop': False
+        }
+        
+        self.history = {
+            'train_loss': [],
+            'val_loss': [],
+            'learning_rates': []
+        }
+        
+        if self.hooks_params:
+            self._init_hooks()
+    
+    def _init_hooks(self):
+        """Initialize FedCore hooks based on parameters"""
+        for hook_enum in self._hooks:
+            for hook_elem in hook_enum:
+                hook_class = hook_elem.value
+                if hook_class.check_init(self.hooks_params):
+                    hook_instance = hook_class(self.hooks_params, self.model)
+                    self.hooks_collection.append(hook_instance)
+
+    def on_epoch_begin(self, args: TrainingArguments, state, control, **kwargs):
+        """Execute FedCore hooks at the beginning of each epoch"""
+        epoch = state.epoch if hasattr(state, 'epoch') else 0
+        trainer = kwargs.get('trainer')
+        
+        if trainer:
+            if hasattr(trainer, 'optimizer') and trainer.optimizer:
+                self.trainer_objects['optimizer'] = trainer.optimizer
+            if hasattr(trainer, 'lr_scheduler') and trainer.lr_scheduler:
+                self.trainer_objects['scheduler'] = trainer.lr_scheduler
+        
+        for hook in self.hooks_collection.start:
+            hook(epoch, 
+                 trainer_objects=self.trainer_objects,
+                 history=self.history)
+        
+        if trainer:
+            if self.trainer_objects.get('optimizer'):
+                trainer.optimizer = self.trainer_objects['optimizer']
+            if self.trainer_objects.get('scheduler'):
+                trainer.lr_scheduler = self.trainer_objects['scheduler']
+        
+        if self.trainer_objects.get('stop', False): 
+            control.should_training_stop = True
+        
+        return control
+    
+    def on_epoch_end(self, args: TrainingArguments, state, control, **kwargs):
+        """Execute FedCore hooks at the end of each epoch"""
+        epoch = state.epoch if hasattr(state, 'epoch') else 0
+        trainer = kwargs.get('trainer')
+        
+        if hasattr(state, 'log_history') and state.log_history:
+            latest_log = state.log_history[-1]
+            if 'loss' in latest_log:
+                self.history['train_loss'].append((epoch, latest_log['loss']))
+            if 'eval_loss' in latest_log:
+                self.history['val_loss'].append((epoch, latest_log['eval_loss']))
+        
+        if trainer:
+            if hasattr(trainer, 'optimizer') and trainer.optimizer:
+                self.trainer_objects['optimizer'] = trainer.optimizer
+            if hasattr(trainer, 'lr_scheduler') and trainer.lr_scheduler:
+                self.trainer_objects['scheduler'] = trainer.lr_scheduler
+        
+        val_loader = None
+        criterion = None
+        if trainer:
+            if hasattr(trainer, 'eval_dataset') and trainer.eval_dataset:
+                val_loader = trainer.get_eval_dataloader(trainer.eval_dataset)
+            if hasattr(trainer, 'compute_loss'):
+                criterion = trainer.compute_loss
+        
+        for hook in self.hooks_collection.end:
+            hook(epoch,
+                 trainer_objects=self.trainer_objects,
+                 history=self.history,
+                 val_loader=val_loader,
+                 criterion=criterion)
+        
+        if trainer:
+            if self.trainer_objects.get('optimizer'):
+                trainer.optimizer = self.trainer_objects['optimizer']
+            if self.trainer_objects.get('scheduler'):
+                trainer.lr_scheduler = self.trainer_objects['scheduler']
+        
+        if self.trainer_objects.get('stop', False):
+            control.should_training_stop = True
+        
+        return control
+    
+    def on_step_end(self, args, state, control, **kwargs):
+        """Track learning rate and sync trainer objects on each step"""
+        trainer = kwargs.get('trainer')
+        if trainer:
+            if hasattr(trainer, 'optimizer') and trainer.optimizer:
+                self.trainer_objects['optimizer'] = trainer.optimizer
+                if hasattr(trainer.optimizer, 'param_groups'):
+                    current_lr = trainer.optimizer.param_groups[0]['lr']
+                    current_step = state.global_step if hasattr(state, 'global_step') else 0
+                    self.history['learning_rates'].append((current_step, current_lr))
+            
+            if hasattr(trainer, 'lr_scheduler') and trainer.lr_scheduler:
+                self.trainer_objects['scheduler'] = trainer.lr_scheduler
+                
+        return control
+    
+    def on_init_end(self, args, state, control, **kwargs):
+        """Called after Trainer initialization - setup optimizer and scheduler via hooks"""
+        trainer = kwargs.get('trainer')
+        if trainer:
+            self.trainer_objects['trainer'] = trainer
+            self.trainer_objects['model'] = trainer.model
+            
+        return control
 
 
 class LLMTrainer(BaseTrainer):
@@ -33,38 +179,7 @@ class LLMTrainer(BaseTrainer):
     LLM Trainer that implements our interfaces with real transformers.Trainer integration
     """
     
-    def __init__(self, model=None, params: Optional[Dict] = None, **kwargs):
-        def _find_in_params(p: Optional[Dict], keys: Iterable[str]) -> Optional[Any]:
-            if not isinstance(p, dict):
-                return None
-            for k in keys:
-                if k in p and p[k] is not None:
-                    return p[k]
-            for v in p.values():
-                if isinstance(v, dict):
-                    found = _find_in_params(v, keys)
-                    if found is not None:
-                        return found
-            return None
-        if model is None and params and 'model' in params:
-            model = params['model']
-        
-        if model is None and params and 'initial_assumption' in params:
-            model = params['initial_assumption']
-
-        if model is None and params and isinstance(params.get('custom_learning_params'), dict):
-            nested = params.get('custom_learning_params')
-            model = nested.get('model', model)
-
-        if model is None and params:
-            model = _find_in_params(params, keys=('model', 'initial_assumption', 'original_model'))
-        
-        super().__init__(model=model, params=params)
-        self.model = model
-        self._hooks = []
-        self._additional_hooks = []
-        
-        self.default_training_args = {
+    DEFAULT_TRAINING_ARGS = {
             'output_dir': './llm_output',
             'num_train_epochs': 3,
             'per_device_train_batch_size': 4,
@@ -83,6 +198,23 @@ class LLMTrainer(BaseTrainer):
             'greater_is_better': False,
         }
         
+    ALLOWED_TRAINING_ARGS = {
+        'output_dir', 'num_train_epochs', 'per_device_train_batch_size',
+        'per_device_eval_batch_size', 'warmup_steps', 'lr_scheduler_type',
+        'weight_decay', 'logging_dir', 'logging_steps', 'save_steps',
+        'eval_steps', 'evaluation_strategy', 'save_strategy',
+        'load_best_model_at_end', 'metric_for_best_model', 'greater_is_better'
+    }
+    
+    def __init__(self, model=None, params: Optional[Dict] = None, **kwargs):
+        if model is None and params and isinstance(params.get('custom_learning_params'), dict):
+            nested = params.get('custom_learning_params')
+            model = nested.get('model', model)
+        
+        super().__init__(model=model, params=params)
+        self.model = model
+        
+        self.default_training_args = self.DEFAULT_TRAINING_ARGS.copy()
         if params:
             training_params = {k: v for k, v in params.items() 
                              if k not in ['model', 'tokenizer', 'custom_learning_params']}
@@ -92,25 +224,20 @@ class LLMTrainer(BaseTrainer):
         self._training_args = None
         self._data_collator = None
         self._fedcore_callback = None
-
-        self.trainer_objects = {
-            'optimizer': None,
-            'scheduler': None,
-            'trainer': None
-        }
+        self._hooks_initialized = False
         
-    def register_additional_hooks(self, hooks: Iterable[Enum]) -> None:
-        """Register additional hooks for training"""
-        self._hooks.extend(hooks)
         
     def _init_hooks(self) -> None:
-        """Initialize hooks for the model"""
-        print("Initializing LLM hooks...")        
+        """
+        Initialize hooks for the model.
         
-        self._fedcore_callback = FedCoreTransformersTrainer(
-            hooks_params=self.default_training_args,
-            model=self.model
-        )
+        Marks hooks as ready to be initialized in FedCoreTransformersTrainer.
+        Actual hook creation happens when FedCoreTransformersTrainer is instantiated.
+        """
+        if self._hooks_initialized:
+            return
+        
+        self._hooks_initialized = True
         
     def _prepare_data(self, input_data: Union[InputData, CompressionInputData]) -> Dict[str, Dataset]:
         """Convert InputData/CompressionInputData to transformers Dataset format"""
@@ -121,28 +248,17 @@ class LLMTrainer(BaseTrainer):
             'train_dataset': train_data,
             'eval_dataset': eval_data
         }
-    def _prepare_text_generation_data(self, dataloader) -> Dataset:
-        """Prepare data specifically for text generation"""
-        data = []
-        for batch in dataloader:
-            if isinstance(batch, dict):
-                input_ids = batch.get('input_ids', batch.get('inputs'))
-                attention_mask = batch.get('attention_mask')
-                labels = batch.get('labels', batch.get('targets'))
-
-                if input_ids is None:
-                    continue
-
-                batch_size = input_ids.shape[0]
-                for i in range(batch_size):
-                    data.append({
-                        'input_ids': input_ids[i].cpu().tolist(),
-                        'attention_mask': None if attention_mask is None else attention_mask[i].cpu().tolist(),
-                        'labels': None if labels is None else labels[i].cpu().tolist(),
-                    })
-        return Dataset.from_list(data)
             
     def _dataloader_to_dataset(self, dataloader) -> Dataset:
+        """
+        Convert DataLoader to HuggingFace Dataset.
+        
+        Dataset reinstantiation is needed because:
+        - Transformers Trainer requires HuggingFace Dataset, not PyTorch DataLoader
+        - DataLoader is stateful (iterator) and incompatible with Transformers' internal data handling
+        - Dataset format allows Transformers to manage batching, shuffling, and distributed training
+        - Converts from our batch formats (tuples/dicts) to standard Dataset.__getitem__ format
+        """
         data = []
         for batch in dataloader:
             if isinstance(batch, dict):
@@ -187,26 +303,26 @@ class LLMTrainer(BaseTrainer):
 
     def _create_trainer(self, datasets: Dict[str, Dataset]):
         """Create transformers trainer with FedCore integration"""
-        allowed_training_args = {
-            'output_dir', 'num_train_epochs', 'per_device_train_batch_size',
-            'per_device_eval_batch_size', 'warmup_steps', 'lr_scheduler_type',
-            'weight_decay', 'logging_dir', 'logging_steps', 'save_steps',
-            'eval_steps', 'evaluation_strategy', 'save_strategy',
-            'load_best_model_at_end', 'metric_for_best_model', 'greater_is_better'
-        }
-        
-        filtered_args = self._normalize_kwargs(self.default_training_args, allowed_training_args)
-        
-        self._training_args = TrainingArguments(**filtered_args)
-        
-        # Create callbacks list
-        callbacks = []
-        if self._fedcore_callback:
-            callbacks.append(self._fedcore_callback)
-        callbacks.append(EarlyStoppingCallback(early_stopping_patience=3))
+        if self.model is None and self._trainer is not None:
+            self.model = self._trainer.model
         
         if self.model is None:
             raise ValueError("LLMTrainer initialization failed: model is None after parameter resolution. Ensure 'model' or 'initial_assumption' is provided in config (including inside 'custom_learning_params').")
+
+        if not self._hooks_initialized:
+            self._init_hooks()
+        
+        filtered_args = self._normalize_kwargs(self.default_training_args, self.ALLOWED_TRAINING_ARGS)
+        self._training_args = TrainingArguments(**filtered_args)
+        
+        self._fedcore_callback = FedCoreTransformersTrainer(
+            model=self.model,
+            hooks_params=self.default_training_args,
+            additional_hooks=self._additional_hooks
+        )
+        
+        callbacks = [self._fedcore_callback, EarlyStoppingCallback(early_stopping_patience=3)]
+        
 
         self._trainer = Trainer(
             model=self.model,
@@ -217,19 +333,16 @@ class LLMTrainer(BaseTrainer):
             callbacks=callbacks
         )
         
-        # Connect trainer objects for hooks
-        if self._fedcore_callback:
-            self._fedcore_callback.trainer_objects['trainer'] = self._trainer
-
         self.trainer_objects['trainer'] = self._trainer
 
     def fit(self, input_data: Union[InputData, CompressionInputData], 
             supplementary_data: Optional[Dict] = None, loader_type: str = 'train') -> Any:
-        """Train the model using InputData/CompressionInputData"""
-        print(f"Training LLM model with {loader_type} data...")
+        """
+        Train the model using InputData/CompressionInputData.
         
-        if not hasattr(self, '_fedcore_callback'):
-            self._init_hooks()
+        Input can be either InputData (FEDOT) or CompressionInputData (FedCore).
+        """
+        print(f"Training LLM model with {loader_type} data...")
         
         # Final fallback: pull model from input_data if still missing
         if self.model is None:
@@ -241,28 +354,33 @@ class LLMTrainer(BaseTrainer):
 
         datasets = self._prepare_data(input_data)
         self._create_trainer(datasets)
-        self.execute_hooks('start', epoch=0)
+        # self.execute_hooks('start', epoch=0)
         
         train_result = self._trainer.train()
         print(f"Training completed. Loss: {getattr(train_result, 'training_loss', None)}")
         if self._fedcore_callback:
             self.history.update(self._fedcore_callback.history)
         
+        self.model = self._trainer.model
+        
         return self.model
         
         
-    def predict(self, input_data: Union[InputData, CompressionInputData], 
+    def predict(self, input_data: Union[InputData, CompressionInputData],  
                 output_mode: str = "default") -> Any:
         """Make predictions using InputData/CompressionInputData"""
         print(f"Making LLM predictions with {output_mode} mode...")
         
-        
         has_val_loader = hasattr(input_data, 'features') and hasattr(input_data.features, 'val_dataloader')
-        if self._trainer is None and has_val_loader:
-            datasets = self._prepare_data(input_data)
-            self._create_trainer(datasets)
 
         if self._trainer is not None and has_val_loader:
+            eval_dataset = self._dataloader_to_dataset(input_data.features.val_dataloader)
+            return self._trainer.predict(eval_dataset)
+        elif self._trainer is None and has_val_loader:
+            if self.model is None:
+                raise ValueError("Cannot create trainer for prediction: model is None. Call fit() first or provide model in initialization.")
+            datasets = self._prepare_data(input_data)
+            self._create_trainer(datasets)
             eval_dataset = self._dataloader_to_dataset(input_data.features.val_dataloader)
             return self._trainer.predict(eval_dataset)
 
@@ -279,7 +397,7 @@ class LLMTrainer(BaseTrainer):
         
         return output_data
         
-    def predict_for_fit(self, input_data: Union[InputData, CompressionInputData], 
+    def predict_for_fit(self, input_data: Union[InputData, CompressionInputData],  
                        output_mode: str = "default") -> Any:
         """Make predictions during training"""
         return self.predict(input_data, output_mode)
@@ -361,18 +479,7 @@ class LLMTrainer(BaseTrainer):
                 self._clear_cache()
                 
         return self._convert_predict(torch.cat(prediction), output_mode)
-    
-    @property
-    def is_quantised(self) -> bool:
-        """Check if model is quantized"""
-        return getattr(self.model, '_is_quantised', False)
-    
-    @property
-    def optimizer(self) -> Any:
-        """Get optimizer from transformers trainer"""
-        if self._fedcore_callback and 'optimizer' in self._fedcore_callback.trainer_objects:
-            return self._fedcore_callback.trainer_objects['optimizer']
-        return None
+
     
     @property
     def scheduler(self) -> Any:

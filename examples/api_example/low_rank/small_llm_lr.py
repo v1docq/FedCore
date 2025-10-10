@@ -174,7 +174,9 @@ model_arch_config = ModelArchitectureConfigTemplate(
 pretrain_config = LLMConfigTemplate(
     model_architecture=model_arch_config,
     epochs=5,  
-    optimizer='ultg',
+    optimizer='paralleltg',
+    scheduler='one_cycle',
+    scheduler_step_each=1,
     criterion=LOSS,
     is_llm=True,
     model=INITIAL_ASSUMPTION,
@@ -204,11 +206,11 @@ finetune_config = LLMConfigTemplate(
 
 peft_config = LowRankTemplate(
     strategy='quantile',
-    rank_prune_each=-1, 
+    rank_prune_each=1, 
     custom_criterions=None,
-    non_adaptive_threshold=0.1,  
+    non_adaptive_threshold=0.3,  
     finetune_params=finetune_config,
-    epochs=2,
+    epochs=5,
     log_each=1,
     eval_each=1,
     criterion=LOSS,
@@ -217,7 +219,7 @@ peft_config = LowRankTemplate(
     rank=None,  
     distortion_factor=0.6, 
     random_init='normal',  
-    power=3,  
+    power=3,
 )
 
 fedot_config = FedotConfigTemplate(

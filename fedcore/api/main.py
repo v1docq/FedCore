@@ -182,6 +182,13 @@ class FedCore(Fedot):
             x = self.__init_solver_no_evo(x)
             fitted_solver = self.manager.solver.fit(x)
         self.optimised_model = fitted_solver.target
+
+        if hasattr(self.manager.solver, 'operator'):
+            self.fedcore_model = self.manager.solver.operator.root_node.operation.fitted_operation
+        elif hasattr(self.manager.solver, 'root_node'):
+            self.fedcore_model = self.manager.solver.root_node.operation.fitted_operation
+        elif hasattr(self.manager.solver, 'fitted_operation'):
+            self.fedcore_model = self.manager.solver.fitted_operation
         return fitted_solver
 
     def predict(self, predict_data: tuple, output_mode: str = 'fedcore', **kwargs):
@@ -344,7 +351,10 @@ class FedCore(Fedot):
             return torch.cat(all_targets) if all_targets else None         
         
         if is_inference_metric:
-            prediction_dict = dict(model=self.fedcore_model, dataset=target, model_regime=model_regime)
+            model_to_evaluate = getattr(self.fedcore_model, model_regime, None)
+            if model_to_evaluate is None:
+                model_to_evaluate = self.fedcore_model
+            prediction_dict = dict(model=model_to_evaluate, dataset=target, model_regime=model_regime)
         else:
             preproc_labels, preproc_probs = preproc_predict(prediction)
             preproc_target = preproc_target(target)

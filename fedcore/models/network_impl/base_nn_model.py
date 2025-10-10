@@ -142,45 +142,28 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             self.model = torch.load(path, map_location=self.device)
         self.model.eval()
 
-    def __check_and_substitute_loss(self, train_data: InputData):
-        # TODO delete 
-        names = ['loss', 'criterion']
-        if self.criterion is None:
-            criterion_name = 'cross_entropy' if self.task_type.name == 'classification' else 'rmse'
-            self.criterion = TorchLossesConstant[criterion_name].value()
-        for name in names:
-            if (train_data.supplementary_data.col_type_ids is not None
-                    and train_data.supplementary_data.col_type_ids.get(name, None)
-            ):
-                criterion = train_data.supplementary_data.col_type_ids[name]
-                try:
-                    self.criterion = criterion()
-                except:
-                    self.criterion = criterion
-                print("Forcely substituted criterion[loss] to", self.criterion)
+    # def __check_and_substitute_loss(self, train_data: InputData):
+    #     # TODO delete 
+    #     names = ['loss', 'criterion']
+    #     if self.criterion is None:
+    #         criterion_name = 'cross_entropy' if self.task_type.name == 'classification' else 'rmse'
+    #         self.criterion = TorchLossesConstant[criterion_name].value()
+    #     for name in names:
+    #         if (train_data.supplementary_data.col_type_ids is not None
+    #                 and train_data.supplementary_data.col_type_ids.get(name, None)
+    #         ):
+    #             criterion = train_data.supplementary_data.col_type_ids[name]
+    #             try:
+    #                 self.criterion = criterion()
+    #             except:
+    #                 self.criterion = criterion
+    #             print("Forcely substituted criterion[loss] to", self.criterion)
 
     def __substitute_device_quant(self):
         if not getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
-
-    def _compute_loss(self, criterion, model_output, target, stage='train', epoch=None):
-        if hasattr(model_output, 'loss'):
-            quality_loss = model_output.loss
-        else:
-            quality_loss = criterion(model_output, target)
-        if isinstance(model_output, torch.Tensor):
-            additional_losses = {name: coef * criterion(model_output, target)
-                                 for name, (criterion, coef) in self.custom_criterions.items()
-                                 if hasattr(TorchLossesConstant, name)}
-            additional_losses.update({name: coef * criterion(self.model)
-                                      for name, (criterion, coef) in self.custom_criterions.items()
-                                      if hasattr(StructureCriterions, name)})
-            for name, val in additional_losses.items():
-                self.history[f'{stage}_{name}_loss'].append((epoch, val))
-        final_loss = reduce(torch.add, additional_losses.values(), quality_loss)
-        return final_loss
 
     def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
@@ -306,10 +289,10 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         with torch.no_grad():
             torch.cuda.empty_cache()
 
-    def __wrap(self, model):
-        if not isinstance(model, BaseNeuralModel):
-            return BaseNeuralModel.wrap(model, self.params)
-        return model
+    # def __wrap(self, model):
+    #     if not isinstance(model, BaseNeuralModel):
+    #         return BaseNeuralModel.wrap(model, self.params)
+    #     return model
 
     @staticmethod
     def get_validation_frequency(epoch, lr):

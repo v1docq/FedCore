@@ -240,6 +240,7 @@ class NodeTemplate(ConfigTemplate):
     epochs: int = 15
     optimizer: Optimizers = 'adam'
     scheduler: Optional[Schedulers] = None
+    scheduler_step_each: Optional[int] = None  
     criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
 
 

@@ -60,12 +60,23 @@ class IDecomposed(abc.ABC):
         self._current_forward = self._forward_dict[compose_mode]
 
     def _evaluate_compose_mode(self: nn.Module):
+        """Evaluate the best composition mode to minimize parameters.
+        
+        Returns:
+            'one_layer': Compose all into single weight (when no compression achieved)
+            'two_layers': Keep U and Vh separate (preserves low-rank compression)
+        """
         nparams = [
             p.numel() for p in self.parameters()
         ]
-        l1 = self._initial_params_num
-        l2 = nparams[0] + nparams[-1]
-        return 'two_layers' if l2 > l1 else 'one_layer'
+        l1 = self._initial_params_num 
+        l2 = nparams[0] + nparams[-1]  
+        
+
+        if l2 < l1:
+            return 'two_layers' 
+        else:
+            return 'one_layer'  
 
     def _get_weights(self):
         return self.weight
@@ -453,12 +464,12 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
 
     def _forward2(self, x):
         x = embedding(x, self.U)
-        x = linear(x, self.Vh)
+        x = linear(x, self.Vh.T)
         return x
     
     def _forward3(self, x):
         x = embedding(x, (self.U * self.S))
-        x = linear(x, self.Vh)
+        x = linear(x, self.Vh.T)
         return x
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
