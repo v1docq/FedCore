@@ -1,7 +1,7 @@
-from copy import deepcopy
 from itertools import chain
 from fedot.core.data.data import InputData
 from torch import nn, optim
+import torch
 import traceback
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -18,7 +18,7 @@ from fedcore.repository.constanst_repository import (
     PRUNERS,
     PRUNING_IMPORTANCE, TorchLossesConstant
 )
-from fedcore.tools.model_registry import ModelRegistry
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 
@@ -96,23 +96,44 @@ class BasePruner(BaseCompressionModel):
 
     def _init_model(self, input_data):
         print('Prepare original model for pruning'.center(80, '='))
-        self.model_before = input_data.target
+        model = input_data.target
+        if isinstance(model, str):
+            device = default_device()
+            loaded = torch.load(model, map_location=device)
+            if isinstance(loaded, dict) and "model" in loaded:
+                model = loaded["model"]
+            else:
+                model = loaded
+        self.model_before = model
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.ft_params)
         else:
             self.trainer = BaseNeuralModel(self.ft_params)
+        
         if hasattr(self.model_before, 'model'):
             self.trainer.model = self.model_before.model
+        else:
+            self.trainer.model = self.model_before
+            
         self.model_before.to(default_device())
-        self.model_after = self.model_before
-        registry = ModelRegistry().get_instance(model=self.model_before)
-        self._model_registry = registry
+        
+        self._model_registry = ModelRegistry.get_instance()
         self._pruning_index += 1
+        
         metrics_before = {
             "stage": f"pruning_{self._pruning_index}",
+            "operation": "pruning",
             "is_processed": False,
         }
-        ModelRegistry.register_changes(metrics=metrics_before)
+        if self._model_id_before:
+            ModelRegistry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_before,
+                metrics=metrics_before
+            )
+        
+        self.model_after = self.model_before
+        
         print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
         print(f' Pruning importance - {self.importance_name} '.center(80, '='))
         print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
@@ -127,7 +148,7 @@ class BasePruner(BaseCompressionModel):
         elif not self.importance_name in ['random', 'lamp', 'magnitude']:
             self.pruner = PRUNERS["growing_reg_pruner"]
         else:
-            self.pruner = PRUNERS[self.pruner_name]
+            self.pruner = PRUNERS[self.pruner_name]  
         self._check_before_prune(input_data)
         self.optimizer_for_grad = optim.Adam(self.model_after.parameters(),
                                              lr=self.ft_params['lr_for_grad'])
@@ -181,12 +202,21 @@ class BasePruner(BaseCompressionModel):
                 hook(importance=self.importance, pruner_objects=self.pruner_objects)
             if finetune:
                 result_model = self.finetune(finetune_object=self.model_after, finetune_data=input_data)
+
                 # Record post-pruning state in registry
                 metrics_after = {
                     "stage": f"pruning_{self._pruning_index}",
+                    "operation": "pruning",
                     "is_processed": True,
                 }
-                ModelRegistry.register_changes(metrics=metrics_after)
+                self.model_after = result_model
+                if self._model_id_after:
+                    ModelRegistry.update_metrics(
+                        fedcore_id=self._fedcore_id,
+                        model_id=self._model_id_after,
+                        metrics=metrics_after
+                    )
+                
                 return result_model
         except Exception as e:
             traceback.print_exc()

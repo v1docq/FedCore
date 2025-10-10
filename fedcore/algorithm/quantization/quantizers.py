@@ -1,4 +1,3 @@
-from copy import deepcopy
 from itertools import chain
 from typing import Optional
 import traceback
@@ -30,7 +29,7 @@ from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
 from fedcore.repository.constanst_repository import TorchLossesConstant
 from fedcore.models.network_impl.hooks import Optimizers
-from fedcore.tools.model_registry import ModelRegistry
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 class BaseQuantizer(BaseCompressionModel):
@@ -147,21 +146,38 @@ class BaseQuantizer(BaseCompressionModel):
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
-        self.model_before = input_data.target.to(self.device)
+        model = input_data.target
+        if isinstance(model, str):
+            loaded = torch.load(model, map_location=self.device)
+            if isinstance(loaded, dict) and "model" in loaded:
+                model = loaded["model"]
+            else:
+                model = loaded
+        
+        self.model_before = model.to(self.device)
+        
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.qat_params)
         else:
             self.trainer = BaseNeuralModel(self.qat_params)
+        
         self.trainer.model = self.model_before
         self.quant_model = self.model_before.eval()
-        registry = ModelRegistry().get_instance(model=self.model_before)
-        self._model_registry = registry
+        
+        self._model_registry = ModelRegistry.get_instance()
         self._quantization_index += 1
         metrics_before = {
-            "stage": f"quantization_{self._pruning_index}",
+            "stage": f"quantization_{self._quantization_index}",
+            "operation": "quantization",
             "is_processed": False,
         }
-        ModelRegistry.register_changes(metrics=metrics_before)
+        if self._model_id_before:
+            ModelRegistry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_before,
+                metrics=metrics_before
+            )
+        
         print("[MODEL] Model initialized for quantization (no deepcopy).")
 
     def _prepare_model(self, input_data: InputData):
@@ -222,13 +238,22 @@ class BaseQuantizer(BaseCompressionModel):
 
             print("[FIT] Quantization performed successfully.")
             self.model_after = self.quant_model
+            
             if self.quant_type == 'qat':
-                self.model_after._is_quantized = True 
-            metrics_before = {
-                "stage": f"quantization_{self._pruning_index}",
-                "is_processed": False,
+                self.model_after._is_quantized = True
+            
+            metrics_after = {
+                "stage": f"quantization_{self._quantization_index}",
+                "operation": "quantization",
+                "is_processed": True,
             }
-            ModelRegistry.register_changes(metrics=metrics_before)
+            
+            if self._model_id_after:
+                ModelRegistry.update_metrics(
+                    fedcore_id=self._fedcore_id,
+                    model_id=self._model_id_after,
+                    metrics=metrics_after
+                )
         except Exception as e:
             print("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()

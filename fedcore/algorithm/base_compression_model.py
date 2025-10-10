@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -11,7 +12,7 @@ from fedcore.architecture.comptutaional.devices import default_device, extract_d
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from torchinfo import summary
-from fedcore.tools.model_registry import ModelRegistry
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 class BaseCompressionModel:
@@ -45,7 +46,16 @@ class BaseCompressionModel:
         self.model_for_inference = None
         # self.optimizer = None
         self.params = params
+        
         self._fedcore_id = params.get("fedcore_id")
+        if self._fedcore_id is None:
+            self._fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
+        
+        self._model_id_before = None
+        self._model_id_after = None
+        self._model_before_cached = None
+        self._model_after_cached = None
+        self._registry = ModelRegistry()
 
     def _save_and_clear_cache(self):
         try:
@@ -69,6 +79,96 @@ class BaseCompressionModel:
             )
             os.remove(prefix)
 
+    @property
+    def model_before(self):
+        """Get model_before from cache or registry."""
+        if self._model_before_cached is not None:
+            return self._model_before_cached
+        
+        if self._model_id_before is None:
+            return None
+        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        loaded_model = ModelRegistry.load_model_from_latest_checkpoint(
+            self._fedcore_id, self._model_id_before, device
+        )
+        
+        if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
+            self._model_before_cached = loaded_model
+            return self._model_before_cached
+        
+        return None
+    
+    @model_before.setter
+    def model_before(self, value):
+        """Set model_before - stores in cache and optionally in registry."""
+        self._model_before_cached = value
+        if value is not None and self._model_id_before is None:
+            self._model_id_before = ModelRegistry.register_model(
+                fedcore_id=self._fedcore_id,
+                model=value,
+                metrics={"stage": "initial", "is_processed": False}
+            )
+    
+    @property
+    def model_after(self):
+        """Get model_after from cache or registry."""
+        if self._model_after_cached is not None:
+            return self._model_after_cached
+        
+        if self._model_id_after is None:
+            return None
+        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        loaded_model = ModelRegistry.load_model_from_latest_checkpoint(
+            self._fedcore_id, self._model_id_after, device
+        )
+        
+        if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
+            self._model_after_cached = loaded_model
+            return self._model_after_cached
+        
+        return None
+    
+    @model_after.setter
+    def model_after(self, value):
+        """Set model_after - stores in cache and registers changes."""
+        self._model_after_cached = value
+        if value is not None:
+            if self._model_id_after is None:
+                self._model_id_after = ModelRegistry.register_model(
+                    fedcore_id=self._fedcore_id,
+                    model=value,
+                    metrics={"stage": "after_compression", "is_processed": False}
+                )
+            else:
+                ModelRegistry.register_changes(
+                    fedcore_id=self._fedcore_id,
+                    model_id=self._model_id_after,
+                    model=value,
+                    metrics={"stage": "after_compression", "is_processed": True}
+                )
+    
+    def _save_model_checkpoint(self, model, stage: str, metrics: dict = None):
+        """Save model checkpoint to registry.
+        
+        Args:
+            model: Model to save
+            stage: Stage name (e.g., 'before_compression', 'after_compression')
+            metrics: Optional metrics dictionary
+        """
+        if metrics is None:
+            metrics = {}
+        
+        metrics['stage'] = stage
+        
+        model_id = ModelRegistry.register_model(
+            fedcore_id=self._fedcore_id,
+            model=model,
+            metrics=metrics
+        )
+        return model_id
+
     def _init_model(self, input_data, additional_hooks=tuple()):
         model = input_data.target
         # Support passing a filesystem path to a checkpoint/model at the node input
@@ -91,23 +191,6 @@ class BaseCompressionModel:
             self.trainer = BaseNeuralModel(self.params)
         self.trainer.register_additional_hooks(additional_hooks)
         self.trainer.model = model
-
-        # Initialize and register the model in a process-wide registry (single instance per FedCore)
-        registry = ModelRegistry().get_instance(model=model)
-        # If a string path was provided originally, persist that; otherwise serialize current model
-        orig_target = input_data.target
-        if isinstance(orig_target, str):
-            self._model_id = ModelRegistry.register_model(
-                fedcore_id=self._fedcore_id,
-                model_path=orig_target,
-                metrics={}
-            )
-        else:
-            self._model_id = ModelRegistry.register_model(
-                fedcore_id=self._fedcore_id,
-                model=model,
-                metrics={}
-            )
 
         return model
 

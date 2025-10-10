@@ -20,7 +20,7 @@ from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.tools.edge_device import PowerEstimator
 from time import time
-from fedcore.tools.model_registry import ModelRegistry
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 def format_num(num: int, bytes=False):

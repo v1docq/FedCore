@@ -61,7 +61,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=6)
 
-pretrain_config = NeuralModelConfigTemplate(epochs=15,
+pretrain_config = NeuralModelConfigTemplate(epochs=5,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,

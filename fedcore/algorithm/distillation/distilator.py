@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import numpy as np
 from fedot.core.data.data import InputData
 from torch import nn, optim
@@ -11,7 +9,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import TrainParams
-from fedcore.tools.model_registry import ModelRegistry
+from fedcore.tools.registry.model_registry import ModelRegistry
 from fedcore.metrics.cv_metrics import (
     LastLayer,
     IntermediateAttention,
@@ -37,14 +35,59 @@ class BaseDistilator(BaseCompressionModel):
         return "Distilation_model"
 
     def _init_distil_model(self, teacher_model):
+        """Initialize student model from teacher model without deepcopy.
+        
+        Strategy:
+        1. Try to instantiate a new model of the same type
+        2. Load teacher's state_dict into student
+        3. Modify student architecture as needed (e.g., remove layers)
+        4. If instantiation fails, save and reload from checkpoint
+        """
         try:
-            student_model = type(teacher_model)() if hasattr(type(teacher_model), '__call__') else deepcopy(teacher_model)
-            if hasattr(student_model, 'load_state_dict') and hasattr(teacher_model, 'state_dict'):
-                student_model.load_state_dict(teacher_model.state_dict())
-        except Exception:
-            student_model = deepcopy(teacher_model)
-        for module in student_model.segformer.encoder.block:
-            del module[0]
+            model_class = type(teacher_model)
+            if hasattr(model_class, '__call__'):
+                try:
+                    student_model = model_class()
+                except TypeError:
+                    if hasattr(teacher_model, 'config'):
+                        student_model = model_class(teacher_model.config)
+                    else:
+                        temp_checkpoint = ModelRegistry.register_model(
+                            fedcore_id=self._fedcore_id,
+                            model=teacher_model,
+                            metrics={"stage": "temp_teacher", "is_processed": False}
+                        )
+                        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                        student_model = ModelRegistry.load_model_from_latest_checkpoint(
+                            self._fedcore_id, temp_checkpoint, device
+                        )
+                        if student_model is None:
+                            raise RuntimeError("Failed to create student model from checkpoint")
+                
+                if hasattr(student_model, 'load_state_dict') and hasattr(teacher_model, 'state_dict'):
+                    student_model.load_state_dict(teacher_model.state_dict())
+            else:
+                raise TypeError("Cannot instantiate model")
+                
+        except Exception as e:
+            print(f"Warning: Standard initialization failed ({e}), using checkpoint-based approach")
+            temp_checkpoint = ModelRegistry.register_model(
+                fedcore_id=self._fedcore_id,
+                model=teacher_model,
+                metrics={"stage": "temp_teacher_fallback", "is_processed": False}
+            )
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            student_model = ModelRegistry.load_model_from_latest_checkpoint(
+                self._fedcore_id, temp_checkpoint, device
+            )
+            if student_model is None:
+                raise RuntimeError("Failed to create student model")
+        
+        if hasattr(student_model, 'segformer') and hasattr(student_model.segformer, 'encoder'):
+            for module in student_model.segformer.encoder.block:
+                if len(module) > 0:
+                    del module[0]
+        
         return student_model
 
     def _calc_losses(self, loss, train_params, output_dict):
@@ -159,25 +202,41 @@ class BaseDistilator(BaseCompressionModel):
     def fit(self, input_data: InputData):
         self.base_model = input_data.target
         self.num_classes = input_data.features.num_classes
+        self.model_before = self.base_model
         self.student_model = self._init_distil_model(self.base_model)
-        registry = ModelRegistry().get_instance(model=self.base_model)
-        self._model_registry = registry
+        self._model_registry = ModelRegistry.get_instance()
         self._distill_index += 1
+        
         metrics_before = {
             "stage": f"distill_{self._distill_index}",
+            "operation": "distillation",
             "is_processed": False,
         }
-        ModelRegistry.register_changes(metrics=metrics_before)
+        if self._model_id_before:
+            ModelRegistry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_before,
+                metrics=metrics_before
+            )
         
         self._fit_distil_model(input_data)
         
         metrics_after = {
             "stage": f"distill_{self._distill_index}",
+            "operation": "distillation",
             "is_processed": True,
         }
-        ModelRegistry.register_changes(metrics=metrics_after)
         
-        self.model.cpu().eval()
+        self.model_after = self.student_model
+        
+        if self._model_id_after:
+            ModelRegistry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_after,
+                metrics=metrics_after
+            )
+        
+        self.student_model.cpu().eval()
 
     def predict_for_fit(
         self, input_data: InputData, output_mode: str = "default"

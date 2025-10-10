@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Dict, Optional
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
@@ -17,6 +16,7 @@ from fedcore.repository.constanst_repository import (
     LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 class LowRankModel(BaseCompressionModel):
@@ -35,12 +35,22 @@ class LowRankModel(BaseCompressionModel):
 
     def _init_model(self, input_data):
         model = super()._init_model(input_data, self._additional_hooks)
-        self.model_before = model
-        self.model_after = deepcopy(model)
+
+        if self._model_id_before:
+            ModelRegistry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_before,
+                metrics={"operation": "low_rank", "stage": "before_decomposition"}
+            )
+        
+
         decompose_module(
-            self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
+            model, self.decomposing_mode, self.decomposer, self.compose_mode
         )
-        self.model_after.to(self.device)
+        model.to(self.device)
+
+        self.model_after = model
+        
         return self.model_after
 
     def fit(self, input_data) -> None:
