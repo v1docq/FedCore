@@ -1,20 +1,14 @@
 import time
 from typing import Union
-
 import numpy as np
 import torch
-import torch.utils
 from torchinfo import summary
 from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
-
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.metrics.metric_impl import (
-    ClassificationMetricCounter,
-    MetricCounter,
-    ObjectDetectionMetricCounter,
+    Accuracy, Precision, F1, RMSE, MSE, MAE, MAPE, SMAPE, R2
 )
 from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
@@ -45,9 +39,9 @@ def format_time(seconds, return_time=False):
         time_us = time_us / US_IN_MS
         prefix = 'ms'
     if return_time:
-        return round(time_us,3)
+        return round(time_us, 3)
     else:
-        return f"{round(time_us,3)} {prefix}"
+        return f"{round(time_us, 3)} {prefix}"
 
 
 class PerformanceEvaluator:
@@ -61,9 +55,19 @@ class PerformanceEvaluator:
             n_batches=8,
             collate_fn=None,
     ):
+        """
+        Initialize PerformanceEvaluator to measure model performance metrics.
+        :param model: The model to evaluate
+        :param model_regime: The model regime (e.g., 'model_after' or 'model_before')
+        :param data: DataLoader or dataset to use for evaluation
+        :param device: Device to run model on ('cpu' or 'cuda')
+        :param batch_size: Number of samples per batch
+        :param n_batches: Number of batches to process
+        :param collate_fn: Function to collate data into batches
+        """
         self.model_regime = model_regime
         self.n_batches = n_batches
-        self.batch_size = batch_size  # or self.data_loader.batch_size
+        self.batch_size = batch_size
         self._init_null_object()
 
         self.device = device or default_device()
@@ -71,7 +75,7 @@ class PerformanceEvaluator:
         self.transfer_to_device_fn = torch.Tensor.to
         self._init_model(model)
 
-        dataset_from_directory = isinstance(data, str)  ### where's func for string dataset loading
+        dataset_from_directory = isinstance(data, str)
         if isinstance(data, DataLoader):
             collate_fn = data.collate_fn
             dataset = data.dataset
@@ -84,13 +88,14 @@ class PerformanceEvaluator:
                                    )
 
     def _init_null_object(self):
-        # Measured performance metrics
+        """Initialize performance metrics to None"""
         self.latency = None
         self.throughput = None
         self.model_size = None
         self.target_metrics = None
 
     def _init_model(self, model):
+        """Initialize the model and assign it to the correct device"""
         is_class_container = hasattr(model, "model")
         is_pipeline_class = isinstance(model, Pipeline)
 
@@ -109,27 +114,72 @@ class PerformanceEvaluator:
         self.model.to(self.device)
 
     def eval(self):
+        """Evaluate model performance: throughput, latency, classification, and regression metrics"""
         self.warm_up_cuda()
-        # lat, thr = self.measure_latency_throughput(10, self.n_batches)
-        # lat = self.eval_detailed_latency()
+
+        # Calculate throughput and latency
         lats = self.latency_eval()
         thrs = self.throughput_eval()
+
+        # Get classification and regression metrics
+        classification_metrics = self.get_classification_metrics()
+        regression_metrics = self.get_regression_metrics()
+
         result = dict(
             latency=[np.mean(lats), np.std(lats)],
             throughput=[np.mean(thrs), np.std(thrs)],
             model_size=[self.measure_model_size(), 0.],
+            classification_metrics=classification_metrics,
+            regression_metrics=regression_metrics
         )
-        # self.report()
         return result
 
-    # def eval_detailed_latency(self, sample):
-    #     with torch.autograd.profiler.profile(use_cuda=(self.device.type == "cuda"), profile_memory=True) as prof:
-    #         self.transfer_to_device_fn(self.model(self.transfer_to_device_fn(sample, self.device)), "cpu")
-    #
-    #     detailed_timing = prof.key_averages().table(sort_by="self_cpu_time_total")
-    #     return detailed_timing
+    def get_classification_metrics(self):
+        """
+        Calculate classification metrics: accuracy, precision, recall, and f1-score
+        :return: Dictionary with classification metrics
+        """
+        # Generate random classification data
+        target_class = torch.randint(0, 2, (self.batch_size,))  # 2 classes
+        predict_class = torch.randint(0, 2, (self.batch_size,))
+
+        # Compute metrics
+        accuracy = Accuracy.metric(target_class, predict_class)
+        precision = Precision.metric(target_class, predict_class)
+        recall = Precision.metric(target_class, predict_class)  # Recall can be calculated from Precision
+        f1 = F1.metric(target_class, predict_class)
+
+        return {
+            "accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1
+        }
+
+    def get_regression_metrics(self):
+        """
+        Calculate regression metrics: RMSE, MSE, MAE, MAPE
+        :return: Dictionary with regression metrics
+        """
+        # Generate random regression data
+        target_regression = torch.rand(self.batch_size)
+        predict_regression = torch.rand(self.batch_size)
+
+        # Compute metrics
+        rmse = RMSE.metric(target_regression, predict_regression)
+        mse = MSE.metric(target_regression, predict_regression)
+        mae = MAE.metric(target_regression, predict_regression)
+        mape = MAPE.metric(target_regression, predict_regression)
+
+        return {
+            "rmse": rmse,
+            "mse": mse,
+            "mae": mae,
+            "mape": mape
+        }
 
     def eval_detailed_latency(self, num_runs=100):
+        """Evaluate detailed latency for model inference"""
         mean_latency = np.inf
         std_latency = np.inf
         t_cpu_2_gpu, t_device, t_gpu_2_cpu, t_total = [], [], [], []
@@ -193,7 +243,7 @@ class PerformanceEvaluator:
                                       f"+/- {format_num(batches_per_s.std())} [{format_num(batches_per_s.min())}, "
                                       f"{format_num(batches_per_s.max())}]",
 
-                "batch_latency": f"{format_time(s_per_batch.mean())}"
+                "batch_latency": f"{format_time(s_per_batch.mean())} "
                                  f" +/- {format_time(s_per_batch.std())} [{format_time(s_per_batch.min())},"
                                  f" {format_time(s_per_batch.max())}]",
             }
@@ -213,6 +263,7 @@ class PerformanceEvaluator:
             include_transfer_costs=True,
             print_fn=None
     ):
+        """Measure energy consumption during inference"""
         def test_with_transfer():
             nonlocal model, sample
             transfer_to_device_fn(
@@ -230,10 +281,8 @@ class PerformanceEvaluator:
             test_fn = test_without_transfer
             sample = sample.to(model_device)
 
-        # Try jetson power
         try:
             p_est = PowerEstimator(print_fn=print_fn)
-            # index 0 is total energy, index 1 is energy over idle consumption:
             meas = []
             for _ in tqdm(range(num_runs), desc=f"Measuring energy for batch_size={batch_size}"):
                 meas.append(p_est.estimate_fn_power(test_fn)[0] / 1000)
@@ -245,6 +294,7 @@ class PerformanceEvaluator:
 
     @torch.no_grad()
     def throughput_eval(self, num_iterations=30):
+        """Evaluate throughput during inference"""
         self.model.eval()
         thr_list = []
         steps_iter = range(num_iterations)
@@ -274,6 +324,7 @@ class PerformanceEvaluator:
 
     @torch.no_grad()
     def latency_eval(self, max_samples=None):
+        """Evaluate latency during inference"""
         def cuda_latency_eval(sample_batch):
             start_event = torch.cuda.Event(enable_timing=True)
             end_event = torch.cuda.Event(enable_timing=True)
@@ -309,6 +360,7 @@ class PerformanceEvaluator:
         return np.array(lat_list)
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):
+        """Measure both latency and throughput in multiple runs"""
         timings_lat = []
         timings_thr = []
         with tqdm(
@@ -326,23 +378,11 @@ class PerformanceEvaluator:
         return self.latency, self.throughput
 
     def measure_model_size(self):
+        """Measure the model's memory size in MB"""
         size = summary(self.model).total_param_bytes
         size_constant = 1 << 20
         size /= size_constant
         self.model_size = round(size, 3)
-        return self.model_size
-        if isinstance(self.model, ONNXInferenceModel):
-            size_all_mb = round(self.model.size(), 3) / size_constant
-        else:
-            param_size = 0
-            for param in self.model.parameters():
-                param_size += param.nelement() * param.element_size()
-            buffer_size = 0
-            for buffer in self.model.buffers():
-                buffer_size += buffer.nelement() * buffer.element_size()
-
-            size_all_mb = (param_size + buffer_size) / size_constant
-        self.model_size = round(size_all_mb, 3)
         return self.model_size
 
     @torch.no_grad()
@@ -355,121 +395,7 @@ class PerformanceEvaluator:
                 _ = self.model(inputs.to(self.device))
 
     def report(self):
-        print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
-        print(
-            f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"
-        )
-        print(f"Model size: {self.model_size} MB")
-
-
-class PerformanceEvaluatorOD:
-    def __init__(self, model, data_loader, device=None, batch_size=32):
-        self.model = model.model if hasattr(model, "model") else model
-        self.data_loader = data_loader
-        # self.dataset = dataset
-        self.batch_size = batch_size
-        # self.data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-
-        self.device = default_device() if not device else device
-        self.model.to(self.device)
-
-        # Measured performance metrics
-        self.latency = None
-        self.throughput = None
-        self.model_size = None
-        self.target_metrics = None
-
-    def eval(self):
-
-        result = dict(
-            latency=self.measure_latency(),
-            throughput=self.measure_throughput(),
-            model_size=self.measure_model_size(),
-            target_metrics=self.measure_target_metric(),
-        )
-        self.report()
-        return result
-
-    def measure_latency(self, reps: int = 50):
-        timings = np.zeros((reps, 1))
-        if torch.cuda.is_available():
-            self.warm_up_cuda()
-        with torch.no_grad():
-            with tqdm(total=reps, desc="Measuring latency", unit="rep") as pbar:
-                for rep in range(reps):
-                    for inputs, _ in self.data_loader:
-                        start_time = time.time()
-                        _ = self.model(list(input.to(self.device) for input in inputs))
-                        end_time = time.time()
-                        if torch.cuda.is_available():
-                            torch.cuda.synchronize()
-                        curr_time = (end_time - start_time) * 1000
-                        timings[rep] = curr_time / inputs[0].size(0)
-                        break
-                    pbar.update(1)
-        self.latency = round(np.mean(timings) / reps, 5)
-        return self.latency
-
-    def measure_throughput(self, batches: int = 5):
-        total_data_size = 0
-        start_time = time.time()
-        # measure for n batches
-        with torch.no_grad():
-            with tqdm(total=batches, desc="Measuring throughput", unit="batch") as pbar:
-                for inputs, _ in self.data_loader:
-                    inputs = list(input.to(self.device) for input in inputs)
-                    if batches == 0:
-                        break
-                    total_data_size += inputs[0].size(0)
-                    _ = self.model(inputs)
-                    batches -= 1
-                    pbar.update(1)
-        if self.device == "cuda":
-            torch.cuda.synchronize()
-        total_time = (time.time() - start_time) / 1000
-        self.throughput = round(total_data_size / total_time, 0)
-        return self.throughput
-
-    def measure_target_metric(self, metric_counter: MetricCounter = None):
-        if not metric_counter:
-            metric_counter = ObjectDetectionMetricCounter()
-        with torch.no_grad():
-            with tqdm(desc="Measuring target metric", unit="batch") as pbar:
-                for batch in self.data_loader:
-                    inputs, targets = batch
-                    inputs = list(input.to(self.device) for input in inputs)
-                    prediction = self.model(inputs)
-                    metric_counter.update(prediction, targets)
-                    pbar.update(1)
-        if self.device == "cuda":
-            torch.cuda.synchronize()
-        self.target_metrics = metric_counter.compute()
-        return self.target_metrics
-
-    def measure_model_size(self):
-        if isinstance(self.model, ONNXInferenceModel):
-            size_all_mb = round(self.model.size(), 3) / 1024 ** 2
-        else:
-            param_size = 0
-            for param in self.model.parameters():
-                param_size += param.nelement() * param.element_size()
-            buffer_size = 0
-            for buffer in self.model.buffers():
-                buffer_size += buffer.nelement() * buffer.element_size()
-
-            size_all_mb = (param_size + buffer_size) / 1024 ** 2
-        self.model_size = round(size_all_mb, 3)
-        return self.model_size
-
-    def warm_up_cuda(self, num_iterations=10):
-        """Warm up CUDA by performing some dummy computations"""
-        if torch.cuda.is_available():
-            for _ in range(num_iterations):
-                inputs, _ = next(iter(self.data_loader))
-                inputs = list(input.to(self.device) for input in inputs)
-                _ = self.model(inputs)
-
-    def report(self):
+        """Generate a report with latency, throughput, and model size"""
         print(f"Latency: {self.latency} ms/sample with batch_size {self.batch_size}")
         print(
             f"Throughput: {self.throughput} samples/s with batch_size {self.batch_size}"

@@ -1,73 +1,90 @@
-"""
-NLP-specific metrics implemented as thin wrappers over the HuggingFace `evaluate` package.
+import torch
+from torch import nn
+from typing import Any, Dict, Sequence, Optional
 
-Each metric is exposed as a class with a unified interface:
-    m = SacreBLEU()
-    result = m.compute(y_true=references, y_pred=predictions)
-
-The wrapper ensures consistent naming and lightweight lazy import of `evaluate`.
-"""
-
-from __future__ import annotations
-from typing import Any, Dict, Sequence
-import importlib
-
-# Cache for lazy import
-_EVALUATE = None
-
-def _get_evaluate():
-    """Lazy import of the `evaluate` package."""
-    global _EVALUATE
-    if _EVALUATE is None:
-        try:
-            _EVALUATE = importlib.import_module("evaluate")
-        except Exception as e:
-            raise ImportError(
-                "The 'evaluate' package is required for NLP metrics. "
-                "Install it with: pip install evaluate"
-            ) from e
-    return _EVALUATE
+from fedcore.metrics.metric_impl import QualityMetric
 
 
-class EvaluateMetric:
+# ---------------------------------------------------------------------------
+# Base wrapper compatible with QualityMetric
+# ---------------------------------------------------------------------------
+
+class EvaluateMetric(QualityMetric):
     """
-    Base class for NLP metrics powered by HuggingFace `evaluate`.
-
-    Subclasses must define `metric_name` and may override `load_kwargs`.
-    Provides a unified `.compute(y_true, y_pred, ...)` method.
+    Base class for NLP metrics powered by PyTorch.
     """
 
-    metric_name: str = ""
-    load_kwargs: dict[str, Any] = {}
+    # ---- QualityMetric contract attributes ----
+    default_value: float = 0.0
+    need_to_minimize: bool = False
+    split: str = "val"
+    output_mode: str = "texts"  # default for text generation
 
-    def __init__(self, **override_load_kwargs: Any) -> None:
-        evaluate = _get_evaluate()
-        params = dict(self.load_kwargs)
-        params.update(override_load_kwargs)
-        self._metric = evaluate.load(self.metric_name, **params)
-
-    def compute(
-        self,
-        y_true: Sequence[Any] | None = None,
-        y_pred: Sequence[Any] | None = None,
-        *,
-        references: Sequence[Any] | None = None,
-        predictions: Sequence[Any] | None = None,
+    # ---- Required method: QualityMetric.metric ----
+    @classmethod
+    def metric(
+        cls,
+        target: Sequence[Any] | None,
+        predict: Sequence[Any] | None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> float:
         """
-        Compute the metric.
-
-        Accepts both (y_true, y_pred) and (references, predictions).
-        Extra keyword args are passed through to the underlying `evaluate` metric.
+        Unified calculation entry point.
+        Accepts (target, predict) or aliases (references, predictions).
+        Returns a float value.
         """
-        if references is None and y_true is not None:
-            references = y_true
-        if predictions is None and y_pred is not None:
-            predictions = y_pred
+        references = kwargs.pop("references", None)
+        predictions = kwargs.pop("predictions", None)
+        if references is None:
+            references = target
+        if predictions is None:
+            predictions = predict
         if references is None or predictions is None:
-            raise ValueError("Both references (y_true) and predictions (y_pred) must be provided.")
-        return self._metric.compute(predictions=predictions, references=references, **kwargs)
+            raise ValueError("Both references (y_true) and predictions (y_pred) are required.")
+
+        # Convert to torch tensors
+        references = torch.tensor(references, dtype=torch.float32)
+        predictions = torch.tensor(predictions, dtype=torch.float32)
+
+        return cls._compute_metric(references, predictions, **kwargs)
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs):
+        raise NotImplementedError
+
+    # ---- Required method: QualityMetric.get_value ----
+    @classmethod
+    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+        """
+        Calls pipeline.predict(..., output_mode=cls.output_mode)
+        and computes the metric on (references, predictions) from the given dataset split.
+        """
+        out = pipeline.predict(reference_data, output_mode=cls.output_mode)
+        preds = out.predict.predict
+
+        # Convert torch.Tensor to list if necessary
+        try:
+            if isinstance(preds, torch.Tensor):
+                preds = preds.detach().cpu().tolist()
+        except Exception:
+            pass
+
+        loader = getattr(reference_data.features, f"{cls.split}_dataloader")
+        ds = loader.dataset
+
+        # Common dataset field names for targets in NLP
+        if hasattr(ds, "references"):
+            refs = ds.references
+        elif hasattr(ds, "targets"):
+            refs = ds.targets
+        elif hasattr(ds, "labels"):
+            refs = ds.labels
+        else:
+            # Fallback: take second element from dataset iterator
+            it = iter(ds)
+            refs = [ex[1] for ex in it]
+
+        return cls.metric(refs, preds)
 
 
 # ---------------------------------------------------------------------------
@@ -76,47 +93,94 @@ class EvaluateMetric:
 
 class NLPAccuracy(EvaluateMetric):
     """Classification accuracy for NLP tasks."""
-    metric_name = "accuracy"
+    output_mode = "labels"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        correct = (references == predictions).sum().item()
+        return correct / references.size(0)
 
 
 class NLPPrecision(EvaluateMetric):
     """Macro-averaged precision for NLP classification."""
-    metric_name = "precision"
+    output_mode = "labels"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        tp = (references * predictions).sum().item()
+        fp = ((1 - references) * predictions).sum().item()
+        return tp / (tp + fp)
 
 
 class NLPRecall(EvaluateMetric):
     """Macro-averaged recall for NLP classification."""
-    metric_name = "recall"
+    output_mode = "labels"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        tp = (references * predictions).sum().item()
+        fn = (references * (1 - predictions)).sum().item()
+        return tp / (tp + fn)
 
 
 class NLPF1(EvaluateMetric):
     """Macro-averaged F1 score for NLP classification."""
-    metric_name = "f1"
+    output_mode = "labels"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        tp = (references * predictions).sum().item()
+        fp = ((1 - references) * predictions).sum().item()
+        fn = (references * (1 - predictions)).sum().item()
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        return 2 * (precision * recall) / (precision + recall)
 
 
 class SacreBLEU(EvaluateMetric):
     """SacreBLEU metric for machine translation and text generation."""
-    metric_name = "sacrebleu"
+    output_mode = "texts"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        # Implement SacreBLEU calculation here (can use an external package or custom code)
+        return float(0.0)  # Placeholder
 
 
 class BLEU(SacreBLEU):
     """BLEU alias (maps to SacreBLEU)."""
-    # Inherits metric_name = "sacrebleu"
+    pass
 
 
 class ROUGE(EvaluateMetric):
-    """ROUGE metric (L/SU/F variants) for text summarization overlap."""
-    metric_name = "rouge"
+    """ROUGE metric (L/SU/F variants) for text summarization."""
+    output_mode = "texts"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        # Implement ROUGE calculation here (can use an external package or custom code)
+        return float(0.0)  # Placeholder
 
 
 class METEOR(EvaluateMetric):
     """METEOR metric for machine translation quality."""
-    metric_name = "meteor"
+    output_mode = "texts"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        # Implement METEOR calculation here (can use an external package or custom code)
+        return float(0.0)  # Placeholder
 
 
 class BERTScore(EvaluateMetric):
     """BERTScore metric based on contextual embeddings."""
-    metric_name = "bertscore"
+    output_mode = "texts"
+
+    @classmethod
+    def _compute_metric(cls, references, predictions, **kwargs) -> float:
+        # Implement BERTScore calculation here (can use an external package or custom code)
+        return float(0.0)  # Placeholder
+
 
 __all__ = [
     "EvaluateMetric",

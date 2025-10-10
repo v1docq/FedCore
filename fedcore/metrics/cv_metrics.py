@@ -1,16 +1,14 @@
 from __future__ import annotations
 from abc import abstractmethod
 from typing import Optional
-import numpy as np
+import torch
 from torch import nn
-
 from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
 from fedot.core.pipelines.pipeline import Pipeline
-from fedcore.architecture.computational.devices import default_device
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.tools.ruler import PerformanceEvaluator
-
-
+from fedcore.metrics.metric_impl import SMAPE as smape
 # ---------------------------------------------------------------------------
 # Base class
 # ---------------------------------------------------------------------------
@@ -18,9 +16,6 @@ from fedcore.tools.ruler import PerformanceEvaluator
 class CompressionMetric(Metric):
     """
     Base class for compression- and computation-oriented metrics.
-
-    Subclasses must implement `metric(...)`. Values are inverted if
-    `need_to_minimize=True`.
     """
 
     default_value: float = 0.0
@@ -30,7 +25,7 @@ class CompressionMetric(Metric):
     @abstractmethod
     def metric(**kwargs) -> float:
         """Compute the metric from provided arguments."""
-        pass  # Simply define abstract method without explicit error
+        pass
 
     def simple_prediction(self, pipeline, reference_data):
         """Convenience wrapper to get pipeline predictions and pass-through data."""
@@ -46,14 +41,9 @@ class CompressionMetric(Metric):
     ) -> float:
         """
         Compute metric value on a pipeline and reference data.
-
-        Args:
-            pipeline: Pipeline to evaluate.
-            reference_data: InputData for evaluation.
-            validation_blocks: Only relevant for TS; ignored otherwise.
         """
         value = cls.metric(pipeline, reference_data.features.val_dataloader)
-        if cls.need_to_minimize and isinstance(value, (int, float, np.number)):
+        if cls.need_to_minimize and isinstance(value, (int, float, torch.Tensor)):
             value = -value
         return value
 
@@ -110,7 +100,7 @@ class Throughput(CompressionMetric):
     def metric(cls, model, dataset, device=default_device(), batch_size: int = 32):
         evaluator = PerformanceEvaluator(model=model, data=dataset, device=device, batch_size=batch_size)
         throughputs = evaluator.throughput_eval()
-        return float(np.mean(throughputs))
+        return float(torch.mean(torch.tensor(throughputs)))
 
 
 class Latency(CompressionMetric):
@@ -134,15 +124,12 @@ class Latency(CompressionMetric):
             batch_size=batch_size,
         )
         latency_list = evaluator.latency_eval()
-        return float(np.mean(latency_list))
+        return float(torch.mean(torch.tensor(latency_list)))
 
 
 class CV_quality_metric(CompressionMetric):
     """
     Aggregate quality metric wrapper using PerformanceEvaluator.
-
-    Produces a dict with multiple metrics (accuracy, etc.)
-    instead of a single float.
     """
     default_clf_metric = "accuracy"
     need_to_minimize = True

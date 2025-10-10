@@ -1,5 +1,5 @@
 from __future__ import annotations
-import numpy as np
+import torch
 import pandas as pd
 from sklearn.metrics import (
     mean_absolute_error,
@@ -22,11 +22,11 @@ from fedcore.metrics.metric_impl import (
 # Define constants for metric names
 METRIC_NAMES = {
     "r2": r2_score,
-    "mse": mean_squared_error,
-    "rmse": lambda a, b: float(np.sqrt(mean_squared_error(a, b))),
-    "mae": mean_absolute_error,
-    "msle": mean_squared_log_error,
-    "mape": mean_absolute_percentage_error,
+    "mse": lambda a, b: torch.mean((a - b) ** 2).item(),  # MSE with PyTorch
+    "rmse": lambda a, b: torch.sqrt(torch.mean((a - b) ** 2)).item(),  # RMSE with PyTorch
+    "mae": lambda a, b: torch.mean(torch.abs(a - b)).item(),  # MAE with PyTorch
+    "msle": lambda a, b: torch.mean(torch.log1p(a) - torch.log1p(b)).item(),  # MSLE with PyTorch
+    "mape": lambda a, b: torch.mean(torch.abs((a - b) / a)).item(),  # MAPE with PyTorch
 }
 
 def _to_df(values: dict, rounding: int = 3) -> pd.DataFrame:
@@ -48,14 +48,14 @@ def calculate_regression_metric(
     Compute regression metrics.
 
     Args:
-        target: Ground truth array.
-        predict: Predictions array.
+        target: Ground truth tensor.
+        predict: Predictions tensor.
         rounding_order: Decimal places for rounding.
         metric_names: Metrics to compute.
             Options: "r2", "mse", "rmse", "mae", "msle", "mape".
     """
-    target = np.asarray(target, dtype=float)
-    predict = np.asarray(predict, dtype=float)
+    target = torch.tensor(target, dtype=torch.float32)
+    predict = torch.tensor(predict, dtype=torch.float32)
 
     if "msle" in metric_names and ((target < 0).any() or (predict < 0).any()):
         raise ValueError("MSLE requires non-negative target and prediction.")
@@ -85,8 +85,8 @@ def calculate_forecasting_metric(
         metric_names: Metrics to compute.
             Options: "rmse", "mae", "smape", "mase", "mape".
     """
-    target = np.asarray(target, dtype=float)
-    predict = np.asarray(predict, dtype=float)
+    target = torch.tensor(target, dtype=torch.float32)
+    predict = torch.tensor(predict, dtype=torch.float32)
 
     values = {n: METRIC_NAMES[n](target, predict) for n in metric_names if n in METRIC_NAMES}
     return _to_df(values, rounding_order)
