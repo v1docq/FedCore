@@ -277,7 +277,7 @@ try:
         print()
 
         # Save model
-        save_path = "../../tinyllama_absorption_compressed"
+        save_path = "tinyllama_absorption_compressed"
         print(f"Save compressed model to {save_path}? (y/n): ", end='')
         response = input()
         if response.lower() == 'y':

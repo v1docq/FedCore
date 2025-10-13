@@ -9,6 +9,7 @@ from .core_reassemblers import (
     get_reassembler, REASSEMBLERS
 )
 from .transmla_reassembler import TransMLA, TransMLAConfig, get_transmla_status
+from .flatllm_reassembler import FlatLLM, FlatLLMConfig, get_flatllm_status
 from .decomposed_recreation import RECREATION_FUNCTIONS
 
 __all__ = [
@@ -16,8 +17,11 @@ __all__ = [
     'ParentalReassembler',
     'TransMLA',
     'TransMLAConfig',
+    'FlatLLM',
+    'FlatLLMConfig',
     'get_reassembler',
     'get_transmla_status',
+    'get_flatllm_status',
     'REASSEMBLERS',
     'RECREATION_FUNCTIONS'
 ]
