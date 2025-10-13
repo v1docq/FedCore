@@ -19,17 +19,8 @@ from fedcore.api.main import FedCore
 ### ts_forecasting), PEFT problem (pruning, quantisation, distillation,###
 ### low_rank) and appropriate loss function both for model and compute ###
 ##########################################################################
-METRIC_TO_OPTIMISE = ['accuracy', 'latency']
-LOSS = 'cross_entropy'
-PROBLEM = 'classification'
-PEFT_PROBLEM = 'pruning'
 INITIAL_ASSUMPTION = {'path_to_model': '/home/user/projects/FedCore/FedCore/examples/api_example/pruning/cv_task/pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
                       'model_type': 'ResNet18'}
-INITIAL_MODEL = 'ResNet18'
-PRETRAIN_SCENARIO = 'from_checkpoint'
-SCRATCH_SCENARIO = 'from_scratch'
-POP_SIZE = 1
-DATASET = 'CIFAR10'
 train_dataloader_params = {"batch_size": 64,
                            'shuffle': True,
                            'is_train': True,
@@ -39,16 +30,6 @@ test_dataloader_params = {"batch_size": 100,
                           'shuffle': True,
                           'is_train': False,
                           'data_type': 'table'}
-
-
-def create_usage_scenario(scenario: str, model: str, path_to_pretrain: str = None):
-    if path_to_pretrain is not None:
-        initial_assumption = {'path_to_model': path_to_pretrain,
-                              'model_type': model}
-    else:
-        initial_assumption = model
-    return get_scenario_for_api(scenario, initial_assumption)
-
 
 def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloader_params):
     fedcore_train_data = load_data(source=dataset_name, loader_params=train_dataloader_params)
@@ -60,8 +41,6 @@ def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloade
 ### CREATE SCENARIO FOR FEDCORE AGENT (TRAIN AND OPTIMISE MODEL FROM SCRATCH ###
 ### or optimise pretrained model with PEFT strategies                        ###
 ################################################################################
-initial_assumption, learning_strategy = get_scenario_for_api(scenario_type=SCRATCH_SCENARIO, #PRETRAIN_SCENARIO
-                                                             initial_assumption=INITIAL_ASSUMPTION)
 
 model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
@@ -71,24 +50,22 @@ pretrain_config = NeuralModelConfigTemplate(epochs=200,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,
-                                            criterion=LOSS,
+                                            criterion='cross_entropy',
                                             model_architecture=model_config,
                                             custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                             'maximise_task': False,
-                                                                                            'delta': 0.01}))
-
-fedot_config = FedotConfigTemplate(problem=PROBLEM,
-                                   metric=METRIC_TO_OPTIMISE,
-                                   pop_size=POP_SIZE,
+                                                                                            'delta': 0.01})
+fedot_config = FedotConfigTemplate(problem='classification',
+                                   metric=['accuracy', 'latency'],
+                                   pop_size=1,
                                    timeout=1,
-                                   initial_assumption=initial_assumption)
+                                   initial_assumption=INITIAL_ASSUMPTION)
 
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
 finetune_config = NeuralModelConfigTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
-                                            criterion=LOSS,
                                             )
 peft_config = PruningTemplate(
     importance="magnitude", #"activation_entropy"
@@ -96,10 +73,10 @@ peft_config = PruningTemplate(
     finetune_params=finetune_config
 )
 
-learning_config = LearningConfigTemplate(criterion=LOSS,
-                                         learning_strategy=learning_strategy,
+learning_config = LearningConfigTemplate(criterion='cross_entropy',
+                                         learning_strategy='from_checkpoint',
                                          learning_strategy_params=pretrain_config,
-                                         peft_strategy=PEFT_PROBLEM,
+                                         peft_strategy='peft',
                                          peft_strategy_params=peft_config)
 
 api_template = APIConfigTemplate(automl_config=automl_config,
@@ -109,7 +86,7 @@ if __name__ == "__main__":
     APIConfig = ConfigFactory.from_template(api_template)
     api_config = APIConfig()
     fedcore_compressor = FedCore(api_config)
-    fedcore_train_data, fedcore_test_data = load_benchmark_dataset(DATASET, train_dataloader_params,
+    fedcore_train_data, fedcore_test_data = load_benchmark_dataset('CIFAR10', train_dataloader_params,
                                                                    test_dataloader_params)
     fitted_model = fedcore_compressor.fit_no_evo(fedcore_train_data)
     print(f"   Тип: {type(fitted_model)}")

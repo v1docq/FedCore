@@ -34,14 +34,9 @@ from fedcore.metrics.nlp_metrics import NLPAccuracy, NLPF1, SacreBLEU, ROUGE
 ### CONFIGURATION ###
 ##########################################################################
 
-METRIC_TO_OPTIMISE = ['accuracy', 'f1']  
-LOSS = 'cross_entropy'
-PROBLEM = 'classification'
-PEFT_PROBLEM = 'low_rank'  
-
 INITIAL_MODEL = 'arnir0/Tiny-LLM'
-INITIAL_ASSUMPTION = AutoModelForCausalLM.from_pretrained(INITIAL_MODEL)
-print(f"Model type: {type(INITIAL_ASSUMPTION)}")
+model = AutoModelForCausalLM.from_pretrained(INITIAL_MODEL)
+print(f"Model type: {type(INITIAL_MODEL)}")
 
 TOKENIZER = AutoTokenizer.from_pretrained(INITIAL_MODEL)
 
@@ -53,9 +48,7 @@ if TOKENIZER.pad_token is None:
 print(f"Tokenizer loaded: {TOKENIZER is not None}")
 print(f"Vocabulary size: {TOKENIZER.vocab_size}")
 
-PRETRAIN_SCENARIO = 'from_checkpoint'
-SCRATCH_SCENARIO = 'from_scratch'
-POP_SIZE = 1
+
 DATASET = load_dataset("wikitext", "wikitext-2-raw-v1", split="train[:1000]")
 
 def preprocess_dataset(examples):
@@ -148,7 +141,7 @@ example_input = example_batch[0]
 
 compression_data = CompressionInputData(
     features=example_input,  
-    target=INITIAL_ASSUMPTION, 
+    target=model, 
     train_dataloader=train_dataloader,
     val_dataloader=val_dataloader,
     test_dataloader=test_dataloader,
@@ -160,26 +153,14 @@ compression_data = CompressionInputData(
 ### CONFIGURE FEDCORE WITH LLMTrainer AND LOW_RANK PEFT ###
 ################################################################################
 
-initial_assumption, learning_strategy = get_scenario_for_api(
-    scenario_type=SCRATCH_SCENARIO,
-    initial_assumption=INITIAL_ASSUMPTION
-)
-
-model_arch_config = ModelArchitectureConfigTemplate(
-    input_dim=TOKENIZER.vocab_size,
-    output_dim=TOKENIZER.vocab_size,
-    depth=3
-)
-
 pretrain_config = LLMConfigTemplate(
-    model_architecture=model_arch_config,
     epochs=5,  
     optimizer='paralleltg',
     scheduler='one_cycle',
     scheduler_step_each=1,
-    criterion=LOSS,
+    criterion='cross_entropy',
     is_llm=True,
-    model=INITIAL_ASSUMPTION,
+    model=model,
     tokenizer=TOKENIZER,
     custom_learning_params={
         'batch_size': 4,
@@ -190,31 +171,28 @@ pretrain_config = LLMConfigTemplate(
     }
 )
 
-finetune_config = LLMConfigTemplate(
-    model_architecture=model_arch_config,
-    epochs=2,
-    optimizer='ultg',
-    criterion=LOSS,
-    is_llm=True,
-    model=INITIAL_ASSUMPTION,
-    tokenizer=TOKENIZER,
-    custom_learning_params={
-        'batch_size': 4,
-        'learning_rate': 1e-5
-    }
-)
+# finetune_config = LLMConfigTemplate(
+#     model_architecture=model_arch_config,
+#     epochs=2,
+#     optimizer='ultg',
+#     criterion=LOSS,
+#     is_llm=True,
+#     model=INITIAL_ASSUMPTION,
+#     tokenizer=TOKENIZER,
+#     custom_learning_params={
+#         'batch_size': 4,
+#         'learning_rate': 1e-5
+#     }
+# )
 
 peft_config = LowRankTemplate(
     strategy='quantile',
     rank_prune_each=1, 
     custom_criterions=None,
     non_adaptive_threshold=0.3,  
-    finetune_params=finetune_config,
     epochs=5,
     log_each=1,
     eval_each=1,
-    criterion=LOSS,
-    model_architecture=model_arch_config,
     decomposer='rsvd', 
     rank=None,  
     distortion_factor=0.6, 
@@ -223,20 +201,20 @@ peft_config = LowRankTemplate(
 )
 
 fedot_config = FedotConfigTemplate(
-    problem=PROBLEM,
-    metric=METRIC_TO_OPTIMISE,
-    pop_size=POP_SIZE,
+    problem='classification',
+    metric= ['accuracy', 'f1'],
+    pop_size=1,
     timeout=2,
-    initial_assumption=INITIAL_ASSUMPTION
+    initial_assumption=model
 )
 
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
 learning_config = LearningConfigTemplate(
-    criterion=LOSS,
-    learning_strategy=learning_strategy,
+    criterion='cross_entropy',
+    learning_strategy='from_scratch',
     learning_strategy_params=pretrain_config,
-    peft_strategy=PEFT_PROBLEM, 
+    peft_strategy='low_rank', 
     peft_strategy_params=peft_config  
 )
 
