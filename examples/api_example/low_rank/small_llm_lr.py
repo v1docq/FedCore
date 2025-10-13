@@ -2,12 +2,6 @@ import sys
 import os
 import torch
 
-# Правильный путь с учетом вложенности
-correct_path = "/home/user/projects/FedCore/FedCore"
-sys.path.insert(0, correct_path)
-
-print("Обновленный sys.path:")
-print(sys.path[0])
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from torch.utils.data import DataLoader
 from fedot.core.repository.tasks import (

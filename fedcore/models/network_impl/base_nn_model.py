@@ -142,22 +142,6 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             self.model = torch.load(path, map_location=self.device)
         self.model.eval()
 
-    # def __check_and_substitute_loss(self, train_data: InputData):
-    #     # TODO delete 
-    #     names = ['loss', 'criterion']
-    #     if self.criterion is None:
-    #         criterion_name = 'cross_entropy' if self.task_type.name == 'classification' else 'rmse'
-    #         self.criterion = TorchLossesConstant[criterion_name].value()
-    #     for name in names:
-    #         if (train_data.supplementary_data.col_type_ids is not None
-    #                 and train_data.supplementary_data.col_type_ids.get(name, None)
-    #         ):
-    #             criterion = train_data.supplementary_data.col_type_ids[name]
-    #             try:
-    #                 self.criterion = criterion()
-    #             except:
-    #                 self.criterion = criterion
-    #             print("Forcely substituted criterion[loss] to", self.criterion)
 
     def __substitute_device_quant(self):
         if not getattr(self.model, '_is_quantized', False):

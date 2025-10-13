@@ -19,7 +19,7 @@ from fedcore.repository.model_repository import (
 )
 
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
-from fedcore.models.network_impl.utils.trainer_factory import create_trainer
+from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 
 class FedCoreStrategy(EvaluationStrategy):
     def _convert_to_output(
@@ -74,29 +74,15 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
     def __init__(
         self, operation_type: str, params: Optional[OperationParameters] = None
     ):
-        params_dict = {}
-        if hasattr(params, 'to_dict'):
-            params_dict = params.to_dict()
-        else:
-            params_dict = params
-
-        is_llm = params_dict.get('is_llm', False)
-
-        model = params_dict.get('model', getattr(params, 'model', None))
-        # if is_llm:
-        #     self.operation_impl = LLMTrainer(model=model, params=params_dict)
-        # else:
-        #     super().__init__(operation_type, params)
-
-        task_type = params_dict.get('task_type', 'classification')
-
-        self.operation_impl = create_trainer(
-            task_type=task_type,
-            params=params_dict,
-            model=model
+        from functools import partial
+        self.operation_impl = partial(
+            create_trainer_from_input_data,
+            params=params
         )
+                                      
 
     def fit(self, train_data: InputData):
+        self.operation_impl = self.operation_impl(train_data)
         self.trained_model = self.operation_impl.fit(train_data)
         return self.operation_impl
 
