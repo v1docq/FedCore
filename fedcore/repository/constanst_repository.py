@@ -492,3 +492,8 @@ DEFAULT_TORCH_DATASET = {
 }
 
 HISTORY_VIZ_PARAMS = HistoryVisualisationParams
+
+FedotTaskEnum = FedotTaskEnum
+FedCoreTaskEnum = FedCoreTaskEnum
+CVTasks = CVTasks
+FedCoreCVDataset = FedCoreCVDataset
