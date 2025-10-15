@@ -36,7 +36,7 @@ from fedcore.metrics.api_metric import (
     calculate_forecasting_metric,
     calculate_regression_metric,
 )
-from fedcore.models.network_impl.decomposed_layers import DecomposableLayers  ### don't del
+from fedcore.models.network_impl.decomposed_layers import DecomposableLayers  # noqa
 
 from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
 from fedcore.models.network_modules.losses import (
@@ -53,16 +53,16 @@ from fedcore.models.network_modules.losses import (
 )
 
 from fedcore.repository.setups import QAT_1, PTQ_1
-from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks  # don't del
-from fedcore.algorithm.low_rank.hooks import LRHooks  # don't del
+from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks  # noqa
+from fedcore.algorithm.low_rank.hooks import LRHooks  # noqa
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.architecture.utils.misc import EnumNoValue
 
 from fedcore.models.network_impl.hooks import (
     Optimizers, Schedulers, ModelLearningHooks, LoggingHooks,
-)  # don't del
-from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum  # don't del
+)  # noqa
+from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum  # noqa
 
 default_param_values_dict = dict(
     problem=None,
@@ -198,14 +198,12 @@ class FedotOperationConstant(Enum):
 
     FEDOT_ENSEMBLE_ASSUMPTIONS = {}
 
-class PEFTStrategies(Enum):
-    pruning = partial(PipelineBuilder().add_node, operation_type="pruning_model")
-    low_rank = partial(PipelineBuilder().add_node, operation_type="low_rank_model")
-    quantization = partial(PipelineBuilder().add_node, operation_type='quantization_model')
-    distilation = partial(PipelineBuilder().add_node, operation_type="distilation_model")
-    detection = partial(PipelineBuilder().add_node, operation_type="detection_model", params={"pretrained": True})
-    training = partial(PipelineBuilder().add_node, operation_type="training_model")
-
+# class PEFTStrategies(Enum):
+#     pruning = partial(PipelineBuilder().add_node, operation_type="pruning_model")
+#     low_rank = partial(PipelineBuilder().add_node, operation_type="low_rank_model")
+#     quantization = partial(PipelineBuilder().add_node, operation_type='quantization_model')
+#     distilation = partial(PipelineBuilder().add_node, operation_type="distilation_model")
+#     training = partial(PipelineBuilder().add_node, operation_type="training_model")
 
 class ModelCompressionConstant(Enum):
     ENERGY_THR = [0.9, 0.95, 0.99, 0.999]
@@ -247,17 +245,7 @@ class ModelCompressionConstant(Enum):
         "RandomImportance": tp.importance.RandomImportance,
     }
 
-    # PRUNING_IMPORTANCE = {
-    #     "MagnitudeImportance": tp.importance.MagnitudeImportance,
-    #     "TaylorImportance": tp.importance.TaylorImportance,
-    #     "HessianImportance": tp.importance.HessianImportance,
-    #     "BNScaleImportance": tp.importance.BNScaleImportance,
-    #     "LAMPImportance": tp.importance.LAMPImportance,
-    #     "RandomImportance": tp.importance.RandomImportance,
-    #     "GroupNormImportance": tp.importance.GroupNormImportance,
-    #     "GroupTaylorImportance": tp.importance.GroupTaylorImportance,
-    #     "GroupHessianImportance": tp.importance.GroupHessianImportance,
-    # }
+
     GROUP_PRUNING_IMPORTANCE = {
         "GroupNormImportance": tp.importance.GroupMagnitudeImportance,
         "GroupTaylorImportance": tp.importance.GroupTaylorImportance,
@@ -413,20 +401,16 @@ class HistoryVisualisationParams(Enum):
 
 AVAILABLE_REG_OPERATIONS = FedotOperationConstant.AVAILABLE_REG_OPERATIONS.value
 AVAILABLE_CLS_OPERATIONS = FedotOperationConstant.AVAILABLE_CLS_OPERATIONS.value
-# EXCLUDED_OPERATION_MUTATION = FedotOperationConstant.EXCLUDED_OPERATION_MUTATION.value
-# FEDOT_TASK = FedotOperationConstant.FEDOT_TASK.value
 FEDOT_TASK = EnumNoValue(FedotTaskEnum)
 # FEDOT_ASSUMPTIONS = FedotOperationConstant.FEDOT_ASSUMPTIONS.value  ###
-FEDOT_ASSUMPTIONS = EnumNoValue(PEFTStrategies)
+# FEDOT_ASSUMPTIONS = EnumNoValue(PEFTStrategies)
 FEDOT_API_PARAMS = FedotOperationConstant.FEDOT_API_PARAMS.value
 FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.value
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
 FEDOT_EVO_MULTI_STRATEGY = FedotOperationConstant.FEDOT_EVO_MULTI_STRATEGY.value
 FEDOT_GENETIC_MULTI_STRATEGY = FedotOperationConstant.FEDOT_GENETIC_MULTI_STRATEGY.value
 FEDOT_GET_METRICS = FedotOperationConstant.FEDOT_GET_METRICS.value
-# FEDCORE_TASK = FedotOperationConstant.FEDCORE_TASK.value
 FEDCORE_TASK = EnumNoValue(FedCoreTaskEnum)
-# CV_TASK = FedotOperationConstant.CV_TASK.value
 CV_TASK = EnumNoValue(CVTasks)
 # FEDCORE_CV_DATASET = FedotOperationConstant.FEDCORE_CV_DATASET.value
 FEDCORE_CV_DATASET = EnumNoValue(FedCoreCVDataset)

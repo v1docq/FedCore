@@ -11,7 +11,9 @@ import torch
 import torch.nn
 from fedot.api.main import Fedot
 from fedot.core.data.data import InputData, OutputData
-from fedot.core.pipelines.pipeline import Pipeline
+from fedot.core.pipelines.pipeline import Pipeline        
+from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+
 from pymonad.either import Either
 from pymonad.maybe import Maybe
 from torch import Tensor
@@ -21,10 +23,9 @@ from fedcore.architecture.abstraction.decorators import DaskServer, exception_ha
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
     FEDOT_API_PARAMS,
-    FEDOT_ASSUMPTIONS,
+    # FEDOT_ASSUMPTIONS,
     FEDOT_GET_METRICS,
 )
 from fedcore.repository.initializer_industrial_models import FedcoreModels
@@ -76,10 +77,10 @@ class FedCore(Fedot):
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
-        initial_assumption = initial_assumption(
-            params=self.manager.learning_config.peft_strategy_params.to_dict())
-        initial_pipeline = initial_assumption.build()
+        # initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
+        # initial_assumption = initial_assumption(
+        #     params=self.manager.learning_config.peft_strategy_params.to_dict())
+        initial_pipeline = self.__build_assumption()
         self.manager.solver.params.data.update({'initial_assumption': initial_pipeline})
         return input_data
 
@@ -95,18 +96,35 @@ class FedCore(Fedot):
 
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
-                                    use_input_preprocessing=False,
-                                    use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](
-            params=self.manager.learning_config.peft_strategy_params.to_dict()
-        )
-        self.manager.solver = initial_assumption.build()
+        # self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
+        #                             use_input_preprocessing=False,
+        #                             use_auto_preprocessing=False)
+        self.manager.solver = self.__build_assumption()
         return input_data
+    
+    def __build_assumption(self):
+        def camel_to_snake(camel_case_string):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        
+        initial_assumption = PipelineBuilder()
+        peft_strategy_params = self.manager.learning_config.peft_strategy_params
+        # check if atomized strategy
+        if not isinstance(peft_strategy_params, (list, tuple)):
+            peft_strategy_params = (peft_strategy_params,)
+        print('###', peft_strategy_params)
+        print('###', self.manager.learning_config)
+        for peft_strategy_conf in peft_strategy_params:
+            initial_assumption.add_node(
+                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
+                params=peft_strategy_conf.to_dict()
+            )
+
+        return initial_assumption.build()
 
     def _process_input_data(self, input_data):
-        data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
-                             model=self.manager.automl_config.fedot_config['initial_assumption'],
+        data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
         train_data = Either.insert(input_data).then(data_cls.check_input_data).value
@@ -150,7 +168,7 @@ class FedCore(Fedot):
         def fit_function(train_data):
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
             if pretrain_before_optimise:
-                model_learning_pipeline = FEDOT_ASSUMPTIONS["training"](
+                model_learning_pipeline = PipelineBuilder().add_node(operation_type='training_model',
                     params=self.manager.learning_config.learning_strategy_params.to_dict()
                 )
                 model_learning_pipeline = model_learning_pipeline.build()
