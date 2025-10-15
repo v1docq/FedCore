@@ -79,7 +79,6 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
             create_trainer_from_input_data,
             params=params
         )
-                                      
 
     def fit(self, train_data: InputData):
         self.operation_impl = self.operation_impl(train_data)

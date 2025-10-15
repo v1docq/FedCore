@@ -94,6 +94,59 @@ class FedCore(Fedot):
         self.logger.info(f'Link Dask Server - {self.manager.dask_client.dashboard_link}')
         self.logger.info('-' * 50)
         return input_data
+    
+    def _extract_fitted_operation(self, solver, max_depth: int = 5):
+        """Extract fitted operation from solver using recursive search.
+        Args:
+            solver: Fedot solver instance or any object containing fitted_operation
+            max_depth: Maximum depth for recursive search (default: 5)
+            
+        Returns:
+            Fitted operation (usually a trained model)
+            
+        Raises:
+            AttributeError: If fitted_operation cannot be found
+        """
+        def _recursive_search(obj, target_attr: str, depth: int = 0, visited=None):
+            if visited is None:
+                visited = set()
+            
+            obj_id = id(obj)
+            if obj_id in visited or depth > max_depth:
+                return None
+            visited.add(obj_id)
+            
+            if hasattr(obj, target_attr):
+                return getattr(obj, target_attr)
+
+            priority_attrs = ['operator', 'root_node', 'operation']
+            
+            for attr_name in priority_attrs:
+                if hasattr(obj, attr_name):
+                    nested_obj = getattr(obj, attr_name)
+                    if nested_obj is not None and not isinstance(nested_obj, (str, int, float, bool)):
+                        result = _recursive_search(nested_obj, target_attr, depth + 1, visited)
+                        if result is not None:
+                            return result
+            
+            for attr_name in dir(obj):
+                if (attr_name.startswith('_') or 
+                    attr_name in priority_attrs or 
+                    attr_name in ['__class__', '__dict__']):
+                    continue
+
+                nested_obj = getattr(obj, attr_name)
+                if (nested_obj is not None and 
+                    not isinstance(nested_obj, (str, int, float, bool, list, dict, tuple)) and
+                    not callable(nested_obj)):
+                    result = _recursive_search(nested_obj, target_attr, depth + 1, visited)
+                    if result is not None:
+                        return result
+                    
+            return None
+        
+        result = _recursive_search(solver, 'fitted_operation')
+        return result
 
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
@@ -105,6 +158,49 @@ class FedCore(Fedot):
         )
         self.manager.solver = initial_assumption.build()
         return input_data
+
+    @property
+    def compressed_model(self):
+        """Get compressed (optimized) model.
+        Returns:
+            torch.nn.Module or None: Compressed model
+        """
+        if self.fedcore_model is None:
+            return None
+        return getattr(self.fedcore_model, 'model_after', self.fedcore_model)
+    
+    @property
+    def original_model(self):
+        """Get original (before compression) model.        
+        Returns:
+            torch.nn.Module or None: Original model
+        """
+        if self.fedcore_model is None:
+            return None
+        return getattr(self.fedcore_model, 'model_before', self.fedcore_model)
+    
+    def get_model_by_regime(self, regime: str = 'model_after'):
+        """Get model by regime name.
+        Args:
+            regime: 'model_after' for compressed, 'model_before' for original
+            
+        Returns:
+            torch.nn.Module: Requested model or fallback to fedcore_model
+            
+        Raises:
+            ValueError: If fedcore_model is not initialized
+        """
+        if self.fedcore_model is None:
+            raise ValueError("fedcore_model is not initialized. Call fit() first.")
+        
+        model = getattr(self.fedcore_model, regime, None)
+        if model is None:
+            self.logger.warning(
+                f"Regime '{regime}' not found in fedcore_model. "
+                f"Using fedcore_model directly."
+            )
+            model = self.fedcore_model
+        return model
 
     def _process_input_data(self, input_data):
         data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
@@ -182,13 +278,8 @@ class FedCore(Fedot):
             x = self.__init_solver_no_evo(x)
             fitted_solver = self.manager.solver.fit(x)
         self.optimised_model = fitted_solver.target
-
-        if hasattr(self.manager.solver, 'operator'):
-            self.fedcore_model = self.manager.solver.operator.root_node.operation.fitted_operation
-        elif hasattr(self.manager.solver, 'root_node'):
-            self.fedcore_model = self.manager.solver.root_node.operation.fitted_operation
-        elif hasattr(self.manager.solver, 'fitted_operation'):
-            self.fedcore_model = self.manager.solver.fitted_operation
+        
+        self.fedcore_model = self._extract_fitted_operation(self.manager.solver)
         return fitted_solver
 
     def predict(self, predict_data: tuple, output_mode: str = 'fedcore', **kwargs):
@@ -212,17 +303,20 @@ class FedCore(Fedot):
             target_values = torch.tensor(result.label_ids) if result.label_ids is not None else None
             
             self.manager.predicted_labels = OutputData(
-            idx=torch.arange(len(pred_values)),
-            task=getattr(predict_data, 'task', None),
-            predict=pred_values,
-            target=target_values,
-            data_type=DataTypesEnum.table,
+                idx=torch.arange(len(pred_values)),
+                task=getattr(predict_data, 'task', None),
+                predict=pred_values,
+                target=target_values,
+                data_type=DataTypesEnum.table,
             )
             
         elif isinstance(result, OutputData):
             self.manager.predicted_labels = result
         elif hasattr(result, 'predict'):
-            self.manager.predicted_labels = result.predict
+            pred_value = result.predict if result.predict is not None else getattr(result, 'model', None)
+            if pred_value is None:
+                raise ValueError("Result has 'predict' attribute but it is None, and 'model' is also unavailable")
+            self.manager.predicted_labels = pred_value if isinstance(pred_value, OutputData) else result
         else:
             pred_values = torch.tensor(result) if not isinstance(result, torch.Tensor) else result
             self.manager.predicted_labels = OutputData(
@@ -291,24 +385,6 @@ class FedCore(Fedot):
             pandas DataFrame with calculated metrics
 
         """
-
-        print("=== EVALUATE METRIC DEBUG ===")
-        print(f"Problem type: {problem}")
-        print(f"Prediction type: {type(prediction)}")
-        
-        if hasattr(prediction, 'predict'):
-            pred_value = prediction.predict
-        else:
-            pred_value = prediction
-            
-        if hasattr(pred_value, 'shape'):
-            print(f"Prediction shape: {pred_value.shape}")
-            print(f"Prediction sample: {pred_value[:2]}")
-        
-        # Проверяем target
-        target_sample = next(iter(target)) if hasattr(target, '__iter__') else target
-        print(f"Target sample type: {type(target_sample)}")
-        print("=============================")
         is_inference_metric = problem.__contains__("computational")
         is_fedcore_model = problem.__contains__('fedcore')
         model_regime = 'model_after' if is_fedcore_model else 'model_before'
@@ -351,9 +427,7 @@ class FedCore(Fedot):
             return torch.cat(all_targets) if all_targets else None         
         
         if is_inference_metric:
-            model_to_evaluate = getattr(self.fedcore_model, model_regime, None)
-            if model_to_evaluate is None:
-                model_to_evaluate = self.fedcore_model
+            model_to_evaluate = self.get_model_by_regime(model_regime)
             prediction_dict = dict(model=model_to_evaluate, dataset=target, model_regime=model_regime)
         else:
             preproc_labels, preproc_probs = preproc_predict(prediction)

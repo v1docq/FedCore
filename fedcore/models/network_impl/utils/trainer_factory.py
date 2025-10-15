@@ -80,45 +80,45 @@ def _analyze_model_architecture(model: Any) -> str:
 
 def _get_trainer_class(model: Any, task_type: str, params: Dict) -> Type[ITrainer]:
     """
-    Determine the appropriate trainer class based on model architecture and task type.
-    
+    Determine the appropriate trainer class based on explicit config first, then model architecture and task type.
     Args:
-        model: The model to train
+        model: The model to train (type of input data, not a parameter)
         task_type: Task type from input data
         params: Training parameters
         
     Returns:
         Type[ITrainer]: Appropriate trainer class
     """
+    is_llm = params.get('is_llm', None)
+    
+    if is_llm is True:
+        logger.info("Creating LLMTrainer based on explicit is_llm=True parameter")
+        return LLMTrainer
+    elif is_llm is False:
+        logger.info("Explicit is_llm=False, skipping LLM trainer")
+    
     architecture_type = _analyze_model_architecture(model)
     task_type_lower = task_type.lower()
     
     logger.info(f"Determining trainer class for architecture: {architecture_type}, task: {task_type}")
     
-    decision_log = []
-    
     if architecture_type == 'llm':
-        decision_log.append("LLM architecture detected")
         logger.info("Creating LLMTrainer based on transformer architecture")
         return LLMTrainer
-    
+
     elif architecture_type == 'forecasting':
-        decision_log.append("Forecasting architecture detected")
         logger.info("Creating BaseNeuralForecaster based on forecasting architecture")
         return BaseNeuralForecaster
-    
+
     elif 'forecasting' in task_type_lower:
-        decision_log.append(f"Forecasting task type detected: {task_type}")
         logger.info(f"Creating BaseNeuralForecaster based on task type: {task_type}")
         return BaseNeuralForecaster
-    
+
     elif 'llm' in task_type_lower or 'transformer' in task_type_lower:
-        decision_log.append(f"LLM/Transformer task type detected: {task_type}")
         logger.info(f"Creating LLMTrainer based on task type: {task_type}")
         return LLMTrainer
-    
+
     else:
-        decision_log.append("General task type, using default trainer")
         logger.info(f"Creating BaseNeuralModel for general task: {task_type}")
         return BaseNeuralModel
 
@@ -130,12 +130,15 @@ def create_trainer(
     **kwargs
 ) -> ITrainer:
     """
-    Create appropriate trainer based on model architecture and task type
+    Create appropriate trainer based on model architecture and task type.
+    
+    Model is treated as input data type, NOT as a parameter.
+    Model is passed directly to trainer constructor, not through params dict.
     
     Args:
         task_type: Type of task ('forecasting', 'llm', 'classification', 'regression', etc.)
-        params: Training parameters
-        model: Model to train
+        params: Training parameters (WITHOUT model)
+        model: Model to train (type of input data)
         **kwargs: Additional arguments
         
     Returns:
@@ -146,12 +149,10 @@ def create_trainer(
         params_dict = params.to_dict()
     else:
         params_dict = params or {}
-
-    if model is not None:
-        params_dict['model'] = model
-    
     trainer_class = _get_trainer_class(model, task_type, params_dict)
     
+    if model is not None:
+        kwargs['model'] = model
     return trainer_class(params=params_dict, **kwargs)
 
 
@@ -162,12 +163,15 @@ def create_trainer_from_input_data(
     **kwargs
 ) -> ITrainer:
     """
-    Create appropriate trainer based on input data and model architecture
+    Create appropriate trainer based on input data.
+    
+    Model is extracted from input_data (input_data.target) as it represents
+    the type of input data, not a parameter.
     
     Args:
-        input_data: Input data with task information
-        params: Training parameters
-        model: Model to train
+        input_data: Input data with task information and model (in input_data.target)
+        params: Training parameters (WITHOUT model)
+        model: Optional model override (if not provided, extracted from input_data.target)
         **kwargs: Additional arguments
         
     Returns:
@@ -177,8 +181,8 @@ def create_trainer_from_input_data(
     
     if model is None and hasattr(input_data, 'target'):
         model = input_data.target
-        logger.debug("Using model from input_data.target")
+        logger.debug("Extracted model from input_data.target (model is input data type)")
     
-    logger.debug(f"Final parameters - task_type: {task_type}, model: {type(model).__name__ if model else 'None'}")
+    logger.debug(f"Creating trainer - task_type: {task_type}, model: {type(model).__name__ if model else 'None'}")
     
     return create_trainer(task_type, params, model, **kwargs)
