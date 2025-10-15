@@ -11,8 +11,8 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
-    QuantTemplate
+    TrainingTemplate, 
+    QuantizationTemplate
     )
 from fedcore.algorithm.quantization.quantizers import BaseQuantizer
 from fedcore.api.config_factory import ConfigFactory
@@ -43,7 +43,7 @@ def get_api_template(quant_type: str):
         )
 
 
-    pretrain_config = NeuralModelConfigTemplate(
+    pretrain_config = TrainingTemplate(
         epochs=200,
         log_each=10,
         eval_each=15,
@@ -65,13 +65,13 @@ def get_api_template(quant_type: str):
 
     automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-    qat_config = NeuralModelConfigTemplate(epochs=3,
+    qat_config = TrainingTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
                                             criterion=LOSS,
                                             )
     
-    peft_config = QuantTemplate(quant_type=quant_type,
+    peft_config = QuantizationTemplate(quant_type=quant_type,
                                 allow_emb=False,
                                 allow_conv=True,
                                 qat_params=qat_config
@@ -81,7 +81,6 @@ def get_api_template(quant_type: str):
         criterion=LOSS,
         learning_strategy=learning_strategy,
         learning_strategy_params=pretrain_config,
-        peft_strategy=PEFT_PROBLEM,
         peft_strategy_params=peft_config
         )
 
@@ -128,7 +127,6 @@ def test_quantizers(quant_type):
     input_data.train_dataloader = train_dataloader
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
-        peft_task=api_config.learning_config.config['peft_strategy'],
         model=api_config.automl_config.fedot_config['initial_assumption'],
         learning_params=api_config.learning_config.learning_strategy_params
     )

@@ -10,7 +10,7 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
+    TrainingTemplate, 
     PruningTemplate
     )
 from fedcore.algorithm.pruning.pruners import BasePruner
@@ -41,7 +41,7 @@ def get_api_template(pruner_importance: str):
         )
 
 
-    pretrain_config = NeuralModelConfigTemplate(
+    pretrain_config = TrainingTemplate(
         epochs=200,
         log_each=10,
         eval_each=15,
@@ -63,7 +63,7 @@ def get_api_template(pruner_importance: str):
 
     automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-    finetune_config = NeuralModelConfigTemplate(
+    finetune_config = TrainingTemplate(
         epochs=3,
         log_each=3,
         eval_each=3,
@@ -80,7 +80,6 @@ def get_api_template(pruner_importance: str):
         criterion=LOSS,
         learning_strategy=learning_strategy,
         learning_strategy_params=pretrain_config,
-        peft_strategy=PEFT_PROBLEM,
         peft_strategy_params=peft_config
         )
 
@@ -129,7 +128,6 @@ def test_pruners(pruner_name):
     input_data.train_dataloader = train_dataloader
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
-        peft_task=api_config.learning_config.config['peft_strategy'],
         model=api_config.automl_config.fedot_config['initial_assumption'],
         learning_params=api_config.learning_config.learning_strategy_params
     )
