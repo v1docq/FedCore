@@ -1,5 +1,6 @@
 import ctypes
 import inspect
+import logging
 
 from py_boost import GradientBoosting
 import cupy as cp
@@ -57,45 +58,73 @@ class FedcoreGradHessHistory(GradSketch):
     def __init__(self,
                  randomization_method: str = 'random_svd',
                  randomization_params: dict = {},
-                 history_period: int = 10):
+                 history_period: int = 10,
+                 derivative_threshold: float = 0.01):
         self.randomization_params = dict(randomization_params or {})
         self.solver = FEDCORE_SAMPLING_METHODS[randomization_method]
         self.history_period = int(history_period)
+        self.derivative_threshold = derivative_threshold
+        self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.approximation = False
-        self._collect_history = False
-        self._buf_grad, self._buf_hess = [], []
+        self.use_approximation = False
         self._hist_grad, self._hist_hess = None, None
+        self._current_iteration = 0
 
     def before_train(self, build_info):
-        self._collect_history = False
-        self._buf_grad, self._buf_hess = [], []
+        self.use_approximation = False
+        self._hist_grad, self._hist_hess = None, None
+        self._current_iteration = 0
 
     def before_iteration(self, build_info):
+        self._current_iteration = build_info['num_iter'] + 1
         train = build_info['data']['train']
-        counter = build_info['num_iter'] + 1
         grad: cp.ndarray = train.get('grad')
         hess: cp.ndarray = train.get('hess')
+
+        # accumulate to history when grads and hesses are available
         if grad is not None and hess is not None:
-            self._buf_grad.append(grad.copy())
-            self._buf_hess.append(hess.copy())
+            self._update_history(grad, hess)
+            # check if we should apply approximation based on history
+            self.use_approximation = self._scheduler()
 
-        # schedule decision for this iteration
-        self._collect_history = self._scheduler(counter)
-        if self._collect_history:
-            try:
-                self._hist_grad = cp.stack(self._buf_grad, axis=0)
-                self._hist_hess = cp.stack(self._buf_hess, axis=0)
-            except Exception:
-                self._hist_grad, self._hist_hess = self._buf_grad[-1], self._buf_hess[-1]
-            self._buf_grad, self._buf_hess = [], []  # clear buffers for next window
+    def _update_history(self, grad: cp.ndarray, hess: cp.ndarray):
+        if self._hist_grad is None or len(self._hist_grad) < self.history_period:
+            self._hist_grad = cp.stack([grad.copy()] * self.history_period)
+            self._hist_hess = cp.stack([hess.copy()] * self.history_period)
         else:
-            self._hist_grad, self._hist_hess = None, None
+            # sliding window: roll and replace the oldest grad and hess
+            self._hist_grad = cp.roll(self._hist_grad, -1, axis=0)
+            self._hist_hess = cp.roll(self._hist_hess, -1, axis=0)
+            self._hist_grad[-1] = grad.copy()
+            self._hist_hess[-1] = hess.copy()
 
-    def _scheduler(self, counter: int) -> bool:
-        if self.history_period <= 0:
+    def _gaussian_smooth(self, data: cp.ndarray, sigma: float = 1.0) -> cp.ndarray:
+        if len(data) < 3:
+            return data
+
+        kernel_size = min(5, len(data))
+        x = cp.arange(kernel_size) - (kernel_size - 1) // 2
+        kernel = cp.exp(-0.5 * (x / sigma) ** 2)
+        kernel = kernel / cp.sum(kernel)
+        smoothed = cp.convolve(data, kernel, mode='same')
+        return smoothed
+
+    def _scheduler(self) -> bool:
+        # TODO: rewrite as dynamic observers
+        if self._hist_grad is None or self._current_iteration < self.history_period:
             return False
-        return (counter % self.history_period) == 0
+
+        threshold = self.derivative_threshold
+        grad_norms = cp.linalg.norm(self._hist_grad, axis=1)
+        derivative = cp.gradient(self._gaussian_smooth(grad_norms))
+
+        recent_deriv = cp.abs(derivative[-1])
+        # also check if the average of recent derivatives is close to zero
+        recent_window = min(3, len(derivative))
+        avg_recent_deriv = cp.mean(cp.abs(derivative[-recent_window:]))
+
+        self.logger.debug(f'recent_deriv: {recent_deriv}, avg_recent_deriv: {avg_recent_deriv}')
+        return (recent_deriv < threshold and avg_recent_deriv < threshold)
 
     def get_indexers_from_decomposition(self, tensor: cp.ndarray, top_fraction: float):
         U, s, Vh = cp.linalg.svd(tensor, full_matrices=False)
@@ -112,14 +141,12 @@ class FedcoreGradHessHistory(GradSketch):
         return row_indexer, col_indexer
 
     def perform_historic_approximation(self, grad, hess):
-
         row_indexer, col_indexer = self.get_indexers_from_decomposition(grad, top_fraction=0.5)
 
         stack = inspect.stack()
         target_method = 'build_tree'
 
         for frame_info in stack[1:]:
-
             if frame_info.function == target_method:
                 frame = frame_info.frame
                 try:
@@ -127,15 +154,18 @@ class FedcoreGradHessHistory(GradSketch):
                     ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
                     frame.f_locals['col_indexer'] = col_indexer
                     ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
-                except Exception as _:
+                except Exception:
                     pass
-                break
+                finally:
+                    # unset this flag after approximation
+                    self.use_approximation = False
+                    break
 
         grad_approx = grad
         hess_approx = hess
         return grad_approx, hess_approx
 
     def __call__(self, grad: cp.ndarray, hess: cp.ndarray):
-        if self._collect_history:
+        if self.use_approximation:
             return self.perform_historic_approximation(grad, hess)
         return grad, hess
