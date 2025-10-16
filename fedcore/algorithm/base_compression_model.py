@@ -14,6 +14,8 @@ from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeura
 from torchinfo import summary
 from fedcore.tools.registry.model_registry import ModelRegistry
 
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class BaseCompressionModel:
     """Class responsible for NN model implementation.
@@ -88,9 +90,8 @@ class BaseCompressionModel:
         if self._model_id_before is None:
             return None
         
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        loaded_model = ModelRegistry.load_model_from_latest_checkpoint(
-            self._fedcore_id, self._model_id_before, device
+        loaded_model = self._registry.load_model_from_latest_checkpoint(
+            self._fedcore_id, self._model_id_before, DEVICE
         )
         
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
@@ -104,7 +105,7 @@ class BaseCompressionModel:
         """Set model_before - stores in cache and optionally in registry."""
         self._model_before_cached = value
         if value is not None and self._model_id_before is None:
-            self._model_id_before = ModelRegistry.register_model(
+            self._model_id_before = self._registry.register_model(
                 fedcore_id=self._fedcore_id,
                 model=value,
                 metrics={"stage": "initial", "is_processed": False}
@@ -119,9 +120,8 @@ class BaseCompressionModel:
         if self._model_id_after is None:
             return None
         
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        loaded_model = ModelRegistry.load_model_from_latest_checkpoint(
-            self._fedcore_id, self._model_id_after, device
+        loaded_model = self._registry.load_model_from_latest_checkpoint(
+            self._fedcore_id, self._model_id_after, DEVICE
         )
         
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
@@ -136,13 +136,13 @@ class BaseCompressionModel:
         self._model_after_cached = value
         if value is not None:
             if self._model_id_after is None:
-                self._model_id_after = ModelRegistry.register_model(
+                self._model_id_after = self._registry.register_model(
                     fedcore_id=self._fedcore_id,
                     model=value,
                     metrics={"stage": "after_compression", "is_processed": False}
                 )
             else:
-                ModelRegistry.register_changes(
+                self._registry.register_changes(
                     fedcore_id=self._fedcore_id,
                     model_id=self._model_id_after,
                     model=value,
@@ -162,7 +162,7 @@ class BaseCompressionModel:
         
         metrics['stage'] = stage
         
-        model_id = ModelRegistry.register_model(
+        model_id = self._registry.register_model(
             fedcore_id=self._fedcore_id,
             model=model,
             metrics=metrics
@@ -173,7 +173,7 @@ class BaseCompressionModel:
         model = input_data.target
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device = default_device()
             loaded = torch.load(model, map_location=device)
             if isinstance(loaded, dict) and "model" in loaded:
                 model = loaded["model"]
