@@ -191,7 +191,7 @@ class BaseQuantizer(BaseCompressionModel):
                 self.logger.info("[PREPARE] fuse_model executed.")
             propagate_qconfig_(self.quant_model, self.qconfig)
             for name, module in self.quant_model.named_modules():
-                loggself.loggering.info(f"Module: {name}, qconfig: {module.qconfig}")
+                self.logger.info(f"Module: {name}, qconfig: {module.qconfig}")
             self.data_batch_for_calib = self._get_example_input(input_data)
 
             QDQWrapper.add_quant_entry_exit(
