@@ -2,6 +2,7 @@
 
 import os
 from typing import Optional
+from threading import Lock
 
 import torch
 
@@ -12,7 +13,7 @@ from .metrics_tracker import MetricsTracker
 
 class ModelRegistry:
     """
-    Singleton model registry for FedCore pipeline.
+    Thread-safe Singleton model registry for FedCore pipeline.
     
     Manages model checkpoints, metrics, and versioning across the PEFT pipeline.
     Uses composition pattern with specialized managers for different responsibilities.
@@ -25,39 +26,41 @@ class ModelRegistry:
     
     _instance = None
     _initialized = False
-    
+    _lock = Lock()
+
     def __new__(cls):
-        """Ensure only one instance exists (Singleton)."""
+        """Ensure only one instance exists (Thread-safe Singleton).
+        
+        Uses double-checked locking pattern:
+        - First check without lock for performance
+        - Acquire lock only if instance doesn't exist
+        - Second check after acquiring lock to prevent race condition
+        """
         if cls._instance is None:
-            cls._instance = super(ModelRegistry, cls).__new__(cls)
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(ModelRegistry, cls).__new__(cls)
         return cls._instance
     
     def __init__(self):
-        """Initialize registry components (only once)."""
-        if not ModelRegistry._initialized:
-            base_dir = os.environ.get("FEDCORE_MODEL_REGISTRY_PATH", "llm_output")
-            
-            self.checkpoint_manager = CheckpointManager(base_dir)
-            self.storage = RegistryStorage(base_dir)
-            self.metrics_tracker = MetricsTracker()
-            
-            ModelRegistry._initialized = True
-    
-    @classmethod
-    def get_instance(cls, model=None, model_path: Optional[str] = None) -> "ModelRegistry":
-        """Get singleton instance (compatibility method).
+        """Initialize registry components (only once, thread-safe).
         
-        Args:
-            model: Ignored (for compatibility)
-            model_path: Ignored (for compatibility)
-            
-        Returns:
-            ModelRegistry singleton instance
+        Uses the same lock as __new__ to ensure components are
+        initialized exactly once even in multi-threaded environment.
         """
-        return cls()
+        if not ModelRegistry._initialized:
+            with ModelRegistry._lock:
+                if not ModelRegistry._initialized:
+                    base_dir = os.environ.get("FEDCORE_MODEL_REGISTRY_PATH", "llm_output")
+                    
+                    self.checkpoint_manager = CheckpointManager(base_dir)
+                    self.storage = RegistryStorage(base_dir)
+                    self.metrics_tracker = MetricsTracker()
+                    
+                    ModelRegistry._initialized = True
     
-    @classmethod
-    def register_model(cls, fedcore_id: str, model=None, model_path: str = None,
+    
+    def register_model(self, fedcore_id: str, model=None, model_path: str = None,
                       pipeline_params: dict = None, metrics: Optional[dict] = None,
                       note: str = "initial", params_format: str = 'yaml') -> str:
         """Register a new model in the registry.
@@ -74,23 +77,21 @@ class ModelRegistry:
         Returns:
             model_id: Generated model identifier
         """
-        registry = cls()
-        
-        model_id = registry.metrics_tracker.generate_model_id(model, model_path)
-        version = registry.metrics_tracker.generate_version()
-        safe_timestamp = registry.metrics_tracker.sanitize_timestamp(version)
-        checkpoint_bytes = registry.checkpoint_manager.serialize_to_bytes(model, model_path)
+        model_id = self.metrics_tracker.generate_model_id(model, model_path)
+        version = self.metrics_tracker.generate_version()
+        safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
+        checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, model_path)
         
         if model_path and os.path.isfile(model_path):
             checkpoint_path = model_path
         else:
-            checkpoint_path = registry.checkpoint_manager.generate_checkpoint_path(
+            checkpoint_path = self.checkpoint_manager.generate_checkpoint_path(
                 fedcore_id, model_id, safe_timestamp
             )
-            registry.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
+            self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
         
         record = {
-            "record_id": str(registry.metrics_tracker.generate_model_id()),
+            "record_id": str(self.metrics_tracker.generate_model_id()),
             "fedcore_id": fedcore_id,
             "model_id": model_id,
             "version": version,
@@ -102,12 +103,11 @@ class ModelRegistry:
             "pipeline_params": None,  # Can be extended later
         }
         
-        registry.storage.append_record(fedcore_id, record)
+        self.storage.append_record(fedcore_id, record)
         
         return model_id
     
-    @classmethod
-    def register_changes(cls, fedcore_id: str, model_id: str, model=None,
+    def register_changes(self, fedcore_id: str, model_id: str, model=None,
                         pipeline_params: dict = None, metrics: Optional[dict] = None,
                         note: str = "update", params_format: str = 'yaml'):
         """Register changes to an existing model.
@@ -121,26 +121,22 @@ class ModelRegistry:
             note: Note about the update
             params_format: Format for params
         """
-        registry = cls()
-
-
-        
-        existing = registry.storage.get_latest_record(fedcore_id, model_id)
+        existing = self.storage.get_latest_record(fedcore_id, model_id)
         if existing is None:
-            cls.register_model(fedcore_id, model, None, pipeline_params, metrics, note, params_format)
+            self.register_model(fedcore_id, model, None, pipeline_params, metrics, note, params_format)
             return
         
-        version = registry.metrics_tracker.generate_version()
-        safe_timestamp = registry.metrics_tracker.sanitize_timestamp(version)
+        version = self.metrics_tracker.generate_version()
+        safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
         
-        checkpoint_bytes = registry.checkpoint_manager.serialize_to_bytes(model, None)
-        checkpoint_path = registry.checkpoint_manager.generate_checkpoint_path(
+        checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, None)
+        checkpoint_path = self.checkpoint_manager.generate_checkpoint_path(
             fedcore_id, model_id, safe_timestamp
         )
-        registry.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
+        self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
         
         record = {
-            "record_id": str(registry.metrics_tracker.generate_model_id()),
+            "record_id": str(self.metrics_tracker.generate_model_id()),
             "fedcore_id": fedcore_id,
             "model_id": model_id,
             "version": version,
@@ -152,21 +148,18 @@ class ModelRegistry:
             "pipeline_params": None,
         }
         
-        registry.storage.append_record(fedcore_id, record)
+        self.storage.append_record(fedcore_id, record)
     
-    @classmethod
-    def update_metrics(cls, fedcore_id: str, model_id: str, metrics: dict):
+    def update_metrics(self, fedcore_id: str, model_id: str, metrics: dict):
         """Update metrics for the latest version of a model.
         Args:
             fedcore_id: FedCore instance identifier
             model_id: Model identifier
             metrics: Metrics dictionary to merge
         """
-        registry = cls()
-        registry.storage.update_record_metrics(fedcore_id, model_id, metrics)
+        self.storage.update_record_metrics(fedcore_id, model_id, metrics)
     
-    @classmethod
-    def get_latest_record(cls, fedcore_id: str, model_id: str) -> Optional[dict]:
+    def get_latest_record(self, fedcore_id: str, model_id: str) -> Optional[dict]:
         """Get the latest record for a specific model.
         Args:
             fedcore_id: FedCore instance identifier
@@ -175,11 +168,9 @@ class ModelRegistry:
         Returns:
             Latest record dictionary or None
         """
-        registry = cls()
-        return registry.storage.get_latest_record(fedcore_id, model_id)
+        return self.storage.get_latest_record(fedcore_id, model_id)
     
-    @classmethod
-    def get_model_history(cls, fedcore_id: str, model_id: str):
+    def get_model_history(self, fedcore_id: str, model_id: str):
         """Get complete history of a model.
         Args:
             fedcore_id: FedCore instance identifier
@@ -188,11 +179,9 @@ class ModelRegistry:
         Returns:
             DataFrame with model history
         """
-        registry = cls()
-        return registry.storage.get_records(fedcore_id, model_id)
+        return self.storage.get_records(fedcore_id, model_id)
     
-    @classmethod
-    def get_best_checkpoint(cls, fedcore_id: str, metric_name: str, mode: str = "max") -> Optional[dict]:
+    def get_best_checkpoint(self, fedcore_id: str, metric_name: str, mode: str = "max") -> Optional[dict]:
         """Get the best checkpoint based on a specific metric.
         Args:
             fedcore_id: FedCore instance identifier
@@ -202,12 +191,10 @@ class ModelRegistry:
         Returns:
             Best checkpoint record or None
         """
-        registry = cls()
-        df = registry.storage.load(fedcore_id)
-        return registry.metrics_tracker.find_best_checkpoint(df, metric_name, mode)
+        df = self.storage.load(fedcore_id)
+        return self.metrics_tracker.find_best_checkpoint(df, metric_name, mode)
     
-    @classmethod
-    def load_model_from_latest_checkpoint(cls, fedcore_id: str, model_id: str,
+    def load_model_from_latest_checkpoint(self, fedcore_id: str, model_id: str,
                                          device: torch.device = None) -> Optional[torch.nn.Module]:
         """Load model from the latest checkpoint.
         Args:
@@ -218,16 +205,14 @@ class ModelRegistry:
         Returns:
             Loaded model or None
         """
-        registry = cls()
-        latest = registry.storage.get_latest_record(fedcore_id, model_id)
+        latest = self.storage.get_latest_record(fedcore_id, model_id)
         
         if latest is None or not latest.get('checkpoint_path'):
             return None
         
-        return registry.checkpoint_manager.load_from_file(latest['checkpoint_path'], device)
+        return self.checkpoint_manager.load_from_file(latest['checkpoint_path'], device)
     
-    @classmethod
-    def list_models(cls, fedcore_id: str) -> list:
+    def list_models(self, fedcore_id: str) -> list:
         """List all unique model IDs in the registry.
         Args:
             fedcore_id: FedCore instance identifier
@@ -235,6 +220,27 @@ class ModelRegistry:
         Returns:
             List of model IDs
         """
-        registry = cls()
-        return registry.storage.list_model_ids(fedcore_id)
+        return self.storage.list_model_ids(fedcore_id)
+    
+    def get_model_with_fallback(self, fedcore_id: str, model_id: str,
+                               fallback_model=None, device: torch.device = None):
+        """Load model from registry with fallback to provided model.
+        
+        Args:
+            fedcore_id: FedCore instance identifier
+            model_id: Model identifier
+            fallback_model: Model to use if loading from registry fails
+            device: Device to load model on
+            
+        Returns:
+            Loaded model from registry or fallback_model
+        """
+        try:
+            loaded_model = self.load_model_from_latest_checkpoint(fedcore_id, model_id, device)
+            if loaded_model is not None:
+                return loaded_model
+        except Exception as e:
+            print(f"Failed to load model from registry: {e}")
+        
+        return fallback_model
 
