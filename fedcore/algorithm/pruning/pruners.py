@@ -73,6 +73,7 @@ class BasePruner(BaseCompressionModel):
         self._hooks = [PruningHooks]
         self._init_empty_object()
         self._pruning_index = 0
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def __repr__(self):
         return self.pruner_name
@@ -96,7 +97,7 @@ class BasePruner(BaseCompressionModel):
                 self._on_epoch_start.append(hook)
 
     def _init_model(self, input_data):
-        logging.info('Prepare original model for pruning'.center(80, '='))
+        self.logger.info('Prepare original model for pruning'.center(80, '='))
         model = input_data.target
         if isinstance(model, str):
             device = default_device()
@@ -135,10 +136,10 @@ class BasePruner(BaseCompressionModel):
         
         self.model_after = self.model_before
         
-        logging.info(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
-        logging.info(f' Pruning importance - {self.importance_name} '.center(80, '='))
-        logging.info(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
-        logging.info(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
+        self.logger.info(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
+        self.logger.info(f' Pruning importance - {self.importance_name} '.center(80, '='))
+        self.logger.info(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
+        self.logger.info(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
         # Pruner initialization
         if self.importance_name.__contains__('activation'):
             self.pruner = None
@@ -227,11 +228,11 @@ class BasePruner(BaseCompressionModel):
     def finetune(self, finetune_object, finetune_data):
         validated_finetune_object = self.validator.validate_pruned_layers(finetune_object)
         self.trainer.model = validated_finetune_object
-        logging.info(f"==============After {self.importance_name} pruning=================")
+        self.logger.info(f"==============After {self.importance_name} pruning=================")
         params_dict = self.estimate_params(example_batch=self.data_batch_for_calib,
                                            model_before=self.model_before,
                                            model_after=validated_finetune_object)
-        logging.info("==============Finetune pruned model=================")
+        self.logger.info("==============Finetune pruned model=================")
         self.model_after = self.trainer.fit(finetune_data)
         return self.model_after
 

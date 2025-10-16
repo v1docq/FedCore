@@ -31,6 +31,7 @@ class BaseDistilator(BaseCompressionModel):
         self.optimizer = params.get("optimizer", optim.Adam)
         self.learning_rate = params.get("lr", 0.001)
         self._distill_index = 0
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def __repr__(self):
         return "Distilation_model"
@@ -71,7 +72,7 @@ class BaseDistilator(BaseCompressionModel):
                 raise TypeError("Cannot instantiate model")
                 
         except Exception as e:
-            logging.warning(f"Warning: Standard initialization failed ({e}), using checkpoint-based approach")
+            self.logger.warning(f"Warning: Standard initialization failed ({e}), using checkpoint-based approach")
             temp_checkpoint = self._registry.register_model(
                 fedcore_id=self._fedcore_id,
                 model=teacher_model,

@@ -18,6 +18,7 @@ class CheckpointManager:
             base_dir: Base directory for storing checkpoints
         """
         self.base_dir = base_dir
+        self.logger = logging.getLogger(self.__class__.__name__)
     
     def get_checkpoint_dir(self, fedcore_id: str) -> str:
         """Get checkpoint directory for specific fedcore instance."""
@@ -86,14 +87,14 @@ class CheckpointManager:
             Loaded model or checkpoint dict
         """
         if not os.path.exists(checkpoint_path):
-            logging.info(f"Checkpoint file not found: {checkpoint_path}")
+            self.logger.info(f"Checkpoint file not found: {checkpoint_path}")
             return None
         ckpt = torch.load(checkpoint_path, map_location=device)
         if isinstance(ckpt, dict):
             if 'model' in ckpt and isinstance(ckpt['model'], torch.nn.Module):
                 return ckpt['model']
             elif 'state_dict' in ckpt:
-                logging.info(f"Warning: Only state_dict found. Need model architecture to load.")
+                self.logger.info(f"Warning: Only state_dict found. Need model architecture to load.")
                 return ckpt
         return ckpt
 
