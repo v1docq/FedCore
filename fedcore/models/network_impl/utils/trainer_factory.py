@@ -102,22 +102,22 @@ def _get_trainer_class(model: Any, task_type: str, params: Dict) -> Type[ITraine
     
     logger.info(f"Determining trainer class for architecture: {architecture_type}, task: {task_type}")
     
-    if architecture_type == 'llm':
+    if architecture_type == 'llm' and is_llm is not False:
         logger.info("Creating LLMTrainer based on transformer architecture")
         return LLMTrainer
-
+    
     elif architecture_type == 'forecasting':
         logger.info("Creating BaseNeuralForecaster based on forecasting architecture")
         return BaseNeuralForecaster
-
+    
     elif 'forecasting' in task_type_lower:
         logger.info(f"Creating BaseNeuralForecaster based on task type: {task_type}")
         return BaseNeuralForecaster
-
+    
     elif 'llm' in task_type_lower or 'transformer' in task_type_lower:
         logger.info(f"Creating LLMTrainer based on task type: {task_type}")
         return LLMTrainer
-
+    
     else:
         logger.info(f"Creating BaseNeuralModel for general task: {task_type}")
         return BaseNeuralModel
