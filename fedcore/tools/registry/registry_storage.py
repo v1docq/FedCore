@@ -1,6 +1,7 @@
 """Registry storage layer using pandas DataFrame."""
 
 import os
+import logging
 from typing import Dict, Optional
 
 import pandas as pd
@@ -121,7 +122,7 @@ class RegistryStorage:
         
         records = df[df["model_id"] == model_id]
         if records.empty:
-            print(f"Warning: No records found for model_id {model_id}")
+            logging.info(f"Warning: No records found for model_id {model_id}")
             return
         
         latest_idx = records["version"].idxmax()

@@ -5,6 +5,7 @@ from tqdm import tqdm
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from typing import Optional
 import torch
+import logging
 from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.comptutaional.devices import default_device
@@ -52,13 +53,13 @@ class BaseDistilator(BaseCompressionModel):
                     if hasattr(teacher_model, 'config'):
                         student_model = model_class(teacher_model.config)
                     else:
-                        temp_checkpoint = ModelRegistry.register_model(
+                        temp_checkpoint = self._registry.register_model(
                             fedcore_id=self._fedcore_id,
                             model=teacher_model,
                             metrics={"stage": "temp_teacher", "is_processed": False}
                         )
                         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                        student_model = ModelRegistry.load_model_from_latest_checkpoint(
+                        student_model = self._registry.load_model_from_latest_checkpoint(
                             self._fedcore_id, temp_checkpoint, device
                         )
                         if student_model is None:
@@ -70,14 +71,14 @@ class BaseDistilator(BaseCompressionModel):
                 raise TypeError("Cannot instantiate model")
                 
         except Exception as e:
-            print(f"Warning: Standard initialization failed ({e}), using checkpoint-based approach")
-            temp_checkpoint = ModelRegistry.register_model(
+            logging.warning(f"Warning: Standard initialization failed ({e}), using checkpoint-based approach")
+            temp_checkpoint = self._registry.register_model(
                 fedcore_id=self._fedcore_id,
                 model=teacher_model,
                 metrics={"stage": "temp_teacher_fallback", "is_processed": False}
             )
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            student_model = ModelRegistry.load_model_from_latest_checkpoint(
+            student_model = self._registry.load_model_from_latest_checkpoint(
                 self._fedcore_id, temp_checkpoint, device
             )
             if student_model is None:
@@ -204,7 +205,7 @@ class BaseDistilator(BaseCompressionModel):
         self.num_classes = input_data.features.num_classes
         self.model_before = self.base_model
         self.student_model = self._init_distil_model(self.base_model)
-        self._model_registry = ModelRegistry.get_instance()
+        self._model_registry = ModelRegistry()
         self._distill_index += 1
         
         metrics_before = {
@@ -213,7 +214,7 @@ class BaseDistilator(BaseCompressionModel):
             "is_processed": False,
         }
         if self._model_id_before:
-            ModelRegistry.update_metrics(
+            self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
                 metrics=metrics_before
@@ -230,7 +231,7 @@ class BaseDistilator(BaseCompressionModel):
         self.model_after = self.student_model
         
         if self._model_id_after:
-            ModelRegistry.update_metrics(
+            self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_after,
                 metrics=metrics_after

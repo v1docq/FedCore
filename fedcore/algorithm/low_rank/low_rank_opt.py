@@ -37,7 +37,7 @@ class LowRankModel(BaseCompressionModel):
         model = super()._init_model(input_data, self._additional_hooks)
 
         if self._model_id_before:
-            ModelRegistry.update_metrics(
+            self._registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
                 metrics={"operation": "low_rank", "stage": "before_decomposition"}

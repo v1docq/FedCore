@@ -2,6 +2,7 @@ from itertools import chain
 from fedot.core.data.data import InputData
 from torch import nn, optim
 import torch
+import logging
 import traceback
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -95,7 +96,7 @@ class BasePruner(BaseCompressionModel):
                 self._on_epoch_start.append(hook)
 
     def _init_model(self, input_data):
-        print('Prepare original model for pruning'.center(80, '='))
+        logging.info('Prepare original model for pruning'.center(80, '='))
         model = input_data.target
         if isinstance(model, str):
             device = default_device()
@@ -117,7 +118,7 @@ class BasePruner(BaseCompressionModel):
             
         self.model_before.to(default_device())
         
-        self._model_registry = ModelRegistry.get_instance()
+        self._model_registry = ModelRegistry()
         self._pruning_index += 1
         
         metrics_before = {
@@ -126,7 +127,7 @@ class BasePruner(BaseCompressionModel):
             "is_processed": False,
         }
         if self._model_id_before:
-            ModelRegistry.update_metrics(
+            self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
                 metrics=metrics_before
@@ -134,10 +135,10 @@ class BasePruner(BaseCompressionModel):
         
         self.model_after = self.model_before
         
-        print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
-        print(f' Pruning importance - {self.importance_name} '.center(80, '='))
-        print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
-        print(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
+        logging.info(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
+        logging.info(f' Pruning importance - {self.importance_name} '.center(80, '='))
+        logging.info(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
+        logging.info(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
         # Pruner initialization
         if self.importance_name.__contains__('activation'):
             self.pruner = None
@@ -211,7 +212,7 @@ class BasePruner(BaseCompressionModel):
                 }
                 self.model_after = result_model
                 if self._model_id_after:
-                    ModelRegistry.update_metrics(
+                    self._model_registry.update_metrics(
                         fedcore_id=self._fedcore_id,
                         model_id=self._model_id_after,
                         metrics=metrics_after
@@ -226,11 +227,11 @@ class BasePruner(BaseCompressionModel):
     def finetune(self, finetune_object, finetune_data):
         validated_finetune_object = self.validator.validate_pruned_layers(finetune_object)
         self.trainer.model = validated_finetune_object
-        print(f"==============After {self.importance_name} pruning=================")
+        logging.info(f"==============After {self.importance_name} pruning=================")
         params_dict = self.estimate_params(example_batch=self.data_batch_for_calib,
                                            model_before=self.model_before,
                                            model_after=validated_finetune_object)
-        print("==============Finetune pruned model=================")
+        logging.info("==============Finetune pruned model=================")
         self.model_after = self.trainer.fit(finetune_data)
         return self.model_after
 

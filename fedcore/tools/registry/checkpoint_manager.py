@@ -2,6 +2,7 @@
 
 import io
 import os
+import logging
 from typing import Optional
 
 import torch
@@ -85,14 +86,14 @@ class CheckpointManager:
             Loaded model or checkpoint dict
         """
         if not os.path.exists(checkpoint_path):
-            print(f"Checkpoint file not found: {checkpoint_path}")
+            logging.info(f"Checkpoint file not found: {checkpoint_path}")
             return None
         ckpt = torch.load(checkpoint_path, map_location=device)
         if isinstance(ckpt, dict):
             if 'model' in ckpt and isinstance(ckpt['model'], torch.nn.Module):
                 return ckpt['model']
             elif 'state_dict' in ckpt:
-                print(f"Warning: Only state_dict found. Need model architecture to load.")
+                logging.info(f"Warning: Only state_dict found. Need model architecture to load.")
                 return ckpt
         return ckpt
 

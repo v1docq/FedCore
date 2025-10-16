@@ -1,6 +1,7 @@
 from itertools import chain
 from typing import Optional
 import traceback
+import logging
 
 import torch
 import torch.ao.nn.quantized.dynamic as nnqd
@@ -70,9 +71,9 @@ class BaseQuantizer(BaseCompressionModel):
         self._init_empty_object()
         self._quantization_index = 0
 
-        print(f"[INIT] quant_type: {self.quant_type}, backend: {self.backend}, device: {self.device}")
-        print(f"[INIT] dtype: {self.dtype}, allow_embedding: {self.allow_emb}, allow_convolution: {self.allow_conv}")
-        print(f"[INIT] qconfig: {self.qconfig}")
+        logging.info(f"[INIT] quant_type: {self.quant_type}, backend: {self.backend}, device: {self.device}")
+        logging.info(f"[INIT] dtype: {self.dtype}, allow_embedding: {self.allow_emb}, allow_convolution: {self.allow_conv}")
+        logging.info(f"[INIT] qconfig: {self.qconfig}")
 
     def __repr__(self):
         return f"{self.quant_type.upper()} Quantization"
@@ -136,13 +137,13 @@ class BaseQuantizer(BaseCompressionModel):
             qconfig_mapping.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig)
             qconfig_mapping.set_object_type(nn.EmbeddingBag, float_qparams_weight_only_qconfig)
 
-        print(f"[QCONFIG] Created qconfig mapping: {qconfig_mapping}")
+        logging.info(f"[QCONFIG] Created qconfig mapping: {qconfig_mapping}")
         return get_flattened_qconfig_dict(qconfig_mapping)
 
     def _get_example_input(self, input_data: InputData):
         loader = input_data.features.val_dataloader
         example_input, _ = next(iter(loader))
-        print(f"[DATA] Example input shape: {example_input.shape}")
+        logging.info(f"[DATA] Example input shape: {example_input.shape}")
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
@@ -164,7 +165,7 @@ class BaseQuantizer(BaseCompressionModel):
         self.trainer.model = self.model_before
         self.quant_model = self.model_before.eval()
         
-        self._model_registry = ModelRegistry.get_instance()
+        self._model_registry = ModelRegistry()
         self._quantization_index += 1
         metrics_before = {
             "stage": f"quantization_{self._quantization_index}",
@@ -172,13 +173,13 @@ class BaseQuantizer(BaseCompressionModel):
             "is_processed": False,
         }
         if self._model_id_before:
-            ModelRegistry.update_metrics(
+            self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
                 metrics=metrics_before
             )
         
-        print("[MODEL] Model initialized for quantization (no deepcopy).")
+        logging.info("[MODEL] Model initialized for quantization (no deepcopy).")
 
     def _prepare_model(self, input_data: InputData):
         try:
@@ -186,10 +187,10 @@ class BaseQuantizer(BaseCompressionModel):
             self.quant_model = ParentalReassembler.reassemble(self.quant_model)
             if hasattr(self.quant_model, 'fuse_model'):
                 self.quant_model.fuse_model()
-                print("[PREPARE] fuse_model executed.")
+                logging.info("[PREPARE] fuse_model executed.")
             propagate_qconfig_(self.quant_model, self.qconfig)
             for name, module in self.quant_model.named_modules():
-                print(f"Module: {name}, qconfig: {module.qconfig}")
+                logging.info(f"Module: {name}, qconfig: {module.qconfig}")
             self.data_batch_for_calib = self._get_example_input(input_data)
 
             QDQWrapper.add_quant_entry_exit(
@@ -208,11 +209,11 @@ class BaseQuantizer(BaseCompressionModel):
                 self.quant_model.train()
                 prepare_qat(self.quant_model, inplace=True)
 
-            print("[PREPARE] Model prepared successfully.")
+            logging.info("[PREPARE] Model prepared successfully.")
             return self.quant_model
 
         except Exception as e:
-            print("[PREPARE ERROR] Exception during preparation:")
+            logging.info("[PREPARE ERROR] Exception during preparation:")
             traceback.print_exc()
             return self.model_before.eval()
 
@@ -236,7 +237,7 @@ class BaseQuantizer(BaseCompressionModel):
             else:
                 convert(self.quant_model, inplace=True)
 
-            print("[FIT] Quantization performed successfully.")
+            logging.info("[FIT] Quantization performed successfully.")
             self.model_after = self.quant_model
             
             if self.quant_type == 'qat':
@@ -249,13 +250,13 @@ class BaseQuantizer(BaseCompressionModel):
             }
             
             if self._model_id_after:
-                ModelRegistry.update_metrics(
+                self._model_registry.update_metrics(
                     fedcore_id=self._fedcore_id,
                     model_id=self._model_id_after,
                     metrics=metrics_after
                 )
         except Exception as e:
-            print("[FIT ERROR] Exception during quantization:")
+            logging.info("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()
             self.model_after = self.model_before.eval()
             
