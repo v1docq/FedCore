@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Dict, Optional
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
@@ -18,6 +17,7 @@ from fedcore.repository.constant_repository import (
     LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
+from fedcore.tools.registry.model_registry import ModelRegistry
 from tdecomp._base import Decomposer
 from tdecomp.matrix.decomposer import DECOMPOSERS
 
@@ -97,6 +97,15 @@ class LowRankModel(BaseCompressionModel):
 
     def _init_model(self, input_data):
         model = super()._init_model(input_data, self._additional_hooks)
+
+        if self._model_id_before:
+            self._registry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_before,
+                metrics={"operation": "low_rank", "stage": "before_decomposition"}
+            )
+        
+
         decompose_module(
             model, 
             self.decomposing_mode, 
@@ -104,7 +113,11 @@ class LowRankModel(BaseCompressionModel):
             self.compose_mode,
             self.decomposer_params
         )
-        return model
+        model.to(self.device)
+
+        self.model_after = model
+        
+        return self.model_after
 
     def fit(self, input_data) -> None:
         """Run model training with optimization.
@@ -112,28 +125,14 @@ class LowRankModel(BaseCompressionModel):
         Args:
             input_data: An instance of the model class
         """
-        model_before = self._init_model(input_data)
-        example_batch = self._get_example_input(input_data)
-        device = extract_device(model_before)
-        
-        if isinstance(example_batch, dict):
-            example_batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v 
-                           for k, v in example_batch.items()}
-        elif isinstance(example_batch, (list, tuple)):
-            example_batch = type(example_batch)(
-                item.to(device) if isinstance(item, torch.Tensor) else item 
-                for item in example_batch
-            )
-        else:
-            example_batch = example_batch.to(device)
-        
-        base_params = self._estimate_params(model_before, example_batch)
-        self.trainer.model = deepcopy(model_before)
+        model_after = self._init_model(input_data)
+        # base_params = self._estimate_params(self.model_before, example_batch)
+        self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
-        self.compress(self.model_after)
+        # self.compress(self.model_after)
         # check params
-        self._diagnose(self.model_after, example_batch, *base_params,
-            "After low rank truncation".center(80, '='))
+        example_batch = self._get_example_input(input_data)#.to(extract_device(self.model_before))
+        self.estimate_params(example_batch, self.model_before, self.model_after)
         self.model_after._structure_changed__ = True
         return self.model_after
 

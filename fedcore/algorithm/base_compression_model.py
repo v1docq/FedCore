@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -12,6 +13,9 @@ from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 from torchinfo import summary
+from fedcore.tools.registry.model_registry import ModelRegistry
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class BaseCompressionModel:
@@ -45,6 +49,16 @@ class BaseCompressionModel:
         self.model_for_inference = None
         # self.optimizer = None
         self.params = params
+        
+        self._fedcore_id = params.get("fedcore_id")
+        if self._fedcore_id is None:
+            self._fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
+        
+        self._model_id_before = None
+        self._model_id_after = None
+        self._model_before_cached = None
+        self._model_after_cached = None
+        self._registry = ModelRegistry()
 
     def _save_and_clear_cache(self):
         try:
@@ -68,13 +82,114 @@ class BaseCompressionModel:
             )
             os.remove(prefix)
 
+    @property
+    def model_before(self):
+        """Get model_before from cache or registry."""
+        if self._model_before_cached is not None:
+            return self._model_before_cached
+        
+        if self._model_id_before is None:
+            return None
+        
+        loaded_model = self._registry.load_model_from_latest_checkpoint(
+            self._fedcore_id, self._model_id_before, DEVICE
+        )
+        
+        if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
+            self._model_before_cached = loaded_model
+            return self._model_before_cached
+        
+        return None
+    
+    @model_before.setter
+    def model_before(self, value):
+        """Set model_before - stores in cache and optionally in registry."""
+        self._model_before_cached = value
+        if value is not None and self._model_id_before is None:
+            self._model_id_before = self._registry.register_model(
+                fedcore_id=self._fedcore_id,
+                model=value,
+                metrics={"stage": "initial", "is_processed": False}
+            )
+    
+    @property
+    def model_after(self):
+        """Get model_after from cache or registry."""
+        if self._model_after_cached is not None:
+            return self._model_after_cached
+        
+        if self._model_id_after is None:
+            return None
+        
+        loaded_model = self._registry.load_model_from_latest_checkpoint(
+            self._fedcore_id, self._model_id_after, DEVICE
+        )
+        
+        if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
+            self._model_after_cached = loaded_model
+            return self._model_after_cached
+        
+        return None
+    
+    @model_after.setter
+    def model_after(self, value):
+        """Set model_after - stores in cache and registers changes."""
+        self._model_after_cached = value
+        if value is not None:
+            if self._model_id_after is None:
+                self._model_id_after = self._registry.register_model(
+                    fedcore_id=self._fedcore_id,
+                    model=value,
+                    metrics={"stage": "after_compression", "is_processed": False}
+                )
+            else:
+                self._registry.register_changes(
+                    fedcore_id=self._fedcore_id,
+                    model_id=self._model_id_after,
+                    model=value,
+                    metrics={"stage": "after_compression", "is_processed": True}
+                )
+    
+    def _save_model_checkpoint(self, model, stage: str, metrics: dict = None):
+        """Save model checkpoint to registry.
+        
+        Args:
+            model: Model to save
+            stage: Stage name (e.g., 'before_compression', 'after_compression')
+            metrics: Optional metrics dictionary
+        """
+        if metrics is None:
+            metrics = {}
+        
+        metrics['stage'] = stage
+        
+        model_id = self._registry.register_model(
+            fedcore_id=self._fedcore_id,
+            model=model,
+            metrics=metrics
+        )
+        return model_id
+
     def _init_model(self, input_data, additional_hooks=tuple()):
         model = input_data.target
+        # Support passing a filesystem path to a checkpoint/model at the node input
+        if isinstance(model, str):
+            device = default_device()
+            loaded = torch.load(model, map_location=device)
+            if isinstance(loaded, dict) and "model" in loaded:
+                model = loaded["model"]
+            else:
+                model = loaded
+        
+        if not isinstance(model, torch.nn.Module):
+            raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
+
         self.model_before = model
         # Create trainer using factory
         self.trainer = create_trainer_from_input_data(input_data, self.params)
         self.trainer.register_additional_hooks(additional_hooks)
         self.trainer.model = model
+
         return model
 
     def _fit_model(self, ts: CompressionInputData, split_data: bool = False):
@@ -145,17 +260,28 @@ class BaseCompressionModel:
     def estimate_params(self, example_batch, model_before, model_after):
         # in future we don't want to store both models simult.
         # base_macs, base_nparams = tp.utils.count_ops_and_params(model_before, example_batch)
-        base_info = summary(model=model_before, input_data=example_batch, verbose=0)
-        base_macs, base_nparams = base_info.total_mult_adds, base_info.total_params
+        
+        is_huggingface = (
+            hasattr(model_before, 'config') and 
+            hasattr(model_before.config, 'model_type') and
+            hasattr(model_before, 'base_model')  
+        )
+        
+        if is_huggingface:
+            base_nparams = model_before.num_parameters()  
+            nparams = model_after.num_parameters()
+            
+            base_macs, macs = 0, 0  
+        else:
+            base_info = summary(model=model_before, input_data=example_batch.to(extract_device(model_before)), verbose=0)
+            base_macs, base_nparams = base_info.total_mult_adds, base_info.total_params
 
-        info = summary(model=model_after, input_data=example_batch, verbose=0)
-        macs, nparams = info.total_mult_adds, base_info.total_params
-
-        print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))
+            info = summary(model=model_after, input_data=example_batch.to(extract_device(model_after)), verbose=0)
+            macs, nparams = info.total_mult_adds, info.total_params
+        
         return dict(params_before=base_nparams, macs_before=base_macs,
                     params_after=nparams, macs_after=macs)
-    
+        
     # don't del its for New Year
     def _estimate_params(self, model, example_batch):
         base_macs, base_nparams = tp.utils.count_ops_and_params(model, example_batch)

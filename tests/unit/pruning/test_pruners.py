@@ -141,8 +141,8 @@ def test_pruners(pruner_name):
 
     pruned_model = pruner.fit(input_data=train_data, finetune=False)
     params_dict = pruner.estimate_params(example_batch=pruner.data_batch_for_calib,
-                                         model_before=pruner.model_before_pruning,
-                                         model_after=pruner.model_after_pruning)
+                                         model_before=pruner.model_before,
+                                         model_after=pruner.model_after)
 
-    reduction = get_reduction(model_after=pruned_model, model_before=pruner.model_before_pruning)
+    reduction = get_reduction(model_after=pruned_model, model_before=pruner.model_before)
     assert reduction < 1, f'{pruner_name} pruner doesnt reduce number of model parameters, reduction: {reduction}'
