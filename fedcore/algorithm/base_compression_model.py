@@ -41,6 +41,10 @@ class BaseCompressionModel:
     """
 
     def __init__(self, params: Optional[OperationParameters] = {}):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug("BaseCompressionModel.__init__() called")
+        
         # self.epochs = params.get("epochs", 10)
         self.batch_size = params.get("batch_size", 16)
         self.activation = params.get("activation", "ReLU")
@@ -54,11 +58,15 @@ class BaseCompressionModel:
         if self._fedcore_id is None:
             self._fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
         
+        logger.debug(f"fedcore_id: {self._fedcore_id}")
+        
         self._model_id_before = None
         self._model_id_after = None
         self._model_before_cached = None
         self._model_after_cached = None
         self._registry = ModelRegistry()
+        
+        logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
 
     def _save_and_clear_cache(self):
         try:
@@ -104,13 +112,21 @@ class BaseCompressionModel:
     @model_before.setter
     def model_before(self, value):
         """Set model_before - stores in cache and optionally in registry."""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"model_before setter called: value={'not None' if value else 'None'}, _model_id_before={self._model_id_before}")
+        
         self._model_before_cached = value
         if value is not None and self._model_id_before is None:
+            logger.info("Registering model_before in ModelRegistry")
             self._model_id_before = self._registry.register_model(
                 fedcore_id=self._fedcore_id,
                 model=value,
                 metrics={"stage": "initial", "is_processed": False}
             )
+            logger.info(f"model_before registered with id={self._model_id_before}")
+        else:
+            logger.debug(f"Skipping registration: value is None={value is None}, already registered={self._model_id_before is not None}")
     
     @property
     def model_after(self):
@@ -134,21 +150,31 @@ class BaseCompressionModel:
     @model_after.setter
     def model_after(self, value):
         """Set model_after - stores in cache and registers changes."""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"model_after setter called: value={'not None' if value else 'None'}, _model_id_after={self._model_id_after}")
+        
         self._model_after_cached = value
         if value is not None:
             if self._model_id_after is None:
+                logger.info("Registering new model_after in ModelRegistry")
                 self._model_id_after = self._registry.register_model(
                     fedcore_id=self._fedcore_id,
                     model=value,
                     metrics={"stage": "after_compression", "is_processed": False}
                 )
+                logger.info(f"model_after registered with id={self._model_id_after}")
             else:
+                logger.info("Registering changes for model_after")
                 self._registry.register_changes(
                     fedcore_id=self._fedcore_id,
                     model_id=self._model_id_after,
                     model=value,
                     metrics={"stage": "after_compression", "is_processed": True}
                 )
+                logger.info("model_after changes registered")
+        else:
+            logger.debug("Skipping registration: value is None")
     
     def _save_model_checkpoint(self, model, stage: str, metrics: dict = None):
         """Save model checkpoint to registry.
@@ -171,20 +197,31 @@ class BaseCompressionModel:
         return model_id
 
     def _init_model(self, input_data, additional_hooks=tuple()):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("BaseCompressionModel._init_model() started")
+        
         model = input_data.target
+        logger.info(f"Model type from input_data.target: {type(model).__name__}")
+        
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
+            logger.info(f"Loading model from path: {model}")
             device = default_device()
             loaded = torch.load(model, map_location=device)
             if isinstance(loaded, dict) and "model" in loaded:
                 model = loaded["model"]
             else:
                 model = loaded
+            logger.info(f"Model loaded: type={type(model).__name__}")
         
         if not isinstance(model, torch.nn.Module):
             raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
 
+        logger.info("Calling model_before setter")
         self.model_before = model
+        logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
+        
         # Create trainer using factory
         self.trainer = create_trainer_from_input_data(input_data, self.params)
         self.trainer.register_additional_hooks(additional_hooks)

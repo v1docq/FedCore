@@ -2,6 +2,7 @@
 
 import io
 import os
+import gc
 import logging
 from typing import Optional
 
@@ -11,14 +12,17 @@ import torch
 class CheckpointManager:
     """Manages model checkpoint serialization and deserialization."""
     
-    def __init__(self, base_dir: str):
+    def __init__(self, base_dir: str, auto_cleanup: bool = True):
         """Initialize checkpoint manager.
         
         Args:
             base_dir: Base directory for storing checkpoints
+            auto_cleanup: If True, automatically clean GPU memory after saving checkpoints
         """
         self.base_dir = base_dir
+        self.auto_cleanup = auto_cleanup
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.INFO)
     
     def get_checkpoint_dir(self, fedcore_id: str) -> str:
         """Get checkpoint directory for specific fedcore instance."""
@@ -62,12 +66,15 @@ class CheckpointManager:
         
         return None
     
-    def save_to_file(self, checkpoint_bytes: Optional[bytes], target_path: str) -> None:
+    def save_to_file(self, checkpoint_bytes: Optional[bytes], target_path: str, 
+                     cleanup_after_save: bool = None) -> None:
         """Save checkpoint bytes to file.
         
         Args:
             checkpoint_bytes: Serialized checkpoint
             target_path: Target file path
+            cleanup_after_save: If True, clean GPU memory after saving. 
+                              If None, use self.auto_cleanup setting
         """
         if checkpoint_bytes is None:
             return
@@ -75,6 +82,12 @@ class CheckpointManager:
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
         with open(target_path, "wb") as f:
             f.write(checkpoint_bytes)
+        
+        should_cleanup = cleanup_after_save if cleanup_after_save is not None else self.auto_cleanup
+        if should_cleanup:
+            self.logger.info("Cleaning GPU memory after saving checkpoint")
+            self._cleanup_gpu_memory()
+            self.logger.info("GPU memory cleanup completed")
     
     def load_from_file(self, checkpoint_path: str, 
                       device: Optional[torch.device] = None) -> Optional[torch.nn.Module]:
@@ -97,4 +110,30 @@ class CheckpointManager:
                 self.logger.info(f"Warning: Only state_dict found. Need model architecture to load.")
                 return ckpt
         return ckpt
+    
+    def _cleanup_gpu_memory(self) -> None:
+        """Clean up GPU memory by running garbage collection and clearing CUDA cache."""
+        if torch.cuda.is_available():
+            gc.collect()
+            
+            torch.cuda.empty_cache()
+            
+            torch.cuda.reset_peak_memory_stats()
+            
+            self.logger.debug("GPU memory cleaned: garbage collected and CUDA cache emptied")
+    
+    def get_gpu_memory_stats(self) -> dict:
+        """Get current GPU memory statistics.
+        
+        Returns:
+            Dictionary with memory statistics in GB, or empty dict if CUDA unavailable
+        """
+        if not torch.cuda.is_available():
+            return {}
+        
+        return {
+            'allocated_gb': torch.cuda.memory_allocated() / 1024**3,
+            'reserved_gb': torch.cuda.memory_reserved() / 1024**3,
+            'max_allocated_gb': torch.cuda.max_memory_allocated() / 1024**3,
+        }
 

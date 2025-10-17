@@ -162,7 +162,6 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self.model = input_data.target if self.model is None else self.model
         self.optimised_model = self.model
         self.model.to(self.device)
-        self.__check_and_substitute_loss(input_data)
         self._init_hooks()
         self._train_loop(
             train_loader=train_loader,

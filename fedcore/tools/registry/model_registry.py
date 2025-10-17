@@ -1,6 +1,8 @@
 """Refactored Model Registry with cleaner architecture."""
 
 import os
+import gc
+import logging
 from typing import Optional
 from threading import Lock
 
@@ -28,13 +30,16 @@ class ModelRegistry:
     _initialized = False
     _lock = Lock()
 
-    def __new__(cls):
+    def __new__(cls, auto_cleanup: bool = True):
         """Ensure only one instance exists (Thread-safe Singleton).
         
         Uses double-checked locking pattern:
         - First check without lock for performance
         - Acquire lock only if instance doesn't exist
         - Second check after acquiring lock to prevent race condition
+        
+        Args:
+            auto_cleanup: Ignored in __new__, handled in __init__
         """
         if cls._instance is None:
             with cls._lock:
@@ -42,7 +47,7 @@ class ModelRegistry:
                     cls._instance = super(ModelRegistry, cls).__new__(cls)
         return cls._instance
     
-    def __init__(self):
+    def __init__(self, auto_cleanup: bool = True):
         """Initialize registry components (only once, thread-safe).
         
         Uses the same lock as __new__ to ensure components are
@@ -53,16 +58,21 @@ class ModelRegistry:
                 if not ModelRegistry._initialized:
                     base_dir = os.environ.get("FEDCORE_MODEL_REGISTRY_PATH", "llm_output")
                     
-                    self.checkpoint_manager = CheckpointManager(base_dir)
+                    self.checkpoint_manager = CheckpointManager(base_dir, auto_cleanup=auto_cleanup)
                     self.storage = RegistryStorage(base_dir)
                     self.metrics_tracker = MetricsTracker()
+                    self.auto_cleanup = auto_cleanup
+                    self.logger = logging.getLogger(self.__class__.__name__)
+                    self.logger.setLevel(logging.INFO)
                     
                     ModelRegistry._initialized = True
+                    self.logger.info(f"ModelRegistry initialized: auto_cleanup={auto_cleanup}, base_dir={base_dir}")
     
     
     def register_model(self, fedcore_id: str, model=None, model_path: str = None,
                       pipeline_params: dict = None, metrics: Optional[dict] = None,
-                      note: str = "initial", params_format: str = 'yaml') -> str:
+                      note: str = "initial", params_format: str = 'yaml', 
+                      delete_model_after_save: bool = True) -> str:
         """Register a new model in the registry.
         
         Args:
@@ -73,13 +83,21 @@ class ModelRegistry:
             metrics: Metrics dictionary
             note: Note about this registration (unused)
             params_format: Format for params (unused)
+            delete_model_after_save: If True, delete model from memory after saving
             
         Returns:
             model_id: Generated model identifier
         """
+        self.logger.info(f"register_model called: fedcore_id={fedcore_id}, model_type={type(model).__name__ if model else 'None'}, metrics={metrics}")
+        
         model_id = self.metrics_tracker.generate_model_id(model, model_path)
         version = self.metrics_tracker.generate_version()
         safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
+        
+        if self.auto_cleanup and torch.cuda.is_available():
+            mem_before = self.checkpoint_manager.get_gpu_memory_stats()
+            self.logger.info(f"GPU memory before saving: {mem_before.get('allocated_gb', 0):.4f} GB")
+        
         checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, model_path)
         
         if model_path and os.path.isfile(model_path):
@@ -105,11 +123,21 @@ class ModelRegistry:
         
         self.storage.append_record(fedcore_id, record)
         
+        if delete_model_after_save and model is not None:
+            self.logger.info(f"Deleting model {model_id} from memory")
+            self._delete_model_from_memory(model)
+            self.logger.info("Model deleted from memory")
+        
+        if self.auto_cleanup and torch.cuda.is_available():
+            mem_after = self.checkpoint_manager.get_gpu_memory_stats()
+            self.logger.info(f"GPU memory after cleanup: {mem_after.get('allocated_gb', 0):.4f} GB")
+        
         return model_id
     
     def register_changes(self, fedcore_id: str, model_id: str, model=None,
                         pipeline_params: dict = None, metrics: Optional[dict] = None,
-                        note: str = "update", params_format: str = 'yaml'):
+                        note: str = "update", params_format: str = 'yaml',
+                        delete_model_after_save: bool = True):
         """Register changes to an existing model.
         
         Args:
@@ -120,11 +148,20 @@ class ModelRegistry:
             metrics: Updated metrics
             note: Note about the update
             params_format: Format for params
+            delete_model_after_save: If True, delete model from memory after saving
         """
+        self.logger.info(f"register_changes called: fedcore_id={fedcore_id}, model_id={model_id}, metrics={metrics}")
+        
         existing = self.storage.get_latest_record(fedcore_id, model_id)
         if existing is None:
-            self.register_model(fedcore_id, model, None, pipeline_params, metrics, note, params_format)
+            self.logger.warning("No existing record found, calling register_model instead")
+            self.register_model(fedcore_id, model, None, pipeline_params, metrics, note, 
+                              params_format, delete_model_after_save)
             return
+        
+        if self.auto_cleanup and torch.cuda.is_available():
+            mem_before = self.checkpoint_manager.get_gpu_memory_stats()
+            self.logger.info(f"GPU memory before saving changes: {mem_before.get('allocated_gb', 0):.4f} GB")
         
         version = self.metrics_tracker.generate_version()
         safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
@@ -149,6 +186,15 @@ class ModelRegistry:
         }
         
         self.storage.append_record(fedcore_id, record)
+        
+        if delete_model_after_save and model is not None:
+            self.logger.info(f"Deleting model {model_id} from memory")
+            self._delete_model_from_memory(model)
+            self.logger.info("Model deleted from memory")
+        
+        if self.auto_cleanup and torch.cuda.is_available():
+            mem_after = self.checkpoint_manager.get_gpu_memory_stats()
+            self.logger.info(f"GPU memory after cleanup: {mem_after.get('allocated_gb', 0):.4f} GB")
     
     def update_metrics(self, fedcore_id: str, model_id: str, metrics: dict):
         """Update metrics for the latest version of a model.
@@ -243,4 +289,55 @@ class ModelRegistry:
             print(f"Failed to load model from registry: {e}")
         
         return fallback_model
+    
+    def _delete_model_from_memory(self, model) -> None:
+        """Delete model from memory and clean up GPU memory.
+        
+        Args:
+            model: Model object to delete
+        """
+        if model is None:
+            return
+        
+        if hasattr(model, 'cpu'):
+            try:
+                model.cpu()
+            except Exception as e:
+                self.logger.debug(f"Could not move model to CPU: {e}")
+        
+        if isinstance(model, torch.nn.Module):
+            try:
+                for param in model.parameters():
+                    if param.grad is not None:
+                        param.grad = None
+                    param.data = None
+                
+                for buffer in model.buffers():
+                    buffer.data = None
+                    
+            except Exception as e:
+                self.logger.debug(f"Could not clear model parameters: {e}")
+        
+        del model
+        
+        gc.collect()
+        
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    
+    def get_memory_stats(self) -> dict:
+        """Get current GPU memory statistics.
+        
+        Returns:
+            Dictionary with memory statistics
+        """
+        return self.checkpoint_manager.get_gpu_memory_stats()
+    
+    def force_cleanup(self) -> None:
+        """Force cleanup of GPU memory.
+        
+        Useful for manual cleanup when needed.
+        """
+        self.checkpoint_manager._cleanup_gpu_memory()
+        self.logger.info("Forced GPU memory cleanup executed")
 

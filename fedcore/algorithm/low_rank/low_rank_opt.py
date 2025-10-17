@@ -72,6 +72,15 @@ class LowRankModel(BaseCompressionModel):
         
         if 'rank' not in filtered_params:
             filtered_params['rank'] = None
+
+        if self.decomposer == 'svd':
+            filtered_params.pop('power', None)
+            filtered_params.pop('random_init', None)
+        elif self.decomposer == 'two_sided':
+            filtered_params.pop('power', None)
+        elif self.decomposer == 'cur':
+            filtered_params.pop('power', None)
+            filtered_params.pop('random_init', None)
             
         return filtered_params
 

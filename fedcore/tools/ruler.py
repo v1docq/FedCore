@@ -13,6 +13,7 @@ from sklearn.metrics import accuracy_score
 from fedcore.architecture.computational.devices import default_device
 from fedcore.inference.onnx import ONNXInferenceModel
 from functools import partial
+from fedcore.tools.registry.model_registry import ModelRegistry
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.tools.edge_device import PowerEstimator
 from time import time

@@ -23,7 +23,6 @@ from fedcore.architecture.abstraction.decorators import DaskServer, exception_ha
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constant_repository import (
     FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,

@@ -150,9 +150,7 @@ def create_trainer(
     else:
         params_dict = params or {}
     trainer_class = _get_trainer_class(model, task_type, params_dict)
-    
-    if model is not None:
-        kwargs['model'] = model
+
     return trainer_class(params=params_dict, **kwargs)
 
 
