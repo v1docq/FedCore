@@ -59,7 +59,7 @@ class FedcoreGradHessHistory(GradSketch):
                  randomization_method: str = 'random_svd',
                  randomization_params: dict = {},
                  history_period: int = 10,
-                 derivative_threshold: float = 0.01):
+                 derivative_threshold: float = 0.1):
         self.randomization_params = dict(randomization_params or {})
         self.solver = FEDCORE_SAMPLING_METHODS[randomization_method]
         self.history_period = int(history_period)
@@ -115,16 +115,12 @@ class FedcoreGradHessHistory(GradSketch):
             return False
 
         threshold = self.derivative_threshold
-        grad_norms = cp.linalg.norm(self._hist_grad, axis=1)
+        grad_norms = cp.linalg.norm(self._hist_grad, axis=0)
         derivative = cp.gradient(self._gaussian_smooth(grad_norms))
 
-        recent_deriv = cp.abs(derivative[-1])
         # also check if the average of recent derivatives is close to zero
-        recent_window = min(3, len(derivative))
-        avg_recent_deriv = cp.mean(cp.abs(derivative[-recent_window:]))
-
-        self.logger.debug(f'recent_deriv: {recent_deriv}, avg_recent_deriv: {avg_recent_deriv}')
-        return (recent_deriv < threshold and avg_recent_deriv < threshold)
+        avg_recent_deriv = cp.mean(cp.abs(derivative))
+        return avg_recent_deriv < threshold
 
     def get_indexers_from_decomposition(self, tensor: cp.ndarray, top_fraction: float):
         U, s, Vh = cp.linalg.svd(tensor, full_matrices=False)
@@ -169,3 +165,70 @@ class FedcoreGradHessHistory(GradSketch):
         if self.use_approximation:
             return self.perform_historic_approximation(grad, hess)
         return grad, hess
+
+
+from sklearn.metrics import confusion_matrix
+from fedcore.repository.data.custom.boosting_config import BOOSTING_MODEL_PARAMS
+from fedcore.data.custom.load_data import load_benchmark_data, split_benchmark_data
+
+
+class ExperimentPipeline:
+    def __init__(self):
+        self.models_impl = dict(pyboost=GradientBoosting,
+                                fedcore_boosting=FedcoreBoostingModel)
+
+    def init_boosting_model(self, model_name, model_params):
+        self.model = self.models_impl[model_name](**model_params)
+
+    def fit_boosting_model(self, dataset_dict: dict):
+        eval_set = [{'X': dataset_dict['test_features'], 'y': dataset_dict['test_target']}]
+        self.model.fit(dataset_dict['train_features'], dataset_dict['train_target'],
+                       eval_sets=eval_set)
+
+    def predict(self, dataset_dict):
+        return self.model.predict(dataset_dict['test_features'])
+
+
+def run_benchmark(dataset_id: int = 110, model_name: str = 'pyboost', model_params: dict = BOOSTING_MODEL_PARAMS):
+    full_dataset_dict = load_benchmark_data(dataset_id)
+    # apply randomization on initial dataset
+    # sampled_dataset_dict = random_method(full_dataset_dict)
+    train_dataset_dict = split_benchmark_data(full_dataset_dict)
+    client = ExperimentPipeline()
+    client.init_boosting_model(model_name, model_params)
+    client.fit_boosting_model(train_dataset_dict)
+    prediction = client.predict(train_dataset_dict)
+
+    return prediction, train_dataset_dict
+
+
+def confusion_matrix_cupy_vectorized(y_pred, y_true):
+    y_true = cp.asnumpy(y_true)
+    y_pred = cp.asnumpy(y_pred).argmax(axis=1)
+
+    cm = confusion_matrix(y_true, y_pred)
+    return cm
+
+if __name__ == "__main__":
+
+    datasets_dict = {
+        'yeast': 110,
+        'wine_quality': 186,
+        # # 'mushroom': 73,
+        'spambase': 94,
+        # 'breast_cancer': 14,
+        # 'adult': 2,
+        # 'bank_marketing': 222,
+        # 'online_retail': 352,
+        'default_credit_card': 350
+    }
+
+    for dataset, id_ in datasets_dict.items():
+        model_params = {**BOOSTING_MODEL_PARAMS, 'industrial_strategy': {'history_period': 10}}
+        CURRENT_DATASET = f'{dataset}_{id_}'
+        try:
+            preds, train_dataset_dict = run_benchmark(dataset_id=id_, model_name='fedcore_boosting', model_params=model_params)
+            cm = confusion_matrix_cupy_vectorized(preds, train_dataset_dict['test_target'])
+            # cp.save(f'cm_{dataset}_{id_}.npy', cm)
+        except Exception as e:
+            pass
