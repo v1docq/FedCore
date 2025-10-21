@@ -13,7 +13,7 @@ Usage examples at the bottom show how to attach to nn.Linear and to torch.nn.Mul
 Designed for clarity and testability.
 """
 
-from typing import Tuple, Optional, Sequence
+from typing import Tuple, Optional, Sequence, Union
 import math
 import torch
 import torch.nn as nn
@@ -34,8 +34,18 @@ class CPDecomp(nn.Module):
     """
 
     def __init__(self, shape: Sequence[int], rank: int, init_scale: float = 1e-3):
+        """Initialize CPD decomposition with given shape and rank.
+        
+        Args:
+            shape: Tuple/sequence of integers defining tensor dimensions (e.g., (8, 64, 512) for 3D)
+            rank: CPD rank (number of components in the decomposition)
+            init_scale: Standard deviation for Gaussian initialization of factors
+            
+        Raises:
+            AssertionError: If rank < 1
+        """
         super().__init__()
-        assert rank >= 1, "rank must be >=1"
+        assert rank >= 1, f"CPD rank must be >= 1, but got rank={rank}"
         self.shape = tuple(int(s) for s in shape)
         self.rank = int(rank)
         self.num_modes = len(self.shape)
@@ -53,39 +63,43 @@ class CPDecomp(nn.Module):
     def reconstruct(self) -> torch.Tensor:
         """Reconstruct full tensor from factors. Returns tensor with `self.shape`.
 
+        Uses einsum for efficient canonical polyadic reconstruction.
+        For a 2-mode tensor: T[i,j] = sum_r factors[0][i,r] * factors[1][j,r]
+        For a 3-mode tensor: T[i,j,k] = sum_r factors[0][i,r] * factors[1][j,r] * factors[2][k,r]
+        
         Efficiency note: reconstruction costs O(prod(shape) * rank), which can be expensive for large
         tensors. Callers should avoid reconstructing huge tensors frequently; instead consider computing
         mode-wise contractions when possible. For adapter use-cases (small rank, moderate shape), this
         is usually acceptable.
+        
+        Note: Supports tensors up to 52 modes using letters [a-z, A-Z] (excluding 'r' and 'R').
         """
-        # Start by computing outer product across ranks: do einsum across factors
-        # We'll compute a tensor of shape (*shape, rank) and then sum over rank.
-        # To do this efficiently, we iteratively expand and multiply.
-        rank = self.rank
-        # initialize as factors[0] shaped (dim0, rank)
-        out = self.factors[0]  # (d0, r)
-        # iteratively outer product with remaining factors
-        for idx in range(1, self.num_modes):
-            f = self.factors[idx]  # (di, r)
-            # reshape out: current shape: (d0, d1, ..., di-1, r)
-            # f: (di, r)
-            # we want to multiply along rank dimension to get shape (d0, ..., di, r)
-            out = out.unsqueeze(-2) * f.unsqueeze(0).unsqueeze(0)
-            # the above will broadcast; however doing generalized broadcasting for arbitrary modes
-            # is easier by using einsum. To keep code simple and robust, use einsum expansion.
-            # But for clarity, we'll reconstruct via iterative einsum below.
-
-        # Simpler universal reconstruction using einsum: build string like 'ir,jr,kr->ijk'
-        subscripts_in = []
-        letters = [chr(ord('i') + i) for i in range(self.num_modes)]
-        for l in letters:
-            subscripts_in.append(l + 'r')
+        # Check if we can generate enough unique letters (max 52 modes supported)
+        if self.num_modes > 52:
+            raise ValueError(
+                f"CPDecomp only supports up to 52 modes, but got {self.num_modes}. "
+                "For very high-dimensional tensors, consider alternative decomposition methods."
+            )
+        
+        # Build einsum string like 'ar,br,cr->abc' for 3-mode tensor
+        # Use letters a-z, A-Z, but skip 'r' and 'R' (reserved for rank dimension)
+        # This gives us 52 possible letters for modes
+        available_letters = [chr(i) for i in range(ord('a'), ord('z') + 1) if chr(i) != 'r']
+        available_letters += [chr(i) for i in range(ord('A'), ord('Z') + 1) if chr(i) != 'R']
+        
+        letters = available_letters[:self.num_modes]
+        subscripts_in = [l + 'r' for l in letters]
         subs_in = ','.join(subscripts_in)
         subs_out = ''.join(letters)
         eins = f"{subs_in}->{subs_out}"
         return torch.einsum(eins, *self.factors)
 
     def num_parameters(self) -> int:
+        """Calculate total number of parameters in all factors.
+        
+        Returns:
+            Total number of learnable parameters across all factor matrices
+        """
         return sum(p.numel() for p in self.factors)
 
 
@@ -104,14 +118,32 @@ class CaraAdapter(nn.Module):
     """
 
     def __init__(self, base_shape: Sequence[int], rank: int, tensor_modes: Optional[Sequence[int]] = None, 
-                 init_scale: float = 1e-3, scaling: float | str = 1.0):
+                 init_scale: float = 1e-3, scaling: Union[float, str] = 1.0):
+        """Initialize CaRA adapter with CPD parameterization.
+        
+        Args:
+            base_shape: Shape of the base tensor to adapt (e.g., (out_features, in_features) for Linear weight)
+            rank: CPD rank for low-rank decomposition
+            tensor_modes: Optional tensorization pattern. If None, uses base_shape directly.
+                         If provided, must have same total size as base_shape (e.g., (8,64,512) for (512,512))
+            init_scale: Standard deviation for Gaussian initialization of CPD factors
+            scaling: Scaling factor α for delta. Either float value or 'learnable' for trainable scaling
+            
+        Raises:
+            AssertionError: If tensor_modes product doesn't match base_shape product
+        """
         super().__init__()
         self.base_shape = tuple(int(s) for s in base_shape)
         if tensor_modes is None:
             # default: treat base tensor as 2-mode with original shape
             self.tensor_shape = self.base_shape
         else:
-            assert math.prod(tensor_modes) == math.prod(self.base_shape), "tensor_modes must multiply to product of base_shape"
+            base_prod = math.prod(self.base_shape)
+            modes_prod = math.prod(tensor_modes)
+            assert modes_prod == base_prod, (
+                f"tensor_modes product ({modes_prod}) must equal base_shape product ({base_prod}). "
+                f"Got tensor_modes={tuple(tensor_modes)}, base_shape={self.base_shape}"
+            )
             self.tensor_shape = tuple(int(s) for s in tensor_modes)
         self.rank = int(rank)
 
@@ -137,10 +169,16 @@ class CaraAdapter(nn.Module):
         return self.scaling * reconstructed_flat
 
     def zero_factors(self):
+        """Reset all CPD factors to zero. Useful for zero-initialization."""
         for p in self.cpd.factors:
             nn.init.zeros_(p)
 
     def num_parameters(self) -> int:
+        """Calculate total number of trainable parameters.
+        
+        Returns:
+            Total parameters including CPD factors and scaling (if learnable)
+        """
         total = self.cpd.num_parameters()
         if self.is_scaling_learnable:
             total += 1
@@ -160,9 +198,24 @@ class CaraLinear(nn.Module):
     """
 
     def __init__(self, base_linear: nn.Linear, rank: int, adapt_bias: bool = False, tensor_modes: Optional[Sequence[int]] = None, 
-                 init_scale: float = 1e-3, scaling: float | str = 1.0):
+                 init_scale: float = 1e-3, scaling: Union[float, str] = 1.0):
+        """Initialize CaraLinear wrapper for adapting a frozen Linear layer.
+        
+        Args:
+            base_linear: Existing nn.Linear layer (will be frozen)
+            rank: CPD rank for weight adaptation
+            adapt_bias: Whether to also adapt bias using CPD
+            tensor_modes: Optional tensorization for weight (e.g., (num_heads, head_dim, embed_dim))
+            init_scale: Standard deviation for Gaussian initialization
+            scaling: Scaling factor α. Either float or 'learnable'
+            
+        Raises:
+            AssertionError: If base_linear is not nn.Linear
+        """
         super().__init__()
-        assert isinstance(base_linear, nn.Linear), "base_linear must be nn.Linear"
+        assert isinstance(base_linear, nn.Linear), (
+            f"base_linear must be nn.Linear, but got {type(base_linear).__name__}"
+        )
         self.in_features = base_linear.in_features
         self.out_features = base_linear.out_features
         self.base_weight = base_linear.weight.detach()  # frozen base
@@ -178,9 +231,15 @@ class CaraLinear(nn.Module):
                                    init_scale=init_scale, scaling=scaling)
         self.adapt_bias = adapt_bias
         if adapt_bias:
-            # simple low-rank bias adapter: treat bias as vector and model delta as sum of rank outer products (vector factors)
-            self.bias_factors = nn.Parameter(torch.empty(self.out_features, self.adapter.rank))
-            nn.init.normal_(self.bias_factors, std=init_scale)
+            # Use CaraAdapter for bias too (1D tensor with CPD decomposition)
+            # For a 1D tensor (vector), CPD with rank r gives: bias[i] = sum_r factor[i,r]
+            self.bias_adapter = CaraAdapter(
+                base_shape=(self.out_features,),
+                rank=rank,
+                tensor_modes=None,  # 1D decomposition
+                init_scale=init_scale,
+                scaling=scaling
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # weight: (out, in)
@@ -190,16 +249,21 @@ class CaraLinear(nn.Module):
         if self.base_bias is not None or self.adapt_bias:
             bias = self.bias_base if self.base_bias is not None else torch.zeros(self.out_features, device=x.device, dtype=x.dtype)
             if self.adapt_bias:
-                # reconstruct bias delta as sum over rank factors (i.e., bias_factors @ ones_rank)
-                delta_b = torch.sum(self.bias_factors, dim=1)
+                # Use CPD-based bias adapter for consistency
+                delta_b = self.bias_adapter()
                 bias = bias + delta_b
             y = y + bias
         return y
 
     def num_trainable_parameters(self) -> int:
+        """Calculate total number of trainable parameters.
+        
+        Returns:
+            Total parameters including weight adapter and bias adapter (if enabled)
+        """
         total = self.adapter.num_parameters()
         if self.adapt_bias:
-            total += self.bias_factors.numel()
+            total += self.bias_adapter.num_parameters()
         return total
 
 
@@ -217,7 +281,7 @@ class CaraAttentionWrapper(nn.Module):
     """
 
     def __init__(self, base_attn: nn.MultiheadAttention, rank: int, init_scale: float = 1e-3, 
-                 scaling: float | str = 1.0, adapt_out_proj: bool = True):
+                 scaling: Union[float, str] = 1.0, adapt_out_proj: bool = True):
         """
         Args:
             base_attn: PyTorch MultiheadAttention module to wrap
@@ -271,7 +335,8 @@ class CaraAttentionWrapper(nn.Module):
                 average_attn_weights: bool = True) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """Forward pass applying CaRA deltas to Q/K/V and output projections.
         
-        This method intercepts the attention computation and adds learned deltas to projection weights.
+        This method computes attention with modified weights without mutating the base model.
+        Uses functional API for safe and efficient computation.
         Signature matches nn.MultiheadAttention.forward for compatibility.
         """
         # Get deltas for Q, K, V projections
@@ -279,62 +344,68 @@ class CaraAttentionWrapper(nn.Module):
         delta_k = self.adapters['in_proj_k']()
         delta_v = self.adapters['in_proj_v']()
         
-        # Apply deltas by temporarily modifying base weights
-        # Note: PyTorch MHA uses in_proj_weight (packed Q/K/V) or separate q/k/v_proj_weight
-        original_in_proj = None
-        original_q_proj = None
-        original_k_proj = None
-        original_v_proj = None
+        # Create modified weights without mutating base weights
+        # This is safe for autograd and thread-safe
+        if self.base_attn._qkv_same_embed_dim:
+            # Packed weights: in_proj_weight shape (3*embed_dim, embed_dim)
+            # Create a new tensor with deltas applied (no in-place modification)
+            in_proj_weight = self.base_attn.in_proj_weight.clone()
+            D = self.embed_dim
+            in_proj_weight[0:D] = in_proj_weight[0:D] + delta_q
+            in_proj_weight[D:2*D] = in_proj_weight[D:2*D] + delta_k
+            in_proj_weight[2*D:3*D] = in_proj_weight[2*D:3*D] + delta_v
+            in_proj_bias = self.base_attn.in_proj_bias
+            q_proj_weight = k_proj_weight = v_proj_weight = None
+        else:
+            # Separate projection weights
+            q_proj_weight = self.base_attn.q_proj_weight + delta_q
+            k_proj_weight = self.base_attn.k_proj_weight + delta_k
+            v_proj_weight = self.base_attn.v_proj_weight + delta_v
+            in_proj_weight = None
+            in_proj_bias = None
         
-        try:
-            if self.base_attn._qkv_same_embed_dim:
-                # Packed weights: in_proj_weight shape (3*embed_dim, embed_dim)
-                original_in_proj = self.base_attn.in_proj_weight.data.clone()
-                D = self.embed_dim
-                # Apply deltas to each block
-                self.base_attn.in_proj_weight.data[0:D] += delta_q
-                self.base_attn.in_proj_weight.data[D:2*D] += delta_k
-                self.base_attn.in_proj_weight.data[2*D:3*D] += delta_v
-            else:
-                # Separate projection weights
-                original_q_proj = self.base_attn.q_proj_weight.data.clone()
-                original_k_proj = self.base_attn.k_proj_weight.data.clone()
-                original_v_proj = self.base_attn.v_proj_weight.data.clone()
-                self.base_attn.q_proj_weight.data += delta_q
-                self.base_attn.k_proj_weight.data += delta_k
-                self.base_attn.v_proj_weight.data += delta_v
-            
-            # Apply output projection delta if enabled
-            if self.adapt_out_proj:
-                delta_out = self.adapters['out_proj']()
-                original_out_proj = self.base_attn.out_proj.weight.data.clone()
-                self.base_attn.out_proj.weight.data += delta_out
-            else:
-                original_out_proj = None
-            
-            # Call base attention with modified weights
-            attn_output, attn_weights = self.base_attn(
-                query, key, value,
-                key_padding_mask=key_padding_mask,
-                need_weights=need_weights,
-                attn_mask=attn_mask,
-                average_attn_weights=average_attn_weights
-            )
-            
-        finally:
-            # Restore original weights (important for gradient computation)
-            if original_in_proj is not None:
-                self.base_attn.in_proj_weight.data.copy_(original_in_proj)
-            if original_q_proj is not None:
-                self.base_attn.q_proj_weight.data.copy_(original_q_proj)
-                self.base_attn.k_proj_weight.data.copy_(original_k_proj)
-                self.base_attn.v_proj_weight.data.copy_(original_v_proj)
-            if original_out_proj is not None:
-                self.base_attn.out_proj.weight.data.copy_(original_out_proj)
+        # Prepare output projection weights
+        if self.adapt_out_proj:
+            delta_out = self.adapters['out_proj']()
+            out_proj_weight = self.base_attn.out_proj.weight + delta_out
+        else:
+            out_proj_weight = self.base_attn.out_proj.weight
+        
+        out_proj_bias = self.base_attn.out_proj.bias
+        
+        # Use functional API to compute attention with modified weights
+        # This doesn't mutate the base model and is autograd-safe
+        attn_output, attn_weights = F.multi_head_attention_forward(
+            query, key, value,
+            self.embed_dim,
+            self.num_heads,
+            in_proj_weight,
+            in_proj_bias,
+            self.base_attn.bias_k,
+            self.base_attn.bias_v,
+            self.base_attn.add_zero_attn,
+            self.base_attn.dropout,
+            out_proj_weight,
+            out_proj_bias,
+            training=self.training,
+            key_padding_mask=key_padding_mask,
+            need_weights=need_weights,
+            attn_mask=attn_mask,
+            use_separate_proj_weight=(not self.base_attn._qkv_same_embed_dim),
+            q_proj_weight=q_proj_weight,
+            k_proj_weight=k_proj_weight,
+            v_proj_weight=v_proj_weight,
+            average_attn_weights=average_attn_weights
+        )
         
         return attn_output, attn_weights
 
     def num_trainable_parameters(self) -> int:
+        """Calculate total number of trainable parameters across all adapters.
+        
+        Returns:
+            Total parameters in Q/K/V and output projection adapters
+        """
         return sum(m.num_parameters() for m in self.adapters.values())
 
 
@@ -399,8 +470,10 @@ if __name__ == '__main__':
     x2 = torch.randn(5, 64)
     base_out = lin2(x2)
     cara_out = cara_lin2(x2)
-    diff = (base_out - cara_out).abs().max().item()
-    print(f'  Max difference with zero scaling: {diff:.6f} (should be ~0)')
+    is_close = torch.allclose(base_out, cara_out, rtol=1e-5, atol=1e-7)
+    max_diff = (base_out - cara_out).abs().max().item()
+    print(f'  Outputs match (allclose): {is_close}')
+    print(f'  Max absolute difference: {max_diff:.2e}')
     
     # Test 5: Training step simulation
     print("\n[Test 5] Training step simulation")
