@@ -178,20 +178,21 @@ def dice_score(outputs: Tensor, masks: Tensor, threshold: float = 0.5, smooth: f
     dice[total == 0] = -1
     return dice
 
-
 class ParetoMetrics:
     def pareto_metric_list(self, costs: Union[list, torch.Tensor], maximise: bool = True) -> torch.Tensor:
-        """Return mask of Pareto-efficient points."""
+        """Return mask of Pareto-efficient points (True = efficient)."""
         costs = torch.tensor(costs)
         is_efficient = torch.ones(costs.shape[0], dtype=torch.bool)
         for i, c in enumerate(costs):
             if is_efficient[i]:
+                idx = torch.where(is_efficient)[0]             
                 if maximise:
-                    is_efficient[is_efficient] = torch.all(costs[is_efficient] >= c, dim=1)
+                    keep = torch.all(costs[idx] >= c, dim=1)
                 else:
-                    is_efficient[is_efficient] = torch.all(costs[is_efficient] <= c, dim=1)
+                    keep = torch.all(costs[idx] <= c, dim=1)
+                is_efficient[idx] = keep.clone()               
+                is_efficient[i] = True                        
         return is_efficient
-
 
 # ============================ Generic metrics =================================
 

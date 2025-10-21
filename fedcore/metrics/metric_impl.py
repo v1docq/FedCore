@@ -213,28 +213,72 @@ class F1(QualityMetric):
 
 
 class Logloss(QualityMetric):
-    """Log loss on probabilities."""
+    """Binary log loss for probabilities P(y=1).
+
+    Accepts either:
+      - (N,) tensor with P(y=1), or
+      - (N,2) tensor with class probabilities; column 1 is P(y=1).
+    """
     output_mode = "probs"
 
     @classmethod
-    def metric(cls, target, predict) -> float:
-        return float(torch.mean(-target * torch.log(predict) - (1 - target) * torch.log(1 - predict)))
+    def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
+        t = torch.as_tensor(target).float().view(-1)   # (N,)
+        p = torch.as_tensor(predict).float()           # (N,) or (N,2)
 
+        # Support (N,2) → take prob of positive class
+        if p.ndim == 2:
+            if p.size(1) != 2:
+                raise ValueError("For binary Logloss, 'predict' must be (N,) or (N,2) with 2 classes.")
+            p = p[:, 1]
+
+        # Numerical stability
+        eps = 1e-12
+        p = p.clamp(min=eps, max=1.0 - eps)
+
+        loss = -(t * torch.log(p) + (1.0 - t) * torch.log(1.0 - p)).mean()
+        return float(loss.item())
 
 class ROCAUC(QualityMetric):
-    """ROC-AUC; multiclass uses macro OVR."""
+    """ROC-AUC using torchmetrics; supports binary (N,) or (N,2) and multiclass (N,C)."""
     output_mode = "probs"
 
     @classmethod
     def metric(cls, target, predict) -> float:
-        import torchmetrics
-        t = target
-        p = predict
-        if torch.unique(t).size(0) > 2:
-            score = torchmetrics.functional.roc_auc_score(t, p)
+        import torchmetrics.functional as F
+        t = torch.as_tensor(target).long().view(-1)   # labels (N,)
+        p = torch.as_tensor(predict).float()          # probs/logits: (N,), (N,2) or (N,C)
+
+        # Decide binary vs multiclass
+        is_multiclass = (p.ndim == 2 and p.size(1) > 2) or (torch.unique(t).numel() > 2)
+
+        if not is_multiclass:
+            # ---- Binary: ensure we pass P(y=1) as preds
+            p_bin = p[:, 1] if (p.ndim == 2 and p.size(1) == 2) else p
+            if hasattr(F, "roc_auc_score"):
+                score = F.roc_auc_score(p_bin, t)               # preds first, target second
+            else:
+                try:
+                    score = F.auroc(p_bin, t, task="binary")
+                except TypeError:
+                    score = F.auroc(p_bin, t)
         else:
-            score = torchmetrics.functional.roc_auc_score(t, p[:, 1] if p.ndimension() == 2 else p)
-        return round(float(score), 3)
+            # ---- Multiclass: use macro average; pass (preds, target)
+            if p.ndim == 1:
+                # if someone passed class ids as preds for multiclass — one-hot them
+                num_classes = int(t.max().item()) + 1
+                p = torch.nn.functional.one_hot(p.long(), num_classes=num_classes).float()
+            num_classes = p.size(1)
+            if hasattr(F, "roc_auc_score"):
+                score = F.roc_auc_score(p, t, num_classes=num_classes, average="macro", multi_class="ovo")
+            else:
+                try:
+                    score = F.auroc(p, t, task="multiclass", num_classes=num_classes, average="macro")
+                except TypeError:
+                    score = F.auroc(p, t, num_classes=num_classes, average="macro")
+
+        return float(score)
+
     
 class MASE(QualityMetric):
     """Mean Absolute Scaled Error (MASE)."""
