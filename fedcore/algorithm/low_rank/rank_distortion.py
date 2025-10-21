@@ -1,4 +1,35 @@
-from typing import Optional
+"""
+LoRA (Low-Rank Adaptation) helpers for FedCore.
+
+This module provides a minimal training wrapper and a parameterization module
+to fine-tune neural networks with low-rank adapters on top of a (largely)
+frozen base model.
+
+Components
+---------
+- LoraTrainer:
+    A thin orchestrator that (a) takes a ready model from the incoming
+    ``InputData`` container, (b) freezes non-LoRA parameters, enabling only
+    LoRA parameters for training via ``loralib.mark_only_lora_as_trainable``,
+    and (c) delegates the training loop to :class:`BaseNeuralModel`.
+
+- LoRAParametrization:
+    A drop-in parameterization that implements the classic LoRA update
+    ΔW = (B @ A) * (α / r) added to the original weight matrix W.
+    Initialization follows Section 4.1 of the LoRA paper:
+      * A ~ N(0, 1) (random Gaussian),
+      * B = 0 so that ΔW starts at 0.
+
+- linear_layer_parameterization:
+    Convenience factory that creates :class:`LoRAParametrization` for a given
+    linear layer's weight dimensions.
+
+References
+----------
+Hu et al., "LoRA: Low-Rank Adaptation of Large Language Models", 2021/2022.
+"""
+
+from typing import Optional 
 
 import loralib as lora
 import torch
@@ -11,6 +42,34 @@ from fedcore.repository.constanst_repository import default_device
 
 
 class LoraTrainer:
+    """
+    Minimal trainer wrapper for LoRA fine-tuning.
+
+    This class expects that the incoming ``input_data`` object carries a
+    pre-constructed model in ``input_data.target``. It freezes all non-LoRA
+    parameters and enables training only for LoRA parameters according to
+    the configured bias strategy.
+
+    Parameters
+    ----------
+    params : Optional[OperationParameters], default={}
+        Operation parameters. Recognized keys:
+          - ``lora_strategy`` : Optional[str]
+                Bias handling policy forwarded to
+                ``loralib.mark_only_lora_as_trainable(..., bias=...)``.
+                Typical values: ``None``, ``'all'``, ``'lora_only'``.
+
+    Attributes
+    ----------
+    lora_strategy : Optional[str]
+        Current bias policy for LoRA training.
+    device : torch.device
+        Target computation device.
+    trainer : BaseNeuralModel
+        Training loop driver used to fit the model.
+    model : Optional[nn.Module]
+        The underlying model being fine-tuned.
+    """
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__()
         self.lora_strategy = params.get("lora_strategy", None)
@@ -20,17 +79,88 @@ class LoraTrainer:
         self.model = None
 
     def _init_model(self, input_data):
+        """
+        Initialize the model and restrict trainable params to LoRA.
+
+        Notes
+        -----
+        The model is taken directly from ``input_data.target``. All parameters
+        except LoRA parameters are frozen via ``loralib.mark_only_lora_as_trainable``.
+
+        Parameters
+        ----------
+        input_data : Any
+            Container that must expose the model in ``input_data.target``.
+        """
         self.model = input_data.target
         lora.mark_only_lora_as_trainable(model=self.model, bias=self.lora_strategy)
 
     def fit(self, input_data):
+        """
+        Run the training loop with LoRA-enabled parameters.
+
+        Steps
+        -----
+        1) Initialize model and mark only LoRA parameters as trainable.
+        2) Attach the model to :attr:`trainer`.
+        3) Delegate training to :meth:`BaseNeuralModel.fit`.
+
+        Parameters
+        ----------
+        input_data : Any
+            Training data structure compatible with :class:`BaseNeuralModel`.
+
+        Returns
+        -------
+        nn.Module
+            The trained model instance with updated LoRA parameters.
+        """
         self._init_model(input_data)
         self.trainer.model = self.model
         self.model = self.trainer.fit(input_data)
         # self.compress(model=self.model, params=input_data.features, ft_params=None)
+        return self.model
 
 
 class LoRAParametrization(nn.Module):
+    """
+    LoRA parameterization for a weight matrix.
+
+    Implements ΔW = (B @ A) * (α / r) and returns W + ΔW at forward time.
+    The shapes follow the paper's convention and this code's implementation:
+      * ``A`` has shape (r, features_out),
+      * ``B`` has shape (features_in, r).
+
+    Initialization
+    --------------
+    - ``A`` ~ N(0, 1)
+    - ``B`` = 0
+    so that ΔW initially equals 0 (Section 4.1 in the paper).
+
+    Parameters
+    ----------
+    features_in : int
+        Input dimensionality of the base weight matrix W.
+    features_out : int
+        Output dimensionality of W.
+    rank : int, default=1
+        Low-rank dimension ``r``.
+    alpha : float, default=1
+        Scaling coefficient ``α`` used as ``α / r``.
+    device : str or torch.device, default="cpu"
+        Device for the LoRA parameters.
+
+    Attributes
+    ----------
+    lora_A : nn.Parameter
+        Right factor A ∈ R^{r × features_out}.
+    lora_B : nn.Parameter
+        Left factor B ∈ R^{features_in × r}.
+    scale : float
+        Precomputed scaling factor α / r.
+    enabled : bool
+        Gate to toggle the LoRA update on/off at forward time.
+    """
     def __init__(self, features_in, features_out, rank=1, alpha=1, device="cpu"):
         super().__init__()
         # Section 4.1 of the paper:
@@ -48,6 +178,19 @@ class LoRAParametrization(nn.Module):
         self.enabled = True
 
     def forward(self, original_weights):
+        """
+        Apply the LoRA update to the given base weights.
+
+        Parameters
+        ----------
+        original_weights : torch.Tensor
+            The original (frozen) weight tensor W.
+
+        Returns
+        -------
+        torch.Tensor
+            Updated weights W + ΔW if :attr:`enabled` is True; otherwise W.
+        """
         if self.enabled:
             # Return W + (B * A) * scale
             return (
@@ -60,6 +203,29 @@ class LoRAParametrization(nn.Module):
 
 
 def linear_layer_parameterization(layer, device, rank=1, lora_alpha=1):
+    """
+    Create LoRA parameterization for a linear layer's weight.
+
+    Only the weight matrix is parameterized; the bias, if present, is ignored.
+    This mirrors the common LoRA practice of adapting attention/linear weights
+    while keeping biases and certain MLP parts frozen (cf. Section 4.2).
+
+    Parameters
+    ----------
+    layer : nn.Linear or compatible
+        Module whose ``weight.shape`` is used to size the LoRA factors.
+    device : str or torch.device
+        Device on which to allocate the LoRA parameters.
+    rank : int, default=1
+        Low-rank dimension r.
+    lora_alpha : float, default=1
+        Scaling coefficient α (used as α / r).
+
+    Returns
+    -------
+    LoRAParametrization
+        A parameterization module sized to the layer's weight.
+    """
     # Only add the parameterization to the weight matrix, ignore the Bias
 
     # From section 4.2 of the paper:
