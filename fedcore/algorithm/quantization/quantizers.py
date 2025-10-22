@@ -1,3 +1,28 @@
+"""
+Quantization pipeline base class for FedCore.
+
+This module provides :class:`BaseQuantizer`, a high-level orchestrator for
+PyTorch quantization workflows covering:
+  * **Dynamic PTQ** (post-training quantization without calibration),
+  * **Static PTQ** (with calibration on a validation dataloader),
+  * **QAT** (quantization-aware training).
+
+Core responsibilities
+---------------------
+- Initialize a copy of the model to be quantized and select the proper trainer.
+- Build a ``qconfig`` mapping and allowed module set for the chosen mode/dtype.
+- Prepare the model (fusing, qconfig propagation, Q/DQ wrapping, calibration).
+- Invoke quantization hooks (see ``fedcore.algorithm.quantization.hooks``)
+  to run mode-specific actions (e.g., dynamic setup, calibration loop, QAT).
+- Convert the prepared model to its quantized form and return it.
+
+Notes
+-----
+- The original model remains in ``self.model_before``; the quantized artifact
+  is kept in ``self.model_after``.
+- Hooks are registered under the summon key ``'quantization'``.
+"""
+
 from copy import deepcopy
 from itertools import chain
 from typing import Optional
@@ -33,7 +58,67 @@ from fedcore.models.network_impl.hooks import Optimizers
 
 
 class BaseQuantizer(BaseCompressionModel):
+    """
+    High-level quantization orchestrator supporting dynamic PTQ, static PTQ, and QAT.
+
+    Configuration is provided via ``params`` and determines device, backend,
+    dtype, allowed module set, qconfig mapping, and (for QAT) training
+    hyperparameters. The typical flow is:
+
+        1) :meth:`_init_model` — copy & place model to device, select trainer.
+        2) :meth:`_init_hooks` — construct quantization hooks for the chosen mode.
+        3) :meth:`_prepare_model` — uninplace, (re)assemble, fuse, propagate qconfig,
+           attach Q/DQ wrappers, and (if needed) run calibration / enable QAT.
+        4) :meth:`fit` — execute hooks, run ``convert``/``quantize_dynamic``,
+           and return the quantized model in ``self.model_after``.
+
+    Attributes
+    ----------
+    device : torch.device
+        Target device for quantization phases.
+    quant_type : {'dynamic','static','qat'}
+        Quantization workflow to execute.
+    backend : str
+        Quantization backend engine (e.g., 'fbgemm', 'onednn').
+    dtype : torch.dtype
+        Quantized dtype (e.g., ``torch.qint8``) or ``torch.float16`` for FP16 path.
+    allow_emb : bool
+        Whether to allow embedding modules in the mapping (QAT only).
+    allow_conv : bool
+        Whether to allow convolution modules in the mapping.
+    inplace : bool
+        Preference for in-place transformations (passed to PyTorch APIs where applicable).
+    qconfig : dict
+        Flattened qconfig mapping prepared by :meth:`get_qconfig`.
+    allow : set[type]
+        Allowed module set derived from PyTorch default mappings and flags.
+    qat_params : dict
+        QAT hyperparameters (epochs, optimizer, criterion, lr).
+    optimizer : Optimizers
+        Registry entry for optimizer used in QAT hooks.
+    criterion : TorchLossesConstant
+        Registry entry for loss used in QAT hooks.
+    _hooks : list
+        Hook group used to instantiate quantization hooks.
+
+    See Also
+    --------
+    fedcore.algorithm.quantization.hooks : Hook implementations for each mode.
+    """
+
     def __init__(self, params: Optional[OperationParameters] = {}):
+        """Initialize quantization settings, qconfig, and hook registry.
+
+        Parameters
+        ----------
+        params : Optional[OperationParameters], default={}
+            Recognized keys:
+              - ``device`` (torch.device or str), ``quant_type`` ('dynamic'|'static'|'qat'),
+              - ``backend`` (str), ``dtype`` (torch.dtype),
+              - ``allow_emb`` (bool), ``allow_conv`` (bool), ``inplace`` (bool),
+              - ``qconfig`` (optional prebuilt mapping),
+              - ``qat_params`` dict with 'epochs'|'optimizer'|'criterion'|'lr'.
+        """
         super().__init__(params)
         
         # Quantizing params
@@ -45,7 +130,9 @@ class BaseQuantizer(BaseCompressionModel):
         self.allow_conv = params.get("allow_conv", True)
         self.inplace = params.get("inplace", False)
         
-        # self.device = default_device('cpu') if self.quant_type == 'qat' else self.device
+        # Device/dtype/backend interplay (kept as in original implementation)
+        # - Prefer FP16 on CUDA; restrict conv quant if FP16 is chosen.
+        # - Switch backend on CUDA to 'onednn' (as in original code).
         self.dtype = torch.float16 if self.device.type == "cuda" else self.dtype
         self.backend = 'onednn' if self.device.type == ("cuda") else self.backend
         self.allow_conv = False if self.dtype == torch.float16 else self.allow_conv
@@ -74,14 +161,23 @@ class BaseQuantizer(BaseCompressionModel):
         print(f"[INIT] qconfig: {self.qconfig}")
 
     def __repr__(self):
+        """Return human-readable identifier of the configured quantization type."""
         return f"{self.quant_type.upper()} Quantization"
 
     def _init_empty_object(self):
+        """Initialize history containers and hook lists (internal helper)."""
         self.history = {'train_loss': [], 'val_loss': []}
         self._on_epoch_end = []
         self._on_epoch_start = []
 
     def _init_hooks(self, input_data):
+        """Instantiate quantization hooks for the current mode.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Data container; used to pass dataloaders into hooks.
+        """
         self._on_epoch_end = []
         self._on_epoch_start = []
 
@@ -103,6 +199,18 @@ class BaseQuantizer(BaseCompressionModel):
                 self._on_epoch_start.append(hook)
 
     def _set_allow_mappings(self):
+        """Build the set of allowed module types for quantization conversion.
+
+        The base mapping is chosen from PyTorch defaults according to
+        ``self.quant_type`` and then optionally adjusted:
+          * add embedding modules for QAT when ``allow_emb`` is True,
+          * drop convolutional modules when ``allow_conv`` is False.
+
+        Returns
+        -------
+        set[type]
+            Set of module classes that are allowed to be quantized/converted.
+        """
         mapping_dict = {
             'dynamic': DEFAULT_DYNAMIC_QUANT_MODULE_MAPPINGS,
             'static': DEFAULT_STATIC_QUANT_MODULE_MAPPINGS,
@@ -117,6 +225,19 @@ class BaseQuantizer(BaseCompressionModel):
         return set(mapping_dict)
 
     def get_qconfig(self):
+        """Create and flatten a global qconfig mapping for the chosen mode/dtype.
+
+        For INT8, chooses between ``default_dynamic_qconfig`` / ``default_qconfig`` /
+        ``get_default_qat_qconfig``. For FP16, uses the corresponding float16 configs.
+
+        If ``allow_emb`` is True, embedding modules are configured with
+        ``float_qparams_weight_only_qconfig``.
+
+        Returns
+        -------
+        dict
+            A flattened qconfig dictionary suitable for propagation utilities.
+        """
         if self.dtype == torch.qint8:
             qconfig = {
                 'dynamic': default_dynamic_qconfig,
@@ -139,12 +260,20 @@ class BaseQuantizer(BaseCompressionModel):
         return get_flattened_qconfig_dict(qconfig_mapping)
 
     def _get_example_input(self, input_data: InputData):
+        """Fetch one validation batch for calibration/shape checks and move to device."""
         loader = input_data.features.val_dataloader
         example_input, _ = next(iter(loader))
         print(f"[DATA] Example input shape: {example_input.shape}")
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
+        """Copy the base model to device, select trainer, and build a quant copy.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Container holding the source model and task metadata.
+        """
         self.model_before = input_data.target.to(self.device)
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.qat_params)
@@ -155,6 +284,29 @@ class BaseQuantizer(BaseCompressionModel):
         print("[MODEL] Model initialized and copied for quantization.")
 
     def _prepare_model(self, input_data: InputData):
+        """Prepare the model for the selected quantization mode.
+
+        Steps
+        -----
+        1) Make modules out-of-place friendly (``uninplace``) and reassemble parents.
+        2) Fuse model if it provides ``fuse_model`` (common in ResNet-like backbones).
+        3) Propagate qconfig through the module tree.
+        4) Collect example input and wrap the model with Q/DQ entry/exit points.
+        5) For each mode:
+            - **dynamic**: switch to eval mode.
+            - **static** : ``prepare`` and run calibration on val dataloader, eval mode.
+            - **qat**    : ``prepare_qat`` and switch to train mode.
+
+        Returns
+        -------
+        nn.Module
+            Prepared model ready for conversion / quantize_dynamic.
+
+        Notes
+        -----
+        Any exception reverts preparation and supplies a clean eval copy of the
+        original model to keep the pipeline robust.
+        """
         try:
             uninplace(self.quant_model)
             self.quant_model = ParentalReassembler.reassemble(self.quant_model)
@@ -191,6 +343,18 @@ class BaseQuantizer(BaseCompressionModel):
             return deepcopy(self.model_before).eval()
 
     def fit(self, input_data: InputData):
+        """Execute the full quantization flow and return the quantized model.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Data container with model and loaders.
+
+        Returns
+        -------
+        nn.Module
+            Quantized model instance (also stored in ``self.model_after``).
+        """
         self._init_model(input_data)
         self._init_hooks(input_data)
         self.quant_model = self._prepare_model(input_data)
@@ -223,8 +387,10 @@ class BaseQuantizer(BaseCompressionModel):
         return self.model_after
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "fedcore"):
+        """Return the model object used during fit-time predictions (compat shim)."""
         return self.model_after if output_mode == "fedcore" else self.model_before
 
     def predict(self, input_data: InputData, output_mode: str = "fedcore"):
+        """Forward to the trainer using either the quantized or original model."""
         self.trainer.model = self.model_after if output_mode == "fedcore" else self.model_before
         return self.trainer.predict(input_data, output_mode)
