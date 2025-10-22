@@ -1,3 +1,24 @@
+"""
+Utilities for structured pruning of convolutional models (ResNet-focused).
+
+This module contains:
+- **Filter zeroing helpers** for Conv2d layers:
+    * :func:`percentage_filter_zeroing` — zero the lowest-norm filters by a ratio.
+    * :func:`energy_filter_zeroing` — zero filters until a target energy is kept.
+- **State dict surgery** for ResNet-like models:
+    * Functions to parse/collect nested state dicts and to prune channels in a
+      topology-aware way, ensuring BatchNorm/Conv/Linear tensors stay consistent.
+    * :func:`prune_resnet_state_dict` — prune a ResNet `state_dict` by removing
+      entirely-zeroed filters and propagating the channel selection through the
+      block graph.
+    * :func:`sizes_from_state_dict` — report tensor shapes after pruning.
+
+Notes
+-----
+These helpers operate purely on tensors and state dicts (no forward graph),
+which makes them convenient for offline/serialized pruning pipelines.
+"""
+
 from collections import OrderedDict
 from typing import Dict, Optional, Tuple, List, Union
 
@@ -8,14 +29,22 @@ from torch.nn import Conv2d
 
 
 def percentage_filter_zeroing(conv: Conv2d, pruning_ratio: float) -> None:
-    """Zero filters of convolutional layer to the pruning_ratio (in-place).
+    """Zero out a percentage of filters in a convolution (in-place).
 
-    Args:
-        conv: The optimizable layer.
-        pruning_ratio: pruning hyperparameter must be in the range (0, 1),
-            percentage of zeroed filters.
-    Raises:
-        Assertion Error: If ``energy_threshold`` is not in (0, 1).
+    The `pruning_ratio` fraction of filters (by smallest L2 norm over
+    weights) are set to zero. Biases are not modified.
+
+    Parameters
+    ----------
+    conv : torch.nn.Conv2d
+        The convolutional layer to modify.
+    pruning_ratio : float
+        Fraction of filters to zero in the open interval (0, 1).
+
+    Raises
+    ------
+    AssertionError
+        If ``pruning_ratio`` is not in (0, 1).
     """
     assert 0 < pruning_ratio < 1, "pruning_ratio must be in the range (0, 1)"
     filter_pruned_num = int(conv.weight.size()[0] * pruning_ratio)
@@ -26,14 +55,23 @@ def percentage_filter_zeroing(conv: Conv2d, pruning_ratio: float) -> None:
 
 
 def energy_filter_zeroing(conv: Conv2d, energy_threshold: float) -> None:
-    """Zero filters of convolutional layer to the energy_threshold (in-place).
+    """Zero filters of a convolution until a target energy remains (in-place).
 
-    Args:
-        conv: The optimizable layer.
-        energy_threshold: pruning hyperparameter must be in the range (0, 1].
-            the lower the threshold, the more filters will be pruned.
-    Raises:
-        Assertion Error: If ``energy_threshold`` is not in (0, 1].
+    Filters are sorted by L2 norm; the smallest ones are zeroed iteratively
+    until the remaining sum of squared norms falls below
+    ``energy_threshold * total_energy``.
+
+    Parameters
+    ----------
+    conv : torch.nn.Conv2d
+        The convolutional layer to modify.
+    energy_threshold : float
+        Target energy share to preserve, in the interval (0, 1].
+
+    Raises
+    ------
+    AssertionError
+        If ``energy_threshold`` is not in (0, 1].
     """
     assert 0 < energy_threshold <= 1, "energy_threshold must be in the range (0, 1]"
     filter_norms = vector_norm(conv.weight, dim=(1, 2, 3))
@@ -49,7 +87,18 @@ def energy_filter_zeroing(conv: Conv2d, energy_threshold: float) -> None:
 
 
 def _check_nonzero_filters(weight: Tensor) -> Tensor:
-    """Returns indices of nonzero filters."""
+    """Return indices of filters with at least one non-zero element.
+
+    Parameters
+    ----------
+    weight : torch.Tensor
+        Convolutional weight tensor of shape (out_channels, in_channels, H, W).
+
+    Returns
+    -------
+    torch.Tensor
+        1D tensor of indices for non-zero filters (by any element).
+    """
     filters = torch.count_nonzero(weight, dim=(1, 2, 3))
     indices = torch.flatten(torch.nonzero(filters))
     return indices
@@ -60,14 +109,21 @@ def _prune_filters(
     saving_filters: Optional[Tensor] = None,
     saving_channels: Optional[Tensor] = None,
 ) -> Tensor:
-    """Prune filters and channels of convolutional layer.
+    """Prune filters and/or input channels of a convolution weight tensor.
 
-    Args:
-        weight: Weight matrix.
-        saving_filters: Indexes of filters to be saved.
-            If ``None`` all filters to be saved.
-        saving_channels: Indexes of channels to be saved.
-            If ``None`` all channels to be saved.
+    Parameters
+    ----------
+    weight : torch.Tensor
+        Convolutional weight tensor.
+    saving_filters : Optional[torch.Tensor]
+        Indices of **output** filters to keep. If ``None``, keep all.
+    saving_channels : Optional[torch.Tensor]
+        Indices of **input** channels to keep. If ``None``, keep all.
+
+    Returns
+    -------
+    torch.Tensor
+        A cloned/pruned weight tensor.
     """
     if saving_filters is not None:
         weight = weight[saving_filters].clone()
@@ -77,12 +133,20 @@ def _prune_filters(
 
 
 def _prune_batchnorm(bn: Dict, saving_channels: Tensor) -> Dict[str, Tensor]:
-    """Prune BatchNorm2d.
+    """Prune BatchNorm1d/2d-like parameter tensors by channel indices.
 
-    Args:
-        bn: Dictionary with batchnorm params.
-        saving_channels: Indexes of channels to be saved.
-            If ``None`` all channels to be saved.
+    Parameters
+    ----------
+    bn : Dict[str, torch.Tensor]
+        Dictionary with BN params: ``weight``, ``bias``, ``running_mean``,
+        ``running_var``.
+    saving_channels : torch.Tensor
+        Indices of channels to keep.
+
+    Returns
+    -------
+    Dict[str, torch.Tensor]
+        BN dictionary with tensors sliced to the selected channels.
     """
     bn["weight"] = bn["weight"][saving_channels].clone()
     bn["bias"] = bn["bias"][saving_channels].clone()
@@ -92,7 +156,18 @@ def _prune_batchnorm(bn: Dict, saving_channels: Tensor) -> Dict[str, Tensor]:
 
 
 def _index_union(x: Tensor, y: Tensor) -> Tensor:
-    """Returns the union of x and y"""
+    """Return the set union of two index tensors.
+
+    Parameters
+    ----------
+    x, y : torch.Tensor
+        1D integer index tensors.
+
+    Returns
+    -------
+    torch.Tensor
+        1D tensor with unique indices from both inputs (order not guaranteed).
+    """
     x = set(x.tolist())
     y = set(y.tolist())
     xy = x | y
@@ -100,7 +175,25 @@ def _index_union(x: Tensor, y: Tensor) -> Tensor:
 
 
 def _indexes_of_tensor_values(tensor: Tensor, values: Tensor) -> Tensor:
-    """Returns the indexes of the values in the input tensor."""
+    """Return positions of specific values within a 1D tensor.
+
+    Parameters
+    ----------
+    tensor : torch.Tensor
+        1D tensor whose values are searched.
+    values : torch.Tensor
+        1D tensor with values to find in ``tensor``.
+
+    Returns
+    -------
+    torch.Tensor
+        1D tensor of integer indices corresponding to ``values`` in ``tensor``.
+
+    Notes
+    -----
+    This performs linear searches and assumes that all ``values`` are present
+    in ``tensor`` (no error handling for missing values).
+    """
     indexes = []
     tensor = tensor.tolist()
     for value in values.tolist():
@@ -109,7 +202,20 @@ def _indexes_of_tensor_values(tensor: Tensor, values: Tensor) -> Tensor:
 
 
 def _parse_sd(state_dict: OrderedDict) -> OrderedDict:
-    """Parses state_dict to nested dictionaries."""
+    """Convert a flat state_dict into a nested dictionary structure.
+
+    Keys are split by '.' to create nested mappings.
+
+    Parameters
+    ----------
+    state_dict : OrderedDict
+        Flat state dict as produced by PyTorch modules.
+
+    Returns
+    -------
+    OrderedDict
+        Nested dictionary mirroring the module hierarchy.
+    """
     parsed_sd = OrderedDict()
     for k, v in state_dict.items():
         _parse_param(k.split("."), v, parsed_sd)
@@ -117,7 +223,17 @@ def _parse_sd(state_dict: OrderedDict) -> OrderedDict:
 
 
 def _parse_param(param: List, value: Tensor, dictionary: OrderedDict) -> None:
-    """Parses value from state_dict to nested dictionaries."""
+    """Recursive helper to build nested dicts from dotted keys.
+
+    Parameters
+    ----------
+    param : List[str]
+        Key tokens obtained by splitting a full key on '.'.
+    value : torch.Tensor
+        Tensor to assign.
+    dictionary : OrderedDict
+        Current nesting level to populate.
+    """
     if len(param) > 1:
         dictionary.setdefault(param[0], OrderedDict())
         _parse_param(param[1:], value, dictionary[param[0]])
@@ -126,7 +242,18 @@ def _parse_param(param: List, value: Tensor, dictionary: OrderedDict) -> None:
 
 
 def _collect_sd(parsed_state_dict: OrderedDict) -> OrderedDict:
-    """Collect state_dict from nested dictionaries."""
+    """Flatten a nested dictionary back into a standard state_dict.
+
+    Parameters
+    ----------
+    parsed_state_dict : OrderedDict
+        Nested dictionary (as produced by :func:`_parse_sd`).
+
+    Returns
+    -------
+    OrderedDict
+        Flat state dict with dotted keys.
+    """
     state_dict = OrderedDict()
     keys, values = _collect_param(parsed_state_dict)
     for k, v in zip(keys, values):
@@ -136,7 +263,18 @@ def _collect_sd(parsed_state_dict: OrderedDict) -> OrderedDict:
 
 
 def _collect_param(dictionary: Union[OrderedDict, Tensor]) -> Tuple:
-    """Collect value from nested dictionaries."""
+    """Recursive helper to collect keys/values from a nested dictionary.
+
+    Parameters
+    ----------
+    dictionary : OrderedDict | torch.Tensor
+        Either a nested mapping or a leaf tensor.
+
+    Returns
+    -------
+    Tuple[List[List[str]], List[torch.Tensor]]
+        Collected key paths (as token lists) and corresponding leaf tensors.
+    """
     if isinstance(dictionary, OrderedDict):
         all_keys = []
         all_values = []
@@ -152,7 +290,30 @@ def _collect_param(dictionary: Union[OrderedDict, Tensor]) -> Tuple:
 
 
 def _prune_resnet_block(block: Dict, input_channels: Tensor) -> Tensor:
-    """Prune block of ResNet"""
+    """Prune a single ResNet basic/bottleneck block by channel connectivity.
+
+    The procedure:
+      1) If present, prune the downsample branch (Conv-BN) using the incoming
+         channels; record its output channels.
+      2) For the main path, iteratively prune each Conv by keeping non-zero
+         output filters and slicing input channels to match the previous layer.
+      3) For the final Conv, take the union of its non-zero filters and the
+         downsample's output channels to preserve residual addition shape.
+      4) Prune the final BN accordingly and store indices aligning the
+         downsample output with the main path.
+
+    Parameters
+    ----------
+    block : Dict
+        Nested dictionary representing a serialized ResNet block.
+    input_channels : torch.Tensor
+        Indices of channels entering the block.
+
+    Returns
+    -------
+    torch.Tensor
+        Indices of channels leaving the block (for the next block).
+    """
     channels = input_channels
     downsample_channels = input_channels
     keys = list(block.keys())
@@ -198,13 +359,21 @@ def _prune_resnet_block(block: Dict, input_channels: Tensor) -> Tensor:
 def prune_resnet_state_dict(
     state_dict: OrderedDict,
 ) -> OrderedDict:
-    """Prune state_dict of ResNet
+    """Prune a serialized ResNet by removing zeroed filters and aligning channels.
 
-    Args:
-        state_dict: ``state_dict`` of ResNet model.
+    This function inspects the state dict, determines non-zero filters,
+    prunes convolution/BN tensors accordingly throughout all blocks/layers,
+    and returns a **new** state dict consistent with the pruned topology.
 
-    Returns:
-        Tuple(state_dict, input_channels, output_channels).
+    Parameters
+    ----------
+    state_dict : OrderedDict
+        State dict of a ResNet model.
+
+    Returns
+    -------
+    OrderedDict
+        Pruned state dict with updated tensors and auxiliary indices.
     """
     sd = _parse_sd(state_dict)
     filters = _check_nonzero_filters(sd["conv1"]["weight"])
@@ -223,6 +392,21 @@ def prune_resnet_state_dict(
 
 
 def sizes_from_state_dict(state_dict: OrderedDict) -> Dict:
+    """Report tensor shapes for each major module in a (possibly pruned) ResNet.
+
+    Useful for constructing an architecture stub that matches the tensor sizes
+    of a pruned state dict.
+
+    Parameters
+    ----------
+    state_dict : OrderedDict
+        (Pruned) state dict as accepted by :func:`prune_resnet_state_dict`.
+
+    Returns
+    -------
+    dict
+        A nested dictionary with shapes for convs/BNs/FC and downsample parts.
+    """
     sd = _parse_sd(state_dict)
     sizes = {"conv1": sd["conv1"]["weight"].shape}
     for layer in ["layer1", "layer2", "layer3", "layer4"]:
@@ -243,40 +427,12 @@ def sizes_from_state_dict(state_dict: OrderedDict) -> Dict:
 #
 # def prune_resnet(model: ResNet) -> PrunedResNet:
 #     """Prune ResNet
-#
-#     Args:
-#         model: ResNet model.
-#
-#     Returns:
-#         Pruned ResNet model.
-#
-#     Raises:
-#         AssertionError if model is not Resnet.
+#     ...
 #     """
-#     assert isinstance(model, ResNet), "Supports only ResNet models"
-#     model_type = MODELS_FROM_LENGTH[len(model.state_dict())]
-#     pruned_sd = prune_resnet_state_dict(model.state_dict())
-#     sizes = sizes_from_state_dict(pruned_sd)
-#     model = PRUNED_MODELS[model_type](sizes=sizes)
-#     model.load_state_dict(pruned_sd)
-#     return model
+#     ...
 #
-#
-# def load_sfp_resnet_model(
-#         state_dict_path: str,
-# ) -> torch.nn.Module:
+# def load_sfp_resnet_model(state_dict_path: str) -> torch.nn.Module:
 #     """Loads SFP state_dict to PrunedResNet model.
-#
-#     Args:
-#         state_dict_path: Path to state_dict file.
-#
-#     Returns:
-#         PrunedResNet model.
+#     ...
 #     """
-#     state_dict = torch.load(state_dict_path, map_location='cpu')
-#     sizes = sizes_from_state_dict(state_dict)
-#     model_type = MODELS_FROM_LENGTH[len(
-#         list(filter((lambda x: not x.endswith('indices')), state_dict.keys())))]
-#     model = PRUNED_MODELS[model_type](sizes=sizes)
-#     model.load_state_dict(state_dict)
-#     return model
+#     ...
