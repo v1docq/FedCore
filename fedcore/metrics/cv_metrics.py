@@ -10,8 +10,7 @@ from fedcore.metrics.metric_impl import QualityMetric
 from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
 from golem.core.dag.graph import Graph
-from sklearn.metrics import precision_recall_fscore_support, accuracy_score, f1_score
-import torchmetrics
+
 # ============================== Counters =====================================
 
 class MetricCounter(ABC):
@@ -178,21 +177,20 @@ def dice_score(outputs: Tensor, masks: Tensor, threshold: float = 0.5, smooth: f
     dice[total == 0] = -1
     return dice
 
+
 class ParetoMetrics:
     def pareto_metric_list(self, costs: Union[list, torch.Tensor], maximise: bool = True) -> torch.Tensor:
-        """Return mask of Pareto-efficient points (True = efficient)."""
+        """Return mask of Pareto-efficient points."""
         costs = torch.tensor(costs)
         is_efficient = torch.ones(costs.shape[0], dtype=torch.bool)
         for i, c in enumerate(costs):
             if is_efficient[i]:
-                idx = torch.where(is_efficient)[0]             
                 if maximise:
-                    keep = torch.all(costs[idx] >= c, dim=1)
+                    is_efficient[is_efficient] = torch.all(costs[is_efficient] >= c, dim=1)
                 else:
-                    keep = torch.all(costs[idx] <= c, dim=1)
-                is_efficient[idx] = keep.clone()               
-                is_efficient[i] = True                        
+                    is_efficient[is_efficient] = torch.all(costs[is_efficient] <= c, dim=1)
         return is_efficient
+
 
 # ============================ Generic metrics =================================
 
@@ -328,257 +326,3 @@ class ROCAUC(QualityMetric):
         else:
             score = torchmetrics.functional.roc_auc_score(t, p[:, 1] if p.ndimension() == 2 else p)
         return round(score, 3)
-# ============================== Distillation Metrics =====================================
-
-class LastLayer(QualityMetric):
-    """Last layer distillation metric."""
-    
-    @classmethod
-    def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
-        """
-        Compute last layer distillation metric.
-        
-        Args:
-            target (torch.Tensor): Teacher model outputs
-            predict (torch.Tensor): Student model outputs
-            
-        Returns:
-            float: Distillation loss value
-        """
-        # Simple MSE between teacher and student outputs
-        return float(torch.nn.functional.mse_loss(target, predict).item())
-
-
-class IntermediateAttention(QualityMetric):
-    """Intermediate layers attention distillation metric."""
-    
-    @classmethod
-    def metric(cls, target: List[torch.Tensor], predict: List[torch.Tensor]) -> float:
-        """
-        Compute attention-based distillation loss.
-        
-        Args:
-            target (List[torch.Tensor]): Teacher attention maps
-            predict (List[torch.Tensor]): Student attention maps
-            
-        Returns:
-            float: Attention distillation loss
-        """
-        loss = 0.0
-        for t_att, s_att in zip(target, predict):
-            loss += torch.nn.functional.mse_loss(t_att, s_att)
-        return float(loss / len(target))
-
-
-class IntermediateFeatures(QualityMetric):
-    """Intermediate layers feature distillation metric."""
-    
-    @classmethod
-    def metric(cls, target: List[torch.Tensor], predict: List[torch.Tensor]) -> float:
-        """
-        Compute feature-based distillation loss.
-        
-        Args:
-            target (List[torch.Tensor]): Teacher feature maps
-            predict (List[torch.Tensor]): Student feature maps
-            
-        Returns:
-            float: Feature distillation loss
-        """
-        loss = 0.0
-        for t_feat, s_feat in zip(target, predict):
-            # Normalize features before comparison
-            t_norm = torch.nn.functional.normalize(t_feat, p=2, dim=1)
-            s_norm = torch.nn.functional.normalize(s_feat, p=2, dim=1)
-            loss += torch.nn.functional.mse_loss(t_norm, s_norm)
-        return float(loss / len(target))
-
-
-# ============================== CV Quality Metric =====================================
-
-class CV_quality_metric(QualityMetric):
-    """Computer Vision quality metric for computational performance."""
-    
-    @classmethod
-    def metric(cls, model, dataset, model_regime: str) -> float:
-        """
-        Compute computational metrics like latency and throughput.
-        
-        Args:
-            model: The model to evaluate
-            dataset: The dataset to evaluate on
-            model_regime (str): The regime of the model
-            
-        Returns:
-            float: Computational metric value
-        """
-        # Placeholder implementation - you'll need to implement actual computation
-        # of latency, throughput, etc. based on your specific requirements
-        
-        if model_regime == "latency":
-            # Measure inference latency
-            return cls._measure_latency(model, dataset)
-        elif model_regime == "throughput":
-            # Measure throughput
-            return cls._measure_throughput(model, dataset)
-        else:
-            return 0.0
-    
-    @staticmethod
-    def _measure_latency(model, dataset):
-        """Measure average inference latency."""
-        # Implementation for latency measurement
-        return 0.0
-    
-    @staticmethod
-    def _measure_throughput(model, dataset):
-        """Measure throughput (samples per second)."""
-        # Implementation for throughput measurement  
-        return 0.0
-# ============================== Computational Metrics =====================================
-
-class Latency(QualityMetric):
-    """Latency measurement metric."""
-    
-    @classmethod
-    def metric(cls, model, dataset, model_regime: str) -> float:
-        """
-        Measure inference latency.
-        
-        Args:
-            model: The model to evaluate
-            dataset: The dataset to evaluate on
-            model_regime (str): The regime of the model
-            
-        Returns:
-            float: Average latency in milliseconds
-        """
-        # Simple latency measurement implementation
-        import time
-        
-        model.eval()
-        latencies = []
-        
-        # Warmup
-        with torch.no_grad():
-            for i, (data, _) in enumerate(dataset):
-                if i >= 10:  # Warmup for 10 batches
-                    break
-                _ = model(data)
-        
-        # Measure latency
-        with torch.no_grad():
-            for i, (data, _) in enumerate(dataset):
-                if i >= 100:  # Measure 100 batches
-                    break
-                start_time = time.time()
-                _ = model(data)
-                end_time = time.time()
-                latencies.append((end_time - start_time) * 1000)  # Convert to milliseconds
-        
-        return float(sum(latencies) / len(latencies)) if latencies else 0.0
-
-
-class Throughput(QualityMetric):
-    """Throughput measurement metric."""
-    
-    @classmethod
-    def metric(cls, model, dataset, model_regime: str) -> float:
-        """
-        Measure inference throughput.
-        
-        Args:
-            model: The model to evaluate
-            dataset: The dataset to evaluate on
-            model_regime (str): The regime of the model
-            
-        Returns:
-            float: Throughput in samples per second
-        """
-        import time
-        
-        model.eval()
-        total_samples = 0
-        start_time = time.time()
-        
-        # Measure throughput for 5 seconds or entire dataset
-        with torch.no_grad():
-            for data, _ in dataset:
-                batch_size = data.size(0)
-                _ = model(data)
-                total_samples += batch_size
-                
-                if time.time() - start_time >= 5.0:  # Measure for 5 seconds
-                    break
-        
-        end_time = time.time()
-        duration = end_time - start_time
-        
-        return float(total_samples / duration) if duration > 0 else 0.0
-
-
-class Energy(QualityMetric):
-    """Energy consumption metric (placeholder)."""
-    
-    @classmethod
-    def metric(cls, model, dataset, model_regime: str) -> float:
-        """
-        Placeholder for energy consumption measurement.
-        
-        Args:
-            model: The model to evaluate
-            dataset: The dataset to evaluate on
-            model_regime (str): The regime of the model
-            
-        Returns:
-            float: Energy consumption (placeholder)
-        """
-        # This would require hardware-specific measurements
-        return 0.0
-
-
-class ModelSize(QualityMetric):
-    """Model size metric."""
-    
-    @classmethod
-    def metric(cls, model, dataset, model_regime: str) -> float:
-        """
-        Calculate model size.
-        
-        Args:
-            model: The model to evaluate
-            dataset: The dataset to evaluate on (unused)
-            model_regime (str): The regime of the model (unused)
-            
-        Returns:
-            float: Model size in megabytes
-        """
-        param_size = 0
-        for param in model.parameters():
-            param_size += param.nelement() * param.element_size()
-        buffer_size = 0
-        for buffer in model.buffers():
-            buffer_size += buffer.nelement() * buffer.element_size()
-        
-        size_mb = (param_size + buffer_size) / 1024**2
-        return float(size_mb)
-
-
-class MACs(QualityMetric):
-    """Multiply-accumulate operations metric (placeholder)."""
-    
-    @classmethod
-    def metric(cls, model, dataset, model_regime: str) -> float:
-        """
-        Placeholder for MACs measurement.
-        
-        Args:
-            model: The model to evaluate
-            dataset: The dataset to evaluate on
-            model_regime (str): The regime of the model
-            
-        Returns:
-            float: MACs count (placeholder)
-        """
-        # This would require specialized libraries like thop or ptflops
-        return 0.0

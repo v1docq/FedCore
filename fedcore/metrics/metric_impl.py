@@ -1,84 +1,26 @@
 import torch
 from torch import Tensor
-from torch.nn.functional import softmax
-from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from abc import ABC, abstractmethod
 from typing import List, Dict, Union
 
 # Import necessary libraries
 from fedot.core.composer.metrics import Metric
-from fedot.core.data.data import InputData
-from golem.core.dag.graph import Graph
 
-# ============================== Counters =====================================
-
-class MetricCounter(ABC):
-    """Base class for streaming metric accumulation."""
-
-    @abstractmethod
-    def update(self, **kwargs) -> None:
-        """Update internal state with a new batch."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def compute(self) -> Dict[str, float]:
-        """Return computed metrics."""
-        raise NotImplementedError
+# ============================== Pareto =====================================
 
 
-class ClassificationMetricCounter(MetricCounter):
-    """Accumulates logits/targets and computes macro metrics (+ ROC-AUC)."""
-
-    def __init__(self, class_metrics: bool = False) -> None:
-        self.y_true: List[int] = []
-        self.y_pred: List[int] = []
-        self.y_score: List[Tensor] = []
-        self.class_metrics = class_metrics
-
-    def update(self, logits: Tensor, targets: Tensor) -> None:
-        """Add a batch of logits and targets."""
-        logits = logits.detach().cpu()
-        targets = targets.detach().cpu()
-        self.y_true.extend(targets.tolist())
-        self.y_pred.extend(torch.argmax(logits, dim=-1).tolist())
-        self.y_score.extend(softmax(logits, dim=-1))
-
-    def compute(self) -> Dict[str, float]:
-        """Compute macro metrics; add ROC-AUC if y_score is available."""
-        from sklearn.metrics import precision_recall_fscore_support, accuracy_score, f1_score
-        import torchmetrics
-
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            self.y_true, self.y_pred, average="macro"
-        )
-
-        scores = {
-            "accuracy": accuracy_score(self.y_true, self.y_pred),
-            "precision": float(precision),
-            "recall": float(recall),
-            "f1": float(f1),
-        }
-
-        # Compute ROC-AUC
-        try:
-            y_true = torch.tensor(self.y_true)
-            y_score = torch.stack(self.y_score)
-            if y_score.ndimension() == 2 and y_score.size(1) > 1:
-                auc = torchmetrics.functional.roc_auc_score(
-                    y_true, y_score
-                )
-            else:
-                pos = y_score[:, 1] if y_score.ndimension() == 2 else y_score
-                auc = torchmetrics.functional.roc_auc_score(y_true, pos)
-            scores["roc_auc"] = round(float(auc), 3)
-        except Exception:
-            pass
-
-        if self.class_metrics:
-            f1s = f1_score(self.y_true, self.y_pred, average=None)
-            scores.update({f"f1_for_class_{i}": float(s) for i, s in enumerate(f1s)})
-
-        return scores
+class ParetoMetrics:
+    def pareto_metric_list(self, costs: Union[list, torch.Tensor], maximise: bool = True) -> torch.Tensor:
+        """Return mask of Pareto-efficient points."""
+        costs = torch.tensor(costs)
+        is_efficient = torch.ones(costs.shape[0], dtype=torch.bool)
+        for i, c in enumerate(costs):
+            if is_efficient[i]:
+                if maximise:
+                    is_efficient[is_efficient] = torch.all(costs[is_efficient] >= c, dim=1)
+                else:
+                    is_efficient[is_efficient] = torch.all(costs[is_efficient] <= c, dim=1)
+        return is_efficient
 
 
 # ============================ Generic metrics =================================
@@ -89,10 +31,6 @@ class QualityMetric(Metric):
     need_to_minimize = False
     output_mode = "compress"  # 'labels' | 'probs' | 'raw' | 'compress'
     split = "val"             # 'val' | 'test'
-
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        raise NotImplementedError
 
     @classmethod
     def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
@@ -165,6 +103,16 @@ class R2(QualityMetric):
     def metric(cls, target, predict) -> float:
         return float(1 - torch.sum((target - predict) ** 2) / torch.sum((target - target.mean()) ** 2))
 
+REGRESSION_METRICS = [
+    'R2',
+    'MAE',
+    'MAPE',
+    'MSLE',
+    'RMSE',
+    'SMAPE',
+    'MSE', 
+    'MASE'
+]
 
 # --------------------------- Classification -----------------------------------
 
@@ -174,8 +122,7 @@ class Accuracy(QualityMetric):
 
     @classmethod
     def metric(cls, target, predict) -> float:
-        # Convert boolean to float before mean calculation
-        return float(torch.mean((target == predict).float()).item())
+        return float(torch.mean(target == predict).item())
 
 
 class Precision(QualityMetric):
@@ -184,13 +131,9 @@ class Precision(QualityMetric):
 
     @classmethod
     def metric(cls, target, predict) -> float:
-        # Ensure tensors are the same type and convert to float
-        target = target.float()
-        predict = predict.float()
-        
-        tp = torch.sum((target == 1) & (predict == 1)).float()
-        fp = torch.sum((target == 0) & (predict == 1)).float()
-        return float((tp / (tp + fp + 1e-8)).item())
+        tp = torch.sum((target == 1) & (predict == 1))
+        fp = torch.sum((target == 0) & (predict == 1))
+        return float(tp / (tp + fp + 1e-8))
 
 
 class F1(QualityMetric):
@@ -199,106 +142,47 @@ class F1(QualityMetric):
 
     @classmethod
     def metric(cls, target, predict) -> float:
-        # Ensure tensors are the same type and convert to float
-        target = target.float()
-        predict = predict.float()
-        
-        tp = torch.sum((target == 1) & (predict == 1)).float()
-        fp = torch.sum((target == 0) & (predict == 1)).float()
-        fn = torch.sum((target == 1) & (predict == 0)).float()
+        tp = torch.sum((target == 1) & (predict == 1))
+        fp = torch.sum((target == 0) & (predict == 1))
+        fn = torch.sum((target == 1) & (predict == 0))
         precision = tp / (tp + fp + 1e-8)
         recall = tp / (tp + fn + 1e-8)
-        f1_score = 2 * (precision * recall) / (precision + recall + 1e-8)
-        return float(f1_score.item())
+        return 2 * (precision * recall) / (precision + recall + 1e-8)
 
 
 class Logloss(QualityMetric):
-    """Binary log loss for probabilities P(y=1).
-
-    Accepts either:
-      - (N,) tensor with P(y=1), or
-      - (N,2) tensor with class probabilities; column 1 is P(y=1).
-    """
-    output_mode = "probs"
-
-    @classmethod
-    def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
-        t = torch.as_tensor(target).float().view(-1)   # (N,)
-        p = torch.as_tensor(predict).float()           # (N,) or (N,2)
-
-        # Support (N,2) → take prob of positive class
-        if p.ndim == 2:
-            if p.size(1) != 2:
-                raise ValueError("For binary Logloss, 'predict' must be (N,) or (N,2) with 2 classes.")
-            p = p[:, 1]
-
-        # Numerical stability
-        eps = 1e-12
-        p = p.clamp(min=eps, max=1.0 - eps)
-
-        loss = -(t * torch.log(p) + (1.0 - t) * torch.log(1.0 - p)).mean()
-        return float(loss.item())
-
-class ROCAUC(QualityMetric):
-    """ROC-AUC using torchmetrics; supports binary (N,) or (N,2) and multiclass (N,C)."""
+    """Log loss on probabilities."""
     output_mode = "probs"
 
     @classmethod
     def metric(cls, target, predict) -> float:
-        import torchmetrics.functional as F
-        t = torch.as_tensor(target).long().view(-1)   # labels (N,)
-        p = torch.as_tensor(predict).float()          # probs/logits: (N,), (N,2) or (N,C)
+        return float(torch.mean(-target * torch.log(predict) - (1 - target) * torch.log(1 - predict)))
 
-        # Decide binary vs multiclass
-        is_multiclass = (p.ndim == 2 and p.size(1) > 2) or (torch.unique(t).numel() > 2)
 
-        if not is_multiclass:
-            # ---- Binary: ensure we pass P(y=1) as preds
-            p_bin = p[:, 1] if (p.ndim == 2 and p.size(1) == 2) else p
-            if hasattr(F, "roc_auc_score"):
-                score = F.roc_auc_score(p_bin, t)               # preds first, target second
-            else:
-                try:
-                    score = F.auroc(p_bin, t, task="binary")
-                except TypeError:
-                    score = F.auroc(p_bin, t)
-        else:
-            # ---- Multiclass: use macro average; pass (preds, target)
-            if p.ndim == 1:
-                # if someone passed class ids as preds for multiclass — one-hot them
-                num_classes = int(t.max().item()) + 1
-                p = torch.nn.functional.one_hot(p.long(), num_classes=num_classes).float()
-            num_classes = p.size(1)
-            if hasattr(F, "roc_auc_score"):
-                score = F.roc_auc_score(p, t, num_classes=num_classes, average="macro", multi_class="ovo")
-            else:
-                try:
-                    score = F.auroc(p, t, task="multiclass", num_classes=num_classes, average="macro")
-                except TypeError:
-                    score = F.auroc(p, t, num_classes=num_classes, average="macro")
+class ROCAUC(QualityMetric):
+    """ROC-AUC; multiclass uses macro OVR."""
+    output_mode = "probs"
 
-        return float(score)
-
-    
-class MASE(QualityMetric):
-    """Mean Absolute Scaled Error (MASE)."""
-    
     @classmethod
-    def metric(cls, target: torch.Tensor, predict: torch.Tensor, seasonal_factor: int = 1) -> float:
-        """
-        Compute Mean Absolute Scaled Error (MASE).
+    def metric(cls, target, predict) -> float:
+        t = target
+        p = predict
+        if torch.unique(t).size(0) > 2:
+            score = torchmetrics.functional.roc_auc_score(t, p)
+        else:
+            score = torchmetrics.functional.roc_auc_score(t, p[:, 1] if p.ndimension() == 2 else p)
+        return round(score, 3)
+    
+CLASSIFICATION_METRICS = [
+    'ROCAUC',
+    'LogLoss',
+    'F1',
+    'Precision',
+    'Accuracy'
+]
 
-        Args:
-            target (torch.Tensor): Ground truth values.
-            predict (torch.Tensor): Predicted values.
-            seasonal_factor (int): Seasonal factor (e.g., number of periods per year).
-
-        Returns:
-            float: The MASE value.
-        """
-        # Compute the scale based on the seasonal difference (for example, yearly data)
-        scale = torch.mean(torch.abs(target[seasonal_factor:] - target[:-seasonal_factor]))
-
-        # Calculate the MASE
-        mase_value = torch.mean(torch.abs(target - predict)) / scale
-        return float(mase_value.item())
+__all__ = [
+    *CLASSIFICATION_METRICS, 
+    *REGRESSION_METRICS,
+    'ParetoMetrics'
+]
