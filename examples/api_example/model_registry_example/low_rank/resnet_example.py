@@ -19,27 +19,22 @@ from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from fedcore.tools.registry.model_registry import ModelRegistry
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    force=True
-)
+log_dir = 'examples/api_example/model_registry_example/logs'
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'LR_resnet.log')
 
-# Явно устанавливаем уровень для критичных логгеров
-logging.getLogger('BaseCompressionModel').setLevel(logging.INFO)
-logging.getLogger('BaseCompressionModel.__init__').setLevel(logging.INFO)
-logging.getLogger('BaseCompressionModel._init_model').setLevel(logging.INFO)
-logging.getLogger('BaseCompressionModel.model_before_setter').setLevel(logging.INFO)
-logging.getLogger('BaseCompressionModel.model_after_setter').setLevel(logging.INFO)
-logging.getLogger('LowRankModel._init_model').setLevel(logging.INFO)
-logging.getLogger('LowRankModel').setLevel(logging.INFO)
-logging.getLogger('ModelRegistry').setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-##########################################################################
-### DEFINE ML PROBLEM (classification, object_detection, regression,   ###
-### ts_forecasting), PEFT problem (pruning, quantisation, distillation,###
-### low_rank) and appropriate loss function both for model and compute ###
-##########################################################################
+file_handler = logging.FileHandler(log_file, mode='w')
+console_handler = logging.StreamHandler()
+log_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(log_format)
+console_handler.setFormatter(log_format)
+
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
 METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
@@ -119,136 +114,108 @@ learning_config = LearningConfigTemplate(criterion='cross_entropy',
 api_template = APIConfigTemplate(automl_config=automl_config,
                                  learning_config=learning_config)
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
     registry = ModelRegistry(auto_cleanup=True)
-    logging.info(f"ModelRegistry initialized with auto_cleanup={registry.auto_cleanup}")
     registry.force_cleanup()
     
-    logging.info("GPU INITIAL STATE:")
     initial_memory = registry.get_memory_stats()
-    for key, value in initial_memory.items():
-        if isinstance(value, float):
-            logging.info(f"  {key}: {value:.4f} GB")
-        else:
-            logging.info(f"  {key}: {value}")
     
     start_init = time.time()
     APIConfig = ConfigFactory.from_template(api_template)
     api_config = APIConfig()
     fedcore_compressor = FedCore(api_config)
     init_time = time.time() - start_init
-    logging.info(f"FedCore initialization time: {init_time:.4f} sec")
     
     start_data = time.time()
     fedcore_train_data, fedcore_test_data = load_benchmark_dataset('CIFAR10', train_dataloader_params,
                                                                    test_dataloader_params)
     data_load_time = time.time() - start_data
-    logging.info(f"Data load time: {data_load_time:.4f} sec")
-
-    logging.info("GPU AFTER DATA LOADING:")
     memory_after_data = registry.get_memory_stats()
-    for key, value in memory_after_data.items():
-        if isinstance(value, float):
-            logging.info(f"  {key}: {value:.4f} GB")
-        else:
-            logging.info(f"  {key}: {value}")
     
     start_fit = time.time()
     fedcore_compressor.fit_no_evo(fedcore_train_data)
     fit_time = time.time() - start_fit
-    logging.info(f"fit_no_evo time lead: {fit_time:.4f} sec")
-    
-    logging.info("GPU AFTER TRAINING:")
     memory_after_fit = registry.get_memory_stats()
-    for key, value in memory_after_fit.items():
-        if isinstance(value, float):
-            logging.info(f"  {key}: {value:.4f} GB")
-        else:
-            logging.info(f"  {key}: {value}")
     
     start_report = time.time()
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
     report_time = time.time() - start_report
-    logging.info(f"get_report lead time: {report_time:.4f} sec")
-    
-    logging.info("GPU AFTER get_report (модель загружена для оценки):")
     memory_after_report = registry.get_memory_stats()
-    for key, value in memory_after_report.items():
-        if isinstance(value, float):
-            logging.info(f"  {key}: {value:.4f} GB")
-        else:
-            logging.info(f"  {key}: {value}")
     
-    # Get fedcore_id before deleting the object
-    fedcore_id = getattr(fedcore_compressor, '_fedcore_id', None)
-    
-    logging.info("Deleting FedCore object and performing final cleanup")
-    del fedcore_compressor
-    gc.collect()  
-    registry.force_cleanup()  
-    
-    logging.info("GPU AFTER CLEANUP:")
-    memory_after_cleanup = registry.get_memory_stats()
-    for key, value in memory_after_cleanup.items():
-        if isinstance(value, float):
-            logging.info(f"  {key}: {value:.4f} GB")
-        else:
-            logging.info(f"  {key}: {value}")
-    
-    logging.info("REGISTERED MODELS INFO:")
-    try:
-        if fedcore_id:
-            model_ids = registry.list_models(fedcore_id)
-            logging.info(f"  Number of registered models: {len(model_ids)}")
-            for idx, model_id in enumerate(model_ids, 1):
-                logging.info(f"  {idx}. Model ID: {model_id}")
-                latest_record = registry.get_latest_record(fedcore_id, model_id)
-                if latest_record:
-                    logging.info(f"     - Checkpoint path: {latest_record.get('checkpoint_path', 'N/A')}")
-                    logging.info(f"     - Stage: {latest_record.get('metrics', {}).get('stage', 'N/A')}")
-    except Exception as e:
-        logging.warning(f"Unable to retrieve information about models: {e}")
-    
-    logger = logging.getLogger('EXPERIMENT_SUMMARY')
-    logger.info("="*80)
-    logger.info("FINAL STATISTICS")
-    logger.info("="*80)
-    
-    logger.info("TIMING METRICS:")
-    logger.info(f"  - Initialization:         {init_time:.4f} sec")
-    logger.info(f"  - Data loading:           {data_load_time:.4f} sec")
-    logger.info(f"  - Training/optimization:  {fit_time:.4f} sec")
-    logger.info(f"  - Report generation:      {report_time:.4f} sec")
-    logger.info(f"  - TOTAL TIME:             {init_time + data_load_time + fit_time + report_time:.4f} sec")
-    
-    if torch.cuda.is_available() and initial_memory:
-        logger.info("GPU MEMORY CHANGES:")
-        logger.info(f"  - Initial:                {initial_memory.get('allocated_gb', 0):.4f} GB")
-        logger.info(f"  - After data loading:     {memory_after_data.get('allocated_gb', 0):.4f} GB")
-        logger.info(f"  - After training:         {memory_after_fit.get('allocated_gb', 0):.4f} GB")
-        logger.info(f"  - After get_report:       {memory_after_report.get('allocated_gb', 0):.4f} GB")
-        logger.info(f"  - After final cleanup:    {memory_after_cleanup.get('allocated_gb', 0):.4f} GB")
+    if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
+        if hasattr(fedcore_compressor.fedcore_model, 'trainer'):
+            trainer = fedcore_compressor.fedcore_model.trainer
+            if trainer is not None and hasattr(trainer, 'model') and trainer.model is not None:
+                registry._delete_model_from_memory(trainer.model)
+                trainer.model = None
         
-        mem_initial = initial_memory.get('allocated_gb', 0)
-        mem_after_data = memory_after_data.get('allocated_gb', 0)
-        mem_after_train = memory_after_fit.get('allocated_gb', 0)
+        if hasattr(fedcore_compressor.fedcore_model, '_model_before_cached') and \
+           fedcore_compressor.fedcore_model._model_before_cached is not None:
+            registry._delete_model_from_memory(fedcore_compressor.fedcore_model._model_before_cached)
+            fedcore_compressor.fedcore_model._model_before_cached = None
+        
+        if hasattr(fedcore_compressor.fedcore_model, '_model_after_cached') and \
+           fedcore_compressor.fedcore_model._model_after_cached is not None:
+            registry._delete_model_from_memory(fedcore_compressor.fedcore_model._model_after_cached)
+            fedcore_compressor.fedcore_model._model_after_cached = None
+    
+    memory_after_cache_clear = registry.get_memory_stats()
+    
+    fedcore_id = None
+    if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
+        fedcore_id = getattr(fedcore_compressor.fedcore_model, '_fedcore_id', None)
+    
+    logger.info("REGISTERED MODELS INFO:")
+    logger.info(f"  FedCore ID: {fedcore_id}")
+    if fedcore_id:
+        model_ids = registry.list_models(fedcore_id)
+        logger.info(f"  Number of registered models: {len(model_ids)}")
+        for idx, model_id in enumerate(model_ids, 1):
+            logger.info(f"  {idx}. Model ID: {model_id}")
+            latest_record = registry.get_latest_record(fedcore_id, model_id)
+            if latest_record:
+                logger.info(f"     - Checkpoint path: {latest_record.get('checkpoint_path', 'N/A')}")
+                logger.info(f"     - Stage: {latest_record.get('metrics', {}).get('stage', 'N/A')}")
+    
+    if hasattr(fedcore_compressor, 'shutdown'):
+        fedcore_compressor.shutdown()
+    
+    del fedcore_compressor
+    del fedcore_train_data
+    del fedcore_test_data
+    del model_comparison
+    gc.collect()
+    
+    if fedcore_id:
+        storage = registry.storage
+        df = storage.load(fedcore_id)
+        if not df.empty and 'checkpoint_bytes' in df.columns:
+            df['checkpoint_bytes'] = None
+            storage.save(fedcore_id, df)
+            del df
+            gc.collect()
+    
+    registry.force_cleanup()
+    registry.force_cleanup()
+    
+    # Additional aggressive cleanup
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+    
+    memory_after_cleanup = registry.get_memory_stats()
+    
+    logger.info("FINAL STATISTICS")
+    logger.info(f"Training time:     {fit_time:.2f} sec")
+    logger.info(f"Report time:       {report_time:.2f} sec")
+    logger.info(f"Total time:        {init_time + data_load_time + fit_time + report_time:.2f} sec")
+    
+    if torch.cuda.is_available():
         mem_after_report = memory_after_report.get('allocated_gb', 0)
         mem_after_cleanup = memory_after_cleanup.get('allocated_gb', 0)
-        
-        logger.info("MEMORY CLEANUP ANALYSIS:")
-        
-        final_cleanup = mem_after_report - mem_after_cleanup
-        
-        total_used = mem_after_report 
         total_freed = mem_after_report - mem_after_cleanup
         
-        logger.info(f"  - Peak memory usage:        {mem_after_report:.4f} GB (after get_report)")
-        logger.info(f"  - Memory after training:    {mem_after_train:.4f} GB (after ModelRegistry cleanup)")
-        logger.info(f"  - Final cleanup freed:      {final_cleanup:.4f} GB")
-        logger.info(f"  - Remaining allocated:      {mem_after_cleanup:.4f} GB")
-        
-        if mem_after_train < mem_after_report:
-            logger.info(f"  - get_report loaded models: {mem_after_report - mem_after_train:.4f} GB")
- 
-    else:
-        logger.warning("CUDA unavailable - GPU memory statistics not available")
+        logger.info(f"Peak GPU memory:   {mem_after_report:.4f} GB")
+        logger.info(f"Final GPU memory:  {mem_after_cleanup:.4f} GB")
+        logger.info(f"Cleanup:           {total_freed:.4f} GB freed")

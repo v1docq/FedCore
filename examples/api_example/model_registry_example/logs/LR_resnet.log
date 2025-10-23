@@ -1,0 +1,13 @@
+2025-10-23 17:25:37,942 - __main__ - INFO - REGISTERED MODELS INFO:
+2025-10-23 17:25:37,942 - __main__ - INFO -   FedCore ID: fedcore_96cd88c3
+2025-10-23 17:25:37,943 - __main__ - INFO -   Number of registered models: 1
+2025-10-23 17:25:37,943 - __main__ - INFO -   1. Model ID: model_125392028252960
+2025-10-23 17:25:37,943 - __main__ - INFO -      - Checkpoint path: llm_output/checkpoints/fedcore_96cd88c3/model_125392028252960_2025-10-23T14-25-25.039197.pt
+2025-10-23 17:25:37,943 - __main__ - INFO -      - Stage: after_compression
+2025-10-23 17:25:38,613 - __main__ - INFO - FINAL STATISTICS
+2025-10-23 17:25:38,613 - __main__ - INFO - Training time:     75.17 sec
+2025-10-23 17:25:38,613 - __main__ - INFO - Report time:       12.11 sec
+2025-10-23 17:25:38,613 - __main__ - INFO - Total time:        88.11 sec
+2025-10-23 17:25:38,613 - __main__ - INFO - Peak GPU memory:   0.2260 GB
+2025-10-23 17:25:38,613 - __main__ - INFO - Final GPU memory:  0.1581 GB
+2025-10-23 17:25:38,613 - __main__ - INFO - Cleanup:           0.0679 GB freed

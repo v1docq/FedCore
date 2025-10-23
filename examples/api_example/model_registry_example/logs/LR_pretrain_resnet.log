@@ -1,0 +1,16 @@
+2025-10-23 17:31:15,543 - __main__ - INFO - ================================================================================
+2025-10-23 17:31:15,543 - __main__ - INFO - LOGGING TEST - logs will be saved to: examples/api_example/model_registry_example/logs/LR_pretrain_resnet.log
+2025-10-23 17:31:15,543 - __main__ - INFO - ================================================================================
+2025-10-23 17:32:42,201 - __main__ - INFO - REGISTERED MODELS INFO:
+2025-10-23 17:32:42,201 - __main__ - INFO -   FedCore ID: fedcore_d493a0e0
+2025-10-23 17:32:42,201 - __main__ - INFO -   Number of registered models: 1
+2025-10-23 17:32:42,201 - __main__ - INFO -   1. Model ID: model_139240304788912
+2025-10-23 17:32:42,202 - __main__ - INFO -      - Checkpoint path: llm_output/checkpoints/fedcore_d493a0e0/model_139240304788912_2025-10-23T14-32-30.920815.pt
+2025-10-23 17:32:42,202 - __main__ - INFO -      - Stage: after_compression
+2025-10-23 17:32:43,154 - __main__ - INFO - FINAL STATISTICS
+2025-10-23 17:32:43,155 - __main__ - INFO - Training time:     74.71 sec
+2025-10-23 17:32:43,155 - __main__ - INFO - Report time:       10.47 sec
+2025-10-23 17:32:43,155 - __main__ - INFO - Total time:        86.01 sec
+2025-10-23 17:32:43,155 - __main__ - INFO - Peak GPU memory:   0.2260 GB
+2025-10-23 17:32:43,155 - __main__ - INFO - Final GPU memory:  0.1581 GB
+2025-10-23 17:32:43,155 - __main__ - INFO - Cleanup:           0.0679 GB freed

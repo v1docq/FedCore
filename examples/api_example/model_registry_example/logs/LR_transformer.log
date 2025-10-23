@@ -1,0 +1,21 @@
+2025-10-23 17:40:37,905 - __main__ - INFO - Loading model from HuggingFace: arnir0/Tiny-LLM
+2025-10-23 17:40:38,338 - __main__ - INFO - Model loaded: LlamaForCausalLM
+2025-10-23 17:40:38,657 - __main__ - INFO - Tokenizer loaded. Vocabulary size: 32000
+2025-10-23 17:40:38,657 - __main__ - INFO - Generated fedcore_id: fedcore_eedfab04
+2025-10-23 17:40:44,214 - __main__ - INFO - Dataset loaded: 1000 samples
+2025-10-23 17:40:44,221 - __main__ - INFO - Dataset filtered: 647 samples
+2025-10-23 17:40:44,234 - __main__ - INFO -  Datasets split: train=517, val=64, test=66
+2025-10-23 17:40:44,235 - __main__ - INFO -  Example batch shape: torch.Size([4, 64])
+2025-10-23 17:40:52,822 - __main__ - INFO - REGISTERED MODELS INFO:
+2025-10-23 17:40:52,823 - __main__ - INFO -   FedCore ID: fedcore_eedfab04
+2025-10-23 17:40:52,823 - __main__ - INFO -   Number of registered models: 1
+2025-10-23 17:40:52,823 - __main__ - INFO -   1. Model ID: model_135636261406608
+2025-10-23 17:40:52,823 - __main__ - INFO -      - Checkpoint path: llm_output/checkpoints/fedcore_eedfab04/model_135636261406608_2025-10-23T14-40-50.361693.pt
+2025-10-23 17:40:52,823 - __main__ - INFO -      - Stage: after_compression
+2025-10-23 17:40:53,471 - __main__ - INFO - FINAL STATISTICS
+2025-10-23 17:40:53,472 - __main__ - INFO - Training time:     6.49 sec
+2025-10-23 17:40:53,472 - __main__ - INFO - Report time:       1.77 sec
+2025-10-23 17:40:53,472 - __main__ - INFO - Total time:        14.59 sec
+2025-10-23 17:40:53,472 - __main__ - INFO - Peak GPU memory:   0.2018 GB
+2025-10-23 17:40:53,472 - __main__ - INFO - Final GPU memory:  0.1668 GB
+2025-10-23 17:40:53,472 - __main__ - INFO - Cleanup:           0.0350 GB freed

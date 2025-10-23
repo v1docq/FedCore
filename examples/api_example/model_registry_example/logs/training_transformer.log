@@ -1,0 +1,8 @@
+2025-10-23 18:15:16,289 - __main__ - INFO - Loading model from HuggingFace: arnir0/Tiny-LLM
+2025-10-23 18:15:16,790 - __main__ - INFO - Model loaded: LlamaForCausalLM
+2025-10-23 18:15:17,115 - __main__ - INFO - Tokenizer loaded. Vocabulary size: 32000
+2025-10-23 18:15:17,115 - __main__ - INFO - Generated fedcore_id: fedcore_c586d44d
+2025-10-23 18:15:23,157 - __main__ - INFO - Dataset loaded: 1000 samples
+2025-10-23 18:15:23,162 - __main__ - INFO - Dataset filtered: 647 samples
+2025-10-23 18:15:23,184 - __main__ - INFO - Datasets split: train=517, val=64, test=66
+2025-10-23 18:15:23,189 - __main__ - INFO - Example batch shape: torch.Size([4, 64])
