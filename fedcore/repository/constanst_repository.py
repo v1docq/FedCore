@@ -30,12 +30,7 @@ from fedcore.architecture.dataset.task_specified.segmentation_dataset import (
     SegmentationDataset,
     SemanticSegmentationDataset,
 )
-from fedcore.metrics.api_metric import (
-    calculate_classification_metric,
-    calculate_computational_metric,
-    calculate_forecasting_metric,
-    calculate_regression_metric,
-)
+
 from fedcore.models.network_impl.decomposed_layers import DecomposableLayers  ### don't del
 
 from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
@@ -101,6 +96,13 @@ default_param_values_dict = dict(
 )
 
 
+DEFAULT_METRICS_BY_TASK = {
+    TaskTypesEnum.regression: 'MeanSquaredError',
+    TaskTypesEnum.classification: 'MulticlassAUROC',
+    TaskTypesEnum.clustering: 'MutualInfoScore',
+    TaskTypesEnum.ts_forecasting: 'MeanSquaredError',
+}
+
 class FedotTaskEnum(Enum):
     classification = Task(TaskTypesEnum.classification)
     regression = Task(TaskTypesEnum.regression)
@@ -153,13 +155,13 @@ class FedotGeneticMultiStrategy(Enum):
 
 
 class FedotOperationConstant(Enum):
-    FEDOT_GET_METRICS = {
-        "regression": calculate_regression_metric,
-        "ts_forecasting": calculate_forecasting_metric,
-        "classification": calculate_classification_metric,
-        "computational_fedcore": calculate_computational_metric,
-        "computational_original": calculate_computational_metric
-    }
+    # FEDOT_GET_METRICS = {
+    #     "regression": calculate_regression_metric,
+    #     "ts_forecasting": calculate_forecasting_metric,
+    #     "classification": calculate_classification_metric,
+    #     "computational_fedcore": calculate_computational_metric,
+    #     "computational_original": calculate_computational_metric
+    # }
 
     FEDOT_API_PARAMS = default_param_values_dict
 
@@ -423,7 +425,7 @@ FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.v
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
 FEDOT_EVO_MULTI_STRATEGY = FedotOperationConstant.FEDOT_EVO_MULTI_STRATEGY.value
 FEDOT_GENETIC_MULTI_STRATEGY = FedotOperationConstant.FEDOT_GENETIC_MULTI_STRATEGY.value
-FEDOT_GET_METRICS = FedotOperationConstant.FEDOT_GET_METRICS.value
+# FEDOT_GET_METRICS = FedotOperationConstant.FEDOT_GET_METRICS.value
 # FEDCORE_TASK = FedotOperationConstant.FEDCORE_TASK.value
 FEDCORE_TASK = EnumNoValue(FedCoreTaskEnum)
 # CV_TASK = FedotOperationConstant.CV_TASK.value
