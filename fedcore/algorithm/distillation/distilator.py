@@ -11,11 +11,15 @@ from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import TrainParams
-from fedcore.metrics.cv_metrics import (
-    LastLayer,
-    IntermediateAttention,
-    IntermediateFeatures,
-)
+# from fedcore.metrics.cv_metrics import (
+#     LastLayer,
+#     IntermediateAttention,
+#     IntermediateFeatures,
+# )
+
+LastLayer = None
+IntermediateAttention = None
+IntermediateFeatures = None
 
 
 class BaseDistilator(BaseCompressionModel):
