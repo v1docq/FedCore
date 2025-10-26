@@ -272,6 +272,35 @@ class TransMLAConfig:
         return model_info
     
     @staticmethod
+    def _resolve_dtype(dtype: str, priority: str = "balanced") -> str:
+        """
+        Resolve dtype from "auto" to concrete value based on hardware capabilities.
+        
+        Args:
+            dtype: dtype value ("auto", "fp16", "bf16", "fp32")
+            priority: optimization priority (for context)
+            
+        Returns:
+            str: Resolved dtype value
+        """
+        if dtype != "auto":
+            return dtype
+        
+        # Memory priority always uses fp16 for maximum memory savings
+        if priority == "memory":
+            return "fp16"
+        
+        # For other priorities, auto-detect based on CUDA availability
+        if torch.cuda.is_available():
+            # Check if bfloat16 is supported
+            if torch.cuda.is_bf16_supported():
+                return "bf16"
+            else:
+                return "fp16"
+        else:
+            return "fp32"
+    
+    @staticmethod
     def _analyze_hardware(hardware_budget: str, model: Optional[nn.Module] = None) -> dict:
         """
         Analyze available hardware resources.
@@ -426,9 +455,9 @@ class TransMLAConfig:
         if priority == "memory":
             params['cal_batch_size'] = 1
             params['cal_max_seqlen'] = min(params['cal_max_seqlen'], 128)
-            params['dtype'] = "fp16"  # fp16 saves more memory
-        else:
-            params['dtype'] = "auto"
+        
+        # Resolve dtype using centralized logic
+        params['dtype'] = TransMLAConfig._resolve_dtype("auto", priority)
         
         # Other parameters
         params['q_lora_rank'] = None  # Keep disabled by default
@@ -523,16 +552,8 @@ class TransMLA(Reassembler):
             if hasattr(config, key):
                 setattr(config, key, value)
         
-        # Handle auto-values
-        if config.dtype == "auto":
-            if torch.cuda.is_available():
-                # Check if bfloat16 is supported
-                if torch.cuda.is_bf16_supported():
-                    config.dtype = "bf16"
-                else:
-                    config.dtype = "fp16"
-            else:
-                config.dtype = "fp32"
+        # Resolve auto-values using centralized logic
+        config.dtype = TransMLAConfig._resolve_dtype(config.dtype)
         
         # Convert
         model = convert_model_to_mla(model, tokenizer, config)
