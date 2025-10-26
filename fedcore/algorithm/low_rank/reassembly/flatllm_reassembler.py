@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 
 from .core_reassemblers import Reassembler
+from .config_mixins import ConfigAnalysisMixin
 
 
 # FLAT-LLM configuration
@@ -122,7 +123,7 @@ def get_flatllm_status():
     }
 
 
-class FlatLLMConfig:
+class FlatLLMConfig(ConfigAnalysisMixin):
     """Configuration for FLAT-LLM compression."""
 
     def __init__(self, 
@@ -205,7 +206,7 @@ class FlatLLMConfig:
         """
         # Analyze model characteristics
         model_info = cls._analyze_model(model)
-        hardware_info = cls._analyze_hardware(hardware_budget)
+        hardware_info = cls._analyze_hardware(hardware_budget, model)
         
         # Calculate automatic parameters
         auto_params = cls._calculate_auto_parameters(
@@ -216,86 +217,6 @@ class FlatLLMConfig:
         auto_params.update(kwargs)
         
         return cls(**auto_params)
-    
-    @staticmethod
-    def _analyze_model(model: nn.Module) -> dict:
-        """
-        Analyze model architecture and extract relevant characteristics.
-        
-        Args:
-            model: The transformer model to analyze
-            
-        Returns:
-            dict: Model characteristics including size, architecture, dimensions
-        """
-        config = getattr(model, 'config', None)
-        if config is None:
-            raise ValueError("Model must have a config attribute")
-        
-        # Extract basic model information
-        model_info = {
-            'model_type': getattr(config, 'model_type', 'unknown'),
-            'hidden_size': getattr(config, 'hidden_size', 768),
-            'num_attention_heads': getattr(config, 'num_attention_heads', 12),
-            'num_hidden_layers': getattr(config, 'num_hidden_layers', 12),
-            'vocab_size': getattr(config, 'vocab_size', 32000),
-        }
-        
-        # Get num_key_value_heads for GQA models
-        model_info['num_key_value_heads'] = getattr(
-            config, 'num_key_value_heads', model_info['num_attention_heads']
-        )
-        
-        # Calculate derived characteristics
-        model_info['head_dim'] = model_info['hidden_size'] // model_info['num_attention_heads']
-        model_info['total_params'] = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        
-        # Check if model uses GQA (Grouped Query Attention)
-        model_info['uses_gqa'] = model_info['num_key_value_heads'] < model_info['num_attention_heads']
-        
-        # Determine model size category
-        if model_info['total_params'] < 1e9:
-            model_info['size_category'] = 'small'  # <1B params
-        elif model_info['total_params'] < 10e9:
-            model_info['size_category'] = 'medium'  # 1B-10B params
-        else:
-            model_info['size_category'] = 'large'  # >10B params
-            
-        return model_info
-    
-    @staticmethod
-    def _analyze_hardware(hardware_budget: str) -> dict:
-        """
-        Analyze available hardware resources.
-        
-        Args:
-            hardware_budget: Hardware assumption ("auto", "low", "high")
-            
-        Returns:
-            dict: Hardware characteristics and resource constraints
-        """
-        hardware_info = {
-            'cuda_available': torch.cuda.is_available(),
-            'device_count': torch.cuda.device_count() if torch.cuda.is_available() else 0,
-        }
-        
-        if hardware_budget == "auto" and torch.cuda.is_available():
-            # Auto-detect GPU memory
-            gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-            if gpu_memory_gb < 8:
-                hardware_info['budget'] = 'low'
-            elif gpu_memory_gb > 24:
-                hardware_info['budget'] = 'high'
-            else:
-                hardware_info['budget'] = 'medium'
-            hardware_info['gpu_memory_gb'] = gpu_memory_gb
-        else:
-            hardware_info['budget'] = hardware_budget if hardware_budget != "auto" else 'medium'
-            hardware_info['gpu_memory_gb'] = {
-                'low': 6, 'medium': 16, 'high': 32
-            }.get(hardware_info['budget'], 16)
-        
-        return hardware_info
     
     @staticmethod
     def _calculate_auto_parameters(model_info: dict, hardware_info: dict, 

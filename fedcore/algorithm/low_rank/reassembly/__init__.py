@@ -8,6 +8,7 @@ from .core_reassemblers import (
     Reassembler, ParentalReassembler,
     get_reassembler, REASSEMBLERS
 )
+from .config_mixins import ConfigAnalysisMixin
 from .transmla_reassembler import TransMLA, TransMLAConfig, get_transmla_status
 from .flatllm_reassembler import FlatLLM, FlatLLMConfig, get_flatllm_status
 from .decomposed_recreation import RECREATION_FUNCTIONS
@@ -15,6 +16,7 @@ from .decomposed_recreation import RECREATION_FUNCTIONS
 __all__ = [
     'Reassembler', 
     'ParentalReassembler',
+    'ConfigAnalysisMixin',
     'TransMLA',
     'TransMLAConfig',
     'FlatLLM',
