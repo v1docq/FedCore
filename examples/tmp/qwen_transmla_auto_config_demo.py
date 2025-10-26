@@ -63,30 +63,14 @@ def load_qwen_model(model_name: str = "Qwen/Qwen2.5-0.5B", device: str = "auto")
 
 
 def validate_auto_config(model, cfg: TransMLAConfig) -> None:
-    """Validate key constraints implied by TransMLA and our auto calculation."""
-    # Derive model attributes
-    hidden_size = getattr(model.config, 'hidden_size', 768)
-    num_heads = getattr(model.config, 'num_attention_heads', 12)
-    head_dim = getattr(model.config, 'head_dim', hidden_size // max(1, num_heads))
-    num_kv_heads = getattr(model.config, 'num_key_value_heads', num_heads)
-    latent_dim = num_kv_heads * head_dim
-
-    # 1) qk_mqa_dim should divide head_dim
-    if isinstance(cfg.qk_mqa_dim, int) and cfg.qk_mqa_dim > 0:
-        assert head_dim % cfg.qk_mqa_dim == 0, (
-            f"qk_mqa_dim={cfg.qk_mqa_dim} must divide head_dim={head_dim}")
-
-    # 2) kv_lora_rank constraint
-    max_kv_rank = 2 * latent_dim - int(cfg.qk_mqa_dim)
-    assert cfg.kv_lora_rank < max_kv_rank, (
-        f"kv_lora_rank={cfg.kv_lora_rank} must be < 2*latent_dim - qk_mqa_dim = {max_kv_rank}")
-
-    # 3) freqfold/collapse types are either 'auto' or positive ints (collapse resolved later)
-    assert (cfg.freqfold == "auto") or (isinstance(cfg.freqfold, int) and cfg.freqfold > 0)
-    assert (cfg.collapse == "auto") or (isinstance(cfg.collapse, int) and cfg.collapse > 0)
-
-    # 4) basic calibration sanity
-    assert cfg.cal_nsamples > 0 and cfg.cal_batch_size > 0 and cfg.cal_max_seqlen > 0
+    """
+    Validate key constraints implied by TransMLA and our auto calculation.
+    
+    NOTE: This function is now a wrapper around the built-in validate() method
+    in TransMLAConfig. The validation logic has been moved into the reassembler
+    to ensure all configurations are validated before conversion.
+    """
+    cfg.validate(model)
 
 
 def print_config(cfg: TransMLAConfig, title: str):

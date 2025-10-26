@@ -171,6 +171,81 @@ class TransMLAConfig:
     def to_dict(self):
         return {k: v for k, v in self.__dict__.items()}
     
+    def validate(self, model: nn.Module) -> None:
+        """
+        Validate configuration against model architecture constraints.
+        
+        This method checks that the configuration satisfies all TransMLA requirements
+        and constraints based on the model architecture.
+        
+        Args:
+            model: The transformer model to validate against
+            
+        Raises:
+            AssertionError: If configuration violates TransMLA constraints
+            ValueError: If model configuration is invalid
+        """
+        # Extract model attributes
+        config = getattr(model, 'config', None)
+        if config is None:
+            raise ValueError("Model must have a config attribute")
+        
+        hidden_size = getattr(config, 'hidden_size', 768)
+        num_heads = getattr(config, 'num_attention_heads', 12)
+        head_dim = getattr(config, 'head_dim', hidden_size // max(1, num_heads))
+        num_kv_heads = getattr(config, 'num_key_value_heads', num_heads)
+        latent_dim = num_kv_heads * head_dim
+        
+        # Validation 1: qk_mqa_dim should divide head_dim evenly
+        if isinstance(self.qk_mqa_dim, int) and self.qk_mqa_dim > 0:
+            if head_dim % self.qk_mqa_dim != 0:
+                raise ValueError(
+                    f"Configuration validation failed: qk_mqa_dim={self.qk_mqa_dim} "
+                    f"must divide head_dim={head_dim} evenly. "
+                    f"Valid divisors: {[d for d in [128, 64, 32, 16, 8] if head_dim % d == 0 and d <= head_dim]}"
+                )
+        
+        # Validation 2: kv_lora_rank constraint (critical TransMLA requirement)
+        max_kv_rank = 2 * latent_dim - int(self.qk_mqa_dim)
+        if self.kv_lora_rank >= max_kv_rank:
+            raise ValueError(
+                f"Configuration validation failed: kv_lora_rank={self.kv_lora_rank} "
+                f"must be < 2*latent_dim - qk_mqa_dim = {max_kv_rank}. "
+                f"Suggested max value: {int(max_kv_rank * 0.9)}"
+            )
+        
+        # Validation 3: freqfold and collapse must be 'auto' or positive integers
+        if self.freqfold != "auto" and not (isinstance(self.freqfold, int) and self.freqfold > 0):
+            raise ValueError(
+                f"Configuration validation failed: freqfold must be 'auto' or a positive integer, "
+                f"got {self.freqfold}"
+            )
+        
+        if self.collapse != "auto" and not (isinstance(self.collapse, int) and self.collapse > 0):
+            raise ValueError(
+                f"Configuration validation failed: collapse must be 'auto' or a positive integer, "
+                f"got {self.collapse}"
+            )
+        
+        # Validation 4: calibration parameters sanity checks
+        if self.cal_nsamples <= 0:
+            raise ValueError(
+                f"Configuration validation failed: cal_nsamples must be positive, "
+                f"got {self.cal_nsamples}"
+            )
+        
+        if self.cal_batch_size <= 0:
+            raise ValueError(
+                f"Configuration validation failed: cal_batch_size must be positive, "
+                f"got {self.cal_batch_size}"
+            )
+        
+        if self.cal_max_seqlen <= 0:
+            raise ValueError(
+                f"Configuration validation failed: cal_max_seqlen must be positive, "
+                f"got {self.cal_max_seqlen}"
+            )
+    
     @classmethod
     def auto_from_model(cls, 
                        model: nn.Module,
@@ -220,7 +295,11 @@ class TransMLAConfig:
         # Override with any user-provided kwargs
         auto_params.update(kwargs)
         
-        return cls(**auto_params)
+        # Create config and validate it
+        config = cls(**auto_params)
+        config.validate(model)
+        
+        return config
     
     @staticmethod
     def _analyze_model(model: nn.Module) -> dict:
@@ -554,6 +633,9 @@ class TransMLA(Reassembler):
         
         # Resolve auto-values using centralized logic
         config.dtype = TransMLAConfig._resolve_dtype(config.dtype)
+        
+        # Validate configuration before conversion
+        config.validate(model)
         
         # Convert
         model = convert_model_to_mla(model, tokenizer, config)
