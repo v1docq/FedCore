@@ -147,7 +147,12 @@ class FlatLLMConfig(ConfigAnalysisMixin):
                 - "all": Compress all layers (not recommended)
                 - List[int]: Explicit layer indices
             compression_ratio: Fraction of layers to compress (0.3 = 30% of layers)
-            cal_dataset: Calibration dataset name
+            cal_dataset: Calibration dataset name (supports various formats automatically)
+                - "wikitext2": WikiText-2 dataset
+                - "c4": C4 dataset (English)
+                - "ptb": Penn Treebank dataset
+                - Any HuggingFace dataset name (will attempt automatic text extraction)
+                Note: Uses intelligent key detection to handle different dataset formats
             cal_nsamples: Number of calibration samples
             cal_batch_size: Batch size for calibration
             cal_max_seqlen: Maximum sequence length for calibration
@@ -310,9 +315,57 @@ class FlatLLMConfig(ConfigAnalysisMixin):
         return params
 
 
+def _extract_text_from_sample(sample, possible_keys=None):
+    """
+    Extract text from a dataset sample, trying various common keys.
+    
+    This function makes the calibration data preparation scalable across different
+    dataset formats by automatically detecting the appropriate text field.
+    
+    Args:
+        sample: A single dataset sample (dict-like)
+        possible_keys: Optional list of keys to try (in order of priority)
+        
+    Returns:
+        str: Extracted text or None if not found
+        
+    Examples:
+        >>> # Works with various dataset formats:
+        >>> sample1 = {"text": "Some content..."}
+        >>> sample2 = {"content": "Some content..."}
+        >>> sample3 = {"article": "Some content..."}
+        >>> # All will successfully extract the text
+    """
+    if possible_keys is None:
+        # Common text field names in datasets, ordered by likelihood
+        possible_keys = [
+            'text', 'content', 'document', 'article', 
+            'sentence', 'paragraph', 'prompt', 'input',
+            'story', 'passage', 'body'
+        ]
+    
+    # Try each key
+    for key in possible_keys:
+        if key in sample:
+            text = sample[key]
+            if isinstance(text, str) and len(text.strip()) > 50:
+                return text
+    
+    # If we have a dict with only one string value, use it
+    if isinstance(sample, dict):
+        for value in sample.values():
+            if isinstance(value, str) and len(value.strip()) > 50:
+                return value
+    
+    return None
+
+
 def _prepare_calibration_data(model, tokenizer, config: FlatLLMConfig):
     """
     Prepare calibration data for FLAT-LLM compression.
+    
+    This function handles various dataset formats automatically by trying
+    common text field names and adapting to the dataset structure.
     
     Args:
         model: The model to compress
@@ -329,23 +382,62 @@ def _prepare_calibration_data(model, tokenizer, config: FlatLLMConfig):
     torch.manual_seed(config.seed)
     
     # Get calibration dataset
-    if config.cal_dataset == "wikitext2":
+    texts = []
+    
+    # Try to load dataset from HuggingFace
+    try:
         from datasets import load_dataset
-        dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split="test")
         
-        # Sample texts
-        texts = []
-        for _ in range(config.cal_nsamples):
+        # Map common dataset names to HuggingFace paths
+        dataset_map = {
+            "wikitext2": ("wikitext", "wikitext-2-raw-v1", "test"),
+            "c4": ("allenai/c4", "en", "validation"),  # Updated path for new HuggingFace API
+            "ptb": ("ptb_text_only", None, "test"),
+        }
+        
+        # Load dataset
+        if config.cal_dataset in dataset_map:
+            dataset_path, dataset_config, split = dataset_map[config.cal_dataset]
+            if dataset_config:
+                # Try with streaming for large datasets like C4
+                try:
+                    dataset = load_dataset(dataset_path, dataset_config, split=split, streaming=True)
+                    # Convert to list for sampling (only if streaming)
+                    dataset = list(dataset.take(config.cal_nsamples * 5))  # Take more for filtering
+                except:
+                    # Fallback to non-streaming
+                    dataset = load_dataset(dataset_path, dataset_config, split=split)
+            else:
+                dataset = load_dataset(dataset_path, split=split)
+        else:
+            # Try to load as custom HuggingFace dataset
+            try:
+                dataset = load_dataset(config.cal_dataset, split="test")
+            except:
+                # Try with train split as fallback
+                dataset = load_dataset(config.cal_dataset, split="train")
+        
+        # Sample texts with automatic key detection
+        max_attempts = config.cal_nsamples * 3  # Allow more attempts to find valid texts
+        attempts = 0
+        
+        while len(texts) < config.cal_nsamples and attempts < max_attempts:
             idx = random.randint(0, len(dataset) - 1)
-            text = dataset[idx]["text"]
-            if len(text.strip()) > 50:  # Skip empty or very short texts
+            text = _extract_text_from_sample(dataset[idx])
+            if text:
                 texts.append(text)
+            attempts += 1
         
-        # If not enough valid texts, use some defaults
-        while len(texts) < config.cal_nsamples:
-            texts.append("The future of artificial intelligence is bright and full of possibilities.")
-    else:
-        # Default calibration texts
+        if config.verbose and len(texts) < config.cal_nsamples:
+            print(f"[FLAT-LLM] Warning: Only found {len(texts)}/{config.cal_nsamples} valid texts from dataset")
+    
+    except Exception as e:
+        if config.verbose:
+            print(f"[FLAT-LLM] Warning: Could not load dataset '{config.cal_dataset}': {e}")
+            print(f"[FLAT-LLM] Falling back to default calibration texts")
+    
+    # If not enough valid texts, pad with default calibration texts
+    if len(texts) < config.cal_nsamples:
         default_texts = [
             "The future of artificial intelligence is bright and full of possibilities.",
             "Machine learning models are becoming more efficient and powerful.",
@@ -356,7 +448,11 @@ def _prepare_calibration_data(model, tokenizer, config: FlatLLMConfig):
             "Neural networks can learn complex patterns from data efficiently.",
             "Attention mechanisms enable models to focus on relevant information.",
         ]
-        texts = default_texts[:config.cal_nsamples]
+        
+        # Pad with default texts (cycle through them if needed)
+        needed = config.cal_nsamples - len(texts)
+        for i in range(needed):
+            texts.append(default_texts[i % len(default_texts)])
     
     # Tokenize
     calibration_inputs = tokenizer(

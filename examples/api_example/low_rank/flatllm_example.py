@@ -15,7 +15,7 @@ from fedcore.algorithm.low_rank.reassembly import FlatLLM, FlatLLMConfig, get_fl
 def load_model(model_name: str):
     """Load model and tokenizer."""
     print(f"Loading model: {model_name}")
-    
+
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.float16,
@@ -23,11 +23,11 @@ def load_model(model_name: str):
     )
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
-    
+
     print(f"Model loaded!")
     print(f"  Parameters: {sum(p.numel() for p in model.parameters()):,}")
     print()
-    
+
     return model, tokenizer
 
 
@@ -35,15 +35,15 @@ def test_generation(model, tokenizer, test_prompt: str = "Hello, I am"):
     """Test model generation with a prompt."""
     model_device = next(model.parameters()).device
     inputs = tokenizer(test_prompt, return_tensors="pt").to(model_device)
-    
+
     with torch.no_grad():
         outputs = model.generate(**inputs, max_length=30, pad_token_id=tokenizer.eos_token_id)
-    
+
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     print(f"  Prompt: {test_prompt}")
     print(f"  Output: {generated_text}")
     print()
-    
+
     return generated_text
 
 
@@ -65,7 +65,7 @@ def main():
     print("FLAT-LLM Compression Example")
     print("=" * 80)
     print()
-    
+
     # Check FLAT-LLM availability
     status = get_flatllm_status()
     print(f"FLAT-LLM Status:")
@@ -75,25 +75,25 @@ def main():
         print(f"  Error: {status['error']}")
         return
     print()
-    
+
     # Configuration
     model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
     test_prompt = "Hello, I am"
-    
+
     # Load model once for initial testing
     model, tokenizer = load_model(model_name)
-    
+
     # Test generation before compression
     print("Testing generation before compression...")
     original_text = test_generation(model, tokenizer, test_prompt)
-    
+
     # Define parameterized examples
     examples = [
         {
             "name": "Auto Configuration",
             "description": "Using auto_from_model() with balanced priority and medium compression",
             "config_fn": lambda m: FlatLLMConfig.auto_from_model(
-                m, priority="balanced", compression="medium"
+                m, priority="balanced", compression="medium", cal_dataset="c4"
             ),
             "kwargs": {},
             "test_generation": True,
@@ -123,7 +123,7 @@ def main():
             "test_generation": False,
         },
     ]
-    
+
     # Run all examples in a loop
     for i, example in enumerate(examples, 1):
         print("=" * 80)
@@ -131,13 +131,13 @@ def main():
         print("=" * 80)
         print(f"{example['description']}")
         print()
-        
+
         # Reload model for each example (to ensure clean state)
         model, tokenizer = load_model(model_name)
-        
+
         # Create config
         config = example['config_fn'](model)
-        
+
         # Print config details if available
         if config is not None:
             print_config_details(config)
@@ -146,17 +146,17 @@ def main():
             for key, value in example['kwargs'].items():
                 print(f"  {key}: {value}")
             print()
-        
+
         # Compress model
         print("Compressing model...")
         compressed_model = FlatLLM.reassemble(
             model, tokenizer, config, **example['kwargs']
         )
-        
+
         print(f"Compression complete!")
         print(f"  Parameters: {sum(p.numel() for p in compressed_model.parameters()):,}")
         print()
-        
+
         # Test generation if requested
         if example['test_generation']:
             print("Testing generation after compression...")
