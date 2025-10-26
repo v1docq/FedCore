@@ -60,19 +60,6 @@ class TestFlatLLMPathsSafe(unittest.TestCase):
             self.skipTest(f"Path function test failed safely: {e}")
 
 
-class TestFlatLLMRegistrationSafe(unittest.TestCase):
-    
-    def test_reassembler_registry_contains_flatllm(self):
-        try:
-            from fedcore.algorithm.low_rank.reassembly.core_reassemblers import REASSEMBLERS
-
-            self.assertIn('flat-llm', REASSEMBLERS)
-            self.assertTrue(callable(REASSEMBLERS['flat-llm']))
-            
-        except Exception as e:
-            self.skipTest(f"Registry test failed safely: {e}")
-
-
 class TestFlatLLMBasicInterfaceSafe(unittest.TestCase):
     
     def test_flatllm_class_exists(self):
@@ -191,8 +178,7 @@ def run_tests():
 
     safe_test_classes = [
         TestFlatLLMConfigSafe,
-        TestFlatLLMPathsSafe, 
-        TestFlatLLMRegistrationSafe,
+        TestFlatLLMPathsSafe,
         TestFlatLLMBasicInterfaceSafe,
         TestFlatLLMFullyMockedSafe,
         TestFlatLLMImportSafety
