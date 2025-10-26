@@ -210,7 +210,7 @@ class TransMLAConfig:
         """
         # Analyze model characteristics
         model_info = cls._analyze_model(model)
-        hardware_info = cls._analyze_hardware(hardware_budget)
+        hardware_info = cls._analyze_hardware(hardware_budget, model)
         
         # Calculate automatic parameters
         auto_params = cls._calculate_auto_parameters(
@@ -272,12 +272,13 @@ class TransMLAConfig:
         return model_info
     
     @staticmethod
-    def _analyze_hardware(hardware_budget: str) -> dict:
+    def _analyze_hardware(hardware_budget: str, model: Optional[nn.Module] = None) -> dict:
         """
         Analyze available hardware resources.
         
         Args:
             hardware_budget: Hardware assumption ("auto", "low", "high")
+            model: The model to detect device from (optional, used for auto-detection)
             
         Returns:
             dict: Hardware characteristics and resource constraints
@@ -288,8 +289,19 @@ class TransMLAConfig:
         }
         
         if hardware_budget == "auto" and torch.cuda.is_available():
-            # Auto-detect GPU memory
-            gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+            # Determine which GPU device to check based on model's location
+            device_id = 0  # default
+            if model is not None:
+                try:
+                    # Get device from first model parameter
+                    first_param = next(model.parameters())
+                    if first_param.is_cuda:
+                        device_id = first_param.device.index
+                except (StopIteration, AttributeError):
+                    pass  # Use default device 0
+            
+            # Auto-detect GPU memory from the actual device where model is located
+            gpu_memory_gb = torch.cuda.get_device_properties(device_id).total_memory / (1024**3)
             if gpu_memory_gb < 8:
                 hardware_info['budget'] = 'low'
             elif gpu_memory_gb > 24:
