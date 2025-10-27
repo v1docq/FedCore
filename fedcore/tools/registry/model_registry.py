@@ -382,17 +382,35 @@ class ModelRegistry:
             
             if hasattr(compressor_object, 'trainer') and compressor_object.trainer is not None:
                 trainer = compressor_object.trainer
+                
+                self.logger.info(f"Found trainer, type: {type(trainer).__name__}")
+                self.logger.info(f"Trainer has _trainer: {hasattr(trainer, '_trainer')}")
+                
                 if hasattr(trainer, 'model') and trainer.model is not None:
-                    self.logger.info("Clearing trainer model")
+                    self.logger.info("Clearing trainer.model")
                     self._delete_model_from_memory(trainer.model)
                     trainer.model = None
-                for trainer_attr in ['model']:  
-                    if hasattr(trainer, trainer_attr):
-                        trainer_val = getattr(trainer, trainer_attr)
-                        if isinstance(trainer_val, torch.nn.Module):
-                            self.logger.info(f"Clearing trainer.{trainer_attr}")
-                            self._delete_model_from_memory(trainer_val)
-                            setattr(trainer, trainer_attr, None)
+                
+                if hasattr(trainer, '_trainer'):
+                    self.logger.info(f"_trainer is not None: {trainer._trainer is not None}")
+                    if trainer._trainer is not None:
+                        self.logger.info("Clearing trainers._trainer object")
+                        _trainer_obj = trainer._trainer
+                        
+                        if hasattr(_trainer_obj, 'model') and _trainer_obj.model is not None:
+                            self.logger.info("Clearing _trainer.model")
+                            self._delete_model_from_memory(_trainer_obj.model)
+                            _trainer_obj.model = None
+                        
+                        del trainer._trainer
+                        trainer._trainer = None
+                        gc.collect()
+                
+                trainer_copy = trainer 
+                del compressor_object.trainer
+                compressor_object.trainer = None
+                del trainer_copy  
+                gc.collect()
             
             cleared_count = 0
             for attr_name in dir(compressor_object):
