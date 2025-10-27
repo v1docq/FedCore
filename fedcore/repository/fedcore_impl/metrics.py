@@ -11,7 +11,7 @@ from fedot.core.repository.metrics_repository import (
 
 from fedcore.repository.constanst_repository import DEFAULT_METRICS_BY_TASK, TaskTypesEnum
 
-from fedcore.metrics.quality import QualityMetric, metric_factory
+from fedcore.metrics.quality import QualityMetric, MetricFactory
 
 from fedot.core.composer.metrics import (ComplexityMetric, NodeNum, StructuralComplexity) # TODO include in fedcore.metrics module
 from typing import Union
@@ -87,10 +87,10 @@ class MetricByTask:
 class MetricsRepository:
     @staticmethod
     def get_metric(metric_name: MetricsEnum) -> MetricCallable:
-        return metric_factory(metric_name).get_value
+        return MetricFactory.get_metric(metric_name).get_value
 
     @staticmethod
     def get_metric_class(
             metric_name: MetricsEnum,
     ) -> Union[QualityMetric, ComplexityMetric]:
-        return metric_factory(metric_name)
+        return MetricFactory.get_metric(metric_name)

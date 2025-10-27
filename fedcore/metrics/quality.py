@@ -1,10 +1,13 @@
 import torch
 import pandas as pd
+from functools import wraps
 
 from typing import Optional
 
 from fedot.core.composer.metrics import Metric
-
+from fedot.core.composer.metrics import (ComplexityMetric, ComputationTime, NodeNum, QualityMetric, 
+                                         StructuralComplexity)
+                                         
 import torch
 from torch import Tensor
 from abc import ABC, abstractmethod
@@ -16,6 +19,7 @@ import torchmetrics
 from importlib import import_module
 
 from fedcore.repository.constanst_repository import FedotTaskEnum
+
 
 # ============================== Pareto =====================================
 
@@ -80,43 +84,111 @@ __problems = [PROBLEM_MAPPING.get(problem.name, problem.name) for problem in Fed
 __problem_to_metric = {
     problem: getattr(torchmetrics, problem).__all__ for problem in __problems
 }
-__METRICS_TO_PROBLEM = {
+_METRICS_TO_PROBLEM = {
     metric: problem for problem, metrics in __problem_to_metric.items() for metric in metrics
 }
+
 
 def get_available_metrics(problem): 
     module = import_module(f'torchmetrics.{PROBLEM_MAPPING.get(problem, problem)}')
     return module.__all__
 
 
-def metric_factory(metric_name, problem=None) -> QualityMetric:
-    if problem is None:
-        problem = __METRICS_TO_PROBLEM[metric_name]
-    if metric_name in LOADED_METRICS:
-        return LOADED_METRICS[metric_name]
-    
-    module = import_module(f'torchmetrics.{PROBLEM_MAPPING.get(problem, problem)}')
-    parent_cls = getattr(module, metric_name)
-    attributes = {
-        child_attr: getattr(parent_cls, parent_attr) for parent_attr, child_attr in ATTRIBUTE_MAPPING.items()
-    }
-    # special cases
-    attributes['need_to_minimize'] = not attributes['need_to_minimize'] 
+def _problem_based_output_convertor(problem):
+    def output_convertor(metric):
+        wraps(metric)
+        def _wrapped_output(cls, target, predict, **metric_kw):
+            assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor)
+            try: 
+                return metric(cls, target, predict, **metric_kw)
+            except (ValueError):
+                if problem == 'classification':
+                    predict = torch.argmax(predict, -1)
+                    print('###', 'argmax')
+                return metric(cls, target, predict, **metric_kw)
+        return _wrapped_output
+    return output_convertor
+
+FEDOT_STRUCTURAL = {
+    'structural': StructuralComplexity,
+    'node_number': NodeNum,
+    'computation_time': ComputationTime
+}
+
+COMPUTATIONAL_METRICS = [
+    'latency',
+    'throughput',
+    'model_size'
+]
+
+class MetricFactory:
+    __approaches = ['get_fedot', 'get_torchmetrics']
 
     @classmethod
-    def metric(cls: torchmetrics.Metric, target, predict, **metric_kw) -> torch.Tensor:
-        instance = cls(**metric_kw)
-        instance.update(predict, target)
-        result = instance.compute()
-        del instance
-        return result
+    def get_metric(cls, metric_name, problem=None) -> QualityMetric:
+        for approach in cls.__approaches:
+            try:
+                method = getattr(cls, approach)
+                metric = method(metric_name, problem)
+                return metric
+            except (KeyError, ModuleNotFoundError):
+                pass
+        raise NameError('Unknown metric name')
+
+    @classmethod
+    def get_fedot(cls, metric_name, problem=None) -> QualityMetric:
+        return FEDOT_STRUCTURAL[metric_name]
     
-    attributes['metric'] = metric
-    new_metric = type(
-        metric_name, (parent_cls, QualityMetric), attributes
-    )
-    LOADED_METRICS[metric_name] = new_metric 
-    return new_metric
+    @classmethod
+    def get_torchmetrics(cls, metric_name, problem=None) -> QualityMetric:
+        if metric_name in LOADED_METRICS:
+            return LOADED_METRICS[metric_name]
+        
+        original_name = metric_name
+        # get suffix of class number
+        metric_name = metric_name.split('__')
+        if len(metric_name) < 2:
+            suffix = None
+        else:
+            suffix = int(metric_name[-1])
+        metric_name = metric_name[0]
+
+        if problem is None:
+            problem = _METRICS_TO_PROBLEM.get(metric_name)
+
+        module = import_module(f'torchmetrics.{PROBLEM_MAPPING.get(problem, problem)}')
+        parent_cls = getattr(module, metric_name)
+        attributes = {
+            child_attr: getattr(parent_cls, parent_attr) for parent_attr, child_attr in ATTRIBUTE_MAPPING.items()
+        }
+        attributes['problem'] = problem
+        # special cases
+        attributes['need_to_minimize'] = not attributes['need_to_minimize'] 
+
+        @classmethod
+        @_problem_based_output_convertor(problem)
+        def metric(cls: torchmetrics.Metric, target, predict, **metric_kw) -> torch.Tensor:
+            """
+            Compute metric value
+            Args: 
+                target: torch.Tensor
+                predict: torch.Tensor 
+                **metric_kw - any to instantiate torchmetrics' metric
+            """
+            if suffix and problem == 'classification':
+                metric_kw['num_classes'] = suffix
+            instance = cls(**metric_kw)
+            instance.update(predict, target)
+            result = instance.compute()
+            del instance
+            return result
+        
+        attributes['metric'] = metric
+        new_metric = type(
+            original_name, (parent_cls, QualityMetric), attributes
+        )
+        LOADED_METRICS[original_name] = new_metric 
+        return new_metric
 
 
 def calculate_metrics(
@@ -125,7 +197,7 @@ def calculate_metrics(
     predict: torch.Tensor,
     rounding_order: int = 3,
     ):
-    values = {metric_name: metric_factory(metric_name).metric(target, predict).item() for metric_name in metric_names}
+    values = {metric_name: MetricFactory.get_metric(metric_name).metric(target, predict).item() for metric_name in metric_names}
     return _to_df(values, rounding_order)
 
 # -------------------- Utility Function: Convert to DataFrame --------------------

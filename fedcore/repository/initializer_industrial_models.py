@@ -31,9 +31,10 @@ from fedcore.repository.fedcore_impl.data import (
     build_holdout_producer,
     build_fedcore_dataproducer,
 )
+from fedot.core.repository.metrics_repository import MetricsRepository
 from fedcore.repository.fedcore_impl.metrics import MetricsRepository as FedcoreMetric, evaluate_objective_fedcore, MetricByTask as FedcoreMetricByTask
 
-FEDCORE_METRIC_REPO = FedcoreMetric()
+# FEDCORE_METRIC_REPO = FedcoreMetric()
 
 FEDOT_METHOD_TO_REPLACE = {
     #(Fedot, 'fit'),
@@ -41,8 +42,15 @@ FEDOT_METHOD_TO_REPLACE = {
     (PipelineObjectiveEvaluate, 'evaluate'): evaluate_objective_fedcore,
     (fedot_task, "TaskTypesEnum"): TaskCompression,
     (DataSourceSplitter, "build"): build_fedcore_dataproducer,
+
     (metrics_repository, "MetricsRepository"): FedcoreMetric,
+    (metrics_repository.MetricsRepository, 'get_metric'): FedcoreMetric.get_metric, 
+    (metrics_repository.MetricsRepository, 'get_metric_class'): FedcoreMetric.get_metric_class, 
+
     (define_metric_by_task, "MetricByTask"): FedcoreMetricByTask,
+    (define_metric_by_task.MetricByTask, "compute_default_metric"): FedcoreMetricByTask.compute_default_metric,
+    (define_metric_by_task.MetricByTask, "get_default_quality_metrics"): FedcoreMetricByTask.get_default_quality_metrics,
+
     (ApiParamsRepository, "_get_default_mutations"): _get_default_fedcore_mutations,
     (PipelineSearchSpace, "get_parameters_dict"): get_fedcore_search_space,
     (AssumptionsHandler, "fit_assumption_and_check_correctness"): _fit_assumption_and_check_correctness,
@@ -55,6 +63,7 @@ FEDOT_METHOD_TO_REPLACE = {
     (ApiComposer, 'obtain_model'): obtain_model_fedcore,
     (PipelineOperationRepository, 'divide_operations'): divide_operations_fedcore
 }
+
 
 DEFAULT_METHODS = [
     getattr(class_impl[0], class_impl[1]) for class_impl in FEDOT_METHOD_TO_REPLACE
@@ -85,6 +94,15 @@ class FedcoreModels:
         for (cls, method_name), fedcore_method in FEDOT_METHOD_TO_REPLACE.items():
             new_method = fedcore_method if to_fedcore else getattr(cls, method_name)
             setattr(cls, method_name, new_method)
+            from types import ModuleType
+
+            def is_module(obj):
+                """Check if an object is a module"""
+                return isinstance(obj, ModuleType)
+            
+            import sys 
+            if is_module(cls):
+                sys.modules[getattr(cls, '__name__')] = cls
 
     def setup_repository(self):
         OperationTypesRepository.__repository_dict__.update(
