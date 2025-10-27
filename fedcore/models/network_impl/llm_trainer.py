@@ -196,6 +196,7 @@ class LLMTrainer(BaseTrainer):
             'load_best_model_at_end': True,
             'metric_for_best_model': 'eval_loss',
             'greater_is_better': False,
+            'no_cuda': False,
         }
         
     ALLOWED_TRAINING_ARGS = {
@@ -203,7 +204,8 @@ class LLMTrainer(BaseTrainer):
         'per_device_eval_batch_size', 'warmup_steps', 'lr_scheduler_type',
         'weight_decay', 'logging_dir', 'logging_steps', 'save_steps',
         'eval_steps', 'evaluation_strategy', 'save_strategy',
-        'load_best_model_at_end', 'metric_for_best_model', 'greater_is_better'
+        'load_best_model_at_end', 'metric_for_best_model', 'greater_is_better',
+        'no_cuda'
     }
     
     def __init__(self, model=None, params: Optional[Dict] = None, **kwargs):
@@ -309,15 +311,25 @@ class LLMTrainer(BaseTrainer):
         if self.model is None:
             raise ValueError("LLMTrainer initialization failed: model is None after parameter resolution. Ensure 'model' or 'initial_assumption' is provided in config (including inside 'custom_learning_params').")
 
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+            self.model = self.model.to(device)
+
         if not self._hooks_initialized:
             self._init_hooks()
         
         filtered_args = self._normalize_kwargs(self.default_training_args, self.ALLOWED_TRAINING_ARGS)
         self._training_args = TrainingArguments(**filtered_args)
         
+        hooks_params = self.default_training_args.copy()
+        if self.params:
+            for key in ['optimizer', 'scheduler', 'criterion', 'learning_rate']:
+                if key in self.params:
+                    hooks_params[key] = self.params[key]
+        
         self._fedcore_callback = FedCoreTransformersTrainer(
             model=self.model,
-            hooks_params=self.default_training_args,
+            hooks_params=hooks_params,
             additional_hooks=self._additional_hooks
         )
         
@@ -369,11 +381,17 @@ class LLMTrainer(BaseTrainer):
     def predict(self, input_data: Union[InputData, CompressionInputData],  
                 output_mode: str = "default") -> Any:
         """Make predictions using InputData/CompressionInputData"""
-        print(f"Making LLM predictions with {output_mode} mode...")
         
         has_val_loader = hasattr(input_data, 'features') and hasattr(input_data.features, 'val_dataloader')
 
         if self._trainer is not None and has_val_loader:
+            if torch.cuda.is_available():
+                device = torch.device('cuda')
+                self._trainer.model = self._trainer.model.to(device)
+                for buffer in self._trainer.model.buffers():
+                    buffer.data = buffer.data.to(device)
+            self._trainer.model.eval()
+            
             eval_dataset = self._dataloader_to_dataset(input_data.features.val_dataloader)
             return self._trainer.predict(eval_dataset)
         elif self._trainer is None and has_val_loader:

@@ -166,9 +166,13 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
                     fallback_model=model_from_attr,
                     device=self.device
                 )
+                self._loaded_from_registry = True
+                self._fedcore_id = fedcore_id
+                self._model_id = model_id
             else:
                 print("No fedcore_id or model_id found, using model from operation attributes")
                 self.model = model_from_attr
+                self._loaded_from_registry = False
             
             operation_device = getattr(fitted, 'device', None)
             if operation_device:
@@ -177,10 +181,22 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
                 
         elif is_class_container:
             self.model = model.model
+            self._loaded_from_registry = False
         else:
             self.model = model
+            self._loaded_from_registry = False
             
         self.model.to(self.device)
+    
+    def cleanup_model(self):
+        """Clean up loaded model from memory.
+        
+        DEPRECATED: Use ModelRegistry.cleanup_fedcore_instance() instead.
+        This method is kept for backward compatibility only.
+        """
+        if hasattr(self, 'model') and self.model is not None:
+            self._registry._delete_model_from_memory(self.model)
+            self.model = None
 
     def eval(self):
         self.warm_up_cuda()

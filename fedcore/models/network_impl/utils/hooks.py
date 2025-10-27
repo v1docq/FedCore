@@ -1,3 +1,4 @@
+import bitsandbytes as bnb
 import os
 from abc import abstractmethod, ABC
 from datetime import datetime
@@ -19,6 +20,12 @@ from tdecomp.grad_proj.tensorgrad.prepared_tg import ULTG, ParallelTG
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
+
+try:
+    import bitsandbytes as bnb
+    BNB_AVAILABLE = True
+except ImportError:
+    BNB_AVAILABLE = False
 
 VERBOSE = True
 
@@ -402,3 +409,8 @@ class Optimizers(Enum):
 class Schedulers(Enum):
     one_cycle = (torch.optim.lr_scheduler.OneCycleLR,
                  {'learning_rate': 'max_lr', 'epochs': 'total_steps'})
+
+if BNB_AVAILABLE:
+    Optimizers.adam_bnb_8bit = bnb.optim.Adam8bit
+    Optimizers.adamw_bnb_8bit = bnb.optim.AdamW8bit
+    Optimizers.sgd_bnb_8bit = bnb.optim.SGD8bit

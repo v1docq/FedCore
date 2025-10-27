@@ -272,6 +272,7 @@ class LearningConfigTemplate(ConfigTemplate):
     nlp_task_type: Optional[str] = None
     # Accept any params to avoid circular import with NLP templates
     nlp_task_params: Optional[Any] = None
+    fedcore_id: Optional[str] = None
 
 
 @dataclass
@@ -302,6 +303,7 @@ class LowRankTemplate(NeuralModelConfigTemplate):
     distortion_factor: float = 0.6  # For stable rank estimation (0 < distortion_factor <= 1)
     random_init: Literal['normal', 'ortho', 'lean_walsh'] = 'normal'  # Random initialization for randomized methods
     power: int = 3  # Power parameter for RandomizedSVD
+    fedcore_id: Optional[str] = None  # FedCore instance ID for model registry
 
 
 @dataclass

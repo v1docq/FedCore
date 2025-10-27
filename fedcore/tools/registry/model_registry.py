@@ -25,7 +25,7 @@ class ModelRegistry:
         - RegistryStorage: Manages DataFrame persistence
         - MetricsTracker: Tracks metrics and versions
     """
-    
+
     _instance = None
     _initialized = False
     _lock = Lock()
@@ -46,7 +46,7 @@ class ModelRegistry:
                 if cls._instance is None:
                     cls._instance = super(ModelRegistry, cls).__new__(cls)
         return cls._instance
-    
+
     def __init__(self, auto_cleanup: bool = True):
         """Initialize registry components (only once, thread-safe).
         
@@ -57,18 +57,18 @@ class ModelRegistry:
             with ModelRegistry._lock:
                 if not ModelRegistry._initialized:
                     base_dir = os.environ.get("FEDCORE_MODEL_REGISTRY_PATH", "llm_output")
-                    
+
                     self.checkpoint_manager = CheckpointManager(base_dir, auto_cleanup=auto_cleanup)
                     self.storage = RegistryStorage(base_dir)
                     self.metrics_tracker = MetricsTracker()
                     self.auto_cleanup = auto_cleanup
                     self.logger = logging.getLogger(self.__class__.__name__)
                     self.logger.setLevel(logging.INFO)
-                    
+
                     ModelRegistry._initialized = True
                     self.logger.info(f"ModelRegistry initialized: auto_cleanup={auto_cleanup}, base_dir={base_dir}")
-    
-    
+
+
     def register_model(self, fedcore_id: str, model=None, model_path: str = None,
                       pipeline_params: dict = None, metrics: Optional[dict] = None,
                       note: str = "initial", params_format: str = 'yaml', 
@@ -89,17 +89,17 @@ class ModelRegistry:
             model_id: Generated model identifier
         """
         self.logger.info(f"register_model called: fedcore_id={fedcore_id}, model_type={type(model).__name__ if model else 'None'}, metrics={metrics}")
-        
+
         model_id = self.metrics_tracker.generate_model_id(model, model_path)
         version = self.metrics_tracker.generate_version()
         safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
-        
+
         if self.auto_cleanup and torch.cuda.is_available():
             mem_before = self.checkpoint_manager.get_gpu_memory_stats()
             self.logger.info(f"GPU memory before saving: {mem_before.get('allocated_gb', 0):.4f} GB")
-        
+
         checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, model_path)
-        
+
         if model_path and os.path.isfile(model_path):
             checkpoint_path = model_path
         else:
@@ -107,7 +107,7 @@ class ModelRegistry:
                 fedcore_id, model_id, safe_timestamp
             )
             self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
-        
+
         record = {
             "record_id": str(self.metrics_tracker.generate_model_id()),
             "fedcore_id": fedcore_id,
@@ -120,20 +120,20 @@ class ModelRegistry:
             "metrics": metrics if metrics is not None else {},
             "pipeline_params": None,  # Can be extended later
         }
-        
+
         self.storage.append_record(fedcore_id, record)
-        
+
         if delete_model_after_save and model is not None:
             self.logger.info(f"Deleting model {model_id} from memory")
             self._delete_model_from_memory(model)
             self.logger.info("Model deleted from memory")
-        
+
         if self.auto_cleanup and torch.cuda.is_available():
             mem_after = self.checkpoint_manager.get_gpu_memory_stats()
             self.logger.info(f"GPU memory after cleanup: {mem_after.get('allocated_gb', 0):.4f} GB")
-        
+
         return model_id
-    
+
     def register_changes(self, fedcore_id: str, model_id: str, model=None,
                         pipeline_params: dict = None, metrics: Optional[dict] = None,
                         note: str = "update", params_format: str = 'yaml',
@@ -151,27 +151,27 @@ class ModelRegistry:
             delete_model_after_save: If True, delete model from memory after saving
         """
         self.logger.info(f"register_changes called: fedcore_id={fedcore_id}, model_id={model_id}, metrics={metrics}")
-        
+
         existing = self.storage.get_latest_record(fedcore_id, model_id)
         if existing is None:
             self.logger.warning("No existing record found, calling register_model instead")
             self.register_model(fedcore_id, model, None, pipeline_params, metrics, note, 
                               params_format, delete_model_after_save)
             return
-        
+
         if self.auto_cleanup and torch.cuda.is_available():
             mem_before = self.checkpoint_manager.get_gpu_memory_stats()
             self.logger.info(f"GPU memory before saving changes: {mem_before.get('allocated_gb', 0):.4f} GB")
-        
+
         version = self.metrics_tracker.generate_version()
         safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
-        
+
         checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, None)
         checkpoint_path = self.checkpoint_manager.generate_checkpoint_path(
             fedcore_id, model_id, safe_timestamp
         )
         self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
-        
+
         record = {
             "record_id": str(self.metrics_tracker.generate_model_id()),
             "fedcore_id": fedcore_id,
@@ -184,18 +184,18 @@ class ModelRegistry:
             "metrics": metrics if metrics is not None else {},
             "pipeline_params": None,
         }
-        
+
         self.storage.append_record(fedcore_id, record)
-        
+
         if delete_model_after_save and model is not None:
             self.logger.info(f"Deleting model {model_id} from memory")
             self._delete_model_from_memory(model)
             self.logger.info("Model deleted from memory")
-        
+
         if self.auto_cleanup and torch.cuda.is_available():
             mem_after = self.checkpoint_manager.get_gpu_memory_stats()
             self.logger.info(f"GPU memory after cleanup: {mem_after.get('allocated_gb', 0):.4f} GB")
-    
+
     def update_metrics(self, fedcore_id: str, model_id: str, metrics: dict):
         """Update metrics for the latest version of a model.
         Args:
@@ -204,7 +204,7 @@ class ModelRegistry:
             metrics: Metrics dictionary to merge
         """
         self.storage.update_record_metrics(fedcore_id, model_id, metrics)
-    
+
     def get_latest_record(self, fedcore_id: str, model_id: str) -> Optional[dict]:
         """Get the latest record for a specific model.
         Args:
@@ -215,7 +215,7 @@ class ModelRegistry:
             Latest record dictionary or None
         """
         return self.storage.get_latest_record(fedcore_id, model_id)
-    
+
     def get_model_history(self, fedcore_id: str, model_id: str):
         """Get complete history of a model.
         Args:
@@ -226,7 +226,7 @@ class ModelRegistry:
             DataFrame with model history
         """
         return self.storage.get_records(fedcore_id, model_id)
-    
+
     def get_best_checkpoint(self, fedcore_id: str, metric_name: str, mode: str = "max") -> Optional[dict]:
         """Get the best checkpoint based on a specific metric.
         Args:
@@ -239,7 +239,7 @@ class ModelRegistry:
         """
         df = self.storage.load(fedcore_id)
         return self.metrics_tracker.find_best_checkpoint(df, metric_name, mode)
-    
+
     def load_model_from_latest_checkpoint(self, fedcore_id: str, model_id: str,
                                          device: torch.device = None) -> Optional[torch.nn.Module]:
         """Load model from the latest checkpoint.
@@ -252,12 +252,12 @@ class ModelRegistry:
             Loaded model or None
         """
         latest = self.storage.get_latest_record(fedcore_id, model_id)
-        
+
         if latest is None or not latest.get('checkpoint_path'):
             return None
-        
+
         return self.checkpoint_manager.load_from_file(latest['checkpoint_path'], device)
-    
+
     def list_models(self, fedcore_id: str) -> list:
         """List all unique model IDs in the registry.
         Args:
@@ -267,7 +267,7 @@ class ModelRegistry:
             List of model IDs
         """
         return self.storage.list_model_ids(fedcore_id)
-    
+
     def get_model_with_fallback(self, fedcore_id: str, model_id: str,
                                fallback_model=None, device: torch.device = None):
         """Load model from registry with fallback to provided model.
@@ -287,9 +287,9 @@ class ModelRegistry:
                 return loaded_model
         except Exception as e:
             print(f"Failed to load model from registry: {e}")
-        
+
         return fallback_model
-    
+
     def _delete_model_from_memory(self, model) -> None:
         """Delete model from memory and clean up GPU memory.
         
@@ -298,33 +298,32 @@ class ModelRegistry:
         """
         if model is None:
             return
-        
+
         if hasattr(model, 'cpu'):
             try:
                 model.cpu()
             except Exception as e:
                 self.logger.debug(f"Could not move model to CPU: {e}")
-        
+
         if isinstance(model, torch.nn.Module):
             try:
                 for param in model.parameters():
                     if param.grad is not None:
                         param.grad = None
-                    param.data = None
-                
-                for buffer in model.buffers():
-                    buffer.data = None
-                    
+                        
             except Exception as e:
-                self.logger.debug(f"Could not clear model parameters: {e}")
-        
-        del model
-        
+                self.logger.debug(f"Could not clear model gradients: {e}")
+
+        try:
+            del model
+        except:
+            pass
+
         gc.collect()
-        
+
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-    
+
     def get_memory_stats(self) -> dict:
         """Get current GPU memory statistics.
         
@@ -332,7 +331,7 @@ class ModelRegistry:
             Dictionary with memory statistics
         """
         return self.checkpoint_manager.get_gpu_memory_stats()
-    
+
     def force_cleanup(self) -> None:
         """Force cleanup of GPU memory.
         
@@ -341,3 +340,120 @@ class ModelRegistry:
         self.checkpoint_manager._cleanup_gpu_memory()
         self.logger.info("Forced GPU memory cleanup executed")
 
+    def cleanup_fedcore_instance(self, fedcore_id: str, compressor_object=None) -> None:
+        """Comprehensive cleanup for a FedCore instance.
+        
+        This method performs full memory cleanup including:
+        1. Cleaning cached models in the provided object
+        2. Clearing GPU memory
+        3. Running garbage collection
+        
+        Args:
+            fedcore_id: FedCore instance identifier
+            compressor_object: Optional object (like BaseCompressionModel) with cached models to clean
+        """
+        self.logger.info(f"Starting comprehensive cleanup for fedcore_id={fedcore_id}")
+        
+        mem_before = self.get_memory_stats()
+        self.logger.info(f"Memory before cleanup: {mem_before.get('allocated_gb', 0):.4f} GB")
+        
+        if compressor_object is not None:
+            self.logger.info("Cleaning cached models in compressor object...")
+            
+            if hasattr(compressor_object, '_model_before_cached') and compressor_object._model_before_cached is not None:
+                self.logger.info("Clearing model_before cache")
+                self._delete_model_from_memory(compressor_object._model_before_cached)
+                compressor_object._model_before_cached = None
+            
+            if hasattr(compressor_object, '_model_after_cached') and compressor_object._model_after_cached is not None:
+                self.logger.info("Clearing model_after cache")
+                self._delete_model_from_memory(compressor_object._model_after_cached)
+                compressor_object._model_after_cached = None
+            
+            if hasattr(compressor_object, 'model') and compressor_object.model is not None:
+                self.logger.info("Clearing main model")
+                self._delete_model_from_memory(compressor_object.model)
+                compressor_object.model = None
+            
+            if hasattr(compressor_object, 'model_for_inference') and compressor_object.model_for_inference is not None:
+                self.logger.info("Clearing model_for_inference")
+                self._delete_model_from_memory(compressor_object.model_for_inference)
+                compressor_object.model_for_inference = None
+            
+            if hasattr(compressor_object, 'trainer') and compressor_object.trainer is not None:
+                trainer = compressor_object.trainer
+                if hasattr(trainer, 'model') and trainer.model is not None:
+                    self.logger.info("Clearing trainer model")
+                    self._delete_model_from_memory(trainer.model)
+                    trainer.model = None
+                for trainer_attr in ['model']:  
+                    if hasattr(trainer, trainer_attr):
+                        trainer_val = getattr(trainer, trainer_attr)
+                        if isinstance(trainer_val, torch.nn.Module):
+                            self.logger.info(f"Clearing trainer.{trainer_attr}")
+                            self._delete_model_from_memory(trainer_val)
+                            setattr(trainer, trainer_attr, None)
+            
+            cleared_count = 0
+            for attr_name in dir(compressor_object):
+                if not attr_name.startswith('__'):  
+                    try:
+                        attr = getattr(compressor_object, attr_name)
+                        if isinstance(attr, torch.nn.Module):
+                            self.logger.info(f"Found and clearing {attr_name} model")
+                            self._delete_model_from_memory(attr)
+                            setattr(compressor_object, attr_name, None)
+                            cleared_count += 1
+                        elif isinstance(attr, (list, tuple)) and len(attr) > 0:
+                            for i, item in enumerate(attr):
+                                if isinstance(item, torch.nn.Module):
+                                    self.logger.info(f"Found model in {attr_name}[{i}]")
+                                    self._delete_model_from_memory(item)
+                                    attr[i] = None
+                                    cleared_count += 1
+                        elif isinstance(attr, dict):
+                            for key, value in list(attr.items()):
+                                if isinstance(value, torch.nn.Module):
+                                    self.logger.info(f"Found model in {attr_name}['{key}']")
+                                    self._delete_model_from_memory(value)
+                                    attr[key] = None
+                                    cleared_count += 1
+                    except Exception as e:
+                        self.logger.debug(f"Could not check {attr_name}: {e}")
+            
+            if cleared_count > 0:
+                self.logger.info(f"Cleared {cleared_count} additional models")
+        
+        self.checkpoint_manager._cleanup_gpu_memory()
+        
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+            try:
+                torch.cuda.reset_peak_memory_stats()
+                torch.cuda.reset_accumulated_memory_stats()
+                self.logger.info("GPU memory stats reset")
+            except Exception as e:
+                self.logger.debug(f"Could not reset GPU stats: {e}")
+        
+        total_collected = 0
+        for i in range(3):
+            collected = gc.collect()
+            total_collected += collected
+        
+        if total_collected > 0:
+            self.logger.info(f"Garbage collection freed {total_collected} objects")
+        
+        mem_after = self.get_memory_stats()
+        memory_freed = mem_before.get('allocated_gb', 0) - mem_after.get('allocated_gb', 0)
+        
+        self.logger.info("CLEANUP RESULTS:")
+        self.logger.info(f"  Memory before: {mem_before.get('allocated_gb', 0):.4f} GB")
+        self.logger.info(f"  Memory after:  {mem_after.get('allocated_gb', 0):.4f} GB")
+        self.logger.info(f"  Memory freed:  {memory_freed:.4f} GB")
+        
+        if mem_before.get('allocated_gb', 0) > 0:
+            efficiency = (memory_freed / mem_before.get('allocated_gb', 0)) * 100
+            self.logger.info(f"  Cleanup efficiency: {efficiency:.1f}%")
+        
+        self.logger.info("Comprehensive cleanup completed")

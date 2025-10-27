@@ -81,4 +81,3 @@ class MetricsTracker:
         
         result = best.drop(labels=["_metric_val"]).to_dict()
         return result
-

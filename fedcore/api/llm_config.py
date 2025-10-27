@@ -11,3 +11,4 @@ class LLMConfigTemplate(NeuralModelConfigTemplate):
     is_llm: bool = True
     model: Any = None
     tokenizer: Any = None
+    fedcore_id: Optional[str] = None

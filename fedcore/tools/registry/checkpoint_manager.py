@@ -111,6 +111,30 @@ class CheckpointManager:
                 return ckpt
         return ckpt
     
+    def deserialize_from_bytes(self, checkpoint_bytes: bytes, 
+                               device: Optional[torch.device] = None) -> Optional[torch.nn.Module]:
+        """Load model from checkpoint bytes.
+        Args:
+            checkpoint_bytes: Serialized checkpoint bytes
+            device: Device to load model on
+            
+        Returns:
+            Loaded model or checkpoint dict
+        """
+        if checkpoint_bytes is None:
+            return None
+            
+        buffer = io.BytesIO(checkpoint_bytes)
+        ckpt = torch.load(buffer, map_location=device)
+        
+        if isinstance(ckpt, dict):
+            if 'model' in ckpt and isinstance(ckpt['model'], torch.nn.Module):
+                return ckpt['model']
+            elif 'state_dict' in ckpt:
+                self.logger.info(f"Warning: Only state_dict found. Need model architecture to load.")
+                return ckpt
+        return ckpt
+    
     def _cleanup_gpu_memory(self) -> None:
         """Clean up GPU memory by running garbage collection and clearing CUDA cache."""
         if torch.cuda.is_available():
@@ -136,4 +160,3 @@ class CheckpointManager:
             'reserved_gb': torch.cuda.memory_reserved() / 1024**3,
             'max_allocated_gb': torch.cuda.max_memory_allocated() / 1024**3,
         }
-

@@ -277,6 +277,8 @@ class DecomposedConv2d(Conv2d, IDecomposed):
                 self.stride, self.padding, self.dilation, self.groups)
     
     def _forward2(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = conv2d(input=x, weight=self.Vh, groups=self.groups, **self.decomposing['Vh'])
         if self.bias is not None:
             x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
@@ -285,6 +287,8 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return x
     
     def _forward3(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = conv2d(
             input=x,
             weight=self.Vh,
@@ -395,6 +399,8 @@ class DecomposedLinear(nn.Linear, IDecomposed):
         super().decompose(W)
     
     def _forward2(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = linear(x, self.Vh)
         if self.bias is not None:
             x = linear(x, self.U, self.bias)
@@ -403,6 +409,8 @@ class DecomposedLinear(nn.Linear, IDecomposed):
         return x 
     
     def _forward3(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = linear(x, self.Vh)
         if self.bias is not None:
             x = linear(x, (self.U * self.S), self.bias)
@@ -460,11 +468,15 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
             self.padding_idx, self.max_norm, self.norm_type, self.scale_grad_by_freq, self.sparse)
 
     def _forward2(self, x):
+        if self.U is not None and x.device != self.U.device:
+            x = x.to(self.U.device)
         x = embedding(x, self.U)
         x = linear(x, self.Vh.T)
         return x
     
     def _forward3(self, x):
+        if self.U is not None and x.device != self.U.device:
+            x = x.to(self.U.device)
         x = embedding(x, (self.U * self.S))
         x = linear(x, self.Vh.T)
         return x

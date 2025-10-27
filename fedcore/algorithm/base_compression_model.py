@@ -1,6 +1,7 @@
 import os
 import uuid
 from typing import Any, Optional, Union
+import logging
 
 import numpy as np
 import torch
@@ -195,7 +196,7 @@ class BaseCompressionModel:
             metrics=metrics
         )
         return model_id
-
+    
     def _init_model(self, input_data, additional_hooks=tuple()):
         import logging
         logger = logging.getLogger(__name__)
@@ -326,8 +327,8 @@ class BaseCompressionModel:
     
     # don't del its for New Year
     def _diagnose(self, model, example_batch, *previos_results, annotation=''):
-        print(annotation)
+        logging.info(annotation)
         base_macs, base_nparams, *_ = previos_results
         macs, nparams = self._estimate_params(model, example_batch.to(extract_device(model)))
-        print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+        logging.info("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
+        logging.info("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))

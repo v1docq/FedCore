@@ -193,7 +193,8 @@ def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloade
     return fedcore_train_data, fedcore_test_data
 
 if __name__ == "__main__":
-    registry = ModelRegistry(auto_cleanup=True)
+    # auto_cleanup=False for LLM experiments to avoid clearing optimizer/scheduler during training
+    registry = ModelRegistry(auto_cleanup=False)
     logger.info(f"ModelRegistry initialized with auto_cleanup={registry.auto_cleanup}")
     
     logger.info("GPU INITIAL STATE:")
@@ -209,7 +210,8 @@ if __name__ == "__main__":
     
     model = AutoModelForCausalLM.from_pretrained(INITIAL_MODEL)
     logger.info(f"Model loaded: {type(model).__name__}")
-    
+    initial_memory = registry.get_memory_stats()
+
     tokenizer = AutoTokenizer.from_pretrained(INITIAL_MODEL)
     if tokenizer.pad_token is None:
         if tokenizer.eos_token is not None:
@@ -294,93 +296,24 @@ if __name__ == "__main__":
     start_fit = time.time()
     fedcore_compressor.fit_no_evo(compression_data)
     fit_time = time.time() - start_fit
-    logger.info(f"Training completed in {fit_time:.4f} sec")
-    
-    logger.info("GPU AFTER TRAINING:")
-    if torch.cuda.is_available():
-        allocated_gb = torch.cuda.memory_allocated() / 1024**3
-        reserved_gb = torch.cuda.memory_reserved() / 1024**3
-        logger.info(f"  allocated_gb: {allocated_gb:.4f} GB")
-        logger.info(f"  reserved_gb: {reserved_gb:.4f} GB")
+    memory_after_training = registry.get_memory_stats()
     
     start_report = time.time()
     model_comparison = fedcore_compressor.get_report(compression_data)
     report_time = time.time() - start_report
-    
-    logger.info(f"Report type: {type(model_comparison)}")
-    
-    if isinstance(model_comparison, dict):
-        logger.info("Report contents:")
-        for key, value in model_comparison.items():
-            logger.info(f"  {key}: {value}")
-    else:
-        logger.info(f"Report: {model_comparison}")
-    
-    logger.info("GPU AFTER get_report (model loaded for evaluation):")
-    if torch.cuda.is_available():
-        allocated_gb = torch.cuda.memory_allocated() / 1024**3
-        reserved_gb = torch.cuda.memory_reserved() / 1024**3
-        logger.info(f"  allocated_gb: {allocated_gb:.4f} GB")
-        logger.info(f"  reserved_gb: {reserved_gb:.4f} GB")
-    
-    # Measure memory after get_report for cleanup comparison
     memory_after_report = registry.get_memory_stats()
     
-    # Clear cached models from memory
-    if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
-        if hasattr(fedcore_compressor.fedcore_model, 'trainer'):
-            trainer = fedcore_compressor.fedcore_model.trainer
-            if trainer is not None and hasattr(trainer, 'model') and trainer.model is not None:
-                registry._delete_model_from_memory(trainer.model)
-                trainer.model = None
-        
-        if hasattr(fedcore_compressor.fedcore_model, '_model_before_cached') and \
-           fedcore_compressor.fedcore_model._model_before_cached is not None:
-            registry._delete_model_from_memory(fedcore_compressor.fedcore_model._model_before_cached)
-            fedcore_compressor.fedcore_model._model_before_cached = None
-        
-        if hasattr(fedcore_compressor.fedcore_model, '_model_after_cached') and \
-           fedcore_compressor.fedcore_model._model_after_cached is not None:
-            registry._delete_model_from_memory(fedcore_compressor.fedcore_model._model_after_cached)
-            fedcore_compressor.fedcore_model._model_after_cached = None
-    
-    memory_after_cache_clear = registry.get_memory_stats()
+    memory_before_cleanup = registry.get_memory_stats()
     
     fedcore_id = None
     if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
-        fedcore_id = getattr(fedcore_compressor.fedcore_model, '_fedcore_id', None)
-    
-    logger.info("REGISTERED MODELS INFO:")
-    logger.info(f"  FedCore ID: {fedcore_id}")
-    if fedcore_id:
-        model_ids = registry.list_models(fedcore_id)
-        logger.info(f"  Number of registered models: {len(model_ids)}")
-        for idx, model_id in enumerate(model_ids, 1):
-            logger.info(f"  {idx}. Model ID: {model_id}")
-            latest_record = registry.get_latest_record(fedcore_id, model_id)
-            if latest_record:
-                logger.info(f"     - Checkpoint path: {latest_record.get('checkpoint_path', 'N/A')}")
-                logger.info(f"     - Stage: {latest_record.get('metrics', {}).get('stage', 'N/A')}")
+        fedcore_id = fedcore_compressor.fedcore_model._fedcore_id
+        logger.info(f"Using fedcore_id: {fedcore_id}")
+        registry.cleanup_fedcore_instance(fedcore_id, fedcore_compressor.fedcore_model)
     else:
-        logger.info("  FedCore ID is None - cannot retrieve model information")
+        registry.force_cleanup()
     
-    if fedcore_id:
-        storage = registry.storage
-        df = storage.load(fedcore_id)
-        if not df.empty and 'checkpoint_bytes' in df.columns:
-            df['checkpoint_bytes'] = None
-            storage.save(fedcore_id, df)
-            del df
-            gc.collect()
-    
-    registry.force_cleanup()
-    
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-        torch.cuda.synchronize()
-    
-    memory_after_cleanup = registry.get_memory_stats()
+    final_memory = registry.get_memory_stats()
     
     logger.info("GPU AFTER CLEANUP:")
     if torch.cuda.is_available():
@@ -389,21 +322,21 @@ if __name__ == "__main__":
         logger.info(f"  allocated_gb: {allocated_gb:.4f} GB")
         logger.info(f"  reserved_gb: {reserved_gb:.4f} GB")
     
-    logger.info("FINAL STATISTICS")
-    logger.info(f"Training time:     {fit_time:.2f} sec")
-    logger.info(f"Report time:       {report_time:.2f} sec")
-    logger.info(f"Total time:        {init_time + fit_time + report_time:.2f} sec")
+    logger.info("MEMORY STATISTICS:")
+    logger.info(f"Initial GPU memory:     {initial_memory.get('allocated_gb', 0):.4f} GB")
+    logger.info(f"After training:          {memory_after_training.get('allocated_gb', 0):.4f} GB")
+    logger.info(f"After report:            {memory_after_report.get('allocated_gb', 0):.4f} GB")
+    logger.info(f"Final GPU memory:        {final_memory.get('allocated_gb', 0):.4f} GB")
     
-    mem_after_report = memory_after_report.get('allocated_gb', 0)
-    mem_after_cache_clear = memory_after_cache_clear.get('allocated_gb', 0)
-    mem_after_cleanup = memory_after_cleanup.get('allocated_gb', 0)
+    peak_memory = max(
+        initial_memory.get('allocated_gb', 0),
+        memory_after_training.get('allocated_gb', 0),
+        memory_after_report.get('allocated_gb', 0)
+    )
+    memory_freed = peak_memory - final_memory.get('allocated_gb', 0)
+    logger.info(f"Peak memory:             {peak_memory:.4f} GB")
+    logger.info(f"Memory freed:             {memory_freed:.4f} GB")
     
-    cache_freed = mem_after_report - mem_after_cache_clear
-    total_freed = mem_after_report - mem_after_cleanup
-    cleanup_efficiency = (total_freed / max(mem_after_report, 0.001)) * 100
-        
-    logger.info(f"Peak GPU memory:   {mem_after_report:.4f} GB")
-    logger.info(f"After cache clear: {mem_after_cache_clear:.4f} GB")
-    logger.info(f"Final GPU memory:  {mem_after_cleanup:.4f} GB")
-    logger.info(f"Cache freed:       {cache_freed:.4f} GB")
-    logger.info(f"Total freed:       {total_freed:.4f} GB")
+    if peak_memory > 0:
+        cleanup_percentage = (memory_freed / peak_memory) * 100
+        logger.info(f"Cleanup efficiency:      {cleanup_percentage:.1f}%")

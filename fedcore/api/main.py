@@ -31,6 +31,7 @@ from fedcore.repository.constant_repository import (
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 warnings.filterwarnings("ignore")
 
@@ -433,6 +434,11 @@ class FedCore(Fedot):
             preproc_target = preproc_target(target)
             prediction_dict = dict(target=preproc_target, labels=preproc_labels, probs=preproc_probs, metric_names=metrics)
         prediction_dataframe = FEDOT_GET_METRICS[problem](**prediction_dict)
+        
+        if is_inference_metric:
+            registry = ModelRegistry()
+            registry.force_cleanup()
+        
         return prediction_dataframe
 
     def get_report(self, test_data: CompressionInputData):
