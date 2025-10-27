@@ -308,7 +308,6 @@ if __name__ == "__main__":
     fedcore_id = None
     if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
         fedcore_id = fedcore_compressor.fedcore_model._fedcore_id
-        logger.info(f"Using fedcore_id: {fedcore_id}")
         registry.cleanup_fedcore_instance(fedcore_id, fedcore_compressor.fedcore_model)
     else:
         registry.force_cleanup()

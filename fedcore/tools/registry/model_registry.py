@@ -323,6 +323,8 @@ class ModelRegistry:
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+            torch.cuda.ipc_collect()
 
     def get_memory_stats(self) -> dict:
         """Get current GPU memory statistics.
@@ -406,7 +408,7 @@ class ModelRegistry:
                         trainer._trainer = None
                         gc.collect()
                 
-                trainer_copy = trainer 
+                trainer_copy = trainer  
                 del compressor_object.trainer
                 compressor_object.trainer = None
                 del trainer_copy  

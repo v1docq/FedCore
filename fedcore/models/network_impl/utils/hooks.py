@@ -291,19 +291,20 @@ class SchedulerRenewal(BaseHook):
                           self.params.get('epochs', 1))
 
     def trigger(self, epoch, kws):
-        if kws['trainer_objects']['scheduler'] is None:
+        if kws['trainer_objects']['scheduler'] is None and kws['trainer_objects']['optimizer'] is not None:
             kws['trainer_objects']['scheduler'] = self.__renew(kws)
-        opt_changed = kws['trainer_objects']['scheduler'].optimizer is kws['trainer_objects']['optimizer']
-        if epoch == 1 or opt_changed:
-            self._mode.append('renew')
+        if kws['trainer_objects']['scheduler'] is not None:
+            opt_changed = kws['trainer_objects']['scheduler'].optimizer is kws['trainer_objects']['optimizer']
+            if epoch == 1 or opt_changed:
+                self._mode.append('renew')
         if epoch % self.params.get('scheduler_step_each', 1) == 0:
             self._mode.append('step')
         return bool(self._mode)
 
     def action(self, epoch, kws):
-        if 'renew' in self._mode:
+        if 'renew' in self._mode and kws['trainer_objects']['optimizer'] is not None:
             kws['trainer_objects']['scheduler'] = self.__renew(kws)
-        if 'step' in self._mode:
+        if 'step' in self._mode and kws['trainer_objects']['scheduler'] is not None:
             kws['trainer_objects']['scheduler'].step()
         self._mode.clear()
 

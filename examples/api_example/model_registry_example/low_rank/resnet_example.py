@@ -149,11 +149,8 @@ if __name__ == "__main__":
     if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
         fedcore_id = fedcore_compressor.fedcore_model._fedcore_id
         logger.info(f"Using fedcore_id: {fedcore_id}")
-        logger.info("Calling registry.cleanup_fedcore_instance()...")
-        registry.cleanup_fedcore_instance(fedcore_id, fedcore_compressor.fedcore_model)
-        logger.info("registry.cleanup_fedcore_instance() completed")
+        registry.cleanup_fedcore_instance(fedcore_id if fedcore_id else "unknown", fedcore_compressor.fedcore_model)
     else:
-        logger.warning("fedcore_model is None, using basic force_cleanup()...")
         registry.force_cleanup()
     
     final_memory = registry.get_memory_stats()

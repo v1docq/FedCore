@@ -1,17 +1,15 @@
-2025-10-27 12:48:25,685 - __main__ - INFO - Memory before cleanup: 0.2260 GB
-2025-10-27 12:48:25,685 - __main__ - INFO - Using fedcore_id: fedcore_30aecd7c
-2025-10-27 12:48:25,685 - __main__ - INFO - Calling registry.cleanup_fedcore_instance()...
-2025-10-27 12:48:26,584 - __main__ - INFO - registry.cleanup_fedcore_instance() completed
-2025-10-27 12:48:26,585 - __main__ - INFO - Memory after cleanup: 0.0162 GB
-2025-10-27 12:48:26,585 - __main__ - INFO - FINAL STATISTICS
-2025-10-27 12:48:26,585 - __main__ - INFO - Training time:     75.90 sec
-2025-10-27 12:48:26,585 - __main__ - INFO - Report time:       9.87 sec
-2025-10-27 12:48:26,585 - __main__ - INFO - Total time:        89.58 sec
-2025-10-27 12:48:26,585 - __main__ - INFO - MEMORY STATISTICS:
-2025-10-27 12:48:26,585 - __main__ - INFO - Initial GPU memory:     0.0000 GB
-2025-10-27 12:48:26,585 - __main__ - INFO - After training:          0.1577 GB
-2025-10-27 12:48:26,585 - __main__ - INFO - After report:            0.2260 GB
-2025-10-27 12:48:26,585 - __main__ - INFO - Final GPU memory:        0.0162 GB
-2025-10-27 12:48:26,585 - __main__ - INFO - Peak memory:             0.2260 GB
-2025-10-27 12:48:26,585 - __main__ - INFO - Memory freed:             0.2098 GB
-2025-10-27 12:48:26,585 - __main__ - INFO - Cleanup efficiency:      92.8%
+2025-10-27 15:22:31,360 - __main__ - INFO - Memory before cleanup: 0.1928 GB
+2025-10-27 15:22:31,360 - __main__ - INFO - Using fedcore_id: fedcore_606f5a49
+2025-10-27 15:22:32,384 - __main__ - INFO - Memory after cleanup: 0.0162 GB
+2025-10-27 15:22:32,384 - __main__ - INFO - FINAL STATISTICS
+2025-10-27 15:22:32,384 - __main__ - INFO - Training time:     76.07 sec
+2025-10-27 15:22:32,384 - __main__ - INFO - Report time:       10.65 sec
+2025-10-27 15:22:32,384 - __main__ - INFO - Total time:        87.69 sec
+2025-10-27 15:22:32,384 - __main__ - INFO - MEMORY STATISTICS:
+2025-10-27 15:22:32,384 - __main__ - INFO - Initial GPU memory:     0.0000 GB
+2025-10-27 15:22:32,384 - __main__ - INFO - After training:          0.1577 GB
+2025-10-27 15:22:32,384 - __main__ - INFO - After report:            0.1928 GB
+2025-10-27 15:22:32,384 - __main__ - INFO - Final GPU memory:        0.0162 GB
+2025-10-27 15:22:32,384 - __main__ - INFO - Peak memory:             0.1928 GB
+2025-10-27 15:22:32,385 - __main__ - INFO - Memory freed:             0.1765 GB
+2025-10-27 15:22:32,385 - __main__ - INFO - Cleanup efficiency:      91.6%
