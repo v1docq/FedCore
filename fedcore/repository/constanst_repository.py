@@ -59,7 +59,7 @@ from fedcore.models.network_impl.hooks import (
 )  # don't del
 from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum  # don't del
 
-from fedcore.metrics.quality import COMPUTATIONAL_METRICS # noqa
+# from fedcore.metrics.quality import COMPUTATIONAL_METRICS # noqa
 
 default_param_values_dict = dict(
     problem=None,
