@@ -26,10 +26,8 @@ def test_probs():
     assert mtr.metric(target, preds) is not None, 'wrong `.metric` logic. the type-based decorator didn\'t cope with the input'
 
 
-prob_name_suffix = 'MeanSquaredError'
-def test_probs():
+def test_regression():
     target = torch.Tensor([1, 1.])
-    preds = torch.Tensor([[0, 1], [0.2, 0]])
-    mtr = MetricFactory.get_metric(prob_name_suffix)
+    preds = torch.Tensor([0.2, 0])
+    mtr = MetricFactory.get_metric('MeanSquaredError')
     assert mtr.metric(target, preds) is not None, 'wrong `.metric` logic. the type-based decorator didn\'t cope with the input'
-
