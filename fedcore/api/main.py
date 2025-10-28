@@ -287,7 +287,6 @@ class FedCore(Fedot):
         is_fedcore_model = problem.__contains__('fedcore')
         model_regime = 'model_after' if is_fedcore_model else 'model_before'
         prediction_dict = dict(target=target, predict=prediction.predict)
-        print('@@@', prediction, target)
         if is_inference_metric:
             prediction_dict = dict(model=self.fedcore_model, dataset=target, model_regime=model_regime)
             # preproc_target = preproc_target(target)
