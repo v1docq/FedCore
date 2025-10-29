@@ -197,6 +197,7 @@ if __name__ == "__main__":
     registry = ModelRegistry(auto_cleanup=False)
     logger.info(f"ModelRegistry initialized with auto_cleanup={registry.auto_cleanup}")
     
+    start_init = time.time()
     logger.info("GPU INITIAL STATE:")
     if torch.cuda.is_available():
         allocated_gb = torch.cuda.memory_allocated() / 1024**3
@@ -220,6 +221,32 @@ if __name__ == "__main__":
             tokenizer.add_special_tokens({'pad_token': '[PAD]'})
     logger.info(f"Tokenizer loaded. Vocabulary size: {tokenizer.vocab_size}")
     
+    fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
+    logger.info(f"Generated fedcore_id: {fedcore_id}")
+    api_template = create_api_config(model, tokenizer, fedcore_id)
+    
+    APIConfig = ConfigFactory.from_template(api_template)
+    api_config = APIConfig()
+    fedcore_compressor = FedCore(api_config)
+    init_time = time.time() - start_init
+    logger.info(f"Initialization time: {init_time:.4f} sec")
+    
+    if hasattr(fedcore_compressor, 'fedcore_model'):
+        model_class = fedcore_compressor.fedcore_model.__class__.__name__
+        logger.info(f"Trainer class: {model_class}")
+        
+        if hasattr(fedcore_compressor.fedcore_model, 'operation_impl'):
+            trainer_type = type(fedcore_compressor.fedcore_model.operation_impl).__name__
+            logger.info(f"Trainer type: {trainer_type}")
+    
+    logger.info("GPU AFTER INITIALIZATION:")
+    if torch.cuda.is_available():
+        allocated_gb = torch.cuda.memory_allocated() / 1024**3
+        reserved_gb = torch.cuda.memory_reserved() / 1024**3
+        logger.info(f"  allocated_gb: {allocated_gb:.4f} GB")
+        logger.info(f"  reserved_gb: {reserved_gb:.4f} GB")
+    
+    start_data = time.time()
     dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split="train[:1000]")
     logger.info(f"Dataset loaded: {len(dataset)} samples")
     
@@ -259,34 +286,9 @@ if __name__ == "__main__":
         task=Task(TaskTypesEnum.classification),  
         input_dim=tokenizer.vocab_size,
     )
+    data_load_time = time.time() - start_data
     
     logger.info("GPU AFTER DATA PREPARATION:")
-    if torch.cuda.is_available():
-        allocated_gb = torch.cuda.memory_allocated() / 1024**3
-        reserved_gb = torch.cuda.memory_reserved() / 1024**3
-        logger.info(f"  allocated_gb: {allocated_gb:.4f} GB")
-        logger.info(f"  reserved_gb: {reserved_gb:.4f} GB")
-    
-    fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
-    logger.info(f"Generated fedcore_id: {fedcore_id}")
-    api_template = create_api_config(model, tokenizer, fedcore_id)
-    
-    start_init = time.time()
-    APIConfig = ConfigFactory.from_template(api_template)
-    api_config = APIConfig()
-    fedcore_compressor = FedCore(api_config)
-    init_time = time.time() - start_init
-    logger.info(f"FedCore initialization time: {init_time:.4f} sec")
-    
-    if hasattr(fedcore_compressor, 'fedcore_model'):
-        model_class = fedcore_compressor.fedcore_model.__class__.__name__
-        logger.info(f"Trainer class: {model_class}")
-        
-        if hasattr(fedcore_compressor.fedcore_model, 'operation_impl'):
-            trainer_type = type(fedcore_compressor.fedcore_model.operation_impl).__name__
-            logger.info(f"Trainer type: {trainer_type}")
-    
-    logger.info("GPU AFTER INITIALIZATION:")
     if torch.cuda.is_available():
         allocated_gb = torch.cuda.memory_allocated() / 1024**3
         reserved_gb = torch.cuda.memory_reserved() / 1024**3
@@ -320,6 +322,13 @@ if __name__ == "__main__":
         reserved_gb = torch.cuda.memory_reserved() / 1024**3
         logger.info(f"  allocated_gb: {allocated_gb:.4f} GB")
         logger.info(f"  reserved_gb: {reserved_gb:.4f} GB")
+    
+    logger.info("FINAL STATISTICS")
+    logger.info(f"Initialization time: {init_time:.2f} sec")
+    logger.info(f"Data loading time:   {data_load_time:.2f} sec")
+    logger.info(f"Training time:       {fit_time:.2f} sec")
+    logger.info(f"Report time:         {report_time:.2f} sec")
+    logger.info(f"Total time:          {init_time + data_load_time + fit_time + report_time:.2f} sec")
     
     logger.info("MEMORY STATISTICS:")
     logger.info(f"Initial GPU memory:     {initial_memory.get('allocated_gb', 0):.4f} GB")
