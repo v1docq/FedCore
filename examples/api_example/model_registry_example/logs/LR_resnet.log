@@ -1,15 +1,15 @@
-2025-10-27 15:22:31,360 - __main__ - INFO - Memory before cleanup: 0.1928 GB
-2025-10-27 15:22:31,360 - __main__ - INFO - Using fedcore_id: fedcore_606f5a49
-2025-10-27 15:22:32,384 - __main__ - INFO - Memory after cleanup: 0.0162 GB
-2025-10-27 15:22:32,384 - __main__ - INFO - FINAL STATISTICS
-2025-10-27 15:22:32,384 - __main__ - INFO - Training time:     76.07 sec
-2025-10-27 15:22:32,384 - __main__ - INFO - Report time:       10.65 sec
-2025-10-27 15:22:32,384 - __main__ - INFO - Total time:        87.69 sec
-2025-10-27 15:22:32,384 - __main__ - INFO - MEMORY STATISTICS:
-2025-10-27 15:22:32,384 - __main__ - INFO - Initial GPU memory:     0.0000 GB
-2025-10-27 15:22:32,384 - __main__ - INFO - After training:          0.1577 GB
-2025-10-27 15:22:32,384 - __main__ - INFO - After report:            0.1928 GB
-2025-10-27 15:22:32,384 - __main__ - INFO - Final GPU memory:        0.0162 GB
-2025-10-27 15:22:32,384 - __main__ - INFO - Peak memory:             0.1928 GB
-2025-10-27 15:22:32,385 - __main__ - INFO - Memory freed:             0.1765 GB
-2025-10-27 15:22:32,385 - __main__ - INFO - Cleanup efficiency:      91.6%
+2025-10-29 14:19:21,209 - __main__ - INFO - Memory before cleanup: 0.1928 GB
+2025-10-29 14:19:21,209 - __main__ - INFO - Using fedcore_id: fedcore_420f30ef
+2025-10-29 14:19:21,890 - __main__ - INFO - Memory after cleanup: 0.0162 GB
+2025-10-29 14:19:21,890 - __main__ - INFO - FINAL STATISTICS
+2025-10-29 14:19:21,890 - __main__ - INFO - Training time:     75.04 sec
+2025-10-29 14:19:21,890 - __main__ - INFO - Report time:       9.90 sec
+2025-10-29 14:19:21,890 - __main__ - INFO - Total time:        85.83 sec
+2025-10-29 14:19:21,890 - __main__ - INFO - MEMORY STATISTICS:
+2025-10-29 14:19:21,890 - __main__ - INFO - Initial GPU memory:     0.0000 GB
+2025-10-29 14:19:21,890 - __main__ - INFO - After training:          0.1577 GB
+2025-10-29 14:19:21,890 - __main__ - INFO - After report:            0.1928 GB
+2025-10-29 14:19:21,890 - __main__ - INFO - Final GPU memory:        0.0162 GB
+2025-10-29 14:19:21,890 - __main__ - INFO - Peak memory:             0.1928 GB
+2025-10-29 14:19:21,890 - __main__ - INFO - Memory freed:             0.1765 GB
+2025-10-29 14:19:21,890 - __main__ - INFO - Cleanup efficiency:      91.6%

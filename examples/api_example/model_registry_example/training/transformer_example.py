@@ -247,9 +247,25 @@ if __name__ == "__main__":
     fit_time = time.time() - start_fit
     memory_after_training = registry.get_memory_stats()
     
-    fedcore_id = None
+    extracted_fedcore_id = None
     if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
-        fedcore_id = getattr(fedcore_compressor.fedcore_model, '_fedcore_id', None)
+        extracted_fedcore_id = getattr(fedcore_compressor.fedcore_model, '_fedcore_id', None)
+    
+    if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
+        trained_model = getattr(fedcore_compressor.fedcore_model, 'model', None)
+        if trained_model is not None:
+            try:
+                model_id = registry.register_model(
+                    fedcore_id=fedcore_id,
+                    model=trained_model,
+                    metrics={"operation": "training", "stage": "after_training"}
+                )
+                logger.info(f"Trained model registered with ID: {model_id}")
+                logger.info(f"Using fedcore_id: {fedcore_id}")
+            except Exception as e:
+                logger.warning(f"Failed to save trained model to registry: {e}")
+    
+    fedcore_id = fedcore_id  
     
     start_report = time.time()
     model_comparison = fedcore_compressor.get_report(compression_data)

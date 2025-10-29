@@ -11,16 +11,15 @@ class RegistryStorage:
     """Manages persistent storage of model registry data."""
 
     COLUMNS = [
-        "record_id",
-        "fedcore_id",
-        "model_id",
-        "version",
+        "record",
+        "fedcore",
+        "model",
         "created_at",
         "model_path",
         "checkpoint_path",
-        "checkpoint_bytes",
+        "stage",
+        "mode",
         "metrics",
-        "pipeline_params",
     ]
 
     def __init__(self, base_dir: str):
@@ -35,7 +34,7 @@ class RegistryStorage:
         """Get path to registry file for specific fedcore instance."""
         registry_dir = os.path.join(self.base_dir, "registries")
         os.makedirs(registry_dir, exist_ok=True)
-        return os.path.join(registry_dir, f"{fedcore_id}_registry.pkl")
+        return os.path.join(registry_dir, f"{fedcore_id}_registry.csv")
 
     def load(self, fedcore_id: str) -> pd.DataFrame:
         """Load registry from disk.
@@ -51,7 +50,7 @@ class RegistryStorage:
         registry_path = self.get_registry_path(fedcore_id)
 
         if os.path.isfile(registry_path):
-            df = pd.read_pickle(registry_path)
+            df = pd.read_csv(registry_path)
         else:
             df = pd.DataFrame(columns=self.COLUMNS)
 
@@ -67,7 +66,7 @@ class RegistryStorage:
         self._registries[fedcore_id] = df
 
         registry_path = self.get_registry_path(fedcore_id)
-        df.to_pickle(registry_path)
+        df.to_csv(registry_path)
 
     def append_record(self, fedcore_id: str, record: dict) -> None:
         """Append new record to registry.
@@ -92,7 +91,7 @@ class RegistryStorage:
         if df.empty:
             return pd.DataFrame(columns=self.COLUMNS)
 
-        return df[df["model_id"] == model_id].sort_values("version")
+        return df[df["model"] == model_id].sort_values("created_at")
 
     def get_latest_record(self, fedcore_id: str, model_id: str) -> Optional[dict]:
         """Get latest record for specific model.
@@ -120,19 +119,38 @@ class RegistryStorage:
         """
         df = self.load(fedcore_id)
 
-        records = df[df["model_id"] == model_id]
+        records = df[df["model"] == model_id]
         if records.empty:
             logging.info(f"Warning: No records found for model_id {model_id}")
             return
 
-        latest_idx = records["version"].idxmax()
+        latest_idx = records["created_at"].idxmax() if "created_at" in records else records.index[-1]
 
-        existing_metrics = df.at[latest_idx, "metrics"]
-        if not isinstance(existing_metrics, dict):
-            existing_metrics = {}
-
-        existing_metrics.update(metrics)
-        df.at[latest_idx, "metrics"] = existing_metrics
+        if isinstance(metrics, dict):
+            metrics_copy = metrics.copy()
+            stage = metrics_copy.pop("stage", None)
+            mode = metrics_copy.pop("operation", None)
+            metrics_copy.pop("is_processed", None)
+            
+            if stage is not None:
+                if isinstance(stage, str):
+                    if "before" in stage.lower():
+                        stage = "before"
+                    elif "after" in stage.lower():
+                        stage = "after"
+                df.at[latest_idx, "stage"] = stage
+            
+            if mode is not None:
+                df.at[latest_idx, "mode"] = mode
+            
+            existing_metrics = df.at[latest_idx, "metrics"]
+            if not isinstance(existing_metrics, dict):
+                existing_metrics = {}
+            
+            existing_metrics.update(metrics_copy)
+            df.at[latest_idx, "metrics"] = existing_metrics
+        else:
+            df.at[latest_idx, "metrics"] = metrics
 
         self.save(fedcore_id, df)
 
@@ -147,4 +165,4 @@ class RegistryStorage:
         df = self.load(fedcore_id)
         if df.empty:
             return []
-        return df["model_id"].unique().tolist()
+        return df["model"].unique().tolist()

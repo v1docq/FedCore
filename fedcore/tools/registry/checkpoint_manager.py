@@ -2,7 +2,6 @@
 
 import io
 import os
-import gc
 import logging
 from typing import Optional
 
@@ -134,29 +133,3 @@ class CheckpointManager:
                 self.logger.info(f"Warning: Only state_dict found. Need model architecture to load.")
                 return ckpt
         return ckpt
-    
-    def _cleanup_gpu_memory(self) -> None:
-        """Clean up GPU memory by running garbage collection and clearing CUDA cache."""
-        if torch.cuda.is_available():
-            gc.collect()
-            
-            torch.cuda.empty_cache()
-            
-            torch.cuda.reset_peak_memory_stats()
-            
-            self.logger.debug("GPU memory cleaned: garbage collected and CUDA cache emptied")
-    
-    def get_gpu_memory_stats(self) -> dict:
-        """Get current GPU memory statistics.
-        
-        Returns:
-            Dictionary with memory statistics in GB, or empty dict if CUDA unavailable
-        """
-        if not torch.cuda.is_available():
-            return {}
-        
-        return {
-            'allocated_gb': torch.cuda.memory_allocated() / 1024**3,
-            'reserved_gb': torch.cuda.memory_reserved() / 1024**3,
-            'max_allocated_gb': torch.cuda.max_memory_allocated() / 1024**3,
-        }

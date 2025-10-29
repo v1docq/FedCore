@@ -108,17 +108,34 @@ class ModelRegistry:
             )
             self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
 
+        clean_metrics = {}
+        stage = None
+        mode = None
+        
+        if metrics is not None:
+            metrics_copy = metrics.copy()
+            stage = metrics_copy.pop("stage", None)
+            mode = metrics_copy.pop("operation", None)
+            metrics_copy.pop("is_processed", None)
+            clean_metrics = metrics_copy
+        
+        if stage is not None:
+            if isinstance(stage, str):
+                if "before" in stage.lower():
+                    stage = "before"
+                elif "after" in stage.lower():
+                    stage = "after"
+        
         record = {
-            "record_id": str(self.metrics_tracker.generate_model_id()),
-            "fedcore_id": fedcore_id,
-            "model_id": model_id,
-            "version": version,
+            "record": str(self.metrics_tracker.generate_model_id()),
+            "fedcore": fedcore_id,
+            "model": model_id,
             "created_at": version,
             "model_path": model_path,
             "checkpoint_path": checkpoint_path,
-            "checkpoint_bytes": checkpoint_bytes,
-            "metrics": metrics if metrics is not None else {},
-            "pipeline_params": None,  # Can be extended later
+            "stage": stage,
+            "mode": mode,
+            "metrics": clean_metrics if clean_metrics else {},
         }
 
         self.storage.append_record(fedcore_id, record)
@@ -172,17 +189,34 @@ class ModelRegistry:
         )
         self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
 
+        clean_metrics = {}
+        stage = None
+        mode = None
+        
+        if metrics is not None:
+            metrics_copy = metrics.copy()
+            stage = metrics_copy.pop("stage", None)
+            mode = metrics_copy.pop("operation", None)
+            metrics_copy.pop("is_processed", None)
+            clean_metrics = metrics_copy
+        
+        if stage is not None:
+            if isinstance(stage, str):
+                if "before" in stage.lower():
+                    stage = "before"
+                elif "after" in stage.lower():
+                    stage = "after"
+        
         record = {
-            "record_id": str(self.metrics_tracker.generate_model_id()),
-            "fedcore_id": fedcore_id,
-            "model_id": model_id,
-            "version": version,
+            "record": str(self.metrics_tracker.generate_model_id()),
+            "fedcore": fedcore_id,
+            "model": model_id,
             "created_at": version,
             "model_path": None,
             "checkpoint_path": checkpoint_path,
-            "checkpoint_bytes": checkpoint_bytes,
-            "metrics": metrics if metrics is not None else {},
-            "pipeline_params": None,
+            "stage": stage,
+            "mode": mode,
+            "metrics": clean_metrics if clean_metrics else {},
         }
 
         self.storage.append_record(fedcore_id, record)
@@ -456,21 +490,13 @@ class ModelRegistry:
             except Exception as e:
                 self.logger.debug(f"Could not reset GPU stats: {e}")
         
-        total_collected = 0
-        for i in range(3):
-            collected = gc.collect()
-            total_collected += collected
+        collected = gc.collect()
         
-        if total_collected > 0:
-            self.logger.info(f"Garbage collection freed {total_collected} objects")
+        if collected > 0:
+            self.logger.info(f"Garbage collection freed {collected} objects")
         
         mem_after = self.get_memory_stats()
         memory_freed = mem_before.get('allocated_gb', 0) - mem_after.get('allocated_gb', 0)
-        
-        self.logger.info("CLEANUP RESULTS:")
-        self.logger.info(f"  Memory before: {mem_before.get('allocated_gb', 0):.4f} GB")
-        self.logger.info(f"  Memory after:  {mem_after.get('allocated_gb', 0):.4f} GB")
-        self.logger.info(f"  Memory freed:  {memory_freed:.4f} GB")
         
         if mem_before.get('allocated_gb', 0) > 0:
             efficiency = (memory_freed / mem_before.get('allocated_gb', 0)) * 100

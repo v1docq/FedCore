@@ -1,18 +1,23 @@
-2025-10-27 16:44:50,843 - __main__ - INFO - Generated fedcore_id: fedcore_cb9cd8a8
-2025-10-27 16:46:09,544 - __main__ - INFO - REGISTERED MODELS INFO:
-2025-10-27 16:46:09,545 - __main__ - INFO -   FedCore ID: None
-2025-10-27 16:46:09,545 - __main__ - INFO -   FedCore ID is None - cannot retrieve model information
-2025-10-27 16:46:09,545 - __main__ - INFO - Using fedcore_id: None
-2025-10-27 16:46:10,326 - __main__ - INFO - Memory after cleanup: 0.1008 GB
-2025-10-27 16:46:10,326 - __main__ - INFO - FINAL STATISTICS
-2025-10-27 16:46:10,326 - __main__ - INFO - Training time:     68.63 sec
-2025-10-27 16:46:10,326 - __main__ - INFO - Report time:       9.17 sec
-2025-10-27 16:46:10,326 - __main__ - INFO - Total time:        78.70 sec
-2025-10-27 16:46:10,326 - __main__ - INFO - MEMORY STATISTICS:
-2025-10-27 16:46:10,326 - __main__ - INFO - Initial GPU memory:     0.0000 GB
-2025-10-27 16:46:10,326 - __main__ - INFO - After training:          0.1421 GB
-2025-10-27 16:46:10,326 - __main__ - INFO - After report:            0.1425 GB
-2025-10-27 16:46:10,326 - __main__ - INFO - Final GPU memory:        0.1008 GB
-2025-10-27 16:46:10,326 - __main__ - INFO - Peak memory:             0.1425 GB
-2025-10-27 16:46:10,326 - __main__ - INFO - Memory freed:             0.0417 GB
-2025-10-27 16:46:10,326 - __main__ - INFO - Cleanup efficiency:      29.3%
+2025-10-29 15:03:12,808 - __main__ - INFO - Generated fedcore_id: fedcore_ad1ce32c
+2025-10-29 15:04:20,668 - __main__ - INFO - Trained model registered with ID: model_136746172926656
+2025-10-29 15:04:20,668 - __main__ - INFO - Using fedcore_id: fedcore_ad1ce32c
+2025-10-29 15:04:29,748 - __main__ - INFO - REGISTERED MODELS INFO:
+2025-10-29 15:04:29,748 - __main__ - INFO -   FedCore ID: fedcore_ad1ce32c
+2025-10-29 15:04:29,748 - __main__ - INFO -   Number of registered models: 1
+2025-10-29 15:04:29,748 - __main__ - INFO -   1. Model ID: model_136746172926656
+2025-10-29 15:04:29,749 - __main__ - INFO -      - Checkpoint path: llm_output/checkpoints/fedcore_ad1ce32c/model_136746172926656_2025-10-29T12-04-20.252537.pt
+2025-10-29 15:04:29,749 - __main__ - INFO -      - Stage: N/A
+2025-10-29 15:04:29,749 - __main__ - INFO - Using fedcore_id: fedcore_ad1ce32c
+2025-10-29 15:04:30,313 - __main__ - INFO - Memory after cleanup: 0.1008 GB
+2025-10-29 15:04:30,313 - __main__ - INFO - FINAL STATISTICS
+2025-10-29 15:04:30,313 - __main__ - INFO - Training time:     66.49 sec
+2025-10-29 15:04:30,313 - __main__ - INFO - Report time:       9.08 sec
+2025-10-29 15:04:30,313 - __main__ - INFO - Total time:        76.52 sec
+2025-10-29 15:04:30,313 - __main__ - INFO - MEMORY STATISTICS:
+2025-10-29 15:04:30,313 - __main__ - INFO - Initial GPU memory:     0.0000 GB
+2025-10-29 15:04:30,313 - __main__ - INFO - After training:          0.1421 GB
+2025-10-29 15:04:30,313 - __main__ - INFO - After report:            0.1442 GB
+2025-10-29 15:04:30,313 - __main__ - INFO - Final GPU memory:        0.1008 GB
+2025-10-29 15:04:30,313 - __main__ - INFO - Peak memory:             0.1442 GB
+2025-10-29 15:04:30,314 - __main__ - INFO - Memory freed:             0.0434 GB
+2025-10-29 15:04:30,314 - __main__ - INFO - Cleanup efficiency:      30.1%

@@ -1,37 +1,37 @@
-2025-10-27 15:19:54,944 - __main__ - INFO - Loading model from HuggingFace: arnir0/Tiny-LLM
-2025-10-27 15:19:55,334 - __main__ - INFO - Model loaded: LlamaForCausalLM
-2025-10-27 15:19:55,669 - __main__ - INFO - Tokenizer loaded. Vocabulary size: 32000
-2025-10-27 15:19:55,670 - __main__ - INFO - Generated fedcore_id: fedcore_6175b760
-2025-10-27 15:20:01,701 - __main__ - INFO - Dataset loaded: 1000 samples
-2025-10-27 15:20:01,706 - __main__ - INFO - Dataset filtered: 647 samples
-2025-10-27 15:20:01,722 - __main__ - INFO -  Datasets split: train=517, val=64, test=66
-2025-10-27 15:20:01,723 - __main__ - INFO -  Example batch shape: torch.Size([4, 64])
-2025-10-27 15:20:09,369 - __main__ - INFO - Cleaning up fedcore_instance with id: fedcore_6175b760
-2025-10-27 15:20:10,750 - __main__ - INFO - MEMORY DIAGNOSTICS BEFORE FINAL CLEANUP:
-2025-10-27 15:20:10,751 - __main__ - INFO -   GPU allocated before cleanup: 0.0163 GB
-2025-10-27 15:20:10,751 - __main__ - INFO -   GPU reserved before cleanup: 0.2402 GB
-2025-10-27 15:20:10,820 - __main__ - INFO -   Active CUDA tensors: 47
-2025-10-27 15:20:10,820 - __main__ - INFO -   CUDA tensor memory: 0.0000 GB
-2025-10-27 15:20:10,839 - __main__ - INFO -   Total Python objects: 727074
-2025-10-27 15:20:11,116 - __main__ - INFO -   Model-related objects: 16675
-2025-10-27 15:20:11,121 - __main__ - INFO - MEMORY DIAGNOSTICS AFTER FINAL CLEANUP:
-2025-10-27 15:20:11,121 - __main__ - INFO -   GPU allocated after cleanup: 0.0163 GB
-2025-10-27 15:20:11,121 - __main__ - INFO -   GPU reserved after cleanup: 0.0547 GB
-2025-10-27 15:20:11,121 - __main__ - INFO -   ANALYSIS OF REMAINING MEMORY:
-2025-10-27 15:20:11,121 - __main__ - INFO -     Allocated memory: 16.69 MB
-2025-10-27 15:20:11,121 - __main__ - INFO -     Reserved memory: 56.00 MB
-2025-10-27 15:20:11,121 - __main__ - INFO -     Reserved/Allocated ratio: 3.36x
-2025-10-27 15:20:11,121 - __main__ - INFO -     Minimal memory remaining (likely PyTorch overhead)
-2025-10-27 15:20:11,122 - __main__ - INFO - Memory after cleanup: 0.0163 GB
-2025-10-27 15:20:11,122 - __main__ - INFO - FINAL STATISTICS
-2025-10-27 15:20:11,122 - __main__ - INFO - Training time:     6.05 sec
-2025-10-27 15:20:11,122 - __main__ - INFO - Report time:       1.59 sec
-2025-10-27 15:20:11,122 - __main__ - INFO - Total time:        14.42 sec
-2025-10-27 15:20:11,122 - __main__ - INFO - MEMORY STATISTICS:
-2025-10-27 15:20:11,122 - __main__ - INFO - Initial GPU memory:     0.0000 GB
-2025-10-27 15:20:11,122 - __main__ - INFO - After training:          0.1668 GB
-2025-10-27 15:20:11,122 - __main__ - INFO - After report:            0.2018 GB
-2025-10-27 15:20:11,122 - __main__ - INFO - Final GPU memory:        0.0163 GB
-2025-10-27 15:20:11,122 - __main__ - INFO - Peak memory:             0.2018 GB
-2025-10-27 15:20:11,122 - __main__ - INFO - Memory freed:             0.1855 GB
-2025-10-27 15:20:11,122 - __main__ - INFO - Cleanup efficiency:      91.9%
+2025-10-29 14:19:56,338 - __main__ - INFO - Loading model from HuggingFace: arnir0/Tiny-LLM
+2025-10-29 14:19:57,086 - __main__ - INFO - Model loaded: LlamaForCausalLM
+2025-10-29 14:19:57,409 - __main__ - INFO - Tokenizer loaded. Vocabulary size: 32000
+2025-10-29 14:19:57,409 - __main__ - INFO - Generated fedcore_id: fedcore_1bdec14e
+2025-10-29 14:20:03,667 - __main__ - INFO - Dataset loaded: 1000 samples
+2025-10-29 14:20:03,674 - __main__ - INFO - Dataset filtered: 647 samples
+2025-10-29 14:20:03,692 - __main__ - INFO -  Datasets split: train=517, val=64, test=66
+2025-10-29 14:20:03,694 - __main__ - INFO -  Example batch shape: torch.Size([4, 64])
+2025-10-29 14:20:12,907 - __main__ - INFO - Cleaning up fedcore_instance with id: fedcore_1bdec14e
+2025-10-29 14:20:13,870 - __main__ - INFO - MEMORY DIAGNOSTICS BEFORE FINAL CLEANUP:
+2025-10-29 14:20:13,870 - __main__ - INFO -   GPU allocated before cleanup: 0.0163 GB
+2025-10-29 14:20:13,870 - __main__ - INFO -   GPU reserved before cleanup: 0.2402 GB
+2025-10-29 14:20:13,935 - __main__ - INFO -   Active CUDA tensors: 47
+2025-10-29 14:20:13,935 - __main__ - INFO -   CUDA tensor memory: 0.0000 GB
+2025-10-29 14:20:13,953 - __main__ - INFO -   Total Python objects: 727225
+2025-10-29 14:20:14,209 - __main__ - INFO -   Model-related objects: 16677
+2025-10-29 14:20:14,213 - __main__ - INFO - MEMORY DIAGNOSTICS AFTER FINAL CLEANUP:
+2025-10-29 14:20:14,213 - __main__ - INFO -   GPU allocated after cleanup: 0.0163 GB
+2025-10-29 14:20:14,213 - __main__ - INFO -   GPU reserved after cleanup: 0.0547 GB
+2025-10-29 14:20:14,213 - __main__ - INFO -   ANALYSIS OF REMAINING MEMORY:
+2025-10-29 14:20:14,213 - __main__ - INFO -     Allocated memory: 16.69 MB
+2025-10-29 14:20:14,213 - __main__ - INFO -     Reserved memory: 56.00 MB
+2025-10-29 14:20:14,213 - __main__ - INFO -     Reserved/Allocated ratio: 3.36x
+2025-10-29 14:20:14,213 - __main__ - INFO -     Minimal memory remaining (likely PyTorch overhead)
+2025-10-29 14:20:14,213 - __main__ - INFO - Memory after cleanup: 0.0163 GB
+2025-10-29 14:20:14,213 - __main__ - INFO - FINAL STATISTICS
+2025-10-29 14:20:14,213 - __main__ - INFO - Training time:     5.51 sec
+2025-10-29 14:20:14,213 - __main__ - INFO - Report time:       3.70 sec
+2025-10-29 14:20:14,213 - __main__ - INFO - Total time:        16.57 sec
+2025-10-29 14:20:14,213 - __main__ - INFO - MEMORY STATISTICS:
+2025-10-29 14:20:14,213 - __main__ - INFO - Initial GPU memory:     0.0000 GB
+2025-10-29 14:20:14,213 - __main__ - INFO - After training:          0.1668 GB
+2025-10-29 14:20:14,213 - __main__ - INFO - After report:            0.2018 GB
+2025-10-29 14:20:14,213 - __main__ - INFO - Final GPU memory:        0.0163 GB
+2025-10-29 14:20:14,214 - __main__ - INFO - Peak memory:             0.2018 GB
+2025-10-29 14:20:14,214 - __main__ - INFO - Memory freed:             0.1855 GB
+2025-10-29 14:20:14,214 - __main__ - INFO - Cleanup efficiency:      91.9%
