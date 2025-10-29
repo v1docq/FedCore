@@ -1,31 +1,37 @@
-2025-10-29 14:24:40,848 - __main__ - INFO - ModelRegistry initialized with auto_cleanup=False
-2025-10-29 14:24:40,848 - __main__ - INFO - GPU INITIAL STATE:
-2025-10-29 14:24:40,849 - __main__ - INFO -   allocated_gb: 0.0000 GB
-2025-10-29 14:24:40,849 - __main__ - INFO -   reserved_gb: 0.0000 GB
-2025-10-29 14:24:40,849 - __main__ - INFO - Loading model from HuggingFace: arnir0/Tiny-LLM
-2025-10-29 14:24:41,304 - __main__ - INFO - Model loaded: LlamaForCausalLM
-2025-10-29 14:24:41,610 - __main__ - INFO - Tokenizer loaded. Vocabulary size: 32000
-2025-10-29 14:24:49,245 - __main__ - INFO - Dataset loaded: 1000 samples
-2025-10-29 14:24:49,250 - __main__ - INFO - Dataset filtered: 647 samples
-2025-10-29 14:24:49,263 - __main__ - INFO - Datasets split: train=517, val=64, test=66
-2025-10-29 14:24:49,265 - __main__ - INFO - Example batch shape: torch.Size([4, 64])
-2025-10-29 14:24:49,265 - __main__ - INFO - GPU AFTER DATA PREPARATION:
-2025-10-29 14:24:49,265 - __main__ - INFO -   allocated_gb: 0.0000 GB
-2025-10-29 14:24:49,265 - __main__ - INFO -   reserved_gb: 0.0000 GB
-2025-10-29 14:24:49,265 - __main__ - INFO - Generated fedcore_id: fedcore_a918e496
-2025-10-29 14:24:49,269 - __main__ - INFO - FedCore initialization time: 0.0031 sec
-2025-10-29 14:24:49,269 - __main__ - INFO - Trainer class: NoneType
-2025-10-29 14:24:49,269 - __main__ - INFO - GPU AFTER INITIALIZATION:
-2025-10-29 14:24:49,269 - __main__ - INFO -   allocated_gb: 0.0000 GB
-2025-10-29 14:24:49,269 - __main__ - INFO -   reserved_gb: 0.0000 GB
-2025-10-29 14:24:55,781 - __main__ - INFO - GPU AFTER CLEANUP:
-2025-10-29 14:24:55,782 - __main__ - INFO -   allocated_gb: 0.0163 GB
-2025-10-29 14:24:55,782 - __main__ - INFO -   reserved_gb: 0.2402 GB
-2025-10-29 14:24:55,782 - __main__ - INFO - MEMORY STATISTICS:
-2025-10-29 14:24:55,782 - __main__ - INFO - Initial GPU memory:     0.0000 GB
-2025-10-29 14:24:55,782 - __main__ - INFO - After training:          0.1668 GB
-2025-10-29 14:24:55,782 - __main__ - INFO - After report:            0.2018 GB
-2025-10-29 14:24:55,782 - __main__ - INFO - Final GPU memory:        0.0163 GB
-2025-10-29 14:24:55,782 - __main__ - INFO - Peak memory:             0.2018 GB
-2025-10-29 14:24:55,782 - __main__ - INFO - Memory freed:             0.1855 GB
-2025-10-29 14:24:55,782 - __main__ - INFO - Cleanup efficiency:      91.9%
+2025-10-29 19:26:24,623 - __main__ - INFO - ModelRegistry initialized with auto_cleanup=False
+2025-10-29 19:26:24,623 - __main__ - INFO - GPU INITIAL STATE:
+2025-10-29 19:26:24,623 - __main__ - INFO -   allocated_gb: 0.0000 GB
+2025-10-29 19:26:24,623 - __main__ - INFO -   reserved_gb: 0.0000 GB
+2025-10-29 19:26:24,623 - __main__ - INFO - Loading model from HuggingFace: arnir0/Tiny-LLM
+2025-10-29 19:26:25,166 - __main__ - INFO - Model loaded: LlamaForCausalLM
+2025-10-29 19:26:25,557 - __main__ - INFO - Tokenizer loaded. Vocabulary size: 32000
+2025-10-29 19:26:25,557 - __main__ - INFO - Generated fedcore_id: fedcore_372df8e1
+2025-10-29 19:26:25,561 - __main__ - INFO - Initialization time: 0.9383 sec
+2025-10-29 19:26:25,561 - __main__ - INFO - Trainer class: NoneType
+2025-10-29 19:26:25,561 - __main__ - INFO - GPU AFTER INITIALIZATION:
+2025-10-29 19:26:25,562 - __main__ - INFO -   allocated_gb: 0.0000 GB
+2025-10-29 19:26:25,562 - __main__ - INFO -   reserved_gb: 0.0000 GB
+2025-10-29 19:26:31,822 - __main__ - INFO - Dataset loaded: 1000 samples
+2025-10-29 19:26:31,828 - __main__ - INFO - Dataset filtered: 647 samples
+2025-10-29 19:26:31,851 - __main__ - INFO - Datasets split: train=517, val=64, test=66
+2025-10-29 19:26:31,856 - __main__ - INFO - Example batch shape: torch.Size([4, 64])
+2025-10-29 19:26:31,856 - __main__ - INFO - GPU AFTER DATA PREPARATION:
+2025-10-29 19:26:31,856 - __main__ - INFO -   allocated_gb: 0.0000 GB
+2025-10-29 19:26:31,856 - __main__ - INFO -   reserved_gb: 0.0000 GB
+2025-10-29 19:26:38,987 - __main__ - INFO - GPU AFTER CLEANUP:
+2025-10-29 19:26:38,987 - __main__ - INFO -   allocated_gb: 0.0163 GB
+2025-10-29 19:26:38,988 - __main__ - INFO -   reserved_gb: 0.2402 GB
+2025-10-29 19:26:38,988 - __main__ - INFO - FINAL STATISTICS
+2025-10-29 19:26:38,988 - __main__ - INFO - Initialization time: 0.94 sec
+2025-10-29 19:26:38,988 - __main__ - INFO - Data loading time:   6.29 sec
+2025-10-29 19:26:38,988 - __main__ - INFO - Training time:       4.69 sec
+2025-10-29 19:26:38,988 - __main__ - INFO - Report time:         1.53 sec
+2025-10-29 19:26:38,988 - __main__ - INFO - Total time:          13.45 sec
+2025-10-29 19:26:38,988 - __main__ - INFO - MEMORY STATISTICS:
+2025-10-29 19:26:38,988 - __main__ - INFO - Initial GPU memory:     0.0000 GB
+2025-10-29 19:26:38,988 - __main__ - INFO - After training:          0.1668 GB
+2025-10-29 19:26:38,988 - __main__ - INFO - After report:            0.2018 GB
+2025-10-29 19:26:38,988 - __main__ - INFO - Final GPU memory:        0.0163 GB
+2025-10-29 19:26:38,988 - __main__ - INFO - Peak memory:             0.2018 GB
+2025-10-29 19:26:38,988 - __main__ - INFO - Memory freed:             0.1855 GB
+2025-10-29 19:26:38,988 - __main__ - INFO - Cleanup efficiency:      91.9%
