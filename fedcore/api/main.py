@@ -31,7 +31,6 @@ from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.repository.constanst_repository import (
     FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,
-    COMPUTATIONAL_METRICS
     # FEDOT_GET_METRICS,
 )
 from fedcore.metrics.quality import calculate_metrics
@@ -39,6 +38,9 @@ from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 
 warnings.filterwarnings("ignore")
+
+# TODO 
+COMPUTATIONAL_METRICS = []
 
 
 

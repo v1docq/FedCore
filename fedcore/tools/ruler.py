@@ -38,18 +38,18 @@ from fedcore.tools.edge_device import PowerEstimator
 # Configure logging
 logger = logging.getLogger(__name__)
 
-@dataclass
-class PerformanceMetrics:
-    """Data class to store performance metrics"""
-    model_size: Tuple[float, float]  # (mean, std)
+# @dataclass
+# class PerformanceMetrics:
+#     """Data class to store performance metrics"""
+#     model_size: Tuple[float, float]  # (mean, std)
     
-    cpu_latency: Tuple[float, float]  # (mean, std)
-    cpu_throughput: Tuple[float, float]  # (mean, std)
-    cpu_energy_consumption: Optional[float] = None
+#     cpu_latency: Tuple[float, float]  # (mean, std)
+#     cpu_throughput: Tuple[float, float]  # (mean, std)
+#     cpu_energy_consumption: Optional[float] = None
 
-    gpu_latency: Tuple[float, float]  # (mean, std)
-    gpu_throughput: Tuple[float, float]  # (mean, std)
-    gpu_energy_consumption: Optional[float] = None
+#     gpu_latency: Tuple[float, float]  # (mean, std)
+#     gpu_throughput: Tuple[float, float]  # (mean, std)
+#     gpu_energy_consumption: Optional[float] = None
 
 @dataclass
 class TimingResult:
@@ -81,6 +81,7 @@ class PerformanceEvaluator:
         batch_size: int = DEFAULT_BATCH_SIZE,
         n_batches: int = 8,
         collate_fn: Optional[Callable] = None,
+        need_wrap: bool = False
     ):
         """
         Initialize PerformanceEvaluator.
@@ -97,6 +98,7 @@ class PerformanceEvaluator:
         self.model_regime = model_regime
         self.n_batches = n_batches
         self.batch_size = batch_size
+        self._need_wrap = need_wrap
         
         self._init_metrics()
         self.device = device or default_device()
@@ -144,6 +146,10 @@ class PerformanceEvaluator:
 
     def _initialize_data_loader(self, data: Union[DataLoader, str], collate_fn: Optional[Callable]) -> None:
         """Initialize data loader for evaluation"""
+        if not self._need_wrap:
+            self.data_loader = data
+            return
+
         if isinstance(data, DataLoader):
             collate_fn = data.collate_fn
             dataset = data.dataset
@@ -164,7 +170,7 @@ class PerformanceEvaluator:
         )
 
     @torch.no_grad()
-    def evaluate(self) -> PerformanceMetrics:
+    def evaluate(self):
         """
         Comprehensive model evaluation.
         
@@ -173,7 +179,8 @@ class PerformanceEvaluator:
         """
         logger.info("Starting model evaluation...")
         devices = [torch.device('cpu')]
-        if self._cuda_available():
+
+        if self._cuda_available:
             devices.append(self.device)
 
         metrics = {
@@ -185,43 +192,58 @@ class PerformanceEvaluator:
         result = {'model_size': self.measure_model_size()}
         for device in devices:
             # Warm up if using CUDA
-            if self._cuda_available:
+            self.model.to(device)
+            if device.type != 'cpu':
                 self._warmup_cuda()
 
             # Measure performance metrics
             result.update({
-                device.type + metric: method(device) for metric, method in metrics.items()
+                device.type + '_' + metric: method(device) for metric, method in metrics.items()
             })
         
         return result
     
     def _generate_example_batch(self, num_samples, return_sample=False, device='cpu', metric=''):
+        num_samples = num_samples or float('inf')
+        dataloader = self.data_loader(max_batches=num_samples) if self._need_wrap else self.data_loader
+        count = 0
         for batch in tqdm(
-            self.data_loader(max_batches=num_samples or self.batch_size),
+            dataloader,
             desc=f"Measuring {metric}",
             unit="batch"
         ):
+            
             features = batch[0] if isinstance(batch, (tuple, list)) else batch
             if return_sample:
                 for sample in features:
                     sample = sample.to(device).unsqueeze(0)  # Add batch dimension
                     yield sample
+                    count += return_sample
+                    if num_samples <= count:
+                        return
+                    
             else:
-                batch = batch.to(device)
-                yield batch
+                features = features.to(device)
+                yield features
+                count += return_sample
+                if num_samples <= count:
+                    return
     
     @torch.no_grad()
-    def measure_power(self, device=torch.device('cpu')):
-
-         # Clear any pending operations
-        
-        
-        
-        return 
+    def measure_power(self, device=torch.device('cpu'), num_samples=None):
+        """Measure inference power consumption"""
+        if device.type == 'cpu':
+            return float('inf'), float('inf')
+        powers = []
+        for sample in self._generate_example_batch(num_samples, device=device, return_sample=False, metric='latency'):
+            powers.append(self._eval_single_power(sample))        
+        powers = np.array(powers)
+        return float(np.mean(powers)), float(np.std(powers))
     
     def _eval_single_power(self, batch):
+        index = self.device.index or 0
         pynvml.nvmlInit()
-        handle = pynvml.nvmlDeviceGetHandleByIndex(self.device.index)
+        handle = pynvml.nvmlDeviceGetHandleByIndex(index)
         if self.device.type == 'cuda':
             torch.cuda.synchronize()
         
@@ -243,7 +265,7 @@ class PerformanceEvaluator:
         method = self._cuda_latency_eval if device.type != 'cpu' else self._cpu_latency_eval
         latencies = []
         for sample in self._generate_example_batch(num_samples, device=device, return_sample=False, metric='latency'):
-            latencies.append(method(sample, device))        
+            latencies.append(method(sample))        
         latencies = np.array(latencies)
         return float(np.mean(latencies)), float(np.std(latencies))
 
@@ -255,8 +277,8 @@ class PerformanceEvaluator:
 
         start_event.record()
         self.model(sample)
-        torch.cuda.synchronize(self.device)
         end_event.record()
+        torch.cuda.synchronize(self.device)
         
         return start_event.elapsed_time(end_event)
 
@@ -322,15 +344,9 @@ class PerformanceEvaluator:
             return
             
         logger.info("Warming up CUDA...")
-        for i, batch in enumerate(self.data_loader(max_batches=n_batches)):
-            if isinstance(batch, (tuple, list)):
-                inputs = batch[0]
-            else:
-                inputs = batch
-            _ = self.model(inputs.to(self.device))
-            
-        if self._cuda_available:
-            torch.cuda.synchronize()
+        for batch in self._generate_example_batch(n_batches, device=self.device):
+            _ = self.model(batch)
+        torch.cuda.synchronize()
 
     def generate_report(self) -> str:
         """Generate a comprehensive performance report"""
