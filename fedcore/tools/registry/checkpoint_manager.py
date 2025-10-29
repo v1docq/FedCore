@@ -1,5 +1,6 @@
 """Checkpoint management for model registry."""
 
+import gc
 import io
 import os
 import logging
@@ -133,3 +134,43 @@ class CheckpointManager:
                 self.logger.info(f"Warning: Only state_dict found. Need model architecture to load.")
                 return ckpt
         return ckpt
+    
+    def get_gpu_memory_stats(self) -> dict:
+        """Get current GPU memory statistics.
+        
+        Returns:
+            Dictionary with GPU memory statistics:
+            - allocated_gb: Currently allocated memory in GB
+            - reserved_gb: Currently reserved memory in GB
+            - allocated_mb: Currently allocated memory in MB
+            - reserved_mb: Currently reserved memory in MB
+        """
+        if not torch.cuda.is_available():
+            return {
+                'allocated_gb': 0.0,
+                'reserved_gb': 0.0,
+                'allocated_mb': 0.0,
+                'reserved_mb': 0.0
+            }
+        
+        allocated_bytes = torch.cuda.memory_allocated()
+        reserved_bytes = torch.cuda.memory_reserved()
+        
+        return {
+            'allocated_gb': allocated_bytes / (1024 ** 3),
+            'reserved_gb': reserved_bytes / (1024 ** 3),
+            'allocated_mb': allocated_bytes / (1024 ** 2),
+            'reserved_mb': reserved_bytes / (1024 ** 2)
+        }
+    
+    def _cleanup_gpu_memory(self) -> None:
+        """Clean up GPU memory by clearing cache and running garbage collection."""
+        gc.collect()
+        
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+            try:
+                torch.cuda.ipc_collect()
+            except Exception as e:
+                self.logger.debug(f"Could not run torch.cuda.ipc_collect(): {e}")
