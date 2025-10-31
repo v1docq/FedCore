@@ -24,7 +24,7 @@ from fedcore.repository.constanst_repository import SLRStrategiesEnum
 METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PEFT_PROBLEM = 'low_rank'
-INITIAL_ASSUMPTION = 'ResNet18'
+INITIAL_MODEL_ASSUMPTION = 'ResNet18'
 PRETRAIN_SCENARIO = 'from_checkpoint'
 
 def get_api_template():
@@ -68,7 +68,7 @@ def test_lrs(low_rank_strategy):
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
         peft_task=learning_config.config['peft_strategy'],
-        model=INITIAL_ASSUMPTION,
+        model=INITIAL_MODEL_ASSUMPTION,
         learning_params=learning_config.learning_strategy_params
     )
     train_data = Either.insert(input_data).then(data_cls.check_input_data).value
