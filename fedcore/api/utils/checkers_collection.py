@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Callable, Union
+from typing import Callable
 
 import torch
 import numpy as np
@@ -12,12 +12,11 @@ from fedot.core.repository.tasks import (
 )
 
 from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.data.data import CompressionInputData, CompressionOutputData
+from fedcore.data.data import CompressionInputData
 from fedcore.models.backbone.backbone_loader import load_backbone
 from fedcore.repository.config_repository import TASK_MAPPING
 from pymonad.maybe import Maybe
 
-import torch.optim.adam
 
 
 class DataCheck:
@@ -100,7 +99,6 @@ class DataCheck:
             supplementary_data=compression_dataset.supplementary_data,
         )
         torch_model = self._init_model_from_backbone(input_data)
-
         input_data.target = torch_model  # model for compression
         input_data.features.target = torch_model  # model for compression
         input_data.supplementary_data.is_auto_preprocessed = True

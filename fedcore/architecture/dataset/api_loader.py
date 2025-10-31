@@ -51,7 +51,7 @@ class ApiLoader:
         model = BACKBONE_MODELS[model_name](pretrained=True).to(default_device())
         return model
 
-    def _convert_to_fedcore(self, torch_dataset):
+    def _convert_to_fedcore(self, torch_dataset) -> CompressionInputData:
         if 'split_ratio' in self.loader_params:
             train_dataset, val_dataset = random_split(torch_dataset, self.loader_params['split_ratio'])
         else:
@@ -79,7 +79,7 @@ class ApiLoader:
         fedcore_train_data.supplementary_data.is_auto_preprocessed = True
         return fedcore_train_data
 
-    def load_data(self, loader_type: str = None):
+    def load_data(self, loader_type: str = None) -> CompressionInputData:
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)
         try:
             if loader_type.__contains__('benchmark'):
