@@ -16,7 +16,6 @@ from fedcore.data.data import CompressionInputData
 from fedcore.models.backbone.backbone_loader import load_backbone
 from pymonad.maybe import Maybe
 
-import torch.optim.adam
 
 
 class DataCheck:
