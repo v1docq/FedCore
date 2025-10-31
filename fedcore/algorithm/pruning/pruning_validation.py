@@ -2,7 +2,6 @@ import torch
 from torch import nn
 from torchvision.models import VisionTransformer
 
-from fedcore.repository.constanst_repository import PRUNING_FUNC, PRUNING_LAYER_TYPE
 from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
 
 
@@ -14,8 +13,10 @@ class PruningValidator:
         self.specified_models = ["ssd", "raft_larget", "retinanet_resnet50_fpn_v2",
                                  "object_detection", "chronos", "fcos_resnet50_fpn", "keypointrcnn_resnet50_fpn",
                                  "maskrcnn_resnet50_fpn_v2"]
-
-    def validate_pruned_layers(self, pruned_model):
+    @staticmethod
+    def validate_pruned_layers(pruned_model):
+        """Make layer weight shapes aligment
+        """
         list_of_layers = list(pruned_model.modules())
         for layer in list_of_layers:
             if isinstance(layer, torch.nn.BatchNorm1d):

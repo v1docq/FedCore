@@ -4,10 +4,8 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from inspect import isclass
-from itertools import chain
 
 import numpy as np
-from itertools import chain
 
 import numpy as np
 from pathlib import Path
@@ -21,18 +19,28 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
 
+from typing import TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
+
+
 VERBOSE = True
 
 def now_for_file():
     return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
 
 class BaseHook(ABC):
-    _SUMMON_KEY: str
-    _hook_place: int = 1
+    _SUMMON_KEY: Union[str, tuple]
+    HOOK_PLACE: int = 1
 
-    def __init__(self, params, model):
-        self.params: dict = params
-        self.model: torch.nn.Module = model
+    def __init__(self):
+        pass
+
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        self.params = hookable_trainer.params
+        self.model = hookable_trainer.model
+        self.hookable_trainer = hookable_trainer
 
     def __call__(self, epoch, **kws):
         trigger_result = self.trigger(epoch, kws)
@@ -42,7 +50,7 @@ class BaseHook(ABC):
             self.action(epoch, kws)
 
     @abstractmethod
-    def trigger(self, epoch, kws):
+    def trigger(self, epoch, kws) -> bool:
         pass
 
     @abstractmethod
@@ -68,15 +76,15 @@ class BaseHook(ABC):
 
 class Saver(BaseHook):
     _SUMMON_KEY = 'save_each'
-    _hook_place = 100
-    _hook_place = 100
+    HOOK_PLACE = 100
+        
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.save_each = params.get('save_each', False)
-        self.checkpoint_folder = params.get('checkpoint_folder', '.')
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
+        self.save_each = hookable_trainer.params.get('save_each', False)
+        self.checkpoint_folder = hookable_trainer.params.get('checkpoint_folder', '.')
 
-    def trigger(self, epoch, kw) -> bool:
+    def trigger(self, epoch, kws) -> bool:
         if not self.save_each:
             return False
         if self.save_each != -1:
@@ -84,8 +92,8 @@ class Saver(BaseHook):
         else:
             return epoch == self.params.get('epochs', 0)
 
-    def action(self, epoch, kw):
-        name = kw.get('name', '') or self.params.get('name', '')
+    def action(self, epoch, kws):
+        name = kws.get('name', '') or self.params.get('name', '')
         path_pref = Path(self.checkpoint_folder)
         save_only = self.params.get('save_only', '')
         to_save = self.model if not save_only else Accessor.get_module(self.model, save_only)
@@ -112,13 +120,13 @@ class Saver(BaseHook):
 
 class FitReport(BaseHook):
     _SUMMON_KEY = 'log_each'
-    _hook_place = 10
+    HOOK_PLACE = 10
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.log_interval = params.get('log_each', 1)
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
+        self.log_interval = hookable_trainer.params.get('log_each', 1)
 
-    def trigger(self, epoch, kw) -> bool:
+    def trigger(self, epoch, kws) -> bool:
         return epoch % self.log_interval == 0
 
     def action(self, epoch, kws):
@@ -145,18 +153,18 @@ class FitReport(BaseHook):
 
 class EarlyStopping(BaseHook):
     _SUMMON_KEY = 'early_stop_after'
-    _hook_place = 90
+    HOOK_PLACE = 90
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.counts = params.get('early_stop_after', 5)
-        self.horizon = params.get('horizon', 15)
-        self.angle_tol = params.get('angle_tol', 2.5)
-        if Evaluator.check_init(params):
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
+        self.counts = hookable_trainer.params.get('early_stop_after', 5)
+        self.horizon = hookable_trainer.params.get('horizon', 15)
+        self.angle_tol = hookable_trainer.params.get('angle_tol', 2.5)
+        if Evaluator.check_init(hookable_trainer.params):
             self._check_in_history = 'val_loss'
         else:
             self._check_in_history = 'train_loss'
-        self.__last_record = None 
+        self.__last_record = None
 
     def trigger(self, epoch, kws) -> bool:
         if epoch < self.horizon:
@@ -170,7 +178,7 @@ class EarlyStopping(BaseHook):
         if last_record is not self.__last_record:
             self.counts -= 1
         self.__last_record = last_record
-        if not self.count:
+        if not self.counts:
             kws['trainer_objects']['stop'] = True
     
     def _estimate_angle(self, history):
@@ -182,11 +190,11 @@ class EarlyStopping(BaseHook):
 
 class Evaluator(BaseHook):
     _SUMMON_KEY = 'eval_each'
-    _hook_place = 80
+    HOOK_PLACE = 80
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.eval_each = params.get('eval_each', 1)
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
+        self.eval_each = self.params.get('eval_each', 1)
         self.device = next(iter(self.model.parameters())).device
 
     def trigger(self, epoch, kws):
@@ -215,10 +223,10 @@ class Evaluator(BaseHook):
 
 class OptimizerGen(BaseHook):
     _check_field = '_structure_changed__'
-    _hook_place = -100
+    HOOK_PLACE = -100
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
         self.__gen = self.__get_optimizer_gen(
             self.params.get('optimizer', 'adam')
         )
@@ -237,7 +245,7 @@ class OptimizerGen(BaseHook):
 
     def __get_optimizer_gen(self, opt_type, **kws):
         if isinstance(opt_type, partial):
-            return partial(opt_type, lr=self.learning_rate, **kws)
+            return partial(opt_type, lr=self.params.get('learning_rate', 1e-3), **kws)
         if isinstance(opt_type, str):
             opt_constructor = Optimizers[opt_type].value
         elif isclass(opt_type):
@@ -249,15 +257,14 @@ class OptimizerGen(BaseHook):
 
 
 class SchedulerRenewal(BaseHook):
-    _hook_place = -90
-    _hook_place = -90
-    _SUMMON_KEY = ('scheduler_step_each', 'scheduler')
+    HOOK_PLACE = -90
+    _SUMMON_KEY = ('scheduler_step_each', 'scheduler') 
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
         self.__gen = self.__get_scheduler_gen(
-            self.params.get('sch_type', 'one_cycle')
-        )
+                self.params.get('sch_type', 'one_cycle')
+            )
         self._mode = []
 
     def __get_scheduler_gen(self, sch_type, **kws):
@@ -299,10 +306,10 @@ class SchedulerRenewal(BaseHook):
 
 class Freezer(BaseHook):
     _SUMMON_KEY = ('frozen_prop', 'refreeze_each')
-    _hook_place = -10
-
-    def __init__(self, params, model):
-        super().__init__(params, model)
+    HOOK_PLACE = -10
+      
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
         self.frozen_prop = self.params.get('frozen_prop', 0.5)
         self.approach = self.params.get('freeze_approach', 'random')
         self.refreeze_each = self.params.get('refreeze_each', 1)
@@ -330,48 +337,13 @@ class Freezer(BaseHook):
 
     def action(self, epoch, kws):
         self.__unfreeze()
-        if epoch != self.params.epochs:
+        if epoch != self.hookable_trainer.epochs:
             self.__freeze()
         
 
-
-class Freezer(BaseHook):
-    _SUMMON_KEY = ('frozen_prop', 'refreeze_each')
-    _hook_place = -10
-
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.frozen_prop = self.params.get('frozen_prop', 0.5)
-        self.approach = self.params.get('freeze_approach', 'random')
-        self.refreeze_each = self.params.get('refreeze_each', 1)
-        self.__criterions = {
-            'random': self.__uniform_mask,
-        }
-        self.criterion = self.__criterions[self.approach]
-
-    def __uniform_mask(self):
-        prob = np.random.random(1)[0]
-        return prob < self.frozen_prop
-
-    def __freeze(self):
-        for name, layer in self.model.named_modules():
-            if self.criterion(layer, name):
-                for p in layer.parameters():
-                    p.requires_grad = False
-
-    def __unfreeze(self):
-        for p in self.model.parameters():
-            p.requires_grad = True
-
-    def trigger(self, epoch, kws):
-        return self.refreeze_each and epoch % self.refreeze_each == 0
-
-    def action(self, epoch, kws):
-        self.__unfreeze()
-        if epoch != self.params.epochs:
-            self.__freeze()
         
-
+LOGGING_HOOKS = [Evaluator, FitReport, Saver]
+MODEL_LEARNING_HOOKS = [Freezer, OptimizerGen, SchedulerRenewal, EarlyStopping]
 class LoggingHooks(Enum):
     evaluator = Evaluator
     fit_report = FitReport

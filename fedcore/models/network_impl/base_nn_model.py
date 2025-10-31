@@ -1,9 +1,7 @@
-from datetime import datetime
-from enum import Enum
 from gc import collect
 from functools import reduce, partial
 from itertools import chain
-from typing import Iterable, Optional, Any, Union, Callable
+from typing import Iterable, Optional, Sequence, Union, Callable
 from pymonad.maybe import Maybe
 import numpy as np
 import torch
@@ -14,21 +12,22 @@ from fedot.core.repository.dataset_types import DataTypesEnum
 from torch import Tensor
 from tqdm import tqdm
 
+from fedcore.api.api_configs import NeuralModelConfigTemplate
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constanst_repository import (
-    ModelLearningHooks,
-    LoggingHooks,
     StructureCriterions,
     TorchLossesConstant,
 )
 
-from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.models.network_impl.hooks_collection import HooksCollection
+from fedcore.models.network_impl.hooks import LOGGING_HOOKS, MODEL_LEARNING_HOOKS
+from fedcore.models.network_impl.hooks import BaseHook
 
 BASE_REGRESSION_DTYPE = torch.float32
 
+from typing import TypeVar
 
 class BaseNeuralModel(torch.nn.Module):
     """Class responsible for NN model implementation.
@@ -52,9 +51,11 @@ class BaseNeuralModel(torch.nn.Module):
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = None, additional_hooks=None):
+    BASE_HOOKS : list[type['BaseHook']] = LOGGING_HOOKS + MODEL_LEARNING_HOOKS
+
+    def __init__(self, model: torch.nn.Module, params: dict = {}, additional_hooks: Sequence['BaseHook'] = []):
         super().__init__()
-        self.params = params or {}
+        self.params = params
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_empty_object()
         self._init_null_object()
@@ -64,27 +65,20 @@ class BaseNeuralModel(torch.nn.Module):
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
         self.learning_rate = self.params.get("learning_rate", 0.001)
-        self.model = self.params.get("model", None)
-        self._init_custom_criterions(
-            self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer
-        self.criterion = self.__get_criterion()
+        self.model: torch.nn.Module = model
+        self._init_custom_criterions(self.params.get("custom_criterions", {}))
+        self.criterion = self.__init_main_criterion()
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
-        self._hooks = [LoggingHooks, ModelLearningHooks]
-        self._additional_hooks = additional_hooks or []
+        self._additional_hooks = additional_hooks
 
-    def _init_custom_criterions(self, custom_criterions: dict):
-        for name, coef in custom_criterions.items():
-            if hasattr(StructureCriterions, name):
-                criterion = StructureCriterions[name].value
-            elif hasattr(TorchLossesConstant, name):
-                criterion = TorchLossesConstant[name].value
-            else:
-                raise ValueError(f'Unknown type `{name}` of custom loss')
-            self.history[f'train_{name}_loss'] = []
-            self.history[f'val_{name}_loss'] = []
-            custom_criterions[name] = (criterion(), coef)
-        self.custom_criterions = custom_criterions
+    def _init_custom_criterions(self, custom_criterions: dict[str, float]):
+        self.custom_criterions = dict()
+        criterion_type_and_weight = NeuralModelConfigTemplate.map_custom_criterions(custom_criterions)
+        for criterion_type, criterion_relative_weight in criterion_type_and_weight.items():
+            self.history[f'train_{criterion_type.__name__}_loss'] = []
+            self.history[f'val_{criterion_type.__name__}_loss'] = []
+            self.custom_criterions[criterion_type] = (criterion_type(), criterion_relative_weight)
 
     def _init_null_object(self):
         self.label_encoder = None
@@ -105,27 +99,33 @@ class BaseNeuralModel(torch.nn.Module):
             'train_loss': [],
             'val_loss': []
         }
-        # add hooks
-        self.hooks = HooksCollection()
+        self.effective_hooks_collection = HooksCollection()
 
     def __repr__(self):
-        return self.__class__.__name__ + '\n' + repr(self.hooks)
+        return self.__class__.__name__ + '\n' + repr(self.effective_hooks_collection)
 
     def _init_model(self):
         pass
 
-    def _init_hooks(self):
-        for hook_elem in chain(*self._hooks):
-            hook: BaseHook = hook_elem.value
-            if not hook.check_init(self.params):
+    T = TypeVar('T', bound=BaseHook)
+    @staticmethod
+    def filter_hooks_by_params(params, hook_types: Iterable[type[T]]) -> list[type[T]]:
+        filtered_hooks = []
+        for hook_type in hook_types:
+            if not hook_type.check_init(params):
                 continue
-            hook = hook(self.params, self.model)
-            self.hooks.append(hook)
+            filtered_hooks.append(hook_type)
+        return filtered_hooks
 
-    def register_additional_hooks(self, hooks: Iterable[Enum]):
-        self._hooks.extend(hooks)
 
-    def __get_criterion(self):
+    def _link_all_hooks(self):
+        base_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, BaseNeuralModel.BASE_HOOKS.copy())
+        base_hooks = [hook_type() for hook_type in base_hooks]
+        [hook.link_to_trainer(self) for hook in chain(base_hooks, self._additional_hooks)]
+        self.effective_hooks_collection.extend(base_hooks)
+        self.effective_hooks_collection.extend(self._additional_hooks)
+
+    def __init_main_criterion(self):
         key = self.params.get('loss', None) or self.params.get('criterion', None)
         if isinstance(key, str):
             return TorchLossesConstant[key].value()
@@ -175,11 +175,11 @@ class BaseNeuralModel(torch.nn.Module):
         else:
             quality_loss = criterion(model_output, target)
         if isinstance(model_output, torch.Tensor):
-            additional_losses = {name: coef * criterion(model_output, target)
-                                 for name, (criterion, coef) in self.custom_criterions.items()
+            additional_losses = {name: custom_criterion_weight * criterion(model_output, target)
+                                 for name, (criterion, custom_criterion_weight) in self.custom_criterions.items()
                                  if hasattr(TorchLossesConstant, name)}
-            additional_losses.update({name: coef * criterion(self.model)
-                                      for name, (criterion, coef) in self.custom_criterions.items()
+            additional_losses.update({name: custom_criterion_weight * criterion(self.model)
+                                      for name, (criterion, custom_criterion_weight) in self.custom_criterions.items()
                                       if hasattr(StructureCriterions, name)})
             for name, val in additional_losses.items():
                 self.history[f'{stage}_{name}_loss'].append((epoch, val))
@@ -197,7 +197,7 @@ class BaseNeuralModel(torch.nn.Module):
         self.optimised_model = self.model
         self.model.to(self.device)
         self.__check_and_substitute_loss(input_data)
-        self._init_hooks()
+        self._link_all_hooks()
         self._train_loop(
             train_loader=train_loader,
             val_loader=val_loader,
@@ -239,17 +239,17 @@ class BaseNeuralModel(torch.nn.Module):
                                                        max_batches=self.batch_limit,
                                                        enumerate=False)
         for epoch in range(1, self.epochs + 1):
-            for hook in self.hooks.start:
+            for hook in self.effective_hooks_collection.start():
                 hook(epoch=epoch, trainer_objects=self.trainer_objects,
                      learning_rate=self.learning_rate)
             self._run_one_epoch(epoch=epoch,
                                 dataloader=train_loader,
                                 loss_fn=loss_fn,
                                 optimizer=self.optimizer)
-            for hook in self.hooks.end:
+            for hook in self.effective_hooks_collection.end():
                 hook(epoch=epoch, val_loader=val_loader,
                      criterion=partial(self._compute_loss, criterion=loss_fn),
-                     history=self.history)
+                     history=self.history, train_loader=train_loader)
         return self
 
     def predict(self, input_data: InputData, output_mode: str = "default"):
@@ -338,7 +338,7 @@ class BaseNeuralModel(torch.nn.Module):
         return getattr(self, '_is_quantised', False)
 
     @property
-    def optimizer(self):
+    def optimizer(self) -> torch.optim.Optimizer:
         return self.trainer_objects['optimizer']
 
     @property
@@ -366,8 +366,8 @@ class BaseNeuralForecaster(BaseNeuralModel):
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = None):
-        super().__init__(params)
+    def __init__(self, model: torch.nn.Module, params: Optional[OperationParameters] = None, additional_hooks: Sequence['BaseHook'] = []):
+        super().__init__(model, params, additional_hooks)
         self.train_horizon = self.params.get('train_horizon', 1)
         self.test_horizon = self.params.get('test_horizon', 1)
         self.in_sample_regime = self.params.get('use_in_sample', True)

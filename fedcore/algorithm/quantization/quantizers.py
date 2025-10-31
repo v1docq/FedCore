@@ -147,10 +147,9 @@ class BaseQuantizer(BaseCompressionModel):
     def _init_model(self, input_data):
         self.model_before = input_data.target.to(self.device)
         if input_data.task.task_type.value.__contains__('forecasting'):
-            self.trainer = BaseNeuralForecaster(self.qat_params)
+            self.trainer = BaseNeuralForecaster(self.model_before, self.qat_params)
         else:
-            self.trainer = BaseNeuralModel(self.qat_params)
-        self.trainer.model = self.model_before
+            self.trainer = BaseNeuralModel(self.model_before, self.qat_params)
         self.quant_model = deepcopy(self.model_before).eval()
         print("[MODEL] Model initialized and copied for quantization.")
 

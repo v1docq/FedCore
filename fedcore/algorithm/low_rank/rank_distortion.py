@@ -15,7 +15,7 @@ class LoraTrainer:
         super().__init__()
         self.lora_strategy = params.get("lora_strategy", None)
         self.device = default_device()
-        self.trainer = BaseNeuralModel(params)
+        self.trainer = BaseNeuralModel(None, params)
 
         self.model = None
 

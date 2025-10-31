@@ -1,16 +1,17 @@
+from copy import deepcopy
 import os
-from typing import Any, Optional, Union
+from typing import Sequence
 
-import numpy as np
 import torch
 import torch_pruning as tp
 from fedot.core.data.data import InputData
-from fedot.core.operations.operation_parameters import OperationParameters
 
-from fedcore.architecture.comptutaional.devices import default_device, extract_device
+from fedcore.architecture.comptutaional.devices import extract_device
 from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from torchinfo import summary
+
+from fedcore.models.network_impl.hooks import BaseHook
 
 
 class BaseCompressionModel:
@@ -35,14 +36,11 @@ class BaseCompressionModel:
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
-        # self.epochs = params.get("epochs", 10)
+    def __init__(self, params: dict = {}):
         self.batch_size = params.get("batch_size", 16)
         self.activation = params.get("activation", "ReLU")
-        # self.learning_rate = 0.001
         self.model = None
         self.model_for_inference = None
-        # self.optimizer = None
         self.params = params
 
     def _save_and_clear_cache(self):
@@ -67,17 +65,20 @@ class BaseCompressionModel:
             )
             os.remove(prefix)
 
-    def _init_model(self, input_data, additional_hooks=tuple()):
-        model = input_data.target
-        self.model_before = model
+    def _init_model_before_model_after(self, input_data):
+        self.model_before = input_data.target
+        self.model_after = deepcopy(self.model_before)
+
+    def _init_trainer_with_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
         is_forecaster = input_data.task.task_type.value.__contains__('forecasting')
         if is_forecaster:
-            self.trainer = BaseNeuralForecaster(self.params)
+            self.trainer = BaseNeuralForecaster(self.model_after, self.params, additional_hooks)
         else:
-            self.trainer = BaseNeuralModel(self.params)
-        self.trainer.register_additional_hooks(additional_hooks)
-        self.trainer.model = model
-        return model
+            self.trainer = BaseNeuralModel(self.model_after, self.params, additional_hooks)
+
+    def _init_trainer_model_before_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
+        self._init_model_before_model_after(input_data)
+        self._init_trainer_with_model_after(input_data, additional_hooks)
 
     def _fit_model(self, ts: CompressionInputData, split_data: bool = False):
         pass
@@ -90,37 +91,6 @@ class BaseCompressionModel:
         if isinstance(b, (list, tuple)) and len(b) == 2:
             return b[0]
         return b
-
-    # def finetune(self, finetune_object: callable, finetune_data):
-    #     # TODO del it! 1) finetune may be included into the train loop (just look at LowRank)
-    #     # 2) here the logic is base and need to be more flexible (no extra loss, no scheduler, no different types batch handling)
-    #     self.optimizer = finetune_object.optimizer(
-    #         finetune_object.model.parameters(), lr=finetune_object.learning_rate
-    #     )
-    #     finetune_object.model.train()
-    #     for epoch in range(5):  # loop over the dataset multiple times
-    #         running_loss = 0.0
-    #         for i, data in enumerate(finetune_data.features.train_dataloader, 0):
-    #             # get the inputs; data is a list of [inputs, labels]
-    #             inputs, labels = data
-    #             # zero the parameter gradients
-    #             self.optimizer.zero_grad()
-
-    #             # forward + backward + optimize
-    #             outputs = finetune_object.model(inputs.to(default_device()))
-    #             loss = finetune_object.criterion(outputs, labels.to(default_device()))
-    #             loss.backward()
-    #             self.optimizer.step()
-
-    #             # print statistics
-    #             running_loss += loss.item()
-    #             if i % 200 == 0:  # print every 20000 mini-batches
-    #                 print(
-    #                     "[%d, %5d] loss: %.3f" % (epoch + 1, i + 1, running_loss / 200)
-    #                 )
-    #                 running_loss = 0.0
-    #     finetune_object.model.eval()
-    #     return finetune_object
 
     def fit(self, input_data: CompressionInputData):
         """
@@ -154,7 +124,7 @@ class BaseCompressionModel:
         macs, nparams = info.total_mult_adds, info.total_params
 
         print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.6f G => %.6f G" % (base_macs / 1e9, macs / 1e9))
+        print("MACs: %.6f B => %.6f B" % (base_macs / 1e9, macs / 1e9))
         return dict(params_before=base_nparams, macs_before=base_macs,
                     params_after=nparams, macs_after=macs)
     
@@ -169,4 +139,4 @@ class BaseCompressionModel:
         base_macs, base_nparams, *_ = previos_results
         macs, nparams = self._estimate_params(model, example_batch.to(extract_device(model)))
         print("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-        print("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+        print("MACs: %.2f B => %.2f B" % (base_macs / 1e9, macs / 1e9))
