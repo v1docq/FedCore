@@ -1,13 +1,13 @@
+from copy import deepcopy
 import os
 import uuid
-from typing import Any, Optional, Union
+from typing import Optional
 import logging
+from typing import Sequence
 
-import numpy as np
 import torch
 import torch_pruning as tp
 from fedot.core.data.data import InputData
-from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.computational.devices import default_device, extract_device
 from fedcore.data.data import CompressionInputData
@@ -17,6 +17,8 @@ from torchinfo import summary
 from fedcore.tools.registry.model_registry import ModelRegistry
 
 DEVICE = default_device('cuda')
+
+from fedcore.models.network_impl.hooks import BaseHook
 
 
 class BaseCompressionModel:
@@ -49,7 +51,6 @@ class BaseCompressionModel:
         # self.epochs = params.get("epochs", 10)
         self.batch_size = params.get("batch_size", 16)
         self.activation = params.get("activation", "ReLU")
-        # self.learning_rate = 0.001
         self.model = None
         # self.model_for_inference = None
         # self.optimizer = None
@@ -242,6 +243,21 @@ class BaseCompressionModel:
         self.trainer.model = model
 
         return model
+    
+    def _init_model_before_model_after(self, input_data):
+        self.model_before = input_data.target #TODO NEED FIX with _init_model and other staff, check initialization of models, registry, input_data and etc!!!
+        self.model_after = deepcopy(self.model_before)
+
+    def _init_trainer_with_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
+        is_forecaster = input_data.task.task_type.value.__contains__('forecasting')
+        if is_forecaster:
+            self.trainer = BaseNeuralForecaster(self.model_after, self.params, additional_hooks)
+        else:
+            self.trainer = BaseNeuralModel(self.model_after, self.params, additional_hooks)
+
+    def _init_trainer_model_before_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
+        self._init_model_before_model_after(input_data)
+        self._init_trainer_with_model_after(input_data, additional_hooks)
 
     def _fit_model(self, ts: CompressionInputData, split_data: bool = False):
         pass
@@ -250,10 +266,10 @@ class BaseCompressionModel:
         pass
 
     def _get_example_input(self, input_data: InputData):
-        batch = next(iter(input_data.val_dataloader))
-        if isinstance(batch, (list, tuple)) and len(batch) == 2:
-            return batch[0]
-        return batch
+        b = next(iter(input_data.features.val_dataloader))
+        if isinstance(b, (list, tuple)) and len(b) == 2:
+            return b[0]
+        return b
 
     # def finetune(self, finetune_object: callable, finetune_data):
     #     # TODO del it! 1) finetune may be included into the train loop (just look at LowRank)
@@ -329,6 +345,8 @@ class BaseCompressionModel:
             info = summary(model=model_after, input_data=example_batch.to(extract_device(model_after)), verbose=0)
             macs, nparams = info.total_mult_adds, info.total_params
 
+        print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
+        print("MACs: %.6f B => %.6f B" % (base_macs / 1e9, macs / 1e9))
         return dict(params_before=base_nparams, macs_before=base_macs,
                     params_after=nparams, macs_after=macs)
 
@@ -343,4 +361,4 @@ class BaseCompressionModel:
         base_macs, base_nparams, *_ = previos_results
         macs, nparams = self._estimate_params(model, example_batch.to(extract_device(model)))
         logging.info("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-        logging.info("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+        logging.info("MACs: %.2f B => %.2f B" % (base_macs / 1e9, macs / 1e9))

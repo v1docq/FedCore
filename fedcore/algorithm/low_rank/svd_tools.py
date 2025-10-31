@@ -17,11 +17,11 @@ from fedcore.repository.constant_repository import (
 )
 
 __all__ = [
-    'decompose_module',
+    'decompose_module_in_place',
     'load_svd_state_dict'
 ]
 
-def decompose_module(
+def decompose_module_in_place(
     model: Module,
     decomposing_mode: Optional[str] = True,
     decomposer: Literal['svd', 'cur', 'rsvd'] = 'svd',
@@ -40,7 +40,7 @@ def decompose_module(
     device = extract_device(model)
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
-            decompose_module(
+            decompose_module_in_place(
                 module, decomposing_mode=decomposing_mode, decomposer=decomposer,
                 compose_mode=compose_mode, decomposer_params=decomposer_params
             )
@@ -84,17 +84,17 @@ def load_svd_state_dict(
         decomposer_params: Parameters for decomposer from tdecomp API (rank, distortion_factor, etc.)
     """
     state_dict = torch.load(state_dict_path, map_location="cpu")
-    decompose_module(
-        model=model, decomposing_mode=decomposing_mode, compose_mode=compose_mode,
-        decomposer_params=decomposer_params
+
+    decompose_module_in_place(
+        model=model, decomposing_mode=decomposing_mode, compose_mode=compose_mode, decomposer_params=decomposer_params
     )
     _load_svd_params(model, state_dict)
     model.load_state_dict(state_dict)
 
 
-def _map_decomposed_cls(inst: torch.nn.Module) -> Optional[IDecomposed]:
+def _map_decomposed_cls(module: torch.nn.Module) -> Optional[type[IDecomposed]]:
     for decomposable, decomposed in DECOMPOSABLE_LAYERS.items():
-        if (not type(isinstance) in PROHIBIT_TO_DECOMPOSE 
-            and isinstance(inst, decomposable) 
-            and not isinstance(inst, IDecomposed)):
+        if (not type(isinstance) in PROHIBIT_TO_DECOMPOSE
+            and isinstance(module, decomposable) 
+            and not isinstance(module, IDecomposed)):
             return decomposed

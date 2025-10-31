@@ -25,16 +25,14 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import reduce
 from inspect import signature, isclass
-from numbers import Number
 from pathlib import Path
 from typing import (
     get_origin, get_args,   
-    Any, Callable, Dict, Iterable, List, Literal, Optional, Union,
+    Any, Callable, Iterable, List, Literal, Optional, Union,
 )
-import logging
 
 from torch.ao.quantization.utils import _normalize_kwargs
-from torch.nn import Module
+import torch.nn as nn
 
 from fedcore.repository.constant_repository import (
     FedotTaskEnum,
@@ -44,6 +42,7 @@ from fedcore.repository.constant_repository import (
     SLRStrategiesEnum,
     TaskTypesEnum,
     TorchLossesConstant,
+    StructureCriterions
 )
 # Avoid importing NLP-specific templates here to prevent circular imports
 
@@ -464,7 +463,7 @@ class FedotConfigTemplate(ConfigTemplate):
     task_params: Optional[TaskTypesEnum] = None
     metric: Optional[Iterable[str]] = None  ###
     n_jobs: int = -1
-    initial_assumption: Union[Module, str, dict] = None
+    initial_assumption: Union[nn.Module, str, dict] = None
     available_operations: Optional[Iterable[str]] = None
     optimizer: Optional[Any] = None
 
@@ -526,11 +525,50 @@ class TrainingTemplate(ConfigTemplate):
     epochs: int = 1
     optimizer: Optimizers = 'adam'
     scheduler: Optional[Schedulers] = None
-    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
+    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  
+
+    @staticmethod
+    def map_criterion(criterion: Union[str, Callable]) -> object:
+        if isinstance(criterion, str):
+            return TorchLossesConstant[criterion].value()
+        elif isinstance(criterion, Callable):
+            return criterion()
+        else:
+            raise ValueError(f"Unknown or not callable criterion: {criterion}")
+
+
+@dataclass
+class ModelArchitectureConfigTemplate(ConfigTemplate):
+    """Example of specific node template"""
+    input_dim: Union[None, int] = None
+    output_dim: Union[None, int] = None
+    depth: Union[int, dict] = 3
+    custom_model_params: dict = None
+
+
+@dataclass
+class NeuralModelConfigTemplate(NodeTemplate):
+    """Additional learning settings. May be redundant"""
     custom_learning_params: dict = None
     custom_criterions: dict = None
     model_architecture: ModelArchitectureConfigTemplate = None
 
+    @staticmethod
+    def map_custom_criterions(custom_criterions: dict) -> dict[type[nn.Module], float]:
+        mapped_criterions = dict()
+        for criterion_name, criterion_relative_weight in custom_criterions.items():
+            mapped_criterions[NeuralModelConfigTemplate.map_criterion_name(criterion_name)] = criterion_relative_weight
+        return mapped_criterions
+            
+    @staticmethod
+    def map_criterion_name(criterion_name: str) -> type[nn.Module]:
+        criterion_type = StructureCriterions[criterion_name].value
+        if (criterion_type is not None):
+            return criterion_type
+        elif (hasattr(TorchLossesConstant, criterion_name)):
+            return TorchLossesConstant[criterion_name].value
+        else:
+            raise ValueError(f'Unknown type `{criterion_name}` of custom loss')
 
 @dataclass
 class LearningConfigTemplate(ConfigTemplate):
@@ -590,7 +628,6 @@ class APIConfigTemplate(ExtendableConfigTemplate):
     solver: Optional[Any] = None
     predicted_probs: Optional[Any] = None
     original_model: Optional[Any] = None
-
 
 @dataclass
 class LowRankTemplate(TrainingTemplate):
@@ -653,6 +690,7 @@ class PruningTemplate(TrainingTemplate):
     importance_normalize: str = 'max' # drop
     pruning_iterations: int = 1 # drop
     finetune_params: TrainingTemplate = None
+    prune_each: int = -1
     
 @dataclass
 class QuantTemplate(TrainingTemplate):

@@ -18,13 +18,11 @@ from torch import nn
 import inspect
 
 from transformers import AutoTokenizer
-
-from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
-from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
-from fedcore.architecture.computational.devices import default_device, extract_device
-from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
+from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module_in_place
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
+from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.repository.constant_repository import (
     DECOMPOSE_MODE,
     LRHooks
@@ -77,11 +75,11 @@ class LowRankModel(BaseCompressionModel):
         * Any additional keys supported by :class:`BaseCompressionModel`
           and :class:`BaseNeuralModel` (e.g. optimizer, scheduler, device).
     """
-    _additional_hooks = [LRHooks]
+    DEFAULT_HOOKS: list[type[BaseHook]] = [prop.value for prop in LRHooks]
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
-        super().__init__(params or {})
-        self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
+    def __init__(self, params: dict = {}):
+        super().__init__(params)
+        self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE) 
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
         self.device = default_device()
@@ -138,6 +136,20 @@ class LowRankModel(BaseCompressionModel):
         return batch
 
     def _init_model(self, input_data):
+        additional_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, self.DEFAULT_HOOKS)
+        additional_hooks = [hook_type() for hook_type in additional_hooks]
+        super()._init_trainer_model_before_model_after(input_data, additional_hooks)
+        
+        decompose_module_in_place(
+            self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
+        )
+        model.to(self.device)
+
+        self.model_after = model
+
+        return self.model_after
+    
+    def _init_model(self, input_data): #TODO DEDUPLICATE THIS!
         model = super()._init_model(input_data, self._additional_hooks)
 
         if self._model_id_before:
@@ -183,7 +195,6 @@ class LowRankModel(BaseCompressionModel):
         """
         model_after = self._init_model(input_data)
         # base_params = self._estimate_params(self.model_before, example_batch)
-        self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
 
         if self._model_id_after:

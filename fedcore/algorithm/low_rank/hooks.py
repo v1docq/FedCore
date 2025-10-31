@@ -7,15 +7,17 @@ attributes to control pruning behaviour.
 """
 
 from enum import Enum
-from math import floor, ceil
-
+from math import ceil
 import torch
-from numpy import diff, abs as npabs
-
-
-from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
+import numpy as np
+from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning_in_place
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.models.network_impl.utils.hooks import BaseHook
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
+
+    
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 
 
@@ -39,32 +41,13 @@ class OnetimeRankPruner(BaseHook):
     _SUMMON_KEY = ('rank_prune_each', 'strategy')
     _hook_place = 50
 
-    def __init__(self, params, model):
-        """Initialize the one-time rank pruner."""
-        super().__init__(params, model)
+    def __init__(self):
+        super().__init__()
         self.__done = False
 
     @classmethod
-    def check_init(cls, params):
-        """Check whether this hook should be instantiated from config.
-
-        Parameters
-        ----------
-        d : dict
-            Configuration dictionary (usually a subset of trainer params).
-
-        Returns
-        -------
-        bool
-            ``True`` if the hook should be created for the given config,
-            ``False`` otherwise.
-
-        Notes
-        -----
-        The hook is enabled when the ``strategy`` key is present and differs
-        from ``"cuttlefish"`` (which is reserved for dynamic pruning).
-        """
-        strategy = params.get('strategy', '') 
+    def check_init(cls, d: dict):
+        strategy = d.get('strategy', '') 
         if strategy and strategy != 'cuttlefish':
             return True
         return False
@@ -115,7 +98,7 @@ class OnetimeRankPruner(BaseHook):
         strategy = self.params.get('strategy', 'explained_variance')
         for name, module in self.model.named_modules():
             if isinstance(module, IDecomposed): 
-                rank_threshold_pruning(decomposed_module=module,
+                rank_threshold_pruning_in_place(decomposed_module=module,
                                        threshold=non_adaptive_threshold,
                                        strategy=strategy,
                                        module_name=name)
@@ -141,14 +124,15 @@ class DynamicRankPruner(BaseHook):
     _SUMMON_KEY = 'n_plateau'
     _hook_place = 50
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.n_plateau : int= params.get('n_plateau', 5)
-        self.pl_thr : float = params.get('pl_thr', 1e-2)
-        self.sv_thr : float = params.get('sv_thr', 1e-5)
+    _RANK_ATTR = '_effective_rank'
+
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        super().link_to_trainer(hookable_trainer)
+        self.n_plateau : int= hookable_trainer.params.get('n_plateau', 5)
+        self.pl_thr : float = hookable_trainer.params.get('pl_thr', 1e-2)
+        self.sv_thr : float = hookable_trainer.params.get('sv_thr', 1e-5)
         self.traced_layers: dict = self._prepare_mapping()
         self.traced_layers_ksis = self._get_ksis()
-        self.rank_attr = '_effective_rank'
 
     def _S_gen(self, model: torch.nn.Module):
         """Yield (name, S) pairs for all decomposed layers' singular values.
@@ -225,7 +209,7 @@ class DynamicRankPruner(BaseHook):
                 )
             )
 
-    def trigger(self, epoch, kws) -> dict:
+    def trigger(self, epoch, kws) -> bool:
         """Check whether any layer has reached a plateau and should be pruned.
 
         Parameters
@@ -249,10 +233,10 @@ class DynamicRankPruner(BaseHook):
         self._estimate_stable_rank()
         to_prune = {}
         for n, history in self.traced_layers:
-            if (npabs(diff(history[-max(len(history), self.n_plateau + 1):])) < self.pl_thr).all():
+            if (np.abs(np.diff(history[-max(len(history), self.n_plateau + 1):])) < self.pl_thr).all():
                 to_prune[n] = ceil(history[-1])
         self.trigger_result = to_prune
-        return to_prune
+        return bool(to_prune)
     
     def action(self, epoch, kws):
         """Apply effective-rank updates to layers marked for pruning.
@@ -274,8 +258,8 @@ class DynamicRankPruner(BaseHook):
         for name, rank in self.trigger_result.items():
             layer_name = '.'.join(name.split('.')[:-1])
             layer = Accessor.get_module(self.model, layer_name)
-            setattr(layer, self.rank_attr, rank)
-            self.traced_layers.pop(name, None)  
+            setattr(layer, self._RANK_ATTR, rank)
+            self.traced_layers.pop(name, None) 
 
 class LRHooks(Enum):
     """Enumeration of available low-rank pruning hook types.
