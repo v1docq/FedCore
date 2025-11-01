@@ -19,6 +19,8 @@ import torchmetrics
 from importlib import import_module
 
 from fedcore.repository.constanst_repository import FedotTaskEnum
+from fedcore.api.utils.misc import camel_to_snake
+from fedcore.tools.ruler import PerformanceEvaluator
 
 
 # ============================== Pareto =====================================
@@ -104,7 +106,6 @@ def _problem_based_output_convertor(problem):
             except (ValueError):
                 if problem == 'classification':
                     predict = torch.argmax(predict, -1)
-                    print('###', 'argmax')
                 return metric(cls, target, predict, **metric_kw)
         return _wrapped_output
     return output_convertor
@@ -115,14 +116,16 @@ FEDOT_STRUCTURAL = {
     'computation_time': ComputationTime
 }
 
-COMPUTATIONAL_METRICS = [
-    'latency',
-    'throughput',
-    'model_size'
-]
+_NEED_TO_MINIMIZE = {
+    'Latency': True,
+    'Throughput': False,
+    'ModelSize': True,
+    'PowerConsupmtion': True
+}
 
 class MetricFactory:
-    __approaches = ['get_fedot', 'get_torchmetrics']
+    __approaches = ['get_fedot', 'get_torchmetrics', 'get_computational']
+    __cpu_prefix = 'CPU'
 
     @classmethod
     def get_metric(cls, metric_name, problem=None) -> QualityMetric:
@@ -188,6 +191,38 @@ class MetricFactory:
             original_name, (parent_cls, QualityMetric), attributes
         )
         LOADED_METRICS[original_name] = new_metric 
+        return new_metric
+    
+    @classmethod
+    def get_computational(cls, metric_name: str, problem: str = None) -> QualityMetric:
+        if metric_name in LOADED_METRICS:
+            return LOADED_METRICS[metric_name]
+
+        is_cpu = metric_name.upper().startswith(cls.__cpu_prefix)
+        true_metric_name = metric_name.removeprefix(cls.__cpu_prefix)
+        need_minimize = _NEED_TO_MINIMIZE.get(true_metric_name, False)
+
+        @classmethod
+        def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+            pe = PerformanceEvaluator(pipeline, data=reference_data)
+            metric = getattr(pe, f'measure_{camel_to_snake(true_metric_name)}')(
+                device=torch.device('cpu') if is_cpu else torch.device('cuda')
+            )
+            return metric
+        
+        @classmethod
+        def metric(cls: torchmetrics.Metric, target, predict, **metric_kw) -> torch.Tensor:
+            raise NotImplementedError(f'The call for `metric` method for {metric_name} is not supported. Use `get_value` instead')
+
+        new_metric = type(
+            metric_name, (QualityMetric,), {
+                'get_value': get_value,
+                'need_to_minimize': need_minimize,
+                'default_value': float('inf') if need_minimize else 0.,
+                'metric': metric
+            }
+        )
+        LOADED_METRICS[metric_name] = new_metric
         return new_metric
 
 

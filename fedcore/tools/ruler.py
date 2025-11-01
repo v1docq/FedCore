@@ -99,13 +99,15 @@ class PerformanceEvaluator:
         self.n_batches = n_batches
         self.batch_size = batch_size
         self._need_wrap = need_wrap
+        self.device = device
         
         self._init_metrics()
-        self.device = device or default_device()
         self._cuda_available = torch.cuda.is_available()
         
         self._initialize_model(model)
         self._initialize_data_loader(data, collate_fn)
+
+        
 
     def _init_metrics(self) -> None:
         """Initialize all performance metrics to None"""
@@ -125,8 +127,10 @@ class PerformanceEvaluator:
                 self.model = model.model  # Model container
             else:
                 self.model = model
-                
-            self.model.to(self.device)
+            if self.device is None:
+                self.device = extract_device(self.model)
+            else:
+                self.model.to(self.device)
             self.model.eval()  # Set to evaluation mode
             
         except Exception as e:
@@ -186,14 +190,14 @@ class PerformanceEvaluator:
         metrics = {
             'latency': self.measure_latency,
             'throughput': self.measure_throughput,
-            'power_consumption': self.measure_power
+            'power_consumption': self.measure_power_consumption
         }
 
         result = {'model_size': self.measure_model_size()}
         for device in devices:
             # Warm up if using CUDA
             self.model.to(device)
-            if device.type != 'cpu':
+            if str(device.type) != 'cpu':
                 self._warmup_cuda()
 
             # Measure performance metrics
@@ -230,10 +234,11 @@ class PerformanceEvaluator:
                     return
     
     @torch.no_grad()
-    def measure_power(self, device=torch.device('cpu'), num_samples=None):
+    def measure_power_consumption(self, device=torch.device('cpu'), num_samples=None):
         """Measure inference power consumption"""
         if device.type == 'cpu':
             return float('inf'), float('inf')
+        self.model.to(device)
         powers = []
         for sample in self._generate_example_batch(num_samples, device=device, return_sample=False, metric='latency'):
             powers.append(self._eval_single_power(sample))        
@@ -263,6 +268,7 @@ class PerformanceEvaluator:
     def measure_latency(self, device, num_samples: Optional[int] = None) -> Tuple[float, float]:
         """Measure inference latency"""
         method = self._cuda_latency_eval if device.type != 'cpu' else self._cpu_latency_eval
+        self.model.to(device)
         latencies = []
         for sample in self._generate_example_batch(num_samples, device=device, return_sample=False, metric='latency'):
             latencies.append(method(sample))        
@@ -273,12 +279,12 @@ class PerformanceEvaluator:
         """Measure latency on CUDA device"""
         start_event = torch.cuda.Event(enable_timing=True)
         end_event = torch.cuda.Event(enable_timing=True)
-        torch.cuda.synchronize(self.device)
+        torch.cuda.synchronize()
 
         start_event.record()
         self.model(sample)
         end_event.record()
-        torch.cuda.synchronize(self.device)
+        torch.cuda.synchronize()
         
         return start_event.elapsed_time(end_event)
 
@@ -293,7 +299,8 @@ class PerformanceEvaluator:
     def measure_throughput(self, device, num_iterations: int = 30) -> Tuple[float, float]:
         """Measure inference throughput"""
         throughputs = []
-        method = self._cuda_throughput_eval if device.type != 'cpu' else self._cpu_throughput_eval
+        self.model.to(device)
+        method = self._cuda_throughput_eval if str(device.type) != 'cpu' else self._cpu_throughput_eval
         for batch in self._generate_example_batch(self.n_batches, device=device, metric='throughput', return_sample=False):
             batch_throughputs = method(batch, num_iterations)
             throughputs.extend(batch_throughputs)
@@ -309,8 +316,8 @@ class PerformanceEvaluator:
         for i in range(num_iterations):
             start_events[i].record()
             self.model(batch)
-            torch.cuda.synchronize(self.device)
             end_events[i].record()
+            torch.cuda.synchronize()
         times = [s.elapsed_time(e) for s, e in zip(start_events, end_events)]
         return [len(batch) / (t / 1000) for t in times]  # samples per second
 
@@ -324,8 +331,9 @@ class PerformanceEvaluator:
             times.append(end_time - start_time)
         return [len(batch) / t for t in times]  # samples per second
 
-    def measure_model_size(self) -> Tuple[float, float]:
-        """Measure model size in MB"""
+    def measure_model_size(self, device=None) -> Tuple[float, float]:
+        """Measure model size in MB
+        device is for compatibility, not used"""
         try:
             model_summary = summary(self.model, verbose=0)
             size_mb = model_summary.total_param_bytes / self.BYTES_TO_MB

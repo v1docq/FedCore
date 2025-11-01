@@ -12,6 +12,7 @@ import pandas as pd
 import torch
 import torch.nn
 
+from fedcore.api.utils import camel_to_snake
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 FEDCORE_IMPLEMENTATIONS = FedcoreModels().setup_repository()
 
@@ -40,7 +41,7 @@ from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 warnings.filterwarnings("ignore")
 
 # TODO 
-COMPUTATIONAL_METRICS = []
+COMPUTATIONAL_METRICS = ['latency', 'power', 'throughput']
 
 
 
@@ -114,11 +115,6 @@ class FedCore(Fedot):
         return input_data
     
     def __build_assumption(self):
-        def camel_to_snake(camel_case_string):
-            import re
-            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
-            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-        
         initial_assumption = PipelineBuilder()
         peft_strategy_params = self.manager.learning_config.peft_strategy_params
         # check if atomized strategy
