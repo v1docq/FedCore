@@ -3,14 +3,21 @@
 import os
 import gc
 import logging
-from typing import Optional
-from threading import Lock
+from typing import Optional, Tuple
+from threading import Lock, local
 
 import torch
+
+try:
+    from fedot.core.pipelines.pipeline import Pipeline
+except ImportError:
+    Pipeline = None
 
 from .checkpoint_manager import CheckpointManager
 from .registry_storage import RegistryStorage
 from .metrics_tracker import MetricsTracker
+
+_registry_context = local()
 
 
 class ModelRegistry:
@@ -67,6 +74,51 @@ class ModelRegistry:
 
                     ModelRegistry._initialized = True
                     self.logger.info(f"ModelRegistry initialized: auto_cleanup={auto_cleanup}, base_dir={base_dir}")
+
+    @staticmethod
+    def set_registry_context(fedcore_id: str, model_id: str) -> None:
+        """Set thread-local context for automatic metrics tracking.
+        
+        When this context is set, metrics calculated during training/evaluation
+        in `evaluate_objective_fedcore` will be automatically saved to the registry.
+        
+        Usage:
+            After registering a model, set the context:
+            ```python
+            model_id = registry.register_model(fedcore_id, model, metrics={...})
+            ModelRegistry.set_registry_context(fedcore_id, model_id)
+            ```
+            
+            Then any subsequent calls to `evaluate_objective_fedcore` (during
+            optimization/training) will automatically update metrics in the registry.
+        
+        Args:
+            fedcore_id: FedCore instance identifier
+            model_id: Model identifier to update metrics for
+        """
+        _registry_context.fedcore_id = fedcore_id
+        _registry_context.model_id = model_id
+
+    @staticmethod
+    def get_registry_context() -> Optional[Tuple[str, str]]:
+        """Get thread-local registry context.
+        
+        Returns:
+            Tuple of (fedcore_id, model_id) or None if not set
+        """
+        fedcore_id = getattr(_registry_context, 'fedcore_id', None)
+        model_id = getattr(_registry_context, 'model_id', None)
+        if fedcore_id and model_id:
+            return (fedcore_id, model_id)
+        return None
+
+    @staticmethod
+    def clear_registry_context() -> None:
+        """Clear thread-local registry context."""
+        if hasattr(_registry_context, 'fedcore_id'):
+            delattr(_registry_context, 'fedcore_id')
+        if hasattr(_registry_context, 'model_id'):
+            delattr(_registry_context, 'model_id')
 
 
     def register_model(self, fedcore_id: str, model=None, model_path: str = None,
@@ -386,7 +438,7 @@ class ModelRegistry:
         
         Args:
             fedcore_id: FedCore instance identifier
-            compressor_object: Optional object (like BaseCompressionModel) with cached models to clean
+            compressor_object: Optional object (like BaseCompressionModel or Pipeline) with cached models to clean
         """
         self.logger.info(f"Starting comprehensive cleanup for fedcore_id={fedcore_id}")
         
@@ -394,95 +446,137 @@ class ModelRegistry:
         self.logger.info(f"Memory before cleanup: {mem_before.get('allocated_gb', 0):.4f} GB")
         
         if compressor_object is not None:
-            self.logger.info("Cleaning cached models in compressor object...")
+            # If compressor_object is a Pipeline, extract the fitted_operation (BaseCompressionModel)
+            if Pipeline is not None and isinstance(compressor_object, Pipeline):
+                self.logger.info("compressor_object is a Pipeline, extracting fitted_operation...")
+                if hasattr(compressor_object, 'operator') and hasattr(compressor_object.operator, 'root_node'):
+                    fitted_op = getattr(compressor_object.operator.root_node, 'fitted_operation', None)
+                    if fitted_op is not None:
+                        self.logger.info(f"Found fitted_operation: {type(fitted_op).__name__}")
+                        compressor_object = fitted_op
+                    else:
+                        self.logger.warning("Pipeline has no fitted_operation, cannot clean models")
+                        compressor_object = None
+                else:
+                    self.logger.warning("Pipeline structure not as expected, cannot extract fitted_operation")
+                    compressor_object = None
             
-            if hasattr(compressor_object, '_model_before_cached') and compressor_object._model_before_cached is not None:
-                self.logger.info("Clearing model_before cache")
-                self._delete_model_from_memory(compressor_object._model_before_cached)
-                compressor_object._model_before_cached = None
-            
-            if hasattr(compressor_object, '_model_after_cached') and compressor_object._model_after_cached is not None:
-                self.logger.info("Clearing model_after cache")
-                self._delete_model_from_memory(compressor_object._model_after_cached)
-                compressor_object._model_after_cached = None
-            
-            if hasattr(compressor_object, 'model') and compressor_object.model is not None:
-                self.logger.info("Clearing main model")
-                self._delete_model_from_memory(compressor_object.model)
-                compressor_object.model = None
-            
-            if hasattr(compressor_object, 'model_for_inference') and compressor_object.model_for_inference is not None:
-                self.logger.info("Clearing model_for_inference")
-                self._delete_model_from_memory(compressor_object.model_for_inference)
-                compressor_object.model_for_inference = None
-            
-            if hasattr(compressor_object, 'trainer') and compressor_object.trainer is not None:
-                trainer = compressor_object.trainer
+            if compressor_object is not None:
+                self.logger.info("Cleaning cached models in compressor object...")
                 
-                self.logger.info(f"Found trainer, type: {type(trainer).__name__}")
-                self.logger.info(f"Trainer has _trainer: {hasattr(trainer, '_trainer')}")
+                if hasattr(compressor_object, 'model_before'):
+                    model_before = compressor_object.model_before
+                    if model_before is not None:
+                        self.logger.info("Clearing model_before")
+                        self._delete_model_from_memory(model_before)
+                        compressor_object.model_before = None
                 
-                if hasattr(trainer, 'model') and trainer.model is not None:
-                    self.logger.info("Clearing trainer.model")
-                    self._delete_model_from_memory(trainer.model)
-                    trainer.model = None
+                if hasattr(compressor_object, '_model_before_cached') and compressor_object._model_before_cached is not None:
+                    self.logger.info("Clearing model_before cache")
+                    self._delete_model_from_memory(compressor_object._model_before_cached)
+                    compressor_object._model_before_cached = None
                 
-                if hasattr(trainer, '_trainer'):
-                    self.logger.info(f"_trainer is not None: {trainer._trainer is not None}")
-                    if trainer._trainer is not None:
-                        self.logger.info("Clearing trainers._trainer object")
-                        _trainer_obj = trainer._trainer
-                        
-                        if hasattr(_trainer_obj, 'model') and _trainer_obj.model is not None:
-                            self.logger.info("Clearing _trainer.model")
-                            self._delete_model_from_memory(_trainer_obj.model)
-                            _trainer_obj.model = None
-                        
-                        del trainer._trainer
-                        trainer._trainer = None
-                        gc.collect()
+                if hasattr(compressor_object, 'model_after'):
+                    model_after = compressor_object.model_after
+                    if model_after is not None:
+                        self.logger.info("Clearing model_after")
+                        self._delete_model_from_memory(model_after)
+                        compressor_object.model_after = None
                 
-                trainer_copy = trainer  
-                del compressor_object.trainer
-                compressor_object.trainer = None
-                del trainer_copy  
-                gc.collect()
-            
-            cleared_count = 0
-            for attr_name in dir(compressor_object):
-                if not attr_name.startswith('__'):  
-                    try:
-                        attr = getattr(compressor_object, attr_name)
-                        if isinstance(attr, torch.nn.Module):
-                            self.logger.info(f"Found and clearing {attr_name} model")
-                            self._delete_model_from_memory(attr)
-                            setattr(compressor_object, attr_name, None)
-                            cleared_count += 1
-                        elif isinstance(attr, (list, tuple)) and len(attr) > 0:
-                            for i, item in enumerate(attr):
-                                if isinstance(item, torch.nn.Module):
-                                    self.logger.info(f"Found model in {attr_name}[{i}]")
-                                    self._delete_model_from_memory(item)
-                                    attr[i] = None
-                                    cleared_count += 1
-                        elif isinstance(attr, dict):
-                            for key, value in list(attr.items()):
-                                if isinstance(value, torch.nn.Module):
-                                    self.logger.info(f"Found model in {attr_name}['{key}']")
-                                    self._delete_model_from_memory(value)
-                                    attr[key] = None
-                                    cleared_count += 1
-                    except Exception as e:
-                        self.logger.debug(f"Could not check {attr_name}: {e}")
-            
-            if cleared_count > 0:
-                self.logger.info(f"Cleared {cleared_count} additional models")
+                if hasattr(compressor_object, '_model_after_cached') and compressor_object._model_after_cached is not None:
+                    self.logger.info("Clearing model_after cache")
+                    self._delete_model_from_memory(compressor_object._model_after_cached)
+                    compressor_object._model_after_cached = None
+                
+                if hasattr(compressor_object, 'model') and compressor_object.model is not None:
+                    self.logger.info("Clearing main model")
+                    self._delete_model_from_memory(compressor_object.model)
+                    compressor_object.model = None
+                
+                if hasattr(compressor_object, 'model_for_inference') and compressor_object.model_for_inference is not None:
+                    self.logger.info("Clearing model_for_inference")
+                    self._delete_model_from_memory(compressor_object.model_for_inference)
+                    compressor_object.model_for_inference = None
+                
+                if hasattr(compressor_object, 'trainer') and compressor_object.trainer is not None:
+                    trainer = compressor_object.trainer
+                    
+                    self.logger.info(f"Found trainer, type: {type(trainer).__name__}")
+                    self.logger.info(f"Trainer has _trainer: {hasattr(trainer, '_trainer')}")
+                    
+                    if hasattr(trainer, 'model') and trainer.model is not None:
+                        self.logger.info("Clearing trainer.model")
+                        self._delete_model_from_memory(trainer.model)
+                        trainer.model = None
+                    
+                    if hasattr(trainer, '_trainer'):
+                        self.logger.info(f"_trainer is not None: {trainer._trainer is not None}")
+                        if trainer._trainer is not None:
+                            self.logger.info("Clearing trainers._trainer object")
+                            _trainer_obj = trainer._trainer
+                            
+                            if hasattr(_trainer_obj, 'model') and _trainer_obj.model is not None:
+                                self.logger.info("Clearing _trainer.model")
+                                self._delete_model_from_memory(_trainer_obj.model)
+                                _trainer_obj.model = None
+                            
+                            del trainer._trainer
+                            trainer._trainer = None
+                            gc.collect()
+                    
+                    trainer_copy = trainer  
+                    del compressor_object.trainer
+                    compressor_object.trainer = None
+                    del trainer_copy  
+                    gc.collect()
+                
+                cleared_count = 0
+                for attr_name in dir(compressor_object):
+                    if not attr_name.startswith('__'):  
+                        try:
+                            attr = getattr(compressor_object, attr_name)
+                            if isinstance(attr, torch.nn.Module):
+                                self.logger.info(f"Found and clearing {attr_name} model")
+                                self._delete_model_from_memory(attr)
+                                setattr(compressor_object, attr_name, None)
+                                cleared_count += 1
+                            elif isinstance(attr, (list, tuple)) and len(attr) > 0:
+                                for i, item in enumerate(attr):
+                                    if isinstance(item, torch.nn.Module):
+                                        self.logger.info(f"Found model in {attr_name}[{i}]")
+                                        self._delete_model_from_memory(item)
+                                        attr[i] = None
+                                        cleared_count += 1
+                            elif isinstance(attr, dict):
+                                for key, value in list(attr.items()):
+                                    if isinstance(value, torch.nn.Module):
+                                        self.logger.info(f"Found model in {attr_name}['{key}']")
+                                        self._delete_model_from_memory(value)
+                                        attr[key] = None
+                                        cleared_count += 1
+                        except Exception as e:
+                            self.logger.debug(f"Could not check {attr_name}: {e}")
+                
+                if cleared_count > 0:
+                    self.logger.info(f"Cleared {cleared_count} additional models")
+        
+        try:
+            storage = self.storage
+            df = storage.load(fedcore_id)
+            if not df.empty:
+                if 'checkpoint_bytes' in df.columns:
+                    df['checkpoint_bytes'] = None
+                    storage.save(fedcore_id, df)
+                    self.logger.info(f"Cleared checkpoint_bytes from registry for {fedcore_id}")
+        except Exception as e:
+            self.logger.debug(f"Could not cleanup registry storage: {e}")
         
         self.checkpoint_manager._cleanup_gpu_memory()
         
         if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            torch.cuda.synchronize()
+            for i in range(3):
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
             try:
                 torch.cuda.reset_peak_memory_stats()
                 torch.cuda.reset_accumulated_memory_stats()
@@ -490,10 +584,10 @@ class ModelRegistry:
             except Exception as e:
                 self.logger.debug(f"Could not reset GPU stats: {e}")
         
-        collected = gc.collect()
-        
-        if collected > 0:
-            self.logger.info(f"Garbage collection freed {collected} objects")
+        for i in range(3):
+            collected = gc.collect()
+            if collected > 0 and i == 0:
+                self.logger.info(f"Garbage collection pass {i+1} freed {collected} objects")
         
         mem_after = self.get_memory_stats()
         memory_freed = mem_before.get('allocated_gb', 0) - mem_after.get('allocated_gb', 0)

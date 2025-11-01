@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from gc import collect
 from functools import reduce, partial
 from itertools import chain
 from typing import Iterable, Optional, Any, Union, Callable
@@ -60,8 +59,6 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_null_object()
         self._init_empty_object()
-
-        self._clear_each = 10
 
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
@@ -147,7 +144,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
 
 
     def __substitute_device_quant(self):
-        if getattr(self.model, '_is_quantized', False):
+        if not getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
@@ -174,7 +171,6 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
     def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
         self.model.train()
-        gc_count = 0
         for batch in tqdm(dataloader, desc='Batch #'):
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
@@ -189,12 +185,6 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             optimizer.step()
             optimizer.zero_grad()
             training_loss += loss.item()
-            del inputs
-            del output
-            del targets
-            gc_count += 1
-            if gc_count % self._clear_each == 0:
-                self._clear_cache() 
         avg_loss = training_loss / len(dataloader)
         self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
 
@@ -221,7 +211,6 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         """
         Method for feature generation for all series
         """
-        self.model.to(self.device)
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
 
@@ -229,7 +218,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         """
         Method for feature generation for all series
         """
-        self.model.to(self.device)
+
         self.__substitute_device_quant()
         return self._predict_model(input_data.features, output_mode)
 
@@ -282,7 +271,6 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
     def _clear_cache(self):
         with torch.no_grad():
             torch.cuda.empty_cache()
-            collect()
 
     # def __wrap(self, model):
     #     if not isinstance(model, BaseNeuralModel):

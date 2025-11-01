@@ -97,6 +97,21 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
             self.mutation.agent._probs = self.optimisation_mutation_probs
             label = 'extended_initial_assumptions'
         init_population = evaluator(initial_individuals)
+        if init_population is None:
+            self.log.error('Initial population evaluation returned None despite safety wrapper')
+            self.log.error(f'Initial individuals count: {len(initial_individuals)}')
+            raise ValueError('evaluator returned None - this indicates a critical error in evaluation system')
+        elif not init_population:
+            self.log.error('Initial population evaluation returned empty list - cannot proceed without individuals')
+            self.log.error(f'Initial individuals count: {len(initial_individuals)}')
+            self.log.error('This usually means all evaluations failed. Check logs above for evaluation errors.')
+            raise ValueError('evaluator returned empty list - cannot initialize optimization without individuals. '
+                           'All initial individuals failed evaluation. Check logs for details.')
+        
+        if init_population is None:
+            self.log.error('CRITICAL: init_population is None right before _update_population')
+            raise ValueError('init_population cannot be None')
+        
         self._update_population(next_population=init_population, evaluator=evaluator, label=label)
         return init_population, evaluator
 
@@ -147,8 +162,6 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
                         random_ind.graph.nodes[0].parameters,
                         new_ind.graph.nodes[0].parameters
                     )
-                    if mut_diff:
-                        print(f'\n\n>>> CATCHED MUTATION:\n{mut_diff}\n\n<<<<')
                     # self.log.message(f'Successful mutation at attempt number: {repr_attempt}. '
                     #                  f'Obtain new pipeline - {new_ind.graph.descriptive_id}')
                     break
@@ -186,7 +199,7 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         try: 
             new_population = self.reproducer.reproduce(individuals_to_select, evaluator)
         except Exception as x:
-            print(x)
+            self.log.warning(f'Exception during reproduction: {x}')
             new_population = None
         if new_population is None:
             new_population = population

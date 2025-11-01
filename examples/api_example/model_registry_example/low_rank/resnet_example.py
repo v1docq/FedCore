@@ -133,7 +133,7 @@ if __name__ == "__main__":
     memory_after_data = registry.get_memory_stats()
     
     start_fit = time.time()
-    fedcore_compressor.fit_no_evo(fedcore_train_data)
+    fedcore_compressor.fit(fedcore_train_data)
     fit_time = time.time() - start_fit
     memory_after_training = registry.get_memory_stats()
     
@@ -147,7 +147,15 @@ if __name__ == "__main__":
     
     fedcore_id = None
     if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
-        fedcore_id = fedcore_compressor.fedcore_model._fedcore_id
+        pipeline = fedcore_compressor.fedcore_model
+        if hasattr(pipeline, 'operator') and hasattr(pipeline.operator, 'root_node'):
+            fitted_op = getattr(pipeline.operator.root_node, 'fitted_operation', None)
+            if fitted_op is not None:
+                fedcore_id = getattr(fitted_op, '_fedcore_id', None)
+        
+        if fedcore_id is None:
+            logger.warning("Could not find _fedcore_id in fedcore_model")
+        
         logger.info(f"Using fedcore_id: {fedcore_id}")
         registry.cleanup_fedcore_instance(fedcore_id if fedcore_id else "unknown", fedcore_compressor.fedcore_model)
     else:

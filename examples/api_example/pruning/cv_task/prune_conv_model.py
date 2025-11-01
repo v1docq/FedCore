@@ -68,7 +68,7 @@ pretrain_config = NeuralModelConfigTemplate(epochs=5,
                                             model_architecture=model_config,
                                             custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                             'maximise_task': False,
-                                                                                            'delta': 0.01})
+                                                                                            'delta': 0.01}))
 fedot_config = FedotConfigTemplate(problem='classification',
                                    metric=['accuracy', 'latency'],
                                    pop_size=1,
@@ -90,7 +90,7 @@ peft_config = PruningTemplate(
 learning_config = LearningConfigTemplate(criterion='cross_entropy',
                                          learning_strategy='from_checkpoint',
                                          learning_strategy_params=pretrain_config,
-                                         peft_strategy='peft',
+                                         peft_strategy='pruning',
                                          peft_strategy_params=peft_config)
 
 api_template = APIConfigTemplate(automl_config=automl_config,
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     fedcore_compressor = FedCore(api_config)
     fedcore_train_data, fedcore_test_data = load_benchmark_dataset('CIFAR10', train_dataloader_params,
                                                                    test_dataloader_params)
-    fedcore_compressor.fit_no_evo(fedcore_train_data)
+    fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
     print(f"Тип model_comparison: {type(model_comparison)}")
     _ = 1
