@@ -59,7 +59,7 @@ class ZeroShotPruner(BaseHook):
     backward passes (e.g. :class:`PrunerWithGrad`, :class:`PrunerWithReg`).
     """
     _SUMMON_KEY = 'pruning'
-    _hook_place = 50
+    HOOK_PLACE = 50
 
     def __init__(self, pruner: tp.BasePruner, pruning_iterations: int, prune_each: int):
         super().__init__()
@@ -95,12 +95,7 @@ class ZeroShotPruner(BaseHook):
         return loss
 
     def trigger(self, epoch, kws) -> bool:
-        if not self.prune_each:
-            return False
-        if self.prune_each != -1:
-            return not epoch % self.prune_each
-        else:
-            return epoch == self.hookable_trainer.epochs
+        return self.is_epoch_arrived_default(epoch, self.prune_each)
 
     def pruning_operation(self):
         """Run configured number of pruning iterations with the pruner."""
@@ -128,7 +123,7 @@ class PrunerWithGrad(ZeroShotPruner):
     (e.g. Taylor-based criteria).
     """
     _SUMMON_KEY = 'prune_each'
-    _hook_place = 50
+    HOOK_PLACE = 50
 
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
         super().link_to_trainer(hookable_trainer)
@@ -151,7 +146,7 @@ class PrunerWithReg(ZeroShotPruner):
     training, and only then runs the structured pruning step.
     """
     _SUMMON_KEY = 'prune_each'
-    _hook_place = 50
+    HOOK_PLACE = 50
             
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
         super().link_to_trainer(hookable_trainer)
@@ -220,7 +215,7 @@ class PrunerInDepth(ZeroShotPruner):
       :func:`torch.nn.utils.prune.l1_unstructured`.
     """
     _SUMMON_KEY = 'prune_each'
-    _hook_place = 50
+    HOOK_PLACE = 50
 
     _ACTIVATION_TI_REPLACE = [torch.nn.ReLU, torch.nn.GELU]
     _CONV_LAYER_TO_REPLACE = [torch.nn.Conv1d, torch.nn.Conv2d, torch.nn.Conv3d]

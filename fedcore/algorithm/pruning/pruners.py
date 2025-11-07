@@ -1,4 +1,3 @@
-from copy import deepcopy
 from fedot.core.data.data import InputData
 import torch
 import logging
@@ -6,8 +5,6 @@ import traceback
 from transformers import Trainer
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from fedot.core.operations.operation_parameters import OperationParameters
-
 
 from fedcore.algorithm.pruning.hooks import PrunerWithGrad, PrunerWithReg, ZeroShotPruner, PrunerInDepth
 from fedcore.algorithm.pruning.pruning_validation import PruningValidator
@@ -19,7 +16,6 @@ from fedcore.repository.constant_repository import (
     PRUNERS,
     PRUNING_IMPORTANCE,
 )
-import torch_pruning as tp
 from torch_pruning.pruner.importance import Importance
 from typing import Union
 from fedcore.tools.registry.model_registry import ModelRegistry
@@ -158,7 +154,7 @@ class BasePruner(BaseCompressionModel):
     def _init_model_before_model_after_hooks_and_pruner(self, input_data):
         print('Prepare original model for pruning'.center(80, '='))
 
-        self._init_model_before_model_after(input_data)
+        super()._init_model_before_model_after(input_data)
         self.pruner = self._init_pruner_with_model_after(input_data)
 
         if (self.pruner != None):
@@ -167,8 +163,7 @@ class BasePruner(BaseCompressionModel):
         else:
             pruner_hooks = []
 
-        self._init_trainer_with_model_after(input_data, pruner_hooks)        
-        self.model_after.to(default_device())
+        super()._init_trainer_with_model_after(input_data, pruner_hooks)
 
         print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
         print(f' Pruning importance - {self.importance_name} '.center(80, '='))
@@ -230,7 +225,7 @@ class BasePruner(BaseCompressionModel):
 
     def fit(self, input_data: InputData):
         try:
-            self._init_model_before_model_after_hooks_and_pruner(input_data)
+            super()._prepare_trainer_and_model_to_fit(input_data)
             self.trainer.fit(input_data)
 
         except Exception as e:

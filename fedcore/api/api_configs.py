@@ -691,6 +691,12 @@ class PruningTemplate(TrainingTemplate):
     pruning_iterations: int = 1 # drop
     finetune_params: TrainingTemplate = None
     prune_each: int = -1
+
+class QuantMode(Enum):
+    DYNAMIC = "dynamic"
+    STATIC = "static"
+    QAT = "qat"
+
     
 @dataclass
 class QuantTemplate(TrainingTemplate):
@@ -713,7 +719,13 @@ class QuantTemplate(TrainingTemplate):
     """
 
     """Example of specific node template"""
-    quant_type: str = "dynamic" # dynamic, static, qat
+    quant_type: str = QuantMode.DYNAMIC.value
     allow_emb: bool = False
     allow_conv: bool = True
-    qat_params: TrainingTemplate = None
+    quant_each: int = -1
+    """Make quantizing after each number of epoch.
+    If quant_type is <code>qat</code> - it should be more than
+    <code>prepare_qat_after_epoch</code> and it will be
+    started only once!"""
+    prepare_qat_after_epoch: int = 1
+    """Starts quantize aware training after that epoch"""
