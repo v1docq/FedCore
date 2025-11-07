@@ -1,20 +1,15 @@
-from copy import deepcopy
 from fedot.core.data.data import InputData
 import traceback
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from fedot.core.operations.operation_parameters import OperationParameters
-
 
 from fedcore.algorithm.pruning.hooks import PrunerWithGrad, PrunerWithReg, ZeroShotPruner, PrunerInDepth
 from fedcore.algorithm.pruning.pruning_validation import PruningValidator
-from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.repository.constanst_repository import (
     PRUNERS,
     PRUNING_IMPORTANCE,
 )
-import torch_pruning as tp
 from torch_pruning.pruner.importance import Importance
 from typing import Union
 
@@ -58,10 +53,10 @@ class BasePruner(BaseCompressionModel):
     def __repr__(self):
         return self.pruner_name
 
-    def _init_model_before_model_after_hooks_and_pruner(self, input_data):
+    def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
         print('Prepare original model for pruning'.center(80, '='))
 
-        self._init_model_before_model_after(input_data)
+        super()._init_model_before_model_after(input_data)
         self.pruner = self._init_pruner_with_model_after(input_data)
 
         if (self.pruner != None):
@@ -70,8 +65,7 @@ class BasePruner(BaseCompressionModel):
         else:
             pruner_hooks = []
 
-        self._init_trainer_with_model_after(input_data, pruner_hooks)        
-        self.model_after.to(default_device())
+        super()._init_trainer_with_model_after(input_data, pruner_hooks)
 
         print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
         print(f' Pruning importance - {self.importance_name} '.center(80, '='))
@@ -83,7 +77,7 @@ class BasePruner(BaseCompressionModel):
         batch_generator = (b for b in input_data.features.val_dataloader)
         # take first batch
         batch_list = next(batch_generator)
-        self.data_batch_for_calib = batch_list[0].to(default_device())
+        self.data_batch_for_calib = batch_list[0].to(self.device)
         n_classes = input_data.task.task_params['forecast_length'] \
             if input_data.task.task_type.value.__contains__('forecasting') else input_data.features.num_classes
         self.validator = PruningValidator(model=self.model_after,
@@ -125,7 +119,7 @@ class BasePruner(BaseCompressionModel):
 
     def fit(self, input_data: InputData):
         try:
-            self._init_model_before_model_after_hooks_and_pruner(input_data)
+            super()._prepare_trainer_and_model_to_fit(input_data)
             self.trainer.fit(input_data)
 
         except Exception as e:

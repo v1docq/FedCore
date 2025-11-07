@@ -11,6 +11,7 @@ from fedcore.algorithm.quantization.utils import (
     ParentalReassembler, uninplace, get_flattened_qconfig_dict,
     QDQWrapper, QDQWrapping
 )
+from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 
 
 def test_uninplace_recursively():
@@ -71,17 +72,21 @@ def simple_dl():
     return DataLoader(TensorDataset(x,y), batch_size=5)
 
 def test_dynamic_quant_hook_does_not_crash(simple_dl):
-    hook = DynamicQuantizationHook({'dtype': torch.qint8, 'device': torch.device('cpu')}, model=nn.Linear(3*8*8,2))
-    assert hook.trigger('dynamic')
-    hook.action('dynamic', {'model': hook.model})
+    hook = DynamicQuantizationHook(1, torch.qint8, set(), -1, "fbgemm")
+    hook.model = nn.Linear(3*8*8,2)
+    assert hook.trigger(1, dict())
+    hook.action(1, {})
 
 def test_static_quant_hook_runs_validation(simple_dl):
     dummy = type('ID', (), {})()
     dummy.features = type('F', (), {})()
     dummy.features.val_dataloader = simple_dl
-    hook = StaticQuantizationHook({'input_data': dummy, 'device': torch.device('cpu')}, model=nn.Conv2d(3,3,3))
-    assert hook.trigger('static')
-    hook.action('static', {'model': hook.model})
+    hook = StaticQuantizationHook(1, torch.qint8, set(), -1, "fbgemm")
+    hookable_trainer = BaseNeuralModel(nn.Conv2d(3,3,3), {}, [])
+    hook.link_to_trainer(hookable_trainer)
+    assert hook.trigger(1, {})
+    hook.action(1, {"val_loader": simple_dl})
+
 
 def test_qat_hook_train_loop(simple_dl):
     dummy = type('ID', (), {})()
@@ -95,6 +100,9 @@ def test_qat_hook_train_loop(simple_dl):
         'lr': 0.01,
         'device': torch.device('cpu')
     }
-    hook = QATHook(params, model=nn.Sequential(nn.Flatten(), nn.Linear(3*8*8,2)))
-    assert hook.trigger('qat')
-    hook.action('qat', {'model': hook.model})
+    hook = QATHook(-1, torch.qint8, set(), 1, "fbgemm")
+    hookable_trainer = BaseNeuralModel(nn.Sequential(nn.Flatten(), nn.Linear(3*8*8,2)), {"epoch": 20}, [hook])
+    hook.link_to_trainer(hookable_trainer)
+    #hookable_trainer.fit(dummy) TODO correct test with BaseQuantizer
+    assert hook.trigger(1, {})
+    hook.action(1, {})

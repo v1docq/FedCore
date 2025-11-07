@@ -11,7 +11,8 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
+    NeuralModelConfigTemplate,
+    QuantMode, 
     QuantTemplate
     )
 from fedcore.algorithm.quantization.quantizers import BaseQuantizer
@@ -64,17 +65,13 @@ def get_api_template(quant_type: str):
         )
 
     automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
-
-    qat_config = NeuralModelConfigTemplate(epochs=3,
-                                            log_each=3,
-                                            eval_each=3,
-                                            criterion=LOSS,
-                                            )
     
     peft_config = QuantTemplate(quant_type=quant_type,
                                 allow_emb=False,
                                 allow_conv=True,
-                                qat_params=qat_config
+                                prepare_qat_after_epoch=6,
+                                quant_each=-1,
+                                epochs=10
                                 )
     
     learning_config = LearningConfigTemplate(
@@ -116,7 +113,7 @@ def get_reduction(model_before, model_after):
     params_after = sum(p.numel() for p in model_after.parameters() if p.requires_grad)
     return params_after / params_before
 
-@pytest.mark.parametrize('quant_type', ['dynamic', 'static', 'qat'])
+@pytest.mark.parametrize('quant_type', [QuantMode.DYNAMIC.value, QuantMode.STATIC.value, QuantMode.QAT.value])
 def test_quantizers(quant_type):
     api = get_api_template(quant_type=quant_type)
     APIConfig = ConfigFactory.from_template(api)
@@ -144,6 +141,7 @@ def test_quantizers(quant_type):
                                          model_after=quantizer.model_after)
     assert params_dict is not None
     reduction = get_reduction(model_after=quant_model, model_before=quantizer.model_before)
+    print("-----REDUCTION-------", reduction)
     if default_device() == torch.device('cpu'):
         assert reduction < 1, f'{quant_type} quantization doesnt reduce number of model parameters, reduction: {reduction}'
     else:

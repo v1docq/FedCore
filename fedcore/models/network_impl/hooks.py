@@ -50,8 +50,16 @@ class BaseHook(ABC):
             self.action(epoch, kws)
 
     @abstractmethod
-    def trigger(self, epoch, kws) -> bool:
+    def trigger(self, epoch, kws: dict) -> bool:
         pass
+
+    def is_epoch_arrived_default(self, current_epoch, epoch_each_param):
+        if not epoch_each_param:
+            return False
+        if epoch_each_param != -1:
+            return not current_epoch % epoch_each_param
+        else:
+            return current_epoch == self.hookable_trainer.epochs
 
     @abstractmethod
     def action(self, epoch, kws):
@@ -85,12 +93,7 @@ class Saver(BaseHook):
         self.checkpoint_folder = hookable_trainer.params.get('checkpoint_folder', '.')
 
     def trigger(self, epoch, kws) -> bool:
-        if not self.save_each:
-            return False
-        if self.save_each != -1:
-            return not epoch % self.save_each
-        else:
-            return epoch == self.params.get('epochs', 0)
+        return self.is_epoch_arrived_default(epoch, self.save_each)
 
     def action(self, epoch, kws):
         name = kws.get('name', '') or self.params.get('name', '')

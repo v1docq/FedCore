@@ -32,12 +32,7 @@ class OnetimeRankPruner(BaseHook):
         if self.__done:
             return False
         rank_prune_each = self.params.get('rank_prune_each', -1)
-        if not rank_prune_each:
-            return False
-        if rank_prune_each != -1:
-            return not epoch % rank_prune_each
-        else:
-            return epoch == self.params.get('epochs', 1)
+        return self.is_epoch_arrived_default(epoch, rank_prune_each)
     
     def action(self, epoch, kws):
         self.__done = True

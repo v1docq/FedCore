@@ -12,9 +12,11 @@ from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeura
 from torchinfo import summary
 
 from fedcore.models.network_impl.hooks import BaseHook
+from abc import ABC, abstractmethod
+from fedcore.architecture.comptutaional.devices import default_device
 
 
-class BaseCompressionModel:
+class BaseCompressionModel(ABC):
     """Class responsible for NN model implementation.
 
     Attributes:
@@ -42,6 +44,7 @@ class BaseCompressionModel:
         self.model = None
         self.model_for_inference = None
         self.params = params
+        self.device = params.get("device", default_device())
 
     def _save_and_clear_cache(self):
         try:
@@ -79,6 +82,19 @@ class BaseCompressionModel:
     def _init_trainer_model_before_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
         self._init_model_before_model_after(input_data)
         self._init_trainer_with_model_after(input_data, additional_hooks)
+
+    @abstractmethod
+    def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
+        """This method in child class should initialize self.model_before, self.model_after, add it to self.trainer with additional 
+        childclass-specific hooks.
+
+        Models usually taken from input_data.target
+        """
+        pass
+
+    def _prepare_trainer_and_model_to_fit(self, input_data):
+        self._init_trainer_model_before_model_after_and_incapsulate_hooks(input_data)
+        self.model_after.to(self.device)
 
     def _fit_model(self, ts: CompressionInputData, split_data: bool = False):
         pass

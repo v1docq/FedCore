@@ -1,6 +1,5 @@
 from torch import nn
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module_in_place
-from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.models.network_impl.hooks import BaseHook
@@ -23,9 +22,8 @@ class LowRankModel(BaseCompressionModel):
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE) 
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
-        self.device = default_device()
 
-    def _init_model(self, input_data):
+    def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
         additional_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, self.DEFAULT_HOOKS)
         additional_hooks = [hook_type() for hook_type in additional_hooks]
         super()._init_trainer_model_before_model_after(input_data, additional_hooks)
@@ -33,8 +31,6 @@ class LowRankModel(BaseCompressionModel):
         decompose_module_in_place(
             self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
         )
-        self.model_after.to(self.device)
-        return self.model_after
 
     def fit(self, input_data) -> None:
         """Run model training with optimization.
@@ -42,7 +38,7 @@ class LowRankModel(BaseCompressionModel):
         Args:
             input_data: An instance of the model class
         """
-        model_after = self._init_model(input_data)
+        super()._prepare_trainer_and_model_to_fit(input_data)
         # base_params = self._estimate_params(self.model_before, example_batch)
         self.model_after = self.trainer.fit(input_data)
         # self.compress(self.model_after)
