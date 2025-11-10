@@ -35,7 +35,7 @@ console_handler.setFormatter(log_format)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-METRIC_TO_OPTIMISE = ['accuracy', 'latency']
+METRIC_TO_OPTIMISE = ['accuracy', 'f1']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'low_rank'
@@ -98,7 +98,7 @@ peft_config = LowRankTemplate(
 )
 
 fedot_config = FedotConfigTemplate(problem='classification',
-                                   metric=['accuracy', 'latency'],
+                                   metric=METRIC_TO_OPTIMISE,
                                    pop_size=1,
                                    timeout=1,
                                    initial_assumption=INITIAL_ASSUMPTION)

@@ -1,9 +1,7 @@
-"""Refactored Model Registry with cleaner architecture."""
-
 import os
 import gc
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 from threading import Lock, local
 
 import torch
@@ -19,35 +17,25 @@ from .metrics_tracker import MetricsTracker
 
 _registry_context = local()
 
+_STAGE_NORMALIZATION = {
+    'before': ['before', 'initial'],
+    'after': ['after']
+}
+
+_MODEL_ATTRS_TO_CLEAN = ['model_before', '_model_before_cached', 'model_after', 
+                         '_model_after_cached', 'model', 'model_for_inference']
+
+_CLEANUP_ITERATIONS = 3
+
 
 class ModelRegistry:
-    """
-    Thread-safe Singleton model registry for FedCore pipeline.
-    
-    Manages model checkpoints, metrics, and versioning across the PEFT pipeline.
-    Uses composition pattern with specialized managers for different responsibilities.
-    
-    Components:
-        - CheckpointManager: Handles checkpoint serialization/deserialization
-        - RegistryStorage: Manages DataFrame persistence
-        - MetricsTracker: Tracks metrics and versions
-    """
+    """Thread-safe Singleton model registry for FedCore pipeline."""
 
     _instance = None
     _initialized = False
     _lock = Lock()
 
     def __new__(cls, auto_cleanup: bool = True):
-        """Ensure only one instance exists (Thread-safe Singleton).
-        
-        Uses double-checked locking pattern:
-        - First check without lock for performance
-        - Acquire lock only if instance doesn't exist
-        - Second check after acquiring lock to prevent race condition
-        
-        Args:
-            auto_cleanup: Ignored in __new__, handled in __init__
-        """
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -55,130 +43,65 @@ class ModelRegistry:
         return cls._instance
 
     def __init__(self, auto_cleanup: bool = True):
-        """Initialize registry components (only once, thread-safe).
-        
-        Uses the same lock as __new__ to ensure components are
-        initialized exactly once even in multi-threaded environment.
-        """
         if not ModelRegistry._initialized:
             with ModelRegistry._lock:
                 if not ModelRegistry._initialized:
                     base_dir = os.environ.get("FEDCORE_MODEL_REGISTRY_PATH", "llm_output")
-
                     self.checkpoint_manager = CheckpointManager(base_dir, auto_cleanup=auto_cleanup)
                     self.storage = RegistryStorage(base_dir)
                     self.metrics_tracker = MetricsTracker()
                     self.auto_cleanup = auto_cleanup
                     self.logger = logging.getLogger(self.__class__.__name__)
                     self.logger.setLevel(logging.INFO)
-
                     ModelRegistry._initialized = True
                     self.logger.info(f"ModelRegistry initialized: auto_cleanup={auto_cleanup}, base_dir={base_dir}")
 
     @staticmethod
     def set_registry_context(fedcore_id: str, model_id: str) -> None:
-        """Set thread-local context for automatic metrics tracking.
-        
-        When this context is set, metrics calculated during training/evaluation
-        in `evaluate_objective_fedcore` will be automatically saved to the registry.
-        
-        Usage:
-            After registering a model, set the context:
-            ```python
-            model_id = registry.register_model(fedcore_id, model, metrics={...})
-            ModelRegistry.set_registry_context(fedcore_id, model_id)
-            ```
-            
-            Then any subsequent calls to `evaluate_objective_fedcore` (during
-            optimization/training) will automatically update metrics in the registry.
-        
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Model identifier to update metrics for
-        """
         _registry_context.fedcore_id = fedcore_id
         _registry_context.model_id = model_id
 
     @staticmethod
     def get_registry_context() -> Optional[Tuple[str, str]]:
-        """Get thread-local registry context.
-        
-        Returns:
-            Tuple of (fedcore_id, model_id) or None if not set
-        """
         fedcore_id = getattr(_registry_context, 'fedcore_id', None)
         model_id = getattr(_registry_context, 'model_id', None)
-        if fedcore_id and model_id:
-            return (fedcore_id, model_id)
-        return None
+        return (fedcore_id, model_id) if (fedcore_id and model_id) else None
 
     @staticmethod
     def clear_registry_context() -> None:
-        """Clear thread-local registry context."""
-        if hasattr(_registry_context, 'fedcore_id'):
-            delattr(_registry_context, 'fedcore_id')
-        if hasattr(_registry_context, 'model_id'):
-            delattr(_registry_context, 'model_id')
+        for attr in ('fedcore_id', 'model_id'):
+            if hasattr(_registry_context, attr):
+                delattr(_registry_context, attr)
 
+    def _normalize_stage(self, stage: Optional[str]) -> Optional[str]:
+        if stage is None:
+            return None
+        stage_lower = stage.lower()
+        for normalized, keywords in _STAGE_NORMALIZATION.items():
+            if any(kw in stage_lower for kw in keywords):
+                return normalized
+        return "after"
 
-    def register_model(self, fedcore_id: str, model=None, model_path: str = None,
-                      pipeline_params: dict = None, metrics: Optional[dict] = None,
-                      note: str = "initial", params_format: str = 'yaml', 
-                      delete_model_after_save: bool = True) -> str:
-        """Register a new model in the registry.
-        
-        Args:
-            fedcore_id: FedCore instance identifier
-            model: Model object to register
-            model_path: Path to model file
-            pipeline_params: Pipeline parameters (currently unused, can be extended)
-            metrics: Metrics dictionary
-            note: Note about this registration (unused)
-            params_format: Format for params (unused)
-            delete_model_after_save: If True, delete model from memory after saving
-            
-        Returns:
-            model_id: Generated model identifier
-        """
-        self.logger.info(f"register_model called: fedcore_id={fedcore_id}, model_type={type(model).__name__ if model else 'None'}, metrics={metrics}")
+    def _inherit_mode(self, fedcore_id: str, model_id: str, mode: Optional[str]) -> Optional[str]:
+        if mode is not None:
+            return mode
+        if existing := self.storage.get_latest_record(fedcore_id, model_id):
+            if inherited_mode := existing.get('mode'):
+                self.logger.info(f"Inherited mode={inherited_mode} from previous record for model_id={model_id}")
+                return inherited_mode
+        return None
 
-        model_id = self.metrics_tracker.generate_model_id(model, model_path)
-        version = self.metrics_tracker.generate_version()
-        safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
+    def _log_memory_stats(self, context: str) -> Optional[Dict[str, float]]:
+        if not (self.auto_cleanup and torch.cuda.is_available()):
+            return None
+        stats = self.checkpoint_manager.get_gpu_memory_stats()
+        self.logger.info(f"GPU memory {context}: {stats.get('allocated_gb', 0):.4f} GB")
+        return stats
 
-        if self.auto_cleanup and torch.cuda.is_available():
-            mem_before = self.checkpoint_manager.get_gpu_memory_stats()
-            self.logger.info(f"GPU memory before saving: {mem_before.get('allocated_gb', 0):.4f} GB")
-
-        checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, model_path)
-
-        if model_path and os.path.isfile(model_path):
-            checkpoint_path = model_path
-        else:
-            checkpoint_path = self.checkpoint_manager.generate_checkpoint_path(
-                fedcore_id, model_id, safe_timestamp
-            )
-            self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
-
-        clean_metrics = {}
-        stage = None
-        mode = None
-        
-        if metrics is not None:
-            metrics_copy = metrics.copy()
-            stage = metrics_copy.pop("stage", None)
-            mode = metrics_copy.pop("operation", None)
-            metrics_copy.pop("is_processed", None)
-            clean_metrics = metrics_copy
-        
-        if stage is not None:
-            if isinstance(stage, str):
-                if "before" in stage.lower():
-                    stage = "before"
-                elif "after" in stage.lower():
-                    stage = "after"
-        
-        record = {
+    def _create_record(self, fedcore_id: str, model_id: str, version: str, 
+                      checkpoint_path: str, model_path: Optional[str] = None,
+                      stage: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        return {
             "record": str(self.metrics_tracker.generate_model_id()),
             "fedcore": fedcore_id,
             "model": model_id,
@@ -187,9 +110,32 @@ class ModelRegistry:
             "checkpoint_path": checkpoint_path,
             "stage": stage,
             "mode": mode,
-            "metrics": clean_metrics if clean_metrics else {},
+            "metrics": {},
         }
 
+    def _resolve_stage_mode(self, fedcore_id: str, model_id: str, stage: Optional[str], mode: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+        stage = self._normalize_stage(stage)
+        mode = self._inherit_mode(fedcore_id, model_id, mode)
+        return stage, mode
+
+    def _save_checkpoint_and_record(self, fedcore_id: str, model_id: str, model=None,
+                                   model_path: Optional[str] = None,
+                                   delete_model_after_save: bool = True,
+                                   stage: Optional[str] = None, mode: Optional[str] = None) -> str:
+        version = self.metrics_tracker.generate_version()
+        safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
+
+        self._log_memory_stats("before saving")
+        checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, model_path)
+        
+        checkpoint_path = (model_path if model_path and os.path.isfile(model_path) else
+                         self.checkpoint_manager.generate_checkpoint_path(fedcore_id, model_id, safe_timestamp))
+        
+        if checkpoint_path != model_path:
+            self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
+        
+        record = self._create_record(fedcore_id, model_id, version, checkpoint_path, 
+                                    model_path, stage, mode)
         self.storage.append_record(fedcore_id, record)
 
         if delete_model_after_save and model is not None:
@@ -197,403 +143,194 @@ class ModelRegistry:
             self._delete_model_from_memory(model)
             self.logger.info("Model deleted from memory")
 
-        if self.auto_cleanup and torch.cuda.is_available():
-            mem_after = self.checkpoint_manager.get_gpu_memory_stats()
-            self.logger.info(f"GPU memory after cleanup: {mem_after.get('allocated_gb', 0):.4f} GB")
-
+        self._log_memory_stats("after cleanup")
         return model_id
 
+    def register_model(self, fedcore_id: str, model=None, model_path: str = None,
+                      pipeline_params: dict = None, note: str = "initial", params_format: str = 'yaml', 
+                      delete_model_after_save: bool = True, stage: Optional[str] = None,
+                      mode: Optional[str] = None) -> str:
+        self.logger.info(f"register_model called: fedcore_id={fedcore_id}, model_type={type(model).__name__ if model else 'None'}, stage={stage}, mode={mode}")
+
+        model_id = self.metrics_tracker.generate_model_id(model, model_path)
+        stage, mode = self._resolve_stage_mode(fedcore_id, model_id, stage, mode)
+
+        return self._save_checkpoint_and_record(fedcore_id, model_id, model, model_path,
+                                               delete_model_after_save, stage, mode)
+
     def register_changes(self, fedcore_id: str, model_id: str, model=None,
-                        pipeline_params: dict = None, metrics: Optional[dict] = None,
-                        note: str = "update", params_format: str = 'yaml',
-                        delete_model_after_save: bool = True):
-        """Register changes to an existing model.
-        
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Existing model identifier
-            model: Updated model object
-            pipeline_params: Updated pipeline parameters
-            metrics: Updated metrics
-            note: Note about the update
-            params_format: Format for params
-            delete_model_after_save: If True, delete model from memory after saving
-        """
-        self.logger.info(f"register_changes called: fedcore_id={fedcore_id}, model_id={model_id}, metrics={metrics}")
+                        pipeline_params: dict = None, note: str = "update", params_format: str = 'yaml',
+                        delete_model_after_save: bool = True, stage: Optional[str] = None,
+                        mode: Optional[str] = None):
+        self.logger.info(f"register_changes called: fedcore_id={fedcore_id}, model_id={model_id}, stage={stage}, mode={mode}")
 
         existing = self.storage.get_latest_record(fedcore_id, model_id)
         if existing is None:
             self.logger.warning("No existing record found, calling register_model instead")
-            self.register_model(fedcore_id, model, None, pipeline_params, metrics, note, 
-                              params_format, delete_model_after_save)
+            self.register_model(fedcore_id, model, None, pipeline_params, note, 
+                              params_format, delete_model_after_save, stage, mode)
             return
 
-        if self.auto_cleanup and torch.cuda.is_available():
-            mem_before = self.checkpoint_manager.get_gpu_memory_stats()
-            self.logger.info(f"GPU memory before saving changes: {mem_before.get('allocated_gb', 0):.4f} GB")
+        stage, mode = self._resolve_stage_mode(fedcore_id, model_id, stage, mode)
 
-        version = self.metrics_tracker.generate_version()
-        safe_timestamp = self.metrics_tracker.sanitize_timestamp(version)
+        self._save_checkpoint_and_record(fedcore_id, model_id, model, None,
+                                        delete_model_after_save, stage, mode)
 
-        checkpoint_bytes = self.checkpoint_manager.serialize_to_bytes(model, None)
-        checkpoint_path = self.checkpoint_manager.generate_checkpoint_path(
-            fedcore_id, model_id, safe_timestamp
-        )
-        self.checkpoint_manager.save_to_file(checkpoint_bytes, checkpoint_path)
-
-        clean_metrics = {}
-        stage = None
-        mode = None
+    def update_metrics(self, fedcore_id: str, model_id: str, metrics: dict, 
+                      stage: Optional[str] = None, mode: Optional[str] = None, trainer=None):
+        self.storage.update_record(fedcore_id, model_id, metrics, stage=stage, mode=mode, trainer=trainer)
+    
+    def save_metrics_from_evaluator(self, solver, fedcore_id: str, model_id: str):
+        metrics_df = self.metrics_tracker.collect_metrics_from_history(solver=solver)
         
-        if metrics is not None:
-            metrics_copy = metrics.copy()
-            stage = metrics_copy.pop("stage", None)
-            mode = metrics_copy.pop("operation", None)
-            metrics_copy.pop("is_processed", None)
-            clean_metrics = metrics_copy
-        
-        if stage is not None:
-            if isinstance(stage, str):
-                if "before" in stage.lower():
-                    stage = "before"
-                elif "after" in stage.lower():
-                    stage = "after"
-        
-        record = {
-            "record": str(self.metrics_tracker.generate_model_id()),
-            "fedcore": fedcore_id,
-            "model": model_id,
-            "created_at": version,
-            "model_path": None,
-            "checkpoint_path": checkpoint_path,
-            "stage": stage,
-            "mode": mode,
-            "metrics": clean_metrics if clean_metrics else {},
-        }
-
-        self.storage.append_record(fedcore_id, record)
-
-        if delete_model_after_save and model is not None:
-            self.logger.info(f"Deleting model {model_id} from memory")
-            self._delete_model_from_memory(model)
-            self.logger.info("Model deleted from memory")
-
-        if self.auto_cleanup and torch.cuda.is_available():
-            mem_after = self.checkpoint_manager.get_gpu_memory_stats()
-            self.logger.info(f"GPU memory after cleanup: {mem_after.get('allocated_gb', 0):.4f} GB")
-
-    def update_metrics(self, fedcore_id: str, model_id: str, metrics: dict):
-        """Update metrics for the latest version of a model.
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Model identifier
-            metrics: Metrics dictionary to merge
-        """
-        self.storage.update_record_metrics(fedcore_id, model_id, metrics)
+        if not metrics_df.empty and len(metrics_df) > 0:
+            last_gen_metrics = metrics_df.iloc[-1].to_dict()
+            last_gen_metrics.pop('generation', None)
+            
+            if last_gen_metrics:
+                self.update_metrics(fedcore_id, model_id, last_gen_metrics)
+                self.logger.info("Saved optimization metrics from evaluator to registry")
 
     def get_latest_record(self, fedcore_id: str, model_id: str) -> Optional[dict]:
-        """Get the latest record for a specific model.
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Model identifier
-            
-        Returns:
-            Latest record dictionary or None
-        """
         return self.storage.get_latest_record(fedcore_id, model_id)
 
     def get_model_history(self, fedcore_id: str, model_id: str):
-        """Get complete history of a model.
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Model identifier
-            
-        Returns:
-            DataFrame with model history
-        """
         return self.storage.get_records(fedcore_id, model_id)
 
     def get_best_checkpoint(self, fedcore_id: str, metric_name: str, mode: str = "max") -> Optional[dict]:
-        """Get the best checkpoint based on a specific metric.
-        Args:
-            fedcore_id: FedCore instance identifier
-            metric_name: Metric to optimize
-            mode: 'max' or 'min'
-            
-        Returns:
-            Best checkpoint record or None
-        """
         df = self.storage.load(fedcore_id)
         return self.metrics_tracker.find_best_checkpoint(df, metric_name, mode)
 
     def load_model_from_latest_checkpoint(self, fedcore_id: str, model_id: str,
                                          device: torch.device = None) -> Optional[torch.nn.Module]:
-        """Load model from the latest checkpoint.
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Model identifier
-            device: Device to load model on
-            
-        Returns:
-            Loaded model or None
-        """
         latest = self.storage.get_latest_record(fedcore_id, model_id)
-
-        if latest is None or not latest.get('checkpoint_path'):
-            return None
-
-        return self.checkpoint_manager.load_from_file(latest['checkpoint_path'], device)
+        return (self.checkpoint_manager.load_from_file(latest['checkpoint_path'], device) 
+                if latest and latest.get('checkpoint_path') else None)
 
     def list_models(self, fedcore_id: str) -> list:
-        """List all unique model IDs in the registry.
-        Args:
-            fedcore_id: FedCore instance identifier
-            
-        Returns:
-            List of model IDs
-        """
         return self.storage.list_model_ids(fedcore_id)
 
     def get_model_with_fallback(self, fedcore_id: str, model_id: str,
                                fallback_model=None, device: torch.device = None):
-        """Load model from registry with fallback to provided model.
-        
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Model identifier
-            fallback_model: Model to use if loading from registry fails
-            device: Device to load model on
-            
-        Returns:
-            Loaded model from registry or fallback_model
-        """
-        try:
-            loaded_model = self.load_model_from_latest_checkpoint(fedcore_id, model_id, device)
-            if loaded_model is not None:
-                return loaded_model
-        except Exception as e:
-            print(f"Failed to load model from registry: {e}")
-
-        return fallback_model
+        loaded_model = self.load_model_from_latest_checkpoint(fedcore_id, model_id, device)
+        return loaded_model if loaded_model is not None else fallback_model
 
     def _delete_model_from_memory(self, model) -> None:
-        """Delete model from memory and clean up GPU memory.
-        
-        Args:
-            model: Model object to delete
-        """
         if model is None:
             return
 
         if hasattr(model, 'cpu'):
-            try:
-                model.cpu()
-            except Exception as e:
-                self.logger.debug(f"Could not move model to CPU: {e}")
-
+            model.cpu()
+        
         if isinstance(model, torch.nn.Module):
-            try:
-                for param in model.parameters():
-                    if param.grad is not None:
-                        param.grad = None
-                        
-            except Exception as e:
-                self.logger.debug(f"Could not clear model gradients: {e}")
-
-        try:
-            del model
-        except:
-            pass
-
+            for param in model.parameters():
+                param.grad = None
+        
+        del model
         gc.collect()
-
+        
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
-            torch.cuda.ipc_collect()
 
     def get_memory_stats(self) -> dict:
-        """Get current GPU memory statistics.
-        
-        Returns:
-            Dictionary with memory statistics
-        """
         return self.checkpoint_manager.get_gpu_memory_stats()
 
     def force_cleanup(self) -> None:
-        """Force cleanup of GPU memory.
-        
-        Useful for manual cleanup when needed.
-        """
         self.checkpoint_manager._cleanup_gpu_memory()
         self.logger.info("Forced GPU memory cleanup executed")
 
     def cleanup_fedcore_instance(self, fedcore_id: str, compressor_object=None) -> None:
-        """Comprehensive cleanup for a FedCore instance.
-        
-        This method performs full memory cleanup including:
-        1. Cleaning cached models in the provided object
-        2. Clearing GPU memory
-        3. Running garbage collection
-        
-        Args:
-            fedcore_id: FedCore instance identifier
-            compressor_object: Optional object (like BaseCompressionModel or Pipeline) with cached models to clean
-        """
         self.logger.info(f"Starting comprehensive cleanup for fedcore_id={fedcore_id}")
-        
         mem_before = self.get_memory_stats()
         self.logger.info(f"Memory before cleanup: {mem_before.get('allocated_gb', 0):.4f} GB")
         
         if compressor_object is not None:
-            # If compressor_object is a Pipeline, extract the fitted_operation (BaseCompressionModel)
-            if Pipeline is not None and isinstance(compressor_object, Pipeline):
-                self.logger.info("compressor_object is a Pipeline, extracting fitted_operation...")
-                if hasattr(compressor_object, 'operator') and hasattr(compressor_object.operator, 'root_node'):
-                    fitted_op = getattr(compressor_object.operator.root_node, 'fitted_operation', None)
-                    if fitted_op is not None:
-                        self.logger.info(f"Found fitted_operation: {type(fitted_op).__name__}")
-                        compressor_object = fitted_op
-                    else:
-                        self.logger.warning("Pipeline has no fitted_operation, cannot clean models")
-                        compressor_object = None
-                else:
-                    self.logger.warning("Pipeline structure not as expected, cannot extract fitted_operation")
-                    compressor_object = None
-            
+            compressor_object = self._extract_fitted_operation(compressor_object)
             if compressor_object is not None:
-                self.logger.info("Cleaning cached models in compressor object...")
-                
-                if hasattr(compressor_object, 'model_before'):
-                    model_before = compressor_object.model_before
-                    if model_before is not None:
-                        self.logger.info("Clearing model_before")
-                        self._delete_model_from_memory(model_before)
-                        compressor_object.model_before = None
-                
-                if hasattr(compressor_object, '_model_before_cached') and compressor_object._model_before_cached is not None:
-                    self.logger.info("Clearing model_before cache")
-                    self._delete_model_from_memory(compressor_object._model_before_cached)
-                    compressor_object._model_before_cached = None
-                
-                if hasattr(compressor_object, 'model_after'):
-                    model_after = compressor_object.model_after
-                    if model_after is not None:
-                        self.logger.info("Clearing model_after")
-                        self._delete_model_from_memory(model_after)
-                        compressor_object.model_after = None
-                
-                if hasattr(compressor_object, '_model_after_cached') and compressor_object._model_after_cached is not None:
-                    self.logger.info("Clearing model_after cache")
-                    self._delete_model_from_memory(compressor_object._model_after_cached)
-                    compressor_object._model_after_cached = None
-                
-                if hasattr(compressor_object, 'model') and compressor_object.model is not None:
-                    self.logger.info("Clearing main model")
-                    self._delete_model_from_memory(compressor_object.model)
-                    compressor_object.model = None
-                
-                if hasattr(compressor_object, 'model_for_inference') and compressor_object.model_for_inference is not None:
-                    self.logger.info("Clearing model_for_inference")
-                    self._delete_model_from_memory(compressor_object.model_for_inference)
-                    compressor_object.model_for_inference = None
-                
-                if hasattr(compressor_object, 'trainer') and compressor_object.trainer is not None:
-                    trainer = compressor_object.trainer
-                    
-                    self.logger.info(f"Found trainer, type: {type(trainer).__name__}")
-                    self.logger.info(f"Trainer has _trainer: {hasattr(trainer, '_trainer')}")
-                    
-                    if hasattr(trainer, 'model') and trainer.model is not None:
-                        self.logger.info("Clearing trainer.model")
-                        self._delete_model_from_memory(trainer.model)
-                        trainer.model = None
-                    
-                    if hasattr(trainer, '_trainer'):
-                        self.logger.info(f"_trainer is not None: {trainer._trainer is not None}")
-                        if trainer._trainer is not None:
-                            self.logger.info("Clearing trainers._trainer object")
-                            _trainer_obj = trainer._trainer
-                            
-                            if hasattr(_trainer_obj, 'model') and _trainer_obj.model is not None:
-                                self.logger.info("Clearing _trainer.model")
-                                self._delete_model_from_memory(_trainer_obj.model)
-                                _trainer_obj.model = None
-                            
-                            del trainer._trainer
-                            trainer._trainer = None
-                            gc.collect()
-                    
-                    trainer_copy = trainer  
-                    del compressor_object.trainer
-                    compressor_object.trainer = None
-                    del trainer_copy  
-                    gc.collect()
-                
-                cleared_count = 0
-                for attr_name in dir(compressor_object):
-                    if not attr_name.startswith('__'):  
-                        try:
-                            attr = getattr(compressor_object, attr_name)
-                            if isinstance(attr, torch.nn.Module):
-                                self.logger.info(f"Found and clearing {attr_name} model")
-                                self._delete_model_from_memory(attr)
-                                setattr(compressor_object, attr_name, None)
-                                cleared_count += 1
-                            elif isinstance(attr, (list, tuple)) and len(attr) > 0:
-                                for i, item in enumerate(attr):
-                                    if isinstance(item, torch.nn.Module):
-                                        self.logger.info(f"Found model in {attr_name}[{i}]")
-                                        self._delete_model_from_memory(item)
-                                        attr[i] = None
-                                        cleared_count += 1
-                            elif isinstance(attr, dict):
-                                for key, value in list(attr.items()):
-                                    if isinstance(value, torch.nn.Module):
-                                        self.logger.info(f"Found model in {attr_name}['{key}']")
-                                        self._delete_model_from_memory(value)
-                                        attr[key] = None
-                                        cleared_count += 1
-                        except Exception as e:
-                            self.logger.debug(f"Could not check {attr_name}: {e}")
-                
-                if cleared_count > 0:
-                    self.logger.info(f"Cleared {cleared_count} additional models")
+                self._clean_compressor_models(compressor_object)
         
-        try:
-            storage = self.storage
-            df = storage.load(fedcore_id)
-            if not df.empty:
-                if 'checkpoint_bytes' in df.columns:
-                    df['checkpoint_bytes'] = None
-                    storage.save(fedcore_id, df)
-                    self.logger.info(f"Cleared checkpoint_bytes from registry for {fedcore_id}")
-        except Exception as e:
-            self.logger.debug(f"Could not cleanup registry storage: {e}")
-        
-        self.checkpoint_manager._cleanup_gpu_memory()
-        
-        if torch.cuda.is_available():
-            for i in range(3):
-                torch.cuda.empty_cache()
-                torch.cuda.synchronize()
-            try:
-                torch.cuda.reset_peak_memory_stats()
-                torch.cuda.reset_accumulated_memory_stats()
-                self.logger.info("GPU memory stats reset")
-            except Exception as e:
-                self.logger.debug(f"Could not reset GPU stats: {e}")
-        
-        for i in range(3):
-            collected = gc.collect()
-            if collected > 0 and i == 0:
-                self.logger.info(f"Garbage collection pass {i+1} freed {collected} objects")
+        self._clean_registry_storage(fedcore_id)
+        self._cleanup_gpu_memory()
         
         mem_after = self.get_memory_stats()
         memory_freed = mem_before.get('allocated_gb', 0) - mem_after.get('allocated_gb', 0)
-        
         if mem_before.get('allocated_gb', 0) > 0:
             efficiency = (memory_freed / mem_before.get('allocated_gb', 0)) * 100
-            self.logger.info(f"  Cleanup efficiency: {efficiency:.1f}%")
+            self.logger.info(f"Cleanup efficiency: {efficiency:.1f}%")
         
         self.logger.info("Comprehensive cleanup completed")
+    
+    def _extract_fitted_operation(self, compressor_object):
+        if Pipeline is None or not isinstance(compressor_object, Pipeline):
+            return compressor_object
+        
+        if hasattr(compressor_object, 'operator') and hasattr(compressor_object.operator, 'root_node'):
+            return getattr(compressor_object.operator.root_node, 'fitted_operation', None)
+        
+        return None
+    
+    def _clean_compressor_models(self, compressor_object):
+        for attr in _MODEL_ATTRS_TO_CLEAN:
+            model = getattr(compressor_object, attr, None)
+            if model is not None:
+                self._delete_model_from_memory(model)
+                setattr(compressor_object, attr, None)
+        
+        if hasattr(compressor_object, 'trainer') and compressor_object.trainer is not None:
+            self._clean_trainer(compressor_object.trainer)
+            del compressor_object.trainer
+            compressor_object.trainer = None
+            gc.collect()
+        
+        self._clean_dynamic_models(compressor_object)
+    
+    def _clean_trainer(self, trainer):
+        for attr_name in ['model', '_trainer']:
+            trainer_obj = getattr(trainer, attr_name, None)
+            if trainer_obj is not None:
+                if attr_name == '_trainer' and hasattr(trainer_obj, 'model'):
+                    model = getattr(trainer_obj, 'model', None)
+                    if model is not None:
+                        self._delete_model_from_memory(model)
+                        trainer_obj.model = None
+                    del trainer._trainer
+                    trainer._trainer = None
+                elif attr_name == 'model':
+                    self._delete_model_from_memory(trainer_obj)
+                    trainer.model = None
+    
+    def _clean_dynamic_models(self, obj):
+        for attr_name in dir(obj):
+            if attr_name.startswith('__'):
+                continue
+            
+            attr = getattr(obj, attr_name, None)
+            if isinstance(attr, torch.nn.Module):
+                self._delete_model_from_memory(attr)
+                setattr(obj, attr_name, None)
+            elif isinstance(attr, (list, tuple)):
+                for i, item in enumerate(attr):
+                    if isinstance(item, torch.nn.Module):
+                        self._delete_model_from_memory(item)
+                        attr[i] = None
+            elif isinstance(attr, dict):
+                for key, value in list(attr.items()):
+                    if isinstance(value, torch.nn.Module):
+                        self._delete_model_from_memory(value)
+                        attr[key] = None
+    
+    def _clean_registry_storage(self, fedcore_id: str):
+        df = self.storage.load(fedcore_id)
+        if not df.empty and 'checkpoint_bytes' in df.columns:
+            df['checkpoint_bytes'] = None
+            self.storage.save(fedcore_id, df)
+    
+    def _cleanup_gpu_memory(self):
+        self.checkpoint_manager._cleanup_gpu_memory()
+        if torch.cuda.is_available():
+            for _ in range(_CLEANUP_ITERATIONS):
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+        for _ in range(_CLEANUP_ITERATIONS):
+            gc.collect()

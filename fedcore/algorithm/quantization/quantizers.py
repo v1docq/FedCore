@@ -166,16 +166,13 @@ class BaseQuantizer(BaseCompressionModel):
         
         self._model_registry = ModelRegistry()
         self._quantization_index += 1
-        metrics_before = {
-            "stage": f"quantization_{self._quantization_index}",
-            "operation": "quantization",
-            "is_processed": False,
-        }
         if self._model_id_before:
             self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
-                metrics=metrics_before
+                metrics={},
+                stage="before",
+                mode=self.__class__.__name__
             )
         
         self.logger.info("[MODEL] Model initialized for quantization (no deepcopy).")
@@ -242,17 +239,13 @@ class BaseQuantizer(BaseCompressionModel):
             if self.quant_type == 'qat':
                 self.model_after._is_quantized = True
             
-            metrics_after = {
-                "stage": f"quantization_{self._quantization_index}",
-                "operation": "quantization",
-                "is_processed": True,
-            }
-            
             if self._model_id_after:
                 self._model_registry.update_metrics(
                     fedcore_id=self._fedcore_id,
                     model_id=self._model_id_after,
-                    metrics=metrics_after
+                    metrics={},
+                    stage="after",
+                    mode=self.__class__.__name__
                 )
         except Exception as e:
             self.logger.info("[FIT ERROR] Exception during quantization:")

@@ -121,16 +121,13 @@ class BasePruner(BaseCompressionModel):
         self._model_registry = ModelRegistry()
         self._pruning_index += 1
         
-        metrics_before = {
-            "stage": f"pruning_{self._pruning_index}",
-            "operation": "pruning",
-            "is_processed": False,
-        }
         if self._model_id_before:
             self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
-                metrics=metrics_before
+                metrics={},
+                stage="before",
+                mode=self.__class__.__name__
             )
         
         self.model_after = self.model_before
@@ -205,17 +202,14 @@ class BasePruner(BaseCompressionModel):
                 result_model = self.finetune(finetune_object=self.model_after, finetune_data=input_data)
 
                 # Record post-pruning state in registry
-                metrics_after = {
-                    "stage": f"pruning_{self._pruning_index}",
-                    "operation": "pruning",
-                    "is_processed": True,
-                }
                 self.model_after = result_model
                 if self._model_id_after:
                     self._model_registry.update_metrics(
                         fedcore_id=self._fedcore_id,
                         model_id=self._model_id_after,
-                        metrics=metrics_after
+                        metrics={},
+                        stage="after",
+                        mode=self.__class__.__name__
                     )
                 
                 return result_model

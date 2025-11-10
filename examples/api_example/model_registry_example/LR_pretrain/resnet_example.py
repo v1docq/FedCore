@@ -39,7 +39,7 @@ logger.info(f"LOGGING TEST - logs will be saved to: {log_file}")
 ### DEFINE ML PROBLEM - Low Rank compression with training from scratch
 ### Training model from scratch with simultaneous Low Rank compression
 ##########################################################################
-METRIC_TO_OPTIMISE = ['accuracy', 'latency']
+METRIC_TO_OPTIMISE = ['accuracy', 'f1']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'low_rank'
@@ -102,7 +102,7 @@ peft_config = LowRankTemplate(
 
 fedot_config = FedotConfigTemplate(
     problem='classification',
-    metric=['accuracy', 'latency'],
+    metric=METRIC_TO_OPTIMISE,
     pop_size=1,
     timeout=1,
     initial_assumption=INITIAL_ASSUMPTION
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     memory_after_data = registry.get_memory_stats()
     
     start_fit = time.time()
-    fedcore_compressor.fit_no_evo(fedcore_train_data)
+    fedcore_compressor.fit(fedcore_train_data)
     fit_time = time.time() - start_fit
     memory_after_training = registry.get_memory_stats()
     
@@ -155,9 +155,14 @@ if __name__ == "__main__":
     
     fedcore_id = None
     if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
-        fedcore_id = fedcore_compressor.fedcore_model._fedcore_id
+        pipeline = fedcore_compressor.fedcore_model
+        if hasattr(pipeline, 'operator') and hasattr(pipeline.operator, 'root_node'):
+            fitted_op = getattr(pipeline.operator.root_node, 'fitted_operation', None)
+            if fitted_op is not None:
+                fedcore_id = getattr(fitted_op, '_fedcore_id', None)
+        
         logger.info(f"Using fedcore_id: {fedcore_id}")
-        registry.cleanup_fedcore_instance(fedcore_id, fedcore_compressor.fedcore_model)
+        registry.cleanup_fedcore_instance(fedcore_id if fedcore_id else "unknown", fedcore_compressor.fedcore_model)
     else:
         registry.force_cleanup()
     

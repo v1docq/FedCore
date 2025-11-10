@@ -123,7 +123,8 @@ class BaseCompressionModel:
             self._model_id_before = self._registry.register_model(
                 fedcore_id=self._fedcore_id,
                 model=value,
-                metrics={"stage": "initial", "is_processed": False}
+                stage="before",
+                mode=None
             )
             logger.info(f"model_before registered with id={self._model_id_before}")
         else:
@@ -162,7 +163,8 @@ class BaseCompressionModel:
                 self._model_id_after = self._registry.register_model(
                     fedcore_id=self._fedcore_id,
                     model=value,
-                    metrics={"stage": "after_compression", "is_processed": False}
+                    stage="after",
+                    mode=None
                 )
                 logger.info(f"model_after registered with id={self._model_id_after}")
             else:
@@ -171,29 +173,25 @@ class BaseCompressionModel:
                     fedcore_id=self._fedcore_id,
                     model_id=self._model_id_after,
                     model=value,
-                    metrics={"stage": "after_compression", "is_processed": True}
+                    stage="after",
+                    mode=None
                 )
                 logger.info("model_after changes registered")
         else:
             logger.debug("Skipping registration: value is None")
     
-    def _save_model_checkpoint(self, model, stage: str, metrics: dict = None):
+    def _save_model_checkpoint(self, model, stage: str):
         """Save model checkpoint to registry.
         
         Args:
             model: Model to save
             stage: Stage name (e.g., 'before_compression', 'after_compression')
-            metrics: Optional metrics dictionary
         """
-        if metrics is None:
-            metrics = {}
-        
-        metrics['stage'] = stage
-        
         model_id = self._registry.register_model(
             fedcore_id=self._fedcore_id,
             model=model,
-            metrics=metrics
+            stage=stage,
+            mode=None
         )
         return model_id
     

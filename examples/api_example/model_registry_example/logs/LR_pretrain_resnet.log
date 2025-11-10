@@ -1,15 +1,15 @@
-2025-10-29 14:22:59,317 - __main__ - INFO - LOGGING TEST - logs will be saved to: examples/api_example/model_registry_example/logs/LR_pretrain_resnet.log
-2025-10-29 14:24:24,903 - __main__ - INFO - Using fedcore_id: fedcore_ad0a8852
-2025-10-29 14:24:25,575 - __main__ - INFO - Memory after cleanup: 0.0162 GB
-2025-10-29 14:24:25,575 - __main__ - INFO - FINAL STATISTICS
-2025-10-29 14:24:25,575 - __main__ - INFO - Training time:     75.20 sec
-2025-10-29 14:24:25,575 - __main__ - INFO - Report time:       9.42 sec
-2025-10-29 14:24:25,575 - __main__ - INFO - Total time:        85.48 sec
-2025-10-29 14:24:25,575 - __main__ - INFO - MEMORY STATISTICS:
-2025-10-29 14:24:25,575 - __main__ - INFO - Initial GPU memory:     0.0000 GB
-2025-10-29 14:24:25,575 - __main__ - INFO - After training:          0.1577 GB
-2025-10-29 14:24:25,575 - __main__ - INFO - After report:            0.1928 GB
-2025-10-29 14:24:25,575 - __main__ - INFO - Final GPU memory:        0.0162 GB
-2025-10-29 14:24:25,575 - __main__ - INFO - Peak memory:             0.1928 GB
-2025-10-29 14:24:25,575 - __main__ - INFO - Memory freed:             0.1765 GB
-2025-10-29 14:24:25,576 - __main__ - INFO - Cleanup efficiency:      91.6%
+2025-11-06 16:12:11,978 - __main__ - INFO - LOGGING TEST - logs will be saved to: examples/api_example/model_registry_example/logs/LR_pretrain_resnet.log
+2025-11-06 16:15:11,908 - __main__ - INFO - Using fedcore_id: fedcore_57224009
+2025-11-06 16:15:12,889 - __main__ - INFO - Memory after cleanup: 0.0672 GB
+2025-11-06 16:15:12,890 - __main__ - INFO - FINAL STATISTICS
+2025-11-06 16:15:12,890 - __main__ - INFO - Training time:     167.74 sec
+2025-11-06 16:15:12,890 - __main__ - INFO - Report time:       11.12 sec
+2025-11-06 16:15:12,890 - __main__ - INFO - Total time:        179.72 sec
+2025-11-06 16:15:12,890 - __main__ - INFO - MEMORY STATISTICS:
+2025-11-06 16:15:12,890 - __main__ - INFO - Initial GPU memory:     0.0000 GB
+2025-11-06 16:15:12,891 - __main__ - INFO - After training:          0.2118 GB
+2025-11-06 16:15:12,891 - __main__ - INFO - After report:            0.2470 GB
+2025-11-06 16:15:12,891 - __main__ - INFO - Final GPU memory:        0.0672 GB
+2025-11-06 16:15:12,891 - __main__ - INFO - Peak memory:             0.2470 GB
+2025-11-06 16:15:12,891 - __main__ - INFO - Memory freed:             0.1798 GB
+2025-11-06 16:15:12,891 - __main__ - INFO - Cleanup efficiency:      72.8%

@@ -1,15 +1,15 @@
-"""
-Core implementations of regression, classification, and time series metrics.
-
-All metrics inherit from `QualityMetric` base class and provide a unified
-interface: `metric(target, predict) -> float` plus `.get_value(...)` to
-integrate with pipelines.
-"""
-
-from __future__ import annotations
-from typing import Any
-import numpy as np
+from abc import ABC, abstractmethod
+from typing import Dict, List
+from sklearn.metrics import precision_recall_fscore_support
+from torch.nn.functional import softmax
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
+import torch
+from typing import Union
 from torch import Tensor
+import numpy as np
+import pandas as pd
+from fedot.core.data.data import InputData
+from golem.core.dag.graph import Graph
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -21,245 +21,461 @@ from sklearn.metrics import (
     precision_score,
     r2_score,
     roc_auc_score,
-    precision_recall_fscore_support,  # used in counters
 )
+from sktime.performance_metrics.forecasting import mean_absolute_scaled_error
+from fedot.core.composer.metrics import Metric
+
+from fedcore.architecture.comptutaional.devices import default_device
 
 
-# ---------------------------------------------------------------------------
-# Base class
-# ---------------------------------------------------------------------------
+class MetricCounter(ABC):
+    """Generalized class for calculating metrics"""
 
-class QualityMetric:
+    def __init__(self, **kwargs) -> None:
+        pass
+
+    @abstractmethod
+    def update(self, **kwargs) -> None:
+        """Have to implement updating, taking model outputs as input."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def compute(self) -> Dict[str, float]:
+        """Have to implement metrics computing."""
+        raise NotImplementedError
+
+
+class ClassificationMetricCounter(MetricCounter):
+    """Calculates metrics for classification task.
+
+    Args:
+        class_metrics:  If ``True``, calculates metrics for each class.
     """
-    Base metric that can be computed directly or via pipeline evaluation.
 
-    Subclasses override `metric(target, predict)` to return a scalar score.
+    def __init__(self, class_metrics: bool = False) -> None:
+        super().__init__()
+        self.y_true = []
+        self.y_pred = []
+        self.y_score = []
+        self.class_metrics = class_metrics
+
+    def update(self, predictions: torch.Tensor, targets: torch.Tensor) -> None:
+        """Accumulates predictions and targets."""
+        self.y_true.extend(targets.tolist())
+        self.y_score.extend(softmax(predictions, dim=1).tolist())
+        self.y_pred.extend(predictions.argmax(1).tolist())
+
+    def compute(self) -> Dict[str, float]:
+        """Compute accuracy, precision, recall, f1, roc auc metrics.
+
+        Returns:
+             Dictionary: `{metric: score}`.
+        """
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            self.y_true, self.y_pred, average="macro"
+        )
+
+        scores = {
+            "accuracy": accuracy_score(self.y_true, self.y_pred),
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        }
+        if self.class_metrics:
+            f1s = f1_score(self.y_true, self.y_pred, average=None)
+            scores.update({f"f1_for_class_{i}": s for i, s in enumerate(f1s)})
+        return scores
+
+
+class SegmentationMetricCounter(MetricCounter):
+    """Calculates metrics for semantic segmentation task.
+
+    Args:
+        class_metrics:  If ``True``, calculates metrics for each class.
     """
 
-    default_value: float = 0.0
-    need_to_minimize: bool = False
-    output_mode: str = "compress"   # 'labels', 'probs', 'raw', 'compress'
-    split: str = "val"              # 'val' or 'test'
+    def __init__(self, class_metrics: bool = False) -> None:
+        super().__init__()
+        self.iou = []
+        self.dice = []
+        self.class_metrics = class_metrics
+
+    def update(self, predictions: torch.Tensor, targets: torch.Tensor) -> None:
+        """Accumulates iou and dice."""
+        masks = torch.zeros_like(predictions)
+        for i in range(predictions.shape[1]):
+            masks[:, i, :, :] = torch.squeeze(targets == i)
+        self.iou.append(iou_score(predictions, masks))
+        self.dice.append(dice_score(predictions, masks))
+
+    def compute(self) -> Dict[str, float]:
+        """Compute average metrics.
+
+        Returns:
+             Dictionary: `{metric: score}`.
+        """
+        iou = torch.cat(self.iou).T
+        dice = torch.cat(self.dice).T
+
+        scores = {
+            "iou": iou[1:][iou[1:] >= 0].mean().item(),
+            "dice": dice[1:][dice[1:] >= 0].mean().item(),
+        }
+        if self.class_metrics:
+            scores.update(
+                {
+                    f"iou_for_class_{i}": s[s >= 0].mean().item()
+                    for i, s in enumerate(iou)
+                }
+            )
+            scores.update(
+                {
+                    f"dice_for_class_{i}": s[s >= 0].mean().item()
+                    for i, s in enumerate(dice)
+                }
+            )
+        return scores
+
+
+class ObjectDetectionMetricCounter(MetricCounter):
+    """Calculates metrics for object detection task.
+
+    Args:
+        class_metrics:  If ``True``, calculates metrics for each class.
+    """
+
+    def __init__(self, class_metrics: bool = False) -> None:
+        super().__init__()
+        self.map = MeanAveragePrecision(class_metrics=class_metrics)
+        self.class_metrics = class_metrics
+
+    def update(
+            self,
+            predictions: List[Dict[str, torch.Tensor]],
+            targets: List[Dict[str, torch.Tensor]],
+    ) -> None:
+        """Accumulates predictions and targets."""
+        self.map.update(preds=predictions, target=targets)
+
+    def compute(self) -> Dict[str, float]:
+        """Compute MAP, MAR metrics.
+
+        Returns:
+             Dictionary: `{metric: score}`.
+        """
+
+        scores = self.map.compute()
+        if self.class_metrics:
+            scores.update(
+                {f"map_for_class_{i}": s for i, s in enumerate(scores["map_per_class"])}
+            )
+            scores.update(
+                {
+                    f"mar_100_for_class_{i}": s
+                    for i, s in enumerate(scores["mar_100_per_class"])
+                }
+            )
+        del scores["map_per_class"]
+        del scores["mar_100_per_class"]
+        return scores
+
+
+class LossesAverager(MetricCounter):
+    """Calculates the average loss."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.losses = None
+        self.counter = 0
+
+    def update(self, losses: Dict[str, torch.Tensor]) -> None:
+        """Accumulates losses"""
+        self.counter += 1
+        if self.losses is None:
+            self.losses = {k: v.item() for k, v in losses.items()}
+        else:
+            for key, value in losses.items():
+                self.losses[key] += value.item()
+
+    def compute(self) -> Dict[str, float]:
+        """Compute average losses.
+
+        Returns:
+            Dictionary: `{metric: score}`.
+        """
+        return {k: v / self.counter for k, v in self.losses.items()}
+
+
+def iou_score(
+        outputs: torch.Tensor,
+        masks: torch.Tensor,
+        threshold: float = 0.5,
+        smooth: float = 1e-10,
+) -> torch.Tensor:
+    """Computes intersection over union (masks) on batch.
+
+    Args:
+        outputs: Output from semantic segmentation model.
+        masks: True masks.
+        threshold: Binarization threshold for output.
+        smooth: Additional constant to avoid division by zero.
+
+    Returns:
+        Intersection over union for batch.
+    """
+    outputs = (outputs > threshold).float()
+    intersection = torch.logical_and(outputs, masks).float().sum((2, 3))
+    union = torch.logical_or(outputs, masks).float().sum((2, 3))
+    iou = (intersection + smooth) / (union + smooth)
+    iou[union == 0] = -1
+    return iou
+
+
+def dice_score(
+        outputs: torch.Tensor,
+        masks: torch.Tensor,
+        threshold: float = 0.5,
+        smooth: float = 1e-10,
+) -> torch.Tensor:
+    """Computes dice coefficient (masks) on batch.
+
+    Args:
+        outputs: Output from semantic segmentation model.
+        masks: True masks.
+        threshold: Binarization threshold for output.
+        smooth: Additional constant to avoid division by zero.
+
+    Returns:
+        Dice for batch.
+    """
+    outputs = (outputs > threshold).float()
+    intersection = torch.logical_and(outputs, masks).float().sum((2, 3))
+    total = (outputs + masks).sum((2, 3))
+    dice = (2 * intersection + smooth) / (total + smooth)
+    dice[total == 0] = -1
+    return dice
+
+
+class ParetoMetrics:
+    def pareto_metric_list(
+            self, costs: Union[list, np.ndarray], maximise: bool = True
+    ) -> np.ndarray:
+        """Calculates the pareto front for a list of costs.
+
+        Args:
+            costs: list of costs. An (n_points, n_costs) array.
+            maximise: flag for maximisation or minimisation.
+
+        Returns:
+            A (n_points, ) boolean array, indicating whether each point is Pareto efficient
+
+        """
+        is_efficient = np.ones(costs.shape[0], dtype=bool)
+        for i, c in enumerate(costs):
+            if is_efficient[i]:
+                if maximise:
+                    is_efficient[is_efficient] = np.any(
+                        costs[is_efficient] >= c, axis=1
+                    )  # Remove dominated points
+                else:
+                    is_efficient[is_efficient] = np.any(
+                        costs[is_efficient] <= c, axis=1
+                    )  # Remove dominated points
+        return is_efficient
+
+
+class QualityMetric(Metric):
+    default_value = 0
+    need_to_minimize = False
+    output_mode = 'compress'
 
     @classmethod
+    @abstractmethod
     def metric(cls, target, predict) -> float:
-        """Compute metric value from arrays of target and prediction."""
-        raise NotImplementedError
+        pass
 
     @classmethod
     def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+        """ Get metric value based on pipeline, reference data, and number of validation blocks.
+        Args:
+            pipeline: a :class:`Pipeline` instance for evaluation.
+            reference_data: :class:`InputData` for evaluation.
+            validation_blocks: number of validation blocks. Used only for time series forecasting.
+                If ``None``, data separation is not performed.
         """
-        Run `pipeline.predict` and compute the metric on reference_data.
-
-        Uses `features.<split>_dataloader` to obtain true labels.
-        """
+        metric = cls.default_value
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
-        loader = getattr(reference_data.features, f"{cls.split}_dataloader")
-
+        # get true targets from test/calib dataloader
+        test_dataset = reference_data.features.val_dataloader.dataset
+        # get predction from result.predict (OutputData)
         prediction = results.predict.predict
         if isinstance(prediction, Tensor):
             prediction = prediction.cpu().detach().numpy().flatten()
-
-        dataset = loader.dataset
-        if hasattr(dataset, "targets"):
-            true_target = dataset.targets
+        if hasattr(test_dataset, 'targets'):
+            true_target = reference_data.features.val_dataloader.dataset.targets
         else:
-            iter_object = iter(dataset)
+            iter_object = iter(test_dataset)
             true_target = np.array([batch[1] for batch in iter_object])
 
-        return cls.metric(target=true_target, predict=prediction)
+        return cls.metric(cls, target=true_target, predict=prediction)
 
     @staticmethod
     def _get_least_frequent_val(array: np.ndarray):
-        """Return the least frequent value in array (for binary F1)."""
+        """Returns the least frequent value in a flattened numpy array."""
         unique_vals, count = np.unique(np.ravel(array), return_counts=True)
-        return unique_vals[np.argmin(count)]
-    
-    @staticmethod
-    def _handle_multiclass_multioutput(target, predict):
-        """
-        Handle multiclass-multioutput data (e.g., LLM predictions with shape (batch, seq_len)).
-        
-        Flattens arrays if ndim > 1 and filters out padding tokens (marked as -100).
-        
-        Args:
-            target: Target labels
-            predict: Predicted labels or logits
-        
-        Returns:
-            tuple: (processed_target, processed_predict)
-        """
-        target = np.asarray(target)
-        predict = np.asarray(predict)
-        
-        if predict.ndim > target.ndim:
-            predict = np.argmax(predict, axis=-1)
-        
-        if target.ndim > 1:
-            target = target.flatten()
-        if predict.ndim > 1:
-            predict = predict.flatten()
-        
-        if target.size != predict.size:
-            if predict.size > target.size and predict.size % target.size == 0:
-                vocab_size = predict.size // target.size
-                predict = predict.reshape(target.size, vocab_size).argmax(axis=-1)
-            else:
-                return target, predict
-        
-        if target.size > 0:
-            valid_mask = target != -100
-            if valid_mask.any():
-                target = target[valid_mask]
-                predict = predict[valid_mask]
-        
-        return target, predict
+        least_frequent_idx = np.argmin(count)
+        least_frequent_val = unique_vals[least_frequent_idx]
+        return least_frequent_val
 
-
-# ---------------------------------------------------------------------------
-# Regression and time series metrics
-# ---------------------------------------------------------------------------
 
 class RMSE(QualityMetric):
-    """Root Mean Squared Error (lower is better)."""
-    @classmethod
     def metric(cls, target, predict) -> float:
-        return float(mean_squared_error(y_true=target, y_pred=predict, squared=False))
-
-
-class MSE(QualityMetric):
-    """Mean Squared Error (lower is better)."""
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        return float(mean_squared_error(y_true=target, y_pred=predict, squared=True))
-
-
-class MSLE(QualityMetric):
-    """Mean Squared Logarithmic Error (non-negative inputs required)."""
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        return float(mean_squared_log_error(y_true=target, y_pred=predict))
-
-
-class MAE(QualityMetric):
-    """Mean Absolute Error (lower is better)."""
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        return float(mean_absolute_error(y_true=target, y_pred=predict))
-
-
-class MAPE(QualityMetric):
-    """Mean Absolute Percentage Error, expressed as a fraction."""
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        return float(mean_absolute_percentage_error(y_true=target, y_pred=predict))
+        return mean_squared_error(y_true=target, y_pred=predict, squared=False)
 
 
 class SMAPE(QualityMetric):
-    """Symmetric MAPE in percentage, robust to scale differences."""
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        t = np.asarray(target).ravel()
-        p = np.asarray(predict).ravel()
-        return float(np.mean(2.0 * np.abs(t - p) / (np.abs(t) + np.abs(p) + 1e-12)) * 100.0)
-
-
-class R2(QualityMetric):
-    """Coefficient of determination R² (higher is better)."""
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        return float(r2_score(y_true=target, y_pred=predict))
-
-
-def smape(target, predict) -> float:
-    """SMAPE as a functional alias (percent)."""
-    return SMAPE.metric(target, predict)
-
-
-def mape(target, predict) -> float:
-    """MAPE as a functional alias (fraction)."""
-    return MAPE.metric(target, predict)
-
-
-def mase(target, predict, seasonal_period: int = 1) -> float:
-    """
-    Mean Absolute Scaled Error using naive seasonal lag as scale.
-
-    Args:
-        target: Ground truth series.
-        predict: Predicted series.
-        seasonal_period: Lag for naive forecast (1, 7, 12, etc.).
-    """
-    y = np.asarray(target).ravel()
-    p = np.asarray(predict).ravel()
-    if y.size <= seasonal_period:
-        return float("inf")
-    mae_model = np.mean(np.abs(y - p))
-    mae_naive = np.mean(np.abs(y[seasonal_period:] - y[:-seasonal_period]))
-    return float(mae_model / (mae_naive if mae_naive != 0 else np.finfo(float).eps))
-
-
-# ---------------------------------------------------------------------------
-# Classification metrics
-# ---------------------------------------------------------------------------
-
-class Accuracy(QualityMetric):
-    """Classification accuracy on discrete labels."""
-    output_mode = "labels"
 
     @classmethod
+    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+        """ Get metric value based on pipeline, reference data, and number of validation blocks.
+        Args:
+            pipeline: a :class:`Pipeline` instance for evaluation.
+            reference_data: :class:`InputData` for evaluation.
+            validation_blocks: number of validation blocks. Used only for time series forecasting.
+                If ``None``, data separation is not performed.
+        """
+        true_pred = pipeline.predict(reference_data, output_mode=cls.output_mode).predict
+        # get true targets from test dataloader
+        target_list = []
+        for batch in reference_data.features.test_dataloader:
+            x_hist, x_fut, y = [b.to(default_device()) for b in batch]
+            target_list.append(y.cpu().detach().numpy().squeeze())
+        true_target = np.concatenate(target_list).ravel()
+        # get predction from result.predict (OutputData)
+        return cls.metric(cls, target=true_target, predict=true_pred)
+
     def metric(cls, target, predict) -> float:
-        target, predict = cls._handle_multiclass_multioutput(target, predict)
-        return float(accuracy_score(target, predict))
+        return (1 / len(predict) * np.sum(2 * np.abs(target - predict)
+                                          / (np.abs(predict) + np.abs(target)) * 100))
 
 
-class Precision(QualityMetric):
-    """Macro-averaged precision for classification."""
-    output_mode = "labels"
-
-    @classmethod
+class MSE(QualityMetric):
     def metric(cls, target, predict) -> float:
-        target, predict = cls._handle_multiclass_multioutput(target, predict)
-        return float(precision_score(target, predict, average="macro", zero_division=0))
-
-
-class F1(QualityMetric):
-    """F1 score; macro for multiclass, minority-positive for binary."""
-    output_mode = "labels"
-
-    @classmethod
-    def metric(cls, target, predict) -> float:
-        target, predict = cls._handle_multiclass_multioutput(target, predict)
-        
-        uniq_t = np.unique(target)
-        if uniq_t.size > 2:
-            return float(f1_score(target, predict, average="macro", zero_division=0))
-        pos_label = cls._get_least_frequent_val(target)
-        return float(
-            f1_score(target, predict, average="binary", pos_label=pos_label, zero_division=0)
+        return mean_squared_error(
+            y_true=target, y_pred=predict, squared=True
         )
 
 
-class Logloss(QualityMetric):
-    """Cross-entropy loss (log loss) on predicted probabilities."""
-    output_mode = "probs"
-
-    @classmethod
+class MSLE(QualityMetric):
     def metric(cls, target, predict) -> float:
-        return float(log_loss(y_true=target, y_pred=predict))
+        return mean_squared_log_error(y_true=target, y_pred=predict)
+
+
+class MAPE(QualityMetric):
+    def metric(cls, target, predict) -> float:
+        return mean_absolute_percentage_error(
+            y_true=target, y_pred=predict
+        )
+
+
+class F1(QualityMetric):
+    output_mode = "labels"
+
+    def metric(cls, target, predict) -> float:
+        n_classes = len(np.unique(target))
+        n_classes_pred = len(np.unique(predict))
+
+        try:
+            if n_classes > 2 or n_classes_pred > 2:
+                return f1_score(
+                    y_true=target, y_pred=predict, average="weighted"
+                )
+            else:
+                pos_label = QualityMetric._get_least_frequent_val(target)
+                return f1_score(
+                    y_true=target,
+                    y_pred=predict,
+                    average="binary",
+                    pos_label=pos_label,
+                )
+        except ValueError:
+            return cls.default_value
+
+
+class MAE(QualityMetric):
+    def metric(cls, target, predict) -> float:
+        return mean_absolute_error(y_true=target, y_pred=predict)
+
+
+class R2(QualityMetric):
+    def metric(self) -> float:
+        return r2_score(y_true=self.target, y_pred=self.predicted_labels)
+
+
+def maximised_r2(graph: Graph, reference_data: InputData, **kwargs):
+    result = graph.predict(reference_data)
+    r2_value = r2_score(y_true=reference_data.target, y_pred=result.predict)
+    return 1 - r2_value
 
 
 class ROCAUC(QualityMetric):
-    """ROC-AUC score; macro OVR for multiclass, standard binary otherwise."""
-    output_mode = "probs"
-
-    @classmethod
     def metric(cls, target, predict) -> float:
-        t = np.asarray(target)
-        p = np.asarray(predict)
-        if np.unique(t).size > 2:
-            score = roc_auc_score(y_true=t, y_score=p, multi_class="ovr", average="macro")
+        n_classes = len(np.unique(target))
+
+        if n_classes > 2:
+            target = pd.get_dummies(target)
+            additional_params = {"multi_class": "ovr", "average": "macro"}
+            prediction = pd.get_dummies(predict)
         else:
-            y_score = p[:, 1] if p.ndim == 2 else p
-            score = roc_auc_score(y_true=t, y_score=y_score)
-        return float(score)
+            target = target
+            additional_params = {}
+            prediction = predict
+
+        score = roc_auc_score(
+            y_score=prediction,
+            y_true=target,
+            labels=np.unique(target),
+            **additional_params,
+        )
+        score = round(score, 3)
+
+        return score
+
+
+class Precision(QualityMetric):
+    output_mode = "labels"
+
+    def metric(cls, target, predict) -> float:
+        n_classes = np.unique(target)
+        if n_classes.shape[0] >= 2:
+            additional_params = {"average": "macro"}
+        else:
+            additional_params = {}
+
+        score = precision_score(y_pred=predict, y_true=target, **additional_params)
+        score = round(score, 3)
+        return score
+
+
+class Logloss(QualityMetric):
+    def metric(cls, target, predict) -> float:
+        return log_loss(y_true=target, y_pred=predict)
+
+
+class Accuracy(QualityMetric):
+    output_mode = "labels"
+
+    def metric(cls, target, predict) -> float:
+        return accuracy_score(y_true=target, y_pred=predict)
+
+
+def mase(A, F, y_train):
+    return mean_absolute_scaled_error(A, F, y_train=y_train)
+
+
+def smape(a, f, _=None):
+    return 1 / len(a) * np.sum(2 * np.abs(f - a) / (np.abs(a) + np.abs(f)) * 100)
+
+
+def mape(A, F):
+    return mean_absolute_percentage_error(A, F)

@@ -1,85 +1,60 @@
-"""
-Computational and compression-related metrics.
-
-These metrics are evaluated on model internals (features, attentions, logits)
-or on runtime characteristics (throughput, latency). All inherit from
-`CompressionMetric`, which follows the common metric interface.
-"""
-
-from __future__ import annotations
 from abc import abstractmethod
-from typing import Optional
+
 import numpy as np
-from torch import nn
+from typing import Optional
 
 from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.utilities.custom_errors import AbstractMethodNotImplementError
+from torch import nn
 
-from fedcore.architecture.computational.devices import default_device
+from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.tools.ruler import PerformanceEvaluator
 
-# ---------------------------------------------------------------------------
-# Base class
-# ---------------------------------------------------------------------------
 
 class CompressionMetric(Metric):
-    """
-    Base class for compression- and computation-oriented metrics.
-
-    Subclasses must implement `metric(...)`. Values are inverted if
-    `need_to_minimize=True`.
-    """
-
-    default_value: float = 0.0
-    need_to_minimize: bool = False
+    default_value = 0
+    need_to_minimize = False
 
     @staticmethod
     @abstractmethod
     def metric(**kwargs) -> float:
-        """Compute the metric from provided arguments."""
         raise AbstractMethodNotImplementError
 
     def simple_prediction(self, pipeline, reference_data):
-        """Convenience wrapper to get pipeline predictions and pass-through data."""
         predict = pipeline.predict(reference_data)
         return predict, reference_data
 
     @classmethod
     def get_value(
-        cls,
-        pipeline: Pipeline,
-        reference_data: InputData,
-        validation_blocks: Optional[int] = None,
+            cls,
+            pipeline: Pipeline,
+            reference_data: InputData,
+            validation_blocks: Optional[int] = None,
     ) -> float:
-        """
-        Compute metric value on a pipeline and reference data.
-
+        """Get metric value based on pipeline, reference data, and number of validation blocks.
         Args:
-            pipeline: Pipeline to evaluate.
-            reference_data: InputData for evaluation.
-            validation_blocks: Only relevant for TS; ignored otherwise.
+            pipeline: a :class:`Pipeline` instance for evaluation.
+            reference_data: :class:`InputData` for evaluation.
+            validation_blocks: number of validation blocks. Used only for time series forecasting.
+                If ``None``, data separation is not performed.
         """
-        value = cls.metric(pipeline, reference_data.features.val_dataloader)
-        if cls.need_to_minimize and isinstance(value, (int, float, np.number)):
-            value = -value
-        return value
+        metric = cls.default_value
+        metric = cls.metric(pipeline, reference_data.features.val_dataloader)
+        if cls.need_to_minimize:
+            metric = -metric
+        return metric
 
-
-# ---------------------------------------------------------------------------
-# Distillation losses (student vs teacher)
-# ---------------------------------------------------------------------------
 
 class IntermediateAttention(CompressionMetric):
-    """KL-divergence loss between student and teacher attentions."""
     @classmethod
     def metric(
-        cls,
-        student_attentions,
-        teacher_attentions,
-        weights,
-        student_teacher_attention_mapping,
+            cls,
+            student_attentions,
+            teacher_attentions,
+            weights,
+            student_teacher_attention_mapping,
     ):
         loss = 0
         for i in range(len(student_attentions)):
@@ -91,7 +66,6 @@ class IntermediateAttention(CompressionMetric):
 
 
 class IntermediateFeatures(CompressionMetric):
-    """MSE loss between intermediate student and teacher feature maps."""
     @classmethod
     def metric(cls, student_feats, teacher_feats, weights):
         loss = 0
@@ -101,78 +75,53 @@ class IntermediateFeatures(CompressionMetric):
 
 
 class LastLayer(CompressionMetric):
-    """MSE loss between student and teacher logits."""
     @classmethod
     def metric(cls, student_logits, teacher_logits, weight):
         return weight * nn.MSELoss()(student_logits, teacher_logits)
 
 
-# ---------------------------------------------------------------------------
-# Runtime metrics
-# ---------------------------------------------------------------------------
-
 class Throughput(CompressionMetric):
-    """Average number of samples processed per second (higher is better)."""
     need_to_minimize = True
 
     @classmethod
-    def metric(cls, model, dataset, device=default_device(), batch_size: int = 32):
+    def metric(cls, model, dataset, device=default_device(), batch_size=32):
         evaluator = PerformanceEvaluator(model=model, data=dataset, device=device, batch_size=batch_size)
         throughputs = evaluator.throughput_eval()
-        return float(np.mean(throughputs))
+        return np.mean(throughputs)
 
 
 class Latency(CompressionMetric):
-    """Average per-batch latency in seconds (lower is better)."""
-    need_to_minimize = True
+    need_to_minimize = False
 
     @classmethod
-    def metric(
-        cls,
-        model,
-        dataset,
-        model_regime: str = "model_after",
-        device=default_device(),
-        batch_size: int = 32,
-    ):
-        evaluator = PerformanceEvaluator(
-            model=model,
-            model_regime=model_regime,
-            data=dataset,
-            device=device,
-            batch_size=batch_size,
-        )
+    def metric(cls, model, dataset, 
+               model_regime='model_after',
+               device=default_device(), 
+               batch_size=32, 
+               ):
+        evaluator = PerformanceEvaluator(model=model, model_regime=model_regime,
+                                         data=dataset, device=device, batch_size=batch_size)
         latency_list = evaluator.latency_eval()
-        return float(np.mean(latency_list))
+        avg_lat = np.mean(latency_list)
+        return avg_lat
 
 
 class CV_quality_metric(CompressionMetric):
-    """
-    Aggregate quality metric wrapper using PerformanceEvaluator.
-
-    Produces a dict with multiple metrics (accuracy, etc.)
-    instead of a single float.
-    """
     default_clf_metric = "accuracy"
     need_to_minimize = True
 
     def __repr__(self):
-        return "Fedcore_compression_quality_metric"
+        """Fedcore_compression_quality_metric"""
 
     @classmethod
-    def metric(
-        cls,
-        model,
-        dataset,
-        model_regime: str = "model_after",
-        device=default_device(),
-        batch_size: int = 32,
-    ):
-        evaluator = PerformanceEvaluator(
-            model=model,
-            model_regime=model_regime,
-            data=dataset,
-            device=device,
-            batch_size=batch_size,
-        )
-        return evaluator.eval()
+    def metric(cls, model, dataset, 
+               model_regime='model_after', 
+               device=default_device(), 
+               batch_size=32):
+        evaluator = PerformanceEvaluator(model=model,
+                                         model_regime=model_regime,
+                                         data=dataset,
+                                         device=device,
+                                         batch_size=batch_size)
+        metric_dict = evaluator.eval()
+        return metric_dict

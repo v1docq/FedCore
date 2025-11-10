@@ -32,6 +32,7 @@ from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.tools.registry.model_registry import ModelRegistry
+from fedcore.api.utils.misc import extract_fitted_operation
 
 warnings.filterwarnings("ignore")
 
@@ -95,59 +96,6 @@ class FedCore(Fedot):
         self.logger.info('-' * 50)
         return input_data
     
-    def _extract_fitted_operation(self, solver, max_depth: int = 5):
-        """Extract fitted operation from solver using recursive search.
-        Args:
-            solver: Fedot solver instance or any object containing fitted_operation
-            max_depth: Maximum depth for recursive search (default: 5)
-            
-        Returns:
-            Fitted operation (usually a trained model)
-            
-        Raises:
-            AttributeError: If fitted_operation cannot be found
-        """
-        def _recursive_search(obj, target_attr: str, depth: int = 0, visited=None):
-            if visited is None:
-                visited = set()
-            
-            obj_id = id(obj)
-            if obj_id in visited or depth > max_depth:
-                return None
-            visited.add(obj_id)
-            
-            if hasattr(obj, target_attr):
-                return getattr(obj, target_attr)
-
-            priority_attrs = ['operator', 'root_node', 'operation']
-            
-            for attr_name in priority_attrs:
-                if hasattr(obj, attr_name):
-                    nested_obj = getattr(obj, attr_name)
-                    if nested_obj is not None and not isinstance(nested_obj, (str, int, float, bool)):
-                        result = _recursive_search(nested_obj, target_attr, depth + 1, visited)
-                        if result is not None:
-                            return result
-            
-            for attr_name in dir(obj):
-                if (attr_name.startswith('_') or 
-                    attr_name in priority_attrs or 
-                    attr_name in ['__class__', '__dict__']):
-                    continue
-
-                nested_obj = getattr(obj, attr_name)
-                if (nested_obj is not None and 
-                    not isinstance(nested_obj, (str, int, float, bool, list, dict, tuple)) and
-                    not callable(nested_obj)):
-                    result = _recursive_search(nested_obj, target_attr, depth + 1, visited)
-                    if result is not None:
-                        return result
-                    
-            return None
-        
-        result = _recursive_search(solver, 'fitted_operation')
-        return result
-
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
@@ -202,6 +150,33 @@ class FedCore(Fedot):
             model = self.fedcore_model
         return model
 
+    def _save_metrics_from_evaluator(self):
+        """Collect and save metrics from evaluator to registry after fit."""        
+        if not hasattr(self.manager, 'solver') or self.manager.solver is None:
+            return
+        
+        if not hasattr(self.manager.solver, 'history') or self.manager.solver.history is None:
+            return
+        
+        fedcore_id = None
+        model_id = None
+        
+        if self.fedcore_model is not None:
+            if hasattr(self.fedcore_model, 'operator') and hasattr(self.fedcore_model.operator, 'root_node'):
+                fitted_op = getattr(self.fedcore_model.operator.root_node, 'fitted_operation', None)
+                if fitted_op is not None:
+                    fedcore_id = getattr(fitted_op, '_fedcore_id', None)
+                    if fedcore_id:
+                        model_id = getattr(fitted_op, '_model_id_after', None) or getattr(fitted_op, '_model_id_before', None)
+        
+        if fedcore_id and model_id:
+            registry = ModelRegistry()
+            registry.save_metrics_from_evaluator(
+                solver=self.manager.solver,
+                fedcore_id=fedcore_id,
+                model_id=model_id
+            )
+
     def _process_input_data(self, input_data):
         data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
                              model=self.manager.automl_config.fedot_config['initial_assumption'],
@@ -218,7 +193,7 @@ class FedCore(Fedot):
         pretrained_model = fedot_pipeline.fit(train_data)
         fedcore_trainer = fedot_pipeline.operator.root_node.operation.fitted_operation
         path_to_save_pretrain = os.path.join(self.manager.compute_config.output_folder)
-        os.makedirs(path_to_save_pretrain)
+        os.makedirs(path_to_save_pretrain, exist_ok=True)
         path_to_model = os.path.join(path_to_save_pretrain,
                                      f'pretrain_model_checkpoint_at_{fedcore_trainer.epochs}_epoch.pt')
         fedcore_trainer.save_model(path_to_model)
@@ -265,9 +240,13 @@ class FedCore(Fedot):
                 then(self.__init_solver). \
                 then(fit_function). \
                 maybe(None, lambda solver: solver)
+            
+            self._save_metrics_from_evaluator()
+            
             return self.fedcore_model
         except KeyboardInterrupt:
             self.fedcore_model = self.manager.solver
+            self._save_metrics_from_evaluator()
             return self.fedcore_model
 
     def fit_no_evo(self, input_data: tuple, manually_done=False, **kwargs):
@@ -279,7 +258,7 @@ class FedCore(Fedot):
             fitted_solver = self.manager.solver.fit(x)
         self.optimised_model = fitted_solver.target
         
-        self.fedcore_model = self._extract_fitted_operation(self.manager.solver)
+        self.fedcore_model = extract_fitted_operation(self.manager.solver)
         return fitted_solver
 
     def predict(self, predict_data: tuple, output_mode: str = 'fedcore', **kwargs):

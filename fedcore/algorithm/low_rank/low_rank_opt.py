@@ -111,7 +111,9 @@ class LowRankModel(BaseCompressionModel):
             self._registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
-                metrics={"operation": "low_rank", "stage": "before_decomposition"}
+                metrics={},
+                stage="before",
+                mode=self.__class__.__name__
             )
         
 
@@ -138,6 +140,17 @@ class LowRankModel(BaseCompressionModel):
         # base_params = self._estimate_params(self.model_before, example_batch)
         self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
+        
+        if self._model_id_after:
+            self._registry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_after,
+                metrics={},
+                stage="after",
+                mode=None,
+                trainer=self.trainer
+            )
+        
         # self.compress(self.model_after)
         # check params
         example_batch = self._get_example_input(input_data)#.to(extract_device(self.model_before))

@@ -57,7 +57,8 @@ class BaseDistilator(BaseCompressionModel):
                         temp_checkpoint = self._registry.register_model(
                             fedcore_id=self._fedcore_id,
                             model=teacher_model,
-                            metrics={"stage": "temp_teacher", "is_processed": False}
+                            stage="before",
+                            mode=self.__class__.__name__
                         )
                         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                         student_model = self._registry.load_model_from_latest_checkpoint(
@@ -76,7 +77,8 @@ class BaseDistilator(BaseCompressionModel):
             temp_checkpoint = self._registry.register_model(
                 fedcore_id=self._fedcore_id,
                 model=teacher_model,
-                metrics={"stage": "temp_teacher_fallback", "is_processed": False}
+                stage="after",
+                mode=self.__class__.__name__
             )
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             student_model = self._registry.load_model_from_latest_checkpoint(
@@ -209,25 +211,16 @@ class BaseDistilator(BaseCompressionModel):
         self._model_registry = ModelRegistry()
         self._distill_index += 1
         
-        metrics_before = {
-            "stage": f"distill_{self._distill_index}",
-            "operation": "distillation",
-            "is_processed": False,
-        }
         if self._model_id_before:
             self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
-                metrics=metrics_before
+                metrics={},
+                stage="before",
+                mode=self.__class__.__name__
             )
         
         self._fit_distil_model(input_data)
-        
-        metrics_after = {
-            "stage": f"distill_{self._distill_index}",
-            "operation": "distillation",
-            "is_processed": True,
-        }
         
         self.model_after = self.student_model
         
@@ -235,7 +228,9 @@ class BaseDistilator(BaseCompressionModel):
             self._model_registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_after,
-                metrics=metrics_after
+                metrics={},
+                stage="after",
+                mode=self.__class__.__name__
             )
         
         self.student_model.cpu().eval()
