@@ -36,7 +36,7 @@ from fedcore.repository.constant_repository import FedotTaskEnum
 ### and compute                                                        ###
 ##########################################################################
 
-METRIC_TO_OPTIMISE = ['perplexity', 'latency']
+METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'training'
@@ -55,7 +55,7 @@ print(f"Tokenizer loaded: {TOKENIZER is not None}")
 print(f"Vocabulary size: {TOKENIZER.vocab_size}")
 
 PRETRAIN_SCENARIO = 'from_checkpoint'
-SCRATCH_SCENARIO = 'from_scratch'
+SCRATCH_SCENARIO = 'checkpoint'
 POP_SIZE = 1
 DATASET = load_dataset("wikitext", "wikitext-2-raw-v1", split="train[:1000]")
 
@@ -124,13 +124,14 @@ val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=False)
 test_dataloader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
 compression_data = CompressionInputData(
-    features=None,  
-    target=None,  
+    features=None,
+    target=None,
     train_dataloader=train_dataloader,
     val_dataloader=val_dataloader,
     test_dataloader=test_dataloader,
-    task=Task(TaskTypesEnum.classification),  
-    input_dim=TOKENIZER.vocab_size, 
+    task=Task(TaskTypesEnum.classification),
+    num_classes=TOKENIZER.vocab_size,
+    input_dim=TOKENIZER.vocab_size,
 )
 
 ################################################################################
@@ -228,7 +229,7 @@ if __name__ == "__main__":
     api_config = APIConfig()
     fedcore_compressor = FedCore(api_config)
     
-    fedcore_compressor.fit_no_evo(compression_data)
+    fedcore_compressor.fit(compression_data)
     if hasattr(fedcore_compressor, 'fedcore_model'):
         model_class = fedcore_compressor.fedcore_model.__class__.__name__
         print(f"Trainer: {model_class}")
