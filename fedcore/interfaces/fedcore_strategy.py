@@ -63,8 +63,8 @@ class FedCoreStrategy(EvaluationStrategy):
     def predict_for_fit(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
     ) -> OutputData:
-        pruned_model = trained_operation.predict_for_fit(predict_data, output_mode)
-        converted = self._convert_to_output(pruned_model, predict_data)
+        prediction = trained_operation.predict_for_fit(predict_data, output_mode)
+        converted = self._convert_to_output(prediction, predict_data)
         return converted
 
 
