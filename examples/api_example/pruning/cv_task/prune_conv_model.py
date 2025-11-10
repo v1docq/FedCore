@@ -22,7 +22,7 @@ from fedcore.api.main import FedCore
 METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
-PEFT_PROBLEM = 'low_rank'
+PEFT_PROBLEM = 'training'
 INITIAL_ASSUMPTION = {'path_to_model': 'examples/api_example/pruning/cv_task/pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
                       'model_type': 'ResNet18'}
 train_dataloader_params = {"batch_size": 64,
@@ -81,23 +81,21 @@ finetune_config = NeuralModelConfigTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
                                             )
-peft_config = LowRankTemplate(
-    strategy='quantile',
-    rank_prune_each=1, 
-    custom_criterions=None,
-    non_adaptive_threshold=0.3,  
-    epochs=5,
-    log_each=1,
-    eval_each=1,
-    decomposer='svd', 
-    rank=None,  
-    distortion_factor=0.6, 
+peft_config = NeuralModelConfigTemplate(
+    epochs=3,
+    log_each=10,
+    eval_each=15,
+    criterion='cross_entropy',
+    model_architecture=model_config,
+    custom_learning_params=dict(use_early_stopping={'patience': 30,
+                                                    'maximise_task': False,
+                                                    'delta': 0.01})
 )
 
 learning_config = LearningConfigTemplate(criterion='cross_entropy',
                                          learning_strategy='from_checkpoint',
                                          learning_strategy_params=pretrain_config,
-                                         peft_strategy='low_rank',
+                                         peft_strategy='training',
                                          peft_strategy_params=peft_config)
 
 api_template = APIConfigTemplate(automl_config=automl_config,
