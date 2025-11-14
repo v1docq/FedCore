@@ -264,10 +264,12 @@ class NeuralModelConfigTemplate(NodeTemplate):
     """Additional learning settings. May be redundant"""
     custom_learning_params: dict = None
     custom_criterions: dict = None
+    """let it be dict[name : coef], let nodes add it to trainer
+    """
     model_architecture: ModelArchitectureConfigTemplate = None
 
     @staticmethod
-    def map_custom_criterions(custom_criterions: dict) -> dict[type[nn.Module], float]:
+    def map_custom_criterions(custom_criterions: dict[str, float]) -> dict[type[nn.Module], float]:
         mapped_criterions = dict()
         for criterion_name, criterion_relative_weight in custom_criterions.items():
             mapped_criterions[NeuralModelConfigTemplate.map_criterion_name(criterion_name)] = criterion_relative_weight

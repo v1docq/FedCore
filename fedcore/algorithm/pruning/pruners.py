@@ -59,7 +59,7 @@ class BasePruner(BaseCompressionModel):
         super()._init_model_before_model_after(input_data)
         self.pruner = self._init_pruner_with_model_after(input_data)
 
-        if (self.pruner != None):
+        if (self.pruner is not None):
             pruner_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, self.DEFAULT_HOOKS)
             pruner_hooks = [pruner_hook_type(self.pruner, self.pruning_iterations, self.prune_each) for pruner_hook_type in pruner_hooks]
         else:
