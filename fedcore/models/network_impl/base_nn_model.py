@@ -7,7 +7,7 @@ from pymonad.maybe import Maybe
 import numpy as np
 import torch
 import torch.nn.functional as F
-from fedot.core.data.data import InputData, OutputData
+from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 from torch import Tensor
@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.computational.devices import default_device
-from fedcore.data.data import CompressionInputData
+from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.repository.constant_repository import (
     ModelLearningHooks,
     LoggingHooks,
@@ -26,6 +26,7 @@ from fedcore.repository.constant_repository import (
 from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
 from fedcore.models.network_impl.utils._base import BaseTrainer
+from fedcore.architecture.preprocessing.data_convertor import CompressionDataConverter
 
 BASE_REGRESSION_DTYPE = torch.float32
 
@@ -130,17 +131,17 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         else:
             return None
 
-    def save_model(self, path: str):
-        torch.save(self.model.state_dict(), path)
+    # def save_model(self, path: str):
+    #     torch.save(self.model.state_dict(), path)
 
-    def load_model(self, path: str):
-        if self.model is None:
-            self._init_model()
-        try:  # path to state_dict
-            self.model.load_state_dict(torch.load(path, weights_only=False))
-        except Exception:  # path to model_impl
-            self.model = torch.load(path, map_location=self.device)
-        self.model.eval()
+    # def load_model(self, path: str):
+    #     if self.model is None:
+    #         self._init_model()
+    #     try:  # path to state_dict
+    #         self.model.load_state_dict(torch.load(path, weights_only=False))
+    #     except Exception:  # path to model_impl
+    #         self.model = torch.load(path, map_location=self.device)
+    #     self.model.eval()
 
 
     def __substitute_device_quant(self):
@@ -150,13 +151,14 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             print('Quantized model inference supports CPU only')
 
     def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
+        compression_data = CompressionDataConverter.convert(input_data)
+        
         # define data for fit process
         self.custom_fit_process = supplementary_data is not None
-        train_loader = getattr(input_data.features, f'{loader_type}_dataloader', 'train_dataloader')
-        val_loader = getattr(input_data.features, 'val_dataloader', None)
-        self.task_type = input_data.task.task_type
-        # define model for fit process
-        self.model = input_data.target if self.model is None else self.model
+        train_loader = getattr(compression_data, f'{loader_type}_dataloader', compression_data.train_dataloader)
+        val_loader = getattr(compression_data, 'val_dataloader', None)
+        self.task_type = compression_data.task.task_type
+        self.model = compression_data.model if self.model is None else self.model
         self.optimised_model = self.model
         self.model.to(self.device)
         self._init_hooks()
@@ -211,22 +213,23 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         """
         Method for feature generation for all series
         """
+        compression_data = CompressionDataConverter.convert(input_data)
         self.__substitute_device_quant()
-        return self._predict_model(input_data, output_mode)
+        return self._predict_model(compression_data, output_mode)
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
-
+        compression_data = CompressionDataConverter.convert(input_data)
         self.__substitute_device_quant()
-        return self._predict_model(input_data.features, output_mode)
+        return self._predict_model(compression_data, output_mode)
 
     @torch.no_grad()
     def _predict_model(
             self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
     ):
-        model: torch.nn.Module = self.model or x_test.target
+        model: torch.nn.Module = self.model or getattr(x_test, 'model', None) or getattr(x_test, 'target', None)
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
@@ -242,9 +245,10 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             del batch
             if i % self._clear_each == 0:
                 self._clear_cache()
-        return self._convert_predict(torch.concat(prediction), output_mode)
+        return self._convert_predict(torch.concat(prediction), output_mode, x_test) 
 
-    def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
+    def _convert_predict(self, pred: Tensor, output_mode: str = "labels", input_data: Union[CompressionInputData, InputData] = None):
+        assert isinstance(pred, torch.Tensor), "Prediction convertion failed, prediction is not a Tensor"
         have_encoder = all([self.label_encoder is not None, output_mode == "labels"])
         if self.task_type.name == 'regression':
             self.is_regression_task = True
@@ -259,18 +263,32 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             then(lambda predict: self.label_encoder.inverse_transform(predict) if have_encoder else predict). \
             maybe(None, lambda output: output)
 
-        predict = OutputData(
-            idx=np.arange(len(pred)),
+        extracted_fields = self._extract_output_fields(input_data)
+        
+        checkpoint_info = self._register_model_checkpoint(
+            model=self.model,
+            stage='after'
+        )
+
+        predict = CompressionOutputData(
+            features=extracted_fields['features'],
             task=self.task_type,
             predict=pred,
-            target=self.target,
+            num_classes=extracted_fields['num_classes'],
+            train_dataloader=extracted_fields['train_dataloader'],
+            val_dataloader=extracted_fields['val_dataloader'],
             data_type=DataTypesEnum.table,
+            model=self.model,
+            checkpoint_path=checkpoint_info['checkpoint_path'],
+            model_id=checkpoint_info['model_id'],
+            fedcore_id=checkpoint_info['fedcore_id'],
         )
         return predict
 
-    def _clear_cache(self):
-        with torch.no_grad():
-            torch.cuda.empty_cache()
+    # def _clear_cache(self):
+    #     """Clear CUDA cache - shared by BaseNeuralModel and LLMTrainer"""
+    #     with torch.no_grad():
+    #         torch.cuda.empty_cache()
 
     # def __wrap(self, model):
     #     if not isinstance(model, BaseNeuralModel):

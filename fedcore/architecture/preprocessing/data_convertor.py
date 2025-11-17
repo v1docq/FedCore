@@ -16,6 +16,7 @@ from sklearn.preprocessing import LabelEncoder
 from fedcore.api.utils.data import check_multivariate_data
 from fedcore.architecture.settings.computational import backend_methods as np
 from fedcore.architecture.computational.devices import default_device
+from fedcore.data.data import CompressionInputData
 
 
 class CustomDatasetTS:
@@ -85,7 +86,7 @@ class CustomDatasetCLF:
         return self.n_samples
 
 
-class FedotConverter:
+class FedotConverter: #never used
     def __init__(self, data):
         self.input_data = self.convert_to_input_data(data)
 
@@ -712,3 +713,55 @@ class NeuralNetworkConverter:
     @property
     def has_weight_or_bias(self):
         return any((self.has_weight, self.has_bias))
+
+
+class CompressionDataConverter:
+    """Converter for converting InputData to CompressionInputData format."""
+    
+    @staticmethod
+    def convert(input_data):
+        """Convert InputData to CompressionInputData if needed.
+        
+        This method handles conversion from InputData to CompressionInputData format.
+        If input_data is already CompressionInputData, it returns it unchanged.
+        
+        Args:
+            input_data: InputData or CompressionInputData object
+            
+        Returns:
+            CompressionInputData object
+        """
+        if isinstance(input_data, CompressionInputData):
+            return input_data
+        elif isinstance(input_data, InputData):
+            if isinstance(input_data.features, CompressionInputData):
+                compression_data = input_data.features
+                if input_data.target is not None and compression_data.model is None:
+                    compression_data.model = input_data.target
+                return compression_data
+            elif hasattr(input_data.features, 'train_dataloader') or \
+                 hasattr(input_data.features, 'val_dataloader') or \
+                 hasattr(input_data.features, 'test_dataloader'):
+                return CompressionInputData(
+                    train_dataloader=getattr(input_data.features, 'train_dataloader', None),
+                    val_dataloader=getattr(input_data.features, 'val_dataloader', None),
+                    test_dataloader=getattr(input_data.features, 'test_dataloader', None),
+                    task=input_data.task,
+                    num_classes=getattr(input_data.features, 'num_classes', None),
+                    input_dim=getattr(input_data.features, 'input_dim', None),
+                    model=input_data.target if input_data.target is not None else getattr(input_data.features, 'model', None),
+                    supplementary_data=input_data.supplementary_data,
+                )
+            else:
+                return CompressionInputData(
+                    train_dataloader=getattr(input_data, 'train_dataloader', None),
+                    val_dataloader=getattr(input_data, 'val_dataloader', None),
+                    test_dataloader=getattr(input_data, 'test_dataloader', None),
+                    task=input_data.task,
+                    num_classes=None,
+                    input_dim=None,
+                    model=input_data.target if input_data.target is not None else None,
+                    supplementary_data=input_data.supplementary_data,
+                )
+        else:
+            return input_data

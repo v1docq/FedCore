@@ -16,7 +16,7 @@ from fedcore.models.network_impl.utils.trainer_factory import create_trainer_fro
 from torchinfo import summary
 from fedcore.tools.registry.model_registry import ModelRegistry
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = default_device('cuda')
 
 
 class BaseCompressionModel:
@@ -51,7 +51,7 @@ class BaseCompressionModel:
         self.activation = params.get("activation", "ReLU")
         # self.learning_rate = 0.001
         self.model = None
-        self.model_for_inference = None
+        # self.model_for_inference = None
         # self.optimizer = None
         self.params = params
         
@@ -69,27 +69,42 @@ class BaseCompressionModel:
         
         logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
 
-    def _save_and_clear_cache(self):
-        try:
-            # the pruned model
-            state_dict = tp.state_dict(self.model)
-            torch.save(state_dict, "pruned.pth")
-            new_model = self.model.eval()
-            # load the pruned state_dict into the unpruned model.
-            loaded_state_dict = torch.load("pruned.pth", map_location="cpu")
-            tp.load_state_dict(new_model, state_dict=loaded_state_dict)
-        except Exception:
-            self.model.zero_grad()  # Remove gradients
-            prefix = f"model_{self.__repr__()}_activation_{self.activation}_epochs_{self.epochs}_bs_{self.batch_size}.pt"
-            torch.save(self.model.state_dict(), prefix)
-            del self.model
-            with torch.no_grad():
-                torch.cuda.empty_cache()
-            self.model = self.model_for_inference.model.to(torch.device("cpu"))
-            self.model.load_state_dict(
-                torch.load(prefix, map_location=torch.device("cpu"))
-            )
-            os.remove(prefix)
+    # def _save_and_clear_cache(self):
+    #     """Save model and clear cache using ModelRegistry.
+        
+    #     Saves the current model to registry and clears memory cache.
+    #     ModelRegistry handles proper cleanup including GPU memory management.
+    #     """
+    #     import logging
+    #     logger = logging.getLogger(__name__)
+        
+    #     if self.model is None:
+    #         logger.debug("No model to save, skipping cache clearing")
+    #         return
+        
+    #     try:
+    #         model_id = self._registry.register_model(
+    #             fedcore_id=self._fedcore_id,
+    #             model=self.model,
+    #             stage="cache",
+    #             mode=None,
+    #             delete_model_after_save=True
+    #         )
+    #         self.model = None
+    #         logger.info(f"Model saved to registry and cleared from memory. model_id={model_id}")
+
+    #         if torch.cuda.is_available():
+    #             torch.cuda.empty_cache()
+                
+    #     except Exception as e:
+    #         logger.error(f"Failed to save model to registry: {e}")
+    #         if self.model is not None:
+    #             self.model.zero_grad()
+    #             del self.model
+    #             self.model = None
+    #             if torch.cuda.is_available():
+    #                 torch.cuda.empty_cache()
+    #             logger.warning("Manual cleanup performed due to registry failure")
 
     @property
     def model_before(self):
@@ -200,7 +215,7 @@ class BaseCompressionModel:
         logger = logging.getLogger(__name__)
         logger.info("BaseCompressionModel._init_model() started")
         
-        model = input_data.target
+        model = input_data.model
         logger.info(f"Model type from input_data.target: {type(model).__name__}")
         
         # Support passing a filesystem path to a checkpoint/model at the node input
@@ -234,8 +249,20 @@ class BaseCompressionModel:
     def _predict_model(self, x_test, output_mode: str = "default"):
         pass
 
-    def _get_example_input(self, input_data: InputData):
-        b = next(iter(input_data.features.val_dataloader))
+    def _get_example_input(self, input_data: Union[InputData, CompressionInputData]):
+        # Handle both CompressionInputData directly and InputData with features as CompressionInputData
+        if isinstance(input_data, CompressionInputData):
+            compression_data = input_data
+        else:
+            # input_data is InputData, features should be CompressionInputData
+            compression_data = input_data.features
+        
+        # Prefer val_dataloader, fallback to train_dataloader if val_dataloader is None
+        dataloader = compression_data.val_dataloader or compression_data.train_dataloader
+        if dataloader is None:
+            raise ValueError("Neither val_dataloader nor train_dataloader is available in input_data")
+        
+        b = next(iter(dataloader))
         if isinstance(b, (list, tuple)) and len(b) == 2:
             return b[0]
         return b
@@ -276,13 +303,12 @@ class BaseCompressionModel:
         Method for feature generation for all series
         """
         self.num_classes = input_data.num_classes
-        self.target = input_data.target
         self.task_type = input_data.task
         self._fit_model(input_data)
-        self._save_and_clear_cache()
-
+        # self._save_and_clear_cache()
     def predict_for_fit(self, input_data: CompressionInputData, output_mode: str = 'fedcore'):
-        return self.model_after if output_mode == 'fedcore' else self.model_before
+        return self.predict(input_data, output_mode)
+        # return self.model_after if output_mode == 'fedcore' else self.trainer.predict(input_data, output_mode)
 
     def predict(
             self, input_data: CompressionInputData, output_mode: str = "fedcore"

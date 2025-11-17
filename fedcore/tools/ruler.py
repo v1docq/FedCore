@@ -151,10 +151,41 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
 
         if is_pipeline_class:
             fitted = model.operator.root_node.fitted_operation
+            
+            operation_device = getattr(fitted, 'device', None)
+            if operation_device:
+                self.device = operation_device
+                self.cuda_allowed = (self.device.type == 'cuda')
+            
             model_from_attr = getattr(fitted, self.model_regime, None)
             
             if model_from_attr is None:
-                raise ValueError(f"Model regime '{self.model_regime}' not found in fitted operation")
+                fallback_attrs = ['model_before', 'model']
+                if hasattr(fitted, 'trainer') and hasattr(fitted.trainer, 'model'):
+                    fallback_attrs.append('trainer.model')
+                
+                for attr_name in fallback_attrs:
+                    if '.' in attr_name:
+                        parts = attr_name.split('.')
+                        obj = fitted
+                        for part in parts:
+                            obj = getattr(obj, part, None) if obj else None
+                            if obj is None:
+                                break
+                        if obj is not None:
+                            model_from_attr = obj
+                            break
+                    else:
+                        model_from_attr = getattr(fitted, attr_name, None)
+                        if model_from_attr is not None:
+                            break
+                
+                if model_from_attr is None:
+                    raise ValueError(
+                        f"Model regime '{self.model_regime}' not found in fitted operation. "
+                        f"Tried fallbacks: {fallback_attrs}. "
+                        f"Available attributes: {[attr for attr in dir(fitted) if not attr.startswith('_')]}"
+                    )
             
             fedcore_id = getattr(fitted, '_fedcore_id', None)
             model_id = getattr(fitted, '_model_id', None)
@@ -173,11 +204,6 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
                 print("No fedcore_id or model_id found, using model from operation attributes")
                 self.model = model_from_attr
                 self._loaded_from_registry = False
-            
-            operation_device = getattr(fitted, 'device', None)
-            if operation_device:
-                self.device = operation_device
-                self.cuda_allowed = (self.device.type == 'cuda')
                 
         elif is_class_container:
             self.model = model.model
@@ -185,8 +211,10 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
         else:
             self.model = model
             self._loaded_from_registry = False
-            
-        self.model.to(self.device)
+        
+        # Ensure model is on the correct device
+        if self.model is not None:
+            self.model = self.model.to(self.device)
     
     def cleanup_model(self):
         """Clean up loaded model from memory.
@@ -380,9 +408,15 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
                     is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
                     sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
                     sample_batch = sample[None, ...]
-                    lat_list.append(cuda_latency_eval(sample_batch))
+                    if self.cuda_allowed and torch.cuda.is_available():
+                        lat_list.append(cuda_latency_eval(sample_batch))
+                    else:
+                        lat_list.append(cpu_latency_eval(sample_batch))
             else:
-                lat_list.append(cuda_latency_eval(features))
+                if self.cuda_allowed and torch.cuda.is_available():
+                    lat_list.append(cuda_latency_eval(features))
+                else:
+                    lat_list.append(cpu_latency_eval(features))
         return lat_list
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):

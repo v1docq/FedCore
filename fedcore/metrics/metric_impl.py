@@ -4,10 +4,12 @@ from sklearn.metrics import precision_recall_fscore_support
 from torch.nn.functional import softmax
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 import torch
+import torch.nn as nn
 from typing import Union
 from torch import Tensor
 import numpy as np
 import pandas as pd
+from fedcore.data.data import CompressionOutputData
 from fedot.core.data.data import InputData
 from golem.core.dag.graph import Graph
 from sklearn.metrics import (
@@ -25,7 +27,7 @@ from sklearn.metrics import (
 from sktime.performance_metrics.forecasting import mean_absolute_scaled_error
 from fedot.core.composer.metrics import Metric
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 
 class MetricCounter(ABC):
@@ -287,7 +289,7 @@ class ParetoMetrics:
 class QualityMetric(Metric):
     default_value = 0
     need_to_minimize = False
-    output_mode = 'compress'
+    output_mode = 'raw'
 
     @classmethod
     @abstractmethod
@@ -295,7 +297,7 @@ class QualityMetric(Metric):
         pass
 
     @classmethod
-    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+    def get_value(cls, pipeline, reference_data: InputData, validation_blocks=None) -> float:
         """ Get metric value based on pipeline, reference data, and number of validation blocks.
         Args:
             pipeline: a :class:`Pipeline` instance for evaluation.
@@ -303,14 +305,48 @@ class QualityMetric(Metric):
             validation_blocks: number of validation blocks. Used only for time series forecasting.
                 If ``None``, data separation is not performed.
         """
+        from fedcore.data.data import CompressionInputData, CompressionOutputData
+
         metric = cls.default_value
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
+        # print('NAXUJJJ', type(results), results)
         # get true targets from test/calib dataloader
         test_dataset = reference_data.features.val_dataloader.dataset
-        # get predction from result.predict (OutputData)
-        prediction = results.predict.predict
+        
+        if isinstance(results, CompressionOutputData):
+            prediction = results.predict
+        elif hasattr(results, 'predict'):
+            prediction = results.predict
+        else:
+            prediction = results
+        
+        if isinstance(prediction, CompressionOutputData):
+            prediction = prediction.predict if hasattr(prediction, 'predict') else None
+        
+        if prediction is None:
+            raise ValueError(
+                f"Could not extract predictions from results. Results type: {type(results).__name__}"
+            )
+        
+        if isinstance(prediction, nn.Module):
+            raise ValueError(
+                f"Expected predictions array, but got model object (type: {type(prediction).__name__}). "
+                f"This usually means predict() method returned model instead of predictions. "
+                f"Check predict() implementation in strategy."
+            )
+        
         if isinstance(prediction, Tensor):
             prediction = prediction.cpu().detach().numpy().flatten()
+        elif isinstance(prediction, np.ndarray):
+            prediction = prediction.flatten()
+        elif isinstance(prediction, list):
+            prediction = np.array(prediction).flatten()
+        elif not isinstance(prediction, (np.ndarray, Tensor, list)):
+            raise ValueError(
+                f"Expected predictions array, but got {type(prediction).__name__}. "
+                f"Value type: {type(prediction)}"
+            )
+
         if hasattr(test_dataset, 'targets'):
             true_target = reference_data.features.val_dataloader.dataset.targets
         else:
@@ -344,14 +380,25 @@ class SMAPE(QualityMetric):
             validation_blocks: number of validation blocks. Used only for time series forecasting.
                 If ``None``, data separation is not performed.
         """
-        true_pred = pipeline.predict(reference_data, output_mode=cls.output_mode).predict
+        results = pipeline.predict(reference_data, output_mode=cls.output_mode)
+
+        if isinstance(results, CompressionOutputData):
+            true_pred = results.predict
+        else:
+            true_pred = results.predict.predict if hasattr(results.predict, 'predict') else results.predict
+        
         # get true targets from test dataloader
         target_list = []
         for batch in reference_data.features.test_dataloader:
             x_hist, x_fut, y = [b.to(default_device()) for b in batch]
             target_list.append(y.cpu().detach().numpy().squeeze())
         true_target = np.concatenate(target_list).ravel()
-        # get predction from result.predict (OutputData)
+        
+        if isinstance(true_pred, Tensor):
+            true_pred = true_pred.cpu().detach().numpy().flatten()
+        elif isinstance(true_pred, np.ndarray):
+            true_pred = true_pred.flatten()
+            
         return cls.metric(cls, target=true_target, predict=true_pred)
 
     def metric(cls, target, predict) -> float:

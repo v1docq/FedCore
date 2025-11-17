@@ -23,8 +23,7 @@ METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'training'
-INITIAL_ASSUMPTION = {'path_to_model': 'examples/api_example/pruning/cv_task/pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
-                      'model_type': 'ResNet18'}
+INITIAL_ASSUMPTION = 'ResNet18'
 train_dataloader_params = {"batch_size": 64,
                            'shuffle': True,
                            'is_train': True,

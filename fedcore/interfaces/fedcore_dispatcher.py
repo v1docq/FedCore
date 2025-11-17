@@ -172,7 +172,7 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
             if self._post_eval_callback:
                 self._post_eval_callback(domain_graph)
             gc.collect()
-        except Exception:
+        except Exception as x:
             self.logger.warning('Exception during graph fitness eval')
             fitness = null_fitness()
 

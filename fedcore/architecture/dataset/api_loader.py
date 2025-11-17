@@ -69,7 +69,7 @@ class ApiLoader:
         input_dim = sample.shape[1] if len(sample.shape) > 2 else sample.shape[0]
         task = Task(TaskTypesEnum.classification) if num_classes != 1 else Task(TaskTypesEnum.regression)
         fedcore_train_data = CompressionInputData(
-            features=np.zeros((2, 2)),
+            # features=np.zeros((2, 2)),
             input_dim=input_dim,
             num_classes=num_classes,
             task=task,

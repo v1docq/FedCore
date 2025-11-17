@@ -43,10 +43,6 @@ class CustomModel(BaseNeuralModel):
                 path_to_model=self.path_to_model,
                 custom_callable_object=self.custom_callable_object
             )
-            self.model_for_inference = TorchModel(
-                path_to_model=self.path_to_model,
-                custom_callable_object=self.custom_callable_object
-            ).model
             self.model = self.model.model
 
     def _prepare_model(self, input_data):

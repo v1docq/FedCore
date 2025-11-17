@@ -31,12 +31,12 @@ class ITrainer(ABC):
         """Make predictions"""
         pass
     
-    @abstractmethod
-    def save_model(self, path: str) -> None:
-        """Save the model"""
-        pass
+    # @abstractmethod
+    # def save_model(self, path: str) -> None:
+    #     """Save the model"""
+    #     pass
     
-    @abstractmethod
-    def load_model(self, path: str) -> None:
-        """Load the model"""
-        pass 
+    # @abstractmethod
+    # def load_model(self, path: str) -> None:
+    #     """Load the model"""
+    #     pass 

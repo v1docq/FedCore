@@ -201,6 +201,19 @@ class ModelRegistry:
         df = self.storage.load(fedcore_id)
         return self.metrics_tracker.find_best_checkpoint(df, metric_name, mode)
 
+    def get_checkpoint_path(self, fedcore_id: str, model_id: str) -> Optional[str]:
+        """Get checkpoint path for a registered model.
+        
+        Args:
+            fedcore_id: FedCore instance identifier
+            model_id: Model identifier
+            
+        Returns:
+            Checkpoint path string or None if not found
+        """
+        latest = self.storage.get_latest_record(fedcore_id, model_id)
+        return latest.get('checkpoint_path') if latest else None
+    
     def load_model_from_latest_checkpoint(self, fedcore_id: str, model_id: str,
                                          device: torch.device = None) -> Optional[torch.nn.Module]:
         latest = self.storage.get_latest_record(fedcore_id, model_id)

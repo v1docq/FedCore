@@ -20,6 +20,7 @@ from fedcore.repository.model_repository import (
 
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
+from fedcore.architecture.preprocessing.data_convertor import CompressionDataConverter
 
 class FedCoreStrategy(EvaluationStrategy):
     def _convert_to_output(
@@ -29,12 +30,10 @@ class FedCoreStrategy(EvaluationStrategy):
         output_data_type: DataTypesEnum = DataTypesEnum.table,
     ) -> OutputData:
         output_data = CompressionOutputData(
-            features=predict_data.features,
-            idx=[1, 2],
-            val_dataloader=predict_data.features.val_dataloader,
+            features=None,  
+            val_dataloader=getattr(predict_data, 'val_dataloader', None),
             task=predict_data.task,
-            num_classes=predict_data.features.num_classes,
-            target=predict_data.features.target,
+            num_classes=getattr(predict_data, 'num_classes', None),
             data_type=DataTypesEnum.image,
             supplementary_data=predict_data.supplementary_data,
         )
@@ -50,21 +49,24 @@ class FedCoreStrategy(EvaluationStrategy):
         )
 
     def fit(self, train_data: InputData):
-        self.operation_impl.fit(train_data)
+        compression_data = CompressionDataConverter.convert(train_data)
+        self.operation_impl.fit(compression_data)
         return self.operation_impl
 
     def predict(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
-    ) -> OutputData:
-        prediction = trained_operation.predict(predict_data, output_mode)
-        converted = self._convert_to_output(prediction, predict_data)
+    ) -> CompressionOutputData:
+        compression_data = CompressionDataConverter.convert(predict_data)
+        prediction = trained_operation.predict(compression_data, output_mode)
+        converted = self._convert_to_output(prediction, compression_data)
         return converted
 
     def predict_for_fit(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
-    ) -> OutputData:
-        prediction = trained_operation.predict_for_fit(predict_data, output_mode)
-        converted = self._convert_to_output(prediction, predict_data)
+    ) -> CompressionOutputData:
+        compression_data = CompressionDataConverter.convert(predict_data)
+        prediction = trained_operation.predict_for_fit(compression_data, output_mode)
+        converted = self._convert_to_output(prediction, compression_data)
         return converted
 
 
@@ -81,20 +83,29 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
         )
 
     def fit(self, train_data: InputData):
-        self.operation_impl = self.operation_impl(train_data)
-        self.trained_model = self.operation_impl.fit(train_data)
+        compression_data = CompressionDataConverter.convert(train_data)
+        self.operation_impl = self.operation_impl(compression_data)
+        self.trained_model = self.operation_impl.fit(compression_data)
         return self.operation_impl
 
     def predict(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
-    ) -> OutputData:
-        converted = self._convert_to_output(trained_operation.model, predict_data)
+    ) -> CompressionOutputData:
+        compression_data = CompressionDataConverter.convert(predict_data)
+        prediction = trained_operation.predict(compression_data, output_mode)
+        if isinstance(prediction, CompressionOutputData):
+            return prediction
+        converted = self._convert_to_output(prediction, compression_data)
         return converted
 
     def predict_for_fit(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
-    ) -> OutputData:
-        converted = self._convert_to_output(trained_operation.model, predict_data)
+    ) -> CompressionOutputData:
+        compression_data = CompressionDataConverter.convert(predict_data)
+        prediction = trained_operation.predict_for_fit(compression_data, output_mode)
+        if isinstance(prediction, CompressionOutputData):
+            return prediction
+        converted = self._convert_to_output(prediction, compression_data)
         return converted
 
 
@@ -146,7 +157,7 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         trained_operation,
         predict_data: CompressionInputData,
         output_mode: str = "default",
-    ) -> OutputData:
+    ) -> CompressionOutputData:
         trained_operation.eval()
         pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
         prediction = [
@@ -162,7 +173,7 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         trained_operation,
         predict_data: CompressionInputData,
         output_mode: str = "default",
-    ) -> OutputData:
+    ) -> CompressionOutputData:
         trained_operation.eval()
         pred = trained_operation(torch.unsqueeze(predict_data.features, dim=0))
         converted = self._convert_to_output(pred, predict_data)
@@ -175,13 +186,11 @@ class FedcoreDetectionStrategy(EvaluationStrategy):
         output_data_type: DataTypesEnum,
     ) -> OutputData:
         output_data = CompressionOutputData(
-            idx=[1, 2],
             features=predict_data.features,
             # train_dataloader=predict_data.train_dataloader,
             # val_dataloader=predict_data.val_dataloader,
             predict=prediction,
             task=predict_data.task,
-            target=predict_data.target,
             data_type=output_data_type,
             supplementary_data=predict_data.supplementary_data,
         )

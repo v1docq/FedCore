@@ -95,7 +95,9 @@ def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloade
     logger.debug(f'Loading dataset {dataset_name} with train params {train_dataloader_params} and test params {test_dataloader_params}')
     fedcore_train_data = load_data(source=dataset_name, loader_params=train_dataloader_params)
     fedcore_test_data = load_data(source=dataset_name, loader_params=test_dataloader_params)
-    logger.debug(f'Dataset loaded: train idx shape={getattr(fedcore_train_data.features, "shape", None)}, test idx shape={getattr(fedcore_test_data.features, "shape", None)}')
+    train_info = f'train_dataloader={fedcore_train_data.train_dataloader is not None}, val_dataloader={fedcore_train_data.val_dataloader is not None}'
+    test_info = f'test_dataloader={fedcore_test_data.test_dataloader is not None}, val_dataloader={fedcore_test_data.val_dataloader is not None}'
+    logger.debug(f'Dataset loaded: train_data ({train_info}), test_data ({test_info})')
     return fedcore_train_data, fedcore_test_data
 
 ################################################################################

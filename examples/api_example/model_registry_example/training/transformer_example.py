@@ -138,7 +138,7 @@ def create_api_config(model, tokenizer, fedcore_id=None):
     
     fedot_config = FedotConfigTemplate(
         problem='classification',
-        metric=['accuracy', 'f1'],
+        metric=['accuracy', 'latency'],
         pop_size=1,
         timeout=2,
         initial_assumption=model
@@ -148,7 +148,7 @@ def create_api_config(model, tokenizer, fedcore_id=None):
     
     learning_config = LearningConfigTemplate(
         criterion='cross_entropy',
-        learning_strategy='from_scratch',
+        learning_strategy='checkpoint',
         learning_strategy_params=training_config,
         peft_strategy='training',
         peft_strategy_params=training_config,
@@ -231,8 +231,7 @@ if __name__ == "__main__":
     logger.info(f"Example batch shape: {example_input.shape}")
     
     compression_data = CompressionInputData(
-        features=example_input,  
-        target=model, 
+        model=model, 
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         test_dataloader=test_dataloader,
@@ -243,7 +242,7 @@ if __name__ == "__main__":
     memory_after_data = registry.get_memory_stats()
     
     start_fit = time.time()
-    fedcore_compressor.fit_no_evo(compression_data)
+    fedcore_compressor.fit(compression_data)
     fit_time = time.time() - start_fit
     memory_after_training = registry.get_memory_stats()
     
