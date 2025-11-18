@@ -4,7 +4,7 @@ from functools import reduce
 from inspect import signature, isclass
 from pathlib import Path
 from typing import (
-    get_origin, get_args,   
+    OrderedDict, Tuple, get_origin, get_args,   
     Any, Callable, Iterable, Literal, Optional, Union, 
 )
 
@@ -106,9 +106,9 @@ class ConfigTemplate:
         annotation = cls.get_annotation(key)
         _check(annotation, key, val)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Tuple[type, OrderedDict]:
         """We don't need template instances themselves. Only normalized parameters"""
-        allowed_parameters = _normalize_kwargs(cls.__init__, kwargs)
+        allowed_parameters = _normalize_kwargs(cls.__init__, kwargs) #get default params from <Something>Template, like "epochs: 5"
         for k in kwargs:
             if k not in allowed_parameters:
                 raise KeyError(f'Unknown field `{k}` was passed into {cls.__name__}')

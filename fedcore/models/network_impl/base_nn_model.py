@@ -210,7 +210,7 @@ class BaseNeuralModel(torch.nn.Module):
         training_loss = 0.0
         self.model.train()
         gc_count = 0
-        for batch in tqdm(dataloader, desc='Batch #'):
+        for batch in tqdm(dataloader, desc='TRAIN Batch #'):
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
             targets = targets.to(self.device)

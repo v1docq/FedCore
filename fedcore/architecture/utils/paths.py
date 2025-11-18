@@ -13,6 +13,9 @@ def data_path(dataset_name: str, log: bool = False):
         print("Data Path: ", Path(PATH_TO_DATA, dataset_name))
     return Path(PATH_TO_DATA, dataset_name)
 
+def wrap_with_project_root_path(relative_path: str) -> str:
+    return str(Path(PROJECT_PATH, relative_path))
+
 
 YOLO_DATA_URL = "https://ultralytics.com/assets/"
 

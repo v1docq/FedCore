@@ -212,7 +212,7 @@ class Evaluator(BaseHook):
         val_dataloader = DataLoaderHandler.check_convert(dataloader=val_dataloader,
                                                          enumerate=False)
 
-        for batch in tqdm(val_dataloader, desc='Batch #'):
+        for batch in tqdm(val_dataloader, desc='(Evaluator hook) Batch #'):
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
             output = self.model(*inputs)
