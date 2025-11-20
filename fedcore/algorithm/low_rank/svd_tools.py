@@ -23,7 +23,7 @@ __all__ = [
 
 def decompose_module_in_place(
     model: Module,
-    decomposing_mode: Optional[str] = True,
+    decomposing_mode: Optional[str] = "channel",
     decomposer: Literal['svd', 'cur', 'rsvd'] = 'svd',
     compose_mode: str = None,
 ) -> None:
@@ -44,7 +44,7 @@ def decompose_module_in_place(
         decomposed_analogue = _map_decomposed_cls(module)
         if decomposed_analogue is not None:
             new_module = decomposed_analogue(
-                module, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
+                module, True, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
             ).to(device)
             setattr(model, name, new_module)
 
@@ -87,7 +87,7 @@ def load_svd_state_dict(
 
 def _map_decomposed_cls(module: torch.nn.Module) -> Optional[type[IDecomposed]]:
     for decomposable, decomposed in DECOMPOSABLE_LAYERS.items():
-        if (not type(isinstance) in PROHIBIT_TO_DECOMPOSE
+        if (not type(module) in PROHIBIT_TO_DECOMPOSE
             and isinstance(module, decomposable) 
             and not isinstance(module, IDecomposed)):
             return decomposed
