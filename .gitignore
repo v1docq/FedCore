@@ -107,3 +107,4 @@ composition_results/
 data/
 datasets/
 .vscode
+*.csv
