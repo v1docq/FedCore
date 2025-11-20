@@ -316,10 +316,10 @@ class Freezer(BaseHook):
         self.frozen_prop = self.params.get('frozen_prop', 0.5)
         self.approach = self.params.get('freeze_approach', 'random')
         self.refreeze_each = self.params.get('refreeze_each', 1)
-        self.__criterions = {
+        self.__rules = {
             'random': self.__uniform_mask,
         }
-        self.criterion = self.__criterions[self.approach]
+        self.rule = self.__rules[self.approach]
 
     def __uniform_mask(self):
         prob = np.random.random(1)[0]
@@ -327,7 +327,7 @@ class Freezer(BaseHook):
 
     def __freeze(self):
         for name, layer in self.model.named_modules():
-            if self.criterion(layer, name):
+            if self.rule(layer, name):
                 for p in layer.parameters():
                     p.requires_grad = False
 
