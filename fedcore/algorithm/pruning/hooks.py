@@ -7,7 +7,7 @@ from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import PRUNER_WITHOUT_REQUIREMENTS, PrunerImportances
 import torch.nn.utils.prune as prune
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 import torch_pruning as tp
 if TYPE_CHECKING:
     from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
@@ -93,11 +93,14 @@ class PrunerWithReg(ZeroShotPruner):
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
         super().link_to_trainer(hookable_trainer)
 
-    def _regularize_model_params(self, pruner, val_dataloader):
+    def _regularize_model_params(self, pruner: Union[tp.BNScalePruner, tp.GroupNormPruner], train_dataloader):
+        """Regularize params, that have small magnitude during training process  
+        See https://github.com/VainF/Torch-Pruning?tab=readme-ov-file#sparse-training-optional
+        """
         pruner.update_regularizer()  # <== initialize regularizer. Define model groups for pruning
-        val_batches = len(val_dataloader) - 1
-        with tqdm(total=val_batches, desc='Pruning reg', ) as pbar:
-            for i, (data, target) in enumerate(val_dataloader):
+        train_batches = len(train_dataloader) - 1
+        with tqdm(total=train_batches, desc='Pruning reg', ) as pbar:
+            for i, (data, target) in enumerate(train_dataloader):
                 if i != 0:
                     self.hookable_trainer.optimizer.zero_grad()
                     loss = self._backward_propagation_step(data, target)
@@ -119,8 +122,8 @@ class PrunerWithReg(ZeroShotPruner):
 
     def action(self, epoch, kws):
         pruning_iter = self.pruning_iterations
-        val_dataloader = kws['val_loader']
-        pruner = self._regularize_model_params(self.pruner, val_dataloader)
+        train_dataloader = kws['train_loader']
+        pruner = self._regularize_model_params(self.pruner, train_dataloader)
         self._prune_after_reg(pruner, pruning_iter)
         PruningValidator.validate_pruned_layers(self.hookable_trainer.model)
 

@@ -37,8 +37,8 @@ class BaseHook(ABC):
     def __init__(self):
         pass
 
-    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
-        self.params = hookable_trainer.params
+    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'): 
+        self.params = hookable_trainer.params #TODO one time, we will abandon the use of self.params. Only concrete fields from self.params
         self.model = hookable_trainer.model
         self.hookable_trainer = hookable_trainer
 
