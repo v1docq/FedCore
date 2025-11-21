@@ -25,7 +25,7 @@ from sklearn.metrics import (
 from sktime.performance_metrics.forecasting import mean_absolute_scaled_error
 from fedot.core.composer.metrics import Metric
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 
 class MetricCounter(ABC):
@@ -306,17 +306,24 @@ class QualityMetric(Metric):
         metric = cls.default_value
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
         # get true targets from test/calib dataloader
-        test_dataset = reference_data.features.val_dataloader.dataset
-        # get predction from result.predict (OutputData)
-        prediction = results.predict.predict
+        test_dataset = reference_data.val_dataloader.dataset
+        # get predction from result.predict (CompressionOutputData)
+        prediction = results.predict
+        print(f"DEBUG: results type: {type(results)}, results.predict type: {type(prediction)}")
+        if prediction.__class__.__name__ == "PredictionOutput":
+            prediction = prediction.predictions.max(axis=2).flatten()
         if isinstance(prediction, Tensor):
             prediction = prediction.cpu().detach().numpy().flatten()
         if hasattr(test_dataset, 'targets'):
             true_target = reference_data.features.val_dataloader.dataset.targets
         else:
             iter_object = iter(test_dataset)
-            true_target = np.array([batch[1] for batch in iter_object])
-
+            true_target = np.array([batch[1] for batch in iter_object]).flatten()
+        
+        # print(f"DEBUG: true_target shape: {true_target.shape if hasattr(true_target, 'shape') else len(true_target) if hasattr(true_target, '__len__') else 'no shape'}, true_target size: {len(true_target) if hasattr(true_target, '__len__') else 'no len'}")
+        # print(f"DEBUG: true_target type: {type(true_target)}, true_target content sample: {true_target[:5] if hasattr(true_target, '__getitem__') and len(true_target) > 0 else true_target}")
+        true_target = true_target.astype(np.float32)
+        prediction = prediction.astype(np.float32)
         return cls.metric(cls, target=true_target, predict=prediction)
 
     @staticmethod

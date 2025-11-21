@@ -256,7 +256,7 @@ class FedCore(Fedot):
             x = self.__init_dask(x)
             x = self.__init_solver_no_evo(x)
             fitted_solver = self.manager.solver.fit(x)
-        self.optimised_model = fitted_solver.target
+        self.optimised_model = fitted_solver.model
         
         self.fedcore_model = extract_fitted_operation(self.manager.solver)
         return fitted_solver

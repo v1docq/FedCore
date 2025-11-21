@@ -240,6 +240,13 @@ class LLMTrainer(BaseTrainer):
             return
         
         self._hooks_initialized = True
+    
+    @property
+    def epochs(self) -> int:
+        """Get the number of training epochs."""
+        if self._training_args is not None:
+            return int(self._training_args.num_train_epochs)
+        return int(self.default_training_args.get('num_train_epochs', 3))
         
     def _prepare_data(self, input_data: Union[InputData, CompressionInputData]) -> Dict[str, Dataset]:
         """Convert InputData/CompressionInputData to transformers Dataset format"""
@@ -347,7 +354,7 @@ class LLMTrainer(BaseTrainer):
         
         self.trainer_objects['trainer'] = self._trainer
 
-    def fit(self, input_data: Union[InputData, CompressionInputData], 
+    def fit(self, input_data: CompressionInputData, 
             supplementary_data: Optional[Dict] = None, loader_type: str = 'train') -> Any:
         """
         Train the model using InputData/CompressionInputData.
@@ -359,8 +366,8 @@ class LLMTrainer(BaseTrainer):
         # Final fallback: pull model from input_data if still missing
         if self.model is None:
             candidate_model = getattr(input_data, 'target', None)
-            if candidate_model is None and hasattr(input_data, 'features'):
-                candidate_model = getattr(input_data.features, 'target', None)
+            if candidate_model is None and hasattr(input_data, 'target'):
+                candidate_model = input_data.target
             if candidate_model is not None:
                 self.model = candidate_model
 
@@ -382,7 +389,7 @@ class LLMTrainer(BaseTrainer):
                 output_mode: str = "default") -> Any:
         """Make predictions using InputData/CompressionInputData"""
         
-        has_val_loader = hasattr(input_data, 'features') and hasattr(input_data.features, 'val_dataloader')
+        has_val_loader = hasattr(input_data, 'val_dataloader')
 
         if self._trainer is not None and has_val_loader:
             if torch.cuda.is_available():
@@ -392,14 +399,14 @@ class LLMTrainer(BaseTrainer):
                     buffer.data = buffer.data.to(device)
             self._trainer.model.eval()
             
-            eval_dataset = self._dataloader_to_dataset(input_data.features.val_dataloader)
+            eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
             return self._trainer.predict(eval_dataset)
         elif self._trainer is None and has_val_loader:
             if self.model is None:
                 raise ValueError("Cannot create trainer for prediction: model is None. Call fit() first or provide model in initialization.")
             datasets = self._prepare_data(input_data)
             self._create_trainer(datasets)
-            eval_dataset = self._dataloader_to_dataset(input_data.features.val_dataloader)
+            eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
             return self._trainer.predict(eval_dataset)
 
         predictions_output = self._predict_model(input_data, output_mode)

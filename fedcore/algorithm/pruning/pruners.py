@@ -154,7 +154,7 @@ class BasePruner(BaseCompressionModel):
 
     def _check_before_prune(self, input_data):
         # list of tensors with dim size n_samples x n_channel x height x width
-        batch_generator = (b for b in input_data.features.val_dataloader)
+        batch_generator = (b for b in input_data.val_dataloader)
         # take first batch
         batch_dict = next(batch_generator)
         # Handle dict-like batches (e.g., LLM) by picking the first value or a specific key
@@ -167,9 +167,9 @@ class BasePruner(BaseCompressionModel):
             # legacy: assume batch is a list/tuple and pick first element
             self.data_batch_for_calib = batch_dict[0].to(default_device())
         n_classes = input_data.task.task_params['forecast_length'] \
-            if input_data.task.task_type.value.__contains__('forecasting') else input_data.features.num_classes
+            if input_data.task.task_type.value.__contains__('forecasting') else input_data.num_classes
         self.validator = PruningValidator(model=self.model_after,
-                                          output_dim=n_classes, input_dim=input_data.features.input_dim)
+                                          output_dim=n_classes, input_dim=input_data.input_dim)
         self.ignored_layers = self.validator.filter_ignored_layers(self.model_after,
                                                                    str(self.model_after.__class__))
         self.channel_groups = self.validator.validate_channel_groups()

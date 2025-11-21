@@ -257,8 +257,10 @@ if __name__ == "__main__":
     logger.info(f" Example batch shape: {example_input.shape}")
     
     compression_data = CompressionInputData(
-        features=example_input,  
-        target=model, 
+        idx = None,
+        data_type=None,
+        features=None,
+        model=model, 
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         test_dataloader=test_dataloader,
@@ -268,7 +270,7 @@ if __name__ == "__main__":
     data_load_time = time.time() - start_data
     
     start_fit = time.time()
-    fedcore_compressor.fit_no_evo(compression_data)
+    fedcore_compressor.fit(compression_data)
     fit_time = time.time() - start_fit
     memory_after_training = registry.get_memory_stats()
     

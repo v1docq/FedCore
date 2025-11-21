@@ -143,7 +143,7 @@ class BaseQuantizer(BaseCompressionModel):
         return get_flattened_qconfig_dict(qconfig_mapping)
 
     def _get_example_input(self, input_data: InputData):
-        loader = input_data.features.val_dataloader
+        loader = input_data.val_dataloader
         example_input, _ = next(iter(loader))
         self.logger.info(f"[DATA] Example input shape: {example_input.shape}")
         return example_input.to(self.device)
@@ -199,7 +199,7 @@ class BaseQuantizer(BaseCompressionModel):
                 prepare(self.quant_model, inplace=True)
                 self.quant_model.eval()
                 with torch.no_grad():
-                    for batch, _ in input_data.features.val_dataloader:
+                    for batch, _ in input_data.val_dataloader:
                         self.quant_model(batch.to(self.device))
             elif self.quant_type == 'qat':
                 self.quant_model.train()

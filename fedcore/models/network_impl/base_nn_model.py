@@ -149,11 +149,11 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
 
-    def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
+    def fit(self, input_data: CompressionInputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
         self.custom_fit_process = supplementary_data is not None
-        train_loader = getattr(input_data.features, f'{loader_type}_dataloader', 'train_dataloader')
-        val_loader = getattr(input_data.features, 'val_dataloader', None)
+        train_loader = input_data.train_dataloader
+        val_loader = input_data.val_dataloader
         self.task_type = input_data.task.task_type
         # define model for fit process
         self.model = input_data.target if self.model is None else self.model
@@ -220,13 +220,13 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         """
 
         self.__substitute_device_quant()
-        return self._predict_model(input_data.features, output_mode)
+        return self._predict_model(input_data, output_mode)
 
     @torch.no_grad()
     def _predict_model(
-            self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
+            self, x_test: CompressionInputData, output_mode: str = "default"
     ):
-        model: torch.nn.Module = self.model or x_test.target
+        model: torch.nn.Module = self.model or x_test.model
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,

@@ -235,10 +235,10 @@ class BaseCompressionModel:
         pass
 
     def _get_example_input(self, input_data: InputData):
-        b = next(iter(input_data.features.val_dataloader))
-        if isinstance(b, (list, tuple)) and len(b) == 2:
-            return b[0]
-        return b
+        batch = next(iter(input_data.val_dataloader))
+        if isinstance(batch, (list, tuple)) and len(batch) == 2:
+            return batch[0]
+        return batch
 
     # def finetune(self, finetune_object: callable, finetune_data):
     #     # TODO del it! 1) finetune may be included into the train loop (just look at LowRank)

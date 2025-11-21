@@ -75,7 +75,7 @@ class DataCheck:
 
         return torch_model
 
-    def _init_input_data(self, compression_dataset: CompressionInputData = None, manually_done=False) -> None:
+    def _init_input_data(self, compression_dataset: CompressionInputData = None) -> InputData:
         """Initializes the `input_data` attribute based on its type.
 
         If a tuple (X, y) is provided, it converts it to a Fedot InputData object
@@ -102,7 +102,7 @@ class DataCheck:
         torch_model = self._init_model_from_backbone(input_data)
 
         input_data.target = torch_model  # model for compression
-        input_data.features.target = torch_model  # model for compression
+        input_data.target = torch_model  # model for compression
         input_data.supplementary_data.is_auto_preprocessed = True
         return input_data
 
@@ -127,7 +127,7 @@ class DataCheck:
         else:
             model_layers = list(model.modules())
             output_layer = model_layers[-1]
-            n_classes = input_data.features.num_classes
+            n_classes = input_data.num_classes
             if output_layer.weight.shape[0] != n_classes:
                 output_layer.weight = torch.nn.Parameter(output_layer.weight[:n_classes, :])
                 output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
@@ -141,7 +141,7 @@ class DataCheck:
             layers = list(state_dict.keys())
             output_layer_weight = layers[-2]
             output_layer_bias = layers[-1]
-            n_classes = input_data.features.num_classes
+            n_classes = input_data.num_classes
             if state_dict[output_layer_weight].shape[0] != n_classes:
                 state_dict[output_layer_weight] = torch.nn.Parameter(state_dict[output_layer_weight][:n_classes, :])
                 state_dict[output_layer_bias] = torch.nn.Parameter(state_dict[output_layer_bias][:n_classes])
