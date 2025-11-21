@@ -1,19 +1,3 @@
-"""Low-rank (SVD-based) compression model wrapper.
-
-This module defines :class:`LowRankModel`, a compression wrapper around
-:class:`BaseNeuralModel` that:
-
-* injects low-rank–specific hooks (see :data:`LRHooks`);
-* trains the base model;
-* decomposes supported layers in-place using SVD (or another decomposer);
-* optionally composes weights for inference and loads decomposed checkpoints.
-"""
-
-from typing import Dict, Optional
-from fedot.core.data.data import InputData
-from fedot.core.operations.operation_parameters import OperationParameters
-import torch_pruning as tp
-import torch
 from torch import nn
 import inspect
 
@@ -135,6 +119,25 @@ class LowRankModel(BaseCompressionModel):
         return batch
 
     def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
+        """Initialize trainer, models and attach low-rank hooks.
+
+        This method:
+
+        1. Filters available hooks using :meth:`BaseNeuralModel.filter_hooks_by_params`
+           and :data:`DEFAULT_HOOKS`.
+        2. Instantiates the selected hooks and passes them to
+           :meth:`BaseCompressionModel._init_trainer_model_before_model_after`
+           to build ``trainer``, ``model_before`` and ``model_after``.
+        3. Applies :func:`decompose_module_in_place` to ``self.model_after``
+           so that supported layers are replaced with low-rank decomposed
+           implementations.
+
+        Parameters
+        ----------
+        input_data :
+            Object used to initialize the underlying trainer/model
+            (e.g. experimenter, dataset descriptor or config object).
+        """
         additional_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, self.DEFAULT_HOOKS)
         additional_hooks = [hook_type() for hook_type in additional_hooks]
         super()._init_trainer_model_before_model_after(input_data, additional_hooks)
@@ -205,7 +208,7 @@ class LowRankModel(BaseCompressionModel):
 
         # self.compress(self.model_after)
         # check params
-        example_batch = self._get_example_input(input_data)#.to(extract_device(self.model_before))
+        example_batch = self._get_example_input(input_data)  # .to(extract_device(self.model_before))
         self.estimate_params(example_batch, self.model_before, self.model_after)
         self.model_after._structure_changed__ = True
         return self.model_after

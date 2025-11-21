@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 
-    
+
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 
 
@@ -42,11 +42,30 @@ class OnetimeRankPruner(BaseHook):
     _hook_place = 50
 
     def __init__(self):
+        """Initialize the one-time rank pruner."""
         super().__init__()
         self.__done = False
 
     @classmethod
     def check_init(cls, d: dict):
+        """Check whether this hook should be instantiated from config.
+
+        Parameters
+        ----------
+        d : dict
+            Configuration dictionary (usually a subset of trainer params).
+
+        Returns
+        -------
+        bool
+            ``True`` if the hook should be created for the given config,
+            ``False`` otherwise.
+
+        Notes
+        -----
+        The hook is enabled when the ``strategy`` key is present and differs
+        from ``"cuttlefish"`` (which is reserved for dynamic pruning).
+        """
         strategy = d.get('strategy', '') 
         if strategy and strategy != 'cuttlefish':
             return True
@@ -122,8 +141,16 @@ class DynamicRankPruner(BaseHook):
     _RANK_ATTR = '_effective_rank'
 
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
+        """Attach the hook to a trainer and initialize tracking structures.
+
+        Parameters
+        ----------
+        hookable_trainer : BaseNeuralModel
+            Trainer or model wrapper that provides ``params`` and ``model``
+            attributes used by the hook.
+        """
         super().link_to_trainer(hookable_trainer)
-        self.n_plateau : int= hookable_trainer.params.get('n_plateau', 5)
+        self.n_plateau : int = hookable_trainer.params.get('n_plateau', 5)
         self.pl_thr : float = hookable_trainer.params.get('pl_thr', 1e-2)
         self.sv_thr : float = hookable_trainer.params.get('sv_thr', 1e-5)
         self.traced_layers: dict = self._prepare_mapping()
@@ -255,6 +282,7 @@ class DynamicRankPruner(BaseHook):
             layer = Accessor.get_module(self.model, layer_name)
             setattr(layer, self._RANK_ATTR, rank)
             self.traced_layers.pop(name, None) 
+
 
 class LRHooks(Enum):
     """Enumeration of available low-rank pruning hook types.

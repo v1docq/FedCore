@@ -1,3 +1,17 @@
+"""Base pruning model abstraction for FedCore.
+
+This module defines :class:`BasePruner`, a compression model that wraps
+a :class:`BaseNeuralModel` and configures structured pruning using
+`torch-pruning`. It:
+
+* selects importance criteria and pruner types based on configuration;
+* initializes a pruning agent on top of the trained model;
+* injects appropriate pruning hooks (zero-shot, gradient-based, reg-based,
+  depth-based) into the training loop;
+* exposes a unified `fit/predict` interface compatible with FedCore
+  compression models.
+"""
+
 from fedot.core.data.data import InputData
 import torch
 import logging
@@ -84,6 +98,25 @@ class BasePruner(BaseCompressionModel):
         self.importance = self._map_importance_name()
 
     def _map_importance_name(self) -> Union[str, Importance]:
+        """Instantiate or resolve an importance object from configuration.
+
+        The mapping is based on :data:`PRUNING_IMPORTANCE` and the current
+        ``importance_name``:
+
+        * if the importance type is a string, it is returned as-is
+          (e.g. for special cases handled by the pruner itself);
+        * if ``importance_name == "random"``, the importance class is
+          instantiated without arguments;
+        * otherwise, a :class:`Importance`-like object is instantiated with
+          ``group_reduction`` and ``normalizer`` taken from the corresponding
+          config fields.
+
+        Returns
+        -------
+        Union[str, Importance]
+            Either a string identifier or an instantiated importance object
+            compatible with Torch-Pruning pruners.
+        """
         importance_type = PRUNING_IMPORTANCE[self.importance_name]
         importance = importance_type
         if self.importance_name == 'random':
@@ -96,7 +129,6 @@ class BasePruner(BaseCompressionModel):
     def __repr__(self):
         """Return a short string representation with the pruner name."""
         return self.pruner_name
-    
     def _init_model(self, input_data): #TODO check new logic with torch.load, insert in _init_model_before_model... and delete it!
         self.logger.info('Prepare original model for pruning'.center(80, '='))
         model = input_data.target
@@ -151,7 +183,7 @@ class BasePruner(BaseCompressionModel):
                                              lr=self.ft_params['lr_for_grad'])
         self.ft_params['optimizer_for_grad_acc'] = self.optimizer_for_grad
 
-    def _init_model_before_model_after_hooks_and_pruner(self, input_data):
+    def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
         print('Prepare original model for pruning'.center(80, '='))
 
         super()._init_model_before_model_after(input_data)
@@ -171,6 +203,24 @@ class BasePruner(BaseCompressionModel):
         print(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
         
     def _setup_pruner_validation_params_from_model(self, input_data):
+        """Prepare calibration batch and pruning validation metadata.
+
+        This method uses :class:`PruningValidator` to derive structures
+        required by Torch-Pruning:
+
+        * selects a calibration batch from ``input_data.features.val_dataloader``;
+        * infers the number of output classes (or forecast length for
+          forecasting tasks);
+        * creates a :class:`PruningValidator` object bound to ``model_after``;
+        * computes a list of layers to ignore during pruning;
+        * computes valid channel groups.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Fedot input data object that provides validation dataloader,
+            task metadata and input dimensionality.
+        """
         # list of tensors with dim size n_samples x n_channel x height x width
         batch_generator = (b for b in input_data.val_dataloader)
         # take first batch
@@ -193,6 +243,40 @@ class BasePruner(BaseCompressionModel):
         self.channel_groups = self.validator.validate_channel_groups()
 
     def _init_pruner_with_model_after(self, input_data):
+        """Instantiate a Torch-Pruning pruner bound to ``model_after``.
+
+        The choice of pruner type is based on ``importance_name``:
+
+        * if ``"activation"`` is found in the importance name, no pruner is
+          created here and ``None`` is returned (activation-based pruners
+          are handled by other mechanisms);
+        * if ``"group"`` is in the name – use ``"group_norm_pruner"`` from
+          :data:`PRUNERS`;
+        * if importance name is ``"bn_scale"`` – use ``"batch_norm_pruner"``;
+        * if importance name is none of ``["random", "lamp", "magnitude"]`` –
+          use ``"growing_reg_pruner"``;
+        * otherwise – fall back to the pruner specified by ``self.pruner_name``.
+
+        After choosing the type, this method calls
+        :meth:`_setup_pruner_validation_params_from_model` and creates a
+        pruner instance with:
+
+        * ``model_after`` as the target model,
+        * calibration batch,
+        * chosen importance object,
+        * target pruning ratio,
+        * ignored layers and channel groups.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Fedot input data object with features, task info and val loader.
+
+        Returns
+        -------
+        Any or None
+            Instantiated pruner or ``None`` if no pruner should be used.
+        """
         pruner = None
 
         if 'activation' in self.importance_name:
@@ -224,6 +308,28 @@ class BasePruner(BaseCompressionModel):
         return pruner
 
     def fit(self, input_data: InputData):
+        """Run training with pruning hooks and return the pruned model.
+
+        This method prepares the trainer and models via
+        :meth:`_prepare_trainer_and_model_to_fit` (which in turn calls
+        :meth:`_init_trainer_model_before_model_after_and_incapsulate_hooks`),
+        and then starts training via ``self.trainer.fit``.
+
+        If any exception occurs during training, the error is printed with a
+        traceback and ``model_after`` is set to ``model_before`` (no pruning
+        is applied).
+
+        Parameters
+        ----------
+        input_data : InputData
+            Fedot input data used to train the model and drive pruning hooks.
+
+        Returns
+        -------
+        Any
+            Pruned (or original, in case of error) model instance stored in
+            ``self.model_after``.
+        """
         try:
             super()._prepare_trainer_and_model_to_fit(input_data)
             self.trainer.fit(input_data)

@@ -1,3 +1,17 @@
+"""Base quantization model abstraction for FedCore.
+
+This module defines :class:`BaseQuantizer`, a compression wrapper that adds
+quantization capabilities on top of :class:`BaseNeuralModel`. It:
+
+* configures quantization mode (dynamic, static, QAT) and backend;
+* builds appropriate QConfig mappings and allowed module sets;
+* prepares the model graph for quantization (uninplace, fusion, QDQ wrapping);
+* injects quantization hooks (:class:`DynamicQuantizationHook`,
+  :class:`StaticQuantizationHook`, :class:`QATHook`) into the training loop;
+* exposes a unified ``fit / predict`` interface compatible with other
+  FedCore compression models.
+"""
+
 from copy import deepcopy
 import traceback
 import logging
@@ -95,6 +109,21 @@ class BaseQuantizer(BaseCompressionModel):
 
     
     def _change_params_considering_device_type(self):
+        """Adjust device-dependent quantization settings.
+
+        This helper adapts certain parameters to the current device:
+
+        * on CUDA devices, forces ``dtype = torch.float16`` and backend
+          ``'onednn'``, since int8 backends may not be available;
+        * disables convolution quantization when using float16
+          (``allow_conv = False``), as some backends do not support
+          conv+float16 combinations.
+
+        Notes
+        -----
+        The actual compatibility constraints depend on PyTorch and backend
+        versions; this method encodes a conservative default strategy.
+        """
         """Corrects device-sensitive parameters like dtype or backend library for compatibility with
         concrete hardware
         """
@@ -109,6 +138,26 @@ class BaseQuantizer(BaseCompressionModel):
         return f"{self.quant_type.upper()} Quantization"
 
     def _set_allowed_quant_module_mappings(self) -> set[nn.Module]:
+        """Derive the set of module types that are allowed to be quantized.
+
+        The mapping is selected based on ``self.quant_type``:
+
+        * ``"dynamic"`` – uses :data:`DEFAULT_DYNAMIC_QUANT_MODULE_MAPPINGS`;
+        * ``"static"`` – uses :data:`DEFAULT_STATIC_QUANT_MODULE_MAPPINGS`;
+        * ``"qat"`` – uses :data:`DEFAULT_QAT_MODULE_MAPPINGS`.
+
+        Additional adjustments:
+
+        * if ``allow_emb`` is enabled and mode is QAT, embedding QAT mappings
+          are merged in;
+        * if ``allow_conv`` is ``False``, all convolution and transposed
+          convolution layers are removed from the mapping.
+
+        Returns
+        -------
+        set[nn.Module]
+            Set of module classes that should be considered for quantization.
+        """
         mapping_dict = {
             'dynamic': DEFAULT_DYNAMIC_QUANT_MODULE_MAPPINGS,
             'static': DEFAULT_STATIC_QUANT_MODULE_MAPPINGS,
@@ -221,6 +270,38 @@ class BaseQuantizer(BaseCompressionModel):
 
 
     def _prepare_model_after_for_quantizing(self, input_data: InputData):
+        """Prepare ``model_after`` for quantization.
+
+        This method executes several steps required before applying
+        quantization transforms:
+
+        1. Call :func:`uninplace` to replace in-place activations (e.g. ReLU)
+           with out-of-place versions to avoid issues with quantization.
+        2. Reassemble the model graph using :class:`ParentalReassembler`
+           to ensure a consistent module hierarchy.
+        3. If the model exposes ``fuse_model``, call it to fuse modules
+           (Conv+BN+ReLU, etc.) before quantization.
+        4. Propagate qconfig using :func:`propagate_qconfig_` with
+           ``self.qconfig``.
+        5. Store an example batch for calibration via :meth:`_get_example_input`.
+        6. Insert Q/DQ wrappers at model entry/exit points through
+           :meth:`QDQWrapper.add_quant_entry_exit`.
+
+        If any step fails, an error is printed and a deep copy of
+        ``model_before`` in eval mode is returned.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Input data used to derive an example batch for calibration.
+
+        Returns
+        -------
+        torch.nn.Module or None
+            On error, a copy of the original model in eval mode is returned;
+            on success, ``self.model_after`` is prepared in-place and
+            ``None`` is implicitly returned.
+        """
         try:
             uninplace(self.model_after) #skip connection operations and other may work incorrect with nn.Relu(inplace=True)
             # https://stackoverflow.com/questions/69913781/is-it-true-that-inplace-true-activations-in-pytorch-make-sense-only-for-infere
@@ -245,6 +326,29 @@ class BaseQuantizer(BaseCompressionModel):
             return deepcopy(self.model_before).eval()
         
     def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
+        """Initialize trainer, models and attach quantization hooks.
+
+        This method:
+
+        1. Filters quantization hooks using
+           :meth:`BaseNeuralModel.filter_hooks_by_params` and
+           :data:`DEFAULT_HOOKS`.
+        2. Instantiates the selected quantization hooks with current
+           quantization parameters (epoch schedule, dtype, allowed modules,
+           QAT preparation epoch, backend).
+        3. Calls the base
+           :meth:`BaseCompressionModel._init_trainer_model_before_model_after`
+           to create ``trainer``, ``model_before`` and ``model_after`` with
+           these hooks attached.
+        4. Runs :meth:`_prepare_model_after_for_quantizing` on
+           ``model_after`` to reassemble and configure it for quantization.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Data and configuration object used to build the trainer and
+            base model.
+        """
         additional_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, self.DEFAULT_HOOKS)
         additional_hooks = [quant_hook_type(
                                 self.quant_each,
@@ -257,6 +361,28 @@ class BaseQuantizer(BaseCompressionModel):
         self._prepare_model_after_for_quantizing(input_data)
 
     def fit(self, input_data: InputData):
+        """Run training with quantization hooks and return the quantized model.
+
+        This method prepares the trainer and models via
+        ``_prepare_trainer_and_model_to_fit`` (which internally calls
+        :meth:`_init_trainer_model_before_model_after_and_incapsulate_hooks`),
+        then runs ``self.trainer.fit``.
+
+        If an exception occurs during training or quantization, the error
+        is printed, and ``model_after`` is replaced with a deep copy of
+        ``model_before`` in eval mode.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Fedot input data used for training and calibration.
+
+        Returns
+        -------
+        torch.nn.Module
+            Quantized model (or original model in case of failure), stored
+            in ``self.model_after``.
+        """
         super()._prepare_trainer_and_model_to_fit(input_data)
         try:
             self.trainer.fit(input_data)
