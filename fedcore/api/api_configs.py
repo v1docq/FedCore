@@ -42,7 +42,7 @@ from fedcore.repository.constant_repository import (
     SLRStrategiesEnum,
     TaskTypesEnum,
     TorchLossesConstant,
-    StructureCriterions
+    StructureCriterions,
 )
 # Avoid importing NLP-specific templates here to prevent circular imports
 
@@ -97,7 +97,7 @@ class MisconfigurationError(BaseException):
         self.exs = exs
 
     def __repr__(self):
-        return '\n'.join([f'\t{str(x)}' for x in self.exs])
+        return "\n".join([f"\t{str(x)}" for x in self.exs])
 
     def __str__(self):
         return self.__repr__()
@@ -196,30 +196,39 @@ class ConfigTemplate:
             field.
         """
         # we don't check parental attr
-        if key == '_parent':
-            return   
+        if key == "_parent":
+            return
 
         def _check_primal(annotation, key, val):
             if isclass(annotation):
                 if issubclass(annotation, Enum):
                     if val is not None and not hasattr(annotation, val):
                         return ValueError(
-                            f'`{val}` not supported as {key} at config {cls.__name__}. Options: {annotation._member_names_}')
+                            f"`{val}` not supported as {key} at config {cls.__name__}. "
+                            f"Options: {annotation._member_names_}"
+                        )
                 elif not isinstance(val, annotation):
-                    return TypeError(f'`Passed `{val}` at config: {cls.__name__}, field: {key}. Expected: {annotation}')
-            elif annotation is Callable and not hasattr(val, '__call__'):
-                return TypeError(f'`Passed `{val}` at config: {cls.__name__}, field: {key}, is not callable!')
-            elif get_origin(annotation) is Literal and not val in get_args(annotation):
-                return ValueError(f'Passed value `{val}` at config {cls.__name__}. Supported: {get_args(annotation)}')
+                    return TypeError(
+                        f"`Passed `{val}` at config: {cls.__name__}, field: {key}. "
+                        f"Expected: {annotation}"
+                    )
+            elif annotation is Callable and not hasattr(val, "__call__"):
+                return TypeError(
+                    f"`Passed `{val}` at config: {cls.__name__}, field: {key}, is not callable!"
+                )
+            elif get_origin(annotation) is Literal and val not in get_args(annotation):
+                return ValueError(
+                    f"Passed value `{val}` at config {cls.__name__}. "
+                    f"Supported: {get_args(annotation)}"
+                )
             return False
 
-        def _check(annotation, key, val):   
+        def _check(annotation, key, val):
             options = get_args(annotation) or (annotation,)
-            exs = [_check_primal(option, key, val)
-                               for option in options]
+            exs = [_check_primal(option, key, val) for option in options]
             if exs and all(exs):
                 raise MisconfigurationError(exs)
-        
+
         annotation = cls.get_annotation(key)
         _check(annotation, key, val)
 
@@ -246,13 +255,12 @@ class ConfigTemplate:
         allowed_parameters = _normalize_kwargs(cls.__init__, kwargs)
         for k in kwargs:
             if k not in allowed_parameters:
-                raise KeyError(f'Unknown field `{k}` was passed into {cls.__name__}')
+                raise KeyError(f"Unknown field `{k}` was passed into {cls.__name__}")
         sign_args = tuple(signature(cls.__init__).parameters)
-        complemented_args = dict(zip(sign_args[1:],
-                                     args))
+        complemented_args = dict(zip(sign_args[1:], args))
         allowed_parameters.update(complemented_args)
         return cls, allowed_parameters
-    
+
     def __repr__(self):
         """Return a multi-line representation with field names and values."""
         params_str = "\n".join(f"{k}: {getattr(self, k)}" for k in self.__slots__)
@@ -393,7 +401,7 @@ class DistributedConfigTemplate(ConfigTemplate):
     processes: bool = False
     n_workers: int = 1
     threads_per_worker: int = 4
-    memory_limit: Literal['auto'] = 'auto'  ###
+    memory_limit: Literal["auto"] = "auto"  ###
 
 
 @dataclass
@@ -416,9 +424,9 @@ class ComputeConfigTemplate(ConfigTemplate):
 
     backend: dict = None
     distributed: DistributedConfigTemplate = None
-    output_folder: Union[str, Path] = './current_experiment_folder'
+    output_folder: Union[str, Path] = "./current_experiment_folder"
     use_cache: bool = True
-    automl_folder: Union[str, Path] = './current_automl_folder'
+    automl_folder: Union[str, Path] = "./current_automl_folder"
 
 
 @dataclass
@@ -490,9 +498,48 @@ class AutoMLConfigTemplate(ConfigTemplate):
     """Extension for FedCore-specific treats"""
     fedot_config: FedotConfigTemplate = None
 
-    mutation_agent: Literal['random'] = 'random'
-    mutation_strategy: Literal['params_mutation_strategy'] = 'params_mutation_strategy'
+    mutation_agent: Literal["random"] = "random"
+    mutation_strategy: Literal["params_mutation_strategy"] = "params_mutation_strategy"
     optimizer: Optional[Any] = None  ### TODO which optimizers may be used? anything except FedCoreEvoOptimizer
+
+
+@dataclass
+class TrainingTemplate(ConfigTemplate):
+    """Computational Node settings. May include hooks summon keys"""
+    log_each: Optional[int] = LookUp(None)
+    eval_each: Optional[int] = LookUp(None)
+    save_each: Optional[int] = LookUp(None)
+    epochs: int = 1
+    optimizer: Optimizers = "adam"
+    scheduler: Optional[Schedulers] = None
+    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)
+
+    @staticmethod
+    def map_criterion(criterion: Union[str, Callable]) -> object:
+        """Resolve criterion name or callable to an instantiated loss object.
+
+        Parameters
+        ----------
+        criterion : str or Callable
+            Either the name of a loss from :class:`TorchLossesConstant` or
+            a callable class/factory that produces a loss instance.
+
+        Returns
+        -------
+        object
+            Instantiated loss object.
+
+        Raises
+        ------
+        ValueError
+            If the value cannot be mapped to a known or callable criterion.
+        """
+        if isinstance(criterion, str):
+            return TorchLossesConstant[criterion].value()
+        elif isinstance(criterion, Callable):
+            return criterion()
+        else:
+            raise ValueError(f"Unknown or not callable criterion: {criterion}")
 
 
 @dataclass
@@ -510,35 +557,7 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
     custom_model_params : dict, optional
         Extra backend-specific architecture parameters.
     """
-    input_dim: Union[None, int] = None
-    output_dim: Union[None, int] = None
-    depth: Union[int, dict] = 3
-    custom_model_params: dict = None
 
-
-@dataclass
-class TrainingTemplate(ConfigTemplate):
-    """Computational Node settings. May include hooks summon keys"""
-    log_each: Optional[int] = LookUp(None)
-    eval_each: Optional[int] = LookUp(None)
-    save_each: Optional[int] = LookUp(None)
-    epochs: int = 1
-    optimizer: Optimizers = 'adam'
-    scheduler: Optional[Schedulers] = None
-    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  
-
-    @staticmethod
-    def map_criterion(criterion: Union[str, Callable]) -> object:
-        if isinstance(criterion, str):
-            return TorchLossesConstant[criterion].value()
-        elif isinstance(criterion, Callable):
-            return criterion()
-        else:
-            raise ValueError(f"Unknown or not callable criterion: {criterion}")
-
-
-@dataclass
-class ModelArchitectureConfigTemplate(ConfigTemplate):
     """Example of specific node template"""
     input_dim: Union[None, int] = None
     output_dim: Union[None, int] = None
@@ -548,6 +567,15 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
 
 @dataclass
 class NeuralModelConfigTemplate(NodeTemplate):
+    """Training configuration for neural network models.
+
+    Extends :class:`NodeTemplate` with:
+
+    * custom learning parameters passed directly to the trainer;
+    * a set of structured criterions with relative weights;
+    * nested :class:`ModelArchitectureConfigTemplate`.
+    """
+
     """Additional learning settings. May be redundant"""
     custom_learning_params: dict = None
     custom_criterions: dict = None
@@ -557,20 +585,52 @@ class NeuralModelConfigTemplate(NodeTemplate):
 
     @staticmethod
     def map_custom_criterions(custom_criterions: dict[str, float]) -> dict[type[nn.Module], float]:
+        """Map custom criterion names to their types with relative weights.
+
+        Parameters
+        ----------
+        custom_criterions : dict[str, float]
+            Mapping from criterion names to relative weights.
+
+        Returns
+        -------
+        dict[type[nn.Module], float]
+            Mapping from criterion classes to relative weights.
+        """
         mapped_criterions = dict()
         for criterion_name, criterion_relative_weight in custom_criterions.items():
-            mapped_criterions[NeuralModelConfigTemplate.map_criterion_name(criterion_name)] = criterion_relative_weight
+            mapped_criterions[
+                NeuralModelConfigTemplate.map_criterion_name(criterion_name)
+            ] = criterion_relative_weight
         return mapped_criterions
-            
+
     @staticmethod
     def map_criterion_name(criterion_name: str) -> type[nn.Module]:
+        """Resolve custom criterion name to a loss/regularizer class.
+
+        Parameters
+        ----------
+        criterion_name : str
+            Name of a structure criterion or Torch loss constant.
+
+        Returns
+        -------
+        type[nn.Module]
+            Corresponding criterion class.
+
+        Raises
+        ------
+        ValueError
+            If the name cannot be resolved.
+        """
         criterion_type = StructureCriterions[criterion_name].value
-        if (criterion_type is not None):
+        if criterion_type is not None:
             return criterion_type
-        elif (hasattr(TorchLossesConstant, criterion_name)):
+        elif hasattr(TorchLossesConstant, criterion_name):
             return TorchLossesConstant[criterion_name].value
         else:
-            raise ValueError(f'Unknown type `{criterion_name}` of custom loss')
+            raise ValueError(f"Unknown type `{criterion_name}` of custom loss")
+
 
 @dataclass
 class LearningConfigTemplate(ConfigTemplate):
@@ -589,7 +649,10 @@ class LearningConfigTemplate(ConfigTemplate):
     learning_strategy_params : NeuralModelConfigTemplate, optional
         Additional parameters for the learning strategy.
     """
-    learning_strategy: Literal['from_scratch', 'checkpoint'] = 'from_scratch'
+
+    """Copies previous version of learning config"""
+    learning_strategy: Literal["from_scratch", "checkpoint"] = "from_scratch"
+    peft_strategy: PEFTStrategies = "training"
     criterion: Union[Callable, TorchLossesConstant] = LookUp(None)
     peft_strategy_params: TrainingTemplate = None
     learning_strategy_params: TrainingTemplate = None
@@ -631,8 +694,9 @@ class APIConfigTemplate(ExtendableConfigTemplate):
     predicted_probs: Optional[Any] = None
     original_model: Optional[Any] = None
 
+
 @dataclass
-class LowRankTemplate(TrainingTemplate):
+class LowRankTemplate(NeuralModelConfigTemplate):
     """Configuration for low-rank (SVD-based) compression.
 
     Attributes
@@ -647,12 +711,12 @@ class LowRankTemplate(TrainingTemplate):
         Mode used when composing decomposed layers.
     non_adaptive_threshold : float
         Threshold for non-adaptive rank pruning.
-    finetune_params : TrainingTemplate, optional
+    finetune_params : NeuralModelConfigTemplate, optional
         Fine-tuning parameters after compression.
     """
 
     """Example of specific node template"""
-    strategy: SLRStrategiesEnum = 'quantile'
+    strategy: SLRStrategiesEnum = "quantile"
     rank_prune_each: int = -1
     custom_criterions: dict = None  # {'norm_loss':{...},
     compose_mode: Optional[Literal['one_layer', 'two_layers', 'three_layers']] = None
@@ -694,12 +758,15 @@ class PruningTemplate(TrainingTemplate):
     finetune_params: TrainingTemplate = None
     prune_each: int = -1
 
+
 class QuantMode(Enum):
+    """Supported quantization modes for :class:`QuantTemplate`."""
+
     DYNAMIC = "dynamic"
     STATIC = "static"
     QAT = "qat"
 
-    
+
 @dataclass
 class QuantTemplate(TrainingTemplate):
     """Configuration for model quantization.
