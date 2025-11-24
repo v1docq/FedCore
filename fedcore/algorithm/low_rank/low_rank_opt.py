@@ -1,17 +1,19 @@
-from copy import deepcopy
-from typing import Dict, Optional
-from fedot.core.data.data import InputData
-from fedot.core.operations.operation_parameters import OperationParameters
-import torch_pruning as tp
-import torch
-from torch import nn
+"""Low-rank (SVD-based) compression model wrapper.
 
-from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
-from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
-from fedcore.architecture.comptutaional.devices import default_device, extract_device
-from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
+This module defines :class:`LowRankModel`, a compression wrapper around
+:class:`BaseNeuralModel` that:
+
+* injects low-rank–specific hooks (see :data:`LRHooks`);
+* trains the base model;
+* decomposes supported layers in-place using SVD (or another decomposer);
+* optionally composes weights for inference and loads decomposed checkpoints.
+"""
+
+from torch import nn
+from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module_in_place
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
+from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.repository.constanst_repository import (
     DECOMPOSE_MODE,
     LRHooks
@@ -20,58 +22,125 @@ from fedcore.algorithm.base_compression_model import BaseCompressionModel
 
 
 class LowRankModel(BaseCompressionModel):
-    """Singular value decomposition for model structure optimization.
+    """Compression model that applies low-rank (SVD-based) decomposition.
 
-    Args:
+    The class wraps training of a base neural network and replaces eligible
+    layers with low-rank decomposed counterparts. It also registers rank
+    pruning hooks defined in :data:`LRHooks` and provides utilities for
+    composing decomposed weights and loading decomposed checkpoints.
+
+    Parameters
+    ----------
+    params : dict, optional
+        Configuration dictionary. Common keys include:
+
+        * ``decomposing_mode``: decomposition mode passed to
+          :func:`decompose_module_in_place` (defaults to
+          :data:`DECOMPOSE_MODE`).
+        * ``decomposer``: name of the decomposer to use
+          (e.g. ``"svd"``; default is ``"svd"``).
+        * ``compose_mode``: compose mode passed to
+          :func:`decompose_module_in_place` and
+          :func:`load_svd_state_dict` (or ``None`` to use default).
+        * Any additional keys supported by :class:`BaseCompressionModel`
+          and :class:`BaseNeuralModel` (e.g. optimizer, scheduler, device).
     """
-    _additional_hooks = [LRHooks]
+    DEFAULT_HOOKS: list[type[BaseHook]] = [prop.value for prop in LRHooks]
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
+    def __init__(self, params: dict = {}):
         super().__init__(params)
-        self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
+        self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE) 
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
-        self.device = default_device()
 
-    def _init_model(self, input_data):
-        model = super()._init_model(input_data, self._additional_hooks)
-        self.model_before = model
-        self.model_after = deepcopy(model)
-        decompose_module(
+    def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
+        """Initialize trainer, models and attach low-rank hooks.
+
+        This method:
+
+        1. Filters available hooks using :meth:`BaseNeuralModel.filter_hooks_by_params`
+           and :data:`DEFAULT_HOOKS`.
+        2. Instantiates the selected hooks and passes them to
+           :meth:`BaseCompressionModel._init_trainer_model_before_model_after`
+           to build ``trainer``, ``model_before`` and ``model_after``.
+        3. Applies :func:`decompose_module_in_place` to ``self.model_after``
+           so that supported layers are replaced with low-rank decomposed
+           implementations.
+
+        Parameters
+        ----------
+        input_data :
+            Object used to initialize the underlying trainer/model
+            (e.g. experimenter, dataset descriptor or config object).
+        """
+        additional_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, self.DEFAULT_HOOKS)
+        additional_hooks = [hook_type() for hook_type in additional_hooks]
+        super()._init_trainer_model_before_model_after(input_data, additional_hooks)
+        
+        decompose_module_in_place(
             self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
         )
-        self.model_after.to(self.device)
-        return self.model_after
 
     def fit(self, input_data) -> None:
-        """Run model training with optimization.
+        """Train the model with low-rank–aware hooks and estimate compression.
 
-        Args:
-            input_data: An instance of the model class
+        The method prepares the trainer and models, runs training, and then
+        evaluates parameter statistics before and after decomposition.
+
+        Parameters
+        ----------
+        input_data :
+            Object required by the trainer to perform fitting
+            (e.g. experimenter instance, dataloaders, or config).
+
+        Returns
+        -------
+        nn.Module
+            Trained and decomposed model instance (``self.model_after``) with
+            ``_structure_changed__`` flag set to ``True``.
         """
-        model_after = self._init_model(input_data)
+        super()._prepare_trainer_and_model_to_fit(input_data)
         # base_params = self._estimate_params(self.model_before, example_batch)
-        self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
         # self.compress(self.model_after)
         # check params
-        example_batch = self._get_example_input(input_data)#.to(extract_device(self.model_before))
+        example_batch = self._get_example_input(input_data)  # .to(extract_device(self.model_before))
         self.estimate_params(example_batch, self.model_before, self.model_after)
         self.model_after._structure_changed__ = True
         return self.model_after
 
     def compress(self, model: nn.Module):
+        """Compose weights of all decomposed layers for inference.
+
+        This helper iterates over all modules of the given ``model`` and,
+        for each instance of :class:`IDecomposed`, calls
+        :meth:`IDecomposed.compose_weight_for_inference` to materialize the
+        effective weight matrix.
+
+        Parameters
+        ----------
+        model : nn.Module
+            Model whose decomposed layers should be switched to inference form.
+        """
         for module in model.modules():
             if isinstance(module, IDecomposed):
                 # module.inference_mode = True
                 module.compose_weight_for_inference()
 
     def load_model(self, model, state_dict_path: str) -> None:
-        """Loads the optimized model into the experimenter.
+        """Load a decomposed (SVD-based) checkpoint into a model.
 
-        Args:
-            exp: An instance of the experimenter class, e.g. ``ClassificationExperimenter``.
-            state_dict_path: Path to state_dict file.
+        The method uses :func:`load_svd_state_dict` to restore a state dict
+        that already contains low-rank–decomposed parameters, and then moves
+        the model to ``self.device``.
+
+        Parameters
+        ----------
+        model : nn.Module
+            Model instance into which the state dict will be loaded.
+        state_dict_path : str
+            Path to the serialized state dict file containing decomposed
+            parameters.
         """
         load_svd_state_dict(
             model=model,

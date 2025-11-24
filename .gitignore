@@ -104,3 +104,7 @@ venv.bak/
 
 results_of_experiments/
 composition_results/
+data/
+datasets/
+.vscode
+*.csv

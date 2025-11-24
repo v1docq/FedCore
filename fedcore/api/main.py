@@ -1,14 +1,11 @@
 import logging
 import os
 import warnings
-from copy import deepcopy
-from datetime import datetime
 from functools import partial
-from typing import Union, Optional, Callable
+from typing import Union, Optional
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn
 from fedot.api.main import Fedot
 from fedot.core.data.data import InputData, OutputData
 from fedot.core.pipelines.pipeline import Pipeline
@@ -21,7 +18,6 @@ from fedcore.architecture.abstraction.decorators import DaskServer, exception_ha
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
     FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,
@@ -132,7 +128,7 @@ class FedCore(Fedot):
             learning_params = self.manager.learning_config.peft_strategy_params.to_dict()
             learning_params['model'] = predict_data.target
             # scenario where we load pretrain model and use it only for inference
-            self.fedcore_model = BaseNeuralModel(learning_params)
+            self.fedcore_model = BaseNeuralModel(predict_data.target, learning_params)
             #predict_data = predict_data.features # InputData to CompressionInputData
         predict = self.fedcore_model.predict(predict_data, output_mode)
         return predict
