@@ -5,6 +5,11 @@ from torch.nn import Module
 from functools import wraps
 
 
+def camel_to_snake(camel_case_string):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
 def filter_kw(f):
     """Allows to pass kwargs with extra key-value pairs without raising an exception"""
     @wraps(f)
