@@ -46,29 +46,29 @@ class DataCheck:
         self.fedot_dummy_idx = np.arange(1)
         self.fedot_dummy_datatype = DataTypesEnum.image
 
-    def _init_model_from_backbone(self, input_data):
+    def _init_model_from_backbone(self, input_data, compression_dataset=None):
         model_is_pretrain_torch_backbone = isinstance(self.model, str)
         model_is_pretrain_backbone_with_weights = isinstance(self.model, dict)
         model_is_custom_callable_object = isinstance(self.model, Callable)
         if model_is_pretrain_torch_backbone:
             torch_model = load_backbone(torch_model=self.model)
-            torch_model = self._check_optimised_model(torch_model, input_data)
+            torch_model = self._check_optimised_model(torch_model, input_data, compression_dataset)
         elif model_is_pretrain_backbone_with_weights:
             if self.model['path_to_model'].__contains__('.pth'):
                     torch_model = torch.load(self.model['path_to_model'], weights_only=False,
                                                    map_location=default_device())
-                    torch_model = self._check_optimised_model(torch_model, input_data)
+                    torch_model = self._check_optimised_model(torch_model, input_data, compression_dataset)
             else:
                 torch_model = load_backbone(torch_model=self.model,
                                             model_params=self.learning_params)
-                torch_model = self._check_optimised_model(torch_model, input_data)
+                torch_model = self._check_optimised_model(torch_model, input_data, compression_dataset)
                 if model_is_pretrain_backbone_with_weights:
                     try:
                         torch_model.load_model(self.model['path_to_model'])
                     except:
                         loaded_state_dict = torch.load(self.model['path_to_model'], weights_only=True,
                                                     map_location=default_device())
-                        verified_state_dict = self._check_state_dict(loaded_state_dict, input_data)
+                        verified_state_dict = self._check_state_dict(loaded_state_dict, input_data, compression_dataset)
                         torch_model.load_state_dict(verified_state_dict)
         elif model_is_custom_callable_object:
             torch_model = self.model
@@ -99,7 +99,7 @@ class DataCheck:
             data_type=self.fedot_dummy_datatype,  # dummy value
             supplementary_data=compression_dataset.supplementary_data,
         )
-        torch_model = self._init_model_from_backbone(input_data)
+        torch_model = self._init_model_from_backbone(input_data, compression_dataset)
 
         input_data.target = torch_model  # model for compression
         input_data.target = torch_model  # model for compression
@@ -115,7 +115,7 @@ class DataCheck:
         """
         return input_data
 
-    def _check_optimised_model(self, model: Callable, input_data: InputData):
+    def _check_optimised_model(self, model: Callable, input_data: InputData, compression_dataset=None):
         """Checks and preprocesses the features in the input data.
 
         - Replaces NaN and infinite values with 0.
@@ -127,22 +127,22 @@ class DataCheck:
         else:
             model_layers = list(model.modules())
             output_layer = model_layers[-1]
-            n_classes = input_data.num_classes
-            if output_layer.weight.shape[0] != n_classes:
+            n_classes = compression_dataset.num_classes if compression_dataset is not None else getattr(input_data, 'num_classes', None)
+            if n_classes is not None and output_layer.weight.shape[0] != n_classes:
                 output_layer.weight = torch.nn.Parameter(output_layer.weight[:n_classes, :])
                 output_layer.bias = torch.nn.Parameter(output_layer.bias[:n_classes])
                 output_layer.out_features = n_classes
         return model
 
-    def _check_state_dict(self, state_dict: dict, input_data: InputData):
+    def _check_state_dict(self, state_dict: dict, input_data: InputData, compression_dataset=None):
         if not input_data.task.task_type.value == 'classification':
             return state_dict
         else:
             layers = list(state_dict.keys())
             output_layer_weight = layers[-2]
             output_layer_bias = layers[-1]
-            n_classes = input_data.num_classes
-            if state_dict[output_layer_weight].shape[0] != n_classes:
+            n_classes = compression_dataset.num_classes if compression_dataset is not None else getattr(input_data, 'num_classes', None)
+            if n_classes is not None and state_dict[output_layer_weight].shape[0] != n_classes:
                 state_dict[output_layer_weight] = torch.nn.Parameter(state_dict[output_layer_weight][:n_classes, :])
                 state_dict[output_layer_bias] = torch.nn.Parameter(state_dict[output_layer_bias][:n_classes])
         return state_dict

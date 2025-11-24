@@ -10,7 +10,7 @@ from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 
-from fedcore.architecture.computational.devices import default_device
+from fedcore.architecture.computational.devices import default_device, extract_device
 from fedcore.inference.onnx import ONNXInferenceModel
 from functools import partial
 from fedcore.tools.registry.model_registry import ModelRegistry
@@ -154,7 +154,20 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
             model_from_attr = getattr(fitted, self.model_regime, None)
             
             if model_from_attr is None:
+                if self.model_regime == 'model_after':
+                    model_from_attr = getattr(fitted, 'model_before', None)
+                    if model_from_attr is None:
+                        model_from_attr = getattr(fitted, 'model', None)
+                elif self.model_regime == 'model_before':
+                    model_from_attr = getattr(fitted, 'model', None)
+            
+            if model_from_attr is None:
                 raise ValueError(f"Model regime '{self.model_regime}' not found in fitted operation")
+            
+            operation_device = getattr(fitted, 'device', None)
+            if operation_device:
+                self.device = operation_device
+                self.cuda_allowed = (self.device.type == 'cuda')
             
             fedcore_id = getattr(fitted, '_fedcore_id', None)
             model_id = getattr(fitted, '_model_id', None)
@@ -173,11 +186,6 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
                 print("No fedcore_id or model_id found, using model from operation attributes")
                 self.model = model_from_attr
                 self._loaded_from_registry = False
-            
-            operation_device = getattr(fitted, 'device', None)
-            if operation_device:
-                self.device = operation_device
-                self.cuda_allowed = (self.device.type == 'cuda')
                 
         elif is_class_container:
             self.model = model.model
@@ -185,6 +193,16 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
         else:
             self.model = model
             self._loaded_from_registry = False
+        
+        if not hasattr(self, 'device') or self.device is None:
+            self.device = default_device()
+            self.cuda_allowed = (self.device.type == 'cuda')
+        
+        model_device = extract_device(self.model) if hasattr(self.model, 'parameters') else None
+        if model_device is not None and model_device.type != self.device.type:
+            if model_device.type == 'cuda' and self.device.type == 'cpu':
+                self.device = model_device
+                self.cuda_allowed = True
             
         self.model.to(self.device)
     
@@ -373,6 +391,8 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
 
         self.model.eval()
         lat_list = []
+        latency_fn = cuda_latency_eval if self.cuda_allowed else cpu_latency_eval
+        
         for batch in tqdm(self.data_loader(max_batches=max_samples or self.batch_size)):
             features = self._extract_batch(batch)
             if isinstance(features, torch.Tensor):
@@ -380,9 +400,10 @@ class PerformanceEvaluator(BasePerformanceEvaluator):
                     is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
                     sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
                     sample_batch = sample[None, ...]
-                    lat_list.append(cuda_latency_eval(sample_batch))
+                    lat_list.append(latency_fn(sample_batch))
             else:
-                lat_list.append(cuda_latency_eval(features))
+                features = features.to(self.device) if isinstance(features, torch.Tensor) else features
+                lat_list.append(latency_fn(features))
         return lat_list
 
     def measure_latency_throughput(self, reps: int = 3, batches: int = 10):

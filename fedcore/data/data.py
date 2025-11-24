@@ -9,7 +9,7 @@ from fedot.core.repository.dataset_types import DataTypesEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 
-@dataclass
+@dataclass(init=False)
 class CompressionInputData(InputData):
     idx = None
     features = None
@@ -18,8 +18,23 @@ class CompressionInputData(InputData):
     val_dataloader: torch.utils.data.DataLoader = None
     test_dataloader: torch.utils.data.DataLoader = None
     input_dim: int = None
+    num_classes: int = None
     model: tp.Any = None
 
+    def __init__(self, idx=None, features=None, data_type=None, 
+                 train_dataloader=None, val_dataloader=None, test_dataloader=None,
+                 input_dim=None, num_classes=None, model=None, **kwargs):
+        if idx is None:
+            idx = np.arange(1)
+        if data_type is None:
+            data_type = DataTypesEnum.image
+        super().__init__(idx=idx, features=features, data_type=data_type, **kwargs)
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
+        self.test_dataloader = test_dataloader
+        self.input_dim = input_dim
+        self.num_classes = num_classes
+        self.model = model
 
     @property
     def shape(self):

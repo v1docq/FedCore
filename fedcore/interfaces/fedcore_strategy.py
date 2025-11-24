@@ -38,7 +38,10 @@ class FedCoreStrategy(EvaluationStrategy):
             data_type=DataTypesEnum.image,
             supplementary_data=predict_data.supplementary_data,
         )
-        output_data.predict = prediction
+        if isinstance(prediction, OutputData):
+            output_data.predict = prediction.predict
+        else:
+            output_data.predict = prediction
         return output_data
 
     def __init__(
@@ -88,13 +91,15 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
     def predict(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
     ) -> OutputData:
-        converted = self._convert_to_output(trained_operation.model, predict_data)
+        prediction = trained_operation.predict(predict_data, output_mode)
+        converted = self._convert_to_output(prediction, predict_data)
         return converted
 
     def predict_for_fit(
         self, trained_operation, predict_data: InputData, output_mode: str = "default"
     ) -> OutputData:
-        converted = self._convert_to_output(trained_operation.model, predict_data)
+        prediction = trained_operation.predict_for_fit(predict_data, output_mode)
+        converted = self._convert_to_output(prediction, predict_data)
         return converted
 
 
