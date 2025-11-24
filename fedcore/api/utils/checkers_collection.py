@@ -36,7 +36,7 @@ class DataCheck:
 
     def __init__(self, peft_task=None, model=None, learning_params=None):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.task = peft_task
+        # self.task = peft_task
         self.model = model
         self.learning_params = learning_params
         self._init_dummy_val()

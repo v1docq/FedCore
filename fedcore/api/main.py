@@ -3,17 +3,23 @@ import os
 import warnings
 from copy import deepcopy
 from datetime import datetime
+from copy import deepcopy
+from datetime import datetime
 from functools import partial
 from typing import Union, Optional, Callable
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn
+
+from fedcore.api.utils import camel_to_snake
+from fedcore.repository.initializer_industrial_models import FedcoreModels
+FEDCORE_IMPLEMENTATIONS = FedcoreModels().setup_repository()
+
 from fedot.api.main import Fedot
 from fedot.core.data.data import InputData, OutputData
-from fedot.core.pipelines.pipeline import Pipeline
-from fedot.core.repository.dataset_types import DataTypesEnum
-
+from fedot.core.pipelines.pipeline import Pipeline        
+from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from pymonad.maybe import Maybe
 from torch import Tensor
@@ -26,15 +32,19 @@ from fedcore.models.network_impl.utils.trainer_factory import create_trainer
 from fedcore.repository.constant_repository import (
     FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,
-    FEDOT_GET_METRICS,
+    # FEDOT_GET_METRICS,
 )
-from fedcore.repository.initializer_industrial_models import FedcoreModels
+from fedcore.metrics.quality import calculate_metrics
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.tools.registry.model_registry import ModelRegistry
 from fedcore.api.utils.misc import extract_fitted_operation
 
 warnings.filterwarnings("ignore")
+
+# TODO 
+COMPUTATIONAL_METRICS = ['latency', 'power', 'throughput']
+
 
 
 class FedCore(Fedot):
@@ -64,7 +74,9 @@ class FedCore(Fedot):
         self.logger.info('-' * 50)
         self.logger.info('Initialising Fedcore Repository')
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
-        self.repo = FedcoreModels().setup_repository()
+        self.repo = FEDCORE_IMPLEMENTATIONS
+        
+
         if not isinstance(self.manager.automl_config.optimizer, partial):
             fedcore_opt = partial(FedcoreEvoOptimizer, optimisation_params={
                 'mutation_strategy': self.manager.automl_config.mutation_strategy,
@@ -79,10 +91,10 @@ class FedCore(Fedot):
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
-        initial_assumption = initial_assumption(
-            params=self.manager.learning_config.peft_strategy_params.to_dict())
-        initial_pipeline = initial_assumption.build()
+        # initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
+        # initial_assumption = initial_assumption(
+        #     params=self.manager.learning_config.peft_strategy_params.to_dict())
+        initial_pipeline = self.__build_assumption()
         self.manager.solver.params.data.update({'initial_assumption': initial_pipeline})
         return input_data
 
@@ -98,14 +110,25 @@ class FedCore(Fedot):
     
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
-                                    use_input_preprocessing=False,
-                                    use_auto_preprocessing=False)
-        initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy](
-            params=self.manager.learning_config.peft_strategy_params.to_dict()
-        )
-        self.manager.solver = initial_assumption.build()
+        # self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
+        #                             use_input_preprocessing=False,
+        #                             use_auto_preprocessing=False)
+        self.manager.solver = self.__build_assumption()
         return input_data
+
+    def __build_assumption(self):
+        initial_assumption = PipelineBuilder()
+        peft_strategy_params = self.manager.learning_config.peft_strategy_params
+        # check if atomized strategy
+        if not isinstance(peft_strategy_params, (list, tuple)):
+            peft_strategy_params = (peft_strategy_params,)
+        for peft_strategy_conf in peft_strategy_params:
+            initial_assumption.add_node(
+                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
+                params=peft_strategy_conf.to_dict()
+            )
+
+        return initial_assumption.build()
 
     @property
     def compressed_model(self):
@@ -178,7 +201,8 @@ class FedCore(Fedot):
             )
 
     def _process_input_data(self, input_data):
-        data_cls = DataCheck(peft_task=self.manager.learning_config.config['peft_strategy'],
+        data_cls = DataCheck(
+            # peft_task=self.manager.learning_config.config['peft_strategy'],
                              model=self.manager.automl_config.fedot_config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
@@ -229,6 +253,7 @@ class FedCore(Fedot):
                 )
                 model_learning_pipeline = model_learning_pipeline.build()
                 train_data = self._pretrain_before_optimise(model_learning_pipeline, train_data)
+            
             fitted_solver = self.manager.solver.fit(train_data)
             return fitted_solver
 
@@ -367,52 +392,13 @@ class FedCore(Fedot):
         is_inference_metric = problem.__contains__("computational")
         is_fedcore_model = problem.__contains__('fedcore')
         model_regime = 'model_after' if is_fedcore_model else 'model_before'
-
-        def preproc_predict(prediction):
-            prediction = getattr(prediction, 'predict', prediction)
-            model_output = prediction.cpu().detach().numpy() if isinstance(prediction, Tensor) else prediction
-            model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
-            if model_output_is_probs and not self.manager.automl_config.fedot_config.problem.__contains__(
-                    'forecasting'):
-                labels = np.argmax(model_output, axis=1)
-                predicted_probs = model_output
-            else:
-                labels = model_output
-                predicted_probs = model_output
-            return labels, predicted_probs
-
-        def preproc_target(target):
-            if hasattr(target, 'targets'):
-                target = target.dataset.targets
-            # else:
-            #     iter_object = iter(target.dataset)
-            #     target = np.array([batch[1] for batch in iter_object])
-            # return target
-            all_targets = []
-            for batch in target:
-                labels = None
-                if isinstance(batch, dict):
-                    labels = batch.get('labels')
-                    if labels is None:
-                        labels = batch.get('targets')
-                elif isinstance(batch, (list, tuple)) and len(batch) >= 2:
-                    labels = batch[1]
-                elif hasattr(batch, 'labels'):
-                    labels = batch.labels
-                
-                if labels is not None:
-                    all_targets.append(labels.cpu())
-            
-            return torch.cat(all_targets) if all_targets else None         
-        
+        prediction_dict = dict(target=target, predict=prediction.predict)
         if is_inference_metric:
             model_to_evaluate = self.get_model_by_regime(model_regime)
             prediction_dict = dict(model=model_to_evaluate, dataset=target, model_regime=model_regime)
-        else:
-            preproc_labels, preproc_probs = preproc_predict(prediction)
-            preproc_target = preproc_target(target)
-            prediction_dict = dict(target=preproc_target, labels=preproc_labels, probs=preproc_probs, metric_names=metrics)
-        prediction_dataframe = FEDOT_GET_METRICS[problem](**prediction_dict)
+            # preproc_target = preproc_target(target)
+        metrics = metrics or self.manager.automl_config.fedot_config.metric
+        prediction_dataframe = calculate_metrics(metrics, **prediction_dict)
         
         if is_inference_metric:
             registry = ModelRegistry()
@@ -447,17 +433,12 @@ class FedCore(Fedot):
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
         prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
         problem = self.manager.automl_config.fedot_config.problem
-        if any([problem == 'ts_forecasting', problem == 'regression']):
-            quality_metrics = ["r2", "mse", "rmse", "mae", "msle", "mape", 
-                               "median_absolute_error", "explained_variance_score", 
-                               "max_error", "d2_absolute_error_score"]
-        else:
-            quality_metrics = ["accuracy", "f1", "precision"]
-        computational_metrics = ["latency", "throughput"]
+        quality_metrics_list  = [name for name in self.manager.automl_config.fedot_config.metrics if name not in COMPUTATIONAL_METRICS]
+        computational_metrics = [name for name in self.manager.automl_config.fedot_config.metrics if name in COMPUTATIONAL_METRICS]
         quality_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                      target=test_data.val_dataloader,
                                                      problem=self.manager.automl_config.fedot_config.problem,
-                                                     metrics=quality_metrics)
+                                                     metrics=quality_metrics_list)
                                 for prediction in prediction_list]
         computational_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                            target=test_data.val_dataloader,

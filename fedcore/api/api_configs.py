@@ -6,7 +6,7 @@ from numbers import Number
 from pathlib import Path
 from typing import (
     get_origin, get_args,   
-    Any, Callable, Dict, Iterable, Literal, Optional, Union, 
+    Any, Callable, Dict, Iterable, List, Literal, Optional, Union, 
 )
 import logging
 
@@ -17,7 +17,7 @@ from fedcore.repository.constant_repository import (
     FedotTaskEnum,
     Schedulers, 
     Optimizers, 
-    PEFTStrategies,
+    # PEFTStrategies,
     SLRStrategiesEnum,
     TaskTypesEnum,
     TorchLossesConstant,
@@ -29,11 +29,10 @@ __all__ = [
     'DeviceConfigTemplate',
     'EdgeConfigTemplate',
     'AutoMLConfigTemplate',
-    'NeuralModelConfigTemplate',
+    'TrainingTemplate',
     'LearningConfigTemplate',
     'APIConfigTemplate',
     'get_nested',
-    'LookUp',
     'LookUp',
 ]
 
@@ -232,19 +231,6 @@ class AutoMLConfigTemplate(ConfigTemplate):
 
 
 @dataclass
-class NodeTemplate(ConfigTemplate):
-    """Computational Node settings. May include hooks summon keys"""
-    log_each: Optional[int] = LookUp(None)
-    eval_each: Optional[int] = LookUp(None)
-    save_each: Optional[int] = LookUp(None)
-    epochs: int = 1
-    optimizer: Optimizers = 'adam'
-    scheduler: Optional[Schedulers] = None
-    scheduler_step_each: Optional[int] = None  
-    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
-
-
-@dataclass
 class ModelArchitectureConfigTemplate(ConfigTemplate):
     """Example of specific node template"""
     input_dim: Union[None, int] = None
@@ -254,8 +240,15 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
 
 
 @dataclass
-class NeuralModelConfigTemplate(NodeTemplate):
-    """Additional learning settings. May be redundant"""
+class TrainingTemplate(ConfigTemplate):
+    """Computational Node settings. May include hooks summon keys"""
+    log_each: Optional[int] = LookUp(None)
+    eval_each: Optional[int] = LookUp(None)
+    save_each: Optional[int] = LookUp(None)
+    epochs: int = 1
+    optimizer: Optimizers = 'adam'
+    scheduler: Optional[Schedulers] = None
+    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
     custom_learning_params: dict = None
     custom_criterions: dict = None
     model_architecture: ModelArchitectureConfigTemplate = None
@@ -265,14 +258,9 @@ class NeuralModelConfigTemplate(NodeTemplate):
 class LearningConfigTemplate(ConfigTemplate):
     """Copies previeous version od learning config"""
     learning_strategy: Literal['from_scratch', 'checkpoint'] = 'from_scratch'
-    peft_strategy: PEFTStrategies = 'training'
     criterion: Union[Callable, TorchLossesConstant] = LookUp(None)
-    peft_strategy_params: NeuralModelConfigTemplate = None
-    learning_strategy_params: NeuralModelConfigTemplate = None
-    nlp_task_type: Optional[str] = None
-    # Accept any params to avoid circular import with NLP templates
-    nlp_task_params: Optional[Any] = None
-    fedcore_id: Optional[str] = None
+    peft_strategy_params: TrainingTemplate = None
+    learning_strategy_params: TrainingTemplate = None
 
 
 @dataclass
@@ -289,25 +277,18 @@ class APIConfigTemplate(ExtendableConfigTemplate):
 
 
 @dataclass
-class LowRankTemplate(NeuralModelConfigTemplate):
+class LowRankTemplate(TrainingTemplate):
     """Example of specific node template"""
     strategy: SLRStrategiesEnum = 'quantile'
     rank_prune_each: int = -1
     custom_criterions: dict = None  # {'norm_loss':{...},
     compose_mode: Optional[Literal['one_layer', 'two_layers', 'three_layers']] = None
     non_adaptive_threshold: float = .5
-    finetune_params: NeuralModelConfigTemplate = None
-    # Decomposition parameters (tdecomp API)
-    decomposer: Literal['svd', 'rsvd', 'two_sided', 'cur'] = 'svd'
-    rank: Optional[Union[int, float]] = None  # Initial rank for decomposition (None = auto-estimate)
-    distortion_factor: float = 0.6  # For stable rank estimation (0 < distortion_factor <= 1)
-    random_init: Literal['normal', 'ortho', 'lean_walsh'] = 'normal'  # Random initialization for randomized methods
-    power: int = 3  # Power parameter for RandomizedSVD
-    fedcore_id: Optional[str] = None  # FedCore instance ID for model registry
+    finetune_params: TrainingTemplate = None
 
 
 @dataclass
-class PruningTemplate(NeuralModelConfigTemplate):
+class PruningTemplate(TrainingTemplate):
     """Example of specific node template"""
     importance: str = "magnitude" # main
     importance_norm: int = 1 # main
@@ -315,12 +296,12 @@ class PruningTemplate(NeuralModelConfigTemplate):
     importance_reduction: str = 'max' # drop 
     importance_normalize: str = 'max' # drop
     pruning_iterations: int = 1 # drop
-    finetune_params: NeuralModelConfigTemplate = None
+    finetune_params: TrainingTemplate = None
     
 @dataclass
-class QuantTemplate(NeuralModelConfigTemplate):
+class QuantizationTemplate(TrainingTemplate):
     """Example of specific node template"""
     quant_type: str = "dynamic" # dynamic, static, qat
     allow_emb: bool = False
     allow_conv: bool = True
-    qat_params: NeuralModelConfigTemplate = None
+    qat_params: TrainingTemplate = None

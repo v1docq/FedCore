@@ -1,8 +1,6 @@
 import pathlib
 import fedot.core.repository.tasks as fedot_task
-from fedot.core.repository.metrics_repository import (
-    MetricsRepository as fedot_metric_repo,
-)
+import fedot.core.repository.metrics_repository as metrics_repository
 from fedot.api.api_utils.api_params_repository import ApiParamsRepository
 from fedot.core.repository.pipeline_operation_repository import PipelineOperationRepository
 from fedot.api.api_utils.assumptions.assumptions_handler import AssumptionsHandler
@@ -13,6 +11,7 @@ from fedot.core.pipelines.tuning.search_space import PipelineSearchSpace
 from fedot.core.repository.operation_types_repository import OperationTypesRepository
 from fedot.core.optimisers.objective.data_objective_eval import PipelineObjectiveEvaluate
 from fedot.api.api_utils.api_composer import ApiComposer
+import fedot.utilities.define_metric_by_task as define_metric_by_task
 from fedot.api.main import Fedot
 from fedot.core.composer.gp_composer.gp_composer import GPComposer
 from fedcore.architecture.utils.paths import PROJECT_PATH
@@ -32,9 +31,10 @@ from fedcore.repository.fedcore_impl.data import (
     build_holdout_producer,
     build_fedcore_dataproducer,
 )
-from fedcore.repository.fedcore_impl.metrics import MetricsRepository as FedcoreMetric, evaluate_objective_fedcore
+from fedot.core.repository.metrics_repository import MetricsRepository
+from fedcore.repository.fedcore_impl.metrics import MetricsRepository as FedcoreMetric, evaluate_objective_fedcore, MetricByTask as FedcoreMetricByTask
 
-FEDCORE_METRIC_REPO = FedcoreMetric()
+# FEDCORE_METRIC_REPO = FedcoreMetric()
 
 FEDOT_METHOD_TO_REPLACE = {
     #(Fedot, 'fit'),
@@ -42,8 +42,15 @@ FEDOT_METHOD_TO_REPLACE = {
     (PipelineObjectiveEvaluate, 'evaluate'): evaluate_objective_fedcore,
     (fedot_task, "TaskTypesEnum"): TaskCompression,
     (DataSourceSplitter, "build"): build_fedcore_dataproducer,
-    (fedot_metric_repo, "_metrics_implementations"): FedcoreMetric._metrics_implementations,
-    (fedot_metric_repo, "_metrics_classes"): FedcoreMetric._metrics_classes,
+
+    (metrics_repository, "MetricsRepository"): FedcoreMetric,
+    (metrics_repository.MetricsRepository, 'get_metric'): FedcoreMetric.get_metric, 
+    (metrics_repository.MetricsRepository, 'get_metric_class'): FedcoreMetric.get_metric_class, 
+
+    (define_metric_by_task, "MetricByTask"): FedcoreMetricByTask,
+    (define_metric_by_task.MetricByTask, "compute_default_metric"): FedcoreMetricByTask.compute_default_metric,
+    (define_metric_by_task.MetricByTask, "get_default_quality_metrics"): FedcoreMetricByTask.get_default_quality_metrics,
+
     (ApiParamsRepository, "_get_default_mutations"): _get_default_fedcore_mutations,
     (PipelineSearchSpace, "get_parameters_dict"): get_fedcore_search_space,
     (AssumptionsHandler, "fit_assumption_and_check_correctness"): _fit_assumption_and_check_correctness,
@@ -56,6 +63,7 @@ FEDOT_METHOD_TO_REPLACE = {
     (ApiComposer, 'obtain_model'): obtain_model_fedcore,
     (PipelineOperationRepository, 'divide_operations'): divide_operations_fedcore
 }
+
 
 DEFAULT_METHODS = [
     getattr(class_impl[0], class_impl[1]) for class_impl in FEDOT_METHOD_TO_REPLACE
@@ -86,6 +94,15 @@ class FedcoreModels:
         for (cls, method_name), fedcore_method in FEDOT_METHOD_TO_REPLACE.items():
             new_method = fedcore_method if to_fedcore else getattr(cls, method_name)
             setattr(cls, method_name, new_method)
+            from types import ModuleType
+
+            def is_module(obj):
+                """Check if an object is a module"""
+                return isinstance(obj, ModuleType)
+            
+            import sys 
+            if is_module(cls):
+                sys.modules[getattr(cls, '__name__')] = cls
 
     def setup_repository(self):
         OperationTypesRepository.__repository_dict__.update(

@@ -1,136 +1,139 @@
-"""
-NLP-specific metrics implemented as thin wrappers over the HuggingFace `evaluate` package.
-
-Each metric is exposed as a class with a unified interface:
-    m = SacreBLEU()
-    result = m.compute(y_true=references, y_pred=predictions)
-
-The wrapper ensures consistent naming and lightweight lazy import of `evaluate`.
-"""
-
-from __future__ import annotations
-from typing import Any, Dict, Sequence
 import importlib
+import torch
+import pandas as pd
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_absolute_percentage_error,
+    mean_squared_error,
+    mean_squared_log_error,
+)
+from fedcore.metrics.metric_impl import SMAPE, MASE, MAPE
+from fedcore.metrics.metric_impl import QualityMetric
 
-# cache for lazy import
+from fedcore.metrics.metric_impl import (
+    Accuracy,
+    F1,
+    Precision,
+    Logloss,
+    ROCAUC,
+)
+from typing import Optional, Any, Dict, Sequence
+
+
 _EVALUATE = None
 
-
 def _get_evaluate():
-    """Lazy import of the `evaluate` package."""
+    """Lazy load the `evaluate` package."""
     global _EVALUATE
     if _EVALUATE is None:
         try:
             _EVALUATE = importlib.import_module("evaluate")
-        except Exception as e:
-            raise ImportError(
-                "The 'evaluate' package is required for NLP metrics. "
-                "Install it with: pip install evaluate"
-            ) from e
+        except ImportError as e:
+            raise ImportError("The 'evaluate' package is required for NLP metrics. Install it using `pip install evaluate`.") from e
     return _EVALUATE
 
+_get_evaluate()
 
-class EvaluateMetric:
-    """
-    Base class for NLP metrics powered by HuggingFace `evaluate`.
+# =============================== NLP Metrics ================================
 
-    Subclasses must define `metric_name` and may override `load_kwargs`.
-    Provides a unified `.compute(y_true, y_pred, ...)` method.
-    """
+class EvaluateMetric(QualityMetric):
+    """Base class for NLP metrics powered by HuggingFace `evaluate`, compatible with QualityMetric."""
+    default_value: float = 0.0
+    need_to_minimize: bool = False
+    split: str = "val"
+    output_mode: str = "texts"  # default for text generation
 
     metric_name: str = ""
-    load_kwargs: dict[str, Any] = {}
+    result_key: Optional[str] = None
+    _metric = _EVALUATE.load(metric_name)
 
-    def __init__(self, **override_load_kwargs: Any) -> None:
-        evaluate = _get_evaluate()
-        params = dict(self.load_kwargs)
-        params.update(override_load_kwargs)
-        self._metric = evaluate.load(self.metric_name, **params)
+    @classmethod
+    def metric(cls, target: Sequence[Any] | None, predict: Sequence[Any] | None, **kwargs: Any) -> float:
+        references = kwargs.pop("references", None)
+        predictions = kwargs.pop("predictions", None)
+        if references is None:
+            references = target
+        if predictions is None:
+            predictions = predict
+        if references is None or predictions is None:
+            raise ValueError("Both references and predictions are required.")
 
-    def compute(
-        self,
-        y_true: Sequence[Any] | None = None,
-        y_pred: Sequence[Any] | None = None,
-        *,
-        references: Sequence[Any] | None = None,
-        predictions: Sequence[Any] | None = None,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        """
-        Compute the metric.
+        res = cls._metric.compute(references=references, predictions=predictions, **kwargs)
 
-        Accepts both (y_true, y_pred) and (references, predictions).
-        Extra keyword args are passed through to the underlying `evaluate` metric.
-        """
+        # Normalize evaluate output to float
+        if isinstance(res, dict):
+            if cls.result_key is not None:
+                val = res[cls.result_key]
+            elif "score" in res:
+                val = res["score"]
+            elif len(res) == 1:
+                val = next(iter(res.values()))
+            else:
+                raise ValueError(
+                    f"{cls.__name__}: specify result_key (multiple fields found: {list(res.keys())})"
+                )
+        else:
+            val = res
+        return float(val)
+
+    @classmethod
+    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+        out = pipeline.predict(reference_data, output_mode=cls.output_mode)
+        preds = out.predict.predict
+        preds = preds.detach().cpu().tolist()
+
+        loader = getattr(reference_data.features, f"{cls.split}_dataloader")
+        ds = loader.dataset
+
+        if hasattr(ds, "references"):
+            refs = ds.references
+        elif hasattr(ds, "targets"):
+            refs = ds.targets
+        elif hasattr(ds, "labels"):
+            refs = ds.labels
+        else:
+            it = iter(ds)
+            refs = [ex[1] for ex in it]
+
+        return cls.metric(refs, preds)
+
+    def compute(self, y_true: Sequence[Any] | None = None, y_pred: Sequence[Any] | None = None, *, references: Sequence[Any] | None = None, predictions: Sequence[Any] | None = None, **kwargs: Any) -> Dict[str, Any]:
         if references is None and y_true is not None:
             references = y_true
         if predictions is None and y_pred is not None:
             predictions = y_pred
         if references is None or predictions is None:
-            raise ValueError("Both references (y_true) and predictions (y_pred) must be provided.")
+            raise ValueError("Both references and predictions are required.")
         return self._metric.compute(predictions=predictions, references=references, **kwargs)
 
-
-# ---------------------------------------------------------------------------
-# Concrete metrics
-# ---------------------------------------------------------------------------
 
 class NLPAccuracy(EvaluateMetric):
     """Classification accuracy for NLP tasks."""
     metric_name = "accuracy"
-
+    result_key = "accuracy"
+    output_mode = "labels"
+    _metric = _EVALUATE.load(metric_name)
+    
+    
+# =============================== Additional NLP Metrics ================================
 
 class NLPPrecision(EvaluateMetric):
-    """Macro-averaged precision for NLP classification."""
+    """Precision for NLP classification tasks."""
     metric_name = "precision"
-
+    result_key = "precision"
+    output_mode = "labels"
+    _metric = _EVALUATE.load(metric_name)
 
 class NLPRecall(EvaluateMetric):
-    """Macro-averaged recall for NLP classification."""
+    """Recall for NLP classification tasks."""
     metric_name = "recall"
-
+    result_key = "recall"
+    output_mode = "labels"
+    _metric = _EVALUATE.load(metric_name)
 
 class NLPF1(EvaluateMetric):
-    """Macro-averaged F1 score for NLP classification."""
+    """F1 score for NLP classification tasks."""
     metric_name = "f1"
-
-
-class SacreBLEU(EvaluateMetric):
-    """SacreBLEU metric for machine translation and text generation."""
-    metric_name = "sacrebleu"
-
-
-class BLEU(SacreBLEU):
-    """BLEU alias (maps to SacreBLEU)."""
-    # Inherits metric_name = "sacrebleu"
-
-
-class ROUGE(EvaluateMetric):
-    """ROUGE metric (L/SU/F variants) for text summarization overlap."""
-    metric_name = "rouge"
-
-
-class METEOR(EvaluateMetric):
-    """METEOR metric for machine translation quality."""
-    metric_name = "meteor"
-
-
-class BERTScore(EvaluateMetric):
-    """BERTScore metric based on contextual embeddings."""
-    metric_name = "bertscore"
-
-__all__ = [
-    "EvaluateMetric",
-    "NLPAccuracy",
-    "NLPPrecision",
-    "NLPRecall",
-    "NLPF1",
-    "SacreBLEU",
-    "BLEU",
-    "ROUGE",
-    "METEOR",
-    "BERTScore",
-]
-
-# Backward-compatibility alias
-SacreBleu = SacreBLEU
+    result_key = "f1"
+    output_mode = "labels"
+    _metric = _EVALUATE.load(metric_name)
