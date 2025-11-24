@@ -4,9 +4,9 @@ from torch import nn, optim, Tensor
 
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.data.data import InputData
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     CROSS_ENTROPY,
     MULTI_CLASS_CROSS_ENTROPY,
     MSE,
@@ -43,10 +43,6 @@ class CustomModel(BaseNeuralModel):
                 path_to_model=self.path_to_model,
                 custom_callable_object=self.custom_callable_object
             )
-            self.model_for_inference = TorchModel(
-                path_to_model=self.path_to_model,
-                custom_callable_object=self.custom_callable_object
-            ).model
             self.model = self.model.model
 
     def _prepare_model(self, input_data):

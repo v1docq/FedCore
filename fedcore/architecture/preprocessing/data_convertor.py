@@ -15,7 +15,8 @@ from sklearn.preprocessing import LabelEncoder
 
 from fedcore.api.utils.data import check_multivariate_data
 from fedcore.architecture.settings.computational import backend_methods as np
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
+from fedcore.data.data import CompressionInputData
 
 
 class CustomDatasetTS:
@@ -85,7 +86,7 @@ class CustomDatasetCLF:
         return self.n_samples
 
 
-class FedotConverter:
+class FedotConverter: #never used
     def __init__(self, data):
         self.input_data = self.convert_to_input_data(data)
 
@@ -170,11 +171,11 @@ class FedotConverter:
     def convert_input_to_output(self):
         return OutputData(
             idx=self.input_data.idx,
-            features=self.input_data.features,
+            # features=self.input_data,
             task=self.input_data.task,
             data_type=self.input_data.data_type,
             target=self.input_data.target,
-            predict=self.input_data.features,
+            predict=self.input_data,
         )
 
     def convert_to_industrial_composing_format(self, mode):
@@ -185,7 +186,7 @@ class FedotConverter:
                     if array is not None and len(array.shape) > 2
                     else array
                 )
-                for array in [self.input_data.features, self.input_data.target]
+                for array in [self.input_data, self.input_data.target]
             ]
             # if new_features.shape[0] != new_target.shape[0]:
             #     min_samples = min(new_features.shape[0], new_target.shape[0])
@@ -199,20 +200,20 @@ class FedotConverter:
                 supplementary_data=self.input_data.supplementary_data,
             )
         elif mode == "channel_independent":
-            feats = self.input_data.features
-            flat_input = self.input_data.features.shape[0] == 1
-            if len(self.input_data.features.shape) == 1:
-                feats = self.input_data.features.reshape(1, -1)
+            feats = self.input_data
+            flat_input = self.input_data.shape[0] == 1
+            if len(self.input_data.shape) == 1:
+                feats = self.input_data.reshape(1, -1)
             elif (
-                len(self.input_data.features.shape) == 3
-                and self.input_data.features.shape[0] == 1
+                len(self.input_data.shape) == 3
+                and self.input_data.shape[0] == 1
             ):
-                feats = self.input_data.features.reshape(
-                    self.input_data.features.shape[1],
-                    1 * self.input_data.features.shape[2],
+                feats = self.input_data.reshape(
+                    self.input_data.shape[1],
+                    1 * self.input_data.shape[2],
                 )
             elif not flat_input:
-                feats = self.input_data.features.swapaxes(1, 0)
+                feats = self.input_data.swapaxes(1, 0)
             input_data = [
                 InputData(
                     idx=self.input_data.idx,
@@ -226,7 +227,7 @@ class FedotConverter:
             ]
         elif mode == "multi_dimensional":
             features = NumpyConverter(
-                data=self.input_data.features
+                data=self.input_data
             ).convert_to_torch_format()
             input_data = InputData(
                 idx=self.input_data.idx,
@@ -479,31 +480,31 @@ class ConditionConverter:
     def solver_is_none(self):
         return self.operation_example is None
 
-    def output_mode_converter(self, output_mode, n_classes):
-        if output_mode == "labels":
-            return self.operation_example.predict(self.train_data.features).reshape(
-                -1, 1
-            )
-        else:
-            return self.probs_prediction_converter(output_mode, n_classes)
+    # def output_mode_converter(self, output_mode, n_classes):
+    #     if output_mode == "labels":
+    #         return self.operation_example.predict(self.train_data.features).reshape(
+    #             -1, 1
+    #         )
+    #     else:
+    #         return self.probs_prediction_converter(output_mode, n_classes)
 
-    def probs_prediction_converter(self, output_mode, n_classes):
-        try:
-            prediction = self.operation_example.predict_proba(self.train_data.features)
-        except Exception:
-            prediction = self.operation_example.predict_proba(
-                self.train_data.features.T
-            )
-        if n_classes < 2:
-            raise ValueError(
-                "Data set contain only 1 target class. Please reformat your data."
-            )
-        elif n_classes == 2 and output_mode != "probs":
-            if self.is_multi_output_target:
-                prediction = np.stack([pred[:, 1] for pred in prediction]).T
-            else:
-                prediction = prediction[:, 1]
-        return prediction
+    # def probs_prediction_converter(self, output_mode, n_classes):
+    #     try:
+    #         prediction = self.operation_example.predict_proba(self.train_data.features)
+    #     except Exception:
+    #         prediction = self.operation_example.predict_proba(
+    #             self.train_data.features.T
+    #         )
+    #     if n_classes < 2:
+    #         raise ValueError(
+    #             "Data set contain only 1 target class. Please reformat your data."
+    #         )
+    #     elif n_classes == 2 and output_mode != "probs":
+    #         if self.is_multi_output_target:
+    #             prediction = np.stack([pred[:, 1] for pred in prediction]).T
+    #         else:
+    #             prediction = prediction[:, 1]
+    #     return prediction
 
 
 class ApiConverter:
@@ -644,27 +645,27 @@ class DataConverter(TensorConverter, NumpyConverter):
         if isinstance(self.data, torch.Tensor):
             return self.convert_to_3d_tensor()
 
-    def convert_to_monad_data(self):
-        if self.is_fedot_data:
-            features = np.array(ListMonad(*self.data.features.tolist()).value)
-        else:
-            features = np.array(ListMonad(*self.data.tolist()).value)
+    # def convert_to_monad_data(self):
+    #     if self.is_fedot_data:
+    #         features = np.array(ListMonad(*self.data.features.tolist()).value)
+    #     else:
+    #         features = np.array(ListMonad(*self.data.tolist()).value)
 
-        if len(features.shape) == 2 and features.shape[1] == 1:
-            features = features.reshape(1, -1)
-        elif len(features.shape) == 1:
-            features = features.reshape(1, 1, -1)
-        elif len(features.shape) == 3 and features.shape[1] == 1:
-            features = features.squeeze()
-        return features
+    #     if len(features.shape) == 2 and features.shape[1] == 1:
+    #         features = features.reshape(1, -1)
+    #     elif len(features.shape) == 1:
+    #         features = features.reshape(1, 1, -1)
+    #     elif len(features.shape) == 3 and features.shape[1] == 1:
+    #         features = features.squeeze()
+    #     return features
 
-    def convert_to_eigen_basis(self):
-        if self.is_fedot_data:
-            features = self.data.features
-        else:
-            features = np.array(ListMonad(*self.data.values.tolist()).value)
-            features = np.array([series[~np.isnan(series)] for series in features])
-        return features
+    # def convert_to_eigen_basis(self):
+    #     if self.is_fedot_data:
+    #         features = self.data.features
+    #     else:
+    #         features = np.array(ListMonad(*self.data.values.tolist()).value)
+    #         features = np.array([series[~np.isnan(series)] for series in features])
+    #     return features
 
 
 class NeuralNetworkConverter:

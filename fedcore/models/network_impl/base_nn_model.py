@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from gc import collect
 from functools import reduce, partial
 from itertools import chain
 from typing import Iterable, Optional, Any, Union, Callable
@@ -8,29 +7,31 @@ from pymonad.maybe import Maybe
 import numpy as np
 import torch
 import torch.nn.functional as F
-from fedot.core.data.data import InputData, OutputData
+from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 from torch import Tensor
 from tqdm import tqdm
 
 from fedcore.api.utils.data import DataLoaderHandler
-from fedcore.architecture.comptutaional.devices import default_device
-from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import (
+from fedcore.architecture.computational.devices import default_device
+from fedcore.data.data import CompressionInputData, CompressionOutputData
+from fedcore.repository.constant_repository import (
     ModelLearningHooks,
     LoggingHooks,
     StructureCriterions,
     TorchLossesConstant,
 )
 
-from fedcore.models.network_impl.hooks import BaseHook
-from fedcore.models.network_impl.hooks_collection import HooksCollection
+from fedcore.models.network_impl.utils.hooks import BaseHook
+from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
+from fedcore.models.network_impl.utils._base import BaseTrainer
+from fedcore.architecture.preprocessing.data_convertor import CompressionDataConverter
 
 BASE_REGRESSION_DTYPE = torch.float32
 
 
-class BaseNeuralModel(torch.nn.Module):
+class BaseNeuralModel(torch.nn.Module, BaseTrainer):
     """Class responsible for NN model implementation.
 
     Attributes:
@@ -53,25 +54,25 @@ class BaseNeuralModel(torch.nn.Module):
     """
 
     def __init__(self, params: Optional[OperationParameters] = None, additional_hooks=None):
-        super().__init__()
-        self.params = params or {}
+        torch.nn.Module.__init__(self)
+        BaseTrainer.__init__(self, params=params.to_dict() if hasattr(params, 'to_dict') else params)
+        
         self.learning_params = self.params.get('custom_learning_params', {})
-        self._init_empty_object()
         self._init_null_object()
-
-        self._clear_each = 10
+        self._init_empty_object()
 
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
         self.learning_rate = self.params.get("learning_rate", 0.001)
         self.model = self.params.get("model", None)
         self._init_custom_criterions(
-            self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer
+            self.params.get("custom_criterions", {})) # let it be dict[name : coef], let nodes add it to trainer
         self.criterion = self.__get_criterion()
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
         self._hooks = [LoggingHooks, ModelLearningHooks]
         self._additional_hooks = additional_hooks or []
+        self._clear_each = self.learning_params.get('clear_each', 10)
 
     def _init_custom_criterions(self, custom_criterions: dict):
         for name, coef in custom_criterions.items():
@@ -95,10 +96,6 @@ class BaseNeuralModel(torch.nn.Module):
         self.batch_limit = self.learning_params.get('batch_limit', None)
         self.calib_batch_limit = self.learning_params.get('calib_batch_limit', None)
         self.batch_type = self.learning_params.get('batch_type', None)
-        self.trainer_objects = {
-            'optimizer': None,
-            'scheduler': None,
-        }
 
     def _init_empty_object(self):
         self.history = {
@@ -134,69 +131,35 @@ class BaseNeuralModel(torch.nn.Module):
         else:
             return None
 
-    def save_model(self, path: str):
-        torch.save(self.model.state_dict(), path)
+    # def save_model(self, path: str):
+    #     torch.save(self.model.state_dict(), path)
 
-    def load_model(self, path: str):
-        if self.model is None:
-            self._init_model()
-        try:  # path to state_dict
-            self.model.load_state_dict(torch.load(path, weights_only=False))
-        except Exception:  # path to model_impl
-            self.model = torch.load(path, map_location=self.device)
-        self.model.eval()
+    # def load_model(self, path: str):
+    #     if self.model is None:
+    #         self._init_model()
+    #     try:  # path to state_dict
+    #         self.model.load_state_dict(torch.load(path, weights_only=False))
+    #     except Exception:  # path to model_impl
+    #         self.model = torch.load(path, map_location=self.device)
+    #     self.model.eval()
 
-    def __check_and_substitute_loss(self, train_data: InputData):
-        # TODO delete 
-        names = ['loss', 'criterion']
-        if self.criterion is None:
-            criterion_name = 'cross_entropy' if self.task_type.name == 'classification' else 'rmse'
-            self.criterion = TorchLossesConstant[criterion_name].value()
-        for name in names:
-            if (train_data.supplementary_data.col_type_ids is not None
-                    and train_data.supplementary_data.col_type_ids.get(name, None)
-            ):
-                criterion = train_data.supplementary_data.col_type_ids[name]
-                try:
-                    self.criterion = criterion()
-                except:
-                    self.criterion = criterion
-                print("Forcely substituted criterion[loss] to", self.criterion)
 
     def __substitute_device_quant(self):
-        if getattr(self.model, '_is_quantized', False):
+        if not getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
 
-    def _compute_loss(self, criterion, model_output, target, stage='train', epoch=None):
-        if hasattr(model_output, 'loss'):
-            quality_loss = model_output.loss
-        else:
-            quality_loss = criterion(model_output, target)
-        if isinstance(model_output, torch.Tensor):
-            additional_losses = {name: coef * criterion(model_output, target)
-                                 for name, (criterion, coef) in self.custom_criterions.items()
-                                 if hasattr(TorchLossesConstant, name)}
-            additional_losses.update({name: coef * criterion(self.model)
-                                      for name, (criterion, coef) in self.custom_criterions.items()
-                                      if hasattr(StructureCriterions, name)})
-            for name, val in additional_losses.items():
-                self.history[f'{stage}_{name}_loss'].append((epoch, val))
-        final_loss = reduce(torch.add, additional_losses.values(), quality_loss)
-        return final_loss
-
-    def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
+    def fit(self, input_data: CompressionInputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
         self.custom_fit_process = supplementary_data is not None
-        train_loader = getattr(input_data.features, f'{loader_type}_dataloader', 'train_dataloader')
-        val_loader = getattr(input_data.features, 'val_dataloader', None)
+        train_loader = input_data.train_dataloader
+        val_loader = input_data.val_dataloader
         self.task_type = input_data.task.task_type
         # define model for fit process
         self.model = input_data.target if self.model is None else self.model
         self.optimised_model = self.model
         self.model.to(self.device)
-        self.__check_and_substitute_loss(input_data)
         self._init_hooks()
         self._train_loop(
             train_loader=train_loader,
@@ -209,7 +172,6 @@ class BaseNeuralModel(torch.nn.Module):
     def _run_one_epoch(self, epoch, dataloader, loss_fn, optimizer):
         training_loss = 0.0
         self.model.train()
-        gc_count = 0
         for batch in tqdm(dataloader, desc='Batch #'):
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
@@ -224,12 +186,6 @@ class BaseNeuralModel(torch.nn.Module):
             optimizer.step()
             optimizer.zero_grad()
             training_loss += loss.item()
-            del inputs
-            del output
-            del targets
-            gc_count += 1
-            if gc_count % self._clear_each == 0:
-                self._clear_cache() 
         avg_loss = training_loss / len(dataloader)
         self.history['train_loss'].append((epoch, avg_loss))  # changed to match epoch and loss
 
@@ -256,23 +212,23 @@ class BaseNeuralModel(torch.nn.Module):
         """
         Method for feature generation for all series
         """
-        self.model.to(self.device)
+        compression_data = CompressionDataConverter.convert(input_data)
         self.__substitute_device_quant()
-        return self._predict_model(input_data, output_mode)
+        return self._predict_model(compression_data, output_mode)
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
-        self.model.to(self.device)
+        compression_data = CompressionDataConverter.convert(input_data)
         self.__substitute_device_quant()
-        return self._predict_model(input_data.features, output_mode)
+        return self._predict_model(input_data, output_mode)
 
     @torch.no_grad()
     def _predict_model(
-            self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
+            self, x_test: CompressionInputData, output_mode: str = "default"
     ):
-        model: torch.nn.Module = self.model or x_test.target
+        model: torch.nn.Module = self.model or x_test.model
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
@@ -288,9 +244,10 @@ class BaseNeuralModel(torch.nn.Module):
             del batch
             if i % self._clear_each == 0:
                 self._clear_cache()
-        return self._convert_predict(torch.concat(prediction), output_mode)
+        return self._convert_predict(torch.concat(prediction), output_mode, x_test) 
 
-    def _convert_predict(self, pred: Tensor, output_mode: str = "labels"):
+    def _convert_predict(self, pred: Tensor, output_mode: str = "labels", input_data: Union[CompressionInputData, InputData] = None):
+        assert isinstance(pred, torch.Tensor), "Prediction convertion failed, prediction is not a Tensor"
         have_encoder = all([self.label_encoder is not None, output_mode == "labels"])
         if self.task_type.name == 'regression':
             self.is_regression_task = True
@@ -305,24 +262,37 @@ class BaseNeuralModel(torch.nn.Module):
             then(lambda predict: self.label_encoder.inverse_transform(predict) if have_encoder else predict). \
             maybe(None, lambda output: output)
 
-        predict = OutputData(
-            idx=np.arange(len(pred)),
+        extracted_fields = self._extract_output_fields(input_data)
+        
+        checkpoint_info = self._register_model_checkpoint(
+            model=self.model,
+            stage='after'
+        )
+
+        predict = CompressionOutputData(
+            features=extracted_fields['features'],
             task=self.task_type,
             predict=pred,
-            target=self.target,
+            num_classes=extracted_fields['num_classes'],
+            train_dataloader=extracted_fields['train_dataloader'],
+            val_dataloader=extracted_fields['val_dataloader'],
             data_type=DataTypesEnum.table,
+            model=self.model,
+            checkpoint_path=checkpoint_info['checkpoint_path'],
+            model_id=checkpoint_info['model_id'],
+            fedcore_id=checkpoint_info['fedcore_id'],
         )
         return predict
 
-    def _clear_cache(self):
-        with torch.no_grad():
-            torch.cuda.empty_cache()
-            collect()
+    # def _clear_cache(self):
+    #     """Clear CUDA cache - shared by BaseNeuralModel and LLMTrainer"""
+    #     with torch.no_grad():
+    #         torch.cuda.empty_cache()
 
-    def __wrap(self, model):
-        if not isinstance(model, BaseNeuralModel):
-            return BaseNeuralModel.wrap(model, self.params)
-        return model
+    # def __wrap(self, model):
+    #     if not isinstance(model, BaseNeuralModel):
+    #         return BaseNeuralModel.wrap(model, self.params)
+    #     return model
 
     @staticmethod
     def get_validation_frequency(epoch, lr):

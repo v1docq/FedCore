@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 
 def collate(batch):

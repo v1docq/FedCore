@@ -7,7 +7,7 @@ from numpy import diff, abs as npabs
 
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.architecture.abstraction.accessor import Accessor
-from fedcore.models.network_impl.hooks import BaseHook
+from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 
 

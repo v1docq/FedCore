@@ -7,7 +7,8 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from torch import nn
 
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.repository.constanst_repository import default_device
+from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
+from fedcore.repository.constant_repository import default_device
 
 
 class LoraTrainer:
@@ -15,12 +16,16 @@ class LoraTrainer:
         super().__init__()
         self.lora_strategy = params.get("lora_strategy", None)
         self.device = default_device()
-        self.trainer = BaseNeuralModel(params)
+        self.params = params
+        # We'll create trainer later when we have input_data
+        self.trainer = None
 
         self.model = None
 
     def _init_model(self, input_data):
         self.model = input_data.target
+        # Create trainer using factory
+        self.trainer = create_trainer_from_input_data(input_data, self.params)
         lora.mark_only_lora_as_trainable(model=self.model, bias=self.lora_strategy)
 
     def fit(self, input_data):

@@ -26,7 +26,7 @@ from fedcore.models.network_impl.decomposed_layers import (
 )
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.architecture.abstraction.delegator import IDelegator
-from fedcore.architecture.comptutaional.devices import extract_device, default_device
+from fedcore.architecture.computational.devices import extract_device, default_device
 
 
 __all__ = [

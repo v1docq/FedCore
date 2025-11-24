@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from fedot.core.operations.operation_parameters import OperationParameters
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralForecaster
 from fedcore.models.network_modules.layers.attention_layers import LinformerSelfAttention
 from fedcore.models.network_modules.layers.sequential_layers import SequentialSequence

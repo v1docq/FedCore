@@ -4,10 +4,10 @@ import numpy as np
 from typing import Callable, Union
 from pymonad.either import Either
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import DEFAULT_TORCH_DATASET
+from fedcore.repository.constant_repository import DEFAULT_TORCH_DATASET
 
 
 def convert_callable_loader(input_data):

@@ -2,10 +2,10 @@ from functools import partial
 
 from torch.utils.data import DataLoader
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.architecture.dataset.datasets_from_source import AbstractDataset, ObjectDetectionDataset, TimeSeriesDataset
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     DEFAULT_TORCH_DATASET,
 )
 from fedcore.repository.model_repository import BACKBONE_MODELS
@@ -69,7 +69,7 @@ class ApiLoader:
         input_dim = sample.shape[1] if len(sample.shape) > 2 else sample.shape[0]
         task = Task(TaskTypesEnum.classification) if num_classes != 1 else Task(TaskTypesEnum.regression)
         fedcore_train_data = CompressionInputData(
-            features=np.zeros((2, 2)),
+            # features=np.zeros((2, 2)),
             input_dim=input_dim,
             num_classes=num_classes,
             task=task,

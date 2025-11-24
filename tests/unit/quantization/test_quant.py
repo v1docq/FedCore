@@ -19,7 +19,7 @@ from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.tools.example_utils import get_scenario_for_api
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 
 def get_api_template(quant_type: str):

@@ -6,33 +6,33 @@ from numbers import Number
 from pathlib import Path
 from typing import (
     get_origin, get_args,   
-    Any, Callable, Dict, Iterable, Literal, Optional, Union, 
+    Any, Callable, Dict, Iterable, List, Literal, Optional, Union, 
 )
 import logging
 
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch.nn import Module
 
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     FedotTaskEnum,
     Schedulers, 
     Optimizers, 
-    PEFTStrategies,
+    # PEFTStrategies,
     SLRStrategiesEnum,
     TaskTypesEnum,
     TorchLossesConstant,
 )
+# Avoid importing NLP-specific templates here to prevent circular imports
 
 __all__ = [
     'ConfigTemplate',
     'DeviceConfigTemplate',
     'EdgeConfigTemplate',
     'AutoMLConfigTemplate',
-    'NeuralModelConfigTemplate',
+    'TrainingTemplate',
     'LearningConfigTemplate',
     'APIConfigTemplate',
     'get_nested',
-    'LookUp',
     'LookUp',
 ]
 
@@ -231,18 +231,6 @@ class AutoMLConfigTemplate(ConfigTemplate):
 
 
 @dataclass
-class NodeTemplate(ConfigTemplate):
-    """Computational Node settings. May include hooks summon keys"""
-    log_each: Optional[int] = LookUp(None)
-    eval_each: Optional[int] = LookUp(None)
-    save_each: Optional[int] = LookUp(None)
-    epochs: int = 1
-    optimizer: Optimizers = 'adam'
-    scheduler: Optional[Schedulers] = None
-    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
-
-
-@dataclass
 class ModelArchitectureConfigTemplate(ConfigTemplate):
     """Example of specific node template"""
     input_dim: Union[None, int] = None
@@ -252,8 +240,15 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
 
 
 @dataclass
-class NeuralModelConfigTemplate(NodeTemplate):
-    """Additional learning settings. May be redundant"""
+class TrainingTemplate(ConfigTemplate):
+    """Computational Node settings. May include hooks summon keys"""
+    log_each: Optional[int] = LookUp(None)
+    eval_each: Optional[int] = LookUp(None)
+    save_each: Optional[int] = LookUp(None)
+    epochs: int = 1
+    optimizer: Optimizers = 'adam'
+    scheduler: Optional[Schedulers] = None
+    criterion: Union[TorchLossesConstant, Callable] = LookUp(None)  # TODO add additional check for those fields which represent
     custom_learning_params: dict = None
     custom_criterions: dict = None
     model_architecture: ModelArchitectureConfigTemplate = None
@@ -263,10 +258,9 @@ class NeuralModelConfigTemplate(NodeTemplate):
 class LearningConfigTemplate(ConfigTemplate):
     """Copies previeous version od learning config"""
     learning_strategy: Literal['from_scratch', 'checkpoint'] = 'from_scratch'
-    peft_strategy: PEFTStrategies = 'training'
     criterion: Union[Callable, TorchLossesConstant] = LookUp(None)
-    peft_strategy_params: NeuralModelConfigTemplate = None
-    learning_strategy_params: NeuralModelConfigTemplate = None
+    peft_strategy_params: TrainingTemplate = None
+    learning_strategy_params: TrainingTemplate = None
 
 
 @dataclass
@@ -283,18 +277,18 @@ class APIConfigTemplate(ExtendableConfigTemplate):
 
 
 @dataclass
-class LowRankTemplate(NeuralModelConfigTemplate):
+class LowRankTemplate(TrainingTemplate):
     """Example of specific node template"""
     strategy: SLRStrategiesEnum = 'quantile'
     rank_prune_each: int = -1
     custom_criterions: dict = None  # {'norm_loss':{...},
     compose_mode: Optional[Literal['one_layer', 'two_layers', 'three_layers']] = None
     non_adaptive_threshold: float = .5
-    finetune_params: NeuralModelConfigTemplate = None
+    finetune_params: TrainingTemplate = None
 
 
 @dataclass
-class PruningTemplate(NeuralModelConfigTemplate):
+class PruningTemplate(TrainingTemplate):
     """Example of specific node template"""
     importance: str = "magnitude" # main
     importance_norm: int = 1 # main
@@ -302,12 +296,12 @@ class PruningTemplate(NeuralModelConfigTemplate):
     importance_reduction: str = 'max' # drop 
     importance_normalize: str = 'max' # drop
     pruning_iterations: int = 1 # drop
-    finetune_params: NeuralModelConfigTemplate = None
+    finetune_params: TrainingTemplate = None
     
 @dataclass
-class QuantTemplate(NeuralModelConfigTemplate):
+class QuantizationTemplate(TrainingTemplate):
     """Example of specific node template"""
     quant_type: str = "dynamic" # dynamic, static, qat
     allow_emb: bool = False
     allow_conv: bool = True
-    qat_params: NeuralModelConfigTemplate = None
+    qat_params: TrainingTemplate = None

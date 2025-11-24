@@ -30,11 +30,13 @@ class IDecomposed(abc.ABC):
         'three_layers': ['U', 'S', 'Vh']
     }
 
-    def __init__(self, decomposing_mode, method: Literal['svd', 'rsvd', 'cur']='svd', compose_mode=None):
+    def __init__(self, decomposing_mode, method: Literal['svd', 'rsvd', 'cur']='svd', compose_mode=None,
+                 decomposer_params: dict = None):
         self.compose_mode : str = compose_mode
         self.inference_mode = False
         self.decomposing_mode = decomposing_mode
         self.method = method
+        self.decomposer_params = decomposer_params or {}
         if decomposing_mode is not None:
             self.decompose()
             self._current_forward = self._forward3
@@ -58,6 +60,12 @@ class IDecomposed(abc.ABC):
         self._current_forward = self._forward_dict[self.compose_mode]
 
     def _evaluate_compose_mode(self: nn.Module):
+        """Evaluate the best composition mode to minimize parameters.
+        
+        Returns:
+            'one_layer': Compose all into single weight (when no compression achieved)
+            'two_layers': Keep U and Vh separate (preserves low-rank compression)
+        """
         nparams = [
             p.numel() for p in self.parameters()
         ]
@@ -72,7 +80,8 @@ class IDecomposed(abc.ABC):
         return None
 
     def decompose(self, W):
-        decomposer = DECOMPOSERS[self.method]()
+        decomposer_cls = DECOMPOSERS[self.method]
+        decomposer = decomposer_cls(**self.decomposer_params)
         U, S, Vh = decomposer.decompose(W)
         assert U.device.type == W.device.type
         self.set_U_S_Vh(U, S, Vh)
@@ -152,6 +161,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
             decomposing_mode: Optional[str] = 'channel',
             decomposer: Optional[str] = 'svd',
             compose_mode: str = None,
+            decomposer_params: dict = None,
             device=None,
             dtype=None,
     ) -> None:
@@ -169,7 +179,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
             dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode)
+        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode, decomposer_params)
 
     def decompose(self) -> None:
         """Decomposes the weight matrix in singular value decomposition.
@@ -259,24 +269,40 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return W
     
     def _forward1(self, x):
-        return torch.nn.functional.conv2d(x, self.U, self.bias, 
-            self.stride, self.padding, self.dilation, self.groups)
+        if self.bias is not None:
+            return torch.nn.functional.conv2d(x, self.U, self.bias, 
+                self.stride, self.padding, self.dilation, self.groups)
+        else:
+            return torch.nn.functional.conv2d(x, self.U, None,
+                self.stride, self.padding, self.dilation, self.groups)
     
     def _forward2(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = conv2d(input=x, weight=self.Vh, groups=self.groups, **self.decomposing['Vh'])
-        x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+        if self.bias is not None:
+            x = conv2d(input=x, weight=self.U, bias=self.bias, **self.decomposing['U'])
+        else:
+            x = conv2d(input=x, weight=self.U, bias=None, **self.decomposing['U'])
         return x
     
     def _forward3(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = conv2d(
             input=x,
             weight=self.Vh,
             groups=self.groups,
             **self.decomposing["Vh"],
         )
-        x = conv2d(
-            input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"],             
-        )
+        if self.bias is not None:
+            x = conv2d(
+                input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"],             
+            )
+        else:
+            x = conv2d(
+                input=x, weight=self.S * self.U, bias=None, **self.decomposing["U"],             
+            )
         return x
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -352,6 +378,7 @@ class DecomposedLinear(nn.Linear, IDecomposed):
             decomposing_mode: bool = True,
             decomposer: Optional[str] = 'svd',
             compose_mode: str = None,
+            decomposer_params: dict = None,
             device=None,
             dtype=None,
     ) -> None:
@@ -364,20 +391,31 @@ class DecomposedLinear(nn.Linear, IDecomposed):
             dtype=dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode)
+        # assert self.bias is not None
+        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode, decomposer_params)
 
     def decompose(self) -> None:
         W = self._get_weights()
         super().decompose(W)
     
     def _forward2(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = linear(x, self.Vh)
-        x = linear(x, self.U, self.bias)
+        if self.bias is not None:
+            x = linear(x, self.U, self.bias)
+        else:
+            x = linear(x, self.U)
         return x 
     
     def _forward3(self, x):
+        if self.Vh is not None and x.device != self.Vh.device:
+            x = x.to(self.Vh.device)
         x = linear(x, self.Vh)
-        x = linear(x, (self.U * self.S), self.bias)
+        if self.bias is not None:
+            x = linear(x, (self.U * self.S), self.bias)
+        else:
+            x = linear(x, (self.U * self.S))
         return x 
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -385,7 +423,10 @@ class DecomposedLinear(nn.Linear, IDecomposed):
         return x
     
     def _forward1(self, x):
-        return torch.nn.functional.linear(x, self.U, self.bias)
+        if self.bias is not None:
+            return torch.nn.functional.linear(x, self.U, self.bias)
+        else:
+            return torch.nn.functional.linear(x, self.U)
     
 
 class DecomposedEmbedding(nn.Embedding, IDecomposed):
@@ -405,6 +446,7 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
             decomposing_mode: bool = True,
             decomposer: Optional[str] = 'svd',
             compose_mode: str = None,
+            decomposer_params: dict = None,
             device=None,
             dtype=None,
     ) -> None:
@@ -415,7 +457,7 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
             dtype=dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode)
+        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode, decomposer_params)
 
     def decompose(self) -> None:
         W = self._get_weights()
@@ -426,11 +468,15 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
             self.padding_idx, self.max_norm, self.norm_type, self.scale_grad_by_freq, self.sparse)
 
     def _forward2(self, x):
+        if self.U is not None and x.device != self.U.device:
+            x = x.to(self.U.device)
         x = embedding(x, self.U)
         x = linear(x, self.Vh.T)
         return x
     
     def _forward3(self, x):
+        if self.U is not None and x.device != self.U.device:
+            x = x.to(self.U.device)
         x = embedding(x, (self.U * self.S))
         x = linear(x, self.Vh.T)
         return x
@@ -444,7 +490,9 @@ class DecomposedConvTranspose2d(nn.ConvTranspose2d, DecomposedConv2d):
             self,
             base_module: nn.ConvTranspose2d,
             decomposing_mode: Optional[str] = 'channel',
+            decomposer: Optional[str] = 'svd',
             compose_mode: str = None,
+            decomposer_params: dict = None,
             device=None,
             dtype=None,
     ) -> None:
@@ -463,7 +511,7 @@ class DecomposedConvTranspose2d(nn.ConvTranspose2d, DecomposedConv2d):
             dtype,
         )
         self.load_state_dict(base_module.state_dict())
-        IDecomposed.__init__(self, compose_mode, decomposing_mode)
+        IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode, decomposer_params)
 
     def __set_decomposing_params(self, decomposing_mode):
         in_channels, out_channels, kernel_height, kernel_width = self.weight.size()

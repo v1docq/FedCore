@@ -1,7 +1,7 @@
 from hyperopt import hp
 import numpy as np
 
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     PRUNING_NORMALIZE,
     PRUNING_REDUCTION,
     PRUNING_NORMS,
