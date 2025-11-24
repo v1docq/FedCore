@@ -41,7 +41,7 @@ def rank_threshold_pruning_in_place(
     threshold = decomposed_module._get_threshold() or threshold  # for cases of per-layer adaptive thresholds
 
     if strategy in SLRStrategies:
-        indices = _apply_S_strategy(S, strategy, threshold, round_to_times=round_to_times)
+        indices = _truncate_S_matrix(S, strategy, threshold, round_to_times=round_to_times)
         initial_size = count_params(decomposed_module)
     else:
         # TODO Grad-based & approx. error
@@ -57,8 +57,7 @@ def rank_threshold_pruning_in_place(
         )
     )
 
-
-def _apply_S_strategy(S, strategy, threshold, round_to_times=1):
+def _truncate_S_matrix(S, strategy, threshold, round_to_times=1):
     S, indices = S.sort(descending=True)
     n_components = SLRStrategiesEnum[strategy].value(S, threshold)
     # n_cpu = cpu_count()

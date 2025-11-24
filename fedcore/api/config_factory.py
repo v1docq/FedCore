@@ -1,6 +1,6 @@
 from enum import Enum
 from inspect import signature, isclass
-from typing import get_args, get_origin, Iterable, Literal, Optional, Union
+from typing import OrderedDict, Tuple, get_args, get_origin, Iterable, Literal, Optional, Union
 
 from .api_configs import ConfigTemplate, ExtendableConfigTemplate, get_nested, LookUp, MisconfigurationError
 
@@ -17,11 +17,11 @@ class ConfigFactory:
         raise Exception('ConfigFactory is a static class')
 
     @classmethod
-    def from_template(cls, template: ConfigTemplate, name: str = None):
-        template_cls, content = template
-        if name is None:
-            name = template_cls.get_default_name()
-        cls.registered_configs[name] = template_cls
+    def from_template(cls, template: Tuple[type, OrderedDict], class_name: str = None):
+        template_cls, content = template #content - is dict of allowed params (epochs: 5 for example)
+        if class_name is None:
+            class_name = template_cls.get_default_name()
+        cls.registered_configs[class_name] = template_cls
         slots = list(content) + ['_parent']
 
         def __init__(self, parent=None, **kwargs):
@@ -30,12 +30,12 @@ class ConfigFactory:
             misconf_errors = []
             for key, value in content.items():
                 try:
-                    value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
+                    value, need_check = ConfigFactory._instantiate_default(self, class_name, key, value)
                     if need_check:
-                        self.__class__.check(key, value)
-                        setattr(self, key, value)
+                        self.__class__.check(key, value) # ConfigTemplate#check
+                        setattr(self, key, value) #May be overrided by child (<Something>Template) with additional check on the way of setattr
                     else:
-                        object.__setattr__(self, key, value)
+                        object.__setattr__(self, key, value) #set directly self.key = value
                 except MisconfigurationError as e:
                     misconf_errors.append(e)
                 except Exception as x:
@@ -89,11 +89,16 @@ class ConfigFactory:
             '__setitem__': __setitem__,
             '__setattr__': __setattr__,
         }
-        return type(name, (cls.registered_configs[name],), class_dict)
+        return type(class_name, (cls.registered_configs[class_name],), class_dict)
     
     @classmethod
-    def _get_annotation(cls, config_name, key):
-        template_cls = cls.registered_configs[config_name]
+    def _get_annotation(cls, config_class_name, key):
+        """Returns annotation of key. For example:  
+        __init__(self, smth: int)  
+
+        annotation will be "int" for key=smth
+        """
+        template_cls = cls.registered_configs[config_class_name]
         return signature(template_cls.__init__).parameters[key].annotation
     
     @staticmethod
@@ -102,15 +107,19 @@ class ConfigFactory:
         return ((origin is Union or origin is Literal) and 
            type(None) in get_args(annotation))         
     
+
     @classmethod
-    def _instantiate_default(cls, self: ConfigTemplate, config_name: str, k: str, v):
+    def _instantiate_default(cls, self: ConfigTemplate, config_class_name: str, k: str, v):
+        """Gets default params of config from parent, if value is <code>LookUp</code>
+        or gets default value from <code>LookUp(value)</code>, or gets just default value
+        """
         # check look-up
         if isinstance(v, LookUp):
             if self._parent:
                 v = getattr(self._parent, k, None)
             else:
                 v = v.value
-        annotation = cls._get_annotation(config_name, k)
+        annotation = cls._get_annotation(config_class_name, k)
         is_config = isclass(annotation) and issubclass(annotation, ConfigTemplate)
         
         if v is not None and not is_config:
@@ -133,7 +142,7 @@ class ConfigFactory:
         # try instantiate empty object
         x = ValueError(f'Misconfiguration! detected class `{annotation}`\n' +
                     f'has wrong argument passed at `{k}` and not explicitly optional.\n' +
-                    f'Config: {config_name}')
+                    f'Config: {config_class_name}')
         # case union
         for arg in get_args(annotation):
             try:

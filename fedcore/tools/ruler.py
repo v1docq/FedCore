@@ -3,7 +3,6 @@ from typing import Union
 
 import numpy as np
 import torch
-import torch.utils
 from torchinfo import summary
 from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data.dataloader import DataLoader
@@ -12,14 +11,13 @@ from tqdm import tqdm
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.metrics.metric_impl import (
-    ClassificationMetricCounter,
     MetricCounter,
     ObjectDetectionMetricCounter,
 )
 from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.tools.edge_device import PowerEstimator
-from time import time
+import time
 
 
 def format_num(num: int, bytes=False):
@@ -108,12 +106,12 @@ class PerformanceEvaluator:
             
         self.model.to(self.device)
 
-    def eval(self):
+    def eval(self, throughput_num_iterations=1):
         self.warm_up_cuda()
         # lat, thr = self.measure_latency_throughput(10, self.n_batches)
         # lat = self.eval_detailed_latency()
         lats = self.latency_eval()
-        thrs = self.throughput_eval()
+        thrs = self.throughput_eval(throughput_num_iterations)
         result = dict(
             latency=[np.mean(lats), np.std(lats)],
             throughput=[np.mean(thrs), np.std(thrs)],
@@ -138,14 +136,14 @@ class PerformanceEvaluator:
             break
 
         for _ in tqdm(range(num_runs), desc=f"Measuring inference for batch_size={self.batch_size}"):
-            start_on_cpu = time()
+            start_on_cpu = time.perf_counter()
             device_sample = self.transfer_to_device_fn(sample, self.device)
 
             if self.cuda_allowed:
                 start_event = torch.cuda.Event(enable_timing=True)
                 stop_event = torch.cuda.Event(enable_timing=True)
                 start_event.record()  # For GPU timing
-            start_on_device = time()  # For CPU timing
+            start_on_device = time.perf_counter()  # For CPU timing
 
             device_result = self.model(device_sample)
 
@@ -153,13 +151,13 @@ class PerformanceEvaluator:
                 stop_event.record()
                 torch.cuda.synchronize()
                 elapsed_on_device = stop_event.elapsed_time(start_event)
-                stop_on_device = time()
+                stop_on_device = time.perf_counter()
             else:
-                stop_on_device = time()
+                stop_on_device = time.perf_counter()
                 elapsed_on_device = stop_on_device - start_on_device
 
             self.transfer_to_device_fn(device_result, "cpu")
-            stop_on_cpu = time()
+            stop_on_cpu = time.perf_counter()
 
             t_cpu_2_gpu.append(start_on_device - start_on_cpu)
             t_device.append(elapsed_on_device)
@@ -245,10 +243,13 @@ class PerformanceEvaluator:
 
     @torch.no_grad()
     def throughput_eval(self, num_iterations=30):
+        """Gets every batch  and mesure throughput of model(batch).  
+        Throughput = batch_latency / len(batch)  (s per sample)
+        """
         self.model.eval()
         thr_list = []
         steps_iter = range(num_iterations)
-        for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="batches", unit="batch"):
+        for batch in tqdm(self.data_loader(max_batches=self.n_batches), desc="throughput eval batches", unit="batch", total=self.n_batches):
             batch = batch[0] if isinstance(batch, (tuple, list)) else batch
             is_already_cuda = all([hasattr(batch, "cuda"), self.cuda_allowed])
             X = batch.cuda(non_blocking=True) if is_already_cuda else batch.to(self.device)
@@ -264,16 +265,19 @@ class PerformanceEvaluator:
             else:
                 times = list()
                 for i in steps_iter:
-                    start_events = time()
+                    start_events = time.perf_counter()
                     self.model(X)
-                    end_events = time()
+                    end_events = time.perf_counter()
                     times.append(end_events - start_events)
                 times = (times)
             thr_list.extend(times)
-        return len(batch) / np.array(thr_list)
+        return np.array(thr_list) / len(batch)
 
     @torch.no_grad()
     def latency_eval(self, max_samples=None):
+        """Gets first sample from every batch and mesure latency of model(sample)  
+        Returns seconds per sample
+        """
         def cuda_latency_eval(sample_batch):
             start_event = torch.cuda.Event(enable_timing=True)
             end_event = torch.cuda.Event(enable_timing=True)
@@ -285,25 +289,25 @@ class PerformanceEvaluator:
             return time
         
         def cpu_latency_eval(sample_batch):
-            start_on_device = time()
+            start_on_device = time.perf_counter()
             self.model(sample_batch)
-            stop_on_device = time()
+            stop_on_device = time.perf_counter()
             elapsed_on_device = stop_on_device - start_on_device
             return elapsed_on_device
 
         self.model.eval()
         lat_list = []
-        for batch in tqdm(self.data_loader(max_batches=max_samples or self.batch_size)):
+        for batch in tqdm(self.data_loader(max_batches=max_samples or self.n_batches), desc="latency eval samples", total=(max_samples or self.n_batches)):
             if isinstance(batch, tuple) or isinstance(batch, list):
                 features = batch[0]
                 if isinstance(features, torch.Tensor):
-                    for sample in features:
-                        is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
-                        sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
-                        sample.to(self.device)
-                        sample_batch = sample[None, ...]
-                        lat_list.append(cuda_latency_eval(sample_batch)) if is_already_cuda else \
-                        lat_list.append(cpu_latency_eval(sample_batch))
+                    sample = features[0]
+                    is_already_cuda = all([hasattr(sample, "cuda"), self.cuda_allowed])
+                    sample = sample.cuda(non_blocking=True) if is_already_cuda else sample.to(self.device)
+                    sample.to(self.device)
+                    sample_batch = sample[None, ...]
+                    lat_list.append(cuda_latency_eval(sample_batch)) if is_already_cuda else \
+                    lat_list.append(cpu_latency_eval(sample_batch))
             else:
                 lat_list.append(cuda_latency_eval(batch))
         return np.array(lat_list)
@@ -398,9 +402,9 @@ class PerformanceEvaluatorOD:
             with tqdm(total=reps, desc="Measuring latency", unit="rep") as pbar:
                 for rep in range(reps):
                     for inputs, _ in self.data_loader:
-                        start_time = time.time()
+                        start_time = time.perf_counter()
                         _ = self.model(list(input.to(self.device) for input in inputs))
-                        end_time = time.time()
+                        end_time = time.perf_counter()
                         if torch.cuda.is_available():
                             torch.cuda.synchronize()
                         curr_time = (end_time - start_time) * 1000
@@ -412,7 +416,7 @@ class PerformanceEvaluatorOD:
 
     def measure_throughput(self, batches: int = 5):
         total_data_size = 0
-        start_time = time.time()
+        start_time = time.perf_counter()
         # measure for n batches
         with torch.no_grad():
             with tqdm(total=batches, desc="Measuring throughput", unit="batch") as pbar:
@@ -426,7 +430,7 @@ class PerformanceEvaluatorOD:
                     pbar.update(1)
         if self.device == "cuda":
             torch.cuda.synchronize()
-        total_time = (time.time() - start_time) / 1000
+        total_time = (time.perf_counter() - start_time) / 1000
         self.throughput = round(total_data_size / total_time, 0)
         return self.throughput
 

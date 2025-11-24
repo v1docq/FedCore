@@ -46,6 +46,13 @@ class OnetimeRankPruner(BaseHook):
         super().__init__()
         self.__done = False
 
+    def link_to_trainer(self, hookable_trainer):
+        super().link_to_trainer(hookable_trainer)
+        self.rank_prune_each = self.params.get('rank_prune_each', -1)
+        self.SLR_strategy = self.params.get('strategy', 'explained_variance')
+        self.non_adaptive_threshold = self.params.get('non_adaptive_threshold', 0.75)
+
+
     @classmethod
     def check_init(cls, d: dict):
         """Check whether this hook should be instantiated from config.
@@ -89,8 +96,7 @@ class OnetimeRankPruner(BaseHook):
         """
         if self.__done:
             return False
-        rank_prune_each = self.params.get('rank_prune_each', -1)
-        return self.is_epoch_arrived_default(epoch, rank_prune_each)
+        return self.is_epoch_arrived_default(epoch, self.rank_prune_each)
     
     def action(self, epoch, kws):
         """Perform one-shot rank pruning of all decomposed layers.
@@ -108,13 +114,11 @@ class OnetimeRankPruner(BaseHook):
         pruned :class:`IDecomposed` layer to update its weight representation.
         """
         self.__done = True
-        non_adaptive_threshold = self.params.get('non_adaptive_threshold', .75)
-        strategy = self.params.get('strategy', 'explained_variance')
         for name, module in self.model.named_modules():
             if isinstance(module, IDecomposed): 
                 rank_threshold_pruning_in_place(decomposed_module=module,
-                                       threshold=non_adaptive_threshold,
-                                       strategy=strategy,
+                                       threshold=self.non_adaptive_threshold,
+                                       strategy=self.SLR_strategy,
                                        module_name=name)
                 module.compose_weight_for_inference()
 
