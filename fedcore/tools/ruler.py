@@ -20,6 +20,7 @@ from functools import partial
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.tools.edge_device import PowerEstimator
 from time import time
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 def format_num(num: int, bytes=False):
@@ -65,6 +66,7 @@ class PerformanceEvaluator:
         self.n_batches = n_batches
         self.batch_size = batch_size  # or self.data_loader.batch_size
         self._init_null_object()
+        self._registry = ModelRegistry()
 
         self.device = device or default_device()
         self.cuda_allowed = True if self.device.type == 'cuda' else False
@@ -95,12 +97,31 @@ class PerformanceEvaluator:
         is_pipeline_class = isinstance(model, Pipeline)
 
         if is_pipeline_class:
-            self.model = getattr(model.operator.root_node.fitted_operation, self.model_regime)
-            try:
-                self.device = getattr(model.operator.root_node.fitted_operation, 'device', default_device())
-                self.cuda_allowed = True if self.device.type == 'cuda' else False
-            except:
-                self.device = self.device
+            fitted = model.operator.root_node.fitted_operation
+            model_from_attr = getattr(fitted, self.model_regime, None)
+            
+            if model_from_attr is None:
+                raise ValueError(f"Model regime '{self.model_regime}' not found in fitted operation")
+            
+            fedcore_id = getattr(fitted, '_fedcore_id', None)
+            model_id = getattr(fitted, '_model_id', None)
+            
+            if fedcore_id and model_id:
+                self.model = self._registry.get_model_with_fallback(
+                    fedcore_id=fedcore_id,
+                    model_id=model_id,
+                    fallback_model=model_from_attr,
+                    device=self.device
+                )
+            else:
+                print("No fedcore_id or model_id found, using model from operation attributes")
+                self.model = model_from_attr
+            
+            operation_device = getattr(fitted, 'device', None)
+            if operation_device:
+                self.device = operation_device
+                self.cuda_allowed = (self.device.type == 'cuda')
+                
         elif is_class_container:
             self.model = model.model
         else:

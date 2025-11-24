@@ -21,7 +21,6 @@ from fedcore.architecture.abstraction.decorators import DaskServer, exception_ha
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.neural_compressor.config import Torch2ONNXConfig
 from fedcore.repository.constanst_repository import (
     FEDOT_API_PARAMS,
     FEDOT_ASSUMPTIONS,
@@ -403,24 +402,25 @@ class FedCore(Fedot):
             framework_config: dict = None,
             supplementary_data: dict = None,
     ):
-        if self.framework_config is None and framework_config is None:
-            return self.logger.info(
-                "You must specify configuration for model convertation"
-            )
-        else:
-            if framework == "ONNX":
-                example_input = next(iter(self.train_data.features.val_dataloader))[
-                    0
-                ][0]
-                self.framework_config["example_inputs"] = torch.unsqueeze(
-                    example_input, dim=0
-                )
-                onnx_config = Torch2ONNXConfig(**self.framework_config)
-                supplementary_data["model_to_export"].export(
-                    "converted-model.onnx", onnx_config
-                )
-                converted_model = ONNXInferenceModel("converted-model.onnx")
-        return converted_model
+        # if self.framework_config is None and framework_config is None:
+        #     return self.logger.info(
+        #         "You must specify configuration for model convertation"
+        #     )
+        # else:
+        #     if framework == "ONNX":
+        #         example_input = next(iter(self.train_data.features.val_dataloader))[
+        #             0
+        #         ][0]
+        #         self.framework_config["example_inputs"] = torch.unsqueeze(
+        #             example_input, dim=0
+        #         )
+        #         onnx_config = Torch2ONNXConfig(**self.framework_config)
+        #         supplementary_data["model_to_export"].export(
+        #             "converted-model.onnx", onnx_config
+        #         )
+        #         converted_model = ONNXInferenceModel("converted-model.onnx")
+        # return converted_model
+        pass
 
     def shutdown(self):
         """Shutdown Dask client"""

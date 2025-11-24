@@ -1,7 +1,7 @@
-from copy import deepcopy
 from itertools import chain
 from typing import Optional
 import traceback
+import logging
 
 import torch
 import torch.ao.nn.quantized.dynamic as nnqd
@@ -30,11 +30,13 @@ from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
 from fedcore.repository.constanst_repository import TorchLossesConstant
 from fedcore.models.network_impl.hooks import Optimizers
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 class BaseQuantizer(BaseCompressionModel):
     def __init__(self, params: Optional[OperationParameters] = {}):
         super().__init__(params)
+        self.logger = logging.getLogger(self.__class__.__name__)
         
         # Quantizing params
         self.device = params.get("device", default_device())
@@ -68,10 +70,11 @@ class BaseQuantizer(BaseCompressionModel):
         # Hooks initialization
         self._hooks = [QuantizationHooks]
         self._init_empty_object()
+        self._quantization_index = 0
 
-        print(f"[INIT] quant_type: {self.quant_type}, backend: {self.backend}, device: {self.device}")
-        print(f"[INIT] dtype: {self.dtype}, allow_embedding: {self.allow_emb}, allow_convolution: {self.allow_conv}")
-        print(f"[INIT] qconfig: {self.qconfig}")
+        self.logger.info(f"[INIT] quant_type: {self.quant_type}, backend: {self.backend}, device: {self.device}")
+        self.logger.info(f"[INIT] dtype: {self.dtype}, allow_embedding: {self.allow_emb}, allow_convolution: {self.allow_conv}")
+        self.logger.info(f"[INIT] qconfig: {self.qconfig}")
 
     def __repr__(self):
         return f"{self.quant_type.upper()} Quantization"
@@ -135,24 +138,49 @@ class BaseQuantizer(BaseCompressionModel):
             qconfig_mapping.set_object_type(nn.Embedding, float_qparams_weight_only_qconfig)
             qconfig_mapping.set_object_type(nn.EmbeddingBag, float_qparams_weight_only_qconfig)
 
-        print(f"[QCONFIG] Created qconfig mapping: {qconfig_mapping}")
+        self.logger.info(f"[QCONFIG] Created qconfig mapping: {qconfig_mapping}")
         return get_flattened_qconfig_dict(qconfig_mapping)
 
     def _get_example_input(self, input_data: InputData):
         loader = input_data.features.val_dataloader
         example_input, _ = next(iter(loader))
-        print(f"[DATA] Example input shape: {example_input.shape}")
+        self.logger.info(f"[DATA] Example input shape: {example_input.shape}")
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
-        self.model_before = input_data.target.to(self.device)
+        model = input_data.target
+        if isinstance(model, str):
+            loaded = torch.load(model, map_location=self.device)
+            if isinstance(loaded, dict) and "model" in loaded:
+                model = loaded["model"]
+            else:
+                model = loaded
+        
+        self.model_before = model.to(self.device)
+        
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.qat_params)
         else:
             self.trainer = BaseNeuralModel(self.qat_params)
+        
         self.trainer.model = self.model_before
-        self.quant_model = deepcopy(self.model_before).eval()
-        print("[MODEL] Model initialized and copied for quantization.")
+        self.quant_model = self.model_before.eval()
+        
+        self._model_registry = ModelRegistry()
+        self._quantization_index += 1
+        metrics_before = {
+            "stage": f"quantization_{self._quantization_index}",
+            "operation": "quantization",
+            "is_processed": False,
+        }
+        if self._model_id_before:
+            self._model_registry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_before,
+                metrics=metrics_before
+            )
+        
+        self.logger.info("[MODEL] Model initialized for quantization (no deepcopy).")
 
     def _prepare_model(self, input_data: InputData):
         try:
@@ -160,10 +188,10 @@ class BaseQuantizer(BaseCompressionModel):
             self.quant_model = ParentalReassembler.reassemble(self.quant_model)
             if hasattr(self.quant_model, 'fuse_model'):
                 self.quant_model.fuse_model()
-                print("[PREPARE] fuse_model executed.")
+                self.logger.info("[PREPARE] fuse_model executed.")
             propagate_qconfig_(self.quant_model, self.qconfig)
             for name, module in self.quant_model.named_modules():
-                print(f"Module: {name}, qconfig: {module.qconfig}")
+                self.logger.info(f"Module: {name}, qconfig: {module.qconfig}")
             self.data_batch_for_calib = self._get_example_input(input_data)
 
             QDQWrapper.add_quant_entry_exit(
@@ -182,13 +210,13 @@ class BaseQuantizer(BaseCompressionModel):
                 self.quant_model.train()
                 prepare_qat(self.quant_model, inplace=True)
 
-            print("[PREPARE] Model prepared successfully.")
+            self.logger.info("[PREPARE] Model prepared successfully.")
             return self.quant_model
 
         except Exception as e:
-            print("[PREPARE ERROR] Exception during preparation:")
+            self.logger.info("[PREPARE ERROR] Exception during preparation:")
             traceback.print_exc()
-            return deepcopy(self.model_before).eval()
+            return self.model_before.eval()
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
@@ -210,15 +238,28 @@ class BaseQuantizer(BaseCompressionModel):
             else:
                 convert(self.quant_model, inplace=True)
 
-            print("[FIT] Quantization performed successfully.")
+            self.logger.info("[FIT] Quantization performed successfully.")
             self.model_after = self.quant_model
+            
             if self.quant_type == 'qat':
-                self.model_after._is_quantized = True 
-
+                self.model_after._is_quantized = True
+            
+            metrics_after = {
+                "stage": f"quantization_{self._quantization_index}",
+                "operation": "quantization",
+                "is_processed": True,
+            }
+            
+            if self._model_id_after:
+                self._model_registry.update_metrics(
+                    fedcore_id=self._fedcore_id,
+                    model_id=self._model_id_after,
+                    metrics=metrics_after
+                )
         except Exception as e:
-            print("[FIT ERROR] Exception during quantization:")
+            self.logger.info("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()
-            self.model_after = deepcopy(self.model_before).eval()
+            self.model_after = self.model_before.eval()
             
         return self.model_after
 

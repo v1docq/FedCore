@@ -1,7 +1,8 @@
-from copy import deepcopy
 from itertools import chain
 from fedot.core.data.data import InputData
 from torch import nn, optim
+import torch
+import logging
 import traceback
 
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
@@ -18,6 +19,7 @@ from fedcore.repository.constanst_repository import (
     PRUNERS,
     PRUNING_IMPORTANCE, TorchLossesConstant
 )
+from fedcore.tools.registry.model_registry import ModelRegistry
 
 
 
@@ -48,7 +50,7 @@ class BasePruner(BaseCompressionModel):
 
         # pruning params
         self.pruner_name = params.get("pruner_name", "meta_pruner")
-        self.importance_name = params.get("importance", "MagnitudeImportance")
+        self.importance_name = params.get("importance", "magnitude")
 
         # pruning hyperparams
         self.pruning_ratio = params.get("pruning_ratio", 0.5)
@@ -70,6 +72,8 @@ class BasePruner(BaseCompressionModel):
 
         self._hooks = [PruningHooks]
         self._init_empty_object()
+        self._pruning_index = 0
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def __repr__(self):
         return self.pruner_name
@@ -93,20 +97,49 @@ class BasePruner(BaseCompressionModel):
                 self._on_epoch_start.append(hook)
 
     def _init_model(self, input_data):
-        print('Prepare original model for pruning'.center(80, '='))
-        self.model_before = input_data.target
+        self.logger.info('Prepare original model for pruning'.center(80, '='))
+        model = input_data.target
+        if isinstance(model, str):
+            device = default_device()
+            loaded = torch.load(model, map_location=device)
+            if isinstance(loaded, dict) and "model" in loaded:
+                model = loaded["model"]
+            else:
+                model = loaded
+        self.model_before = model
         if input_data.task.task_type.value.__contains__('forecasting'):
             self.trainer = BaseNeuralForecaster(self.ft_params)
         else:
             self.trainer = BaseNeuralModel(self.ft_params)
+        
         if hasattr(self.model_before, 'model'):
             self.trainer.model = self.model_before.model
+        else:
+            self.trainer.model = self.model_before
+            
         self.model_before.to(default_device())
-        self.model_after = deepcopy(self.model_before)
-        print(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
-        print(f' Pruning importance - {self.importance_name} '.center(80, '='))
-        print(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
-        print(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
+        
+        self._model_registry = ModelRegistry()
+        self._pruning_index += 1
+        
+        metrics_before = {
+            "stage": f"pruning_{self._pruning_index}",
+            "operation": "pruning",
+            "is_processed": False,
+        }
+        if self._model_id_before:
+            self._model_registry.update_metrics(
+                fedcore_id=self._fedcore_id,
+                model_id=self._model_id_before,
+                metrics=metrics_before
+            )
+        
+        self.model_after = self.model_before
+        
+        self.logger.info(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
+        self.logger.info(f' Pruning importance - {self.importance_name} '.center(80, '='))
+        self.logger.info(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
+        self.logger.info(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
         # Pruner initialization
         if self.importance_name.__contains__('activation'):
             self.pruner = None
@@ -117,7 +150,7 @@ class BasePruner(BaseCompressionModel):
         elif not self.importance_name in ['random', 'lamp', 'magnitude']:
             self.pruner = PRUNERS["growing_reg_pruner"]
         else:
-            self.pruner = PRUNERS[self.pruner_name]
+            self.pruner = PRUNERS[self.pruner_name]  
         self._check_before_prune(input_data)
         self.optimizer_for_grad = optim.Adam(self.model_after.parameters(),
                                              lr=self.ft_params['lr_for_grad'])
@@ -127,8 +160,16 @@ class BasePruner(BaseCompressionModel):
         # list of tensors with dim size n_samples x n_channel x height x width
         batch_generator = (b for b in input_data.features.val_dataloader)
         # take first batch
-        batch_list = next(batch_generator)
-        self.data_batch_for_calib = batch_list[0].to(default_device())
+        batch_dict = next(batch_generator)
+        # Handle dict-like batches (e.g., LLM) by picking the first value or a specific key
+        if isinstance(batch_dict, dict):
+            if 'input_ids' in batch_dict:
+                self.data_batch_for_calib = batch_dict['input_ids'].to(default_device())
+            else:
+                self.data_batch_for_calib = next(iter(batch_dict.values())).to(default_device())
+        else:
+            # legacy: assume batch is a list/tuple and pick first element
+            self.data_batch_for_calib = batch_dict[0].to(default_device())
         n_classes = input_data.task.task_params['forecast_length'] \
             if input_data.task.task_type.value.__contains__('forecasting') else input_data.features.num_classes
         self.validator = PruningValidator(model=self.model_after,
@@ -162,7 +203,23 @@ class BasePruner(BaseCompressionModel):
             for hook in self._on_epoch_end:
                 hook(importance=self.importance, pruner_objects=self.pruner_objects)
             if finetune:
-                return self.finetune(finetune_object=self.model_after, finetune_data=input_data)
+                result_model = self.finetune(finetune_object=self.model_after, finetune_data=input_data)
+
+                # Record post-pruning state in registry
+                metrics_after = {
+                    "stage": f"pruning_{self._pruning_index}",
+                    "operation": "pruning",
+                    "is_processed": True,
+                }
+                self.model_after = result_model
+                if self._model_id_after:
+                    self._model_registry.update_metrics(
+                        fedcore_id=self._fedcore_id,
+                        model_id=self._model_id_after,
+                        metrics=metrics_after
+                    )
+                
+                return result_model
         except Exception as e:
             traceback.print_exc()
             self.model_after = self.model_before
@@ -171,11 +228,11 @@ class BasePruner(BaseCompressionModel):
     def finetune(self, finetune_object, finetune_data):
         validated_finetune_object = self.validator.validate_pruned_layers(finetune_object)
         self.trainer.model = validated_finetune_object
-        print(f"==============After {self.importance_name} pruning=================")
+        self.logger.info(f"==============After {self.importance_name} pruning=================")
         params_dict = self.estimate_params(example_batch=self.data_batch_for_calib,
                                            model_before=self.model_before,
                                            model_after=validated_finetune_object)
-        print("==============Finetune pruned model=================")
+        self.logger.info("==============Finetune pruned model=================")
         self.model_after = self.trainer.fit(finetune_data)
         return self.model_after
 
