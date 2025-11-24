@@ -248,6 +248,13 @@ class LLMTrainer(BaseTrainer):
             return
         
         self._hooks_initialized = True
+    
+    @property
+    def epochs(self) -> int:
+        """Get the number of training epochs."""
+        if self._training_args is not None:
+            return int(self._training_args.num_train_epochs)
+        return int(self.default_training_args.get('num_train_epochs', 3))
         
     def _prepare_data(self, input_data: Union[InputData, CompressionInputData]) -> Dict[str, Dataset]:
         """Convert InputData/CompressionInputData to transformers Dataset format"""
@@ -348,15 +355,24 @@ class LLMTrainer(BaseTrainer):
         
         self.trainer_objects['trainer'] = self._trainer
 
-    def fit(self, input_data: Union[InputData, CompressionInputData], 
+    def fit(self, input_data: CompressionInputData, 
             supplementary_data: Optional[Dict] = None, loader_type: str = 'train') -> Any:
         """
         Train the model using InputData/CompressionInputData.
         
         Input can be either InputData (FEDOT) or CompressionInputData (FedCore).
         """
-        compression_data = CompressionDataConverter.convert(input_data)
-        datasets = self._prepare_data(compression_data)
+        print(f"Training LLM model with {loader_type} data...")
+        
+        # Final fallback: pull model from input_data if still missing
+        if self.model is None:
+            candidate_model = getattr(input_data, 'target', None)
+            if candidate_model is None and hasattr(input_data, 'target'):
+                candidate_model = input_data.target
+            if candidate_model is not None:
+                self.model = candidate_model
+
+        datasets = self._prepare_data(input_data)
         self._create_trainer(datasets)
         # self.execute_hooks('start', epoch=0)
         
@@ -379,57 +395,8 @@ class LLMTrainer(BaseTrainer):
     def predict(self, input_data: Union[InputData, CompressionInputData],  
                 output_mode: str = "default") -> Any:
         """Make predictions using InputData/CompressionInputData"""
-        compression_data = CompressionDataConverter.convert(input_data)
-        return self._predict_model(compression_data, output_mode)
         
-    # def save_model(self, path: str) -> None:
-    #     """Save the model using transformers approach"""
-    #     print(f"Saving LLM model to {path}...")
-        
-    #     if self._trainer is not None:
-    #         self._trainer.save_model(path)
-    #     else:
-    #         super().save_model(path)
-        
-    # def load_model(self, path: str) -> None:
-    #     """Load the model using transformers approach"""
-    #     print(f"Loading LLM model from {path}...")
-
-    #     super().load_model(path)
-    
-    def _process_prediction_output(self, prediction_output, output_mode: str, x_test: Union[CompressionInputData, InputData]) -> CompressionOutputData:
-        """Process PredictionOutput from transformers Trainer and convert to CompressionOutputData.
-        
-        Args:
-            prediction_output: Output from Trainer.predict() - can be PredictionOutput, Tensor, or numpy array
-            output_mode: Output mode for prediction conversion
-            x_test: Input data for context
-            
-        Returns:
-            CompressionOutputData with processed predictions
-        """
-        if hasattr(prediction_output, 'predictions'):
-            pred_data = prediction_output.predictions
-        else:
-            pred_data = prediction_output
-        
-        if isinstance(pred_data, torch.Tensor):
-            pred_tensor = pred_data
-        elif isinstance(pred_data, np.ndarray):
-            pred_tensor = torch.from_numpy(pred_data)
-        elif isinstance(pred_data, list):
-            pred_tensor = torch.tensor(pred_data)
-        else:
-            pred_tensor = torch.tensor(pred_data)
-        
-        return self._convert_predict(pred_tensor, output_mode, x_test)
-
-    @torch.no_grad()
-    def _predict_model(
-            self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
-    ):
-        """Make predictions using Transformers Trainer if available, otherwise use direct model inference"""
-        has_val_loader = hasattr(x_test, 'val_dataloader') and x_test.val_dataloader is not None
+        has_val_loader = hasattr(input_data, 'val_dataloader')
 
         if self._trainer is not None and has_val_loader:
             if torch.cuda.is_available():
@@ -439,22 +406,54 @@ class LLMTrainer(BaseTrainer):
                     buffer.data = buffer.data.to(device)
             self._trainer.model.eval()
             
-            eval_dataset = self._dataloader_to_dataset(x_test.val_dataloader)
-            prediction_output = self._trainer.predict(eval_dataset)
-            return self._process_prediction_output(prediction_output, output_mode, x_test)
+            eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
+            return self._trainer.predict(eval_dataset)
         elif self._trainer is None and has_val_loader:
             if self.model is None:
                 raise ValueError("Cannot create trainer for prediction: model is None. Call fit() first or provide model in initialization.")
             datasets = self._prepare_data(x_test)
             self._create_trainer(datasets)
-            eval_dataset = self._dataloader_to_dataset(x_test.val_dataloader)
-            prediction_output = self._trainer.predict(eval_dataset)
-            return self._process_prediction_output(prediction_output, output_mode, x_test)
+            eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
+            return self._trainer.predict(eval_dataset)
 
-        model: torch.nn.Module = self.model or getattr(x_test, 'model', None)
-        if model is None:
-            raise ValueError("Model is None and cannot be obtained from x_test.target")
+        predictions_output = self._predict_model(input_data, output_mode)
+        pred_values = torch.tensor(predictions_output.predictions)
         
+        output_data = OutputData(
+            idx=torch.arange(len(pred_values)),
+            task=input_data.task,
+            predict=pred_values,
+            target=None,
+            data_type=DataTypesEnum.table,
+        )
+        
+        return output_data
+        
+    def predict_for_fit(self, input_data: Union[InputData, CompressionInputData],  
+                       output_mode: str = "default") -> Any:
+        """Make predictions during training"""
+        return self.predict(input_data, output_mode)
+        
+    def save_model(self, path: str) -> None:
+        """Save the model using transformers approach"""
+        print(f"Saving LLM model to {path}...")
+        
+        if self._trainer is not None:
+            self._trainer.save_model(path)
+        else:
+            super().save_model(path)
+        
+    def load_model(self, path: str) -> None:
+        """Load the model using transformers approach"""
+        print(f"Loading LLM model from {path}...")
+
+        super().load_model(path)
+    
+    @torch.no_grad()
+    def _predict_model(
+            self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
+    ):
+        model: torch.nn.Module = self.model or x_test.target
         model.eval()
         prediction = []
         

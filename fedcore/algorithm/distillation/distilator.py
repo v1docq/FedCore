@@ -136,8 +136,8 @@ class BaseDistilator(BaseCompressionModel):
         step = 0
         for epoch in range(self.epochs):
             pbar = tqdm(
-                enumerate(input_data.features.train_dataloader),
-                total=len(input_data.features.train_dataloader),
+                enumerate(input_data.train_dataloader),
+                total=len(input_data.train_dataloader),
             )
             for idx, batch in pbar:
                 self.student_model.train()
@@ -205,7 +205,7 @@ class BaseDistilator(BaseCompressionModel):
 
     def fit(self, input_data: InputData):
         self.base_model = input_data.target
-        self.num_classes = input_data.features.num_classes
+        self.num_classes = input_data.num_classes
         self.model_before = self.base_model
         self.student_model = self._init_distil_model(self.base_model)
         self._model_registry = ModelRegistry()

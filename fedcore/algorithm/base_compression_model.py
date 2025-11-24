@@ -249,23 +249,11 @@ class BaseCompressionModel:
     def _predict_model(self, x_test, output_mode: str = "default"):
         pass
 
-    def _get_example_input(self, input_data: Union[InputData, CompressionInputData]):
-        # Handle both CompressionInputData directly and InputData with features as CompressionInputData
-        if isinstance(input_data, CompressionInputData):
-            compression_data = input_data
-        else:
-            # input_data is InputData, features should be CompressionInputData
-            compression_data = input_data.features
-        
-        # Prefer val_dataloader, fallback to train_dataloader if val_dataloader is None
-        dataloader = compression_data.val_dataloader or compression_data.train_dataloader
-        if dataloader is None:
-            raise ValueError("Neither val_dataloader nor train_dataloader is available in input_data")
-        
-        b = next(iter(dataloader))
-        if isinstance(b, (list, tuple)) and len(b) == 2:
-            return b[0]
-        return b
+    def _get_example_input(self, input_data: InputData):
+        batch = next(iter(input_data.val_dataloader))
+        if isinstance(batch, (list, tuple)) and len(batch) == 2:
+            return batch[0]
+        return batch
 
     # def finetune(self, finetune_object: callable, finetune_data):
     #     # TODO del it! 1) finetune may be included into the train loop (just look at LowRank)

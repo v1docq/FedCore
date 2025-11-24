@@ -150,15 +150,14 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             self.model.to(self.device)
             print('Quantized model inference supports CPU only')
 
-    def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
-        compression_data = CompressionDataConverter.convert(input_data)
-        
+    def fit(self, input_data: CompressionInputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
         self.custom_fit_process = supplementary_data is not None
-        train_loader = getattr(compression_data, f'{loader_type}_dataloader', compression_data.train_dataloader)
-        val_loader = getattr(compression_data, 'val_dataloader', None)
-        self.task_type = compression_data.task.task_type
-        self.model = compression_data.model if self.model is None else self.model
+        train_loader = input_data.train_dataloader
+        val_loader = input_data.val_dataloader
+        self.task_type = input_data.task.task_type
+        # define model for fit process
+        self.model = input_data.target if self.model is None else self.model
         self.optimised_model = self.model
         self.model.to(self.device)
         self._init_hooks()
@@ -223,13 +222,13 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         """
         compression_data = CompressionDataConverter.convert(input_data)
         self.__substitute_device_quant()
-        return self._predict_model(compression_data, output_mode)
+        return self._predict_model(input_data, output_mode)
 
     @torch.no_grad()
     def _predict_model(
-            self, x_test: Union[CompressionInputData, InputData], output_mode: str = "default"
+            self, x_test: CompressionInputData, output_mode: str = "default"
     ):
-        model: torch.nn.Module = self.model or getattr(x_test, 'model', None) or getattr(x_test, 'target', None)
+        model: torch.nn.Module = self.model or x_test.model
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,

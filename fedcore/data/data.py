@@ -4,20 +4,37 @@ import typing as tp
 import numpy as np
 import torch.utils.data
 from fedot.core.data.supplementary_data import SupplementaryData
+from fedot.core.data.data import InputData
 from fedot.core.repository.dataset_types import DataTypesEnum
 from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 
-@dataclass
-class CompressionInputData:
+@dataclass(init=False)
+class CompressionInputData(InputData):
+    idx = None
+    features = None
+    data_type = None
     train_dataloader: torch.utils.data.DataLoader = None
     val_dataloader: torch.utils.data.DataLoader = None
     test_dataloader: torch.utils.data.DataLoader = None
-    task: Task = Task(TaskTypesEnum.classification)
-    num_classes: int = None
     input_dim: int = None
+    num_classes: int = None
     model: tp.Any = None
-    supplementary_data: SupplementaryData = field(default_factory=SupplementaryData)
+
+    def __init__(self, idx=None, features=None, data_type=None, 
+                 train_dataloader=None, val_dataloader=None, test_dataloader=None,
+                 input_dim=None, num_classes=None, model=None, **kwargs):
+        if idx is None:
+            idx = np.arange(1)
+        if data_type is None:
+            data_type = DataTypesEnum.image
+        super().__init__(idx=idx, features=features, data_type=data_type, **kwargs)
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
+        self.test_dataloader = test_dataloader
+        self.input_dim = input_dim
+        self.num_classes = num_classes
+        self.model = model
 
     @property
     def shape(self):

@@ -257,6 +257,9 @@ if __name__ == "__main__":
     logger.info(f" Example batch shape: {example_input.shape}")
     
     compression_data = CompressionInputData(
+        idx = None,
+        data_type=None,
+        features=None,
         model=model, 
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,

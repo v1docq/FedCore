@@ -256,7 +256,7 @@ class FedCore(Fedot):
             x = self.__init_dask(x)
             x = self.__init_solver_no_evo(x)
             fitted_solver = self.manager.solver.fit(x)
-        self.optimised_model = fitted_solver.target
+        self.optimised_model = fitted_solver.model
         
         self.fedcore_model = extract_fitted_operation(self.manager.solver)
         return fitted_solver
@@ -369,7 +369,7 @@ class FedCore(Fedot):
         model_regime = 'model_after' if is_fedcore_model else 'model_before'
 
         def preproc_predict(prediction):
-            prediction = prediction.predict
+            prediction = getattr(prediction, 'predict', prediction)
             model_output = prediction.cpu().detach().numpy() if isinstance(prediction, Tensor) else prediction
             model_output_is_probs = all([len(model_output.shape) > 1, model_output.shape[1] > 1])
             if model_output_is_probs and not self.manager.automl_config.fedot_config.problem.__contains__(
@@ -445,7 +445,7 @@ class FedCore(Fedot):
 
         eval_regime = ['original', 'fedcore']
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
-        prediction_list = [x if isinstance(x, OutputData) else x.predict for x in prediction_list]
+        prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
         problem = self.manager.automl_config.fedot_config.problem
         if any([problem == 'ts_forecasting', problem == 'regression']):
             quality_metrics = ["r2", "mse", "rmse", "mae", "msle", "mape", 

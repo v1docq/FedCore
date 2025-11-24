@@ -94,12 +94,12 @@ def init_input_data(
             input_data.target[input_data.target == -1] = 0
 
     # Replace NaN and infinite values with 0 in features
-    input_data.features = np.where(
-        np.isnan(input_data.features), 0, input_data.features
-    )
-    input_data.features = np.where(
-        np.isinf(input_data.features), 0, input_data.features
-    )
+    # input_data.features = np.where(
+    #     np.isnan(input_data.features), 0, input_data.features
+    # )
+    # input_data.features = np.where(
+    #     np.isinf(input_data.features), 0, input_data.features
+    # )
 
     return input_data
 
