@@ -23,8 +23,10 @@ from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from fedcore.algorithm.quantization.utils import (
-    ParentalReassembler, QDQWrapper, uninplace, get_flattened_qconfig_dict)
+    QDQWrapper, uninplace, get_flattened_qconfig_dict)
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from fedcore.models.network_impl.trainer_factory import create_trainer_from_input_data
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.architecture.comptutaional.devices import default_device
 from fedcore.algorithm.quantization.hooks import QuantizationHooks
@@ -145,13 +147,10 @@ class BaseQuantizer(BaseCompressionModel):
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
-        self.model_before = input_data.target.to(self.device)
-        if input_data.task.task_type.value.__contains__('forecasting'):
-            self.trainer = BaseNeuralForecaster(self.qat_params)
-        else:
-            self.trainer = BaseNeuralModel(self.qat_params)
-        self.trainer.model = self.model_before
-        self.quant_model = deepcopy(self.model_before).eval()
+        self.model_before_quant = input_data.target.to(self.device)
+        self.trainer = create_trainer_from_input_data(input_data, self.qat_params)
+        self.trainer.model = self.model_before_quant
+        self.quant_model = deepcopy(self.model_before_quant).eval()
         print("[MODEL] Model initialized and copied for quantization.")
 
     def _prepare_model(self, input_data: InputData):
@@ -188,7 +187,7 @@ class BaseQuantizer(BaseCompressionModel):
         except Exception as e:
             print("[PREPARE ERROR] Exception during preparation:")
             traceback.print_exc()
-            return deepcopy(self.model_before).eval()
+            return deepcopy(self.model_before_quant).eval()
 
     def fit(self, input_data: InputData):
         self._init_model(input_data)
@@ -218,13 +217,13 @@ class BaseQuantizer(BaseCompressionModel):
         except Exception as e:
             print("[FIT ERROR] Exception during quantization:")
             traceback.print_exc()
-            self.model_after = deepcopy(self.model_before).eval()
+            self.model_after = deepcopy(self.model_before_quant).eval()
             
         return self.model_after
 
     def predict_for_fit(self, input_data: InputData, output_mode: str = "fedcore"):
-        return self.model_after if output_mode == "fedcore" else self.model_before
+        return self.model_after if output_mode == "fedcore" else self.model_before_quant
 
     def predict(self, input_data: InputData, output_mode: str = "fedcore"):
-        self.trainer.model = self.model_after if output_mode == "fedcore" else self.model_before
+        self.trainer.model = self.model_after if output_mode == "fedcore" else self.model_before_quant
         return self.trainer.predict(input_data, output_mode)

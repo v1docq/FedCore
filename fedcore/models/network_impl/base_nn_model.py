@@ -26,11 +26,12 @@ from fedcore.repository.constanst_repository import (
 
 from fedcore.models.network_impl.hooks import BaseHook
 from fedcore.models.network_impl.hooks_collection import HooksCollection
+from fedcore.models.network_impl._base import BaseTrainer
 
 BASE_REGRESSION_DTYPE = torch.float32
 
 
-class BaseNeuralModel(torch.nn.Module):
+class BaseNeuralModel(torch.nn.Module, BaseTrainer):
     """Class responsible for NN model implementation.
 
     Attributes:
@@ -53,11 +54,12 @@ class BaseNeuralModel(torch.nn.Module):
     """
 
     def __init__(self, params: Optional[OperationParameters] = None, additional_hooks=None):
-        super().__init__()
-        self.params = params or {}
+        torch.nn.Module.__init__(self)
+        BaseTrainer.__init__(self, params=params.to_dict() if hasattr(params, 'to_dict') else params)
+        
         self.learning_params = self.params.get('custom_learning_params', {})
-        self._init_empty_object()
         self._init_null_object()
+        self._init_empty_object()
 
         self._clear_each = 10
 
@@ -66,7 +68,7 @@ class BaseNeuralModel(torch.nn.Module):
         self.learning_rate = self.params.get("learning_rate", 0.001)
         self.model = self.params.get("model", None)
         self._init_custom_criterions(
-            self.params.get("custom_criterions", {}))  # let it be dict[name : coef], let nodes add it to trainer
+            self.params.get("custom_criterions", {}))
         self.criterion = self.__get_criterion()
         self.device = self.params.get('device', default_device())
         self.model_params = self.params.get('model_params', {})
@@ -95,10 +97,6 @@ class BaseNeuralModel(torch.nn.Module):
         self.batch_limit = self.learning_params.get('batch_limit', None)
         self.calib_batch_limit = self.learning_params.get('calib_batch_limit', None)
         self.batch_type = self.learning_params.get('batch_type', None)
-        self.trainer_objects = {
-            'optimizer': None,
-            'scheduler': None,
-        }
 
     def _init_empty_object(self):
         self.history = {

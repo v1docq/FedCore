@@ -16,8 +16,6 @@ from tqdm import tqdm
 
 from fedot.core.operations.operation_parameters import OperationParameters
 
-from fedot.core.operations.operation_parameters import OperationParameters
-
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
 
@@ -123,9 +121,14 @@ class FitReport(BaseHook):
 
     def action(self, epoch, kws):
         history = kws['history']
-        (tr_e, train_loss) = history['train_loss'][-1]
-        val_losses = history['val_loss']
         
+        # Check if there is data in history
+        if not history.get('train_loss'):
+            print(f'No training loss data available at epoch {epoch}')
+            return
+            
+        (tr_e, train_loss) = history['train_loss'][-1]
+        val_losses = history.get('val_loss', [])
         
         (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
 

@@ -107,6 +107,8 @@ class FedotTaskEnum(Enum):
     ts_forecasting = Task(
         TaskTypesEnum.ts_forecasting, TsForecastingParams(forecast_length=1)
     )
+    question_answering = 'question_answering'
+    summarization = 'summarization'
 
 
 class FedCoreTaskEnum(Enum):  # FEDCORE_TASK
@@ -114,7 +116,6 @@ class FedCoreTaskEnum(Enum):  # FEDCORE_TASK
     quantization = auto()
     distilation = auto()
     low_rank = auto()
-    reassembly = auto()
     evo_composed = auto()
 
 
@@ -204,7 +205,6 @@ class PEFTStrategies(Enum):
     low_rank = partial(PipelineBuilder().add_node, operation_type="low_rank_model")
     quantization = partial(PipelineBuilder().add_node, operation_type='quantization_model')
     distilation = partial(PipelineBuilder().add_node, operation_type="distilation_model")
-    reassembly = partial(PipelineBuilder().add_node, operation_type="reassembly_model")
     detection = partial(PipelineBuilder().add_node, operation_type="detection_model", params={"pretrained": True})
     training = partial(PipelineBuilder().add_node, operation_type="training_model")
 
@@ -488,7 +488,6 @@ DEFAULT_TORCH_DATASET = {
     "MNIST": torchvision.datasets.MNIST,
     'COCO': torchvision.datasets.CocoDetection,
     'ImageNet': torchvision.datasets.ImageNet,
-    'Imagenette': torchvision.datasets.Imagenette,
     'VOCSegmentation': torchvision.datasets.VOCSegmentation,
     'VOCDetection': torchvision.datasets.VOCDetection
 }

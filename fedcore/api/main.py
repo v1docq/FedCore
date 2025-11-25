@@ -31,6 +31,13 @@ from fedcore.repository.initializer_industrial_models import FedcoreModels
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 
+try:
+    from fedcore.models.network_impl.llm_trainer import LLMTrainer
+    LLM_TRAINER_AVAILABLE = True
+except ImportError:
+    LLM_TRAINER_AVAILABLE = False
+    LLMTrainer = None
+
 warnings.filterwarnings("ignore")
 
 
@@ -49,13 +56,14 @@ class FedCore(Fedot):
             model = FedCore()
 
     """
-
+    
     def __init__(self, api_config: ConfigTemplate, **kwargs):
         super(Fedot, self).__init__()
         api_config.update(kwargs)
         self.manager = api_config
         self.logger = logging.Logger('Fedcore')
         self.fedcore_model = None
+        self.available_trainers = self._get_available_trainers()
 
     def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
         self.logger.info('-' * 50)
@@ -115,6 +123,56 @@ class FedCore(Fedot):
         train_data.val_dataloader = train_data.features.val_dataloader
         ###
         return train_data
+    
+    def _get_available_trainers(self) -> dict:
+        trainers = {
+            'base_nn': {
+                'class': BaseNeuralModel
+            }
+        }
+        
+        if LLM_TRAINER_AVAILABLE:
+            trainers['llm'] = {
+                'class': LLMTrainer
+            }
+        return trainers
+    
+    def _select_trainer(self, strategy: str) -> Callable:
+        """Select appropriate trainer based on strategy.
+        
+        Args:
+            strategy: Learning strategy (e.g., 'from_scratch', 'llm_fine_tuning')
+            model_config: Configuration parameters for the model
+            
+        Returns:
+            Appropriate trainer class
+            
+        Raises:
+            ValueError: If no suitable trainer is found for the given strategy
+        """
+        if not strategy or not isinstance(strategy, str):
+            raise ValueError(f"Invalid strategy: {strategy}. Strategy must be a non-empty string.")
+        
+        if not self.available_trainers:
+            raise ValueError("No trainers available. Please check your installation.")
+    
+        if strategy.startswith('llm_'):
+            if 'llm' in self.available_trainers:
+                self.logger.info(f"Selected LLMTrainer for strategy: {strategy}")
+                return self.available_trainers['llm']['class']
+            else:
+                raise ValueError(f"LLM trainer requested but not available for strategy: {strategy}")
+        
+        if 'base_nn' in self.available_trainers:
+            self.logger.info(f"Selected BaseNeuralModel for strategy: {strategy}")
+            return self.available_trainers['base_nn']['class']
+        
+        if self.available_trainers:
+            first_trainer = list(self.available_trainers.values())[0]['class']
+            self.logger.info(f"Selected {first_trainer.__name__} as fallback for strategy: {strategy}")
+            return first_trainer
+        
+        raise ValueError(f"No trainers available. Available trainers: {list(self.available_trainers.keys())}")
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
         pretrained_model = fedot_pipeline.fit(train_data)
@@ -150,13 +208,17 @@ class FedCore(Fedot):
         def fit_function(train_data):
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
             if pretrain_before_optimise:
-                model_learning_pipeline = FEDOT_ASSUMPTIONS["training"](
-                    params=self.manager.learning_config.learning_strategy_params.to_dict()
-                )
-                model_learning_pipeline = model_learning_pipeline.build()
+                strategy = self.manager.learning_config.config['learning_strategy']
+                trainer_class = self._select_trainer(strategy)
+                
+                trainer_params = self.manager.learning_config.learning_strategy_params.to_dict()
+                trainer = trainer_class(trainer_params)
+                
+                model_learning_pipeline = self._create_custom_pipeline(trainer)
                 train_data = self._pretrain_before_optimise(model_learning_pipeline, train_data)
             fitted_solver = self.manager.solver.fit(train_data)
             return fitted_solver
+        
 
         # with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
         try:
