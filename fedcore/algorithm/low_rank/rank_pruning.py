@@ -4,11 +4,11 @@ from joblib import cpu_count
 from math import floor, ceil
 
 import torch
-
+from typing import Optional
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.architecture.utils.misc import _contiguous, count_params
 from fedcore.architecture.utils.misc import EnumNoValue
-
+from fedcore.algorithm.low_rank.hooks import DynamicRankPruner
 __all__ = [
     'rank_threshold_pruning',
     'S_STRATEGIES'
@@ -56,6 +56,45 @@ def rank_threshold_pruning(
             round(100 * (count_params(decomposed_module) / initial_size)), module_name
         )
     )
+
+def rank_attr_pruning (
+        decomposed_module: IDecomposed,
+        rank: int,
+        module_name: str = "",
+        rank_attr = '_effective_rank'
+) -> None:
+    """Prune the weight matrices to the rank_attr (in-place).
+    Args:
+        conv: The optimizable layer.
+        rank_attr: hyperparameter must be an integer.
+    Raises:
+        Assertion Error: If ``threshold`` is not in (0, 1].
+    """
+    if hasattr(decomposed_module, 'S') and decomposed_module.S is None:
+        return
+    
+    if not hasattr(decomposed_module, rank_attr):
+        raise ValueError(f"Layer has no attribute '{rank_attr}' to determine rank")
+    decomposed_module._anti_three_layers_compose()
+
+    U, S, Vh = decomposed_module.get_U_S_Vh()
+    S, indices = S.sort(descending=True)
+    n_components = min(rank, len(indices))
+    indices = indices[:n_components]
+    initial_size = count_params(decomposed_module)
+
+    decomposed_module.set_U_S_Vh(
+        _contiguous(U[:, indices]),
+        _contiguous(S[indices]),
+        _contiguous(Vh[indices, :]),
+    )
+    decomposed_module.compose_weight_for_inference()
+    print(
+        "After rank pruning left only {} of {} layer params".format(
+            round(100 * (count_params(decomposed_module) / initial_size)), module_name
+        )
+    )
+
 
 
 def _apply_S_strategy(S, strategy, threshold, round_to_times=1):
