@@ -56,7 +56,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
     def __init__(self, params: Optional[OperationParameters] = None, additional_hooks=None):
         torch.nn.Module.__init__(self)
         BaseTrainer.__init__(self, params=params.to_dict() if hasattr(params, 'to_dict') else params)
-        
+
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_null_object()
         self._init_empty_object()
@@ -242,7 +242,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             del batch
             if i % self._clear_each == 0:
                 self._clear_cache()
-        return self._convert_predict(torch.concat(prediction), output_mode, x_test) 
+        return self._convert_predict(torch.concat(prediction), output_mode, x_test)
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels", input_data: Union[CompressionInputData, InputData] = None):
         assert isinstance(pred, torch.Tensor), "Prediction convertion failed, prediction is not a Tensor"
@@ -261,7 +261,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             maybe(None, lambda output: output)
 
         extracted_fields = self._extract_output_fields(input_data)
-        
+
         checkpoint_info = self._register_model_checkpoint(
             model=self.model,
             stage='after'

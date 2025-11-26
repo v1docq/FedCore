@@ -5,11 +5,6 @@ from datetime import datetime
 from enum import Enum
 from functools import partial
 from inspect import isclass
-from itertools import chain
-
-import numpy as np
-from itertools import chain
-
 import numpy as np
 from pathlib import Path
 import torch
@@ -129,12 +124,12 @@ class FitReport(BaseHook):
 
     def action(self, epoch, kws):
         history = kws['history']
-        
+
         # Check if there is data in history
         if not history.get('train_loss'):
             print(f'No training loss data available at epoch {epoch}')
             return
-            
+
         (tr_e, train_loss) = history['train_loss'][-1]
         val_losses = history.get('val_loss', [])
         

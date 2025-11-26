@@ -45,7 +45,7 @@ class BaseCompressionModel:
         import logging
         logger = logging.getLogger(__name__)
         logger.debug("BaseCompressionModel.__init__() called")
-        
+
         # self.epochs = params.get("epochs", 10)
         self.batch_size = params.get("batch_size", 16)
         self.activation = params.get("activation", "ReLU")
@@ -54,34 +54,34 @@ class BaseCompressionModel:
         # self.model_for_inference = None
         # self.optimizer = None
         self.params = params
-        
+
         self._fedcore_id = params.get("fedcore_id")
         if self._fedcore_id is None:
             self._fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
-        
+
         logger.debug(f"fedcore_id: {self._fedcore_id}")
-        
+
         self._model_id_before = None
         self._model_id_after = None
         self._model_before_cached = None
         self._model_after_cached = None
         self._registry = ModelRegistry()
-        
+
         logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
 
     # def _save_and_clear_cache(self):
     #     """Save model and clear cache using ModelRegistry.
-        
+
     #     Saves the current model to registry and clears memory cache.
     #     ModelRegistry handles proper cleanup including GPU memory management.
     #     """
     #     import logging
     #     logger = logging.getLogger(__name__)
-        
+
     #     if self.model is None:
     #         logger.debug("No model to save, skipping cache clearing")
     #         return
-        
+
     #     try:
     #         model_id = self._registry.register_model(
     #             fedcore_id=self._fedcore_id,
@@ -95,7 +95,7 @@ class BaseCompressionModel:
 
     #         if torch.cuda.is_available():
     #             torch.cuda.empty_cache()
-                
+
     #     except Exception as e:
     #         logger.error(f"Failed to save model to registry: {e}")
     #         if self.model is not None:
@@ -111,27 +111,27 @@ class BaseCompressionModel:
         """Get model_before from cache or registry."""
         if self._model_before_cached is not None:
             return self._model_before_cached
-        
+
         if self._model_id_before is None:
             return None
-        
+
         loaded_model = self._registry.load_model_from_latest_checkpoint(
             self._fedcore_id, self._model_id_before, DEVICE
         )
-        
+
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
             self._model_before_cached = loaded_model
             return self._model_before_cached
-        
+
         return None
-    
+
     @model_before.setter
     def model_before(self, value):
         """Set model_before - stores in cache and optionally in registry."""
         import logging
         logger = logging.getLogger(__name__)
         logger.info(f"model_before setter called: value={'not None' if value else 'None'}, _model_id_before={self._model_id_before}")
-        
+
         self._model_before_cached = value
         if value is not None and self._model_id_before is None:
             logger.info("Registering model_before in ModelRegistry")
@@ -144,33 +144,33 @@ class BaseCompressionModel:
             logger.info(f"model_before registered with id={self._model_id_before}")
         else:
             logger.debug(f"Skipping registration: value is None={value is None}, already registered={self._model_id_before is not None}")
-    
+
     @property
     def model_after(self):
         """Get model_after from cache or registry."""
         if self._model_after_cached is not None:
             return self._model_after_cached
-        
+
         if self._model_id_after is None:
             return None
-        
+
         loaded_model = self._registry.load_model_from_latest_checkpoint(
             self._fedcore_id, self._model_id_after, DEVICE
         )
-        
+
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
             self._model_after_cached = loaded_model
             return self._model_after_cached
-        
+
         return None
-    
+
     @model_after.setter
     def model_after(self, value):
         """Set model_after - stores in cache and registers changes."""
         import logging
         logger = logging.getLogger(__name__)
         logger.info(f"model_after setter called: value={'not None' if value else 'None'}, _model_id_after={self._model_id_after}")
-        
+
         self._model_after_cached = value
         if value is not None:
             if self._model_id_after is None:
@@ -194,10 +194,10 @@ class BaseCompressionModel:
                 logger.info("model_after changes registered")
         else:
             logger.debug("Skipping registration: value is None")
-    
+
     def _save_model_checkpoint(self, model, stage: str):
         """Save model checkpoint to registry.
-        
+
         Args:
             model: Model to save
             stage: Stage name (e.g., 'before_compression', 'after_compression')
@@ -209,15 +209,15 @@ class BaseCompressionModel:
             mode=None
         )
         return model_id
-    
+
     def _init_model(self, input_data, additional_hooks=tuple()):
         import logging
         logger = logging.getLogger(__name__)
         logger.info("BaseCompressionModel._init_model() started")
-        
+
         model = input_data.model
         logger.info(f"Model type from input_data.target: {type(model).__name__}")
-        
+
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
             logger.info(f"Loading model from path: {model}")
@@ -228,14 +228,14 @@ class BaseCompressionModel:
             else:
                 model = loaded
             logger.info(f"Model loaded: type={type(model).__name__}")
-        
+
         if not isinstance(model, torch.nn.Module):
             raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
 
         logger.info("Calling model_before setter")
         self.model_before = model
         logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
-        
+
         # Create trainer using factory
         self.trainer = create_trainer_from_input_data(input_data, self.params)
         self.trainer.register_additional_hooks(additional_hooks)
@@ -310,28 +310,28 @@ class BaseCompressionModel:
     def estimate_params(self, example_batch, model_before, model_after):
         # in future we don't want to store both models simult.
         # base_macs, base_nparams = tp.utils.count_ops_and_params(model_before, example_batch)
-        
+
         is_huggingface = (
-            hasattr(model_before, 'config') and 
+            hasattr(model_before, 'config') and
             hasattr(model_before.config, 'model_type') and
-            hasattr(model_before, 'base_model')  
+            hasattr(model_before, 'base_model')
         )
-        
+
         if is_huggingface:
-            base_nparams = model_before.num_parameters()  
+            base_nparams = model_before.num_parameters()
             nparams = model_after.num_parameters()
-            
-            base_macs, macs = 0, 0  
+
+            base_macs, macs = 0, 0
         else:
             base_info = summary(model=model_before, input_data=example_batch.to(extract_device(model_before)), verbose=0)
             base_macs, base_nparams = base_info.total_mult_adds, base_info.total_params
 
             info = summary(model=model_after, input_data=example_batch.to(extract_device(model_after)), verbose=0)
             macs, nparams = info.total_mult_adds, info.total_params
-        
+
         return dict(params_before=base_nparams, macs_before=base_macs,
                     params_after=nparams, macs_after=macs)
-        
+
     # don't del its for New Year
     def _estimate_params(self, model, example_batch):
         base_macs, base_nparams = tp.utils.count_ops_and_params(model, example_batch)

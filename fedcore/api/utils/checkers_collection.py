@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Callable, Union
+from typing import Callable
 
 import torch
 import numpy as np
@@ -12,9 +12,8 @@ from fedot.core.repository.tasks import (
 )
 
 from fedcore.architecture.computational.devices import default_device
-from fedcore.data.data import CompressionInputData, CompressionOutputData
+from fedcore.data.data import CompressionInputData
 from fedcore.models.backbone.backbone_loader import load_backbone
-from fedcore.repository.config_repository import TASK_MAPPING
 from pymonad.maybe import Maybe
 
 import torch.optim.adam

@@ -41,13 +41,13 @@ def decompose_module(
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             decompose_module(
-                module, decomposing_mode=decomposing_mode, decomposer=decomposer, 
+                module, decomposing_mode=decomposing_mode, decomposer=decomposer,
                 compose_mode=compose_mode, decomposer_params=decomposer_params
             )
         decomposed_analogue = _map_decomposed_cls(module)
         if decomposed_analogue is not None:
             new_module = decomposed_analogue(
-                module, decomposing_mode=decomposing_mode, decomposer=decomposer, 
+                module, decomposing_mode=decomposing_mode, decomposer=decomposer,
                 compose_mode=compose_mode, decomposer_params=decomposer_params
             ).to(device)
             setattr(model, name, new_module)

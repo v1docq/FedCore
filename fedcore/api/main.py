@@ -18,7 +18,7 @@ FEDCORE_IMPLEMENTATIONS = FedcoreModels().setup_repository()
 
 from fedot.api.main import Fedot
 from fedot.core.data.data import InputData, OutputData
-from fedot.core.pipelines.pipeline import Pipeline        
+from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from pymonad.maybe import Maybe
@@ -42,7 +42,7 @@ from fedcore.api.utils.misc import extract_fitted_operation
 
 warnings.filterwarnings("ignore")
 
-# TODO 
+# TODO
 COMPUTATIONAL_METRICS = ['latency', 'power', 'throughput']
 
 
@@ -75,7 +75,7 @@ class FedCore(Fedot):
         self.logger.info('Initialising Fedcore Repository')
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
         self.repo = FEDCORE_IMPLEMENTATIONS
-        
+
 
         if not isinstance(self.manager.automl_config.optimizer, partial):
             fedcore_opt = partial(FedcoreEvoOptimizer, optimisation_params={
@@ -107,7 +107,7 @@ class FedCore(Fedot):
         self.logger.info(f'Link Dask Server - {self.manager.dask_client.dashboard_link}')
         self.logger.info('-' * 50)
         return input_data
-    
+
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
         # self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
@@ -139,31 +139,31 @@ class FedCore(Fedot):
         if self.fedcore_model is None:
             return None
         return getattr(self.fedcore_model, 'model_after', self.fedcore_model)
-    
+
     @property
     def original_model(self):
-        """Get original (before compression) model.        
+        """Get original (before compression) model.
         Returns:
             torch.nn.Module or None: Original model
         """
         if self.fedcore_model is None:
             return None
         return getattr(self.fedcore_model, 'model_before', self.fedcore_model)
-    
+
     def get_model_by_regime(self, regime: str = 'model_after'):
         """Get model by regime name.
         Args:
             regime: 'model_after' for compressed, 'model_before' for original
-            
+
         Returns:
             torch.nn.Module: Requested model or fallback to fedcore_model
-            
+
         Raises:
             ValueError: If fedcore_model is not initialized
         """
         if self.fedcore_model is None:
             raise ValueError("fedcore_model is not initialized. Call fit() first.")
-        
+
         model = getattr(self.fedcore_model, regime, None)
         if model is None:
             self.logger.warning(
@@ -174,16 +174,16 @@ class FedCore(Fedot):
         return model
 
     def _save_metrics_from_evaluator(self):
-        """Collect and save metrics from evaluator to registry after fit."""        
+        """Collect and save metrics from evaluator to registry after fit."""
         if not hasattr(self.manager, 'solver') or self.manager.solver is None:
             return
-        
+
         if not hasattr(self.manager.solver, 'history') or self.manager.solver.history is None:
             return
-        
+
         fedcore_id = None
         model_id = None
-        
+
         if self.fedcore_model is not None:
             if hasattr(self.fedcore_model, 'operator') and hasattr(self.fedcore_model.operator, 'root_node'):
                 fitted_op = getattr(self.fedcore_model.operator.root_node, 'fitted_operation', None)
@@ -191,7 +191,7 @@ class FedCore(Fedot):
                     fedcore_id = getattr(fitted_op, '_fedcore_id', None)
                     if fedcore_id:
                         model_id = getattr(fitted_op, '_model_id_after', None) or getattr(fitted_op, '_model_id_before', None)
-        
+
         if fedcore_id and model_id:
             registry = ModelRegistry()
             registry.save_metrics_from_evaluator(
@@ -253,7 +253,7 @@ class FedCore(Fedot):
                 )
                 model_learning_pipeline = model_learning_pipeline.build()
                 train_data = self._pretrain_before_optimise(model_learning_pipeline, train_data)
-            
+
             fitted_solver = self.manager.solver.fit(train_data)
             return fitted_solver
 
@@ -265,9 +265,9 @@ class FedCore(Fedot):
                 then(self.__init_solver). \
                 then(fit_function). \
                 maybe(None, lambda solver: solver)
-            
+
             self._save_metrics_from_evaluator()
-            
+
             return self.fedcore_model
         except KeyboardInterrupt:
             self.fedcore_model = self.manager.solver
@@ -282,7 +282,7 @@ class FedCore(Fedot):
             x = self.__init_solver_no_evo(x)
             fitted_solver = self.manager.solver.fit(x)
         self.optimised_model = fitted_solver.model
-        
+
         self.fedcore_model = extract_fitted_operation(self.manager.solver)
         return fitted_solver
 
@@ -301,11 +301,11 @@ class FedCore(Fedot):
             then(self.__init_fedcore_backend). \
             then(lambda data: self.__abstract_predict(data, output_mode)). \
             maybe(None, lambda output: output)
-        
+
         if hasattr(result, 'predictions') and hasattr(result, 'label_ids'):
             pred_values = torch.tensor(result.predictions)
             target_values = torch.tensor(result.label_ids) if result.label_ids is not None else None
-            
+
             self.manager.predicted_labels = OutputData(
                 idx=torch.arange(len(pred_values)),
                 task=getattr(predict_data, 'task', None),
@@ -313,7 +313,7 @@ class FedCore(Fedot):
                 target=target_values,
                 data_type=DataTypesEnum.table,
             )
-            
+
         elif isinstance(result, OutputData):
             self.manager.predicted_labels = result
         elif hasattr(result, 'predict'):
@@ -399,11 +399,11 @@ class FedCore(Fedot):
             # preproc_target = preproc_target(target)
         metrics = metrics or self.manager.automl_config.fedot_config.metric
         prediction_dataframe = calculate_metrics(metrics, **prediction_dict)
-        
+
         if is_inference_metric:
             registry = ModelRegistry()
             registry.force_cleanup()
-        
+
         return prediction_dataframe
 
     def get_report(self, test_data: CompressionInputData):

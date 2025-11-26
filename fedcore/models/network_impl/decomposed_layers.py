@@ -61,7 +61,7 @@ class IDecomposed(abc.ABC):
 
     def _evaluate_compose_mode(self: nn.Module):
         """Evaluate the best composition mode to minimize parameters.
-        
+
         Returns:
             'one_layer': Compose all into single weight (when no compression achieved)
             'two_layers': Keep U and Vh separate (preserves low-rank compression)
@@ -270,7 +270,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
     
     def _forward1(self, x):
         if self.bias is not None:
-            return torch.nn.functional.conv2d(x, self.U, self.bias, 
+            return torch.nn.functional.conv2d(x, self.U, self.bias,
                 self.stride, self.padding, self.dilation, self.groups)
         else:
             return torch.nn.functional.conv2d(x, self.U, None,
@@ -297,11 +297,11 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         )
         if self.bias is not None:
             x = conv2d(
-                input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"],             
+                input=x, weight=self.S * self.U, bias=self.bias, **self.decomposing["U"],
             )
         else:
             x = conv2d(
-                input=x, weight=self.S * self.U, bias=None, **self.decomposing["U"],             
+                input=x, weight=self.S * self.U, bias=None, **self.decomposing["U"],
             )
         return x
     
