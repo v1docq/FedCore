@@ -12,12 +12,10 @@ quantization capabilities on top of :class:`BaseNeuralModel`. It:
   FedCore compression models.
 """
 
-from copy import deepcopy
 import traceback
 import logging
 
 import torch
-import torch.ao.nn.quantized.dynamic as nnqd
 from torch import nn, optim
 from torch.ao.quantization import (
     convert, prepare, prepare_qat, propagate_qconfig_, quantize_dynamic)
@@ -35,9 +33,8 @@ from torch.ao.quantization.quantization_mappings import (
 from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from fedcore.algorithm.quantization.utils import (
-    ParentalReassembler, QDQWrapper, uninplace, get_flattened_qconfig_dict)
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
+from fedcore.algorithm.quantization.utils import (QDQWrapper, uninplace, get_flattened_qconfig_dict)
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.architecture.computational.devices import default_device
@@ -98,7 +95,7 @@ class BaseQuantizer(BaseCompressionModel):
         self.allow_emb = params.get("allow_emb", False)
         self.allow_conv = params.get("allow_conv", True)
         self.inplace = params.get("inplace", False)
-        
+
         # self.device = default_device('cpu') if self.quant_type == 'qat' else self.device
         self.dtype = torch.float16 if self.device.type == "cuda" else self.dtype
         self.backend = 'onednn' if self.device.type == ("cuda") else self.backend

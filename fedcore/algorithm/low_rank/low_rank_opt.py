@@ -17,6 +17,8 @@ import torch
 from torch import nn
 import inspect
 
+from transformers import AutoTokenizer
+
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.architecture.computational.devices import default_device, extract_device
@@ -28,9 +30,10 @@ from fedcore.repository.constant_repository import (
     LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from fedcore.tools.registry.model_registry import ModelRegistry
 from tdecomp._base import Decomposer
 from tdecomp.matrix.decomposer import DECOMPOSERS
+from fedcore.algorithm.low_rank.reassembly import TransMLA, FlatLLM
+from external.transmlacore.modify_config import settings
 
 
 def _get_all_decomposer_params():
@@ -77,7 +80,7 @@ class LowRankModel(BaseCompressionModel):
     _additional_hooks = [LRHooks]
 
     def __init__(self, params: Optional[OperationParameters] = {}):
-        super().__init__(params)
+        super().__init__(params or {})
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
@@ -218,6 +221,30 @@ class LowRankModel(BaseCompressionModel):
                 # module.inference_mode = True
                 module.compose_weight_for_inference()
 
+        model_type = getattr(getattr(model, 'config', None), 'model_type', None)
+
+        if model_type in settings:
+            from transformers import AutoTokenizer
+
+            model_name = getattr(model.config, "name_or_path", None)
+            if model_name is None:
+                raise ValueError("Can't find model name in config to load tokenizer")
+
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            trans_mla = TransMLA()
+            model = trans_mla.reassemble(model, tokenizer=tokenizer)
+
+        if model_type in ['llama', 'mistral']:
+            from transformers import AutoTokenizer
+
+            model_name = getattr(model.config, "name_or_path", None)
+            if model_name is None:
+                raise ValueError("Can't find model name in config to load tokenizer")
+
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            flat_llm = FlatLLM()
+            model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
+
     def load_model(self, model, state_dict_path: str) -> None:
         """Load a decomposed (SVD-based) checkpoint into a model.
 
@@ -241,3 +268,15 @@ class LowRankModel(BaseCompressionModel):
             decomposer_params=self.decomposer_params,
         )
         model.to(self.device)
+
+    def predict_for_fit(self, input_data, output_mode: str = 'fedcore'):
+        """Return model after training."""
+        return self.predict(input_data, output_mode)
+
+    def predict(self, input_data, output_mode: str = 'fedcore'):
+        """Prediction using compressed model."""
+        if output_mode == 'fedcore':
+            self.trainer.model = self.model_after
+        else:
+            self.trainer.model = self.model_before
+        return self.trainer.predict(input_data, output_mode)
