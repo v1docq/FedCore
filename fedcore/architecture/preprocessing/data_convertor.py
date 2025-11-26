@@ -359,9 +359,6 @@ class FedotConverter:
                 )
                 for array in [self.input_data, self.input_data.target]
             ]
-            # if new_features.shape[0] != new_target.shape[0]:
-            #     min_samples = min(new_features.shape[0], new_target.shape[0])
-            #     new_features, new_target = new_features[:min_samples], new_target[:min_samples]
             input_data = InputData(
                 idx=self.input_data.idx,
                 features=new_features,
