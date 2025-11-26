@@ -1,25 +1,26 @@
+import bitsandbytes as bnb
 import os
 from abc import abstractmethod, ABC
 from datetime import datetime
 from enum import Enum
 from functools import partial
 from inspect import isclass
-from itertools import chain
-
-import numpy as np
-from itertools import chain
-
 import numpy as np
 from pathlib import Path
 import torch
 from tqdm import tqdm
 
-from fedot.core.operations.operation_parameters import OperationParameters
+from tdecomp.grad_proj.tensorgrad.prepared_tg import ULTG, ParallelTG
 
 from fedot.core.operations.operation_parameters import OperationParameters
-
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.api.utils.data import DataLoaderHandler
+
+try:
+    import bitsandbytes as bnb
+    BNB_AVAILABLE = True
+except ImportError:
+    BNB_AVAILABLE = False
 
 VERBOSE = True
 
@@ -123,9 +124,14 @@ class FitReport(BaseHook):
 
     def action(self, epoch, kws):
         history = kws['history']
+
+        # Check if there is data in history
+        if not history.get('train_loss'):
+            print(f'No training loss data available at epoch {epoch}')
+            return
+
         (tr_e, train_loss) = history['train_loss'][-1]
-        val_losses = history['val_loss']
-        
+        val_losses = history.get('val_loss', [])
         
         (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
 
@@ -280,19 +286,20 @@ class SchedulerRenewal(BaseHook):
                           self.params.get('epochs', 1))
 
     def trigger(self, epoch, kws):
-        if kws['trainer_objects']['scheduler'] is None:
+        if kws['trainer_objects']['scheduler'] is None and kws['trainer_objects']['optimizer'] is not None:
             kws['trainer_objects']['scheduler'] = self.__renew(kws)
-        opt_changed = kws['trainer_objects']['scheduler'].optimizer is kws['trainer_objects']['optimizer']
-        if epoch == 1 or opt_changed:
-            self._mode.append('renew')
+        if kws['trainer_objects']['scheduler'] is not None:
+            opt_changed = kws['trainer_objects']['scheduler'].optimizer is kws['trainer_objects']['optimizer']
+            if epoch == 1 or opt_changed:
+                self._mode.append('renew')
         if epoch % self.params.get('scheduler_step_each', 1) == 0:
             self._mode.append('step')
         return bool(self._mode)
 
     def action(self, epoch, kws):
-        if 'renew' in self._mode:
+        if 'renew' in self._mode and kws['trainer_objects']['optimizer'] is not None:
             kws['trainer_objects']['scheduler'] = self.__renew(kws)
-        if 'step' in self._mode:
+        if 'step' in self._mode and kws['trainer_objects']['scheduler'] is not None:
             kws['trainer_objects']['scheduler'].step()
         self._mode.clear()
 
@@ -391,8 +398,15 @@ class Optimizers(Enum):
     rmsprop = torch.optim.RMSprop
     sgd = torch.optim.SGD
     adadelta = torch.optim.Adadelta
+    ultg = ULTG
+    paralleltg = ParallelTG
 
 
 class Schedulers(Enum):
     one_cycle = (torch.optim.lr_scheduler.OneCycleLR,
                  {'learning_rate': 'max_lr', 'epochs': 'total_steps'})
+
+if BNB_AVAILABLE:
+    Optimizers.adam_bnb_8bit = bnb.optim.Adam8bit
+    Optimizers.adamw_bnb_8bit = bnb.optim.AdamW8bit
+    Optimizers.sgd_bnb_8bit = bnb.optim.SGD8bit

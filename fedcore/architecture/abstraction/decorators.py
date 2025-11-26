@@ -17,6 +17,7 @@ from fedcore.architecture.preprocessing.data_convertor import (
     TensorConverter,
 )
 from fedcore.architecture.settings.computational import backend_methods as np
+from fedcore.data.data import CompressionInputData
 
 
 # from dask.distributed import LocalCluster, Client
@@ -126,6 +127,43 @@ def convert_to_input_data(func):
         )
         return ts_data
 
+    return decorated_func
+
+def convert_to_compression_input_data(func):
+    def decorated_func(*args, **kwargs):
+        input_data = func(*args, **kwargs)
+        if isinstance(input_data.features, CompressionInputData):
+            compression_data = input_data.features
+            if input_data.target is not None and compression_data.model is None:
+                compression_data.model = input_data.target
+            return compression_data
+        
+        if hasattr(input_data.features, 'train_dataloader') or \
+           hasattr(input_data.features, 'val_dataloader') or \
+           hasattr(input_data.features, 'test_dataloader'):
+            compression_data = CompressionInputData(
+                train_dataloader=getattr(input_data.features, 'train_dataloader', None),
+                val_dataloader=getattr(input_data.features, 'val_dataloader', None),
+                test_dataloader=getattr(input_data.features, 'test_dataloader', None),
+                task=input_data.task,
+                num_classes=getattr(input_data.features, 'num_classes', None),
+                input_dim=getattr(input_data.features, 'input_dim', None),
+                model=input_data.target if input_data.target is not None else getattr(input_data.features, 'model', None),
+                supplementary_data=input_data.supplementary_data,
+            )
+            return compression_data
+        
+        compression_data = CompressionInputData(
+            train_dataloader=getattr(input_data, 'train_dataloader', None),
+            val_dataloader=getattr(input_data, 'val_dataloader', None),
+            test_dataloader=getattr(input_data, 'test_dataloader', None),
+            task=input_data.task,
+            num_classes=None,
+            input_dim=None,
+            model=input_data.target if input_data.target is not None else None,
+            supplementary_data=input_data.supplementary_data,
+        )
+        return compression_data
     return decorated_func
 
 

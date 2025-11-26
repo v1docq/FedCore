@@ -276,7 +276,7 @@ class DatasetFromFolder(DatasetFolder):
 
 class AbstractDataset(Dataset):
 
-    def __init__(self, data_source: Union[str, np.array],
+    def __init__(self, data_source: Union[str, np.ndarray],
                  annotation_source: str = None,
                  transformation_func: Callable = TorchVisionTransforms.STANDART_IMG_TRANSFORM.value):
         if isinstance(data_source, str):

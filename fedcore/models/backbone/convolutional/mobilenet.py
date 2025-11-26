@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch.nn import init
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 
 class SeModule(nn.Module):

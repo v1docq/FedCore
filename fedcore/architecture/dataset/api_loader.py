@@ -2,10 +2,10 @@ from functools import partial
 
 from torch.utils.data import DataLoader
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.architecture.dataset.datasets_from_source import AbstractDataset, ObjectDetectionDataset, TimeSeriesDataset
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     DEFAULT_TORCH_DATASET,
 )
 from fedcore.repository.model_repository import BACKBONE_MODELS
@@ -51,7 +51,7 @@ class ApiLoader:
         model = BACKBONE_MODELS[model_name](pretrained=True).to(default_device())
         return model
 
-    def _convert_to_fedcore(self, torch_dataset):
+    def _convert_to_fedcore(self, torch_dataset) -> CompressionInputData:
         if 'split_ratio' in self.loader_params:
             train_dataset, val_dataset = random_split(torch_dataset, self.loader_params['split_ratio'])
         else:
@@ -69,7 +69,7 @@ class ApiLoader:
         input_dim = sample.shape[1] if len(sample.shape) > 2 else sample.shape[0]
         task = Task(TaskTypesEnum.classification) if num_classes != 1 else Task(TaskTypesEnum.regression)
         fedcore_train_data = CompressionInputData(
-            features=np.zeros((2, 2)),
+            # features=np.zeros((2, 2)),
             input_dim=input_dim,
             num_classes=num_classes,
             task=task,
@@ -79,7 +79,7 @@ class ApiLoader:
         fedcore_train_data.supplementary_data.is_auto_preprocessed = True
         return fedcore_train_data
 
-    def load_data(self, loader_type: str = None):
+    def load_data(self, loader_type: str = None) -> CompressionInputData:
         torch_dataset = self.torch_dataset_dict[loader_type](self.source)
         try:
             if loader_type.__contains__('benchmark'):

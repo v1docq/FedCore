@@ -2,7 +2,7 @@ import logging
 from typing import Union, Callable, List
 
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
-from fedcore.repository.constanst_repository import FEDOT_ASSUMPTIONS
+from fedcore.repository.constant_repository import FEDOT_ASSUMPTIONS
 from fedcore.repository.model_repository import default_fedcore_availiable_operation
 
 

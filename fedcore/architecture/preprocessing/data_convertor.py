@@ -29,7 +29,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from fedcore.api.utils.data import check_multivariate_data
 from fedcore.architecture.settings.computational import backend_methods as np
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 
 class CustomDatasetTS:
@@ -324,11 +324,11 @@ class FedotConverter:
         """
         return OutputData(
             idx=self.input_data.idx,
-            features=self.input_data.features,
+            # features=self.input_data,
             task=self.input_data.task,
             data_type=self.input_data.data_type,
             target=self.input_data.target,
-            predict=self.input_data.features,
+            predict=self.input_data,
         )
 
     def convert_to_industrial_composing_format(self, mode):
@@ -357,7 +357,7 @@ class FedotConverter:
                     if array is not None and len(array.shape) > 2
                     else array
                 )
-                for array in [self.input_data.features, self.input_data.target]
+                for array in [self.input_data, self.input_data.target]
             ]
             input_data = InputData(
                 idx=self.input_data.idx,
@@ -368,20 +368,20 @@ class FedotConverter:
                 supplementary_data=self.input_data.supplementary_data,
             )
         elif mode == "channel_independent":
-            feats = self.input_data.features
-            flat_input = self.input_data.features.shape[0] == 1
-            if len(self.input_data.features.shape) == 1:
-                feats = self.input_data.features.reshape(1, -1)
+            feats = self.input_data
+            flat_input = self.input_data.shape[0] == 1
+            if len(self.input_data.shape) == 1:
+                feats = self.input_data.reshape(1, -1)
             elif (
-                len(self.input_data.features.shape) == 3
-                and self.input_data.features.shape[0] == 1
+                len(self.input_data.shape) == 3
+                and self.input_data.shape[0] == 1
             ):
-                feats = self.input_data.features.reshape(
-                    self.input_data.features.shape[1],
-                    1 * self.input_data.features.shape[2],
+                feats = self.input_data.reshape(
+                    self.input_data.shape[1],
+                    1 * self.input_data.shape[2],
                 )
             elif not flat_input:
-                feats = self.input_data.features.swapaxes(1, 0)
+                feats = self.input_data.swapaxes(1, 0)
             input_data = [
                 InputData(
                     idx=self.input_data.idx,
@@ -395,7 +395,7 @@ class FedotConverter:
             ]
         elif mode == "multi_dimensional":
             features = NumpyConverter(
-                data=self.input_data.features
+                data=self.input_data
             ).convert_to_torch_format()
             input_data = InputData(
                 idx=self.input_data.idx,

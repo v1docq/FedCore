@@ -1,0 +1,169 @@
+"""
+Core reassembly classes and utilities.
+
+Contains the base reassembly infrastructure moved from quantization utils.
+"""
+
+from typing import Dict, Optional
+import torch
+import torch.nn as nn
+from fedcore.architecture.abstraction.accessor import Accessor
+from fedcore.architecture.comptutaional.devices import extract_device
+from fedcore.models.network_impl.decomposed_layers import (
+    IDecomposed, 
+    DecomposedLinear,
+    DecomposedEmbedding, 
+    DecomposedConv1d,
+    DecomposedConv2d
+)
+
+
+class RecreatedDecomposed(nn.Sequential):
+    """Sequential container for recreated decomposed modules."""
+    
+    def __init__(self, *modules, routing: Dict = None):
+        super().__init__(*modules)
+        self.routing = routing or {}
+        self._is_recreated = False
+
+
+class Reassembler(Accessor):
+    """Base class for reassembling neural network modules."""
+
+    supported_layers = {}
+    supported_decomposed_layers = {}
+
+    @classmethod
+    def _fetch_module(cls, module: nn.Module):
+        """Determines if a module is supported for conversion."""
+        is_decomposed = isinstance(module, IDecomposed)
+        supported = cls.supported_decomposed_layers if is_decomposed else cls.supported_layers
+        for supported_type in supported:
+            if isinstance(module, supported_type) and (is_decomposed or not type(module) is supported_type):
+                return supported_type, is_decomposed
+        return None, is_decomposed
+
+    @classmethod
+    def _handle(cls, module, module_type):
+        """Processes module conversion according to its type."""
+        supported = cls.supported_decomposed_layers if issubclass(module_type, IDecomposed) else cls.supported_layers
+        return supported[module_type](module)
+
+    @classmethod
+    def convert(cls, module):
+        """Converts a single module."""
+        associated, is_decomp = cls._fetch_module(module)
+        if associated is None:
+            return None
+        new_module = cls._handle(module, associated)
+        return new_module
+
+    @classmethod
+    def _apply_additional_mapping(cls, model: nn.Module, additional_mapping: dict):
+        """Applies additional mappings for module replacement."""
+        if not additional_mapping:
+            return
+
+        for name, module in model.named_modules():
+            module_type = type(module)
+            if module_type in additional_mapping:
+                cls.set_module(model, name, additional_mapping[module_type]())
+
+    @classmethod
+    def _traverse_modules(cls, model: nn.Module, pre_hook=None, post_hook=None):
+        """
+        Unified method for traversing model modules with optional hooks.
+        
+        Args:
+            model: Model to traverse
+            pre_hook: Function called before processing each module (name, module) -> bool
+                     Returns True to continue processing, False to skip
+            post_hook: Function called after processing each module (name, module, result) -> None
+        """
+        device = extract_device(model)
+        
+        for name, module in model.named_modules():
+            # Pre-processing hook
+            if pre_hook and not pre_hook(name, module):
+                continue
+                
+            # Main conversion logic - use base Reassembler convert method
+            new_module = Reassembler.convert(module)
+            if new_module:
+                cls.set_module(model, name, new_module.to(device))
+                
+            # Post-processing hook
+            if post_hook:
+                post_hook(name, module, new_module)
+
+    @classmethod
+    def _validate_device_consistency(cls, model: nn.Module):
+        """Validates device consistency of model parameters."""
+        devices = {p.device for p in model.parameters()}
+        if len(devices) > 1:
+            raise RuntimeError(f"[{cls.__name__}] Device mismatch! Found devices: {devices}")
+
+    @classmethod
+    def reassemble(cls, model: nn.Module, additional_mapping: dict = None, **kwargs):
+        """Main method for model reassembly."""
+        cls._apply_additional_mapping(model, additional_mapping)
+        cls._traverse_modules(model)
+        cls._validate_device_consistency(model)
+        return model
+
+
+class ParentalReassembler(Reassembler):
+    """Reassembler for standard neural network modules."""
+    
+    def __init__(self):
+        # Import here to avoid circular imports
+        from .decomposed_recreation import (
+            _recreate_embedding, _recreate_decomposed_linear,
+            _recreate_decomposed_embedding, _recreate_decomposed_conv2d, _recreate_decomposed_conv1d
+        )
+        
+        self.supported_layers = {
+            torch.nn.Embedding: _recreate_embedding,
+        }
+
+        self.supported_decomposed_layers = {
+            DecomposedLinear: _recreate_decomposed_linear,
+            DecomposedEmbedding: _recreate_decomposed_embedding,
+            DecomposedConv2d: _recreate_decomposed_conv2d,
+            DecomposedConv1d: _recreate_decomposed_conv1d,
+        }
+
+
+# Simple reassembler registry with lazy loading
+def _get_transmla_class():
+    """Lazy import of TransMLA to avoid circular imports."""
+    from .transmla_reassembler import TransMLA
+    return TransMLA
+
+def _get_flatllm_class():
+    """Lazy import of FlatLLM to avoid circular imports."""
+    from .flatllm_reassembler import FlatLLM
+    return FlatLLM
+
+REASSEMBLERS = {
+    'parental': ParentalReassembler,
+    'trans-mla': _get_transmla_class,
+    'flat-llm': _get_flatllm_class,
+}
+
+
+def get_reassembler(reassembler_type: str = 'parental'):
+    """Get reassembler class by type."""
+    if reassembler_type not in REASSEMBLERS:
+        available = list(REASSEMBLERS.keys())
+        raise KeyError(f"Unknown reassembler type '{reassembler_type}'. Available: {available}")
+    
+    reassembler = REASSEMBLERS[reassembler_type]
+    
+    # Handle lazy loading for special reassemblers
+    if callable(reassembler) and reassembler_type in ['trans-mla', 'flat-llm']:
+        return reassembler()  # Call the lazy loader function
+    
+    return reassembler
+
+
