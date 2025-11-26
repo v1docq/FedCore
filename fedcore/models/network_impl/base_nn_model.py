@@ -12,6 +12,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 from torch import Tensor
 from tqdm import tqdm
+import logging
 
 from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.architecture.computational.devices import default_device
@@ -26,7 +27,6 @@ from fedcore.repository.constant_repository import (
 from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
 from fedcore.models.network_impl.utils._base import BaseTrainer
-from fedcore.architecture.preprocessing.data_convertor import CompressionDataConverter
 
 BASE_REGRESSION_DTYPE = torch.float32
 
@@ -148,7 +148,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         if not getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
-            print('Quantized model inference supports CPU only')
+            logging.info('Quantized model inference supports CPU only')
 
     def fit(self, input_data: CompressionInputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
@@ -208,19 +208,17 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
                      history=self.history)
         return self
 
-    def predict(self, input_data: InputData, output_mode: str = "default"):
+    def predict(self, input_data: CompressionInputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
-        compression_data = CompressionDataConverter.convert(input_data)
         self.__substitute_device_quant()
-        return self._predict_model(compression_data, output_mode)
+        return self._predict_model(input_data, output_mode)
 
-    def predict_for_fit(self, input_data: InputData, output_mode: str = "default"):
+    def predict_for_fit(self, input_data: CompressionInputData, output_mode: str = "default"):
         """
         Method for feature generation for all series
         """
-        compression_data = CompressionDataConverter.convert(input_data)
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
 

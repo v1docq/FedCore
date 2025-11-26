@@ -18,7 +18,7 @@ import torchmetrics
 
 from importlib import import_module
 
-from fedcore.repository.constanst_repository import FedotTaskEnum
+from fedcore.repository.constant_repository import FedotTaskEnum
 from fedcore.api.utils.misc import camel_to_snake
 from fedcore.tools.ruler import PerformanceEvaluator
 
@@ -72,7 +72,9 @@ class QualityMetric(Metric):
         return unique_vals[torch.argmin(count)]
 
 PROBLEM_MAPPING = {
-    'ts_forecasting': 'regression'
+    'ts_forecasting': 'regression',
+    'question_answering': 'classification',
+    'summarization': 'classification'
 }
 
 ATTRIBUTE_MAPPING = {

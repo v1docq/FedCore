@@ -3,6 +3,7 @@ import math
 import abc
 from abc import ABC
 from typing import Any, Dict, Optional
+import logging
 
 
 class Scheduler(ABC):
@@ -301,7 +302,7 @@ class CosineLRScheduler(Scheduler):
         assert t_initial > 0
         assert lr_min >= 0
         if t_initial == 1 and cycle_mul == 1 and cycle_decay == 1:
-            print(
+            logging.INFO(
                 "Cosine annealing scheduler will have no effect on the learning "
                 "rate since t_initial = t_mul = eta_mul = 1."
             )

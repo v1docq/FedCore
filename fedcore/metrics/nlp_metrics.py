@@ -7,7 +7,6 @@ from sklearn.metrics import (
     mean_squared_error,
     mean_squared_log_error,
 )
-from fedcore.metrics.metric_impl import SMAPE, MASE, MAPE
 from fedcore.metrics.metric_impl import QualityMetric
 
 from fedcore.metrics.metric_impl import (

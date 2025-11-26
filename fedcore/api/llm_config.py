@@ -3,10 +3,10 @@ from typing import (
     Any, Dict, Optional,
 )
 
-from fedcore.api.api_configs import NeuralModelConfigTemplate
+from fedcore.api.api_configs import TrainingTemplate
 
 @dataclass
-class LLMConfigTemplate(NeuralModelConfigTemplate):
+class LLMConfigTemplate(TrainingTemplate):
     """Configuration template for LLM-specific parameters"""
     is_llm: bool = True
     model: Any = None

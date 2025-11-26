@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 import torch.nn
 
-from fedcore.api.utils import camel_to_snake
+from fedcore.api.utils.misc import camel_to_snake
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 FEDCORE_IMPLEMENTATIONS = FedcoreModels().setup_repository()
 

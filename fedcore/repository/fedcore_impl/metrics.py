@@ -9,7 +9,7 @@ from fedot.core.repository.metrics_repository import (
     MetricCallable, ComplexityMetricsEnum,
 )
 
-from fedcore.repository.constanst_repository import DEFAULT_METRICS_BY_TASK, TaskTypesEnum
+from fedcore.repository.constant_repository import DEFAULT_METRICS_BY_TASK, TaskTypesEnum
 
 from fedcore.metrics.quality import QualityMetric, MetricFactory
 

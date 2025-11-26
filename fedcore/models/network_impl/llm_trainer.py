@@ -7,6 +7,7 @@ import logging
 from typing import Any, Dict, Optional, Iterable, Union
 from enum import Enum
 from tqdm import tqdm
+import logging 
 
 
 # Transformers imports
@@ -27,7 +28,6 @@ from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.models.network_impl.utils._base import BaseTrainer
 from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
 from fedcore.models.network_impl.utils.hooks import LoggingHooks, ModelLearningHooks, OptimizerGen, SchedulerRenewal
-from fedcore.architecture.preprocessing.data_convertor import CompressionDataConverter
 
 
 class FedCoreTransformersTrainer(TrainerCallback):
@@ -362,7 +362,7 @@ class LLMTrainer(BaseTrainer):
         
         Input can be either InputData (FEDOT) or CompressionInputData (FedCore).
         """
-        print(f"Training LLM model with {loader_type} data...")
+        logging.info(f"Training LLM model with {loader_type} data...")
         
         # Final fallback: pull model from input_data if still missing
         if self.model is None:
@@ -386,13 +386,12 @@ class LLMTrainer(BaseTrainer):
         return self.model
         
         
-    def predict_for_fit(self, input_data: Union[InputData, CompressionInputData],  
+    def predict_for_fit(self, input_data: CompressionInputData,  
                        output_mode: str = "default") -> Any:
         """Make predictions during training"""
-        compression_data = CompressionDataConverter.convert(input_data)
-        return self._predict_model(compression_data, output_mode)
+        return self._predict_model(input_data, output_mode)
     
-    def predict(self, input_data: Union[InputData, CompressionInputData],  
+    def predict(self, input_data: CompressionInputData,  
                 output_mode: str = "default") -> Any:
         """Make predictions using InputData/CompressionInputData"""
         
@@ -419,8 +418,8 @@ class LLMTrainer(BaseTrainer):
         predictions_output = self._predict_model(input_data, output_mode)
         pred_values = torch.tensor(predictions_output.predictions)
         
-        output_data = OutputData(
-            idx=torch.arange(len(pred_values)),
+        output_data = CompressionOutputData(
+            # idx=torch.arange(len(pred_values)),
             task=input_data.task,
             predict=pred_values,
             target=None,
@@ -436,7 +435,7 @@ class LLMTrainer(BaseTrainer):
         
     def save_model(self, path: str) -> None:
         """Save the model using transformers approach"""
-        print(f"Saving LLM model to {path}...")
+        logging.info(f"Saving LLM model to {path}...")
         
         if self._trainer is not None:
             self._trainer.save_model(path)
@@ -445,7 +444,7 @@ class LLMTrainer(BaseTrainer):
         
     def load_model(self, path: str) -> None:
         """Load the model using transformers approach"""
-        print(f"Loading LLM model from {path}...")
+        logging.info(f"Loading LLM model from {path}...")
 
         super().load_model(path)
     
