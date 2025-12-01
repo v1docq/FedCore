@@ -14,15 +14,19 @@ def build_holdout_producer(self, data: CompressionInputData):
 
     def convert_compression_to_input(data):
         is_input_data = isinstance(data, InputData)
+        if is_input_data:
+            return data
+        
+        model = data.target if data.target is not None else getattr(data, 'model', None)
         converted = InputData(
             idx=[1],
             features=data,
-            target=data.target,
+            target=model,
             task=data.task,
             data_type=None,
             supplementary_data=data.supplementary_data,
         )
-        return data if is_input_data else converted
+        return converted
 
     train_data, test_data = convert_compression_to_input(
         data

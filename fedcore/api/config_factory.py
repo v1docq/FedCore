@@ -1,4 +1,3 @@
-```python
 """Factory for building concrete configuration classes from templates.
 
 This module provides :class:`ConfigFactory`, a helper that turns
@@ -320,4 +319,3 @@ class ConfigFactory:
             except:
                 raise x
         raise x
-```
