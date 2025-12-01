@@ -108,3 +108,9 @@ data/
 datasets/
 .vscode
 *.csv
+
+.venv/ 
+dist/ 
+build/ 
+*.egg-info/ 
+docs/_build/
