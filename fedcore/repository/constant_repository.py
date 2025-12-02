@@ -53,13 +53,13 @@ from fedcore.models.network_modules.losses import (
 )
 
 from fedcore.repository.setups import QAT_1, PTQ_1
-from fedcore.models.network_impl.hooks import LoggingHooks, ModelLearningHooks  # noqa
+from fedcore.models.network_impl.utils.hooks import LoggingHooks, ModelLearningHooks  # noqa
 from fedcore.algorithm.low_rank.hooks import LRHooks  # noqa
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.architecture.utils.misc import EnumNoValue
 
-from fedcore.models.network_impl.hooks import (
+from fedcore.models.network_impl.utils.hooks import (
     Optimizers, Schedulers, ModelLearningHooks, LoggingHooks,
 )  # noqa
 from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum  # noqa
@@ -100,6 +100,12 @@ default_param_values_dict = dict(
     with_tuning=True,
 )
 
+DEFAULT_METRICS_BY_TASK = {
+    TaskTypesEnum.regression: 'MeanSquaredError',
+    TaskTypesEnum.classification: 'MulticlassAUROC',
+    TaskTypesEnum.clustering: 'MutualInfoScore',
+    TaskTypesEnum.ts_forecasting: 'MeanSquaredError',
+}
 
 class FedotTaskEnum(Enum):
     classification = Task(TaskTypesEnum.classification)
@@ -107,6 +113,8 @@ class FedotTaskEnum(Enum):
     ts_forecasting = Task(
         TaskTypesEnum.ts_forecasting, TsForecastingParams(forecast_length=1)
     )
+    question_answering = 'question_answering'
+    summarization = 'summarization'
 
 
 class FedCoreTaskEnum(Enum):  # FEDCORE_TASK
@@ -114,6 +122,7 @@ class FedCoreTaskEnum(Enum):  # FEDCORE_TASK
     quantization = auto()
     distilation = auto()
     low_rank = auto()
+    reassembly = auto()
     evo_composed = auto()
 
 
@@ -153,13 +162,13 @@ class FedotGeneticMultiStrategy(Enum):
 
 
 class FedotOperationConstant(Enum):
-    FEDOT_GET_METRICS = {
-        "regression": calculate_regression_metric,
-        "ts_forecasting": calculate_forecasting_metric,
-        "classification": calculate_classification_metric,
-        "computational_fedcore": calculate_computational_metric,
-        "computational_original": calculate_computational_metric
-    }
+    # FEDOT_GET_METRICS = {
+    #     "regression": calculate_regression_metric,
+    #     "ts_forecasting": calculate_forecasting_metric,
+    #     "classification": calculate_classification_metric,
+    #     "computational_fedcore": calculate_computational_metric,
+    #     "computational_original": calculate_computational_metric
+    # }
 
     FEDOT_API_PARAMS = default_param_values_dict
 
@@ -409,8 +418,8 @@ FEDOT_ENSEMBLE_ASSUMPTIONS = FedotOperationConstant.FEDOT_ENSEMBLE_ASSUMPTIONS.v
 FEDOT_TUNER_STRATEGY = FedotOperationConstant.FEDOT_TUNER_STRATEGY.value
 FEDOT_EVO_MULTI_STRATEGY = FedotOperationConstant.FEDOT_EVO_MULTI_STRATEGY.value
 FEDOT_GENETIC_MULTI_STRATEGY = FedotOperationConstant.FEDOT_GENETIC_MULTI_STRATEGY.value
-FEDOT_GET_METRICS = FedotOperationConstant.FEDOT_GET_METRICS.value
-FEDCORE_TASK = EnumNoValue(FedCoreTaskEnum)
+# FEDOT_GET_METRICS = FedotOperationConstant.FEDOT_GET_METRICS.value
+# FEDCORE_TASK = EnumNoValue(FedCoreTaskEnum)
 CV_TASK = EnumNoValue(CVTasks)
 # FEDCORE_CV_DATASET = FedotOperationConstant.FEDCORE_CV_DATASET.value
 FEDCORE_CV_DATASET = EnumNoValue(FedCoreCVDataset)
