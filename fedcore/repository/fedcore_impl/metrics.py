@@ -78,9 +78,11 @@ def evaluate_objective_fedcore(self, graph: Pipeline) -> Fitness:
     if folds_metrics:
         folds_metrics = tuple(np.mean(folds_metrics, axis=0))  # averages for each metric over folds
         self._log.debug(f'Pipeline {graph_id} with evaluated metrics: {folds_metrics}')
+        return to_fitness(folds_metrics, self._objective.is_multi_objective)
     else:
-        folds_metrics = None
-    return to_fitness(folds_metrics, self._objective.is_multi_objective)
+        self._log.warning(f'No valid metrics for pipeline {graph_id}, returning null fitness')
+        from golem.core.optimisers.fitness import null_fitness
+        return null_fitness()
 
 
 class MetricsRepository:

@@ -9,7 +9,7 @@ from fedot.core.pipelines.pipeline import Pipeline
 from fedot.utilities.custom_errors import AbstractMethodNotImplementError
 from torch import nn
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.tools.ruler import PerformanceEvaluator
 
 

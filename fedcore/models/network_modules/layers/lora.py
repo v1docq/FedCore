@@ -234,6 +234,99 @@ class Linear(nn.Module):
             init_lora_weights=init_lora_weights,
         )
         self.is_target_conv_1d_layer = is_target_conv_1d_layer
+    
+    def get_base_layer(self):
+        """Return the base layer."""
+        return self.base_layer
+    
+    @property
+    def active_adapters(self):
+        if hasattr(self, '_active_adapter'):
+            return [self._active_adapter]
+        return []
+    
+    def set_adapter(self, adapter_names):
+        """Set active adapter(s)."""
+        if isinstance(adapter_names, str):
+            adapter_names = [adapter_names]
+        self._active_adapter = adapter_names[0] if adapter_names else None
+    
+    @property
+    def disable_adapters(self):
+        return getattr(self, '_disable_adapters', False)
+    
+    @property
+    def merged(self):
+        return len(getattr(self, 'merged_adapters', [])) > 0
+    
+    def update_layer(
+        self,
+        adapter_name,
+        r,
+        lora_alpha,
+        lora_dropout,
+        init_lora_weights,
+    ):
+        """Update LoRA layer with given parameters."""
+        if r <= 0:
+            raise ValueError(
+                f"`r` should be a positive integer value but the value passed is {r}"
+            )
+        
+        self.r[adapter_name] = r
+        self.lora_alpha[adapter_name] = lora_alpha
+        self.scaling[adapter_name] = lora_alpha / r
+        
+        if lora_dropout > 0.0:
+            lora_dropout_layer = nn.Dropout(p=lora_dropout)
+        else:
+            lora_dropout_layer = nn.Identity()
+        
+        self.lora_dropout.update(nn.ModuleDict({adapter_name: lora_dropout_layer}))
+        
+        # Actual trainable parameters
+        self.lora_A[adapter_name] = nn.Linear(self.in_features, r, bias=False)
+        self.lora_B[adapter_name] = nn.Linear(r, self.out_features, bias=False)
+        
+        if init_lora_weights:
+            self.reset_lora_parameters(adapter_name, init_lora_weights)
+        
+        self.set_adapter([adapter_name])
+    
+    def reset_lora_parameters(self, adapter_name, init_lora_weights):
+        """Initialize LoRA parameters."""
+        if init_lora_weights is False:
+            return
+        
+        if adapter_name in self.lora_A.keys():
+            if init_lora_weights is True:
+                nn.init.kaiming_uniform_(
+                    self.lora_A[adapter_name].weight, a=math.sqrt(5)
+                )
+            elif init_lora_weights.lower() == "gaussian":
+                nn.init.normal_(
+                    self.lora_A[adapter_name].weight, std=1 / self.r[adapter_name]
+                )
+            else:
+                raise ValueError(f"Unknown initialization {init_lora_weights=}")
+            nn.init.zeros_(self.lora_B[adapter_name].weight)
+    
+    def _check_forward_args(self, x, *args, **kwargs):
+        """Check if the arguments are compatible with the configs and state of the model."""
+        adapter_names = kwargs.get("adapter_names", None)
+        if adapter_names is None:
+            return
+        
+        if len(x) != len(adapter_names):
+            msg = (
+                "Length of `adapter_names` should be the same as the number of inputs, but got "
+                f"{len(adapter_names)} and {len(x)} respectively."
+            )
+            raise ValueError(msg)
+        
+        if self.merged:
+            msg = "Cannot pass `adapter_names` when there are merged adapters, please call `unmerge_adapter` first."
+            raise ValueError(msg)
 
     def merge(
         self, safe_merge: bool = False, adapter_names: Optional[list[str]] = None
@@ -379,7 +472,7 @@ class Linear(nn.Module):
         return "lora." + rep
 
 
-class Embedding(nn.Module, LoRALayer):
+class Embedding(nn.Module):
     # LoRA implemented in an Embedding layer
     def __init__(
         self,
@@ -392,7 +485,7 @@ class Embedding(nn.Module, LoRALayer):
         **kwargs,
     ) -> None:
         super().__init__()
-        LoRALayer.__init__(self, base_layer)
+        LoRALayer.__init__(self, base_layer, **kwargs)
 
         self._active_adapter = adapter_name
         self.update_layer(
@@ -402,6 +495,10 @@ class Embedding(nn.Module, LoRALayer):
             lora_dropout=lora_dropout,
             init_lora_weights=init_lora_weights,
         )
+    
+    def get_base_layer(self):
+        """Return the base layer."""
+        return self.base_layer
 
     def update_layer(
         self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights
@@ -602,7 +699,7 @@ class Embedding(nn.Module, LoRALayer):
         return "lora." + rep
 
 
-class Conv2d(nn.Module, LoRALayer):
+class Conv2d(nn.Module):
     # Lora implemented in a conv2d layer
     def __init__(
         self,
@@ -615,7 +712,7 @@ class Conv2d(nn.Module, LoRALayer):
         **kwargs,
     ) -> None:
         super().__init__()
-        LoRALayer.__init__(self, base_layer)
+        LoRALayer.__init__(self, base_layer, **kwargs)
 
         self._active_adapter = adapter_name
         self.update_layer(
@@ -625,6 +722,10 @@ class Conv2d(nn.Module, LoRALayer):
             lora_dropout=lora_dropout,
             init_lora_weights=init_lora_weights,
         )
+    
+    def get_base_layer(self):
+        """Return the base layer."""
+        return self.base_layer
 
     def update_layer(
         self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights
@@ -656,9 +757,7 @@ class Conv2d(nn.Module, LoRALayer):
 
         self.scaling[adapter_name] = lora_alpha / r
 
-        if init_lora_weights == "loftq":
-            self.loftq_init(adapter_name)
-        elif init_lora_weights:
+        if init_lora_weights:
             self.reset_lora_parameters(adapter_name, init_lora_weights)
 
         weight = getattr(base_layer, "weight", None)
@@ -666,7 +765,62 @@ class Conv2d(nn.Module, LoRALayer):
             # the layer is already completely initialized, this is an update
             self.to(base_layer.weight.device, dtype=weight.dtype)
 
-        self.set_adapter(self.active_adapters)
+        self.set_adapter([adapter_name])
+    
+    @property
+    def active_adapters(self):
+        if hasattr(self, '_active_adapter'):
+            return [self._active_adapter]
+        return []
+    
+    def set_adapter(self, adapter_names):
+        """Set active adapter(s)."""
+        if isinstance(adapter_names, str):
+            adapter_names = [adapter_names]
+        self._active_adapter = adapter_names[0] if adapter_names else None
+    
+    @property
+    def disable_adapters(self):
+        return getattr(self, '_disable_adapters', False)
+    
+    @property
+    def merged(self):
+        return len(getattr(self, 'merged_adapters', [])) > 0
+    
+    def reset_lora_parameters(self, adapter_name, init_lora_weights):
+        """Initialize LoRA parameters."""
+        if init_lora_weights is False:
+            return
+        
+        if adapter_name in self.lora_A.keys():
+            if init_lora_weights is True:
+                nn.init.kaiming_uniform_(
+                    self.lora_A[adapter_name].weight, a=math.sqrt(5)
+                )
+            elif init_lora_weights.lower() == "gaussian":
+                nn.init.normal_(
+                    self.lora_A[adapter_name].weight, std=1 / self.r[adapter_name]
+                )
+            else:
+                raise ValueError(f"Unknown initialization {init_lora_weights=}")
+            nn.init.zeros_(self.lora_B[adapter_name].weight)
+    
+    def _check_forward_args(self, x, *args, **kwargs):
+        """Check if the arguments are compatible with the configs and state of the model."""
+        adapter_names = kwargs.get("adapter_names", None)
+        if adapter_names is None:
+            return
+        
+        if len(x) != len(adapter_names):
+            msg = (
+                "Length of `adapter_names` should be the same as the number of inputs, but got "
+                f"{len(adapter_names)} and {len(x)} respectively."
+            )
+            raise ValueError(msg)
+        
+        if self.merged:
+            msg = "Cannot pass `adapter_names` when there are merged adapters, please call `unmerge_adapter` first."
+            raise ValueError(msg)
 
     def merge(
         self, safe_merge: bool = False, adapter_names: Optional[list[str]] = None

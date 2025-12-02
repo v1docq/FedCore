@@ -6,7 +6,7 @@ from numbers import Number
 from pathlib import Path
 from typing import (
     get_origin, get_args,   
-    Any, Callable, Dict, Iterable, Literal, Optional, Union, 
+    Any, Callable, Dict, Iterable, List, Literal, Optional, Union, 
 )
 import logging
 
@@ -273,6 +273,7 @@ class LearningConfigTemplate(ConfigTemplate):
     # Accept any params to avoid circular import with NLP templates
     nlp_task_params: Optional[Any] = None
     fedcore_id: Optional[str] = None
+    exclude_lora: bool = False  # Exclude LoRA from evolutionary optimization
 
 
 @dataclass
@@ -304,6 +305,19 @@ class LowRankTemplate(NeuralModelConfigTemplate):
     random_init: Literal['normal', 'ortho', 'lean_walsh'] = 'normal'  # Random initialization for randomized methods
     power: int = 3  # Power parameter for RandomizedSVD
     fedcore_id: Optional[str] = None  # FedCore instance ID for model registry
+
+
+@dataclass
+class LoRATemplate(NeuralModelConfigTemplate):
+    """Configuration template for LoRA (Low-Rank Adaptation) training"""
+    lora_r: int = 8                          # LoRA rank
+    lora_alpha: int = 16                     # LoRA scaling factor
+    lora_dropout: float = 0.1                # Dropout for LoRA layers
+    lora_target_modules: Optional[List[str]] = None  # Target module names (None/empty = all suitable)
+    use_peft: bool = False                   # Use PEFT library for HF models
+    lora_bias: Literal['none', 'all', 'lora_only'] = 'none'  # Bias training strategy
+    task_type: Optional[str] = None          # For PEFT: 'causal_lm', 'seq_cls', etc.
+    fedcore_id: Optional[str] = None         # FedCore instance ID
 
 
 @dataclass

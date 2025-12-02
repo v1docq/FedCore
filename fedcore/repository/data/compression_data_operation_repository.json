@@ -61,6 +61,22 @@
       ],
       "description": "Implementations of industrial preprocessing operations"
     },
+    "fedcore_lora_training": {
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
+      "input_type": "[DataTypesEnum.image, DataTypesEnum.table, DataTypesEnum.text]",
+      "output_type": "[DataTypesEnum.image, DataTypesEnum.table, DataTypesEnum.text]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreLoraTrainingStrategy"
+      ],
+      "tags": [
+      ],
+      "description": "LoRA (Low-Rank Adaptation) for parameter-efficient fine-tuning of neural networks"
+    },
     "fedcore_quantization": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.regression, TaskTypesEnum.ts_forecasting]",
       "input_type": "[DataTypesEnum.image, DataTypesEnum.table]",
@@ -106,6 +122,12 @@
       "presets": [
       ],
       "tags": ["non-default"]
+    },
+    "lora_training_model": {
+      "meta": "fedcore_lora_training",
+      "presets": [
+      ],
+      "tags": []
     },
     "distilation_model": {
       "meta": "fedcore_distilation",

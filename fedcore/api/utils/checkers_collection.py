@@ -54,19 +54,22 @@ class DataCheck:
             torch_model = load_backbone(torch_model=self.model)
             torch_model = self._check_optimised_model(torch_model, input_data)
         elif model_is_pretrain_backbone_with_weights:
-            if self.model['path_to_model'].__contains__('.pth'):
-                    torch_model = torch.load(self.model['path_to_model'], weights_only=False,
+            path_to_model = self.model.get('path_to_model', '')
+            has_pretrained_weights = path_to_model and len(path_to_model.strip()) > 0
+            
+            if has_pretrained_weights and path_to_model.__contains__('.pth'):
+                    torch_model = torch.load(path_to_model, weights_only=False,
                                                    map_location=default_device())
                     torch_model = self._check_optimised_model(torch_model, input_data)
             else:
                 torch_model = load_backbone(torch_model=self.model,
                                             model_params=self.learning_params)
                 torch_model = self._check_optimised_model(torch_model, input_data)
-                if model_is_pretrain_backbone_with_weights:
+                if has_pretrained_weights:
                     try:
-                        torch_model.load_model(self.model['path_to_model'])
+                        torch_model.load_model(path_to_model)
                     except:
-                        loaded_state_dict = torch.load(self.model['path_to_model'], weights_only=True,
+                        loaded_state_dict = torch.load(path_to_model, weights_only=True,
                                                     map_location=default_device())
                         verified_state_dict = self._check_state_dict(loaded_state_dict, input_data)
                         torch_model.load_state_dict(verified_state_dict)

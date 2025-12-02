@@ -56,7 +56,14 @@ class ApiManager(ConfigTemplate):
                 method(config[key])
             else:
                 method()
-        available_operation = default_fedcore_availiable_operation(self.learning_config.peft_strategy)
+        
+        # Get exclude_lora flag from learning config (default: False)
+        exclude_lora_flag = getattr(self.learning_config, 'exclude_lora', False)
+        
+        available_operation = default_fedcore_availiable_operation(
+            self.learning_config.peft_strategy,
+            exclude_lora=exclude_lora_flag
+        )
         if self.automl_config.config['available_operations'] is None:
             self.automl_config.config.update({'available_operations': available_operation})
 
@@ -160,6 +167,7 @@ class LearningConfig(ConfigTemplate):
                      'learning_strategy_params': self.with_learning_strategy_params,
                      'peft_strategy': self.with_peft_strategy,
                      'peft_strategy_params': self.with_peft_strategy_params,
+                     'exclude_lora': self.with_exclude_lora,
                      'loss': self.with_loss}
 
     def with_learning_strategy(self, learning_strategy: str = None):
@@ -177,6 +185,19 @@ class LearningConfig(ConfigTemplate):
     def with_peft_strategy(self, peft_strategy: dict = None):
         self.peft_strategy = peft_strategy
         return self.peft_strategy
+    
+    def with_exclude_lora(self, exclude_lora: bool = False):
+        """
+        Control whether to exclude LoRA from evolutionary optimization.
+        
+        Args:
+            exclude_lora: If True, LoRA operations will be excluded from EO (default: False)
+        
+        Returns:
+            The exclude_lora flag value
+        """
+        self.exclude_lora = exclude_lora
+        return self.exclude_lora
 
     def with_loss(self, loss: Union[Callable, str, dict] = None):
         self.loss = loss

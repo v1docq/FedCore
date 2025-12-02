@@ -48,6 +48,21 @@
       ],
       "description": "Implementations of FedCore Low Rank strategy"
     },
+    "fedcore_lora_training": {
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
+      "input_type": "[DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreLoraTrainingStrategy"
+      ],
+      "tags": [],
+      "description": "LoRA (Low-Rank Adaptation) for parameter-efficient fine-tuning"
+    },
     "fedcore_quantization": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
       "input_type": "[DataTypesEnum.table]",
@@ -90,6 +105,11 @@
       "tags": [
         "non-default"
       ]
+    },
+    "lora_training_model": {
+      "meta": "fedcore_lora_training",
+      "presets": [],
+      "tags": []
     },
     "quantization_model": {
       "meta": "fedcore_quantization",

@@ -14,9 +14,11 @@ from fedcore.repository.model_repository import (
     QUANTIZATION_MODELS,
     DISTILATION_MODELS,
     LOW_RANK_MODELS,
+    LORA_TRAINING_MODELS,
     DETECTION_MODELS,
     TRAINING_MODELS,
 )
+from fedcore.algorithm.low_rank.lora_operation import BaseLoRA
 
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
@@ -100,6 +102,16 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
 
 class FedcoreLowRankStrategy(FedCoreStrategy):
     _operations_by_types = LOW_RANK_MODELS
+
+
+class FedcoreLoraTrainingStrategy(FedCoreStrategy):
+    """
+    Strategy for LoRA (Low-Rank Adaptation) training operations.
+    
+    Uses BaseLoRA for parameter-efficient fine-tuning by adding trainable
+    low-rank decomposition matrices to existing model weights.
+    """
+    _operations_by_types = LORA_TRAINING_MODELS
 
 
 class FedcorePruningStrategy(FedCoreStrategy):

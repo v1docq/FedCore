@@ -2,6 +2,7 @@ from enum import Enum
 
 from fedcore.algorithm.distillation.distilator import BaseDistilator
 from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
+from fedcore.algorithm.low_rank.lora_operation import BaseLoRA
 from torchvision.models.detection.faster_rcnn import fasterrcnn_mobilenet_v3_large_fpn
 
 from fedcore.algorithm.pruning.pruners import BasePruner
@@ -38,6 +39,8 @@ class AtomizedModel(Enum):
     PRUNER_MODELS = {"pruning_model": BasePruner}
 
     LOW_RANK_MODELS = {"low_rank_model": LowRankModel}
+    
+    LORA_TRAINING_MODELS = {"lora_training_model": BaseLoRA}
 
     QUANTIZATION_MODELS = {"quantization_model": BaseQuantizer}
 
@@ -100,6 +103,7 @@ PRUNER_MODELS = AtomizedModel.PRUNER_MODELS.value
 QUANTIZATION_MODELS = AtomizedModel.QUANTIZATION_MODELS.value
 DISTILATION_MODELS = AtomizedModel.DISTILATION_MODELS.value
 LOW_RANK_MODELS = AtomizedModel.LOW_RANK_MODELS.value
+LORA_TRAINING_MODELS = AtomizedModel.LORA_TRAINING_MODELS.value
 TRAINING_MODELS = AtomizedModel.TRAINING_MODELS.value
 
 RESNET_MODELS = AtomizedModel.RESNET_MODELS.value
@@ -126,7 +130,31 @@ BACKBONE_MODELS = {
 DETECTION_MODELS = AtomizedModel.DETECTION_MODELS.value
 
 
-def default_fedcore_availiable_operation(problem: str = "pruning"):
+def default_fedcore_availiable_operation(
+    problem: str = "pruning", 
+    exclude_operations: list = None,
+    exclude_lora: bool = False,
+    include_lora: bool = True
+):
+    """
+    Get available operations for a given problem type.
+    
+    Args:
+        problem: Type of problem ('pruning', 'quantization', 'lora_training', etc.)
+        exclude_operations: List of operation names to exclude (optional)
+        exclude_lora: If True, exclude LoRA training operations (default: False)
+        include_lora: If False, exclude LoRA training operations (default: True)
+    
+    Returns:
+        List of available operation names
+    
+    Examples:
+        # Exclude LoRA from evolutionary optimization
+        ops = default_fedcore_availiable_operation('composite_compression', exclude_lora=True)
+        
+        # Or equivalently
+        ops = default_fedcore_availiable_operation('composite_compression', include_lora=False)
+    """
     all_operations = [
         "quantization_model",
         "low_rank_model",
@@ -138,8 +166,19 @@ def default_fedcore_availiable_operation(problem: str = "pruning"):
         "quantization": QUANTIZATION_MODELS.keys(),
         "distilation": DISTILATION_MODELS.keys(),
         "low_rank": LOW_RANK_MODELS.keys(),
+        "lora_training": LORA_TRAINING_MODELS.keys(),
         "detection": DETECTION_MODELS.keys(),
         "training": TRAINING_MODELS.keys(),
     }
 
-    return list(operation_dict[problem])
+    operations = list(operation_dict[problem])
+    
+    # Handle LoRA exclusion
+    if exclude_lora or not include_lora:
+        operations = [op for op in operations if op not in LORA_TRAINING_MODELS.keys()]
+    
+    # Handle general exclusions
+    if exclude_operations:
+        operations = [op for op in operations if op not in exclude_operations]
+    
+    return operations
