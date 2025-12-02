@@ -29,7 +29,7 @@ from numbers import Number
 from pathlib import Path
 from typing import (
     get_origin, get_args,   
-    Any, Callable, Dict, Iterable, List, Literal, Optional, Union,
+    Any, Callable, Dict, Iterable, List, Literal, Optional, Union, 
 )
 import logging
 
@@ -54,6 +54,10 @@ __all__ = [
     'AutoMLConfigTemplate',
     'TrainingTemplate',
     'LearningConfigTemplate',
+    'LowRankTemplate',
+    'QuantizationTemplate',
+    'FedotConfigTemplate',
+    'PruningTemplate',
     'APIConfigTemplate',
     'get_nested',
     'LookUp',

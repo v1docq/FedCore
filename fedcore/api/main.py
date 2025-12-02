@@ -115,6 +115,118 @@ class FedCore(Fedot):
         #                             use_auto_preprocessing=False)
         self.manager.solver = self.__build_assumption()
         return input_data
+    
+    def __build_assumption(self):
+        def camel_to_snake(camel_case_string):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        
+        initial_assumption = PipelineBuilder()
+        peft_strategy_params = self.manager.learning_config.peft_strategy_params
+        # check if atomized strategy
+        if not isinstance(peft_strategy_params, (list, tuple)):
+            peft_strategy_params = (peft_strategy_params,)
+        print('###', peft_strategy_params)
+        print('###', self.manager.learning_config)
+        for peft_strategy_conf in peft_strategy_params:
+            initial_assumption.add_node(
+                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
+                params=peft_strategy_conf.to_dict()
+            )
+
+        return initial_assumption.build()
+
+    def __build_assumption(self):
+        def camel_to_snake(camel_case_string):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        
+        initial_assumption = PipelineBuilder()
+        peft_strategy_params = self.manager.learning_config.peft_strategy_params
+        # check if atomized strategy
+        if not isinstance(peft_strategy_params, (list, tuple)):
+            peft_strategy_params = (peft_strategy_params,)
+        print('###', peft_strategy_params)
+        print('###', self.manager.learning_config)
+        for peft_strategy_conf in peft_strategy_params:
+            initial_assumption.add_node(
+                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
+                params=peft_strategy_conf.to_dict()
+            )
+
+        return initial_assumption.build()
+
+    @property
+    def compressed_model(self):
+        """Get compressed (optimized) model.
+        Returns:
+            torch.nn.Module or None: Compressed model
+        """
+        if self.fedcore_model is None:
+            return None
+        return getattr(self.fedcore_model, 'model_after', self.fedcore_model)
+
+    @property
+    def original_model(self):
+        """Get original (before compression) model.
+        Returns:
+            torch.nn.Module or None: Original model
+        """
+        if self.fedcore_model is None:
+            return None
+        return getattr(self.fedcore_model, 'model_before', self.fedcore_model)
+
+    def get_model_by_regime(self, regime: str = 'model_after'):
+        """Get model by regime name.
+        Args:
+            regime: 'model_after' for compressed, 'model_before' for original
+
+        Returns:
+            torch.nn.Module: Requested model or fallback to fedcore_model
+
+        Raises:
+            ValueError: If fedcore_model is not initialized
+        """
+        if self.fedcore_model is None:
+            raise ValueError("fedcore_model is not initialized. Call fit() first.")
+
+        model = getattr(self.fedcore_model, regime, None)
+        if model is None:
+            self.logger.warning(
+                f"Regime '{regime}' not found in fedcore_model. "
+                f"Using fedcore_model directly."
+            )
+            model = self.fedcore_model
+        return model
+
+    def _save_metrics_from_evaluator(self):
+        """Collect and save metrics from evaluator to registry after fit."""
+        if not hasattr(self.manager, 'solver') or self.manager.solver is None:
+            return
+
+        if not hasattr(self.manager.solver, 'history') or self.manager.solver.history is None:
+            return
+
+        fedcore_id = None
+        model_id = None
+
+        if self.fedcore_model is not None:
+            if hasattr(self.fedcore_model, 'operator') and hasattr(self.fedcore_model.operator, 'root_node'):
+                fitted_op = getattr(self.fedcore_model.operator.root_node, 'fitted_operation', None)
+                if fitted_op is not None:
+                    fedcore_id = getattr(fitted_op, '_fedcore_id', None)
+                    if fedcore_id:
+                        model_id = getattr(fitted_op, '_model_id_after', None) or getattr(fitted_op, '_model_id_before', None)
+
+        if fedcore_id and model_id:
+            registry = ModelRegistry()
+            registry.save_metrics_from_evaluator(
+                solver=self.manager.solver,
+                fedcore_id=fedcore_id,
+                model_id=model_id
+            )
 
     def __build_assumption(self):
         initial_assumption = PipelineBuilder()
@@ -201,9 +313,7 @@ class FedCore(Fedot):
             )
 
     def _process_input_data(self, input_data):
-        data_cls = DataCheck(
-            # peft_task=self.manager.learning_config.config['peft_strategy'],
-                             model=self.manager.automl_config.fedot_config['initial_assumption'],
+        data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
                              learning_params=self.manager.learning_config.learning_strategy_params
                              )
         train_data = Either.insert(input_data).then(data_cls.check_input_data).value
@@ -248,7 +358,7 @@ class FedCore(Fedot):
         def fit_function(train_data):
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
             if pretrain_before_optimise:
-                model_learning_pipeline = FEDOT_ASSUMPTIONS["training"](
+                model_learning_pipeline = PipelineBuilder().add_node(operation_type='training_model',
                     params=self.manager.learning_config.learning_strategy_params.to_dict()
                 )
                 model_learning_pipeline = model_learning_pipeline.build()

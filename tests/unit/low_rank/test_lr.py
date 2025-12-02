@@ -10,7 +10,7 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
+    TrainingTemplate, 
     LowRankTemplate
     )
 from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
@@ -31,7 +31,6 @@ def get_api_template():
     learning_template = LearningConfigTemplate(
         criterion=LOSS,
         learning_strategy=PRETRAIN_SCENARIO,
-        peft_strategy=PEFT_PROBLEM,
         peft_strategy_params=LowRankTemplate()
     )
     return learning_template
@@ -67,7 +66,6 @@ def test_lrs(low_rank_strategy):
     input_data.train_dataloader = train_dataloader
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
-        peft_task=learning_config.config['peft_strategy'],
         model=INITIAL_ASSUMPTION,
         learning_params=learning_config.learning_strategy_params
     )

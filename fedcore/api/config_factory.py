@@ -58,6 +58,7 @@ class ConfigFactory:
 
     #: Registry of template name → template class.
     registered_configs: dict = {}
+    _listed_instantiation = {'peft_strategy_params'}
 
     def __new__(*ars, **kwargs):
         """Disable direct instantiation of :class:`ConfigFactory`.
@@ -102,12 +103,21 @@ class ConfigFactory:
             misconf_errors = []
             for key, value in content.items():
                 try:
-                    value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
-                    if need_check:
-                        self.__class__.check(key, value)
-                        setattr(self, key, value)
-                    else:
-                        object.__setattr__(self, key, value)
+                    if key in cls._listed_instantiation and isinstance(value, (tuple, list)): # case for listings
+                        enlisted_value = []
+                        for item in value:
+                            item, need_check = ConfigFactory._instantiate_default(self, name, key, item)
+                            if need_check:
+                                self.__class__.check(key, item)
+                            enlisted_value.append(item)
+                        object.__setattr__(self, key, enlisted_value)
+                    else: # general case
+                        value, need_check = ConfigFactory._instantiate_default(self, name, key, value)
+                        if need_check:
+                            self.__class__.check(key, value)
+                            setattr(self, key, value)
+                        else:
+                            object.__setattr__(self, key, value)
                 except MisconfigurationError as e:
                     misconf_errors.append(e)
                 except Exception as x:
@@ -206,7 +216,8 @@ class ConfigFactory:
             ``True`` if the annotation allows ``None``, ``False`` otherwise.
         """
         origin = get_origin(annotation)
-        return (origin is Union or origin is Literal) and type(None) in get_args(annotation)
+        return ((origin is Union or origin is Literal) and 
+           type(None) in get_args(annotation)) 
 
     @classmethod
     def _instantiate_default(cls, self: ConfigTemplate, config_name: str, k: str, v):
@@ -256,8 +267,26 @@ class ConfigFactory:
             else:
                 v = v.value
         annotation = cls._get_annotation(config_name, k)
-        is_config = isclass(annotation) and issubclass(annotation, ConfigTemplate)
+        is_union = get_origin(annotation) is Union
+        if is_union:
+            exceptions = []
+            for arg in get_args(annotation):
+                try:
+                    x = cls._instantiate_default_one(self, arg, k, v)
+                except Exception as exception:
+                    exceptions.append(exception)
+                else:
+                    return x 
+            raise MisconfigurationError(exceptions)
+        else:
+            return cls._instantiate_default_one(self, annotation, k, v, config_name)
+                
 
+    @classmethod
+    def _instantiate_default_one(cls, self: ConfigTemplate, annotation, k: str, v, config_name: str = None):
+        
+        is_config = isclass(annotation) and issubclass(annotation, ConfigTemplate) 
+        
         if v is not None and not is_config:
             return v, True
         # check if explicitly optional
