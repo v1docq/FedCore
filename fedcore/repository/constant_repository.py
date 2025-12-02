@@ -30,12 +30,7 @@ from fedcore.architecture.dataset.task_specified.segmentation_dataset import (
     SegmentationDataset,
     SemanticSegmentationDataset,
 )
-from fedcore.metrics.api_metric import (
-    calculate_classification_metric,
-    calculate_computational_metric,
-    calculate_forecasting_metric,
-    calculate_regression_metric,
-)
+
 from fedcore.models.network_impl.decomposed_layers import DecomposableLayers  # noqa
 
 from fedcore.models.network_modules.layers.attention_layers import MultiHeadAttention
