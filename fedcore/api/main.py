@@ -29,11 +29,11 @@ from fedcore.architecture.abstraction.decorators import DaskServer, exception_ha
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.repository.constant_repository import (
-    FEDOT_API_PARAMS,
-    FEDOT_ASSUMPTIONS,
-    # FEDOT_GET_METRICS,
-)
+# from fedcore.repository.constant_repository import (
+#     FEDOT_API_PARAMS,
+#     FEDOT_ASSUMPTIONS,
+#     # FEDOT_GET_METRICS,
+# )
 from fedcore.metrics.quality import calculate_metrics
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer

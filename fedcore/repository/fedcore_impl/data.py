@@ -1,5 +1,4 @@
 from fedcore.data.data import CompressionInputData
-from functools import partial
 from typing import Union
 from fedot.core.data.data import InputData
 from fedot.core.data.multi_modal import MultiModalData
@@ -33,7 +32,12 @@ def build_holdout_producer(self, data: CompressionInputData):
     ), convert_compression_to_input(data)
     train_data.supplementary_data.is_auto_preprocessed = True
     test_data.supplementary_data.is_auto_preprocessed = True
-    return partial(self._data_producer, train_data, test_data)
+    
+    def data_producer():
+        """Returns iterable with single fold (train_data, test_data) for holdout validation"""
+        return [(train_data, test_data)]
+    
+    return data_producer
 
 
 def build_fedcore_dataproducer(

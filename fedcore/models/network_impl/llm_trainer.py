@@ -89,7 +89,7 @@ class FedCoreTransformersTrainer(TrainerCallback):
             if hasattr(trainer, 'lr_scheduler') and trainer.lr_scheduler:
                 self.trainer_objects['scheduler'] = trainer.lr_scheduler
         
-        for hook in self.hooks_collection.start:
+        for hook in self.hooks_collection.start():
             hook(epoch, 
                  trainer_objects=self.trainer_objects,
                  history=self.history)
@@ -131,7 +131,7 @@ class FedCoreTransformersTrainer(TrainerCallback):
             if hasattr(trainer, 'compute_loss'):
                 criterion = trainer.compute_loss
         
-        for hook in self.hooks_collection.end:
+        for hook in self.hooks_collection.end():
             hook(epoch,
                  trainer_objects=self.trainer_objects,
                  history=self.history,
@@ -406,14 +406,36 @@ class LLMTrainer(BaseTrainer):
             self._trainer.model.eval()
             
             eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
-            return self._trainer.predict(eval_dataset)
+            prediction_output = self._trainer.predict(eval_dataset)
+            
+            if hasattr(prediction_output, 'predictions') and hasattr(prediction_output, 'label_ids'):
+                pred_values = torch.tensor(prediction_output.predictions)
+                output_data = CompressionOutputData(
+                    task=input_data.task,
+                    predict=pred_values,
+                    data_type=DataTypesEnum.table,
+                )
+                return output_data
+            else:
+                return prediction_output
         elif self._trainer is None and has_val_loader:
             if self.model is None:
                 raise ValueError("Cannot create trainer for prediction: model is None. Call fit() first or provide model in initialization.")
-            datasets = self._prepare_data(x_test)
+            datasets = self._prepare_data(input_data)
             self._create_trainer(datasets)
             eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
-            return self._trainer.predict(eval_dataset)
+            prediction_output = self._trainer.predict(eval_dataset)
+            
+            if hasattr(prediction_output, 'predictions') and hasattr(prediction_output, 'label_ids'):
+                pred_values = torch.tensor(prediction_output.predictions)
+                output_data = CompressionOutputData(
+                    task=input_data.task,
+                    predict=pred_values,
+                    data_type=DataTypesEnum.table,
+                )
+                return output_data
+            else:
+                return prediction_output
 
         predictions_output = self._predict_model(input_data, output_mode)
         pred_values = torch.tensor(predictions_output.predictions)
