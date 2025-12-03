@@ -52,7 +52,7 @@ class QualityMetric(Metric):
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
         loader = getattr(reference_data.features, f"{cls.split}_dataloader")
 
-        prediction = results.predict.predict
+        prediction = results.predict
         if isinstance(prediction, torch.Tensor):
             prediction = prediction.cpu().detach()
 

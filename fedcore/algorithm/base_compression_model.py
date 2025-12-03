@@ -215,8 +215,14 @@ class BaseCompressionModel:
         logger = logging.getLogger(__name__)
         logger.info("BaseCompressionModel._init_model() started")
 
-        model = input_data.model
-        logger.info(f"Model type from input_data.target: {type(model).__name__}")
+        if isinstance(input_data, CompressionInputData):
+            model = getattr(input_data, 'model', None) or input_data.target
+        elif hasattr(input_data, 'features') and isinstance(input_data.features, CompressionInputData):
+            model = input_data.target or getattr(input_data.features, 'model', None)
+        else:
+            model = input_data.target
+        
+        logger.info(f"Model type from input_data: {type(model).__name__}")
 
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
@@ -249,9 +255,18 @@ class BaseCompressionModel:
     def _predict_model(self, x_test, output_mode: str = "default"):
         pass
 
-    def _get_example_input(self, input_data: InputData):
-        batch = next(iter(input_data.val_dataloader))
-        if isinstance(batch, (list, tuple)) and len(batch) == 2:
+    def _get_example_input(self, input_data):
+        if isinstance(input_data, CompressionInputData):
+            val_dataloader = input_data.val_dataloader
+        elif hasattr(input_data, 'val_dataloader'):
+            val_dataloader = input_data.val_dataloader
+        elif hasattr(input_data, 'features') and isinstance(input_data.features, CompressionInputData):
+            val_dataloader = input_data.features.val_dataloader
+        else:
+            raise ValueError("Cannot find val_dataloader in input_data")
+        
+        batch = next(iter(val_dataloader))
+        if isinstance(batch, (list, tuple)) and len(batch) >= 2:
             return batch[0]
         return batch
 

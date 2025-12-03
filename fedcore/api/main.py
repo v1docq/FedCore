@@ -29,11 +29,11 @@ from fedcore.architecture.abstraction.decorators import DaskServer, exception_ha
 from fedcore.data.data import CompressionInputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.repository.constant_repository import (
-    FEDOT_API_PARAMS,
-    FEDOT_ASSUMPTIONS,
-    # FEDOT_GET_METRICS,
-)
+# from fedcore.repository.constant_repository import (
+#     FEDOT_API_PARAMS,
+#     FEDOT_ASSUMPTIONS,
+#     # FEDOT_GET_METRICS,
+# )
 from fedcore.metrics.quality import calculate_metrics
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
@@ -231,15 +231,18 @@ class FedCore(Fedot):
     def __build_assumption(self):
         initial_assumption = PipelineBuilder()
         peft_strategy_params = self.manager.learning_config.peft_strategy_params
-        # check if atomized strategy
         if not isinstance(peft_strategy_params, (list, tuple)):
             peft_strategy_params = (peft_strategy_params,)
         for peft_strategy_conf in peft_strategy_params:
+            params = peft_strategy_conf.to_dict()
+            cls_name = peft_strategy_conf.__class__.__name__
+            if cls_name.endswith('Config'):
+                cls_name = cls_name[:-6] + 'Template'
+            operation_type = camel_to_snake(cls_name.replace('Template', '')) + '_model'
             initial_assumption.add_node(
-                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=peft_strategy_conf.to_dict()
+                operation_type=operation_type,
+                params=params
             )
-
         return initial_assumption.build()
 
     @property
