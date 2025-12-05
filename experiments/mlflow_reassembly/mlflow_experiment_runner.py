@@ -54,7 +54,7 @@ try:
     except ImportError:
         from fedcore.algorithm.low_rank.low_rank_opt import decompose_module
     
-    from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
+    from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning_in_place
     from fedcore.models.network_impl.decomposed_layers import IDecomposed
     
     FEDCORE_AVAILABLE = True
@@ -72,8 +72,8 @@ except ImportError as e:
         print("Warning: decompose_module not available (FedCore import failed)")
         pass
     
-    def rank_threshold_pruning(*args, **kwargs):
-        print("Warning: rank_threshold_pruning not available (FedCore import failed)")
+    def rank_threshold_pruning_in_place(*args, **kwargs):
+        print("Warning: rank_threshold_pruning_in_place not available (FedCore import failed)")
         pass
     
     class TransMLA:
@@ -677,7 +677,7 @@ class ExperimentRunner:
             
             for name, module in self.model.named_modules():
                 if isinstance(module, IDecomposed):
-                    rank_threshold_pruning(
+                    rank_threshold_pruning_in_place(
                         decomposed_module=module,
                         threshold=self.config.lowrank.threshold,
                         strategy=self.config.lowrank.strategy,

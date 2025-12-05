@@ -9,21 +9,15 @@ This module defines :class:`LowRankModel`, a compression wrapper around
 * optionally composes weights for inference and loads decomposed checkpoints.
 """
 
-from typing import Dict, Optional
-from fedot.core.data.data import InputData
+from typing import Optional
 from fedot.core.operations.operation_parameters import OperationParameters
-import torch_pruning as tp
-import torch
 from torch import nn
 import inspect
 
-from transformers import AutoTokenizer
 
-from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
+
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
-from fedcore.architecture.computational.devices import default_device, extract_device
-from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constant_repository import (
     DECOMPOSE_MODE,
