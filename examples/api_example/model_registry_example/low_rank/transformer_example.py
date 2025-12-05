@@ -20,16 +20,14 @@ from fedot.core.repository.tasks import (
 
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
-                                     LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, DeviceConfigTemplate, ComputeConfigTemplate,
+                                     LearningConfigTemplate,
+                                     DeviceConfigTemplate, ComputeConfigTemplate,
                                      LowRankTemplate)
-from fedcore.architecture.dataset.api_loader import ApiLoader
+
 from datasets import load_dataset
 from fedcore.api.main import FedCore
 from fedcore.api.llm_config import LLMConfigTemplate
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constant_repository import FedotTaskEnum
-from fedcore.metrics.nlp_metrics import NLPAccuracy, NLPF1, SacreBLEU, ROUGE
 from fedcore.tools.registry.model_registry import ModelRegistry
 
 log_dir = 'examples/api_example/model_registry_example/logs'

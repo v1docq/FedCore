@@ -1,8 +1,7 @@
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, PruningTemplate)
-from fedcore.architecture.dataset.api_loader import ApiLoader
+                                     TrainingTemplate, PruningTemplate)
 from fedcore.data.dataloader import load_data
 from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
@@ -63,7 +62,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=50)
 
-pretrain_config = NeuralModelConfigTemplate(epochs=200,
+pretrain_config = TrainingTemplate(epochs=200,
                                             log_each=20,
                                             eval_each=200,
                                             save_each=50,
@@ -82,7 +81,7 @@ fedot_config = FedotConfigTemplate(problem=PROBLEM,
 
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-finetune_config = NeuralModelConfigTemplate(epochs=3,
+finetune_config = TrainingTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
                                             criterion=LOSS,

@@ -1,5 +1,3 @@
-import sys
-import os
 import torch
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -11,18 +9,12 @@ from fedot.core.repository.tasks import (
 
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
-                                     LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, DeviceConfigTemplate, ComputeConfigTemplate,
+                                     LearningConfigTemplate, DeviceConfigTemplate, ComputeConfigTemplate,
                                      LowRankTemplate)
-from fedcore.architecture.dataset.api_loader import ApiLoader
-from fedcore.data.dataloader import load_data
 from datasets import load_dataset
-from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from fedcore.api.llm_config import LLMConfigTemplate
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constant_repository import FedotTaskEnum
-from fedcore.metrics.nlp_metrics import NLPAccuracy, NLPF1, SacreBLEU, ROUGE
 
 ##########################################################################
 ### CONFIGURATION ###

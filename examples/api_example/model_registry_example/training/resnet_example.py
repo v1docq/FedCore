@@ -1,8 +1,6 @@
 import sys
 import os
-import torch
 import time
-import gc
 import uuid
 import logging
 
@@ -13,7 +11,7 @@ sys.path.insert(0, correct_path)
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate)
+                                     TrainingTemplate)
 from fedcore.data.dataloader import load_data
 from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
@@ -111,7 +109,7 @@ def create_api_template(fedcore_id=None):
                                                    output_dim=None,
                                                    depth=6)
 
-    train_config = NeuralModelConfigTemplate(epochs=2,
+    train_config = TrainingTemplate(epochs=2,
                                              log_each= 1,
                                              eval_each=1,
                                              save_each=50,

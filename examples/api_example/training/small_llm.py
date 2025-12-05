@@ -1,5 +1,4 @@
 import sys
-import os
 import torch
 
 # Правильный путь с учетом вложенности
@@ -18,15 +17,12 @@ from fedot.core.repository.tasks import (
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, DeviceConfigTemplate, ComputeConfigTemplate)
-from fedcore.architecture.dataset.api_loader import ApiLoader
-from fedcore.data.dataloader import load_data
+                                     DeviceConfigTemplate, ComputeConfigTemplate)
 from datasets import load_dataset
 from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from fedcore.api.llm_config import LLMConfigTemplate
 from fedcore.data.data import CompressionInputData
-from fedcore.repository.constant_repository import FedotTaskEnum
 
 ##########################################################################
 ### DEFINE ML PROBLEM (classification, object_detection, regression,   ###

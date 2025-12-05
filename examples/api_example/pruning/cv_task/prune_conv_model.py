@@ -1,6 +1,5 @@
 import sys
-import os
-import torch
+
 
 # Правильный путь с учетом вложенности
 correct_path = "/home/user/projects/FedCore/FedCore"
@@ -8,8 +7,7 @@ sys.path.insert(0, correct_path)
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, LowRankTemplate)
-from fedcore.architecture.dataset.api_loader import ApiLoader
+                                     TrainingTemplate)
 from fedcore.data.dataloader import load_data
 from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
@@ -59,7 +57,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=6)
 
-pretrain_config = NeuralModelConfigTemplate(epochs=5,
+pretrain_config = TrainingTemplate(epochs=5,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,
@@ -76,11 +74,11 @@ fedot_config = FedotConfigTemplate(problem='classification',
 
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-finetune_config = NeuralModelConfigTemplate(epochs=3,
+finetune_config = TrainingTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
                                             )
-peft_config = NeuralModelConfigTemplate(
+peft_config = TrainingTemplate(
     epochs=3,
     log_each=10,
     eval_each=15,

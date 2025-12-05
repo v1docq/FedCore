@@ -1,8 +1,6 @@
 import sys
 import os
-import torch
 import time
-import gc
 import logging
 
 # Правильный путь с учетом вложенности
@@ -12,7 +10,7 @@ sys.path.insert(0, correct_path)
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, LowRankTemplate)
+                                     TrainingTemplate, LowRankTemplate)
 from fedcore.data.dataloader import load_data
 from fedcore.api.main import FedCore
 from fedcore.tools.registry.model_registry import ModelRegistry
@@ -71,7 +69,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=6)
 
-pretrain_config = NeuralModelConfigTemplate(
+pretrain_config = TrainingTemplate(
     epochs=5,
     log_each=10,
     eval_each=15,

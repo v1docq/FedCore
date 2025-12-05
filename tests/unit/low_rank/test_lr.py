@@ -1,24 +1,18 @@
-from copy import deepcopy
 import pytest
 from pymonad.either import Either
 
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
 from fedcore.api.api_configs import (
-    APIConfigTemplate, 
-    AutoMLConfigTemplate, 
-    FedotConfigTemplate, 
-    LearningConfigTemplate, 
-    ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
+    LearningConfigTemplate,  
     LowRankTemplate
     )
 from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.api_loader import ApiLoader
-from fedcore.tools.example_utils import get_scenario_for_api
-from fedcore.repository.constanst_repository import SLRStrategiesEnum
+from fedcore.repository.constant_repository import SLRStrategiesEnum
+
 
 
 METRIC_TO_OPTIMISE = ['accuracy', 'latency']

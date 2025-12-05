@@ -15,7 +15,7 @@ Key ideas
   utility methods for nested access, validation and conversion to ``dict``.
 * :class:`ExtendableConfigTemplate` allows dynamic attributes in addition to
   statically declared slots.
-* Specific templates (e.g. :class:`NeuralModelConfigTemplate`,
+* Specific templates (e.g. :class:`TrainingTemplate`,
   :class:`LowRankTemplate`, :class:`PruningTemplate`,
   :class:`QuantTemplate`) extend these base classes with domain-specific
   parameters that are later consumed by FedCore components.
@@ -544,9 +544,9 @@ class LearningConfigTemplate(ConfigTemplate):
         Parameter-efficient fine-tuning strategy.
     criterion : Callable or TorchLossesConstant or LookUp
         Global loss function configuration.
-    peft_strategy_params : NeuralModelConfigTemplate, optional
+    peft_strategy_params : TrainingTemplate, optional
         Additional parameters for PEFT strategy.
-    learning_strategy_params : NeuralModelConfigTemplate, optional
+    learning_strategy_params : TrainingTemplate, optional
         Additional parameters for the learning strategy.
     """
     learning_strategy: Literal['from_scratch', 'checkpoint'] = 'from_scratch'

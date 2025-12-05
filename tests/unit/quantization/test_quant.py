@@ -11,7 +11,7 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
+    TrainingTemplate, 
     QuantTemplate
     )
 from fedcore.algorithm.quantization.quantizers import BaseQuantizer
@@ -43,7 +43,7 @@ def get_api_template(quant_type: str):
         )
 
 
-    pretrain_config = NeuralModelConfigTemplate(
+    pretrain_config = TrainingTemplate(
         epochs=200,
         log_each=10,
         eval_each=15,
@@ -65,7 +65,7 @@ def get_api_template(quant_type: str):
 
     automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-    qat_config = NeuralModelConfigTemplate(epochs=3,
+    qat_config = TrainingTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
                                             criterion=LOSS,

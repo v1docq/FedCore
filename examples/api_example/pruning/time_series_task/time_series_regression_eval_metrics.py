@@ -7,8 +7,8 @@ from fedcore.data.dataloader import load_data
 
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (
-    APIConfigTemplate, DeviceConfigTemplate, AutoMLConfigTemplate,
-    LearningConfigTemplate, NeuralModelConfigTemplate, ComputeConfigTemplate, FedotConfigTemplate,
+    APIConfigTemplate, AutoMLConfigTemplate,
+    LearningConfigTemplate, TrainingTemplate, FedotConfigTemplate,
     PruningTemplate, ModelArchitectureConfigTemplate)
 
 ##########################################################################
@@ -66,7 +66,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=10)
 
-pretrain_config = NeuralModelConfigTemplate(epochs=200,
+pretrain_config = TrainingTemplate(epochs=200,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,
@@ -75,7 +75,7 @@ pretrain_config = NeuralModelConfigTemplate(epochs=200,
                                             custom_learning_params=dict(use_early_stopping={'patience': 30,
                                                                                             'maximise_task': False,
                                                                                             'delta': 0.01}))
-finetune_config = NeuralModelConfigTemplate(epochs=10,
+finetune_config = TrainingTemplate(epochs=10,
                                             log_each=3,
                                             eval_each=3,
                                             criterion=LOSS,

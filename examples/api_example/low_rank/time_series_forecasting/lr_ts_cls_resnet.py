@@ -7,7 +7,7 @@ from fedcore.data.dataloader import load_data
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (
     APIConfigTemplate, AutoMLConfigTemplate,
-    LearningConfigTemplate, NeuralModelConfigTemplate, FedotConfigTemplate,
+    LearningConfigTemplate, TrainingTemplate, FedotConfigTemplate,
     LowRankTemplate, ModelArchitectureConfigTemplate)
 
 ##########################################################################
@@ -52,7 +52,7 @@ def load_example_dataset():
 model_config = ModelArchitectureConfigTemplate(depth=dict(layers=2,
                                                 blocks_per_layer=[2, 2]))
 
-pretrain_config = NeuralModelConfigTemplate(epochs=200,
+pretrain_config = TrainingTemplate(epochs=200,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,
