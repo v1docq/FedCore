@@ -1,7 +1,7 @@
 from itertools import chain 
 from typing import Iterable
 
-from fedcore.models.network_impl.hooks import BaseHook
+from fedcore.models.network_impl.utils.hooks import BaseHook
 
 
 class HooksCollection:

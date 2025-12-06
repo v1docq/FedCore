@@ -566,10 +566,10 @@ class ModelArchitectureConfigTemplate(ConfigTemplate):
 
 
 @dataclass
-class NeuralModelConfigTemplate(NodeTemplate):
+class NeuralModelConfigTemplate(TrainingTemplate):
     """Training configuration for neural network models.
 
-    Extends :class:`NodeTemplate` with:
+    Extends :class:`TrainingTemplate` with:
 
     * custom learning parameters passed directly to the trainer;
     * a set of structured criterions with relative weights;
@@ -652,7 +652,6 @@ class LearningConfigTemplate(ConfigTemplate):
 
     """Copies previous version of learning config"""
     learning_strategy: Literal["from_scratch", "checkpoint"] = "from_scratch"
-    peft_strategy: PEFTStrategies = "training"
     criterion: Union[Callable, TorchLossesConstant] = LookUp(None)
     peft_strategy_params: TrainingTemplate = None
     learning_strategy_params: TrainingTemplate = None
@@ -696,7 +695,9 @@ class APIConfigTemplate(ExtendableConfigTemplate):
 
 
 @dataclass
-class LowRankTemplate(NeuralModelConfigTemplate):
+class LowRankTemplate(NeuralModelConfigTemplate): 
+    #TODO add "decomposer" field???
+    #TODO add decomposer_params as dict???
     """Configuration for low-rank (SVD-based) compression.
 
     Attributes

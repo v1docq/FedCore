@@ -16,7 +16,6 @@ from typing import Optional
 import loralib as lora
 import torch
 
-from fedot.core.operations.operation_parameters import OperationParameters
 from torch import nn
 
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
@@ -34,7 +33,7 @@ class LoraTrainer:
 
     Parameters
     ----------
-    params : Optional[OperationParameters], optional
+    params : dict
         Configuration parameters passed to :class:`BaseNeuralModel` and used
         to control LoRA behaviour. Recognized keys include:
 
@@ -44,7 +43,7 @@ class LoraTrainer:
         * Any additional keys supported by :class:`BaseNeuralModel`.
     """
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
+    def __init__(self, params: dict = {}):
         super().__init__()
         self.lora_strategy = params.get("lora_strategy", None)
         self.device = default_device()

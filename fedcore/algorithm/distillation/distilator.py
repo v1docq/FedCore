@@ -6,8 +6,6 @@ from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from typing import Optional
 import torch
 import logging
-from fedot.core.operations.operation_parameters import OperationParameters
-
 from fedcore.architecture.computational.devices import default_device
 from fedcore.data.data import TrainParams
 # from fedcore.metrics.cv_metrics import (
@@ -26,7 +24,7 @@ class BaseDistilator(BaseCompressionModel):
     Example:
     """
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
+    def __init__(self, params: dict = {}):
         super().__init__(params)
         # finetune params
         self.epochs = params.get("epochs", 15)

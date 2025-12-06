@@ -18,7 +18,7 @@ from fedcore.tools.registry.model_registry import ModelRegistry
 
 DEVICE = default_device('cuda')
 
-from fedcore.models.network_impl.hooks import BaseHook
+from fedcore.models.network_impl.utils.hooks import BaseHook
 from abc import ABC, abstractmethod
 from fedcore.architecture.comptutaional.devices import default_device
 
@@ -45,7 +45,7 @@ class BaseCompressionModel(ABC):
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
+    def __init__(self, params: dict = {}):
         import logging
         logger = logging.getLogger(__name__)
         logger.debug("BaseCompressionModel.__init__() called")

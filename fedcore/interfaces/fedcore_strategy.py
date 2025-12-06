@@ -80,7 +80,7 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
         from functools import partial
         self.operation_impl = partial(
             create_trainer_from_input_data,
-            params=params
+            params=params.to_dict() if params else None
         )
 
     def fit(self, train_data: CompressionInputData):

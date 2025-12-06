@@ -4,7 +4,6 @@ Trainer Factory for creating appropriate trainers based on task type
 
 from typing import Any, Dict, Optional, Type
 import logging
-from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
@@ -125,7 +124,7 @@ def _get_trainer_class(model: Any, task_type: str, params: Dict) -> Type[ITraine
 
 def create_trainer(
     task_type: str,
-    params: Optional[OperationParameters] = None,
+    params: Optional[dict] = None,
     model: Any = None,
     **kwargs
 ) -> ITrainer:
@@ -146,7 +145,7 @@ def create_trainer(
     """
     
     if params is not None and hasattr(params, 'to_dict'):
-        params_dict = params.to_dict()
+        params_dict = params.to_dict() #TODO delete check?
     else:
         params_dict = params or {}
     trainer_class = _get_trainer_class(model, task_type, params_dict)
@@ -156,7 +155,7 @@ def create_trainer(
 
 def create_trainer_from_input_data(
     input_data: Any,
-    params: Optional[OperationParameters] = None,
+    params: Optional[dict] = None,
     model: Any = None,
     **kwargs
 ) -> ITrainer:

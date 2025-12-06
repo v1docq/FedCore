@@ -68,7 +68,7 @@ class LowRankModel(BaseCompressionModel):
 
         self.decomposer_params = self._extract_decomposer_params(params)
 
-    def _extract_decomposer_params(self, params: OperationParameters) -> dict:
+    def _extract_decomposer_params(self, params: dict) -> dict:
         """Extract decomposer parameters from operation parameters.
 
         Args:

@@ -6,7 +6,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from fedot.core.data.data import InputData
-from fedot.core.operations.operation_parameters import OperationParameters
 from fedot.core.repository.dataset_types import DataTypesEnum
 from torch import Tensor
 from tqdm import tqdm
@@ -353,7 +352,7 @@ class BaseNeuralForecaster(BaseNeuralModel):
                 print(features)
     """
 
-    def __init__(self, model: torch.nn.Module, params: Optional[OperationParameters] = None, additional_hooks: Sequence['BaseHook'] = []):
+    def __init__(self, model: torch.nn.Module, params: dict = {}, additional_hooks: Sequence['BaseHook'] = []):
         super().__init__(model, params, additional_hooks)
         self.train_horizon = self.params.get('train_horizon', 1)
         self.test_horizon = self.params.get('test_horizon', 1)
