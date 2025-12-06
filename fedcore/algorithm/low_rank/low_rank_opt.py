@@ -1,9 +1,8 @@
 from torch import nn
 import inspect
 
-from transformers import AutoTokenizer
+from fedcore.algorithm.low_rank.decomposer import DecomposerType
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module_in_place
-from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.models.network_impl.utils.hooks import BaseHook
@@ -64,7 +63,7 @@ class LowRankModel(BaseCompressionModel):
     def __init__(self, params: dict = {}):
         super().__init__(params)
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE) 
-        self.decomposer = params.get('decomposer', 'svd')
+        self.decomposer = DecomposerType.map_from_str(params.get('decomposer', 'svd'))
         self.compose_mode = params.get("compose_mode", None)
 
         self.decomposer_params = self._extract_decomposer_params(params)
@@ -87,12 +86,12 @@ class LowRankModel(BaseCompressionModel):
         if 'rank' not in filtered_params:
             filtered_params['rank'] = None
 
-        if self.decomposer == 'svd':
+        if self.decomposer == DecomposerType.SVD:
             filtered_params.pop('power', None)
             filtered_params.pop('random_init', None)
-        elif self.decomposer == 'two_sided':
+        elif self.decomposer == DecomposerType.TWO_SIDED:
             filtered_params.pop('power', None)
-        elif self.decomposer == 'cur':
+        elif self.decomposer == DecomposerType.CUR:
             filtered_params.pop('power', None)
             filtered_params.pop('random_init', None)
 

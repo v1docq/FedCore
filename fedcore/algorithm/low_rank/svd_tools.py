@@ -8,12 +8,13 @@ from typing import Literal, Optional
 import torch
 from torch.nn.modules import Module
 
+from fedcore.algorithm.low_rank.decomposer import DecomposerType
 from fedcore.architecture.computational.devices import extract_device
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 from fedcore.repository.constant_repository import (
     DECOMPOSABLE_LAYERS, 
     COMPOSE_MODE, 
-    PROHIBIT_TO_DECOMPOSE
+    PROHIBIT_TO_DECOMPOSE,
 )
 
 __all__ = [
@@ -24,9 +25,9 @@ __all__ = [
 def decompose_module_in_place(
     model: Module,
     decomposing_mode: Optional[str] = "channel",
-    decomposer: Literal['svd', 'cur', 'rsvd'] = 'svd',
-    compose_mode: str = None,
-    decomposer_params: dict = None,
+    decomposer = DecomposerType.SVD,
+    compose_mode: Optional[str] = None,
+    decomposer_params: Optional[dict] = None,
 ) -> None:
     """Replace decomposable layers with their decomposed analogues in module (in-place).
 
@@ -47,7 +48,12 @@ def decompose_module_in_place(
         decomposed_analogue = _map_decomposed_cls(module)
         if decomposed_analogue is not None:
             new_module = decomposed_analogue(
-                module, True, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
+                module, 
+                True, 
+                decomposing_mode=decomposing_mode, 
+                decomposer=decomposer,
+                compose_mode=compose_mode,
+                decomposer_params=decomposer_params
             ).to(device)
             setattr(model, name, new_module)
 
