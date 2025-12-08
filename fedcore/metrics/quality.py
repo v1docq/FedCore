@@ -1,4 +1,5 @@
 import torch
+import evaluate
 import pandas as pd
 from functools import wraps
 
@@ -18,6 +19,7 @@ import torchmetrics
 
 from importlib import import_module
 
+from fedcore.data.data import CompressionOutputData
 from fedcore.repository.constant_repository import FedotTaskEnum
 from fedcore.api.utils.misc import camel_to_snake
 from fedcore.tools.ruler import PerformanceEvaluator
@@ -53,6 +55,9 @@ class QualityMetric(Metric):
         loader = getattr(reference_data.features, f"{cls.split}_dataloader")
 
         prediction = results.predict
+        if isinstance(prediction, CompressionOutputData):
+            prediction = prediction.predict
+
         if isinstance(prediction, torch.Tensor):
             prediction = prediction.cpu().detach()
 
@@ -122,11 +127,15 @@ _NEED_TO_MINIMIZE = {
     'Latency': True,
     'Throughput': False,
     'ModelSize': True,
-    'PowerConsupmtion': True
+    'PowerConsupmtion': True,
+    'BLEU': False,
+    'ROUGE': False,
+    'METEOR': False,
+    'BERTScore': False
 }
 
 class MetricFactory:
-    __approaches = ['get_fedot', 'get_torchmetrics', 'get_computational']
+    __approaches = ['get_fedot', 'get_torchmetrics', 'get_computational', 'get_evaluate']
     __cpu_prefix = 'CPU'
 
     @classmethod
@@ -225,6 +234,60 @@ class MetricFactory:
             }
         )
         LOADED_METRICS[metric_name] = new_metric
+        return new_metric
+    
+    @classmethod
+    def get_evaluate(cls, metric_name, problem=None) -> QualityMetric:
+        if metric_name in LOADED_METRICS:
+            return LOADED_METRICS[metric_name]
+        
+        original_name = metric_name
+
+        if problem is None:
+            problem = _METRICS_TO_PROBLEM.get(metric_name)
+
+        parent_instance = evaluate.load(metric_name)
+        parent_cls = type(parent_instance)
+        
+        attributes = {}
+        attributes['problem'] = problem
+        # special cases
+        attributes['_metric_name'] = metric_name
+        need_minimize = _NEED_TO_MINIMIZE.get(metric_name, _NEED_TO_MINIMIZE.get(metric_name.upper(), False))
+        attributes['need_to_minimize'] = need_minimize
+
+        @classmethod
+        @_problem_based_output_convertor(problem)
+        def metric(cls, target, predict, **metric_kw) -> torch.Tensor:
+            """
+            Compute metric value using evaluate library
+            Args: 
+                target: torch.Tensor, logits, or array/list 
+                predict: torch.Tensor, logits, or array/list 
+                **metric_kw - any kwargs to pass to evaluate.compute()
+            """            
+            instance = evaluate.load(cls._metric_name)
+            result = instance.compute(predictions=predict, references=target, **metric_kw)
+            
+            if isinstance(result, dict):
+                if 'score' in result:
+                    result = result['score']
+                elif len(result) == 1:
+                    result = next(iter(result.values()))
+                else:
+                    result = torch.tensor(list(result.values())[0])
+            
+            if not isinstance(result, torch.Tensor):
+                result = torch.tensor(result, dtype=torch.float32)
+            
+            del instance
+            return result
+        
+        attributes['metric'] = metric
+        new_metric = type(
+            original_name, (parent_cls, QualityMetric), attributes
+        )
+        LOADED_METRICS[original_name] = new_metric 
         return new_metric
 
 
