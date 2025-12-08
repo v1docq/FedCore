@@ -1,8 +1,6 @@
 import logging
 import os
 import warnings
-from copy import deepcopy
-from datetime import datetime
 from functools import partial
 from typing import Union, Optional
 import numpy as np
@@ -10,6 +8,7 @@ import pandas as pd
 import torch
 
 from fedcore.api.utils.misc import camel_to_snake
+from fedcore.repository.constant_repository import FEDOT_ASSUMPTIONS
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 FEDCORE_IMPLEMENTATIONS = FedcoreModels().setup_repository()
 
@@ -19,19 +18,11 @@ from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
 from pymonad.either import Either
 from pymonad.maybe import Maybe
-from torch import Tensor
 from torch.utils.data import DataLoader
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
 from fedcore.data.data import CompressionInputData
-from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-from fedcore.repository.constanst_repository import (
-    FEDOT_API_PARAMS,
-    FEDOT_ASSUMPTIONS,
-    # FEDOT_GET_METRICS,
-)
 from fedcore.metrics.quality import calculate_metrics
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer

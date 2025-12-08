@@ -17,7 +17,7 @@ import traceback
 import logging
 
 import torch
-from torch import nn, optim
+from torch import nn
 from torch.ao.quantization import (
     convert, prepare, prepare_qat, propagate_qconfig_, quantize_dynamic)
 from torch.ao.quantization.qconfig import (
@@ -33,8 +33,9 @@ from torch.ao.quantization.quantization_mappings import (
 
 from fedot.core.data.data import InputData
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
 from fedcore.algorithm.quantization.utils import (
-    ParentalReassembler, QDQWrapper, uninplace, get_flattened_qconfig_dict)
+    QDQWrapper, uninplace, get_flattened_qconfig_dict)
 from fedcore.api.api_configs import QuantMode
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.algorithm.quantization.hooks import AbstractQuantizationHook, DynamicQuantizationHook, QATHook, StaticQuantizationHook

@@ -502,6 +502,27 @@ class AutoMLConfigTemplate(ConfigTemplate):
     mutation_strategy: Literal["params_mutation_strategy"] = "params_mutation_strategy"
     optimizer: Optional[Any] = None  ### TODO which optimizers may be used? anything except FedCoreEvoOptimizer
 
+@dataclass
+class ModelArchitectureConfigTemplate(ConfigTemplate):
+    """Basic model architecture settings.
+
+    Attributes
+    ----------
+    input_dim : int, optional
+        Input dimensionality.
+    output_dim : int, optional
+        Output dimensionality.
+    depth : int or dict
+        Model depth or a more detailed structure description.
+    custom_model_params : dict, optional
+        Extra backend-specific architecture parameters.
+    """
+
+    """Example of specific node template"""
+    input_dim: Union[None, int] = None
+    output_dim: Union[None, int] = None
+    depth: Union[int, dict] = 3
+    custom_model_params: dict = None
 
 @dataclass
 class TrainingTemplate(ConfigTemplate):
@@ -512,7 +533,11 @@ class TrainingTemplate(ConfigTemplate):
     epochs: int = 1
     optimizer: Optimizers = "adam"
     scheduler: Optional[Schedulers] = None
+    scheduler_step_each: int = 1
     criterion: Union[TorchLossesConstant, Callable] = LookUp(None)
+    custom_learning_params: dict = None
+    custom_criterions: dict = None
+    model_architecture: ModelArchitectureConfigTemplate = None
 
     @staticmethod
     def map_criterion(criterion: Union[str, Callable]) -> object:
@@ -540,29 +565,6 @@ class TrainingTemplate(ConfigTemplate):
             return criterion()
         else:
             raise ValueError(f"Unknown or not callable criterion: {criterion}")
-
-
-@dataclass
-class ModelArchitectureConfigTemplate(ConfigTemplate):
-    """Basic model architecture settings.
-
-    Attributes
-    ----------
-    input_dim : int, optional
-        Input dimensionality.
-    output_dim : int, optional
-        Output dimensionality.
-    depth : int or dict
-        Model depth or a more detailed structure description.
-    custom_model_params : dict, optional
-        Extra backend-specific architecture parameters.
-    """
-
-    """Example of specific node template"""
-    input_dim: Union[None, int] = None
-    output_dim: Union[None, int] = None
-    depth: Union[int, dict] = 3
-    custom_model_params: dict = None
 
 
 @dataclass
@@ -696,7 +698,6 @@ class APIConfigTemplate(ExtendableConfigTemplate):
 
 @dataclass
 class LowRankTemplate(NeuralModelConfigTemplate): 
-    #TODO add "decomposer" field???
     #TODO add decomposer_params as dict???
     """Configuration for low-rank (SVD-based) compression.
 
@@ -723,7 +724,11 @@ class LowRankTemplate(NeuralModelConfigTemplate):
     compose_mode: Optional[Literal['one_layer', 'two_layers', 'three_layers']] = None
     non_adaptive_threshold: float = .5
     finetune_params: TrainingTemplate = None
-
+    decomposer: Optional[Literal["svd", "rsvd", "cur", "two_sided"]] = 'svd'
+    rank: Optional[Union[int, float]] = None  # Initial rank for decomposition (None = auto-estimate, float = relative coef from min tensor size value)
+    distortion_factor: float = 0.6  # For stable rank estimation (0 < distortion_factor <= 1)
+    random_init: Literal['normal', 'ortho', 'lean_walsh'] = 'normal'  # Random initialization for randomized methods
+    power: int = 3  # Power parameter for RandomizedSVD
 
 @dataclass
 class PruningTemplate(TrainingTemplate):
