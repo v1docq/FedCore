@@ -107,7 +107,8 @@ def _problem_based_output_convertor(problem):
     def output_convertor(metric):
         wraps(metric)
         def _wrapped_output(cls, target, predict, **metric_kw):
-            assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor)
+            if problem is not None:
+                assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor)
             try: 
                 return metric(cls, target, predict, **metric_kw)
             except (ValueError):
@@ -128,10 +129,9 @@ _NEED_TO_MINIMIZE = {
     'Throughput': False,
     'ModelSize': True,
     'PowerConsupmtion': True,
-    'BLEU': False,
-    'ROUGE': False,
-    'METEOR': False,
-    'BERTScore': False
+    'bleu': False,
+    'rouge': False,
+    'meteor': False,
 }
 
 class MetricFactory:
