@@ -1,7 +1,6 @@
 from torch import nn
-import inspect
 
-from fedcore.algorithm.low_rank.decomposer import DecomposerType
+from fedcore.algorithm.low_rank.decomposer import DecomposerType, init_decomposer_from_whole_params
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module_in_place
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
@@ -12,26 +11,9 @@ from fedcore.repository.constant_repository import (
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from tdecomp._base import Decomposer
-from tdecomp.matrix.decomposer import DECOMPOSERS
+
 from fedcore.algorithm.low_rank.reassembly import TransMLA, FlatLLM
 from external.transmlacore.modify_config import settings
-
-
-def _get_all_decomposer_params():
-    """Dynamically extract all unique parameters from all decomposer classes.
-
-    Returns:
-        set: Set of all parameter names across all decomposer implementations
-    """
-    all_params = set()
-    for decomposer_cls in DECOMPOSERS.values():
-        sig = inspect.signature(decomposer_cls.__init__)
-        all_params.update(sig.parameters.keys())
-    all_params.discard('self')
-    return all_params
-
-
-_DECOMPOSER_PARAMS = _get_all_decomposer_params()
 
 
 class LowRankModel(BaseCompressionModel):
@@ -63,39 +45,8 @@ class LowRankModel(BaseCompressionModel):
     def __init__(self, params: dict = {}):
         super().__init__(params)
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE) 
-        self.decomposer = DecomposerType.map_from_str(params.get('decomposer', 'svd'))
+        self.decomposer = init_decomposer_from_whole_params(params)
         self.compose_mode = params.get("compose_mode", None)
-
-        self.decomposer_params = self._extract_decomposer_params(params)
-
-    def _extract_decomposer_params(self, params: dict) -> dict:
-        """Extract decomposer parameters from operation parameters.
-
-        Args:
-            params: Operation parameters from config
-
-        Returns:
-            dict: Parameters for tdecomp decomposer (rank, distortion_factor, etc.)
-        """
-        params_dict = params.to_dict() if hasattr(params, 'to_dict') else dict(params)
-        filtered_params = {
-            key: value for key, value in params_dict.items()
-            if key in _DECOMPOSER_PARAMS
-        }
-
-        if 'rank' not in filtered_params:
-            filtered_params['rank'] = None
-
-        if self.decomposer == DecomposerType.SVD:
-            filtered_params.pop('power', None)
-            filtered_params.pop('random_init', None)
-        elif self.decomposer == DecomposerType.TWO_SIDED:
-            filtered_params.pop('power', None)
-        elif self.decomposer == DecomposerType.CUR:
-            filtered_params.pop('power', None)
-            filtered_params.pop('random_init', None)
-
-        return filtered_params
 
     def _get_example_input(self, input_data):
         """Override to handle tuples/lists with 2 or 3 elements (for LLM data),
@@ -164,7 +115,6 @@ class LowRankModel(BaseCompressionModel):
             self.decomposing_mode,
             self.decomposer,
             self.compose_mode,
-            self.decomposer_params
         )
         model.to(self.device)
 
@@ -274,7 +224,7 @@ class LowRankModel(BaseCompressionModel):
             state_dict_path=state_dict_path,
             decomposing_mode=self.decomposing_mode,
             compose_mode=self.compose_mode,
-            decomposer_params=self.decomposer_params,
+            decomposer=self.decomposer
         )
         model.to(self.device)
 

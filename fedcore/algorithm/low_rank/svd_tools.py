@@ -3,10 +3,11 @@
 Model decomposition, pruning by threshold, decomposed model loading.
 """
 
-from typing import Literal, Optional
+from typing import Optional
 
 import torch
 from torch.nn.modules import Module
+from tdecomp._base import Decomposer
 
 from fedcore.algorithm.low_rank.decomposer import DecomposerType
 from fedcore.architecture.computational.devices import extract_device
@@ -25,9 +26,8 @@ __all__ = [
 def decompose_module_in_place(
     model: Module,
     decomposing_mode: Optional[str] = "channel",
-    decomposer = DecomposerType.SVD,
+    decomposer: Decomposer = DecomposerType.SVD.value(),
     compose_mode: Optional[str] = None,
-    decomposer_params: Optional[dict] = None,
 ) -> None:
     """Replace decomposable layers with their decomposed analogues in module (in-place).
 
@@ -43,7 +43,7 @@ def decompose_module_in_place(
         if len(list(module.children())) > 0:
             decompose_module_in_place(
                 module, decomposing_mode=decomposing_mode, decomposer=decomposer,
-                compose_mode=compose_mode, decomposer_params=decomposer_params
+                compose_mode=compose_mode
             )
         decomposed_analogue = _map_decomposed_cls(module)
         if decomposed_analogue is not None:
@@ -53,7 +53,6 @@ def decompose_module_in_place(
                 decomposing_mode=decomposing_mode, 
                 decomposer=decomposer,
                 compose_mode=compose_mode,
-                decomposer_params=decomposer_params
             ).to(device)
             setattr(model, name, new_module)
 
@@ -77,7 +76,7 @@ def load_svd_state_dict(
     decomposing_mode: str,
     state_dict_path: str,
     compose_mode: str = COMPOSE_MODE,
-    decomposer_params: dict = None,
+    decomposer: Decomposer = DecomposerType.SVD.value()
 ) -> None:
     """Loads SVD state_dict to model.
 
@@ -91,7 +90,7 @@ def load_svd_state_dict(
     state_dict = torch.load(state_dict_path, map_location="cpu")
 
     decompose_module_in_place(
-        model=model, decomposing_mode=decomposing_mode, compose_mode=compose_mode, decomposer_params=decomposer_params
+        model=model, decomposing_mode=decomposing_mode, compose_mode=compose_mode, decomposer=decomposer
     )
     _load_svd_params(model, state_dict)
     model.load_state_dict(state_dict)
