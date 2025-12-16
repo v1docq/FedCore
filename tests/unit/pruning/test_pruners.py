@@ -19,12 +19,11 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.tools.example_utils import get_scenario_for_api
 
-
+PEFT_PROBLEM = 'pruning'
 def get_api_template(pruner_importance: str):
     METRIC_TO_OPTIMISE = ['accuracy', 'latency']
     LOSS = 'cross_entropy'
     PROBLEM = 'classification'
-    PEFT_PROBLEM = 'pruning'
     INITIAL_ASSUMPTION = 'ResNet18'
     PRETRAIN_SCENARIO = 'from_checkpoint'
     POP_SIZE = 1
@@ -80,7 +79,6 @@ def get_api_template(pruner_importance: str):
         criterion=LOSS,
         learning_strategy=learning_strategy,
         learning_strategy_params=pretrain_config,
-        peft_strategy=PEFT_PROBLEM,
         peft_strategy_params=peft_config
         )
 
@@ -129,7 +127,7 @@ def test_pruners(pruner_importance):
     input_data.train_dataloader = train_dataloader
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
-        peft_task=api_config.learning_config.config['peft_strategy'],
+        peft_task=PEFT_PROBLEM,
         model=api_config.automl_config.fedot_config['initial_assumption'],
         learning_params=api_config.learning_config.learning_strategy_params
     )

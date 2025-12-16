@@ -243,7 +243,7 @@ class BaseCompressionModel(ABC):
     #     return model
     
     def _get_model_or_load_from_path(self, input_data):
-        model = input_data.target #TODO NEED FIX with _init_model and other staff, check initialization of models, registry, input_data and etc!!!
+        model = input_data.target
         self.logger.info(f"Model type from input_data.model: {type(model).__name__}")
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
