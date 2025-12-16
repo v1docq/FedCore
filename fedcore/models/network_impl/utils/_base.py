@@ -23,7 +23,7 @@ HookType = Literal['start', 'end', 'batch_start', 'batch_end', 'validation']
 
 class BaseTrainer(ITrainer, IHookable):
     
-    def __init__(self, params: Optional[Dict] = None):
+    def __init__(self, model: Union['PreTrainedModel', 'Module', None], params: Optional[Dict] = None):
         self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
         
@@ -47,8 +47,7 @@ class BaseTrainer(ITrainer, IHookable):
             'val_loss': [],
             'learning_rates': []
         }
-        
-        self.model: Union['PreTrainedModel', 'Module', None] = self.params.get("model", None)
+        self.model = model
         self.device = default_device()
             
     def register_additional_hooks(self, hooks: Iterable[Enum]) -> None:

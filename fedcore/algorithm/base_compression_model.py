@@ -21,7 +21,7 @@ DEVICE = default_device('cuda')
 from fedcore.models.network_impl.utils.hooks import BaseHook
 from abc import ABC, abstractmethod
 from fedcore.architecture.comptutaional.devices import default_device
-
+import logging
 
 class BaseCompressionModel(ABC):
     """Class responsible for NN model implementation.
@@ -46,9 +46,8 @@ class BaseCompressionModel(ABC):
     """
 
     def __init__(self, params: dict = {}):
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.debug("BaseCompressionModel.__init__() called")
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug("BaseCompressionModel.__init__() called")
 
         # self.epochs = params.get("epochs", 10)
         self.batch_size = params.get("batch_size", 16)
@@ -63,7 +62,7 @@ class BaseCompressionModel(ABC):
         if self._fedcore_id is None:
             self._fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
 
-        logger.debug(f"fedcore_id: {self._fedcore_id}")
+        self.logger.debug(f"fedcore_id: {self._fedcore_id}")
 
         self._model_id_before = None
         self._model_id_after = None
@@ -71,7 +70,7 @@ class BaseCompressionModel(ABC):
         self._model_after_cached = None
         self._registry = ModelRegistry()
 
-        logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
+        self.logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
 
     # def _save_and_clear_cache(self):
     #     """Save model and clear cache using ModelRegistry.
@@ -214,49 +213,63 @@ class BaseCompressionModel(ABC):
         )
         return model_id
 
-    def _init_model(self, input_data, additional_hooks=tuple()):
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info("BaseCompressionModel._init_model() started")
+    # def _init_model(self, input_data, additional_hooks=tuple()):
 
-        model = input_data.model
-        logger.info(f"Model type from input_data.target: {type(model).__name__}")
+    #     model = input_data.model
 
+    #     # Support passing a filesystem path to a checkpoint/model at the node input
+    #     if isinstance(model, str):
+    #         logger.info(f"Loading model from path: {model}")
+    #         device = default_device()
+    #         loaded = torch.load(model, map_location=device)
+    #         if isinstance(loaded, dict) and "model" in loaded:
+    #             model = loaded["model"]
+    #         else:
+    #             model = loaded
+    #         logger.info(f"Model loaded: type={type(model).__name__}")
+
+    #     if not isinstance(model, torch.nn.Module):
+    #         raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
+
+    #     logger.info("Calling model_before setter")
+    #     self.model_before = model
+    #     logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
+
+    #     # Create trainer using factory
+    #     self.trainer = create_trainer_from_input_data(input_data, self.params)
+    #     self.trainer.register_additional_hooks(additional_hooks)
+    #     self.trainer.model = model
+
+    #     return model
+    
+    def _get_model_or_load_from_path(self, input_data):
+        model = input_data.target #TODO NEED FIX with _init_model and other staff, check initialization of models, registry, input_data and etc!!!
+        self.logger.info(f"Model type from input_data.model: {type(model).__name__}")
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
-            logger.info(f"Loading model from path: {model}")
+            self.logger.info(f"Loading model from path: {model}")
             device = default_device()
             loaded = torch.load(model, map_location=device)
             if isinstance(loaded, dict) and "model" in loaded:
                 model = loaded["model"]
             else:
                 model = loaded
-            logger.info(f"Model loaded: type={type(model).__name__}")
-
+            self.logger.info(f"Model loaded: type={type(model).__name__}")
+        
         if not isinstance(model, torch.nn.Module):
             raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
-
-        logger.info("Calling model_before setter")
-        self.model_before = model
-        logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
-
-        # Create trainer using factory
-        self.trainer = create_trainer_from_input_data(input_data, self.params)
-        self.trainer.register_additional_hooks(additional_hooks)
-        self.trainer.model = model
-
         return model
     
     def _init_model_before_model_after(self, input_data):
-        self.model_before = input_data.target #TODO NEED FIX with _init_model and other staff, check initialization of models, registry, input_data and etc!!!
+        model = self._get_model_or_load_from_path(input_data) 
+        self.logger.info("Calling model_before setter")
+        self.model_before = model
+        self.logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
+
         self.model_after = deepcopy(self.model_before)
 
     def _init_trainer_with_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
-        is_forecaster = input_data.task.task_type.value.__contains__('forecasting')
-        if is_forecaster:
-            self.trainer = BaseNeuralForecaster(self.model_after, self.params, additional_hooks)
-        else:
-            self.trainer = BaseNeuralModel(self.model_after, self.params, additional_hooks)
+        self.trainer = create_trainer_from_input_data(input_data, self.params, self.model_after, additional_hooks=additional_hooks)
 
     def _init_trainer_model_before_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
         self._init_model_before_model_after(input_data)
@@ -283,7 +296,7 @@ class BaseCompressionModel(ABC):
 
     def _get_example_input(self, input_data: InputData):
         b = next(iter(input_data.features.val_dataloader))
-        if isinstance(b, (list, tuple)) and len(b) == 2:
+        if isinstance(b, (list, tuple)) and len(b) >= 2:
             return b[0]
         return b
 

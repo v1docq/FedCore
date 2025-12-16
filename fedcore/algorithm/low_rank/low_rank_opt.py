@@ -10,7 +10,6 @@ from fedcore.repository.constant_repository import (
     LRHooks
 )
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
-from tdecomp._base import Decomposer
 
 from fedcore.algorithm.low_rank.reassembly import TransMLA, FlatLLM
 from external.transmlacore.modify_config import settings
@@ -48,26 +47,6 @@ class LowRankModel(BaseCompressionModel):
         self.decomposer = init_decomposer_from_whole_params(params)
         self.compose_mode = params.get("compose_mode", None)
 
-    def _get_example_input(self, input_data):
-        """Override to handle tuples/lists with 2 or 3 elements (for LLM data),
-        as well as dictionary inputs.
-
-        Args:
-            input_data: InputData or CompressionInputData with dataloader
-
-        Returns:
-            Tensor or structure that can be used as model input
-        """
-        batch = super()._get_example_input(input_data)
-
-        if isinstance(batch, dict):
-            return batch
-
-        if isinstance(batch, (list, tuple)) and len(batch) >= 2:
-            return batch[0]
-
-        return batch
-
     def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
         """Initialize trainer, models and attach low-rank hooks.
 
@@ -92,15 +71,7 @@ class LowRankModel(BaseCompressionModel):
         additional_hooks = [hook_type() for hook_type in additional_hooks]
         super()._init_trainer_model_before_model_after(input_data, additional_hooks)
         
-        decompose_module_in_place(
-            self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
-        )
-
-    
-    def _init_model(self, input_data): #TODO DEDUPLICATE THIS!
-        model = super()._init_model(input_data, self._additional_hooks)
-
-        if self._model_id_before:
+        if self._model_id_before: #TODO after merge some context was lost (Model registry PR), check necessity this logic
             self._registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_before,
@@ -109,18 +80,9 @@ class LowRankModel(BaseCompressionModel):
                 mode=self.__class__.__name__
             )
 
-
-        decompose_module(
-            model,
-            self.decomposing_mode,
-            self.decomposer,
-            self.compose_mode,
+        decompose_module_in_place(
+            self.model_after, self.decomposing_mode, self.decomposer, self.compose_mode
         )
-        model.to(self.device)
-
-        self.model_after = model
-
-        return self.model_after
 
     def fit(self, input_data) -> None:
         """Train the model with low-rank–aware hooks and estimate compression.
@@ -141,11 +103,9 @@ class LowRankModel(BaseCompressionModel):
             ``_structure_changed__`` flag set to ``True``.
         """
         super()._prepare_trainer_and_model_to_fit(input_data)
-        # model_after = self._init_model(input_data) #TODO REBASED CHANGE
-        # base_params = self._estimate_params(self.model_before, example_batch)
         self.model_after = self.trainer.fit(input_data)
 
-        if self._model_id_after:
+        if self._model_id_after: #TODO seems broken after merge, why do we need to set metrics={}?
             self._registry.update_metrics(
                 fedcore_id=self._fedcore_id,
                 model_id=self._model_id_after,
@@ -155,7 +115,6 @@ class LowRankModel(BaseCompressionModel):
                 trainer=self.trainer
             )
 
-        # self.compress(self.model_after)
         # check params
         example_batch = self._get_example_input(input_data)  # .to(extract_device(self.model_before))
         self.estimate_params(example_batch, self.model_before, self.model_after)

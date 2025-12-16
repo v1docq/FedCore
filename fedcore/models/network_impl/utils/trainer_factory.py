@@ -150,7 +150,7 @@ def create_trainer(
         params_dict = params or {}
     trainer_class = _get_trainer_class(model, task_type, params_dict)
 
-    return trainer_class(params=params_dict, **kwargs)
+    return trainer_class(model, params=params_dict, **kwargs)
 
 
 def create_trainer_from_input_data(

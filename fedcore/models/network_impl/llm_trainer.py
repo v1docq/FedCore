@@ -209,14 +209,12 @@ class LLMTrainer(BaseTrainer):
         'no_cuda'
     }
     
-    def __init__(self, params: Optional[Dict] = None, **kwargs):
+    def __init__(self, model, params: Optional[Dict] = None, **kwargs):
         # if model is None and params and isinstance(params.get('custom_learning_params'), dict):
         #     nested = params.get('custom_learning_params')
         #     model = nested.get('model', model)
         
-        super().__init__(params=params)
-        self.model = self.params.get("model", None)
-        
+        super().__init__(model, params=params)        
         self.default_training_args = self.DEFAULT_TRAINING_ARGS.copy()
         if params:
             training_params = {k: v for k, v in params.items() 

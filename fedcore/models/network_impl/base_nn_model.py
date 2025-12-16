@@ -29,7 +29,7 @@ BASE_REGRESSION_DTYPE = torch.float32
 
 from typing import TypeVar
 
-class BaseNeuralModel(torch.nn.Module, BaseTrainer):
+class BaseNeuralModel(BaseTrainer):
     """Class responsible for NN model implementation.
 
     Attributes:
@@ -54,14 +54,13 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
     BASE_HOOKS : list[type['BaseHook']] = LOGGING_HOOKS + MODEL_LEARNING_HOOKS
 
     def __init__(self, model: torch.nn.Module, params: dict = {}, additional_hooks: Sequence['BaseHook'] = []):
-        super().__init__()
+        super().__init__(model, params)
         self.params = params
         #  torch.nn.Module.__init__(self) #TODO check and merge or del this commented lines!
         # BaseTrainer.__init__(self, params=params.to_dict() if hasattr(params, 'to_dict') else params)
         self.learning_params = self.params.get('custom_learning_params', {})
         self._init_null_object()
         self._init_empty_object()
-
         self.epochs = self.params.get("epochs", 1)
         self.batch_size = self.params.get("batch_size", 16)
         self.learning_rate = self.params.get("learning_rate", 0.001)
@@ -123,7 +122,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self.effective_hooks_collection.extend(self._additional_hooks)
 
     def __init_main_criterion(self):
-        key = self.params.get('loss', None) or self.params.get('criterion', None)
+        key = self.params.get('criterion', None)
         if isinstance(key, str):
             return TorchLossesConstant[key].value()
         elif isinstance(key, Callable):
@@ -167,17 +166,16 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         final_loss = reduce(torch.add, additional_losses.values(), quality_loss)
         return final_loss
 
-    def fit(self, input_data: CompressionInputData, supplementary_data: dict = None, loader_type='train'):
+    def fit(self, input_data: InputData, supplementary_data: dict = None, loader_type='train'):
         # define data for fit process
         self.custom_fit_process = supplementary_data is not None
-        train_loader = input_data.train_dataloader
-        val_loader = input_data.val_dataloader
+        train_loader = input_data.features.train_dataloader
+        val_loader = input_data.features.val_dataloader
         self.task_type = input_data.task.task_type
         # define model for fit process
         self.model = input_data.target if self.model is None else self.model
         self.optimised_model = self.model
         self.model.to(self.device)
-        self.__check_and_substitute_loss(input_data)
         self._link_all_hooks()
         self._train_loop(
             train_loader=train_loader,
