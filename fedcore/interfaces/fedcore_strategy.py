@@ -27,7 +27,7 @@ class FedCoreStrategy(EvaluationStrategy):
         prediction,
         predict_data: CompressionInputData,
         output_data_type: DataTypesEnum = DataTypesEnum.table,
-    ) -> OutputData:
+    ) -> CompressionOutputData:
         output_data = CompressionOutputData(
             features=predict_data.features,
             # idx=[1, 2],
@@ -38,10 +38,7 @@ class FedCoreStrategy(EvaluationStrategy):
             data_type=DataTypesEnum.image,
             supplementary_data=predict_data.supplementary_data,
         )
-        if isinstance(prediction, OutputData):
-            output_data.predict = prediction.predict
-        else:
-            output_data.predict = prediction
+        output_data.predict = prediction
         return output_data
 
     def __init__(

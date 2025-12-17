@@ -3,11 +3,13 @@ LLM Trainer implementation using transformers library
 Real integration with transformers.Trainer
 """
 import torch
+import torch.nn.functional as F
 import logging
 from typing import Any, Dict, Optional, Iterable, Union
 from enum import Enum
 from tqdm import tqdm
 import logging 
+from pymonad.maybe import Maybe
 
 
 # Transformers imports
@@ -216,6 +218,7 @@ class LLMTrainer(BaseTrainer):
         
         super().__init__(params=params)
         self.model = self.params.get("model", None)
+        self.tokenizer = self.params.get("tokenizer", None)
         
         self.default_training_args = self.DEFAULT_TRAINING_ARGS.copy()
         if params:
@@ -366,8 +369,8 @@ class LLMTrainer(BaseTrainer):
         
         # Final fallback: pull model from input_data if still missing
         if self.model is None:
-            candidate_model = getattr(input_data, 'target', None)
-            if candidate_model is None and hasattr(input_data, 'target'):
+            candidate_model = getattr(input_data, 'model', None)
+            if candidate_model is None and hasattr(input_data, 'model'):
                 candidate_model = input_data.target
             if candidate_model is not None:
                 self.model = candidate_model
@@ -391,6 +394,57 @@ class LLMTrainer(BaseTrainer):
         """Make predictions during training"""
         return self._predict_model(input_data, output_mode)
     
+    def _decode_token_ids_to_text(self, token_ids: torch.Tensor) -> list:
+        """Decode token IDs to text strings using tokenizer"""
+        if self.tokenizer is None:
+            raise ValueError("Tokenizer is not available. Cannot decode token IDs to text.")
+        
+        decoded_texts = []
+        if token_ids.dim() > 1:
+            for batch_idx in range(token_ids.shape[0]):
+                batch_token_ids = token_ids[batch_idx].tolist()
+                decoded_text = self.tokenizer.decode(batch_token_ids, skip_special_tokens=True)
+                decoded_texts.append(decoded_text)
+        else:
+            token_ids_list = token_ids.tolist()
+            decoded_text = self.tokenizer.decode(token_ids_list, skip_special_tokens=True)
+            decoded_texts.append(decoded_text)
+        
+        return decoded_texts
+    
+    def _convert_logits_to_output(self, logits: torch.Tensor, output_mode: str = "default") -> Union[torch.Tensor, list]:
+        """Convert logits to token IDs or text strings based on output_mode"""
+        token_ids = Maybe.insert(logits). \
+            then(lambda predict: F.softmax(predict, dim=-1)). \
+            then(lambda predict: torch.argmax(predict, dim=-1)). \
+            maybe(None, lambda output: output)
+        
+        if output_mode == "texts" and self.tokenizer is not None:
+            return self._decode_token_ids_to_text(token_ids)
+        
+        return token_ids
+    
+    def _process_trainer_predictions(self, prediction_output, input_data: CompressionInputData, output_mode: str = "default") -> Any:
+        """Process predictions from transformers Trainer.predict() output"""
+        if hasattr(prediction_output, 'predictions') and hasattr(prediction_output, 'label_ids'):
+            pred_values = torch.tensor(prediction_output.predictions)
+            pred_values = self._convert_logits_to_output(pred_values, output_mode)
+            
+            target_values = None
+            if hasattr(prediction_output, 'label_ids') and output_mode == "texts" and self.tokenizer is not None:
+                label_ids = torch.tensor(prediction_output.label_ids)
+                target_values = self._decode_token_ids_to_text(label_ids)
+            
+            output_data = CompressionOutputData(
+                task=input_data.task,
+                predict=pred_values,
+                target=target_values,
+                data_type=DataTypesEnum.table,
+            )
+            return output_data
+        else:
+            return prediction_output
+    
     def predict(self, input_data: CompressionInputData,  
                 output_mode: str = "default") -> Any:
         """Make predictions using InputData/CompressionInputData"""
@@ -407,17 +461,8 @@ class LLMTrainer(BaseTrainer):
             
             eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
             prediction_output = self._trainer.predict(eval_dataset)
+            return self._process_trainer_predictions(prediction_output, input_data, output_mode)
             
-            if hasattr(prediction_output, 'predictions') and hasattr(prediction_output, 'label_ids'):
-                pred_values = torch.tensor(prediction_output.predictions)
-                output_data = CompressionOutputData(
-                    task=input_data.task,
-                    predict=pred_values,
-                    data_type=DataTypesEnum.table,
-                )
-                return output_data
-            else:
-                return prediction_output
         elif self._trainer is None and has_val_loader:
             if self.model is None:
                 raise ValueError("Cannot create trainer for prediction: model is None. Call fit() first or provide model in initialization.")
@@ -425,35 +470,15 @@ class LLMTrainer(BaseTrainer):
             self._create_trainer(datasets)
             eval_dataset = self._dataloader_to_dataset(input_data.val_dataloader)
             prediction_output = self._trainer.predict(eval_dataset)
-            
-            if hasattr(prediction_output, 'predictions') and hasattr(prediction_output, 'label_ids'):
-                pred_values = torch.tensor(prediction_output.predictions)
-                output_data = CompressionOutputData(
-                    task=input_data.task,
-                    predict=pred_values,
-                    data_type=DataTypesEnum.table,
-                )
-                return output_data
-            else:
-                return prediction_output
+            return self._process_trainer_predictions(prediction_output, input_data, output_mode)
 
         predictions_output = self._predict_model(input_data, output_mode)
-        pred_values = torch.tensor(predictions_output.predictions)
-        
-        output_data = CompressionOutputData(
-            # idx=torch.arange(len(pred_values)),
-            task=input_data.task,
-            predict=pred_values,
-            target=None,
-            data_type=DataTypesEnum.table,
-        )
-        
-        return output_data
+        return predictions_output
         
     def predict_for_fit(self, input_data: Union[InputData, CompressionInputData],  
                        output_mode: str = "default") -> Any:
         """Make predictions during training"""
-        return self.predict(input_data, output_mode)
+        return self._predict_model(input_data, output_mode)
         
     def save_model(self, path: str) -> None:
         """Save the model using transformers approach"""
@@ -537,18 +562,25 @@ class LLMTrainer(BaseTrainer):
                 
         return self._convert_predict(torch.cat(prediction), output_mode, x_test)
     
-    def _convert_predict(self, pred: Union[torch.Tensor, np.ndarray], output_mode: str = "default", 
+    def _convert_predict(self, pred: Union[torch.Tensor, np.ndarray, list], output_mode: str = "default", 
                          input_data: Union[CompressionInputData, InputData] = None) -> CompressionOutputData:
         """Convert predictions to CompressionOutputData format"""
-        if isinstance(pred, torch.Tensor):
+        if isinstance(pred, list):
+            if pred and isinstance(pred[0], str):
+                pred_values = pred
+            else:
+                pred_values = torch.tensor(pred)
+                pred_values = self._convert_logits_to_output(pred_values, output_mode)
+        elif isinstance(pred, torch.Tensor):
             pred_values = pred.cpu().detach()
+            pred_values = self._convert_logits_to_output(pred_values, output_mode)
         elif isinstance(pred, np.ndarray):
             pred_values = torch.from_numpy(pred)
-        elif isinstance(pred, list):
-            pred_values = torch.tensor(pred)
+            pred_values = self._convert_logits_to_output(pred_values, output_mode)
         else:
             try:
                 pred_values = torch.tensor(pred)
+                pred_values = self._convert_logits_to_output(pred_values, output_mode)
             except (TypeError, ValueError) as e:
                 raise TypeError(f"Prediction conversion failed: cannot convert {type(pred).__name__} to Tensor. Error: {e}")
         

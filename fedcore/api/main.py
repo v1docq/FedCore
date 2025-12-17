@@ -26,7 +26,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
-from fedcore.data.data import CompressionInputData
+from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
 # from fedcore.repository.constant_repository import (
@@ -129,31 +129,25 @@ class FedCore(Fedot):
             peft_strategy_params = (peft_strategy_params,)
         print('###', peft_strategy_params)
         print('###', self.manager.learning_config)
-        for peft_strategy_conf in peft_strategy_params:
-            initial_assumption.add_node(
-                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=peft_strategy_conf.to_dict()
-            )
-
-        return initial_assumption.build()
-
-    def __build_assumption(self):
-        def camel_to_snake(camel_case_string):
-            import re
-            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
-            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
         
-        initial_assumption = PipelineBuilder()
-        peft_strategy_params = self.manager.learning_config.peft_strategy_params
-        # check if atomized strategy
-        if not isinstance(peft_strategy_params, (list, tuple)):
-            peft_strategy_params = (peft_strategy_params,)
-        print('###', peft_strategy_params)
-        print('###', self.manager.learning_config)
+        tokenizer = None
+        learning_strategy_params = self.manager.learning_config.learning_strategy_params
+        if learning_strategy_params is not None:
+            if hasattr(learning_strategy_params, 'tokenizer'):
+                tokenizer = learning_strategy_params.tokenizer
+            elif isinstance(learning_strategy_params, dict) and 'tokenizer' in learning_strategy_params:
+                tokenizer = learning_strategy_params['tokenizer']
+            elif hasattr(learning_strategy_params, 'to_dict'):
+                learning_params_dict = learning_strategy_params.to_dict()
+                tokenizer = learning_params_dict.get('tokenizer') or learning_params_dict.get('custom_learning_params', {}).get('tokenizer')
+        
         for peft_strategy_conf in peft_strategy_params:
+            params_dict = peft_strategy_conf.to_dict()
+            if tokenizer is not None and 'tokenizer' not in params_dict:
+                params_dict['tokenizer'] = tokenizer
             initial_assumption.add_node(
                 operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=peft_strategy_conf.to_dict()
+                params=params_dict
             )
 
         return initial_assumption.build()
@@ -505,10 +499,9 @@ class FedCore(Fedot):
         is_inference_metric = problem.__contains__("computational")
         is_fedcore_model = problem.__contains__('fedcore')
         model_regime = 'model_after' if is_fedcore_model else 'model_before'
-        prediction_dict = dict(target=target, predict=prediction.predict)
         if is_inference_metric:
             model_to_evaluate = self.get_model_by_regime(model_regime)
-            prediction_dict = dict(model=model_to_evaluate, dataset=target, model_regime=model_regime)
+            prediction_dict = dict(model=model_to_evaluate, dataset=target.target, model_regime=model_regime) #hardcode
             # preproc_target = preproc_target(target)
         metrics = metrics or self.manager.automl_config.fedot_config.metric
         prediction_dataframe = calculate_metrics(metrics, **prediction_dict)
@@ -546,8 +539,13 @@ class FedCore(Fedot):
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
         prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
         problem = self.manager.automl_config.fedot_config.problem
-        quality_metrics_list  = [name for name in self.manager.automl_config.fedot_config.metrics if name not in COMPUTATIONAL_METRICS]
-        computational_metrics = [name for name in self.manager.automl_config.fedot_config.metrics if name in COMPUTATIONAL_METRICS]
+        metrics = self.manager.automl_config.fedot_config.metric
+        if isinstance(metrics, str):
+            metrics = [metrics]
+        elif metrics is None:
+            metrics = []
+        quality_metrics_list  = [name for name in metrics if name not in COMPUTATIONAL_METRICS]
+        computational_metrics = [name for name in metrics if name in COMPUTATIONAL_METRICS]
         quality_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                      target=test_data.val_dataloader,
                                                      problem=self.manager.automl_config.fedot_config.problem,

@@ -13,7 +13,9 @@ import torch
 from torch import Tensor
 from abc import ABC, abstractmethod
 from typing import List, Dict, Union
-import torchmetrics 
+import torchmetrics
+
+from fedcore.metrics.nlp_metrics import EvaluateMetric 
 
 # Import necessary libraries
 
@@ -68,7 +70,9 @@ class QualityMetric(Metric):
             iter_object = iter(dataset)
             true_target = torch.tensor([batch[1] for batch in iter_object])
 
-        return cls.metric(target=true_target, predict=prediction)
+        result = cls.metric(target=true_target, predict=prediction)
+        assert result is not None, f"{cls.__name__}.metric() returned None"
+        return float(result)
 
     @staticmethod
     def _get_least_frequent_val(array: torch.Tensor):
@@ -134,6 +138,8 @@ _NEED_TO_MINIMIZE = {
     'meteor': False,
 }
 
+_TEXT_GENERATION_METRICS = {'bleu', 'rouge', 'meteor'}
+
 class MetricFactory:
     __approaches = ['get_fedot', 'get_torchmetrics', 'get_computational', 'get_evaluate']
     __cpu_prefix = 'CPU'
@@ -145,7 +151,7 @@ class MetricFactory:
                 method = getattr(cls, approach)
                 metric = method(metric_name, problem)
                 return metric
-            except (KeyError, ModuleNotFoundError):
+            except (KeyError, ModuleNotFoundError, AttributeError):
                 pass
         raise NameError('Unknown metric name')
 
@@ -213,13 +219,20 @@ class MetricFactory:
         true_metric_name = metric_name.removeprefix(cls.__cpu_prefix)
         need_minimize = _NEED_TO_MINIMIZE.get(true_metric_name, False)
 
+        method_name = f'measure_{camel_to_snake(true_metric_name)}'
+        if not hasattr(PerformanceEvaluator, method_name):
+            raise AttributeError(f"PerformanceEvaluator has no method '{method_name}'")
+
         @classmethod
         def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
+            reference_data = reference_data.target.val_dataloader
             pe = PerformanceEvaluator(pipeline, data=reference_data)
-            metric = getattr(pe, f'measure_{camel_to_snake(true_metric_name)}')(
+            metric = getattr(pe, method_name)(
                 device=torch.device('cpu') if is_cpu else torch.device('cuda')
             )
-            return metric
+            if isinstance(metric, tuple):
+                return float(metric[0])
+            return float(metric)
         
         @classmethod
         def metric(cls: torchmetrics.Metric, target, predict, **metric_kw) -> torch.Tensor:
@@ -238,6 +251,10 @@ class MetricFactory:
     
     @classmethod
     def get_evaluate(cls, metric_name, problem=None) -> QualityMetric:
+        """
+        Get evaluate metric using EvaluateMetric from nlp_metrics.py.
+        This avoids duplication and ensures proper output_mode handling.
+        """
         if metric_name in LOADED_METRICS:
             return LOADED_METRICS[metric_name]
         
@@ -246,46 +263,21 @@ class MetricFactory:
         if problem is None:
             problem = _METRICS_TO_PROBLEM.get(metric_name)
 
-        parent_instance = evaluate.load(metric_name)
-        parent_cls = type(parent_instance)
+        metric_name_lower = metric_name.lower()
+        if metric_name_lower in _TEXT_GENERATION_METRICS:
+            output_mode = "texts"
+        else:
+            output_mode = "labels"
         
-        attributes = {}
-        attributes['problem'] = problem
-        # special cases
-        attributes['_metric_name'] = metric_name
         need_minimize = _NEED_TO_MINIMIZE.get(metric_name, _NEED_TO_MINIMIZE.get(metric_name.upper(), False))
-        attributes['need_to_minimize'] = need_minimize
-
-        @classmethod
-        @_problem_based_output_convertor(problem)
-        def metric(cls, target, predict, **metric_kw) -> torch.Tensor:
-            """
-            Compute metric value using evaluate library
-            Args: 
-                target: torch.Tensor, logits, or array/list 
-                predict: torch.Tensor, logits, or array/list 
-                **metric_kw - any kwargs to pass to evaluate.compute()
-            """            
-            instance = evaluate.load(cls._metric_name)
-            result = instance.compute(predictions=predict, references=target, **metric_kw)
-            
-            if isinstance(result, dict):
-                if 'score' in result:
-                    result = result['score']
-                elif len(result) == 1:
-                    result = next(iter(result.values()))
-                else:
-                    result = torch.tensor(list(result.values())[0])
-            
-            if not isinstance(result, torch.Tensor):
-                result = torch.tensor(result, dtype=torch.float32)
-            
-            del instance
-            return result
-        
-        attributes['metric'] = metric
+ 
         new_metric = type(
-            original_name, (parent_cls, QualityMetric), attributes
+            original_name, (EvaluateMetric,), {
+                'metric_name': metric_name,
+                'problem': problem,
+                'need_to_minimize': need_minimize,
+                'output_mode': output_mode,
+            }
         )
         LOADED_METRICS[original_name] = new_metric 
         return new_metric
