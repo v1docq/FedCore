@@ -62,7 +62,7 @@ def test_linear2():
     in_, out_, k = 18, 29, 3
     C1 = nn.Linear(in_, out_,)
     DC1 = nn.Sequential(deepcopy(C1))
-    decompose_module_in_place(DC1, compose_mode='two_layers', decomposer=DecomposerType.RSVD)
+    decompose_module_in_place(DC1, compose_mode='two_layers', decomposer=DecomposerType.RSVD.value())
     DC1[0].compose_weight_for_inference()
     RDC1 = _recreate_decomposed_linear(DC1[0])
     X = torch.randn(k, in_)
