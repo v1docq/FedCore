@@ -2,7 +2,7 @@
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from external.flatllmcore.core import AbsorptionCompressor
+from fedcore.external.flatllmcore.core import AbsorptionCompressor
 
 # 1. Load model
 model = AutoModelForCausalLM.from_pretrained(

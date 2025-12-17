@@ -7,10 +7,6 @@ import logging
 import torchvision.models as models
 from torch.utils.data import Subset, random_split
 
-# Правильный путь с учетом вложенности
-correct_path = "/home/user/projects/FedCore/FedCore"
-sys.path.insert(0, correct_path)
-
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
@@ -44,7 +40,6 @@ logger.info(f"LOGGING TEST - logs will be saved to: {log_file}")
 METRIC_TO_OPTIMISE = ['MulticlassAccuracy__10', 'MulticlassF1Score__10', 'Latency', 'CPULatency', 'Throughput', 'CPUThroughput', 'ModelSize']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
-PEFT_PROBLEM = 'pruning'
 
 pretrained_resnet152 = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
 INITIAL_ASSUMPTION = pretrained_resnet152 
@@ -71,17 +66,12 @@ def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloade
 ### peft_config defines low_rank compression parameters                      ###
 ################################################################################
 
-model_config = ModelArchitectureConfigTemplate(input_dim=None,
-                                               output_dim=None,
-                                               depth=6)
-
 pretrain_config = TrainingTemplate(
-    epochs=5,
-    log_each=10,
-    eval_each=15,
-    save_each=50,
+    epochs=1,
+    log_each=1,
+    eval_each=1,
+    save_each=None,
     criterion='cross_entropy',
-    model_architecture=model_config,
     custom_learning_params=dict(
         use_early_stopping={
             'patience': 30,
