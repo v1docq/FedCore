@@ -11,7 +11,7 @@ from golem.core.tuning.optuna_tuner import OptunaTuner
 from golem.visualisation.opt_viz_extra import OptHistoryExtraVisualizer
 from matplotlib import pyplot as plt
 
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     FEDOT_GENETIC_MULTI_STRATEGY,
     FEDOT_EVO_MULTI_STRATEGY,
     InferenceMetricsEnum,

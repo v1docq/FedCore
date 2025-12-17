@@ -1,3 +1,12 @@
+"""Visualization utilities for training curves and object detection outputs.
+
+This module provides helper functions for:
+
+* plotting train / test loss and metric curves over epochs;
+* drawing ground-truth and predicted bounding boxes on images;
+* applying non-maximum suppression (NMS) to detection outputs;
+* filtering detection boxes by score threshold.
+"""
 
 import matplotlib.pyplot as plt
 from torchvision.ops import nms
@@ -24,145 +33,30 @@ colors = [
     "#FF5733",
 ]
 
-#
-# _PALETTE = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (128, 0, 0),
-#             (0, 128, 0), (128, 0, 128), (0, 128, 128), (0, 0,
-#                                                         128), (128, 0, 0), (220, 20, 60), (255, 165, 0),
-#             (218, 165, 32), (240, 230, 140), (154, 205,
-#                                               50), (107, 142, 35), (0, 100, 0), (46, 139, 87),
-#             (32, 178, 170), (64, 224, 208), (70, 130, 180), (138,
-#                                                              43, 226), (72, 61, 139), (147, 112, 219),
-#             (139, 0, 139), (218, 112, 214), (219, 112,
-#                                              147), (255, 20, 147), (255, 228, 196), (139, 69, 19),
-#             (210, 105, 30), (244, 164, 96), (188, 143, 143), (112, 128, 144), (230, 230, 250), (245, 245, 245))
-#
-#
-# def _2nparray(arrs: List[Union[torch.Tensor, List]]) -> List[np.ndarray]:
-#     return [arr.numpy() if isinstance(arr, torch.Tensor) else np.array(arr) for arr in arrs]
-#
-#
-# def draw_sample_with_bboxes(
-#         image: Union[torch.Tensor, str],
-#         target: Optional[Dict[str, Union[torch.Tensor, List]]] = None,
-#         prediction: Optional[Dict[str, Union[torch.Tensor, List]]] = None,
-#         threshold: float = 0.5
-# ) -> plt.Figure:
-#     """
-#     Returns the image with bounding boxes.
-#
-#     Args:
-#         image: image tensor or path to image.
-#         target: Dictionary of target values with keys ``'boxes'`` and ``'labels'``.
-#         prediction: Dictionary of predicted values with keys ``'boxes'``, ``'labels'`` and ``'scores'``.
-#         threshold: Confidence threshold for displaying predicted bounding boxes.
-#
-#     Returns:
-#         `matplotlib.pyplot.Figure` of the image with bounding boxes.
-#
-#     """
-#     assert prediction is not None or target is not None, "At least one parameter from 'target' and 'prediction' must not be None"
-#
-#     if isinstance(image, torch.Tensor):
-#         image = image.permute(1, 2, 0).numpy()
-#     else:
-#         image = plt.imread(image)
-#
-#     n = 1 if prediction is None or target is None else 2
-#     fig = plt.figure(figsize=(10 * n, 10))
-#
-#     thickness = 1 + int(image.shape[-2] / 500)
-#     font_scale = image.shape[-2] / 1000
-#
-#     if target is not None:
-#         ax = plt.subplot(1, n, 1)
-#         boxes, labels = _2nparray([target['boxes'], target['labels']])
-#         timage = image.copy()
-#         for box, label in zip(boxes.astype(np.int32), labels.astype(str)):
-#             cv2.rectangle(timage, (box[0], box[1]),
-#                           (box[2], box[3]), (220, 255, 255), thickness)
-#             cv2.putText(timage, label, (box[0], box[1]),
-#                         0, font_scale, (255, 255, 255), thickness)
-#         ax.set_axis_off()
-#         ax.imshow(timage)
-#
-#     if prediction is not None:
-#         ax = plt.subplot(1, n, n)
-#         boxes, labels, scores = _2nparray(
-#             [prediction['boxes'], prediction['labels'], prediction['scores']])
-#
-#         not_thresh = scores > threshold
-#         boxes = boxes[not_thresh]
-#         labels = labels[not_thresh]
-#         scores = scores[not_thresh]
-#
-#         pimage = image.copy()
-#         for box, label, score in zip(boxes.astype(np.int32), labels, scores):
-#             cv2.rectangle(pimage, (box[0], box[1]),
-#                           (box[2], box[3]), (220, 255, 255), thickness)
-#             cv2.putText(pimage, f'{label} ({score:.2f})',
-#                         (box[0], box[1]), 0, font_scale, (255, 255, 255), thickness)
-#         ax.set_axis_off()
-#         ax.imshow(pimage)
-#     return fig
-#
-#
-# def _put_mask(axis: plt.axis, image: np.ndarray, mask: np.ndarray, palette: Tuple):
-#     thickness = 1 + int(image.shape[-2] / 500)
-#     image = image.copy()
-#     for ch in range(mask.shape[0]):
-#         contours, _ = cv2.findContours(
-#             mask[ch, :, :], cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-#         for contour in contours:
-#             cv2.polylines(image, contour, True, palette[ch], thickness)
-#     axis.set_axis_off()
-#     axis.imshow(image)
-#
-#
-# def draw_sample_with_masks(
-#         image: torch.Tensor,
-#         target: torch.Tensor = None,
-#         prediction: torch.Tensor = None,
-#         palette: Tuple = _PALETTE
-# ) -> plt.Figure:
-#     """
-#     Returns the image with masks.
-#
-#     Args:
-#         image: Image tensor.
-#         target: N-channel target tensor with masks, where n - number of classes.
-#         prediction: N-channel prediction tensor with masks, where n - number of classes.
-#         palette: Color palette for each class.
-#
-#     Returns:
-#         `matplotlib.pyplot.Figure` of the image with masks.
-#
-#     """
-#     assert prediction is not None or target is not None, "At least one parameter from 'target' and 'prediction' must not be None"
-#
-#     image = image.permute(1, 2, 0).numpy()
-#
-#     n = 1 if prediction is None or target is None else 2
-#     fig = plt.figure(figsize=(10 * n, 10))
-#
-#     if target is not None:
-#         ax = plt.subplot(1, n, 1)
-#         _put_mask(ax, image, target.numpy().astype(np.uint8), palette)
-#
-#     if prediction is not None:
-#         ax = plt.subplot(1, n, n)
-#         _put_mask(ax, image, prediction.numpy().astype(np.uint8), palette)
-#     return fig
-
 
 def plot_train_test_loss_metric(train_losses, test_losses, train_metric, test_metric):
     """
-    Plots train and test losses and metric by epochs
+    Plot training and validation losses and metrics over epochs.
 
-    :param train_losses:
-    :param test_losses:
-    :param train_metric:
-    :param test_metric:
-    :return:
+    Parameters
+    ----------
+    train_losses : Sequence[float]
+        Loss values computed on the training set for each epoch.
+    test_losses : Sequence[float]
+        Loss values computed on the validation/test set for each epoch.
+    train_metric : Sequence[float]
+        Metric values (e.g. accuracy, F1) on the training set for each epoch.
+    test_metric : Sequence[float]
+        Metric values on the validation/test set for each epoch.
+
+    Notes
+    -----
+    The function creates a figure with two subplots:
+
+    * top: train vs. test loss curves;
+    * bottom: train vs. test metric curves.
+
+    The figure is shown via :func:`matplotlib.pyplot.show`.
     """
     fig, axs = plt.subplots(2)
 
@@ -175,7 +69,7 @@ def plot_train_test_loss_metric(train_losses, test_losses, train_metric, test_me
     axs[0].legend()
     axs[0].grid()
 
-    # Plot the accuracy curves
+    # Plot the accuracy/metric curves
     axs[1].plot(train_metric, label="Train Metric")
     axs[1].plot(test_metric, label="Test Metric")
     axs[1].set_title("Metric Curves")
@@ -191,6 +85,38 @@ def plot_train_test_loss_metric(train_losses, test_losses, train_metric, test_me
 
 
 def get_image(img, preds, classes, targets=None):
+    """
+    Draw ground-truth and predicted bounding boxes on an image.
+
+    Parameters
+    ----------
+    img : PIL.Image.Image
+        Image on which bounding boxes will be drawn. The image is modified in-place.
+    preds : dict
+        Dictionary with prediction results. Expected keys:
+        ``"boxes"``, ``"labels"``, ``"scores"`` where:
+
+        * ``boxes`` – tensor with shape (N, 4) in (x1, y1, x2, y2) format;
+        * ``labels`` – tensor with class indices;
+        * ``scores`` – tensor with confidence scores.
+    classes : Sequence[str]
+        Class names, where ``classes[label_idx]`` returns the class label string.
+    targets : dict, optional
+        Dictionary with ground-truth data. Expected keys:
+        ``"boxes"`` and ``"labels"`` analogous to prediction, but without scores.
+        If provided, target boxes are drawn in red.
+
+    Returns
+    -------
+    PIL.Image.Image
+        The same image object with the drawn bounding boxes and labels.
+
+    Notes
+    -----
+    * Ground-truth boxes are drawn in red.
+    * Predicted boxes are colored according to :data:`colors`.
+    * Prediction labels are annotated with class name and score.
+    """
     draw = ImageDraw.Draw(img)
 
     # Target boxes
@@ -219,7 +145,30 @@ def get_image(img, preds, classes, targets=None):
 
 
 def apply_nms(orig_prediction, iou_thresh):
+    """
+    Apply Non-Maximum Suppression (NMS) to detection predictions.
 
+    Parameters
+    ----------
+    orig_prediction : dict
+        Dictionary with detection outputs, containing keys:
+        ``"boxes"``, ``"scores"``, ``"labels"``. All values are expected to be
+        PyTorch tensors.
+    iou_thresh : float
+        IoU threshold used for NMS. Boxes with IoU above this threshold
+        (w.r.t. a higher-scoring box) will be suppressed.
+
+    Returns
+    -------
+    dict
+        The same dictionary object with filtered tensors for
+        ``"boxes"``, ``"scores"``, and ``"labels"`` (only indices kept by NMS).
+
+    Notes
+    -----
+    This function modifies ``orig_prediction`` in-place, returning it for
+    convenience.
+    """
     keep = nms(orig_prediction["boxes"], orig_prediction["scores"], iou_thresh)
 
     # Keep indices from nms
@@ -232,7 +181,30 @@ def apply_nms(orig_prediction, iou_thresh):
 
 
 def filter_boxes(orig_prediction, thresh):
+    """
+    Filter detection boxes by a score threshold.
 
+    Parameters
+    ----------
+    orig_prediction : dict
+        Dictionary with detection outputs, containing keys:
+        ``"boxes"``, ``"scores"``, ``"labels"``. All values are expected to be
+        PyTorch tensors.
+    thresh : float
+        Minimum score value to keep a detection. Predictions with
+        ``score <= thresh`` are removed.
+
+    Returns
+    -------
+    dict
+        The same dictionary object with filtered tensors for
+        ``"boxes"``, ``"scores"``, and ``"labels"``.
+
+    Notes
+    -----
+    This function modifies ``orig_prediction`` in-place, returning it for
+    convenience.
+    """
     keep = orig_prediction["scores"] > thresh
 
     final_prediction = orig_prediction

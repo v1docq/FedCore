@@ -104,3 +104,14 @@ venv.bak/
 
 results_of_experiments/
 composition_results/
+data/
+datasets/
+.vscode
+*.csv
+
+.venv/ 
+dist/ 
+build/ 
+*.egg-info/ 
+docs/_build/
+/llm_output

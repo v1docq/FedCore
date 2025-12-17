@@ -1,0 +1,259 @@
+"""
+Tests for TransMLA and ParentalReassembler classes
+"""
+import pytest
+import torch
+import torch.nn as nn
+from unittest.mock import Mock, patch, MagicMock
+
+from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler, get_reassembler
+from fedcore.algorithm.low_rank.reassembly.transmla_reassembler import TransMLA, TransMLAConfig, TRANSMLA_AVAILABLE
+
+
+class SimpleModel(nn.Module):
+    """Simple test model"""
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(10, 5)
+        self.config = Mock()
+        self.config.hidden_size = 768
+        self.config.num_attention_heads = 12
+        self.config.head_dim = 64
+
+    def forward(self, x):
+        return self.linear(x)
+
+
+class TestParentalReassembler:
+    """Test ParentalReassembler functionality"""
+
+    def test_reassemble_parental_mode(self):
+        """Test parental reassembly mode"""
+        model = SimpleModel()
+        
+        # Should work without any special dependencies
+        result = ParentalReassembler.reassemble(model)
+        
+        assert result is not None
+        assert isinstance(result, nn.Module)
+
+    def test_reassemble_unknown_mode(self):
+        """Test that unknown mode raises key error"""
+        model = SimpleModel()
+        
+        with pytest.raises(KeyError):
+            get_reassembler('unknown')
+
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
+    def test_reassemble_transmla_mode_success(self):
+        """Test TransMLA conversion mode when TransMLA is available"""
+        model = SimpleModel()
+        tokenizer = Mock()
+        
+        with patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.convert_model_to_mla') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = TransMLA.reassemble(
+                model,
+                tokenizer=tokenizer
+            )
+            
+            assert result is not None
+            mock_reassemble.assert_called_once()
+
+    def test_reassemble_transmla_mode_no_tokenizer(self):
+        """Test that TransMLA requires tokenizer"""
+        model = SimpleModel()
+        
+        with pytest.raises(TypeError):
+            TransMLA.reassemble(model)
+
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', False)
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler._initialize_transmla')
+    def test_reassemble_transmla_mode_unavailable(self, mock_init_transmla):
+        """Test TransMLA mode when TransMLA is not available"""
+        model = SimpleModel()
+        tokenizer = Mock()
+
+        with pytest.raises(AssertionError, match="TransMLA not available"):
+            TransMLA.reassemble(
+                model,
+                tokenizer=tokenizer
+            )
+
+
+class TestTransMLA:
+    """Test TransMLA functionality"""
+
+    def test_reassemble_direct_execution(self):
+        """Test direct execution"""
+        model = SimpleModel()
+        tokenizer = Mock()
+        
+        with patch.object(TransMLA, 'reassemble') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = TransMLA.reassemble(
+                model, 
+                tokenizer=tokenizer
+            )
+            
+            assert result == model
+            mock_reassemble.assert_called_once()
+
+    @patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.TRANSMLA_AVAILABLE', True)
+    def test_reassemble_with_mla_available(self):
+        """Test successful conversion when TransMLA is available"""
+        model = SimpleModel()
+        tokenizer = Mock()
+        
+        with patch('fedcore.algorithm.low_rank.reassembly.transmla_reassembler.convert_model_to_mla') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = TransMLA.reassemble(
+                model=model,
+                tokenizer=tokenizer
+            )
+            
+            assert result == model
+
+
+
+
+class TestReassemblerFunctions:
+    """Test reassembler functions functionality"""
+
+    def test_get_reassembler_valid_types(self):
+        """Test getting valid reassembler types"""
+        valid_types = ['trans-mla', 'parental']
+        
+        for reassembler_type in valid_types:
+            reassembler = get_reassembler(reassembler_type)
+            assert reassembler is not None
+
+    def test_get_reassembler_invalid_type(self):
+        """Test getting invalid reassembler type raises ValueError"""
+        with pytest.raises(KeyError, match="Unknown reassembler type"):
+            get_reassembler('invalid_type')
+
+    def test_reassemble_model_attention(self):
+        """Test reassembling model with attention reassembler"""
+        model = SimpleModel()
+        
+        with patch.object(ParentalReassembler, 'reassemble') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = ParentalReassembler.reassemble(
+                model
+            )
+            
+            assert result == model
+            mock_reassemble.assert_called_once_with(model)
+
+    def test_reassemble_model_transmla(self):
+        """Test reassembling model with TransMLA reassembler"""
+        model = SimpleModel()
+        tokenizer = Mock()
+        
+        with patch.object(TransMLA, 'reassemble') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = TransMLA.reassemble(
+                model,
+                tokenizer=tokenizer
+            )
+            
+            assert result == model
+            mock_reassemble.assert_called_once_with(model, tokenizer=tokenizer)
+
+    def test_reassemble_model_parental(self):
+        """Test converting model with parental reassembler"""
+        from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
+        model = SimpleModel()
+        
+        with patch.object(ParentalReassembler, 'reassemble') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = ParentalReassembler.reassemble(model)
+            
+            assert result == model
+            mock_reassemble.assert_called_once_with(model)
+
+
+class TestTransMLAConfig:
+    """Test TransMLAConfig functionality"""
+
+    def test_default_config(self):
+        """Test default configuration values"""
+        config = TransMLAConfig()
+        
+        assert config.freqfold == "auto"
+        assert config.collapse == "auto"
+        assert config.qk_mqa_dim == 64
+        assert config.kv_lora_rank == 512
+        assert config.cal_dataset == "wikitext2"
+        assert config.cal_nsamples == 128
+
+    def test_custom_config(self):
+        """Test custom configuration values"""
+        config = TransMLAConfig(
+            qk_mqa_dim=128,
+            kv_lora_rank=256,
+            cal_dataset="custom_dataset"
+        )
+        
+        assert config.qk_mqa_dim == 128
+        assert config.kv_lora_rank == 256
+        assert config.cal_dataset == "custom_dataset"
+
+    def test_to_dict(self):
+        """Test configuration to dictionary conversion"""
+        config = TransMLAConfig(qk_mqa_dim=128)
+        config_dict = config.to_dict()
+        
+        assert isinstance(config_dict, dict)
+        assert config_dict['qk_mqa_dim'] == 128
+        assert 'freqfold' in config_dict
+        assert 'collapse' in config_dict
+
+
+class TestIntegration:
+    """Integration tests for the complete workflow"""
+
+    def test_end_to_end_workflow(self):
+        """Test complete conversion workflow"""
+        model = SimpleModel()
+        tokenizer = Mock()
+        
+        # Direct conversion workflow
+        with patch.object(TransMLA, 'reassemble') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = TransMLA.reassemble(
+                model, 
+                tokenizer=tokenizer
+            )
+            
+            assert result == model
+            mock_reassemble.assert_called_once()
+
+    def test_factory_workflow(self):
+        """Test using reassemble method for TransMLA conversion"""
+        model = SimpleModel()
+        tokenizer = Mock()
+        
+        # Use convert_model function for TransMLA conversion
+        with patch.object(TransMLA, 'reassemble') as mock_reassemble:
+            mock_reassemble.return_value = model
+            
+            result = TransMLA.reassemble(
+                model,
+                tokenizer=tokenizer
+            )
+            
+            assert result == model
+            mock_reassemble.assert_called_once_with(model, tokenizer=tokenizer)
+
+
+if __name__ == '__main__':
+    pytest.main([__file__])

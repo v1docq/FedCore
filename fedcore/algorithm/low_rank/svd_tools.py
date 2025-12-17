@@ -3,29 +3,31 @@
 Model decomposition, pruning by threshold, decomposed model loading.
 """
 
-from typing import Callable, Literal, Optional
+from typing import Optional
 
 import torch
 from torch.nn.modules import Module
+from tdecomp._base import Decomposer
 
-from fedcore.architecture.comptutaional.devices import extract_device
+from fedcore.algorithm.low_rank.decomposer import DecomposerType
+from fedcore.architecture.computational.devices import extract_device
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
-from fedcore.repository.constanst_repository import (
+from fedcore.repository.constant_repository import (
     DECOMPOSABLE_LAYERS, 
     COMPOSE_MODE, 
-    PROHIBIT_TO_DECOMPOSE
+    PROHIBIT_TO_DECOMPOSE,
 )
 
 __all__ = [
-    'decompose_module',
+    'decompose_module_in_place',
     'load_svd_state_dict'
 ]
 
-def decompose_module(
+def decompose_module_in_place(
     model: Module,
-    decomposing_mode: Optional[str] = True,
-    decomposer: Literal['svd', 'cur', 'rsvd'] = 'svd',
-    compose_mode: str = None,
+    decomposing_mode: Optional[str] = "channel",
+    decomposer: Decomposer = DecomposerType.SVD.value(),
+    compose_mode: Optional[str] = None,
 ) -> None:
     """Replace decomposable layers with their decomposed analogues in module (in-place).
 
@@ -34,17 +36,23 @@ def decompose_module(
         decomposing_mode: ``'channel'`` or ``'spatial'`` weights reshaping method.
             If ``None`` replace layers without decomposition.
         compose_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
+        decomposer_params: Parameters for decomposer from tdecomp API (rank, distortion_factor, etc.)
     """
     device = extract_device(model)
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
-            decompose_module(
-                module, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
+            decompose_module_in_place(
+                module, decomposing_mode=decomposing_mode, decomposer=decomposer,
+                compose_mode=compose_mode
             )
         decomposed_analogue = _map_decomposed_cls(module)
         if decomposed_analogue is not None:
             new_module = decomposed_analogue(
-                module, decomposing_mode=decomposing_mode, decomposer=decomposer, compose_mode=compose_mode
+                module, 
+                True, 
+                decomposing_mode=decomposing_mode, 
+                decomposer=decomposer,
+                compose_mode=compose_mode,
             ).to(device)
             setattr(model, name, new_module)
 
@@ -68,6 +76,7 @@ def load_svd_state_dict(
     decomposing_mode: str,
     state_dict_path: str,
     compose_mode: str = COMPOSE_MODE,
+    decomposer: Decomposer = DecomposerType.SVD.value()
 ) -> None:
     """Loads SVD state_dict to model.
 
@@ -76,18 +85,20 @@ def load_svd_state_dict(
         decomposing_mode: ``'channel'`` or ``'spatial'`` weights reshaping method.
         state_dict_path: Path to state_dict file.
         compose_mode: ``'one_layer'``, ``'two_layers'`` or ``'three_layers'`` forward pass calculation method.
+        decomposer_params: Parameters for decomposer from tdecomp API (rank, distortion_factor, etc.)
     """
     state_dict = torch.load(state_dict_path, map_location="cpu")
-    decompose_module(
-        model=model, decomposing_mode=decomposing_mode, compose_mode=compose_mode
+
+    decompose_module_in_place(
+        model=model, decomposing_mode=decomposing_mode, compose_mode=compose_mode, decomposer=decomposer
     )
     _load_svd_params(model, state_dict)
     model.load_state_dict(state_dict)
 
 
-def _map_decomposed_cls(inst: torch.nn.Module) -> Optional[IDecomposed]:
+def _map_decomposed_cls(module: torch.nn.Module) -> Optional[type[IDecomposed]]:
     for decomposable, decomposed in DECOMPOSABLE_LAYERS.items():
-        if (not type(isinstance) in PROHIBIT_TO_DECOMPOSE 
-            and isinstance(inst, decomposable) 
-            and not isinstance(inst, IDecomposed)):
+        if (not type(module) in PROHIBIT_TO_DECOMPOSE
+            and isinstance(module, decomposable) 
+            and not isinstance(module, IDecomposed)):
             return decomposed

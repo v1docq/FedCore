@@ -1,110 +1,118 @@
-import numpy as np
+import torch
 import pandas as pd
-from sklearn.metrics import (
-    mean_absolute_error,
-    mean_absolute_percentage_error,
-    mean_squared_error,
-    mean_squared_log_error,
-    r2_score,
-)
-from sklearn.metrics import (
-    d2_absolute_error_score,
-    explained_variance_score,
-    max_error,
-    median_absolute_error,
-)
 
-from fedcore.metrics.cv_metrics import CV_quality_metric
-from fedcore.metrics.metric_impl import (
-    Accuracy,
-    F1,
-    Precision,
-    Logloss,
-    smape,
-    mase,
-    mape,
-)
+from typing import Optional
+
+from fedcore.metrics.metric_impl import CLASSIFICATION_METRICS, REGRESSION_METRICS
 
 
-def calculate_regression_metric(
-        target, labels, rounding_order=3, metric_names=("r2", "rmse", "mae"), **kwargs
-):
-    target = target.astype(float)
+# -------------------- Metric Names Dictionary --------------------
 
-    def rmse(y_true, y_pred):
-        return np.sqrt(mean_squared_error(y_true, y_pred))
+# Map string names to the appropriate metric calculation function
+METRIC_NAMES = {
+    "r2": "r2",
+    "mse": "mse",
+    "rmse": "rmse",
+    "mae": "mae",
+    "msle": "msle",
+    "mape": "mape",
+    "accuracy": "accuracy",  # Add accuracy metric here
+    "precision": "precision",  # Add precision metric here
+    "f1": "f1",  # Add F1 metric here
+}
 
-    metric_dict = {
-        "r2": r2_score,
-        "mse": mean_squared_error,
-        "rmse": rmse,
-        "mae": mean_absolute_error,
-        "msle": mean_squared_log_error,
-        "mape": mean_absolute_percentage_error,
-        "median_absolute_error": median_absolute_error,
-        "explained_variance_score": explained_variance_score,
-        "max_error": max_error,
-        "d2_absolute_error_score": d2_absolute_error_score,
-    }
+# -------------------- Utility Function: Convert to DataFrame --------------------
 
-    df = pd.DataFrame(
-        {
-            name: func(target, labels)
-            for name, func in metric_dict.items()
-            if name in metric_names
-        },
-        index=[0],
-    )
-    return df.round(rounding_order)
+def _to_df(values: dict, rounding: int = 3) -> pd.DataFrame:
+    """
+    Convert a dictionary of metric values into a DataFrame with one row.
+    
+    Args:
+        values (dict): A dictionary of metric names and values.
+        rounding (int): The number of decimal places to round the metric values.
+    
+    Returns:
+        pd.DataFrame: A DataFrame with one row of rounded metric values.
+    """
+    return pd.DataFrame(values, index=[0]).round(rounding)
 
+# -------------------- General Metric Calculation Function --------------------
 
-def calculate_forecasting_metric(
-        target, labels, rounding_order=3, metric_names=("smape", "rmse"), **kwargs
-):
-    target = target.astype(float)
+def calculate_regression_metrics(
+    target: torch.Tensor,
+    predict: torch.Tensor,
+    rounding_order: int = 3,
+    metric_names: tuple[str, ...] = ("r2", "rmse", "mae"),
+    is_forecasting: bool = False
+) -> pd.DataFrame:
+    """
+    Compute metrics for regression or forecasting (time series) tasks.
 
-    def rmse(y_true, y_pred):
-        return np.sqrt(mean_squared_error(y_true, y_pred))
+    Args:
+        target (torch.Tensor): Ground truth values.
+        predict (torch.Tensor): Predicted values.
+        rounding_order (int): Decimal places for rounding the results.
+        metric_names (tuple): Metrics to compute.
+        is_forecasting (bool): Flag to indicate if it is forecasting or not.
 
-    metric_dict = {
-        "rmse": rmse,
-        "mae": mean_absolute_error,
-        "median_absolute_error": median_absolute_error,
-        "smape": smape,
-        #"mase": mase,
-        #"mape": mape,
-    }
+    Returns:
+        pd.DataFrame: A DataFrame containing the computed metrics.
+    """
+    target = target.float()
+    predict = predict.float()
 
-    df = pd.DataFrame(
-        {
-            name: func(target, labels)
-            for name, func in metric_dict.items()
-            if name in metric_names
-        },
-        index=[0],
-    )
-    return df.round(rounding_order)
+    values = {name: calculate_metric(target, predict, name) for name in metric_names if name in REGRESSION_METRICS}
 
+    return _to_df(values, rounding_order)
 
-def calculate_classification_metric(target, labels, probs, rounding_order=3, metric_names=("f1" "accuracy")):
-    metric_dict = {
-        "accuracy": Accuracy,
-        "f1": F1,
-        "precision": Precision,
-        "logloss": Logloss,
-    }
+# -------------------- Classification Metrics Calculation --------------------
 
-    df = pd.DataFrame(
-        {
-            name: func().metric(target, labels)
-            for name, func in metric_dict.items()
-            if name in metric_names
-        },
-        index=[0],
-    )
-    return df.round(rounding_order)
+def calculate_classification_metrics(
+    target: torch.Tensor,
+    labels: torch.Tensor,
+    probs: Optional[torch.Tensor] = None,
+    rounding_order: int = 3,
+    metric_names: tuple[str, ...] = ("f1", "accuracy")
+) -> pd.DataFrame:
+    """
+    Compute classification metrics such as Accuracy, F1, Logloss, etc.
 
+    Args:
+        target (torch.Tensor): Ground truth labels.
+        labels (torch.Tensor): Predicted labels.
+        probs (torch.Tensor, optional): Predicted probabilities (needed for logloss and ROC AUC).
+        rounding_order (int): Decimal places for rounding the results.
+        metric_names (tuple): Metrics to compute.
 
-def calculate_computational_metric(model, dataset, model_regime):
-    metric_dict = CV_quality_metric().metric(model, dataset, model_regime)
-    return metric_dict
+    Returns:
+        pd.DataFrame: A DataFrame containing the computed metrics.
+    """
+    values = {}
+    for name in metric_names:
+        metric = CLASSIFICATION_METRICS[name]
+        if name in ("logloss", "roc_auc"):
+            if probs is None:
+                raise ValueError(f"{name} requires `probs` argument.")
+            values[name] = metric(target, probs)
+        else:
+            values[name] = metric(target, labels)
+
+    return _to_df(values, rounding_order)
+
+# -------------------- Computational Metrics Calculation --------------------
+
+def calculate_computational_metrics(model, dataset, model_regime: str) -> float:
+    """
+    Compute computational metrics like latency and throughput.
+
+    Args:
+        model (torch.nn.Module): The model to evaluate.
+        dataset: The dataset to evaluate on.
+        model_regime (str): The regime of the model.
+
+    Returns:
+        float: The computed computational metric (e.g., throughput or latency).
+    """    
+
+    ###################### TODO Here should be called the fedcore.tools.ruler.PerformanceEvaluator
+    pass 

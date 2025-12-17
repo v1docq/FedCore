@@ -1,0 +1,22 @@
+[build-system] 
+requires = ["setuptools>=61.0", "wheel"] 
+build-backend = "setuptools.build_meta" 
+ 
+[project] 
+name = "fedcore" 
+version = "0.0.1" 
+description = "Framework for model compression and automation" 
+readme = "README.rst" 
+requires-python = ">=3.9" 
+ 
+authors = [ 
+  { name = "FedCore team" } 
+] 
+ 
+license = { text = "MIT" } 
+ 
+dependencies = [
+] 
+ 
+[project.urls] 
+Homepage = "https://github.com/v1docq/FedCore"

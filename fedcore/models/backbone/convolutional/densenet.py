@@ -6,7 +6,7 @@ from torchvision.models.densenet import (
     densenet201,
 )
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 DENSE_MODELS = {
     "densenet121": densenet121,

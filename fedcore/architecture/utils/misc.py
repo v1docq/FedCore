@@ -63,7 +63,7 @@ def count_params(m: Module):
 
 
 class EnumNoValue:
-    def __init__(self, base: Enum):
+    def __init__(self, base: type[Enum]):
         assert issubclass(base, Enum), 'Only Enums are supported'
         self.base = base
 

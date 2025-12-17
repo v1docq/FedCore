@@ -7,7 +7,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from torch import Tensor
 from torch import nn, optim
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.models.network_modules.layers.pooling_layers import GAP1d
 from fedcore.models.network_modules.layers.special import InceptionBlock, InceptionModule

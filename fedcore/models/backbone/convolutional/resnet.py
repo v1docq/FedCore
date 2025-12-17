@@ -4,7 +4,7 @@ from torch import nn, optim, Tensor
 from torchvision.models import resnet101, resnet152, resnet18, resnet34, resnet50
 
 from fedot.core.operations.operation_parameters import OperationParameters
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 from fedcore.models.network_impl.layers import PrunedResNet, Bottleneck, BasicBlock
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 

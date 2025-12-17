@@ -10,7 +10,7 @@ from torch import nn, Tensor
 from torch.autograd import Variable
 from fastai.torch_core import Module
 
-from fedcore.architecture.comptutaional.devices import default_device
+from fedcore.architecture.computational.devices import default_device
 
 
 def lambda_prepare(
