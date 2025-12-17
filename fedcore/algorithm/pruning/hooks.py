@@ -69,13 +69,6 @@ class ZeroShotPruner(BaseHook):
         
 
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
-        """Attach the hook to a trainer and cache common resources.
-
-        Parameters
-        ----------
-        hookable_trainer : BaseNeuralModel
-            Trainer instance that provides ``criterion`` and device settings.
-        """
         super().link_to_trainer(hookable_trainer)
         self.criterion_for_pruner = hookable_trainer.criterion
         self.device = default_device()
@@ -83,18 +76,6 @@ class ZeroShotPruner(BaseHook):
     @classmethod
     def check_init(cls, d: dict):
         """Check whether this particular hook type should be instantiated.
-
-        Parameters
-        ----------
-        d : dict
-            Hook configuration dictionary.
-
-        Returns
-        -------
-        bool
-            ``True`` if the base hook initialization passes and the importance
-            name in config corresponds to this concrete pruner class,
-            ``False`` otherwise.
         """
         if (not super().check_init(d)):
             return False
@@ -107,18 +88,6 @@ class ZeroShotPruner(BaseHook):
 
         This helper method is used by gradient-/regularization-based pruners
         to accumulate gradients using the trainer's criterion.
-
-        Parameters
-        ----------
-        data : torch.Tensor
-            Batch of input features.
-        target : torch.Tensor
-            Batch of targets/labels.
-
-        Returns
-        -------
-        torch.Tensor
-            Computed loss value for the batch.
         """
         data, target = data.to(self.device), target.to(self.device)
         data, target = data.to(torch.float32), target.to(torch.float32)
@@ -133,21 +102,6 @@ class ZeroShotPruner(BaseHook):
         return loss
 
     def trigger(self, epoch, kws) -> bool:
-        """Decide whether pruning should be performed at the current epoch.
-
-        Parameters
-        ----------
-        epoch : int
-            Current training epoch.
-        kws : dict
-            Extra arguments from the trainer (unused here).
-
-        Returns
-        -------
-        bool
-            ``True`` if current epoch matches the ``prune_each`` schedule,
-            ``False`` otherwise.
-        """
         return self.is_epoch_arrived_default(epoch, self.prune_each)
 
     def pruning_operation(self):
@@ -155,8 +109,7 @@ class ZeroShotPruner(BaseHook):
 
         For each iteration, calls ``pruner.step(interactive=True)`` to obtain
         groups of prune operations and then executes ``group.prune()`` for
-        all proposed groups. A simple pruning history is collected
-        (but not used further in the current implementation).
+        all proposed groups.
         """
         pruning_hist = []
         for i in range(self.pruning_iterations):
@@ -170,19 +123,6 @@ class ZeroShotPruner(BaseHook):
 
     def action(self, epoch, kws):
         """Apply pruning and validate the resulting model.
-
-        Parameters
-        ----------
-        epoch : int
-            Current epoch (unused, present for hook API compatibility).
-        kws : dict
-            Extra arguments from the trainer (unused here).
-
-        Notes
-        -----
-        Calls :meth:`pruning_operation` and then
-        :meth:`PruningValidator.validate_pruned_layers` to ensure that
-        pruning did not break the model structure.
         """
         self.pruning_operation()
         PruningValidator.validate_pruned_layers(self.hookable_trainer.model)
@@ -205,20 +145,6 @@ class PrunerWithGrad(ZeroShotPruner):
 
     def action(self, epoch, kws):
         """Accumulate gradients on validation data, then prune and validate.
-
-        Parameters
-        ----------
-        epoch : int
-            Current epoch (unused, present for hook API compatibility).
-        kws : dict
-            Dictionary expected to contain ``'val_loader'`` with validation
-            data loader.
-
-        Notes
-        -----
-        For each batch in ``val_loader``, this method calls
-        :meth:`_backward_propagation_step` to accumulate gradients, then
-        invokes :meth:`pruning_operation` and validates pruned layers.
         """
         print(f"Gradients accumulation")
         print(f"==========================================")
@@ -261,13 +187,6 @@ class PrunerWithReg(ZeroShotPruner):
 
     def _prune_after_reg(self, pruner: tp.BasePruner, pruning_iter):
         """Run pruning iterations after regularization has been applied.
-
-        Parameters
-        ----------
-        pruner : tp.BasePruner
-            Pruner instance with initialized dependency graph.
-        pruning_iter : int
-            Number of pruning iterations to perform.
         """
         pruning_hist = []
         for i in range(pruning_iter):
@@ -281,14 +200,6 @@ class PrunerWithReg(ZeroShotPruner):
 
     def action(self, epoch, kws):
         """Perform sparse-training regularization, then prune and validate.
-
-        Parameters
-        ----------
-        epoch : int
-            Current epoch (unused, present for hook API compatibility).
-        kws : dict
-            Dictionary expected to contain ``'train_loader'`` with training
-            data loader.
         """
         pruning_iter = self.pruning_iterations
         train_dataloader = kws['train_loader']
@@ -387,17 +298,6 @@ class PrunerInDepth(ZeroShotPruner):
 
     def _connect_activation_and_layers(self, layers_entropy):
         """Map activation entropy values to corresponding conv layers.
-
-        Parameters
-        ----------
-        layers_entropy : dict
-            Mapping from activation layer names to entropy values.
-
-        Returns
-        -------
-        tuple[dict, list[str]]
-            Updated ``layers_entropy`` with conv layer names as keys and a
-            list of conv layers selected for pruning.
         """
         layers_to_prune = []
         for key in self.activation_replace_hooks.keys():
@@ -416,20 +316,6 @@ class PrunerInDepth(ZeroShotPruner):
 
     def _get_layer_magnitude(self, layers_to_prune, layers_entropy):
         """Combine entropy and weight magnitudes into layer importance scores.
-
-        Parameters
-        ----------
-        layers_to_prune : list[str]
-            Names of layers considered for pruning.
-        layers_entropy : dict
-            Mapping from layer name to entropy value.
-
-        Returns
-        -------
-        tuple[dict, float]
-            * ``layer_entro_magni`` – per-layer combined score
-              (entropy × mean |weight|),
-            * ``total_layers_entro_magni`` – sum of all scores.
         """
         layer_entro_magni = {}
         for key in layers_entropy.keys():
@@ -451,21 +337,6 @@ class PrunerInDepth(ZeroShotPruner):
 
     def _iter_pruning(self, layers_to_prune, layer_entro_magni, total_layers_entro_magni):
         """Allocate pruning budget across layers according to importance.
-
-        Parameters
-        ----------
-        layers_to_prune : list[str]
-            Names of layers considered for pruning.
-        layer_entro_magni : dict
-            Per-layer importance scores from :meth:`_get_layer_magnitude`.
-        total_layers_entro_magni : float
-            Sum of all importance scores.
-
-        Returns
-        -------
-        tuple[list[str], dict[str, float]]
-            Filtered list of layers to prune and per-layer pruning amounts
-            (number of weights to prune).
         """
         filtred_layers_to_prune = copy.deepcopy(layers_to_prune)
         left_amount = {}
@@ -506,22 +377,6 @@ class PrunerInDepth(ZeroShotPruner):
 
     def action(self, epoch, kws):
         """Run the full entropy-based pruning pipeline and validate.
-
-        Steps
-        -----
-        1. Collect activation values for monitored layers.
-        2. Compute entropy for each activation layer.
-        3. Map activation entropy to convolutional layers.
-        4. Run :meth:`iterative_prune` to apply pruning.
-        5. Validate pruned model via :class:`PruningValidator`.
-
-        Parameters
-        ----------
-        epoch : int
-            Current epoch (unused, present for hook API compatibility).
-        kws : dict
-            Dictionary expected to contain ``'train_loader'`` with training
-            data loader.
         """
         # Step 1. Initialise data for predict loop and entropy monitoring
         train_dataloader = kws['train_loader']
@@ -535,18 +390,6 @@ class PrunerInDepth(ZeroShotPruner):
 
     def iterative_prune(self, layers_entropy, layers_to_prune):
         """Execute entropy-based pruning for selected layers.
-
-        Parameters
-        ----------
-        layers_entropy : dict
-            Mapping from layer name to entropy value.
-        layers_to_prune : list[str]
-            Names of layers to be considered for pruning.
-
-        Notes
-        -----
-        A temporary copy of the model is pruned using unstructured L1
-        pruning on the ``weight`` parameter. Pruning masks are then removed.
         """
         layer_entro_magni, total_layers_entro_magni = self._get_layer_magnitude(layers_to_prune, layers_entropy)
         filtred_layers_to_prune, fix_prun_amount = self._iter_pruning(layers_to_prune,
@@ -565,18 +408,6 @@ class PrunerInDepth(ZeroShotPruner):
 
     def eval_action_entropy(self, train_loader):
         """Evaluate loss and activation entropy over a training loader.
-
-        Parameters
-        ----------
-        train_loader :
-            Data loader that provides training batches.
-
-        Returns
-        -------
-        tuple[dict, float]
-            * ``layers_entropy`` – mapping from activation layer names to
-              mean entropy values over the dataset;
-            * ``total_loss`` – mean loss value over the dataset.
         """
         def eval_on_train(train_loader):
             total_loss = 0
@@ -628,27 +459,6 @@ class PrunerInDepth(ZeroShotPruner):
 
 def define_pruner_hook_type(importance_name: str) -> type[ZeroShotPruner]:
     """Select an appropriate pruning hook class given an importance name.
-
-    The choice is based on global mappings in
-    :data:`PrunerImportances` and :data:`PRUNER_WITHOUT_REQUIREMENTS`:
-
-    * zero-shot pruners – do not require gradients or regularization;
-    * gradient-based pruners – names that contain ``"taylor"`` or ``"hessian"``;
-    * regularization-based pruners – names that contain ``"bn_scale"`` or
-      ``"group"``;
-    * depth-based pruners – names that contain ``"depth"``.
-
-    Parameters
-    ----------
-    importance_name : str
-        Name of the importance metric used for pruning.
-
-    Returns
-    -------
-    type[ZeroShotPruner]
-        One of :class:`ZeroShotPruner`, :class:`PrunerWithGrad`,
-        :class:`PrunerWithReg`, or :class:`PrunerInDepth`, depending on the
-        importance name.
     """
     zeroshot_pruner = PrunerImportances[importance_name] in tuple(PRUNER_WITHOUT_REQUIREMENTS.values())
     pruner_with_grads = not zeroshot_pruner and any(['taylor' in importance_name, 'hessian' in importance_name])
