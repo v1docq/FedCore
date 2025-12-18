@@ -191,7 +191,10 @@ def _fit(self, params, data):
     Returns:
         tuple: trained operation and prediction on train data
     """
-    self._init(data.task, params=params, n_samples_data=data.features.shape[0])
+    self._init(data.task, params=params, 
+               n_samples_data=float('inf')
+            #    data.features.shape[0]
+               )
 
     self.fitted_operation = self._eval_strategy.fit(train_data=data)
 
@@ -243,7 +246,8 @@ def predict_operation_fedcore(
         data.task,
         output_mode=output_mode,
         params=params,
-        n_samples_data=data.features.shape[0],
+        # n_samples_data=data.features.shape[0],
+        n_samples_data=float('inf')
     )
 
     if is_fit_stage:

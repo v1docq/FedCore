@@ -131,17 +131,17 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         else:
             return None
 
-    # def save_model(self, path: str):
-    #     torch.save(self.model.state_dict(), path)
+    def save_model(self, path: str):
+        torch.save(self.model.state_dict(), path)
 
-    # def load_model(self, path: str):
-    #     if self.model is None:
-    #         self._init_model()
-    #     try:  # path to state_dict
-    #         self.model.load_state_dict(torch.load(path, weights_only=False))
-    #     except Exception:  # path to model_impl
-    #         self.model = torch.load(path, map_location=self.device)
-    #     self.model.eval()
+    def load_model(self, path: str):
+        if self.model is None:
+            self._init_model()
+        try:  # path to state_dict
+            self.model.load_state_dict(torch.load(path, weights_only=False))
+        except Exception:  # path to model_impl
+            self.model = torch.load(path, map_location=self.device)
+        self.model.eval()
 
 
     def __substitute_device_quant(self):
@@ -157,7 +157,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         val_loader = input_data.val_dataloader
         self.task_type = input_data.task.task_type
         # define model for fit process
-        self.model = input_data.target if self.model is None else self.model
+        self.model = input_data.model if self.model is None else self.model
         self.optimised_model = self.model
         self.model.to(self.device)
         self._init_hooks()
@@ -195,14 +195,14 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
                                                        max_batches=self.batch_limit,
                                                        enumerate=False)
         for epoch in range(1, self.epochs + 1):
-            for hook in self.hooks.start:
+            for hook in self.hooks.start():
                 hook(epoch=epoch, trainer_objects=self.trainer_objects,
                      learning_rate=self.learning_rate)
             self._run_one_epoch(epoch=epoch,
                                 dataloader=train_loader,
                                 loss_fn=loss_fn,
                                 optimizer=self.optimizer)
-            for hook in self.hooks.end:
+            for hook in self.hooks.end():
                 hook(epoch=epoch, val_loader=val_loader,
                      criterion=partial(self._compute_loss, criterion=loss_fn),
                      history=self.history)
@@ -234,6 +234,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
                                                      max_batches=self.calib_batch_limit)
         if self.task_type is None:
             self.task_type = x_test.task.task_type
+
         for i, batch in tqdm(enumerate(dataloader, 1), total=len(dataloader)):  ###TODO why val_dataloader???
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
@@ -282,10 +283,10 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         )
         return predict
 
-    # def _clear_cache(self):
-    #     """Clear CUDA cache - shared by BaseNeuralModel and LLMTrainer"""
-    #     with torch.no_grad():
-    #         torch.cuda.empty_cache()
+    def _clear_cache(self):
+        """Clear CUDA cache - shared by BaseNeuralModel and LLMTrainer"""
+        with torch.no_grad():
+            torch.cuda.empty_cache()
 
     # def __wrap(self, model):
     #     if not isinstance(model, BaseNeuralModel):

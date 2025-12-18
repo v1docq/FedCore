@@ -26,14 +26,14 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
-from fedcore.data.data import CompressionInputData
+from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.repository.constant_repository import (
-    FEDOT_API_PARAMS,
-    FEDOT_ASSUMPTIONS,
-    # FEDOT_GET_METRICS,
-)
+# from fedcore.repository.constant_repository import (
+#     FEDOT_API_PARAMS,
+#     FEDOT_ASSUMPTIONS,
+#     # FEDOT_GET_METRICS,
+# )
 from fedcore.metrics.quality import calculate_metrics
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
@@ -86,7 +86,7 @@ class FedCore(Fedot):
             # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
-    def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
+    def __init_solver(self, input_data: Optional[InputData] = None):
         self.logger.info('Initialising solver')
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
@@ -129,31 +129,25 @@ class FedCore(Fedot):
             peft_strategy_params = (peft_strategy_params,)
         print('###', peft_strategy_params)
         print('###', self.manager.learning_config)
-        for peft_strategy_conf in peft_strategy_params:
-            initial_assumption.add_node(
-                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=peft_strategy_conf.to_dict()
-            )
-
-        return initial_assumption.build()
-
-    def __build_assumption(self):
-        def camel_to_snake(camel_case_string):
-            import re
-            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
-            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
         
-        initial_assumption = PipelineBuilder()
-        peft_strategy_params = self.manager.learning_config.peft_strategy_params
-        # check if atomized strategy
-        if not isinstance(peft_strategy_params, (list, tuple)):
-            peft_strategy_params = (peft_strategy_params,)
-        print('###', peft_strategy_params)
-        print('###', self.manager.learning_config)
+        tokenizer = None
+        learning_strategy_params = self.manager.learning_config.learning_strategy_params
+        if learning_strategy_params is not None:
+            if hasattr(learning_strategy_params, 'tokenizer'):
+                tokenizer = learning_strategy_params.tokenizer
+            elif isinstance(learning_strategy_params, dict) and 'tokenizer' in learning_strategy_params:
+                tokenizer = learning_strategy_params['tokenizer']
+            elif hasattr(learning_strategy_params, 'to_dict'):
+                learning_params_dict = learning_strategy_params.to_dict()
+                tokenizer = learning_params_dict.get('tokenizer') or learning_params_dict.get('custom_learning_params', {}).get('tokenizer')
+        
         for peft_strategy_conf in peft_strategy_params:
+            params_dict = peft_strategy_conf.to_dict()
+            if tokenizer is not None and 'tokenizer' not in params_dict:
+                params_dict['tokenizer'] = tokenizer
             initial_assumption.add_node(
                 operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=peft_strategy_conf.to_dict()
+                params=params_dict
             )
 
         return initial_assumption.build()
@@ -231,15 +225,18 @@ class FedCore(Fedot):
     def __build_assumption(self):
         initial_assumption = PipelineBuilder()
         peft_strategy_params = self.manager.learning_config.peft_strategy_params
-        # check if atomized strategy
         if not isinstance(peft_strategy_params, (list, tuple)):
             peft_strategy_params = (peft_strategy_params,)
         for peft_strategy_conf in peft_strategy_params:
+            params = peft_strategy_conf.to_dict()
+            cls_name = peft_strategy_conf.__class__.__name__
+            if cls_name.endswith('Config'):
+                cls_name = cls_name[:-6] + 'Template'
+            operation_type = camel_to_snake(cls_name.replace('Template', '')) + '_model'
             initial_assumption.add_node(
-                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=peft_strategy_conf.to_dict()
+                operation_type=operation_type,
+                params=params
             )
-
         return initial_assumption.build()
 
     @property
@@ -313,14 +310,53 @@ class FedCore(Fedot):
             )
 
     def _process_input_data(self, input_data):
-        data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
-                             learning_params=self.manager.learning_config.learning_strategy_params
-                             )
-        train_data = Either.insert(input_data).then(data_cls.check_input_data).value
-        ### TODO del workaround
-        train_data.train_dataloader = train_data.features.train_dataloader
-        train_data.val_dataloader = train_data.features.val_dataloader
-        ###
+        # data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
+        #                      learning_params=self.manager.learning_config.learning_strategy_params
+        #                      )
+        # train_data = Either.insert(input_data).then(data_cls.check_input_data).value
+        train_data = input_data
+        # ### TODO del workaround
+        # train_data.train_dataloader = train_data.features.train_dataloader
+        # train_data.val_dataloader = train_data.features.val_dataloader
+        # ###
+        # model_params = self.learning_params.model_architecture
+        # if any([model_params.input_dim is None, model_params.output_dim is None]):
+        #     model_params.input_dim = self.manager.learning_config.learning_strategy_params.model_architecture.input_dim
+        #     model_params.output_dim = self.manager.learning_config.learning_strategy_params.model_architecture
+
+        from fedcore.models.backbone.backbone_loader import load_backbone
+        from fedcore.architecture.computational.devices import default_device
+
+        def _init_model_from_backbone(model, learning_params):
+            model_is_pretrain_torch_backbone = isinstance(model, str)
+            model_is_pretrain_backbone_with_weights = isinstance(model, dict)
+            model_is_custom_callable_object = isinstance(model, Callable)
+            if model_is_pretrain_torch_backbone:
+                torch_model = load_backbone(torch_model=model)
+            elif model_is_pretrain_backbone_with_weights:
+                if self.model['path_to_model'].__contains__('.pth'):
+                        torch_model = torch.load(model['path_to_model'], weights_only=False,
+                                                    map_location=default_device())
+                else:
+                    torch_model = load_backbone(torch_model=model,
+                                                model_params=learning_params)
+                    if model_is_pretrain_backbone_with_weights:
+                        try:
+                            torch_model.load_model(model['path_to_model'])
+                        except:
+                            loaded_state_dict = torch.load(model['path_to_model'], weights_only=True,
+                                                        map_location=default_device())
+                            # verified_state_dict = self._check_state_dict(loaded_state_dict, input_data, compression_dataset)
+                            # torch_model.load_state_dict(verified_state_dict)
+            elif model_is_custom_callable_object:
+                torch_model = model
+            return torch_model
+
+        torch_model = _init_model_from_backbone(self.manager.automl_config.fedot_config['initial_assumption'], 
+                                                self.manager.learning_config.learning_strategy_params)
+        input_data.model = torch_model
+
+        input_data.supplementary_data.is_auto_preprocessed = True
         return train_data
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
@@ -502,10 +538,9 @@ class FedCore(Fedot):
         is_inference_metric = problem.__contains__("computational")
         is_fedcore_model = problem.__contains__('fedcore')
         model_regime = 'model_after' if is_fedcore_model else 'model_before'
-        prediction_dict = dict(target=target, predict=prediction.predict)
         if is_inference_metric:
             model_to_evaluate = self.get_model_by_regime(model_regime)
-            prediction_dict = dict(model=model_to_evaluate, dataset=target, model_regime=model_regime)
+            prediction_dict = dict(model=model_to_evaluate, dataset=target.target, model_regime=model_regime) #hardcode
             # preproc_target = preproc_target(target)
         metrics = metrics or self.manager.automl_config.fedot_config.metric
         prediction_dataframe = calculate_metrics(metrics, **prediction_dict)
@@ -543,8 +578,13 @@ class FedCore(Fedot):
         prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
         prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
         problem = self.manager.automl_config.fedot_config.problem
-        quality_metrics_list  = [name for name in self.manager.automl_config.fedot_config.metrics if name not in COMPUTATIONAL_METRICS]
-        computational_metrics = [name for name in self.manager.automl_config.fedot_config.metrics if name in COMPUTATIONAL_METRICS]
+        metrics = self.manager.automl_config.fedot_config.metric
+        if isinstance(metrics, str):
+            metrics = [metrics]
+        elif metrics is None:
+            metrics = []
+        quality_metrics_list  = [name for name in metrics if name not in COMPUTATIONAL_METRICS]
+        computational_metrics = [name for name in metrics if name in COMPUTATIONAL_METRICS]
         quality_metrics_list = [self.evaluate_metric(prediction=prediction,
                                                      target=test_data.val_dataloader,
                                                      problem=self.manager.automl_config.fedot_config.problem,

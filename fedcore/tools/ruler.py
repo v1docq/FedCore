@@ -8,9 +8,9 @@ from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 from fedcore.architecture.computational.devices import default_device, extract_device
-from fedcore.metrics.metric_impl import (
-    Accuracy, Precision, F1, RMSE, MSE, MAE, MAPE, SMAPE, R2
-)
+# from fedcore.metrics.metric_impl import (
+#     Accuracy, Precision, F1, RMSE, MSE, MAE, MAPE, SMAPE, R2
+# )
 from functools import partial
 from fedcore.tools.registry.model_registry import ModelRegistry
 from fedcore.api.utils.data import DataLoaderHandler

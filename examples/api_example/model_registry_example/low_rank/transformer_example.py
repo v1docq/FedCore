@@ -21,7 +21,7 @@ from fedot.core.repository.tasks import (
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, DeviceConfigTemplate, ComputeConfigTemplate,
+                                     DeviceConfigTemplate, ComputeConfigTemplate,
                                      LowRankTemplate)
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from datasets import load_dataset
@@ -29,7 +29,6 @@ from fedcore.api.main import FedCore
 from fedcore.api.llm_config import LLMConfigTemplate
 from fedcore.data.data import CompressionInputData
 from fedcore.repository.constant_repository import FedotTaskEnum
-from fedcore.metrics.nlp_metrics import NLPAccuracy, NLPF1, SacreBLEU, ROUGE
 from fedcore.tools.registry.model_registry import ModelRegistry
 
 log_dir = 'examples/api_example/model_registry_example/logs'
@@ -127,7 +126,7 @@ def create_pretrain_config(model, tokenizer):
         epochs=5,  
         optimizer='adamw',
         scheduler='one_cycle',
-        scheduler_step_each=1,
+        # scheduler_step_each=1,
         criterion='cross_entropy',
         is_llm=True,
         model=model,
@@ -163,7 +162,7 @@ def create_api_config(model, tokenizer, fedcore_id=None):
     
     fedot_config = FedotConfigTemplate(
         problem='classification',
-        metric= ['accuracy', 'f1'],
+        metric= ['MulticlassAccuracy__10', 'MulticlassF1Score__10'],
         pop_size=1,
         timeout=2,
         initial_assumption=model
@@ -175,8 +174,8 @@ def create_api_config(model, tokenizer, fedcore_id=None):
         criterion='cross_entropy',
         learning_strategy='checkpoint',
         learning_strategy_params=pretrain_config,
-        peft_strategy='low_rank', 
-        peft_strategy_params=peft_config  
+        # peft_strategy='low_rank', 
+        peft_strategy_params=[peft_config]  
     )
     
     device_config = DeviceConfigTemplate(device='cuda' if torch.cuda.is_available() else 'cpu')

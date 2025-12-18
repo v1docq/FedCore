@@ -35,6 +35,10 @@ class BaseHook(ABC):
         self.params: dict = params
         self.model: torch.nn.Module = model
 
+    @property
+    def HOOK_PLACE(self):
+        return self._hook_place
+
     def __call__(self, epoch, **kws):
         trigger_result = self.trigger(epoch, kws)
         if VERBOSE and trigger_result:

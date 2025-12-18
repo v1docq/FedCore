@@ -614,6 +614,23 @@ class LowRankTemplate(TrainingTemplate):
         Threshold for non-adaptive rank pruning.
     finetune_params : TrainingTemplate, optional
         Fine-tuning parameters after compression.
+    decomposer : {'svd', 'rsvd', 'cur', 'two_sided'}, optional
+        Type of decomposer from tdecomp to use (default: 'svd').
+    decomposing_mode : {'channel', 'spatial'}, optional
+        Decomposition mode for weights (default: 'channel').
+        'channel' mode reshapes weights along channel dimension.
+        'spatial' mode reshapes weights along spatial dimensions.
+    rank : int or float, optional
+        Rank for decomposition. If None, will be estimated automatically.
+        Can be int (absolute rank) or float (relative rank, 0-1).
+    distortion_factor : float, optional
+        Distortion factor for decomposer (default: 0.6). Must be in (0, 1].
+    random_init : str, optional
+        Random initialization method for randomized decomposers (default: 'normal').
+    power : int, optional
+        Power parameter for RandomizedSVD (default: 3).
+    fedcore_id : str, optional
+        FedCore model registry ID for model tracking and registration.
     """
 
     """Example of specific node template"""
@@ -623,6 +640,13 @@ class LowRankTemplate(TrainingTemplate):
     compose_mode: Optional[Literal['one_layer', 'two_layers', 'three_layers']] = None
     non_adaptive_threshold: float = .5
     finetune_params: TrainingTemplate = None
+    decomposer: Optional[Literal['svd', 'rsvd', 'cur', 'two_sided']] = 'svd'
+    decomposing_mode: Optional[Literal['channel', 'spatial']] = None
+    rank: Optional[Union[int, float]] = None
+    distortion_factor: float = 0.6
+    random_init: str = 'normal'
+    power: int = 3
+    fedcore_id: Optional[str] = None
 
 
 @dataclass

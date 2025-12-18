@@ -19,7 +19,7 @@ import inspect
 
 from transformers import AutoTokenizer
 
-from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
+from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning_in_place
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
 from fedcore.architecture.computational.devices import default_device, extract_device
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
