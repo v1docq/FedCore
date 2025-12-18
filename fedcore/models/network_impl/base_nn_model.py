@@ -157,7 +157,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         val_loader = input_data.val_dataloader
         self.task_type = input_data.task.task_type
         # define model for fit process
-        self.model = input_data.target if self.model is None else self.model
+        self.model = input_data.model if self.model is None else self.model
         self.optimised_model = self.model
         self.model.to(self.device)
         self._init_hooks()
@@ -234,6 +234,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
                                                      max_batches=self.calib_batch_limit)
         if self.task_type is None:
             self.task_type = x_test.task.task_type
+
         for i, batch in tqdm(enumerate(dataloader, 1), total=len(dataloader)):  ###TODO why val_dataloader???
             *inputs, targets = batch
             inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))

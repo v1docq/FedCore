@@ -52,6 +52,11 @@ class ApiLoader:
         return model
 
     def _convert_to_fedcore(self, torch_dataset) -> CompressionInputData:
+        num_classes = len(torch_dataset.classes) if torch_dataset.classes is not None else 1
+
+        if 'subset' in self.loader_params:
+            from torch.utils.data import Subset
+            torch_dataset = Subset(torch_dataset, torch.arange(int(self.loader_params['subset'] * len(torch_dataset))))
         if 'split_ratio' in self.loader_params:
             train_dataset, val_dataset = random_split(torch_dataset, self.loader_params['split_ratio'])
         else:
@@ -65,7 +70,6 @@ class ApiLoader:
         val_dataloader = DataLoader(dataset=val_dataset,**_normalize_kwargs(DataLoader.__init__, self.loader_params)
         )
         sample = next(iter(torch_dataset))[0]
-        num_classes = len(torch_dataset.classes) if torch_dataset.classes is not None else 1
         input_dim = sample.shape[1] if len(sample.shape) > 2 else sample.shape[0]
         task = Task(TaskTypesEnum.classification) if num_classes != 1 else Task(TaskTypesEnum.regression)
         fedcore_train_data = CompressionInputData(

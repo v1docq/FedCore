@@ -47,30 +47,28 @@ class QualityMetric(Metric):
     """Base metric computed via pipeline.predict()."""
     default_value = 0
     need_to_minimize = False
-    output_mode = "compress"  # 'labels' | 'probs' | 'raw' | 'compress'
+    output_mode = "raw"  # 'labels' | 'probs' | 'raw' | 'compress'
     split = "val"             # 'val' | 'test'
 
     @classmethod
     def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
         """Compute metric on features.<split> using pipeline.predict(output_mode)."""
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
-        loader = getattr(reference_data.features, f"{cls.split}_dataloader")
+        target_loader = getattr(reference_data, f"{cls.split}_dataloader")
 
         prediction = results.predict
+
         if isinstance(prediction, CompressionOutputData):
             prediction = prediction.predict
 
         if isinstance(prediction, torch.Tensor):
             prediction = prediction.cpu().detach()
 
-        dataset = loader.dataset
-        if hasattr(dataset, "targets"):
-            true_target = dataset.targets
-        else:
-            iter_object = iter(dataset)
-            true_target = torch.tensor([batch[1] for batch in iter_object])
+        target = torch.concat(
+            [b[1] for b in target_loader]
+        )
 
-        result = cls.metric(target=true_target, predict=prediction)
+        result = cls.metric(target=target, predict=prediction)
         assert result is not None, f"{cls.__name__}.metric() returned None"
         return float(result)
 
@@ -182,6 +180,7 @@ class MetricFactory:
             child_attr: getattr(parent_cls, parent_attr) for parent_attr, child_attr in ATTRIBUTE_MAPPING.items()
         }
         attributes['problem'] = problem
+
         # special cases
         attributes['need_to_minimize'] = not attributes['need_to_minimize'] 
 
@@ -202,7 +201,7 @@ class MetricFactory:
             result = instance.compute()
             del instance
             return result
-        
+
         attributes['metric'] = metric
         new_metric = type(
             original_name, (parent_cls, QualityMetric), attributes

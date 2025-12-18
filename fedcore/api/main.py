@@ -86,7 +86,7 @@ class FedCore(Fedot):
             # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
-    def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
+    def __init_solver(self, input_data: Optional[InputData] = None):
         self.logger.info('Initialising solver')
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
@@ -310,14 +310,53 @@ class FedCore(Fedot):
             )
 
     def _process_input_data(self, input_data):
-        data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
-                             learning_params=self.manager.learning_config.learning_strategy_params
-                             )
-        train_data = Either.insert(input_data).then(data_cls.check_input_data).value
-        ### TODO del workaround
-        train_data.train_dataloader = train_data.features.train_dataloader
-        train_data.val_dataloader = train_data.features.val_dataloader
-        ###
+        # data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
+        #                      learning_params=self.manager.learning_config.learning_strategy_params
+        #                      )
+        # train_data = Either.insert(input_data).then(data_cls.check_input_data).value
+        train_data = input_data
+        # ### TODO del workaround
+        # train_data.train_dataloader = train_data.features.train_dataloader
+        # train_data.val_dataloader = train_data.features.val_dataloader
+        # ###
+        # model_params = self.learning_params.model_architecture
+        # if any([model_params.input_dim is None, model_params.output_dim is None]):
+        #     model_params.input_dim = self.manager.learning_config.learning_strategy_params.model_architecture.input_dim
+        #     model_params.output_dim = self.manager.learning_config.learning_strategy_params.model_architecture
+
+        from fedcore.models.backbone.backbone_loader import load_backbone
+        from fedcore.architecture.computational.devices import default_device
+
+        def _init_model_from_backbone(model, learning_params):
+            model_is_pretrain_torch_backbone = isinstance(model, str)
+            model_is_pretrain_backbone_with_weights = isinstance(model, dict)
+            model_is_custom_callable_object = isinstance(model, Callable)
+            if model_is_pretrain_torch_backbone:
+                torch_model = load_backbone(torch_model=model)
+            elif model_is_pretrain_backbone_with_weights:
+                if self.model['path_to_model'].__contains__('.pth'):
+                        torch_model = torch.load(model['path_to_model'], weights_only=False,
+                                                    map_location=default_device())
+                else:
+                    torch_model = load_backbone(torch_model=model,
+                                                model_params=learning_params)
+                    if model_is_pretrain_backbone_with_weights:
+                        try:
+                            torch_model.load_model(model['path_to_model'])
+                        except:
+                            loaded_state_dict = torch.load(model['path_to_model'], weights_only=True,
+                                                        map_location=default_device())
+                            # verified_state_dict = self._check_state_dict(loaded_state_dict, input_data, compression_dataset)
+                            # torch_model.load_state_dict(verified_state_dict)
+            elif model_is_custom_callable_object:
+                torch_model = model
+            return torch_model
+
+        torch_model = _init_model_from_backbone(self.manager.automl_config.fedot_config['initial_assumption'], 
+                                                self.manager.learning_config.learning_strategy_params)
+        input_data.model = torch_model
+
+        input_data.supplementary_data.is_auto_preprocessed = True
         return train_data
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):

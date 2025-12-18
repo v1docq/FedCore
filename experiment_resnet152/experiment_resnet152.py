@@ -42,14 +42,17 @@ LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 
 pretrained_resnet152 = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
+pretrained_resnet152.fc = torch.nn.Linear(2048, 10) 
 INITIAL_ASSUMPTION = pretrained_resnet152 
 
 train_dataloader_params = {"batch_size": 64,
+                            'subset': 0.01,
                            'shuffle': True,
                            'is_train': True,
                            'data_type': 'image',
                            'split_ratio': [0.8, 0.2]}
 test_dataloader_params = {"batch_size": 100,
+                          'subset': 0.1,
                           'shuffle': True,
                           'is_train': False,
                           'data_type': 'image'}
@@ -88,7 +91,7 @@ peft_config = LowRankTemplate(
     non_adaptive_threshold=0.3,  
     epochs=1,
     log_each=1,
-    eval_each=1,
+    eval_each=1, 
     decomposer='svd', 
     rank=None,  
     distortion_factor=0.6, 
@@ -98,7 +101,7 @@ fedot_config = FedotConfigTemplate(
     problem='classification',
     metric=METRIC_TO_OPTIMISE,
     pop_size=3,
-    timeout=60,  
+    timeout=2,  
     initial_assumption=INITIAL_ASSUMPTION
 )
 

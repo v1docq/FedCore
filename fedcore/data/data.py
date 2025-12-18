@@ -56,9 +56,9 @@ class CompressionInputData(InputData):
         (e.g. indexes, masks, service info).
     """
 
-    idx = None
-    features = None
-    data_type = None
+    idx = None # dummy
+    features = None # dummy
+    data_type = None # dummy
     train_dataloader: torch.utils.data.DataLoader = None
     val_dataloader: torch.utils.data.DataLoader = None
     test_dataloader: torch.utils.data.DataLoader = None
