@@ -51,7 +51,6 @@ def evaluate_objective_fedcore(self, graph: Pipeline) -> Fitness:
                 self._log.warning(f'Invalid fitness after objective evaluation. '
                                  f'Skipping the graph: {graph_id}', raise_if_test=True)
         except Exception as exec_during_fit:
-            raise
             self._log.warning(f'Exception - {exec_during_fit} during pipeline learning process. '
                               f'Skipping the graph: {graph_id}', raise_if_test=True)
             break

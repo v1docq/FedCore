@@ -20,6 +20,7 @@ from fedot.api.main import Fedot
 from fedot.core.data.data import InputData, OutputData
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+from fedot.core.repository.dataset_types import DataTypesEnum
 from pymonad.either import Either
 from pymonad.maybe import Maybe
 from torch import Tensor
@@ -478,38 +479,6 @@ class FedCore(Fedot):
             )
 
         return self.manager.predicted_labels
-
-    def finetune(self, train_data, tuning_params=None):
-        """
-        Method to obtain prediction probabilities from trained Industrial model.
-
-        Args:
-            train_data: raw train data
-            tuning_params: dictionary with tuning parameters
-            mode: str, ``default='full'``. Defines the mode of fine-tuning. Could be 'full' or 'head'.
-
-        """
-
-        def _fit_pipeline(data_dict):
-            data_dict['model_to_tune'].fit(data_dict['train_data'])
-            return data_dict
-
-        is_fedot_datatype = self.manager.condition_check.input_data_is_fedot_type(train_data)
-        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.manager.automl_config.fedot_config['task']]
-        tuning_params['tuner'] = FEDOT_TUNER_STRATEGY[tuning_params.get('tuner', 'sequential')]
-
-        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
-            model_to_tune = Either.insert(train_data). \
-                then(lambda data: self._process_input_data(data) if not is_fedot_datatype else data). \
-                then(lambda data: self.__init_fedcore_backend(data)). \
-                then(lambda processed_data: {'train_data': processed_data} |
-                                            {'model_to_tune': model_to_tune.build()} |
-                                            {'tuning_params': tuning_params}). \
-                then(lambda dict_for_tune: _fit_pipeline(dict_for_tune)['model_to_tune'] if return_only_fitted
-            else build_tuner(self, **dict_for_tune)).value
-
-        self.manager.is_finetuned = True
-        self.manager.solver = model_to_tune
 
     def evaluate_metric(
             self,
