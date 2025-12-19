@@ -29,7 +29,7 @@ from fedcore.api.utils.data import DataLoaderHandler
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.models.network_impl.utils._base import BaseTrainer
 from fedcore.models.network_impl.utils.hooks_collection import HooksCollection
-from fedcore.models.network_impl.utils.hooks import LoggingHooks, ModelLearningHooks, OptimizerGen, SchedulerRenewal
+from fedcore.models.network_impl.utils.hooks import LOGGING_HOOKS, MODEL_LEARNING_HOOKS, OptimizerGen, SchedulerRenewal
 
 
 class FedCoreTransformersTrainer(TrainerCallback):
@@ -51,7 +51,7 @@ class FedCoreTransformersTrainer(TrainerCallback):
         self.model = model
         self.hooks_collection = hooks_collection or HooksCollection()
         self.hooks_params = hooks_params or {}
-        self._hooks = [LoggingHooks, ModelLearningHooks]
+        self._hooks = [LOGGING_HOOKS, MODEL_LEARNING_HOOKS]
         if additional_hooks:
             self._hooks.extend(additional_hooks)
         
