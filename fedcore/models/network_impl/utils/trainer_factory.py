@@ -9,6 +9,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
 from fedcore.models.network_impl.utils.interfaces import ITrainer
+from fedcore.data.data import CompressionInputData
 
 logger = logging.getLogger(__name__)
 
@@ -158,11 +159,11 @@ def create_trainer(
     
     trainer_class = _get_trainer_class(model, task_type, params_dict)
 
-    return trainer_class(params=params_dict, **kwargs)
+    return trainer_class(params=params_dict, model=model, **kwargs)
 
 
 def create_trainer_from_input_data(
-    input_data: Any,
+    input_data: CompressionInputData,
     params: Optional[OperationParameters] = None,
     model: Any = None,
     **kwargs
@@ -183,14 +184,6 @@ def create_trainer_from_input_data(
         ITrainer: Appropriate trainer instance
     """
     task_type = input_data.task.task_type.value
-    
-    if model is None and hasattr(input_data, 'model'):
-        model = input_data.model
-        logger.info("Extracted model from input_data.target (model is input data type)")
-
-    if model is None and hasattr(input_data, 'target'):
-        model = input_data.target
-        logger.info("Extracted model from input_data.target (model is input data type)")
     
     logger.info(f"Creating trainer - task_type: {task_type}, model: {type(model).__name__ if model else 'None'}")
     

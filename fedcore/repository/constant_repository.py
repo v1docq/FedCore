@@ -48,14 +48,13 @@ from fedcore.models.network_modules.losses import (
 )
 
 from fedcore.repository.setups import QAT_1, PTQ_1
-from fedcore.models.network_impl.utils.hooks import LoggingHooks, ModelLearningHooks  # noqa
 from fedcore.algorithm.low_rank.hooks import LRHooks  # noqa
 
 from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.architecture.utils.misc import EnumNoValue
 
 from fedcore.models.network_impl.utils.hooks import (
-    Optimizers, Schedulers, ModelLearningHooks, LoggingHooks,
+    Optimizers, Schedulers, LOGGING_HOOKS, MODEL_LEARNING_HOOKS 
 )  # noqa
 from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum  # noqa
 

@@ -21,17 +21,17 @@ class HooksCollection:
         return self._on_epoch_start + self._on_epoch_end
     
     def _sort_start(self):
-        self.start().sort(key=lambda hook: hook.HOOK_PLACE)
+        self.start().sort(key=lambda hook: hook._hook_place)
 
     def _sort_end(self):
-        self.end().sort(key=lambda hook: hook.HOOK_PLACE)
+        self.end().sort(key=lambda hook: hook._hook_place)
     
     def append(self, hook: BaseHook):
         assert isinstance(hook, BaseHook)
-        if hook.HOOK_PLACE > 0:
+        if hook._hook_place > 0:
             self._on_epoch_end.append(hook)
             self._sort_end()
-        elif hook.HOOK_PLACE < 0:
+        elif hook._hook_place < 0:
             self._on_epoch_start.append(hook)
             self._sort_start()
         else:
@@ -42,9 +42,9 @@ class HooksCollection:
 
     def extend(self, hooks: Iterable[BaseHook]):
         for hook in hooks:
-            if (hook.HOOK_PLACE > 0):
+            if (hook._hook_place > 0):
                 self._on_epoch_end.append(hook)
-            elif (hook.HOOK_PLACE < 0):
+            elif (hook._hook_place < 0):
                 self._on_epoch_start.append(hook)
             else:
                 self._on_epoch_end.append(hook)
