@@ -13,7 +13,7 @@ import torch
 from numpy import diff, abs as npabs
 
 
-from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning
+from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning_in_place
 from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
@@ -115,7 +115,7 @@ class OnetimeRankPruner(BaseHook):
         strategy = self.params.get('strategy', 'explained_variance')
         for name, module in self.model.named_modules():
             if isinstance(module, IDecomposed): 
-                rank_threshold_pruning(decomposed_module=module,
+                rank_threshold_pruning_in_place(decomposed_module=module,
                                        threshold=non_adaptive_threshold,
                                        strategy=strategy,
                                        module_name=name)

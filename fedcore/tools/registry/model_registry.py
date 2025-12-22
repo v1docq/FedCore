@@ -1,6 +1,8 @@
 import os
 import gc
 import logging
+import uuid
+import hashlib
 from typing import Optional, Tuple, Dict, Any
 from threading import Lock, local
 
@@ -55,7 +57,32 @@ class ModelRegistry:
                     self.logger.setLevel(logging.INFO)
                     ModelRegistry._initialized = True
                     self.logger.info(f"ModelRegistry initialized: auto_cleanup={auto_cleanup}, base_dir={base_dir}")
+        
+        context = self.get_registry_context()
+        if not context:
+            fedcore_id = self.generate_fedcore_id()
+            model_id = self.generate_model_id(fedcore_id)
+            self.set_registry_context(fedcore_id, model_id)
+            self.logger.debug(f"Auto-generated fedcore_id={fedcore_id}, model_id={model_id}")
 
+    @staticmethod
+    def generate_fedcore_id() -> str:
+        return f"fedcore_{uuid.uuid4().hex[:8]}"
+    
+    @staticmethod
+    def generate_model_id(fedcore_id: Optional[str] = None, model=None, model_path: Optional[str] = None) -> str:
+        if fedcore_id is None:
+            fedcore_id = ModelRegistry.get_fedcore_id()
+        
+        base_id = str(uuid.uuid4())
+        if model is not None:
+            base_id = f"model_{id(model)}"
+        elif model_path is not None:
+            base_id = f"path_{hashlib.md5(model_path.encode()).hexdigest()[:16]}"
+        
+        fedcore_hash = hashlib.md5(fedcore_id.encode()).hexdigest()[:8] if fedcore_id else "unknown"
+        return f"{fedcore_hash}_{base_id}"
+    
     @staticmethod
     def set_registry_context(fedcore_id: str, model_id: str) -> None:
         _registry_context.fedcore_id = fedcore_id
@@ -66,12 +93,19 @@ class ModelRegistry:
         fedcore_id = getattr(_registry_context, 'fedcore_id', None)
         model_id = getattr(_registry_context, 'model_id', None)
         return (fedcore_id, model_id) if (fedcore_id and model_id) else None
+    
+    @staticmethod
+    def get_fedcore_id() -> Optional[str]:
+        return getattr(_registry_context, 'fedcore_id', None)
+    
+    @staticmethod
+    def get_model_id() -> Optional[str]:
+        return getattr(_registry_context, 'model_id', None)
 
     @staticmethod
     def clear_registry_context() -> None:
-        for attr in ('fedcore_id', 'model_id'):
-            if hasattr(_registry_context, attr):
-                delattr(_registry_context, attr)
+        _registry_context.fedcore_id = None
+        _registry_context.model_id = None
 
     def _normalize_stage(self, stage: Optional[str]) -> Optional[str]:
         if stage is None:
@@ -146,28 +180,32 @@ class ModelRegistry:
         self._log_memory_stats("after cleanup")
         return model_id
 
-    def register_model(self, fedcore_id: str, model=None, model_path: str = None,
+    def register_model(self, model=None, model_path: str = None,
                       pipeline_params: dict = None, note: str = "initial", params_format: str = 'yaml', 
                       delete_model_after_save: bool = True, stage: Optional[str] = None,
                       mode: Optional[str] = None) -> str:
-        self.logger.info(f"register_model called: fedcore_id={fedcore_id}, model_type={type(model).__name__ if model else 'None'}, stage={stage}, mode={mode}")
-
-        model_id = self.metrics_tracker.generate_model_id(model, model_path)
+        context = self.get_registry_context()
+        fedcore_id = context[0]
+        model_id = self.generate_model_id(fedcore_id, model, model_path)
+        self.set_registry_context(fedcore_id, model_id)
         stage, mode = self._resolve_stage_mode(fedcore_id, model_id, stage, mode)
 
         return self._save_checkpoint_and_record(fedcore_id, model_id, model, model_path,
                                                delete_model_after_save, stage, mode)
 
-    def register_changes(self, fedcore_id: str, model_id: str, model=None,
-                        pipeline_params: dict = None, note: str = "update", params_format: str = 'yaml',
-                        delete_model_after_save: bool = True, stage: Optional[str] = None,
-                        mode: Optional[str] = None):
+    def register_changes(self, model=None, pipeline_params: dict = None, note: str = "update", 
+                        params_format: str = 'yaml', delete_model_after_save: bool = True, 
+                        stage: Optional[str] = None, mode: Optional[str] = None):
+        context = self.get_registry_context()
+        fedcore_id = context[0]
+        model_id = context[1]
+        
         self.logger.info(f"register_changes called: fedcore_id={fedcore_id}, model_id={model_id}, stage={stage}, mode={mode}")
 
         existing = self.storage.get_latest_record(fedcore_id, model_id)
         if existing is None:
             self.logger.warning("No existing record found, calling register_model instead")
-            self.register_model(fedcore_id, model, None, pipeline_params, note, 
+            self.register_model(model, None, pipeline_params, note, 
                               params_format, delete_model_after_save, stage, mode)
             return
 
@@ -176,11 +214,14 @@ class ModelRegistry:
         self._save_checkpoint_and_record(fedcore_id, model_id, model, None,
                                         delete_model_after_save, stage, mode)
 
-    def update_metrics(self, fedcore_id: str, model_id: str, metrics: dict, 
-                      stage: Optional[str] = None, mode: Optional[str] = None, trainer=None):
+    def update_metrics(self, metrics: dict, stage: Optional[str] = None, 
+                      mode: Optional[str] = None, trainer=None):
+        context = self.get_registry_context()
+        fedcore_id = context[0]
+        model_id = context[1]
         self.storage.update_record(fedcore_id, model_id, metrics, stage=stage, mode=mode, trainer=trainer)
     
-    def save_metrics_from_evaluator(self, solver, fedcore_id: str, model_id: str):
+    def save_metrics_from_evaluator(self, solver):
         metrics_df = self.metrics_tracker.collect_metrics_from_history(solver=solver)
         
         if not metrics_df.empty and len(metrics_df) > 0:
@@ -188,44 +229,43 @@ class ModelRegistry:
             last_gen_metrics.pop('generation', None)
             
             if last_gen_metrics:
-                self.update_metrics(fedcore_id, model_id, last_gen_metrics)
+                self.update_metrics(last_gen_metrics)
                 self.logger.info("Saved optimization metrics from evaluator to registry")
 
-    def get_latest_record(self, fedcore_id: str, model_id: str) -> Optional[dict]:
+    def get_latest_record(self) -> Optional[dict]:
+        context = self.get_registry_context()
+        fedcore_id = context[0]
+        model_id = context[1]
         return self.storage.get_latest_record(fedcore_id, model_id)
 
-    def get_model_history(self, fedcore_id: str, model_id: str):
+    def get_model_history(self):
+        context = self.get_registry_context()
+        fedcore_id = context[0]
+        model_id = context[1]
         return self.storage.get_records(fedcore_id, model_id)
 
-    def get_best_checkpoint(self, fedcore_id: str, metric_name: str, mode: str = "max") -> Optional[dict]:
+    def get_best_checkpoint(self, metric_name: str, mode: str = "max") -> Optional[dict]:
+        context = self.get_registry_context()
+        fedcore_id = context[0]
         df = self.storage.load(fedcore_id)
         return self.metrics_tracker.find_best_checkpoint(df, metric_name, mode)
 
-    def get_checkpoint_path(self, fedcore_id: str, model_id: str) -> Optional[str]:
-        """Get checkpoint path for a registered model.
-        
-        Args:
-            fedcore_id: FedCore instance identifier
-            model_id: Model identifier
-            
-        Returns:
-            Checkpoint path string or None if not found
-        """
-        latest = self.storage.get_latest_record(fedcore_id, model_id)
+    def get_checkpoint_path(self) -> Optional[str]:
+        latest = self.get_latest_record()
         return latest.get('checkpoint_path') if latest else None
     
-    def load_model_from_latest_checkpoint(self, fedcore_id: str, model_id: str,
-                                         device: torch.device = None) -> Optional[torch.nn.Module]:
-        latest = self.storage.get_latest_record(fedcore_id, model_id)
+    def load_model_from_latest_checkpoint(self, device: torch.device = None) -> Optional[torch.nn.Module]:
+        latest = self.get_latest_record()
         return (self.checkpoint_manager.load_from_file(latest['checkpoint_path'], device) 
                 if latest and latest.get('checkpoint_path') else None)
 
-    def list_models(self, fedcore_id: str) -> list:
+    def list_models(self) -> list:
+        context = self.get_registry_context()
+        fedcore_id = context[0]
         return self.storage.list_model_ids(fedcore_id)
 
-    def get_model_with_fallback(self, fedcore_id: str, model_id: str,
-                               fallback_model=None, device: torch.device = None):
-        loaded_model = self.load_model_from_latest_checkpoint(fedcore_id, model_id, device)
+    def get_model_with_fallback(self, fallback_model=None, device: torch.device = None):
+        loaded_model = self.load_model_from_latest_checkpoint(device)
         return loaded_model if loaded_model is not None else fallback_model
 
     def _delete_model_from_memory(self, model) -> None:

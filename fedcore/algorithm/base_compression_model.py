@@ -1,5 +1,4 @@
 import os
-import uuid
 from typing import Any, Optional, Union
 import logging
 
@@ -10,7 +9,7 @@ from fedot.core.data.data import InputData
 from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.computational.devices import default_device, extract_device
-from fedcore.data.data import CompressionInputData
+from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 from torchinfo import summary
@@ -55,9 +54,15 @@ class BaseCompressionModel:
         # self.optimizer = None
         self.params = params
 
-        self._fedcore_id = params.get("fedcore_id")
-        if self._fedcore_id is None:
-            self._fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
+        self._registry = ModelRegistry()
+        
+        provided_fedcore_id = params.get("fedcore_id")
+        if provided_fedcore_id:
+            initial_model_id = self._registry.generate_model_id(provided_fedcore_id)
+            self._registry.set_registry_context(provided_fedcore_id, initial_model_id)
+            self._fedcore_id = provided_fedcore_id
+        else:
+            self._fedcore_id = self._registry.get_fedcore_id()
 
         logger.debug(f"fedcore_id: {self._fedcore_id}")
 
@@ -65,7 +70,6 @@ class BaseCompressionModel:
         self._model_id_after = None
         self._model_before_cached = None
         self._model_after_cached = None
-        self._registry = ModelRegistry()
 
         logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
 
@@ -115,9 +119,8 @@ class BaseCompressionModel:
         if self._model_id_before is None:
             return None
 
-        loaded_model = self._registry.load_model_from_latest_checkpoint(
-            self._fedcore_id, self._model_id_before, DEVICE
-        )
+        self._registry.set_registry_context(self._fedcore_id, self._model_id_before)
+        loaded_model = self._registry.load_model_from_latest_checkpoint(DEVICE)
 
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
             self._model_before_cached = loaded_model
@@ -135,13 +138,15 @@ class BaseCompressionModel:
         self._model_before_cached = value
         if value is not None and self._model_id_before is None:
             logger.info("Registering model_before in ModelRegistry")
+            temp_model_id = self._registry.generate_model_id(self._fedcore_id)
+            self._registry.set_registry_context(self._fedcore_id, temp_model_id)
             self._model_id_before = self._registry.register_model(
-                fedcore_id=self._fedcore_id,
                 model=value,
                 stage="before",
                 mode=None
             )
-            logger.info(f"model_before registered with id={self._model_id_before}")
+            self._registry.set_registry_context(self._fedcore_id, self._model_id_before)
+            logger.info(f"model_before registered with fedcore_id={self._fedcore_id}, model_id={self._model_id_before}")
         else:
             logger.debug(f"Skipping registration: value is None={value is None}, already registered={self._model_id_before is not None}")
 
@@ -154,9 +159,8 @@ class BaseCompressionModel:
         if self._model_id_after is None:
             return None
 
-        loaded_model = self._registry.load_model_from_latest_checkpoint(
-            self._fedcore_id, self._model_id_after, DEVICE
-        )
+        self._registry.set_registry_context(self._fedcore_id, self._model_id_after)
+        loaded_model = self._registry.load_model_from_latest_checkpoint(DEVICE)
 
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
             self._model_after_cached = loaded_model
@@ -175,23 +179,24 @@ class BaseCompressionModel:
         if value is not None:
             if self._model_id_after is None:
                 logger.info("Registering new model_after in ModelRegistry")
+                temp_model_id = self._registry.generate_model_id(self._fedcore_id)
+                self._registry.set_registry_context(self._fedcore_id, temp_model_id)
                 self._model_id_after = self._registry.register_model(
-                    fedcore_id=self._fedcore_id,
                     model=value,
                     stage="after",
                     mode=None
                 )
-                logger.info(f"model_after registered with id={self._model_id_after}")
+                self._registry.set_registry_context(self._fedcore_id, self._model_id_after)
+                logger.info(f"model_after registered with fedcore_id={self._fedcore_id}, model_id={self._model_id_after}")
             else:
                 logger.info("Registering changes for model_after")
+                self._registry.set_registry_context(self._fedcore_id, self._model_id_after)
                 self._registry.register_changes(
-                    fedcore_id=self._fedcore_id,
-                    model_id=self._model_id_after,
                     model=value,
                     stage="after",
                     mode=None
                 )
-                logger.info("model_after changes registered")
+                logger.info(f"model_after changes registered with fedcore_id={self._fedcore_id}, model_id={self._model_id_after}")
         else:
             logger.debug("Skipping registration: value is None")
 
@@ -202,12 +207,14 @@ class BaseCompressionModel:
             model: Model to save
             stage: Stage name (e.g., 'before_compression', 'after_compression')
         """
+        temp_model_id = self._registry.generate_model_id(self._fedcore_id)
+        self._registry.set_registry_context(self._fedcore_id, temp_model_id)
         model_id = self._registry.register_model(
-            fedcore_id=self._fedcore_id,
             model=model,
             stage=stage,
             mode=None
         )
+        self._registry.set_registry_context(self._fedcore_id, model_id)
         return model_id
 
     def _init_model(self, input_data, additional_hooks=tuple()):
@@ -215,8 +222,14 @@ class BaseCompressionModel:
         logger = logging.getLogger(__name__)
         logger.info("BaseCompressionModel._init_model() started")
 
-        model = input_data.model
-        logger.info(f"Model type from input_data.target: {type(model).__name__}")
+        if isinstance(input_data, CompressionInputData): #TODO check why does this data format come?
+            model = getattr(input_data, 'model', None) or input_data.target
+        elif hasattr(input_data, 'features') and isinstance(input_data.features, CompressionInputData):
+            model = input_data.target or getattr(input_data.features, 'model', None)
+        else:
+            model = input_data.target.model #hardcode
+        
+        logger.info(f"Model type from input_data: {type(model).__name__}")
 
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
@@ -249,9 +262,18 @@ class BaseCompressionModel:
     def _predict_model(self, x_test, output_mode: str = "default"):
         pass
 
-    def _get_example_input(self, input_data: InputData):
-        batch = next(iter(input_data.val_dataloader))
-        if isinstance(batch, (list, tuple)) and len(batch) == 2:
+    def _get_example_input(self, input_data):
+        if isinstance(input_data, CompressionInputData):
+            val_dataloader = input_data.val_dataloader
+        elif hasattr(input_data, 'val_dataloader'):
+            val_dataloader = input_data.val_dataloader
+        elif hasattr(input_data, 'features') and isinstance(input_data.features, CompressionInputData):
+            val_dataloader = input_data.features.val_dataloader
+        else:
+            raise ValueError("Cannot find val_dataloader in input_data")
+        
+        batch = next(iter(val_dataloader))
+        if isinstance(batch, (list, tuple)) and len(batch) >= 2:
             return batch[0]
         return batch
 
