@@ -108,3 +108,4 @@ data/
 datasets/
 .vscode
 *.csv
+llm_output/checkpoints/*
