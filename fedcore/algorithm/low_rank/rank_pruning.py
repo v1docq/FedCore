@@ -11,6 +11,7 @@ from fedcore.architecture.utils.misc import EnumNoValue
 
 __all__ = [
     'rank_threshold_pruning_in_place',
+    'rank_threshold_pruning',  # Alias for compatibility
     'S_STRATEGIES'
 ]
 
@@ -105,3 +106,7 @@ class SLRStrategiesEnum(Enum):
 
 
 SLRStrategies = EnumNoValue(SLRStrategiesEnum)
+
+
+# Alias for compatibility with existing code
+rank_threshold_pruning = rank_threshold_pruning_in_place

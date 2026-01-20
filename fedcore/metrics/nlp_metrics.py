@@ -44,7 +44,14 @@ class EvaluateMetric(QualityMetric):
 
     metric_name: str = ""
     result_key: Optional[str] = None
-    _metric = _EVALUATE.load(metric_name)
+    _metric = None  # Will be loaded lazily
+    
+    @classmethod
+    def _load_metric(cls):
+        """Lazy load the metric."""
+        if cls._metric is None and cls.metric_name:
+            cls._metric = _EVALUATE.load(cls.metric_name)
+        return cls._metric
 
     @classmethod
     def metric(cls, target: Sequence[Any] | None, predict: Sequence[Any] | None, **kwargs: Any) -> float:
@@ -57,7 +64,11 @@ class EvaluateMetric(QualityMetric):
         if references is None or predictions is None:
             raise ValueError("Both references and predictions are required.")
 
-        res = cls._metric.compute(references=references, predictions=predictions, **kwargs)
+        metric = cls._load_metric()
+        if metric is None:
+            raise ValueError(f"Metric {cls.metric_name} not loaded. Ensure metric_name is set correctly.")
+        
+        res = metric.compute(references=references, predictions=predictions, **kwargs)
 
         # Normalize evaluate output to float
         if isinstance(res, dict):
@@ -76,10 +87,25 @@ class EvaluateMetric(QualityMetric):
         return float(val)
 
     @classmethod
-    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
-        out = pipeline.predict(reference_data, output_mode=cls.output_mode)
+    def get_value(cls, pipeline, reference_data, validation_blocks=None, **generation_kwargs) -> float:
+        out = pipeline.predict(reference_data, output_mode=cls.output_mode, **generation_kwargs)
         preds = out.predict.predict
-        preds = preds.detach().cpu().tolist()
+        
+        # Fix: if predict is already a list of strings (for output_mode="texts")
+        if isinstance(preds, list):
+            # Check if first element is a string
+            if len(preds) > 0 and isinstance(preds[0], str):
+                # This is already texts, no need to decode
+                predictions = preds
+            else:
+                # Try to process as tensors
+                if len(preds) > 0 and hasattr(preds[0], 'detach'):
+                    preds = [p.detach().cpu().tolist() if isinstance(p, torch.Tensor) else p for p in preds]
+                predictions = preds
+        elif isinstance(preds, torch.Tensor):
+            predictions = preds.detach().cpu().tolist()
+        else:
+            predictions = preds
 
         loader = getattr(reference_data.features, f"{cls.split}_dataloader")
         ds = loader.dataset
@@ -94,7 +120,7 @@ class EvaluateMetric(QualityMetric):
             it = iter(ds)
             refs = [ex[1] for ex in it]
 
-        return cls.metric(refs, preds)
+        return cls.metric(refs, predictions)
 
     def compute(self, y_true: Sequence[Any] | None = None, y_pred: Sequence[Any] | None = None, *, references: Sequence[Any] | None = None, predictions: Sequence[Any] | None = None, **kwargs: Any) -> Dict[str, Any]:
         if references is None and y_true is not None:
@@ -103,7 +129,12 @@ class EvaluateMetric(QualityMetric):
             predictions = y_pred
         if references is None or predictions is None:
             raise ValueError("Both references and predictions are required.")
-        return self._metric.compute(predictions=predictions, references=references, **kwargs)
+        
+        metric = self._load_metric()
+        if metric is None:
+            raise ValueError(f"Metric {self.metric_name} not loaded. Ensure metric_name is set correctly.")
+        
+        return metric.compute(predictions=predictions, references=references, **kwargs)
 
 
 class NLPAccuracy(EvaluateMetric):
@@ -111,7 +142,6 @@ class NLPAccuracy(EvaluateMetric):
     metric_name = "accuracy"
     result_key = "accuracy"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)
     
     
 # =============================== Additional NLP Metrics ================================
@@ -121,18 +151,15 @@ class NLPPrecision(EvaluateMetric):
     metric_name = "precision"
     result_key = "precision"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)
 
 class NLPRecall(EvaluateMetric):
     """Recall for NLP classification tasks."""
     metric_name = "recall"
     result_key = "recall"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)
 
 class NLPF1(EvaluateMetric):
     """F1 score for NLP classification tasks."""
     metric_name = "f1"
     result_key = "f1"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)
