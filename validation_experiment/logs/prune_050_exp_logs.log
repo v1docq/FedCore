@@ -1,0 +1,11 @@
+2026-02-25 13:37:57,900 - __main__ - INFO - LOGGING TEST - logs will be saved to: validation_experiment/logs/prune_050_exp_logs.log
+2026-02-25 13:38:09,237 - __main__ - INFO - Applying pruning to model before training...
+2026-02-25 15:25:36,613 - __main__ - INFO - First log entry keys: ['loss', 'grad_norm', 'learning_rate', 'epoch', 'step']
+2026-02-25 15:25:36,614 - __main__ - INFO - Sample entries with step 500:
+2026-02-25 15:25:36,614 - __main__ - INFO -   Step 500 entry: {'loss': 3.3069, 'grad_norm': 5.9674072265625, 'learning_rate': 4.600000000000001e-05, 'epoch': 0.08, 'step': 500}
+2026-02-25 15:25:36,614 - __main__ - INFO -   Step 500 entry: {'eval_loss': 3.1872811317443848, 'eval_runtime': 342.606, 'eval_samples_per_second': 72.97, 'eval_steps_per_second': 18.243, 'epoch': 0.08, 'step': 500}
+2026-02-25 15:25:36,682 - __main__ - INFO - 
+   step  ref_loss  train_loss  val_loss
+0   500  3.008783      3.3069  3.187281
+1  1000  2.910450      3.1412  3.093575
+2  1500  2.859515      3.0698  3.035407
