@@ -62,6 +62,50 @@ class BaseTrainer(ITrainer, IHookable):
     def predict(self, input_data: Any, output_mode: str = "default") -> Any:
         pass
 
+    def save_model(self, path: str) -> None:
+        """Save model to specified path.
+        
+        Base implementation saves model.state_dict().
+        Subclasses can override for specific model types (e.g., Transformers).
+        
+        Args:
+            path: Path where to save the model
+        """
+        if self.model is None:
+            raise ValueError("Model is not initialized. Call fit() first or provide model during initialization.")
+        
+        torch.save(self.model.state_dict(), path)
+    
+    def load_model(self, path: str) -> None:
+        """Load model from specified path.
+        
+        Base implementation loads state_dict or full model.
+        Subclasses can override for specific model types (e.g., Transformers).
+        
+        Args:
+            path: Path to load the model from
+        """
+        if self.model is None:
+            raise ValueError("Model is not initialized. Cannot load state_dict without model architecture.")
+        
+        loaded = torch.load(path, map_location=self.device, weights_only=False)
+        
+        if isinstance(loaded, dict) and any(key in loaded for key in ['state_dict', 'model_state_dict', 'model']):
+            if 'state_dict' in loaded:
+                self.model.load_state_dict(loaded['state_dict'])
+            elif 'model_state_dict' in loaded:
+                self.model.load_state_dict(loaded['model_state_dict'])
+            elif 'model' in loaded and isinstance(loaded['model'], dict):
+                self.model.load_state_dict(loaded['model'])
+            else:
+                self.model.load_state_dict(loaded)
+        elif isinstance(loaded, dict):
+            self.model.load_state_dict(loaded)
+        else:
+            self.model = loaded
+        
+        self.model.eval()
+
     def _clear_cache(self):
         """Clear GPU cache using ModelRegistry cleanup methods."""
         try:
@@ -150,14 +194,12 @@ class BaseTrainer(ITrainer, IHookable):
                 'train_dataloader': None,
                 'val_dataloader': None,
                 'num_classes': None,
-                'features': None
             }
         
         field_path_mapping = {
             'train_dataloader': ['train_dataloader', ('features', 'train_dataloader')],
             'val_dataloader': ['val_dataloader', ('features', 'val_dataloader')],
             'num_classes': ['num_classes', ('features', 'num_classes')],
-            'features': ['features', ('features', 'features')]
         }
         
         def _get_value_by_path(obj: Any, path) -> Any:

@@ -9,7 +9,7 @@ from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
 from fedcore.models.network_impl.utils.interfaces import ITrainer
-from fedcore.data.data import CompressionInputData
+from fedcore.data.data import CompressionInputData, CompressionOutputData
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,6 @@ def _get_trainer_class(model: Any, task_type: str, params: Dict) -> Type[ITraine
         Type[ITrainer]: Appropriate trainer class
     """
     is_llm = params.get('is_llm', None)
-    
     if is_llm is True:
         logger.info("Creating LLMTrainer based on explicit is_llm=True parameter")
         return LLMTrainer
@@ -128,18 +127,20 @@ def create_trainer(
     task_type: str,
     params: Optional[OperationParameters] = None,
     model: Any = None,
+    model_for_constructor: Any = None,
     **kwargs
 ) -> ITrainer:
     """
     Create appropriate trainer based on model architecture and task type.
     
-    Model is treated as input data type, NOT as a parameter.
-    Model is passed directly to trainer constructor, not through params dict.
+    Model is used for architecture analysis to choose trainer class.
+    Trainer will resolve model via _resolve_model() when needed (e.g., in fit()).
     
     Args:
         task_type: Type of task ('forecasting', 'llm', 'classification', 'regression', etc.)
         params: Training parameters (WITHOUT model)
-        model: Model to train (type of input data)
+        model: Model for architecture analysis (to choose trainer class)
+        model_for_constructor: Model to pass to trainer constructor (if None, uses model param)
         **kwargs: Additional arguments
         
     Returns:
@@ -151,15 +152,18 @@ def create_trainer(
     else:
         params_dict = params or {}
     
-    if 'tokenizer' not in params_dict:
-        if isinstance(params_dict.get('custom_learning_params'), dict):
-            tokenizer = params_dict['custom_learning_params'].get('tokenizer')
+    custom_params = params_dict.get('custom_learning_params', {})
+    if isinstance(custom_params, dict):
+        if 'tokenizer' not in params_dict:
+            tokenizer = custom_params.get('tokenizer')
             if tokenizer is not None:
                 params_dict['tokenizer'] = tokenizer
     
     trainer_class = _get_trainer_class(model, task_type, params_dict)
+    
+    constructor_model = model_for_constructor if model_for_constructor is not None else model
 
-    return trainer_class(params=params_dict, model=model, **kwargs)
+    return trainer_class(params=params_dict, model=constructor_model, **kwargs)
 
 
 def create_trainer_from_input_data(
@@ -185,6 +189,15 @@ def create_trainer_from_input_data(
     """
     task_type = input_data.task.task_type.value
     
-    logger.info(f"Creating trainer - task_type: {task_type}, model: {type(model).__name__ if model else 'None'}")
+    analysis_model = model
+    if analysis_model is None:
+        candidate_model = getattr(input_data, 'target', None) or getattr(input_data, 'model', None)
+
+        if isinstance(candidate_model, CompressionOutputData):
+            analysis_model = getattr(candidate_model, 'model', None)
+        else:
+            analysis_model = candidate_model
     
-    return create_trainer(task_type, params, model, **kwargs)
+    logger.info(f"Creating trainer - task_type: {task_type}, model: {type(analysis_model).__name__ if analysis_model else 'None'}")
+    
+    return create_trainer(task_type, params, analysis_model, model_for_constructor=None, **kwargs)
