@@ -12,14 +12,14 @@ import torch
 from tqdm import tqdm
 
 from tdecomp.grad_proj.tensorgrad.prepared_tg import ULTG, ParallelTG
-print('@@@ before bt')
+# print('@@@ before bt')
 
 from fedcore.models.network_impl.utils._base import BaseTrainer
-print('@@@ before op')
+# print('@@@ before op')
 
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.abstraction.accessor import Accessor
-print('@@@ before dlh')
+# print('@@@ before dlh')
 
 from fedcore.api.utils.data import DataLoaderHandler
 
