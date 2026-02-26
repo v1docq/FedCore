@@ -86,19 +86,21 @@ class EvaluateMetric(QualityMetric):
         return float(val)
 
     @classmethod
-    def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
-        out = pipeline.predict(reference_data, output_mode=cls.output_mode)
+    def get_value(cls, pipeline, reference_data, validation_blocks=None, **generation_kwargs) -> float:
+        out = pipeline.predict(reference_data, output_mode=cls.output_mode, **generation_kwargs)
         preds = out.predict.predict
         
-        if isinstance(preds, torch.Tensor):
-            preds = preds.detach().cpu().tolist()
-        elif isinstance(preds, list):
-            pass
+        if isinstance(preds, list):
+            if len(preds) > 0 and isinstance(preds[0], str):
+                predictions = preds
+            else:
+                if len(preds) > 0 and hasattr(preds[0], 'detach'):
+                    preds = [p.detach().cpu().tolist() if isinstance(p, torch.Tensor) else p for p in preds]
+                predictions = preds
+        elif isinstance(preds, torch.Tensor):
+            predictions = preds.detach().cpu().tolist()
         else:
-            try:
-                preds = list(preds)
-            except (TypeError, ValueError):
-                raise TypeError(f"Unexpected prediction type: {type(preds)}. Expected torch.Tensor or list.")
+            predictions = preds
 
         refs = None
         if hasattr(out, 'target') and out.target is not None:
@@ -117,7 +119,7 @@ class EvaluateMetric(QualityMetric):
                 it = iter(ds)
                 refs = [ex[1] for ex in it]
 
-        result = cls.metric(refs, preds)
+        result = cls.metric(refs, predictions)
         assert result is not None, f"{cls.__name__}.metric() returned None"
         return float(result)
 
@@ -129,6 +131,8 @@ class EvaluateMetric(QualityMetric):
         if references is None or predictions is None:
             raise ValueError("Both references and predictions are required.")
         metric_instance = self._get_metric()
+        if metric_instance is None:
+            raise ValueError(f"Metric {self.metric_name} not loaded. Ensure metric_name is set correctly.")
         return metric_instance.compute(predictions=predictions, references=references, **kwargs)
 
 
