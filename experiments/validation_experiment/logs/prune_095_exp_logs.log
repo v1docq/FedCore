@@ -1,0 +1,3 @@
+2026-03-02 14:30:22,963 - __main__ - INFO - LOGGING TEST - logs will be saved to: validation_experiment/logs/prune_095_exp_logs.log
+2026-03-02 14:30:29,932 - __main__ - INFO - Total parameters before pruning: 494,032,768
+2026-03-02 14:30:53,702 - __main__ - INFO - Zero parameters after pruning: 444,565,094

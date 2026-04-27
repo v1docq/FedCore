@@ -1,0 +1,7 @@
+2026-03-04 11:22:40,905 - __main__ - INFO - LOGGING TEST - logs will be saved to: validation_experiment/logs/prune_075_exp_logs.log
+2026-03-04 11:22:48,978 - __main__ - INFO - Total parameters BEFORE pruning: 494,032,768
+2026-03-04 11:22:49,475 - __main__ - INFO - Total params: 494,032,768, prunable params: 313,830,272, desired global ratio: 0.75, using internal pruning_ratio=0.9900
+2026-03-04 11:22:51,309 - __main__ - INFO - Parameters before: 494,032,768
+2026-03-04 11:22:51,310 - __main__ - INFO - Parameters after: 183,342,976
+2026-03-04 11:22:51,310 - __main__ - INFO - Parameters removed: 310,689,792
+2026-03-04 11:22:51,310 - __main__ - INFO - Reduction: 62.89%
