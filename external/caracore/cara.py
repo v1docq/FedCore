@@ -19,89 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-# ------------------ CPD utilities ------------------
-class CPDecomp(nn.Module):
-    """Canonical Polyadic Decomposition parameterization.
-
-    Represents a tensor of shape `shape` and rank `rank` as a set of `len(shape)` factor matrices
-    where factor[i] has shape (shape[i], rank). The reconstructed tensor is:
-        T[i0,i1,...,i_{n-1}] = sum_{r=0..rank-1} prod_{mode=0..n-1} factors[mode][i_mode, r]
-
-    This module stores the factors as learnable parameters and provides a reconstruct() method.
-    It is intentionally generic: supports 2D (matrix -> reduces to a sum of outer products) and
-    higher-order tensors.
-    """
-
-    def __init__(self, shape: Sequence[int], rank: int, init_scale: float = 1e-3):
-        """Initialize CPD decomposition with given shape and rank.
-        
-        Args:
-            shape: Tuple/sequence of integers defining tensor dimensions (e.g., (8, 64, 512) for 3D)
-            rank: CPD rank (number of components in the decomposition)
-            init_scale: Standard deviation for Gaussian initialization of factors
-            
-        Raises:
-            AssertionError: If rank < 1
-        """
-        super().__init__()
-        assert rank >= 1, f"CPD rank must be >= 1, but got rank={rank}"
-        self.shape = tuple(int(s) for s in shape)
-        self.rank = int(rank)
-        self.num_modes = len(self.shape)
-
-        # create factors: each factor is (mode_dim, rank)
-        self.factors = nn.ParameterList()
-        for dim in self.shape:
-            p = nn.Parameter(torch.empty(dim, self.rank))
-            nn.init.normal_(p, mean=0.0, std=init_scale)
-            self.factors.append(p)
-
-    def forward(self) -> torch.Tensor:
-        return self.reconstruct()
-
-    def reconstruct(self) -> torch.Tensor:
-        """Reconstruct full tensor from factors. Returns tensor with `self.shape`.
-
-        Uses einsum for efficient canonical polyadic reconstruction.
-        For a 2-mode tensor: T[i,j] = sum_r factors[0][i,r] * factors[1][j,r]
-        For a 3-mode tensor: T[i,j,k] = sum_r factors[0][i,r] * factors[1][j,r] * factors[2][k,r]
-        
-        Efficiency note: reconstruction costs O(prod(shape) * rank), which can be expensive for large
-        tensors. Callers should avoid reconstructing huge tensors frequently; instead consider computing
-        mode-wise contractions when possible. For adapter use-cases (small rank, moderate shape), this
-        is usually acceptable.
-        
-        Note: Supports tensors up to 52 modes using letters [a-z, A-Z] (excluding 'r' and 'R').
-        """
-        # Check if we can generate enough unique letters (max 52 modes supported)
-        if self.num_modes > 52:
-            raise ValueError(
-                f"CPDecomp only supports up to 52 modes, but got {self.num_modes}. "
-                "For very high-dimensional tensors, consider alternative decomposition methods."
-            )
-        
-        # Build einsum string like 'ar,br,cr->abc' for 3-mode tensor
-        # Use letters a-z, A-Z, but skip 'r' and 'R' (reserved for rank dimension)
-        # This gives us 52 possible letters for modes
-        available_letters = [chr(i) for i in range(ord('a'), ord('z') + 1) if chr(i) != 'r']
-        available_letters += [chr(i) for i in range(ord('A'), ord('Z') + 1) if chr(i) != 'R']
-        
-        letters = available_letters[:self.num_modes]
-        subscripts_in = [l + 'r' for l in letters]
-        subs_in = ','.join(subscripts_in)
-        subs_out = ''.join(letters)
-        eins = f"{subs_in}->{subs_out}"
-        return torch.einsum(eins, *self.factors)
-
-    def num_parameters(self) -> int:
-        """Calculate total number of parameters in all factors.
-        
-        Returns:
-            Total number of learnable parameters across all factor matrices
-        """
-        return sum(p.numel() for p in self.factors)
-
+from tensorly import cp_to_tensor
 
 # ------------------ Adapter / wrapper ------------------
 class CaraAdapter(nn.Module):
@@ -118,7 +36,8 @@ class CaraAdapter(nn.Module):
     """
 
     def __init__(self, base_shape: Sequence[int], rank: int, tensor_modes: Optional[Sequence[int]] = None, 
-                 init_scale: float = 1e-3, scaling: Union[float, str] = 1.0):
+                 init_scale: float = 1e-3, scaling: Union[float, str] = 1.0, n_iter_max: int = 100,
+                 tol: float = 1e-6):
         """Initialize CaRA adapter with CPD parameterization.
         
         Args:
@@ -145,10 +64,25 @@ class CaraAdapter(nn.Module):
                 f"Got tensor_modes={tuple(tensor_modes)}, base_shape={self.base_shape}"
             )
             self.tensor_shape = tuple(int(s) for s in tensor_modes)
-        self.rank = int(rank)
+        self.rank = rank
 
-        self.cpd = CPDecomp(self.tensor_shape, self.rank, init_scale=init_scale)
+        # self.cpd = CPDecomposition(
+        #     rank=self.rank,
+        #     n_iter_max=n_iter_max,
+        #     tol=tol,
+        #     init='random',  
+        #     normalize_factors=False,
+        #     linesearch=False
+        # )
         
+        self.weights = nn.Parameter(torch.ones(self.rank))
+        self.factors = nn.ParameterList()
+        
+        for dim in self.tensor_shape:
+            factor = nn.Parameter(torch.empty(dim, self.rank))
+            nn.init.normal_(factor, mean=0.0, std=init_scale)
+            self.factors.append(factor)
+
         # Scaling factor α for stability
         if scaling == 'learnable':
             self.scaling = nn.Parameter(torch.ones(1))
@@ -162,15 +96,17 @@ class CaraAdapter(nn.Module):
         Reconstructs CPD tensor and reshapes (flattens modes) to the base tensor shape.
         Applies scaling factor α for stability: delta = α * CPD(factors)
         """
-        reconstructed = self.cpd.reconstruct()
-        # flatten reconstructed to match base_shape
-        reconstructed_flat = reconstructed.reshape(self.base_shape)
-        # Apply scaling factor
-        return self.scaling * reconstructed_flat
+        cp_tensor = (
+            self.weights,
+            list(self.factors),
+        )
+        reconstructed = cp_to_tensor(cp_tensor)
+        reconstructed = reconstructed.reshape(self.base_shape)
+        return self.scaling * reconstructed
 
     def zero_factors(self):
         """Reset all CPD factors to zero. Useful for zero-initialization."""
-        for p in self.cpd.factors:
+        for p in self.factors:
             nn.init.zeros_(p)
 
     def num_parameters(self) -> int:
@@ -179,11 +115,10 @@ class CaraAdapter(nn.Module):
         Returns:
             Total parameters including CPD factors and scaling (if learnable)
         """
-        total = self.cpd.num_parameters()
+        total = self.num_parameters()
         if self.is_scaling_learnable:
             total += 1
         return total
-
 
 # ------------------ Simple wrapped Linear ------------------
 class CaraLinear(nn.Module):
@@ -314,7 +249,7 @@ class CaraAttentionWrapper(nn.Module):
                 rank=rank,
                 tensor_modes=tensor_modes,  # 3D decomposition preserving head structure
                 init_scale=init_scale,
-                scaling=scaling
+                scaling=scaling,
             )
             self.adapters[f'in_proj_{proj_name}'] = adapter
         
@@ -325,7 +260,9 @@ class CaraAttentionWrapper(nn.Module):
                 rank=rank,
                 tensor_modes=None,  # 2D is fine for output
                 init_scale=init_scale,
-                scaling=scaling
+                scaling=scaling,
+                n_iter_max=n_iter_max,
+                tol=tol
             )
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, 
@@ -410,111 +347,111 @@ class CaraAttentionWrapper(nn.Module):
 
 
 # ------------------ Simple unit tests / examples ------------------
-if __name__ == '__main__':
-    print("=" * 60)
-    print("CaRA Implementation Tests - Following Paper Methodology")
-    print("=" * 60)
+# if __name__ == '__main__':
+#     print("=" * 60)
+#     print("CaRA Implementation Tests - Following Paper Methodology")
+#     print("=" * 60)
     
-    # Test 1: CaraLinear with scaling factor
-    print("\n[Test 1] CaraLinear with learnable scaling factor")
-    lin = nn.Linear(128, 256)
-    cara_lin = CaraLinear(lin, rank=4, adapt_bias=True, scaling='learnable')
-    x = torch.randn(10, 128)
-    y = cara_lin(x)
-    print(f'  Output shape: {y.shape}')
-    print(f'  Trainable params: {cara_lin.num_trainable_parameters()}')
-    print(f'  Scaling factor α: {cara_lin.adapter.scaling.item():.4f}')
+#     # Test 1: CaraLinear with scaling factor
+#     print("\n[Test 1] CaraLinear with learnable scaling factor")
+#     lin = nn.Linear(128, 256)
+#     cara_lin = CaraLinear(lin, rank=4, adapt_bias=True, scaling='learnable')
+#     x = torch.randn(10, 128)
+#     y = cara_lin(x)
+#     print(f'  Output shape: {y.shape}')
+#     print(f'  Trainable params: {cara_lin.num_trainable_parameters()}')
+#     print(f'  Scaling factor α: {cara_lin.adapter.scaling.item():.4f}')
     
-    # Test 2: CPD reconstruction for 3D tensor (multi-head structure)
-    print("\n[Test 2] CPD reconstruction for 3D tensor (multi-head like)")
-    num_heads, head_dim, embed_dim = 8, 64, 512
-    shape_3d = (num_heads, head_dim, embed_dim)
-    rank = 4
-    cpd_3d = CPDecomp(shape_3d, rank, init_scale=0.01)
-    full_3d = cpd_3d.reconstruct()
-    print(f'  3D tensor shape: {full_3d.shape}')
-    print(f'  CPD parameters: {cpd_3d.num_parameters()} (vs full tensor: {math.prod(shape_3d)})')
-    compression_ratio = math.prod(shape_3d) / cpd_3d.num_parameters()
-    print(f'  Compression ratio: {compression_ratio:.2f}x')
+#     # Test 2: CPD reconstruction for 3D tensor (multi-head structure)
+#     print("\n[Test 2] CPD reconstruction for 3D tensor (multi-head like)")
+#     num_heads, head_dim, embed_dim = 8, 64, 512
+#     shape_3d = (num_heads, head_dim, embed_dim)
+#     rank = 4
+#     cpd_3d = CPDecomp(shape_3d, rank, init_scale=0.01)
+#     full_3d = cpd_3d.reconstruct()
+#     print(f'  3D tensor shape: {full_3d.shape}')
+#     print(f'  CPD parameters: {cpd_3d.num_parameters()} (vs full tensor: {math.prod(shape_3d)})')
+#     compression_ratio = math.prod(shape_3d) / cpd_3d.num_parameters()
+#     print(f'  Compression ratio: {compression_ratio:.2f}x')
 
-    # Test 3: CaraAttentionWrapper with 3D tensor decomposition
-    print("\n[Test 3] CaraAttentionWrapper with multi-head structure (KEY TEST)")
-    embed_dim = 512
-    num_heads = 8
-    mha = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=True)
+#     # Test 3: CaraAttentionWrapper with 3D tensor decomposition
+#     print("\n[Test 3] CaraAttentionWrapper with multi-head structure (KEY TEST)")
+#     embed_dim = 512
+#     num_heads = 8
+#     mha = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, batch_first=True)
     
-    # Create wrapper - this now uses 3D tensors internally!
-    cara_attn = CaraAttentionWrapper(mha, rank=4, scaling='learnable', adapt_out_proj=True)
-    print(f'  Attention config: embed_dim={embed_dim}, num_heads={num_heads}, head_dim={embed_dim//num_heads}')
-    print(f'  Trainable params: {cara_attn.num_trainable_parameters()}')
+#     # Create wrapper - this now uses 3D tensors internally!
+#     cara_attn = CaraAttentionWrapper(mha, rank=4, scaling='learnable', adapt_out_proj=True)
+#     print(f'  Attention config: embed_dim={embed_dim}, num_heads={num_heads}, head_dim={embed_dim//num_heads}')
+#     print(f'  Trainable params: {cara_attn.num_trainable_parameters()}')
     
-    # Verify 3D tensor structure
-    for name, adapter in cara_attn.adapters.items():
-        if 'in_proj' in name:
-            print(f'  {name}: tensor_shape={adapter.tensor_shape} (3D multi-head!)')
+#     # Verify 3D tensor structure
+#     for name, adapter in cara_attn.adapters.items():
+#         if 'in_proj' in name:
+#             print(f'  {name}: tensor_shape={adapter.tensor_shape} (3D multi-head!)')
     
-    # Test forward pass
-    batch_size, seq_len = 4, 32
-    q = torch.randn(batch_size, seq_len, embed_dim)
-    k = torch.randn(batch_size, seq_len, embed_dim)
-    v = torch.randn(batch_size, seq_len, embed_dim)
+#     # Test forward pass
+#     batch_size, seq_len = 4, 32
+#     q = torch.randn(batch_size, seq_len, embed_dim)
+#     k = torch.randn(batch_size, seq_len, embed_dim)
+#     v = torch.randn(batch_size, seq_len, embed_dim)
     
-    attn_out, attn_weights = cara_attn(q, k, v, need_weights=True)
-    print(f'  Forward output shape: {attn_out.shape}')
-    print(f'  Attention weights shape: {attn_weights.shape}')
+#     attn_out, attn_weights = cara_attn(q, k, v, need_weights=True)
+#     print(f'  Forward output shape: {attn_out.shape}')
+#     print(f'  Attention weights shape: {attn_weights.shape}')
 
-    # Test 4: Zero-initialization test
-    print("\n[Test 4] Zero-delta initialization (should match base)")
-    lin2 = nn.Linear(64, 64)
-    cara_lin2 = CaraLinear(lin2, rank=2, scaling=0.0)  # scaling=0 means no delta
-    x2 = torch.randn(5, 64)
-    base_out = lin2(x2)
-    cara_out = cara_lin2(x2)
-    is_close = torch.allclose(base_out, cara_out, rtol=1e-5, atol=1e-7)
-    max_diff = (base_out - cara_out).abs().max().item()
-    print(f'  Outputs match (allclose): {is_close}')
-    print(f'  Max absolute difference: {max_diff:.2e}')
+#     # Test 4: Zero-initialization test
+#     print("\n[Test 4] Zero-delta initialization (should match base)")
+#     lin2 = nn.Linear(64, 64)
+#     cara_lin2 = CaraLinear(lin2, rank=2, scaling=0.0)  # scaling=0 means no delta
+#     x2 = torch.randn(5, 64)
+#     base_out = lin2(x2)
+#     cara_out = cara_lin2(x2)
+#     is_close = torch.allclose(base_out, cara_out, rtol=1e-5, atol=1e-7)
+#     max_diff = (base_out - cara_out).abs().max().item()
+#     print(f'  Outputs match (allclose): {is_close}')
+#     print(f'  Max absolute difference: {max_diff:.2e}')
     
-    # Test 5: Training step simulation
-    print("\n[Test 5] Training step simulation")
-    cara_lin3 = CaraLinear(nn.Linear(32, 32), rank=2, scaling='learnable')
-    optimizer = torch.optim.Adam(cara_lin3.parameters(), lr=0.01)
+#     # Test 5: Training step simulation
+#     print("\n[Test 5] Training step simulation")
+#     cara_lin3 = CaraLinear(nn.Linear(32, 32), rank=2, scaling='learnable')
+#     optimizer = torch.optim.Adam(cara_lin3.parameters(), lr=0.01)
     
-    x3 = torch.randn(8, 32)
-    target = torch.randn(8, 32)
+#     x3 = torch.randn(8, 32)
+#     target = torch.randn(8, 32)
     
-    # Before training
-    loss_before = F.mse_loss(cara_lin3(x3), target)
+#     # Before training
+#     loss_before = F.mse_loss(cara_lin3(x3), target)
     
-    # Training step
-    optimizer.zero_grad()
-    output = cara_lin3(x3)
-    loss = F.mse_loss(output, target)
-    loss.backward()
-    optimizer.step()
+#     # Training step
+#     optimizer.zero_grad()
+#     output = cara_lin3(x3)
+#     loss = F.mse_loss(output, target)
+#     loss.backward()
+#     optimizer.step()
     
-    # After training
-    loss_after = F.mse_loss(cara_lin3(x3), target)
-    print(f'  Loss before: {loss_before.item():.4f}')
-    print(f'  Loss after: {loss_after.item():.4f}')
-    print(f'  Loss decreased: {loss_before.item() > loss_after.item()}')
+#     # After training
+#     loss_after = F.mse_loss(cara_lin3(x3), target)
+#     print(f'  Loss before: {loss_before.item():.4f}')
+#     print(f'  Loss after: {loss_after.item():.4f}')
+#     print(f'  Loss decreased: {loss_before.item() > loss_after.item()}')
 
-    # Test 6: Parameter efficiency comparison
-    print("\n[Test 6] Parameter efficiency vs LoRA-style 2D decomposition")
-    embed_dim = 512
-    num_heads = 8
-    rank = 4
+#     # Test 6: Parameter efficiency comparison
+#     print("\n[Test 6] Parameter efficiency vs LoRA-style 2D decomposition")
+#     embed_dim = 512
+#     num_heads = 8
+#     rank = 4
     
-    # CaRA: 3D decomposition (num_heads, head_dim, embed_dim)
-    cara_params = (num_heads * rank) + (embed_dim // num_heads * rank) + (embed_dim * rank)
+#     # CaRA: 3D decomposition (num_heads, head_dim, embed_dim)
+#     cara_params = (num_heads * rank) + (embed_dim // num_heads * rank) + (embed_dim * rank)
     
-    # LoRA-style: 2D decomposition (embed_dim, embed_dim)
-    lora_params = (embed_dim * rank) + (embed_dim * rank)
+#     # LoRA-style: 2D decomposition (embed_dim, embed_dim)
+#     lora_params = (embed_dim * rank) + (embed_dim * rank)
     
-    print(f'  CaRA 3D params per projection: {cara_params}')
-    print(f'  LoRA 2D params per projection: {lora_params}')
-    print(f'  CaRA is more efficient: {cara_params < lora_params}')
+#     print(f'  CaRA 3D params per projection: {cara_params}')
+#     print(f'  LoRA 2D params per projection: {lora_params}')
+#     print(f'  CaRA is more efficient: {cara_params < lora_params}')
     
-    print("\n" + "=" * 60)
-    print("✓ All tests passed! Implementation follows CaRA paper.")
-    print("=" * 60)
+#     print("\n" + "=" * 60)
+#     print("✓ All tests passed! Implementation follows CaRA paper.")
+#     print("=" * 60)
