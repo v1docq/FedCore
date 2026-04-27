@@ -7,7 +7,7 @@ import torch.utils.data as data
 from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
-from transformers import SegformerFeatureExtractor
+from transformers import SegformerImageProcessor as SegformerFeatureExtractor
 
 
 class SegmentationDataset(data.Dataset):

@@ -781,7 +781,7 @@ class LLMTrainer(BaseTrainer):
         if self._fedcore_callback is not None:
             saved_reference_batch = getattr(self._fedcore_callback, 'reference_batch', None)
             saved_reference_batch_flag = getattr(self._fedcore_callback, '_reference_batch_saved', False)
-        self._reset_accelerator_state()
+        # self._reset_accelerator_state()
 
         self._resolve_model(input_data)
         datasets = self._prepare_data(input_data)

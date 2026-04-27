@@ -67,7 +67,7 @@ class BaseQuantizer(BaseCompressionModel):
           :class:`QuantMode` values (default: ``QuantMode.DYNAMIC.value``);
         * ``"backend"`` – quantization backend
           (e.g. ``"fbgemm"``, ``"qnnpack"``; default ``"fbgemm"``);
-        * ``"dtype"`` – target quantization dtype
+        * ``'dtype'`` – target quantization dtype
           (e.g. ``torch.qint8`` or ``torch.float16``; default ``torch.qint8``);
         * ``"allow_emb"`` – whether to quantize embedding layers
           (default ``False``);
@@ -91,7 +91,7 @@ class BaseQuantizer(BaseCompressionModel):
         self.device = params.get("device", default_device())
         self.quant_type = params.get("quant_type", 'dynamic')
         self.backend = params.get("backend", 'fbgemm')
-        self.dtype = params.get("dtype", torch.qint8)
+        self.dtype = params.get('dtype', torch.qint8)
         self.allow_emb = params.get("allow_emb", False)
         self.allow_conv = params.get("allow_conv", True)
         self.inplace = params.get("inplace", False)
@@ -140,7 +140,7 @@ class BaseQuantizer(BaseCompressionModel):
 
         hook_params = {
             "input_data": input_data,
-            "dtype": self.dtype,
+            'dtype': self.dtype,
             "epochs": self.qat_params.get("epochs", 2),
             "optimizer": self.optimizer.value,
             "criterion": self.criterion.value(),

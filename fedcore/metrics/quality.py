@@ -64,9 +64,10 @@ class QualityMetric(Metric):
         if isinstance(prediction, torch.Tensor):
             prediction = prediction.cpu().detach()
 
-        target = torch.concat(
-            [b[1] for b in target_loader]
-        )
+        target = torch.cat([
+            b[1] if isinstance(b[1], torch.Tensor) else torch.tensor(b[1]) 
+            for b in target_loader
+        ])
 
         result = cls.metric(target=target, predict=prediction)
         assert result is not None, f"{cls.__name__}.metric() returned None"
@@ -107,7 +108,7 @@ def get_available_metrics(problem):
 
 def _problem_based_output_convertor(problem):
     def output_convertor(metric):
-        wraps(metric)
+        @wraps(metric)
         def _wrapped_output(cls, target, predict, **metric_kw):
             if problem is not None:
                 assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor)
@@ -193,7 +194,7 @@ class MetricFactory:
                 target: torch.Tensor
                 predict: torch.Tensor 
                 **metric_kw - any to instantiate torchmetrics' metric
-            """
+            """    
             if suffix and problem == 'classification':
                 metric_kw['num_classes'] = suffix
             instance = cls(**metric_kw)

@@ -30,8 +30,6 @@ DataSource = Callable[[], Iterable[Tuple[InputData, InputData]]]
 
 
 def evaluate_objective_fedcore(self, graph: Pipeline) -> Fitness:
-    # Seems like a workaround for situation when logger is lost
-    #  when adapting and restoring it to/from OptGraph.
     graph.log = self._log
 
     graph_id = graph.root_node.descriptive_id

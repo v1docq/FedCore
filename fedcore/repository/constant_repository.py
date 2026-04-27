@@ -356,7 +356,7 @@ class CVMetricsEnum(QualityMetricsEnum):
 
 class ONNX_CONFIG(Enum):
     INT8_CONFIG = {
-        "dtype": "int8",
+        'dtype': "int8",
         "opset_version": 16,
         "quant_format": "QDQ",  # or "QLinear"
         "input_names": ["input"],
@@ -364,7 +364,7 @@ class ONNX_CONFIG(Enum):
         "dynamic_axes": {"input": [0], "output": [0]},
     }
     INT5_CONFIG = {
-        "dtype": "int5",
+        'dtype': "int5",
         "opset_version": 16,
         "quant_format": "QDQ",  # or "QLinear"
         "input_names": ["input"],
@@ -372,7 +372,7 @@ class ONNX_CONFIG(Enum):
         "dynamic_axes": {"input": [0], "output": [0]},
     }
     INT4_CONFIG = {
-        "dtype": "int4",
+        'dtype': "int4",
         "opset_version": 16,
         "quant_format": "QDQ",  # or "QLinear"
         "input_names": ["input"],

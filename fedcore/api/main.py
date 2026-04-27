@@ -77,7 +77,6 @@ class FedCore(Fedot):
         self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
         self.repo = FEDCORE_IMPLEMENTATIONS
 
-
         if not isinstance(self.manager.automl_config.optimizer, partial):
             fedcore_opt = partial(FedcoreEvoOptimizer, optimisation_params={
                 'mutation_strategy': self.manager.automl_config.mutation_strategy,
@@ -92,9 +91,6 @@ class FedCore(Fedot):
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
                                     use_auto_preprocessing=False)
-        # initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
-        # initial_assumption = initial_assumption(
-        #     params=self.manager.learning_config.peft_strategy_params.to_dict())
         initial_pipeline = self.__build_assumption()
         self.manager.solver.params.data.update({'initial_assumption': initial_pipeline})
         return input_data
@@ -111,9 +107,6 @@ class FedCore(Fedot):
 
     def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
         self.logger.info('Initialising solver')
-        # self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
-        #                             use_input_preprocessing=False,
-        #                             use_auto_preprocessing=False)
         self.manager.solver = self.__build_assumption()
         return input_data
     
@@ -128,8 +121,6 @@ class FedCore(Fedot):
         # check if atomized strategy
         if not isinstance(peft_strategy_params, (list, tuple)):
             peft_strategy_params = (peft_strategy_params,)
-        print('###', peft_strategy_params)
-        print('###', self.manager.learning_config)
         
         tokenizer = None
         learning_strategy_params = self.manager.learning_config.learning_strategy_params

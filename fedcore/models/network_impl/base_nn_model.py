@@ -129,16 +129,14 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             return None
 
     def save_model(self, path: str):
-        torch.save(self.model.state_dict(), path)
+        """Save model - uses base implementation from BaseTrainer"""
+        super().save_model(path)
 
     def load_model(self, path: str):
+        """Load model with BaseNeuralModel-specific initialization"""
         if self.model is None:
             self._init_model()
-        try:  # path to state_dict
-            self.model.load_state_dict(torch.load(path, weights_only=False))
-        except Exception:  # path to model_impl
-            self.model = torch.load(path, map_location=self.device)
-        self.model.eval()
+        super().load_model(path)
 
 
     def __substitute_device_quant(self):
