@@ -1,0 +1,9 @@
+services:
+  model-exporter:
+    build: .
+    container_name: fedcore-model-exporter-demo
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./exports:/app/exports
