@@ -10,7 +10,7 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    TrainingTemplate, 
+    NeuralModelConfigTemplate, 
     PruningTemplate
     )
 from fedcore.algorithm.pruning.pruners import BasePruner
@@ -19,12 +19,11 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.tools.example_utils import get_scenario_for_api
 
-
+PEFT_PROBLEM = 'pruning'
 def get_api_template(pruner_importance: str):
     METRIC_TO_OPTIMISE = ['accuracy', 'latency']
     LOSS = 'cross_entropy'
     PROBLEM = 'classification'
-    PEFT_PROBLEM = 'pruning'
     INITIAL_ASSUMPTION = 'ResNet18'
     PRETRAIN_SCENARIO = 'from_checkpoint'
     POP_SIZE = 1
@@ -41,7 +40,7 @@ def get_api_template(pruner_importance: str):
         )
 
 
-    pretrain_config = TrainingTemplate(
+    pretrain_config = NeuralModelConfigTemplate(
         epochs=200,
         log_each=10,
         eval_each=15,
@@ -63,17 +62,17 @@ def get_api_template(pruner_importance: str):
 
     automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-    finetune_config = TrainingTemplate(
-        epochs=3,
-        log_each=3,
-        eval_each=3,
-        criterion=LOSS
-        )
+    # finetune_config = NeuralModelConfigTemplate( #TODO DEPRECATED ?
+    #     epochs=3,
+    #     log_each=3,
+    #     eval_each=3,
+    #     criterion=LOSS
+    #     )
     peft_config = PruningTemplate(
         importance=pruner_importance,
         # importance="magnitude",
         pruning_ratio=0.8,
-        finetune_params=finetune_config
+        finetune_params=None #finetune_config
     )
 
     learning_config = LearningConfigTemplate(
@@ -114,11 +113,11 @@ def get_reduction(model_before, model_after):
     params_after = sum(p.numel() for p in model_after.parameters() if p.requires_grad)
     return params_after / params_before
 
-@pytest.mark.parametrize('pruner_name', ['magnitude', 'hessian', 'bn_scale', 
+@pytest.mark.parametrize('pruner_importance', ['magnitude', 'hessian', 'bn_scale', 
                                          'lamp', 'random', 'group_magnitude', 
                                          'group_taylor', 'group_hessian', 'taylor', ])
-def test_pruners(pruner_name):
-    api = get_api_template(pruner_importance=pruner_name)
+def test_pruners(pruner_importance):
+    api = get_api_template(pruner_importance=pruner_importance)
     APIConfig = ConfigFactory.from_template(api)
     api_config = APIConfig()
 
@@ -128,6 +127,7 @@ def test_pruners(pruner_name):
     input_data.train_dataloader = train_dataloader
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
+        peft_task=PEFT_PROBLEM,
         model=api_config.automl_config.fedot_config['initial_assumption'],
         learning_params=api_config.learning_config.learning_strategy_params
     )
@@ -137,10 +137,12 @@ def test_pruners(pruner_name):
     pruning_params = api_config.learning_config.peft_strategy_params
     pruner = BasePruner(pruning_params.to_dict())
 
-    pruned_model = pruner.fit(input_data=train_data, finetune=False)
+    pruned_model = pruner.fit(input_data=train_data)
     params_dict = pruner.estimate_params(example_batch=pruner.data_batch_for_calib,
                                          model_before=pruner.model_before,
                                          model_after=pruner.model_after)
-
     reduction = get_reduction(model_after=pruned_model, model_before=pruner.model_before)
-    assert reduction < 1, f'{pruner_name} pruner doesnt reduce number of model parameters, reduction: {reduction}'
+    print("REDUCTION %.6f" % reduction)
+    assert reduction < 0.04 #for pruning_ratio=0.8
+    assert reduction > 0.038
+    assert reduction < 1, f'{pruner_importance} pruner doesnt reduce number of model parameters, reduction: {reduction}'

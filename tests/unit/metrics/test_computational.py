@@ -1,7 +1,4 @@
 import pytest 
-import sys
-correct_path = "/home/user/projects/FedCore/FedCore"
-sys.path.insert(0, correct_path)
 
 from typing import *
 import torch 
