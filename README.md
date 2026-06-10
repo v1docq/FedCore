@@ -1,4 +1,4 @@
-[README_READY.md](https://github.com/user-attachments/files/28802649/README_READY.md)
+
 # FedCore
 
 <p align="center">
