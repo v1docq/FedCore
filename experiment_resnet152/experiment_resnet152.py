@@ -119,6 +119,7 @@ api_template = APIConfigTemplate(
     learning_config=learning_config
 )
 
+
 if __name__ == "__main__":
     registry = ModelRegistry(auto_cleanup=True)
     registry.force_cleanup()
@@ -128,6 +129,7 @@ if __name__ == "__main__":
     start_init = time.time()
     APIConfig = ConfigFactory.from_template(api_template)
     api_config = APIConfig()
+    print(api_config.learning_config)
     fedcore_compressor = FedCore(api_config)
     init_time = time.time() - start_init
     
