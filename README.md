@@ -1,3 +1,4 @@
+[README_READY.md](https://github.com/user-attachments/files/28802649/README_READY.md)
 # FedCore
 
 <p align="center">
@@ -101,7 +102,7 @@ FedCore предоставляет инструменты для:
 | Компонент | Минимальное требование | Рекомендуемое значение |
 |---|---|---|
 | Операционная система | Linux Ubuntu 20.04 / 22.04 или совместимая ОС | Ubuntu 22.04 |
-| Python | 3.10+ | 3.10–3.12 |
+| Python | 3.8+ | 3.10 |
 | Оперативная память | 8 ГБ | 16 ГБ и более |
 | Процессор | x86-64 CPU | многоядерный x86-64 CPU |
 | GPU | не требуется для базовых сценариев | NVIDIA GPU с CUDA |
@@ -158,6 +159,12 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+Для запуска демонстрационных ноутбуков дополнительно могут потребоваться:
+
+```bash
+pip install notebook pandas matplotlib onnx fastapi uvicorn python-multipart
+```
+
 ---
 
 ## Быстрый старт
@@ -184,7 +191,7 @@ print(report)
 
 ## Примеры новых вариантов использования кода
 
-В репозитории представлены примеры использования библиотеки для разных сценариев. Каждый пример должен сопровождаться пошаговой инструкцией по запуску.
+В репозитории представлены примеры использования библиотеки для разных сценариев. Каждый пример сопровождается пошаговой инструкцией по запуску.
 
 ### Пример 1. Сжатие модели ResNet-18 методом pruning
 
@@ -196,11 +203,17 @@ print(report)
 examples/pruning_resnet18/
 ```
 
-**Инструкция по запуску:**
+**Инструкция по запуску скрипта:**
 
 ```bash
 cd examples/pruning_resnet18
 python run_pruning_resnet18.py
+```
+
+**Инструкция по запуску ноутбука:**
+
+```bash
+jupyter notebook examples/pruning_resnet18/resnet18_pruning_demo.ipynb
 ```
 
 **Ожидаемый результат:**
@@ -209,7 +222,8 @@ python run_pruning_resnet18.py
 - применение метода pruning;
 - оценка качества модели до и после сжатия;
 - вывод размера модели до и после сжатия;
-- вывод времени инференса.
+- вывод времени инференса;
+- сохранение отчёта в `results/pruning_resnet18/metrics.csv`.
 
 ### Пример 2. Малоранговое разложение модели
 
@@ -221,11 +235,17 @@ python run_pruning_resnet18.py
 examples/low_rank_resnet18/
 ```
 
-**Инструкция по запуску:**
+**Инструкция по запуску скрипта:**
 
 ```bash
 cd examples/low_rank_resnet18
 python run_low_rank_resnet18.py
+```
+
+**Инструкция по запуску ноутбука:**
+
+```bash
+jupyter notebook examples/low_rank_resnet18/resnet18_low_rank_demo.ipynb
 ```
 
 **Ожидаемый результат:**
@@ -233,7 +253,8 @@ python run_low_rank_resnet18.py
 - загрузка исходной модели;
 - применение малорангового разложения;
 - сохранение сжатой модели;
-- сравнение метрик качества и размера модели.
+- сравнение метрик качества и размера модели;
+- сохранение отчёта в `results/low_rank_resnet18/metrics.csv`.
 
 ### Пример 3. Квантизация модели
 
@@ -245,11 +266,17 @@ python run_low_rank_resnet18.py
 examples/quantization_resnet18/
 ```
 
-**Инструкция по запуску:**
+**Инструкция по запуску скрипта:**
 
 ```bash
 cd examples/quantization_resnet18
 python run_quantization_resnet18.py
+```
+
+**Инструкция по запуску ноутбука:**
+
+```bash
+jupyter notebook examples/quantization_resnet18/resnet18_quantization_demo.ipynb
 ```
 
 **Ожидаемый результат:**
@@ -257,11 +284,12 @@ python run_quantization_resnet18.py
 - применение квантизации к модели;
 - сравнение размера модели до и после квантизации;
 - сравнение времени инференса;
-- вывод итогового отчёта.
+- вывод итогового отчёта;
+- сохранение отчёта в `results/quantization_resnet18/metrics.csv`.
 
 ### Пример 4. Экспорт модели в ONNX
 
-**Назначение:** показать экспорт сжатой модели в формат ONNX для дальнейшего запуска на целевой платформе.
+**Назначение:** показать экспорт сжатой или демонстрационной модели в формат ONNX для дальнейшего запуска на целевой платформе.
 
 **Путь к примеру:**
 
@@ -269,19 +297,26 @@ python run_quantization_resnet18.py
 examples/export_onnx/
 ```
 
-**Инструкция по запуску:**
+**Инструкция по запуску скрипта:**
 
 ```bash
 cd examples/export_onnx
 python export_to_onnx.py
 ```
 
+**Инструкция по запуску ноутбука:**
+
+```bash
+jupyter notebook examples/export_onnx/resnet18_export_onnx_demo.ipynb
+```
+
 **Ожидаемый результат:**
 
-- загрузка обученной или сжатой модели;
+- загрузка обученной, сжатой или демонстрационной модели;
 - экспорт модели в формат `.onnx`;
-- сохранение результата в директорию `results/exports/`;
-- проверка корректности экспортированной модели.
+- сохранение результата в директорию `results/export_onnx/`;
+- проверка корректности экспортированной модели через `onnx.checker`;
+- сохранение отчёта `export_report.csv`.
 
 ### Пример 5. Запуск модуля экспорта через Docker
 
@@ -316,34 +351,25 @@ curl http://localhost:5000/health
 
 ## Рекомендуемая структура каталога `examples`
 
-Для удобства пользователей рекомендуется размещать примеры в следующей структуре:
-
 ```text
 examples/
 ├── pruning_resnet18/
 │   ├── README.md
-│   └── run_pruning_resnet18.py
+│   ├── run_pruning_resnet18.py
+│   └── resnet18_pruning_demo.ipynb
 ├── low_rank_resnet18/
 │   ├── README.md
-│   └── run_low_rank_resnet18.py
+│   ├── run_low_rank_resnet18.py
+│   └── resnet18_low_rank_demo.ipynb
 ├── quantization_resnet18/
 │   ├── README.md
-│   └── run_quantization_resnet18.py
-├── export_onnx/
-│   ├── README.md
-│   └── export_to_onnx.py
-└── docker_exporter/
+│   ├── run_quantization_resnet18.py
+│   └── resnet18_quantization_demo.ipynb
+└── export_onnx/
     ├── README.md
-    └── docker-compose.yml
+    ├── export_to_onnx.py
+    └── resnet18_export_onnx_demo.ipynb
 ```
-
-Каждый пример должен содержать отдельный файл `README.md` с описанием:
-
-1. цели примера;
-2. необходимых зависимостей;
-3. команды запуска;
-4. ожидаемого результата;
-5. возможных ошибок и способов их устранения.
 
 ---
 
@@ -377,24 +403,17 @@ docs/
 
 ## Запуск через Docker
 
-Для контейнерного запуска библиотеки можно использовать Docker.
-
-### Сборка контейнера
+Для контейнерного запуска демонстрационного модуля экспорта моделей можно использовать Docker.
 
 ```bash
-docker build -t fedcore .
-```
-
-### Запуск контейнера
-
-```bash
-docker run --rm -p 3000:3000 fedcore
-```
-
-Если используется `docker-compose.yml`:
-
-```bash
+cd deployment/model_exporter
 docker compose up --build
+```
+
+Проверка сервиса:
+
+```bash
+curl http://localhost:5000/health
 ```
 
 ---
@@ -406,14 +425,11 @@ docker compose up --build
 | Эндпоинт | Метод | Назначение |
 |---|---|---|
 | `/` | GET | Web-интерфейс модуля |
-| `/webui` | GET | Web-интерфейс через API |
-| `/upload` | POST | Загрузка файлов |
-| `/files` | GET | Получение списка загруженных файлов |
 | `/health` | GET | Проверка состояния сервиса |
-| `/export` | POST | Экспорт модели в выбранный формат |
-| `/export_parts` | POST | Экспорт частей модели с разбиением |
-| `/analyze_model` | POST | Анализ структуры модели |
-| `/analyze_log` | POST | Анализ лог-файла экспорта |
+| `/files` | GET | Получение списка загруженных и экспортированных файлов |
+| `/upload` | POST | Загрузка файлов |
+| `/export` | POST | Демонстрационный экспорт модели в выбранный формат |
+| `/analyze_model` | POST | Анализ загруженного модельного файла |
 
 ---
 
