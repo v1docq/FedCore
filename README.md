@@ -44,7 +44,7 @@
 |---|---|
 | Репозиторий открытой библиотеки | <https://github.com/v1docq/FedCore> |
 | Открытая лицензия | <https://github.com/v1docq/FedCore/blob/main/LICENSE> |
-| Инструкция по работе с библиотекой | <https://github.com/v1docq/FedCore/blob/main/docs/tutorial_ru.md> |
+| Инструкция по работе с библиотекой | <https://github.com/v1docq/FedCore/blob/main/docs/tutorial_ru.rst> |
 | Документация API | <https://github.com/v1docq/FedCore/tree/main/docs> |
 | Примеры использования | <https://github.com/v1docq/FedCore/tree/main/examples> |
 
