@@ -145,13 +145,8 @@ class ConfigAnalysisMixin(ModelAnalysisMixin, HardwareAnalysisMixin):
     a complete analysis suite for auto-configuration classes.
     
     Usage:
-        class MyConfig(ConfigAnalysisMixin):
-            @classmethod
-            def auto_from_model(cls, model, ...):
-                model_info = cls._analyze_model(model)
-                hardware_info = cls._analyze_hardware("auto", model)
-                # Use model_info and hardware_info to calculate params
-                ...
+        Subclass this mixin and call ``_analyze_model`` and
+        ``_analyze_hardware`` inside ``auto_from_model`` classmethods.
     """
     pass
 

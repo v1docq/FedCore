@@ -875,18 +875,11 @@ def transpose(weight, fan_in_fan_out):
 
 
 class LoRAParametrization(nn.Module):
-    """Class responsible for LoRA Update matrices.
+    """Class responsible for LoRA update matrices.
 
-    References:
-        @inproceedings{
-            hu2022lora,
-            title={Lo{RA}: Low-Rank Adaptation of Large Language Models},
-            author={Edward J Hu and Yelong Shen and Phillip Wallis and Zeyuan Allen-Zhu and Yuanzhi Li and Shean Wang and Lu Wang and Weizhu Chen},
-            booktitle={International Conference on Learning Representations},
-            year={2022},
-            url={https://openreview.net/forum?id=nZeVKeeFYf9}
-        }
-        Original paper: https://arxiv.org/pdf/2106.09685
+  References:
+        Hu et al., "LoRA: Low-Rank Adaptation of Large Language Models",
+        ICLR 2022. https://arxiv.org/pdf/2106.09685
     """
 
     def __init__(self, features_in, features_out, rank=1, alpha=1, device="cpu"):

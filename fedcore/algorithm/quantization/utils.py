@@ -55,28 +55,18 @@ def uninplace(model: nn.Module):
 
 
 def get_flattened_qconfig_dict(qconfig_mapping: QConfigMapping) -> Dict[Union[Callable, str], QConfigAny]:
-    """ flatten the global, object_type and module_name qconfig
-    to the same qconfig_dict so that it can be used by
-    propagate_qconfig_ function.
-    "module_name_regex" is ignored for now since it's not supported
-    in propagate_qconfig_, but it can be fixed later.
+    """Flatten global, object-type, and module-name qconfig entries.
 
-    For example:
-    Input: {
-      "": qconfig,
-      "object_type": [
-        (torch.add, qconfig)
-      ],
-      "module_name": [
-        ("conv", qconfig)
-      ]
-    }
+    The result is a single mapping compatible with PyTorch's
+    ``propagate_qconfig_`` helper. ``module_name_regex`` entries are
+    currently ignored.
 
-    Output: {
-      "": qconfig,
-      torch.add: qconfig,
-      "conv": qconfig
-    }
+    Args:
+        qconfig_mapping: Nested qconfig mapping with ``""``, ``object_type``,
+            and ``module_name`` sections.
+
+    Returns:
+        Flat dict mapping module keys and callables to qconfig objects.
     """
     flattened: Dict[Union[Callable, str], QConfigAny] = {"": qconfig_mapping.global_qconfig}
     for obj, qconfig in qconfig_mapping.object_type_qconfigs.items():

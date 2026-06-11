@@ -68,8 +68,7 @@ class HoyerLoss(SVDLoss):
     """Hoyer regularizer for matrix with singular values obtained by SVD decomposition.
 
     Args:
-    factor: The hyperparameter by which the calculated loss function is multiplied
-        (default: ``1``).
+        factor: Multiplier applied to the computed loss (default: ``1``).
     """
 
     def __init__(self, factor: float = 1.0) -> None:

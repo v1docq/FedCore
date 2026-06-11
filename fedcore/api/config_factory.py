@@ -42,11 +42,10 @@ class ConfigFactory:
        of an instance.
     2. This tuple is passed to :meth:`ConfigFactory.from_template`, which
        creates a concrete subclass with appropriate ``__slots__`` and
-       an ``__init__`` that:
-       * resolves :class:`LookUp` values using the parent config;
-       * instantiates nested :class:`ConfigTemplate`-based configs;
-       * validates all values against type annotations (including enums
-         and ``Literal`` types).
+       an ``__init__`` that resolves :class:`LookUp` values using the
+       parent config, instantiates nested :class:`ConfigTemplate`-based
+       configs, and validates all values against type annotations
+       (including enums and ``Literal`` types).
     3. The returned class can then be instantiated as a normal config
        object: ``ConfigCls(parent=..., **overrides)``.
 

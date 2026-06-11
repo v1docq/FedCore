@@ -34,14 +34,10 @@ def global_imports(
         context_module_name: the context module name in the import
 
     Examples:
-        Do this::
-            import os -> global_imports("os")
-            from fedot_ind.core.architecture.settings.computational import backend_methods
-            as np -> global_imports("numpy", "np")
-            from collections import Counter ->
-                global_imports("Counter", None, "collections")
-            from google.cloud import storage ->
-                global_imports("storage", None, "google.cloud")
+        ``global_imports("os")`` imports ``os`` into the module globals.
+        ``global_imports("numpy", "np")`` binds ``np`` to NumPy.
+        ``global_imports("Counter", None, "collections")`` imports
+        ``Counter`` from ``collections``.
 
     """
 
