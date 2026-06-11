@@ -51,11 +51,3 @@ fedcore.api.nlp\_configs module
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: fedcore.api
-   :members:
-   :undoc-members:
-   :show-inheritance:

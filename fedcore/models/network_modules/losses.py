@@ -23,8 +23,7 @@ def lambda_prepare(
         lambda_ (Union[int, list, torch.Tensor]): regularization parameters values
 
     Returns:
-        torch.Tensor: torch.Tensor with lambda_ values,
-        len(lambdas) = number of columns in val
+        Tensor containing one regularization weight per column of ``val``.
     """
 
     if isinstance(lambda_, torch.Tensor):

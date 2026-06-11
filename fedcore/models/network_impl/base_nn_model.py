@@ -38,19 +38,8 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self.num_features: int, the number of features.
 
     Example:
-        To use this operation you can create pipeline as follows::
-            from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-            from examples.fedot.fedot_ex import init_input_data
-            from fedot_ind.tools.loader import DataLoader
-            from fedot_ind.core.repository.initializer_industrial_models import IndustrialModels
-
-            train_data, test_data = DataLoader(dataset_name='Ham').load_data()
-            with IndustrialModels():
-                pipeline = PipelineBuilder().add_node('resnet_model').add_node('rf').build()
-                input_data = init_input_data(train_data[0], train_data[1])
-                pipeline.fit(input_data)
-                features = pipeline.predict(input_data)
-                print(features)
+        Build a Fedot pipeline with a neural model node, fit it on
+        :class:`~fedot.core.data.data.InputData`, and call ``predict``.
     """
     BASE_HOOKS : list[type['BaseHook']] = LOGGING_HOOKS + MODEL_LEARNING_HOOKS
 
@@ -330,17 +319,8 @@ class BaseNeuralForecaster(BaseNeuralModel):
         self.num_features: int, the number of features.
 
     Example:
-        To use this operation you can create pipeline as follows::
-            from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-            from fedot_ind.tools.loader import DataLoader
-            from fedot_ind.core.repository.initializer_industrial_models import IndustrialModels
-
-            train_data, test_data = DataLoader(dataset_name='Ham').load_data()
-            with IndustrialModels():
-                pipeline = PipelineBuilder().add_node('resnet_model').add_node('rf').build()
-                pipeline.fit(input_data)
-                features = pipeline.predict(input_data)
-                print(features)
+        Build a Fedot pipeline with a forecasting model node and fit it on
+        time-series :class:`~fedot.core.data.data.InputData`.
     """
 
     def __init__(self, params: Optional[OperationParameters] = None, model: Optional[torch.nn.Module] = None):

@@ -139,7 +139,7 @@ def dataset_info(dataset: Dataset, verbose: bool = False) -> Dict[int, int]:
         verbose: If `True` prints information about classes.
 
     Returns:
-        Dictionary `{class_id: number_of_samples}`.
+        Dictionary mapping class IDs to sample counts.
 
     """
     classes_of_imgs = _extract_classes(dataset)

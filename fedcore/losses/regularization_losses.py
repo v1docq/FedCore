@@ -34,8 +34,8 @@ class LaiMSE(RegularizationLoss):
         """Calculates adaptive MSE loss.
         
         Args:
-            y_pred: Model predictions tensor of shape (N, *).
-            y_true: Ground truth tensor of same shape as predictions.
+            y_pred: Model predictions tensor of shape ``(N, ...)``.
+            y_true: Ground truth tensor of the same shape as predictions.
         """
         residuals = y_pred - y_true
         n = y_pred.size(0)
@@ -73,8 +73,8 @@ class LaiMAE(RegularizationLoss):
         """Calculates adaptive MAE loss.
         
         Args:
-            y_pred: Model predictions tensor of shape (N, *).
-            y_true: Ground truth tensor of same shape as predictions.
+            y_pred: Model predictions tensor of shape ``(N, ...)``.
+            y_true: Ground truth tensor of the same shape as predictions.
         """
         residuals = y_pred - y_true
         n = y_pred.size(0)

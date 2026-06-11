@@ -10,8 +10,9 @@ from fedcore.architecture.utils.misc import _contiguous, count_params
 from fedcore.architecture.utils.misc import EnumNoValue
 
 __all__ = [
+    'rank_threshold_pruning',
     'rank_threshold_pruning_in_place',
-    'S_STRATEGIES'
+    'S_STRATEGIES',
 ]
 
 
@@ -105,3 +106,5 @@ class SLRStrategiesEnum(Enum):
 
 
 SLRStrategies = EnumNoValue(SLRStrategiesEnum)
+
+rank_threshold_pruning = rank_threshold_pruning_in_place
