@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os 
 import sys 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 project = 'FedCore'
 copyright = '2025, FedCore team'
 author = 'FedCore team'
@@ -19,9 +19,17 @@ release = '0.0.1'
 extensions = [ 
     "sphinx.ext.autodoc",          
     "sphinx.ext.napoleon",         
-    "sphinx_autodoc_typehints",    
-] 
+    "sphinx_autodoc_typehints",
+    "sphinx.ext.viewcode",
+]
 
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'show-inheritance': True,
+    'special-members': '__init__',
+    'inherited-members': False,
+}
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
