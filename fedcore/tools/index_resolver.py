@@ -61,6 +61,8 @@ class IndexResolvingParameter(nn.Parameter):
         final_active_list = sorted(list(final_active_original))
         self._update_mapping(final_active_list)
 
+    def __getattr__(self, name):
+        pass
 def wrap_parameters_with_resolver(
     module: nn.Module,
     param_filter: Optional[Callable[[nn.Module, str, nn.Parameter], bool]] = None,
