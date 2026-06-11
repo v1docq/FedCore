@@ -32,8 +32,8 @@ jobs:
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-docs.txt
-          pip install -e .
+          pip install sphinx sphinx-rtd-theme myst-parser sphinx-autodoc-typehints
+          # pip install -e .
 
       - name: Build Sphinx documentation
         run: |
