@@ -19,11 +19,3 @@ fedcore.data.dataloader module
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: fedcore.data
-   :members:
-   :undoc-members:
-   :show-inheritance:
