@@ -12,8 +12,8 @@ VERSION = '0.0.5.3'
 AUTHOR = 'Ilia Revin'
 AUTHOR_EMAIL = 'revine@inbox.ru'
 SHORT_DESCRIPTION = 'Federated learning core library'
-LONG_DESC_TYPE = 'text/x-rst'
-README = Path(HERE, 'README.rst').read_text(encoding='utf-8')
+LONG_DESC_TYPE = 'text/markdown'
+README = Path(HERE, 'README.md').read_text(encoding='utf-8')
 EXCLUDED_PACKAGES = ['tests*', 'examples']
 URL = 'https://github.com/v1docq/FedCore'
 REQUIRES_PYTHON = '>=3.8, <3.11'
