@@ -104,7 +104,7 @@ class EvaluateMetric(QualityMetric):
         if hasattr(out, 'target') and out.target is not None:
             refs = out.target
         else:
-            loader = getattr(reference_data.features, f"{cls.split}_dataloader")
+            loader = getattr(reference_data, f"{cls.split}_dataloader")
             ds = loader.dataset
 
             if hasattr(ds, "references"):

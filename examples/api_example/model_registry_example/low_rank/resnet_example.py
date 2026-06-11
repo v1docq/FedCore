@@ -12,7 +12,7 @@ sys.path.insert(0, correct_path)
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, LowRankTemplate)
+                                     TrainingTemplate, LowRankTemplate)
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.data.dataloader import load_data
 from fedcore.tools.example_utils import get_scenario_for_api
@@ -75,7 +75,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=6)
 
-pretrain_config = NeuralModelConfigTemplate(epochs=5,
+pretrain_config = TrainingTemplate(epochs=5,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,

@@ -123,7 +123,7 @@ class BaseCompressionModel:
             self._model_before_cached = loaded_model
             return self._model_before_cached
 
-        return None
+        return self.trainer.model
 
     @model_before.setter
     def model_before(self, value):

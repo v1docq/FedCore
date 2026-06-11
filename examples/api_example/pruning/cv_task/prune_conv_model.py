@@ -3,12 +3,12 @@ import os
 import torch
 
 # Правильный путь с учетом вложенности
-correct_path = "/home/user/projects/FedCore/FedCore"
+correct_path = "/home/leostre/Рабочий\ стол/FedCore "
 sys.path.insert(0, correct_path)
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, LowRankTemplate)
+                                     TrainingTemplate, PruningTemplate)
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.data.dataloader import load_data
 from fedcore.tools.example_utils import get_scenario_for_api
@@ -19,7 +19,8 @@ from fedcore.api.main import FedCore
 ### ts_forecasting), PEFT problem (pruning, quantisation, distillation,###
 ### low_rank) and appropriate loss function both for model and compute ###
 ##########################################################################
-METRIC_TO_OPTIMISE = ['accuracy', 'latency']
+
+METRIC_TO_OPTIMISE = ['MulticlassAccuracy__10', 'Latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'training'
@@ -59,7 +60,7 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=6)
 
-pretrain_config = NeuralModelConfigTemplate(epochs=5,
+pretrain_config = TrainingTemplate(epochs=1,
                                             log_each=10,
                                             eval_each=15,
                                             save_each=50,
@@ -69,33 +70,38 @@ pretrain_config = NeuralModelConfigTemplate(epochs=5,
                                                                                             'maximise_task': False,
                                                                                             'delta': 0.01}))
 fedot_config = FedotConfigTemplate(problem='classification',
-                                   metric=['accuracy', 'latency'],
+                                   metric=METRIC_TO_OPTIMISE,
                                    pop_size=1,
                                    timeout=1,
                                    initial_assumption=INITIAL_ASSUMPTION)
 
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-finetune_config = NeuralModelConfigTemplate(epochs=3,
+finetune_config = TrainingTemplate(epochs=3,
                                             log_each=3,
                                             eval_each=3,
                                             )
-peft_config = NeuralModelConfigTemplate(
-    epochs=3,
-    log_each=10,
-    eval_each=15,
-    criterion='cross_entropy',
-    model_architecture=model_config,
-    custom_learning_params=dict(use_early_stopping={'patience': 30,
-                                                    'maximise_task': False,
-                                                    'delta': 0.01})
-)
+# peft_config = TrainingTemplate(
+#     epochs=3,
+#     log_each=10,
+#     eval_each=15,
+#     criterion='cross_entropy',
+#     model_architecture=model_config,
+#     custom_learning_params=dict(use_early_stopping={'patience': 30,
+#                                                     'maximise_task': False,
+#                                                     'delta': 0.01})
+# )
+
+peft_config = PruningTemplate(importance="magnitude",
+                              pruning_ratio=0.8,
+                              finetune_params=finetune_config
+                              )
 
 learning_config = LearningConfigTemplate(criterion='cross_entropy',
                                          learning_strategy='from_checkpoint',
                                          learning_strategy_params=pretrain_config,
-                                         peft_strategy='training',
-                                         peft_strategy_params=peft_config)
+                                          
+                                         peft_strategy_params=[peft_config])
 
 api_template = APIConfigTemplate(automl_config=automl_config,
                                  learning_config=learning_config)
@@ -108,5 +114,5 @@ if __name__ == "__main__":
                                                                    test_dataloader_params)
     fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
-    print(f"Тип model_comparison: {type(model_comparison)}")
+    print(model_comparison)
     _ = 1

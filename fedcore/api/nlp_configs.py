@@ -3,15 +3,15 @@ from typing import (
     Any, Dict, Optional,
 )
 
-from fedcore.api.api_configs import NeuralModelConfigTemplate
+from fedcore.api.api_configs import TrainingTemplate
 
 @dataclass
-class QAConfigTemplate(NeuralModelConfigTemplate):
+class QAConfigTemplate(TrainingTemplate):
     model: Any = None
     tokenizer: Any = None
 
 
 @dataclass
-class SummarizationConfigTemplate(NeuralModelConfigTemplate):
+class SummarizationConfigTemplate(TrainingTemplate):
     model: Any = None
     tokenizer: Any = None

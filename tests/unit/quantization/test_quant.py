@@ -11,7 +11,7 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate,
+    TrainingTemplate,
     QuantMode, 
     QuantTemplate
     )
@@ -43,7 +43,7 @@ def get_api_template(quant_type: str):
         )
 
 
-    pretrain_config = NeuralModelConfigTemplate(
+    pretrain_config = TrainingTemplate(
         epochs=200,
         log_each=10,
         eval_each=15,

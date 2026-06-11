@@ -197,6 +197,7 @@ class MetricFactory:
             if suffix and problem == 'classification':
                 metric_kw['num_classes'] = suffix
             instance = cls(**metric_kw)
+            print('@@@~', predict.size())
             instance.update(predict, target)
             result = instance.compute()
             del instance
@@ -224,7 +225,10 @@ class MetricFactory:
 
         @classmethod
         def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
-            reference_data = reference_data.target.val_dataloader
+            from fedcore.data.data import CompressionInputData
+            if isinstance(reference_data, CompressionInputData):
+                reference_data = reference_data.train_dataloader
+            assert isinstance(reference_data, torch.utils.data.DataLoader), f'{type(reference_data)}'
             pe = PerformanceEvaluator(pipeline, data=reference_data)
             metric = getattr(pe, method_name)(
                 device=torch.device('cpu') if is_cpu else torch.device('cuda')

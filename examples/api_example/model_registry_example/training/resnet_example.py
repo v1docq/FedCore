@@ -13,7 +13,7 @@ sys.path.insert(0, correct_path)
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate)
+                                     TrainingTemplate)
 from fedcore.data.dataloader import load_data
 from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
@@ -68,8 +68,7 @@ console_handler.setFormatter(log_format)
 ### Training from scratch with BaseNeuralModel (peft_strategy='training')
 ##########################################################################
 METRIC_TO_OPTIMISE = [
-    ClassificationMetricsEnum.accuracy,
-    ClassificationMetricsEnum.f1,
+    'MulticalssAccuracy__10'
 ]
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
@@ -111,7 +110,7 @@ def create_api_template(fedcore_id=None):
                                                    output_dim=None,
                                                    depth=6)
 
-    train_config = NeuralModelConfigTemplate(epochs=2,
+    train_config = TrainingTemplate(epochs=2,
                                              log_each= 1,
                                              eval_each=1,
                                              save_each=50,
@@ -132,9 +131,10 @@ def create_api_template(fedcore_id=None):
     learning_config = LearningConfigTemplate(criterion='cross_entropy',
                                              learning_strategy='checkpoint',
                                              learning_strategy_params=train_config,
-                                             peft_strategy='training',
-                                             peft_strategy_params=train_config,
-                                             fedcore_id=fedcore_id)
+                                              
+                                             peft_strategy_params=[train_config],
+                                            #  fedcore_id=fedcore_id
+                                             )
 
     return APIConfigTemplate(automl_config=automl_config,
                             learning_config=learning_config)

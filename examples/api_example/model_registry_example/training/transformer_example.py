@@ -150,7 +150,7 @@ def create_api_config(model, tokenizer, fedcore_id=None):
         criterion='cross_entropy',
         learning_strategy='checkpoint',
         learning_strategy_params=training_config,
-        peft_strategy='training',
+         
         peft_strategy_params=training_config,
         fedcore_id=fedcore_id
     )

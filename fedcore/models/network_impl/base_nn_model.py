@@ -74,6 +74,14 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         self._additional_hooks = additional_hooks or []
         self._clear_each = self.learning_params.get('clear_each', 10)
 
+    @property
+    def model_before(self):
+        return self.model 
+    
+    @property
+    def model_after(self):
+        return self.model
+
     def _init_custom_criterions(self, custom_criterions: dict):
         self.custom_criterions = dict()
         for name, coef in custom_criterions.items():
@@ -142,6 +150,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
 
 
     def __substitute_device_quant(self):
+        return
         if not getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
@@ -224,6 +233,8 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
             self, x_test: CompressionInputData, output_mode: str = "default"
     ):
         model: torch.nn.Module = self.model or x_test.model
+        device = self.device 
+        model.to(device)
         model.eval()
         prediction = []
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,

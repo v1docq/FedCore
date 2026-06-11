@@ -10,7 +10,7 @@ from fedcore.api.api_configs import (
     FedotConfigTemplate, 
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
+    TrainingTemplate, 
     PruningTemplate
     )
 from fedcore.algorithm.pruning.pruners import BasePruner
@@ -40,7 +40,7 @@ def get_api_template(pruner_importance: str):
         )
 
 
-    pretrain_config = NeuralModelConfigTemplate(
+    pretrain_config = TrainingTemplate(
         epochs=200,
         log_each=10,
         eval_each=15,
@@ -62,7 +62,7 @@ def get_api_template(pruner_importance: str):
 
     automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-    # finetune_config = NeuralModelConfigTemplate( #TODO DEPRECATED ?
+    # finetune_config = TrainingTemplate( #TODO DEPRECATED ?
     #     epochs=3,
     #     log_each=3,
     #     eval_each=3,
