@@ -1,16 +1,16 @@
+from copy import deepcopy
 import os
 import uuid
-from typing import Any, Optional, Union
+from typing import Optional
 import logging
+from typing import Sequence
 
-import numpy as np
 import torch
 import torch_pruning as tp
 from fedot.core.data.data import InputData
-from fedot.core.operations.operation_parameters import OperationParameters
 
 from fedcore.architecture.computational.devices import default_device, extract_device
-from fedcore.data.data import CompressionInputData, CompressionOutputData
+from fedcore.data.data import CompressionInputData
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 from torchinfo import summary
@@ -18,8 +18,12 @@ from fedcore.tools.registry.model_registry import ModelRegistry
 
 DEVICE = default_device('cuda')
 
+from fedcore.models.network_impl.utils.hooks import BaseHook
+from abc import ABC, abstractmethod
+from fedcore.architecture.comptutaional.devices import default_device
+import logging
 
-class BaseCompressionModel:
+class BaseCompressionModel(ABC):
     """Class responsible for NN model implementation.
 
     Attributes:
@@ -41,25 +45,24 @@ class BaseCompressionModel:
                 print(features)
     """
 
-    def __init__(self, params: Optional[OperationParameters] = {}):
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.debug("BaseCompressionModel.__init__() called")
+    def __init__(self, params: dict = {}):
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug("BaseCompressionModel.__init__() called")
 
         # self.epochs = params.get("epochs", 10)
         self.batch_size = params.get("batch_size", 16)
         self.activation = params.get("activation", "ReLU")
-        # self.learning_rate = 0.001
         self.model = None
         # self.model_for_inference = None
         # self.optimizer = None
         self.params = params
+        self.device = params.get("device", default_device())
 
         self._fedcore_id = params.get("fedcore_id")
         if self._fedcore_id is None:
             self._fedcore_id = f"fedcore_{uuid.uuid4().hex[:8]}"
 
-        logger.debug(f"fedcore_id: {self._fedcore_id}")
+        self.logger.debug(f"fedcore_id: {self._fedcore_id}")
 
         self._model_id_before = None
         self._model_id_after = None
@@ -67,7 +70,7 @@ class BaseCompressionModel:
         self._model_after_cached = None
         self._registry = ModelRegistry()
 
-        logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
+        self.logger.debug(f"BaseCompressionModel initialized with ModelRegistry, auto_cleanup={self._registry.auto_cleanup}")
 
     # def _save_and_clear_cache(self):
     #     """Save model and clear cache using ModelRegistry.
@@ -123,7 +126,7 @@ class BaseCompressionModel:
             self._model_before_cached = loaded_model
             return self._model_before_cached
 
-        return self.trainer.model
+        return None
 
     @model_before.setter
     def model_before(self, value):
@@ -210,44 +213,80 @@ class BaseCompressionModel:
         )
         return model_id
 
-    def _init_model(self, input_data, additional_hooks=tuple()):
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info("BaseCompressionModel._init_model() started")
+    # def _init_model(self, input_data, additional_hooks=tuple()):
 
-        if isinstance(input_data, CompressionInputData): #TODO check why does this data format come?
-            model = getattr(input_data, 'model', None) or input_data.target
-        elif hasattr(input_data, 'features') and isinstance(input_data.features, CompressionInputData):
-            model = input_data.target or getattr(input_data.features, 'model', None)
-        else:
-            model = input_data.target.model #hardcode
-        
-        logger.info(f"Model type from input_data: {type(model).__name__}")
+    #     model = input_data.model
 
+    #     # Support passing a filesystem path to a checkpoint/model at the node input
+    #     if isinstance(model, str):
+    #         logger.info(f"Loading model from path: {model}")
+    #         device = default_device()
+    #         loaded = torch.load(model, map_location=device)
+    #         if isinstance(loaded, dict) and "model" in loaded:
+    #             model = loaded["model"]
+    #         else:
+    #             model = loaded
+    #         logger.info(f"Model loaded: type={type(model).__name__}")
+
+    #     if not isinstance(model, torch.nn.Module):
+    #         raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
+
+    #     logger.info("Calling model_before setter")
+    #     self.model_before = model
+    #     logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
+
+    #     # Create trainer using factory
+    #     self.trainer = create_trainer_from_input_data(input_data, self.params)
+    #     self.trainer.register_additional_hooks(additional_hooks)
+    #     self.trainer.model = model
+
+    #     return model
+    
+    def _get_model_or_load_from_path(self, input_data):
+        model = input_data.model
+        self.logger.info(f"Model type from input_data.model: {type(model).__name__}")
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
-            logger.info(f"Loading model from path: {model}")
+            self.logger.info(f"Loading model from path: {model}")
             device = default_device()
             loaded = torch.load(model, map_location=device)
             if isinstance(loaded, dict) and "model" in loaded:
                 model = loaded["model"]
             else:
                 model = loaded
-            logger.info(f"Model loaded: type={type(model).__name__}")
-
+            self.logger.info(f"Model loaded: type={type(model).__name__}")
+        
         if not isinstance(model, torch.nn.Module):
             raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
-
-        logger.info("Calling model_before setter")
-        self.model_before = model
-        logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
-
-        # Create trainer using factory
-        self.trainer = create_trainer_from_input_data(input_data, self.params)
-        self.trainer.register_additional_hooks(additional_hooks)
-        self.trainer.model = model
-
         return model
+    
+    def _init_model_before_model_after(self, input_data):
+        model = self._get_model_or_load_from_path(input_data) 
+        self.logger.info("Calling model_before setter")
+        self.model_before = model
+        self.logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
+
+        self.model_after = deepcopy(self.model_before)
+
+    def _init_trainer_with_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
+        self.trainer = create_trainer_from_input_data(input_data, self.params, self.model_after, additional_hooks=additional_hooks)
+
+    def _init_trainer_model_before_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
+        self._init_model_before_model_after(input_data)
+        self._init_trainer_with_model_after(input_data, additional_hooks)
+
+    @abstractmethod
+    def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
+        """This method in child class should initialize self.model_before, self.model_after, add it to self.trainer with additional 
+        childclass-specific hooks.
+
+        Models usually taken from input_data.target
+        """
+        pass
+
+    def _prepare_trainer_and_model_to_fit(self, input_data):
+        self._init_trainer_model_before_model_after_and_incapsulate_hooks(input_data)
+        self.model_after.to(self.device)
 
     def _fit_model(self, ts: CompressionInputData, split_data: bool = False):
         pass
@@ -255,20 +294,11 @@ class BaseCompressionModel:
     def _predict_model(self, x_test, output_mode: str = "default"):
         pass
 
-    def _get_example_input(self, input_data):
-        if isinstance(input_data, CompressionInputData):
-            val_dataloader = input_data.val_dataloader
-        elif hasattr(input_data, 'val_dataloader'):
-            val_dataloader = input_data.val_dataloader
-        elif hasattr(input_data, 'features') and isinstance(input_data.features, CompressionInputData):
-            val_dataloader = input_data.features.val_dataloader
-        else:
-            raise ValueError("Cannot find val_dataloader in input_data")
-        
-        batch = next(iter(val_dataloader))
-        if isinstance(batch, (list, tuple)) and len(batch) >= 2:
-            return batch[0]
-        return batch
+    def _get_example_input(self, input_data: InputData):
+        b = next(iter(input_data.features.val_dataloader))
+        if isinstance(b, (list, tuple)) and len(b) >= 2:
+            return b[0]
+        return b
 
     # def finetune(self, finetune_object: callable, finetune_data):
     #     # TODO del it! 1) finetune may be included into the train loop (just look at LowRank)
@@ -344,6 +374,8 @@ class BaseCompressionModel:
             info = summary(model=model_after, input_data=example_batch.to(extract_device(model_after)), verbose=0)
             macs, nparams = info.total_mult_adds, info.total_params
 
+        print("Params: %.6f M => %.6f M" % (base_nparams / 1e6, nparams / 1e6))
+        print("MACs: %.6f B => %.6f B" % (base_macs / 1e9, macs / 1e9))
         return dict(params_before=base_nparams, macs_before=base_macs,
                     params_after=nparams, macs_after=macs)
 
@@ -358,4 +390,4 @@ class BaseCompressionModel:
         base_macs, base_nparams, *_ = previos_results
         macs, nparams = self._estimate_params(model, example_batch.to(extract_device(model)))
         logging.info("Params: %.2f M => %.2f M" % (base_nparams / 1e6, nparams / 1e6))
-        logging.info("MACs: %.2f G => %.2f G" % (base_macs / 1e9, macs / 1e9))
+        logging.info("MACs: %.2f B => %.2f B" % (base_macs / 1e9, macs / 1e9))

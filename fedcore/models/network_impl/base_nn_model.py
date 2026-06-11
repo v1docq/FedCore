@@ -216,6 +216,15 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         """
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
+    
+    @staticmethod
+    def filter_hooks_by_params(params, hook_types) -> list:
+        filtered_hooks = []
+        for hook_type in hook_types:
+            if not hook_type.check_init(params):
+                continue
+            filtered_hooks.append(hook_type)
+        return filtered_hooks
 
     @torch.no_grad()
     def _predict_model(

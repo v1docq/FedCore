@@ -77,6 +77,8 @@ class BaseHook(ABC):
     def check_init(cls, d: dict):
         if isinstance(d, OperationParameters):
             d = d.to_dict()
+        if not hasattr(cls, '_summon_key'):
+            return False
         summons = cls._summon_key if not isinstance(cls._summon_key, str) else (cls._summon_key,)
         return any(d[summon] is not None for summon in summons if summon in d.keys())
 

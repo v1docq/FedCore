@@ -93,6 +93,8 @@ finetune_config = TrainingTemplate(epochs=3,
 # )
 
 peft_config = PruningTemplate(importance="magnitude",
+                              save_each=10,
+                              eval_each=10,
                               pruning_ratio=0.8,
                               finetune_params=finetune_config
                               )
