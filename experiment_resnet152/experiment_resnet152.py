@@ -4,30 +4,26 @@ import torch
 import time
 import gc
 import logging
-
-# Правильный путь с учетом вложенности
-correct_path = "/home/user/projects/FedCore/FedCore"
-sys.path.insert(0, correct_path)
+import torchvision.models as models
+from torch.utils.data import Subset, random_split
 
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     TrainingTemplate, LowRankTemplate)
-from fedcore.architecture.dataset.api_loader import ApiLoader
+                                     TrainingTemplate, LowRankTemplate, PruningTemplate)
 from fedcore.data.dataloader import load_data
-from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from fedcore.tools.registry.model_registry import ModelRegistry
 
-log_dir = 'examples/api_example/model_registry_example/logs'
+log_dir = 'experiment_resnet152/logs'
 os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, 'LR_resnet.log')
+log_file = os.path.join(log_dir, 'resnet152_logs.log')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 file_handler = logging.FileHandler(log_file, mode='w')
-console_handler = logging.StreamHandler()
+console_handler = logging.StreamHandler(sys.stdout)
 log_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(log_format)
 console_handler.setFormatter(log_format)
@@ -35,84 +31,94 @@ console_handler.setFormatter(log_format)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-METRIC_TO_OPTIMISE = ['accuracy', 'f1']
+logger.info(f"LOGGING TEST - logs will be saved to: {log_file}")
+
+##########################################################################
+### DEFINE ML PROBLEM - Low Rank compression with training from scratch
+### Training model from scratch with simultaneous Low Rank compression
+##########################################################################
+METRIC_TO_OPTIMISE = ['MulticlassAccuracy__10', 'MulticlassF1Score__10', 'Latency', 'CPULatency', 'Throughput', 'CPUThroughput', 'ModelSize']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
-PEFT_PROBLEM = 'low_rank'
-INITIAL_ASSUMPTION = {'path_to_model': 'examples/api_example/pruning/cv_task/pretrain_models/pretrain_model_checkpoint_at_15_epoch.pt',
-                      'model_type': 'ResNet18'}
+
+pretrained_resnet152 = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
+pretrained_resnet152.fc = torch.nn.Linear(2048, 10) 
+INITIAL_ASSUMPTION = pretrained_resnet152 
+
 train_dataloader_params = {"batch_size": 64,
+                            'subset': 0.01,
                            'shuffle': True,
                            'is_train': True,
-                           'data_type': 'table',
+                           'data_type': 'image',
                            'split_ratio': [0.8, 0.2]}
 test_dataloader_params = {"batch_size": 100,
+                          'subset': 0.1,
                           'shuffle': True,
                           'is_train': False,
-                          'data_type': 'table'}
-
-
-def create_usage_scenario(scenario: str, model: str, path_to_pretrain: str = None):
-    if path_to_pretrain is not None:
-        initial_assumption = {'path_to_model': path_to_pretrain,
-                              'model_type': model}
-    else:
-        initial_assumption = model
-    return get_scenario_for_api(scenario, initial_assumption)
+                          'data_type': 'image'}
 
 
 def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloader_params):
     fedcore_train_data = load_data(source=dataset_name, loader_params=train_dataloader_params)
-    fedcore_test_data = load_data(source=dataset_name, loader_params=test_dataloader_params)
+    fedcore_test_data = load_data(source=dataset_name, loader_params=test_dataloader_params)    
     return fedcore_train_data, fedcore_test_data
 
 ################################################################################
-### CREATE SCENARIO FOR FEDCORE AGENT (TRAIN AND OPTIMISE MODEL FROM SCRATCH ###
-### or optimise pretrained model with PEFT strategies                        ###
+### CREATE SCENARIO FOR FEDCORE - TRAIN FROM SCRATCH WITH LOW RANK           ###
+### pretrain_config defines training parameters (epochs, lr, etc)            ###
+### peft_config defines low_rank compression parameters                      ###
 ################################################################################
 
-model_config = ModelArchitectureConfigTemplate(input_dim=None,
-                                               output_dim=None,
-                                               depth=6)
+pretrain_config = TrainingTemplate(
+    epochs=1,
+    log_each=1,
+    eval_each=1,
+    save_each=None,
+    criterion='cross_entropy',
+    custom_learning_params=dict(
+        use_early_stopping={
+            'patience': 30,
+            'maximise_task': False,
+            'delta': 0.01
+        }
+    )
+)
 
-pretrain_config = TrainingTemplate(epochs=5,
-                                            log_each=10,
-                                            eval_each=15,
-                                            save_each=50,
-                                            criterion='cross_entropy',
-                                            model_architecture=model_config,
-                                            custom_learning_params=dict(use_early_stopping={'patience': 30,
-                                                                                            'maximise_task': False,
-                                                                                            'delta': 0.01}))
 peft_config = LowRankTemplate(
     strategy='quantile',
     rank_prune_each=1, 
     custom_criterions=None,
     non_adaptive_threshold=0.3,  
-    epochs=5,
+    epochs=1,
     log_each=1,
-    eval_each=1,
+    eval_each=1, 
     decomposer='svd', 
     rank=None,  
     distortion_factor=0.6, 
 )
 
-fedot_config = FedotConfigTemplate(problem='classification',
-                                   metric=METRIC_TO_OPTIMISE,
-                                   pop_size=1,
-                                   timeout=1,
-                                   initial_assumption=INITIAL_ASSUMPTION)
+fedot_config = FedotConfigTemplate(
+    problem='classification',
+    metric=METRIC_TO_OPTIMISE,
+    pop_size=3,
+    timeout=2,  
+    initial_assumption=INITIAL_ASSUMPTION
+)
 
 automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
-learning_config = LearningConfigTemplate(criterion='cross_entropy',
-                                         learning_strategy='from_checkpoint',
-                                         learning_strategy_params=pretrain_config,
-                                         peft_strategy='low_rank',
-                                         peft_strategy_params=peft_config)
+learning_config = LearningConfigTemplate(
+    criterion='cross_entropy',
+    learning_strategy='from_scratch',
+    learning_strategy_params=pretrain_config,  
+    peft_strategy_params=[peft_config]
+)
 
-api_template = APIConfigTemplate(automl_config=automl_config,
-                                 learning_config=learning_config)
+api_template = APIConfigTemplate(
+    automl_config=automl_config,
+    learning_config=learning_config
+)
+
 
 if __name__ == "__main__":
     registry = ModelRegistry(auto_cleanup=True)
@@ -123,6 +129,7 @@ if __name__ == "__main__":
     start_init = time.time()
     APIConfig = ConfigFactory.from_template(api_template)
     api_config = APIConfig()
+    print(api_config.learning_config)
     fedcore_compressor = FedCore(api_config)
     init_time = time.time() - start_init
     
@@ -143,7 +150,6 @@ if __name__ == "__main__":
     memory_after_report = registry.get_memory_stats()
     
     memory_before_cleanup = registry.get_memory_stats()
-    logger.info(f"Memory before cleanup: {memory_before_cleanup.get('allocated_gb', 0):.4f} GB")
     
     fedcore_id = None
     if hasattr(fedcore_compressor, 'fedcore_model') and fedcore_compressor.fedcore_model is not None:
@@ -153,14 +159,11 @@ if __name__ == "__main__":
             if fitted_op is not None:
                 fedcore_id = getattr(fitted_op, '_fedcore_id', None)
         
-        if fedcore_id is None:
-            logger.warning("Could not find _fedcore_id in fedcore_model")
-        
         logger.info(f"Using fedcore_id: {fedcore_id}")
         registry.cleanup_fedcore_instance(fedcore_id if fedcore_id else "unknown", fedcore_compressor.fedcore_model)
     else:
         registry.force_cleanup()
-    
+    hist = fedcore_compressor.manager.solver.history
     final_memory = registry.get_memory_stats()
     logger.info(f"Memory after cleanup: {final_memory.get('allocated_gb', 0):.4f} GB")
     

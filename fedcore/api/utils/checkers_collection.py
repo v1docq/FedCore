@@ -33,9 +33,8 @@ class DataCheck:
 
     """
 
-    def __init__(self, peft_task=None, model=None, learning_params=None):
+    def __init__(self, model=None, learning_params=None):
         self.logger = logging.getLogger(self.__class__.__name__)
-        # self.task = peft_task
         self.model = model
         self.learning_params = learning_params
         self._init_dummy_val()
@@ -146,7 +145,7 @@ class DataCheck:
                 state_dict[output_layer_bias] = torch.nn.Parameter(state_dict[output_layer_bias][:n_classes])
         return state_dict
 
-    def check_input_data(self, input_data: [InputData, CompressionInputData] = None) -> InputData:
+    def check_input_data(self, input_data: CompressionInputData = None) -> InputData:
         """Checks and preprocesses the input data for Fedot AutoML.
 
         Performs the following steps:

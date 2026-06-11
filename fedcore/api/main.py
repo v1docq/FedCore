@@ -20,20 +20,21 @@ from fedot.api.main import Fedot
 from fedot.core.data.data import InputData, OutputData
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
+from fedot.core.repository.dataset_types import DataTypesEnum
 from pymonad.either import Either
 from pymonad.maybe import Maybe
 from torch import Tensor
 from torch.utils.data import DataLoader
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
-from fedcore.data.data import CompressionInputData
+from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.repository.constant_repository import (
-    FEDOT_API_PARAMS,
-    FEDOT_ASSUMPTIONS,
-    # FEDOT_GET_METRICS,
-)
+# from fedcore.repository.constant_repository import (
+#     FEDOT_API_PARAMS,
+#     FEDOT_ASSUMPTIONS,
+#     # FEDOT_GET_METRICS,
+# )
 from fedcore.metrics.quality import calculate_metrics
 from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
@@ -43,7 +44,7 @@ from fedcore.api.utils.misc import extract_fitted_operation
 warnings.filterwarnings("ignore")
 
 # TODO
-COMPUTATIONAL_METRICS = ['latency', 'power', 'throughput']
+COMPUTATIONAL_METRICS = ['Latency', 'Power', 'Throughput']
 
 
 
@@ -86,7 +87,7 @@ class FedCore(Fedot):
             # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
         return input_data
 
-    def __init_solver(self, input_data: Optional[Union[InputData, np.array]] = None):
+    def __init_solver(self, input_data: Optional[InputData] = None):
         self.logger.info('Initialising solver')
         self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
                                     use_input_preprocessing=False,
@@ -115,17 +116,37 @@ class FedCore(Fedot):
         #                             use_auto_preprocessing=False)
         self.manager.solver = self.__build_assumption()
         return input_data
-
+    
     def __build_assumption(self):
+        def camel_to_snake(camel_case_string):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        
         initial_assumption = PipelineBuilder()
         peft_strategy_params = self.manager.learning_config.peft_strategy_params
         # check if atomized strategy
         if not isinstance(peft_strategy_params, (list, tuple)):
             peft_strategy_params = (peft_strategy_params,)
+        
+        tokenizer = None
+        learning_strategy_params = self.manager.learning_config.learning_strategy_params
+        if learning_strategy_params is not None:
+            if hasattr(learning_strategy_params, 'tokenizer'):
+                tokenizer = learning_strategy_params.tokenizer
+            elif isinstance(learning_strategy_params, dict) and 'tokenizer' in learning_strategy_params:
+                tokenizer = learning_strategy_params['tokenizer']
+            elif hasattr(learning_strategy_params, 'to_dict'):
+                learning_params_dict = learning_strategy_params.to_dict()
+                tokenizer = learning_params_dict.get('tokenizer') or learning_params_dict.get('custom_learning_params', {}).get('tokenizer')
+        
         for peft_strategy_conf in peft_strategy_params:
+            params_dict = peft_strategy_conf.to_dict()
+            if tokenizer is not None and 'tokenizer' not in params_dict:
+                params_dict['tokenizer'] = tokenizer
             initial_assumption.add_node(
                 operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=peft_strategy_conf.to_dict()
+                params=params_dict
             )
 
         return initial_assumption.build()
@@ -200,17 +221,141 @@ class FedCore(Fedot):
                 model_id=model_id
             )
 
+    def __build_assumption(self):
+        initial_assumption = PipelineBuilder()
+        peft_strategy_params = self.manager.learning_config.peft_strategy_params
+        if not isinstance(peft_strategy_params, (list, tuple)):
+            peft_strategy_params = (peft_strategy_params,)
+        for peft_strategy_conf in peft_strategy_params:
+            params = peft_strategy_conf.to_dict()
+            cls_name = peft_strategy_conf.__class__.__name__
+            if cls_name.endswith('Config'):
+                cls_name = cls_name[:-6] + 'Template'
+            operation_type = camel_to_snake(cls_name.replace('Template', '')) + '_model'
+            initial_assumption.add_node(
+                operation_type=operation_type,
+                params=params
+            )
+        return initial_assumption.build()
+
+    @property
+    def compressed_model(self):
+        """Get compressed (optimized) model.
+        Returns:
+            torch.nn.Module or None: Compressed model
+        """
+        if self.fedcore_model is None:
+            return None
+        return getattr(self.fedcore_model, 'model_after', self.fedcore_model)
+
+    @property
+    def original_model(self):
+        """Get original (before compression) model.
+        Returns:
+            torch.nn.Module or None: Original model
+        """
+        if self.fedcore_model is None:
+            return None
+        return getattr(self.fedcore_model, 'model_before', self.fedcore_model)
+
+    def get_model_by_regime(self, regime: str = 'model_after'):
+        """Get model by regime name.
+        Args:
+            regime: 'model_after' for compressed, 'model_before' for original
+
+        Returns:
+            torch.nn.Module: Requested model or fallback to fedcore_model
+
+        Raises:
+            ValueError: If fedcore_model is not initialized
+        """
+        if self.fedcore_model is None:
+            raise ValueError("fedcore_model is not initialized. Call fit() first.")
+
+        model = getattr(self.fedcore_model, regime, None)
+        if model is None:
+            self.logger.warning(
+                f"Regime '{regime}' not found in fedcore_model. "
+                f"Using fedcore_model directly."
+            )
+            model = self.fedcore_model
+        return model
+
+    def _save_metrics_from_evaluator(self):
+        """Collect and save metrics from evaluator to registry after fit."""
+        if not hasattr(self.manager, 'solver') or self.manager.solver is None:
+            return
+
+        if not hasattr(self.manager.solver, 'history') or self.manager.solver.history is None:
+            return
+
+        fedcore_id = None
+        model_id = None
+
+        if self.fedcore_model is not None:
+            if hasattr(self.fedcore_model, 'operator') and hasattr(self.fedcore_model.operator, 'root_node'):
+                fitted_op = getattr(self.fedcore_model.operator.root_node, 'fitted_operation', None)
+                if fitted_op is not None:
+                    fedcore_id = getattr(fitted_op, '_fedcore_id', None)
+                    if fedcore_id:
+                        model_id = getattr(fitted_op, '_model_id_after', None) or getattr(fitted_op, '_model_id_before', None)
+
+        if fedcore_id and model_id:
+            registry = ModelRegistry()
+            registry.save_metrics_from_evaluator(
+                solver=self.manager.solver,
+                fedcore_id=fedcore_id,
+                model_id=model_id
+            )
+
     def _process_input_data(self, input_data):
-        data_cls = DataCheck(
-            # peft_task=self.manager.learning_config.config['peft_strategy'],
-                             model=self.manager.automl_config.fedot_config['initial_assumption'],
-                             learning_params=self.manager.learning_config.learning_strategy_params
-                             )
-        train_data = Either.insert(input_data).then(data_cls.check_input_data).value
-        ### TODO del workaround
-        train_data.train_dataloader = train_data.features.train_dataloader
-        train_data.val_dataloader = train_data.features.val_dataloader
-        ###
+        # data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
+        #                      learning_params=self.manager.learning_config.learning_strategy_params
+        #                      )
+        # train_data = Either.insert(input_data).then(data_cls.check_input_data).value
+        train_data = input_data
+        # ### TODO del workaround
+        # train_data.train_dataloader = train_data.features.train_dataloader
+        # train_data.val_dataloader = train_data.features.val_dataloader
+        # ###
+        # model_params = self.learning_params.model_architecture
+        # if any([model_params.input_dim is None, model_params.output_dim is None]):
+        #     model_params.input_dim = self.manager.learning_config.learning_strategy_params.model_architecture.input_dim
+        #     model_params.output_dim = self.manager.learning_config.learning_strategy_params.model_architecture
+
+        from fedcore.models.backbone.backbone_loader import load_backbone
+        from fedcore.architecture.computational.devices import default_device
+
+        def _init_model_from_backbone(model, learning_params):
+            model_is_pretrain_torch_backbone = isinstance(model, str)
+            model_is_pretrain_backbone_with_weights = isinstance(model, dict)
+            model_is_custom_callable_object = isinstance(model, Callable)
+            if model_is_pretrain_torch_backbone:
+                torch_model = load_backbone(torch_model=model)
+            elif model_is_pretrain_backbone_with_weights:
+                if self.model['path_to_model'].__contains__('.pth'):
+                        torch_model = torch.load(model['path_to_model'], weights_only=False,
+                                                    map_location=default_device())
+                else:
+                    torch_model = load_backbone(torch_model=model,
+                                                model_params=learning_params)
+                    if model_is_pretrain_backbone_with_weights:
+                        try:
+                            torch_model.load_model(model['path_to_model'])
+                        except:
+                            loaded_state_dict = torch.load(model['path_to_model'], weights_only=True,
+                                                        map_location=default_device())
+                            # verified_state_dict = self._check_state_dict(loaded_state_dict, input_data, compression_dataset)
+                            # torch_model.load_state_dict(verified_state_dict)
+            elif model_is_custom_callable_object:
+                torch_model = model
+            return torch_model
+
+        torch_model = _init_model_from_backbone(self.manager.automl_config.fedot_config['initial_assumption'], 
+                                                self.manager.learning_config.learning_strategy_params)
+        input_data.model = torch_model
+
+        input_data.supplementary_data.is_auto_preprocessed = True
         return train_data
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
@@ -248,7 +393,7 @@ class FedCore(Fedot):
         def fit_function(train_data):
             pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
             if pretrain_before_optimise:
-                model_learning_pipeline = FEDOT_ASSUMPTIONS["training"](
+                model_learning_pipeline = PipelineBuilder().add_node(operation_type='training_model',
                     params=self.manager.learning_config.learning_strategy_params.to_dict()
                 )
                 model_learning_pipeline = model_learning_pipeline.build()
@@ -333,78 +478,51 @@ class FedCore(Fedot):
 
         return self.manager.predicted_labels
 
-    def finetune(self, train_data, tuning_params=None):
-        """
-        Method to obtain prediction probabilities from trained Industrial model.
+    # def evaluate_metric(
+    #         self,
+    #         prediction: OutputData,
+    #         target: DataLoader,
+    #         problem: str = "computational",
+    #         metrics: list = ['Latency']
+    # ) -> pd.DataFrame:
+    #     """
+    #     Method to calculate metrics.
 
-        Args:
-            train_data: raw train data
-            tuning_params: dictionary with tuning parameters
-            mode: str, ``default='full'``. Defines the mode of fine-tuning. Could be 'full' or 'head'.
+    #     Available metrics for classification task: 'f1', 'accuracy', 'precision', 'roc_auc', 'logloss'.
 
-        """
+    #     Available metrics for regression task: 'r2', 'rmse', 'mse', 'mae', 'median_absolute_error',
+    #     'explained_variance_score', 'max_error', 'd2_absolute_error_score', 'msle', 'mape'.
 
-        def _fit_pipeline(data_dict):
-            data_dict['model_to_tune'].fit(data_dict['train_data'])
-            return data_dict
+    #     Args:
+    #         metric_type:
+    #         predicton:
+    #         target: target values
 
-        is_fedot_datatype = self.manager.condition_check.input_data_is_fedot_type(train_data)
-        tuning_params['metric'] = FEDOT_TUNING_METRICS[self.manager.automl_config.fedot_config['task']]
-        tuning_params['tuner'] = FEDOT_TUNER_STRATEGY[tuning_params.get('tuner', 'sequential')]
+    #     Returns:
+    #         pandas DataFrame with calculated metrics
 
-        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
-            model_to_tune = Either.insert(train_data). \
-                then(lambda data: self._process_input_data(data) if not is_fedot_datatype else data). \
-                then(lambda data: self.__init_fedcore_backend(data)). \
-                then(lambda processed_data: {'train_data': processed_data} |
-                                            {'model_to_tune': model_to_tune.build()} |
-                                            {'tuning_params': tuning_params}). \
-                then(lambda dict_for_tune: _fit_pipeline(dict_for_tune)['model_to_tune'] if return_only_fitted
-            else build_tuner(self, **dict_for_tune)).value
+    #     """
+    #     # is_inference_metric = problem.__contains__("computational")
+    #     # is_fedcore_model = problem.__contains__('fedcore')
+    #     # model_regime = 'model_after' if is_fedcore_model else 'model_before'
 
-        self.manager.is_finetuned = True
-        self.manager.solver = model_to_tune
 
-    def evaluate_metric(
-            self,
-            prediction: OutputData,
-            target: DataLoader,
-            problem: str = "computational",
-            metrics: list = ['latency']
-    ) -> pd.DataFrame:
-        """
-        Method to calculate metrics.
+    #     prediction_dict = {}
+    #     if is_inference_metric:
+    #         model_to_evaluate = self.get_model_by_regime(model_regime)
+    #         prediction_dict = dict(model=model_to_evaluate, dataset=target.target, model_regime=model_regime) #hardcode
+    #         # preproc_target = preproc_target(target)
+    #     else:
+    #         prediction_dict = dict(target)
+    #     metrics = metrics or self.manager.automl_config.fedot_config.metric
 
-        Available metrics for classification task: 'f1', 'accuracy', 'precision', 'roc_auc', 'logloss'.
+    #     prediction_dataframe = calculate_metrics(metrics, **prediction_dict)
 
-        Available metrics for regression task: 'r2', 'rmse', 'mse', 'mae', 'median_absolute_error',
-        'explained_variance_score', 'max_error', 'd2_absolute_error_score', 'msle', 'mape'.
+    #     # if is_inference_metric:
+    #     #     registry = ModelRegistry()
+    #     #     registry.force_cleanup()
 
-        Args:
-            metric_type:
-            predicton:
-            target: target values
-
-        Returns:
-            pandas DataFrame with calculated metrics
-
-        """
-        is_inference_metric = problem.__contains__("computational")
-        is_fedcore_model = problem.__contains__('fedcore')
-        model_regime = 'model_after' if is_fedcore_model else 'model_before'
-        prediction_dict = dict(target=target, predict=prediction.predict)
-        if is_inference_metric:
-            model_to_evaluate = self.get_model_by_regime(model_regime)
-            prediction_dict = dict(model=model_to_evaluate, dataset=target, model_regime=model_regime)
-            # preproc_target = preproc_target(target)
-        metrics = metrics or self.manager.automl_config.fedot_config.metric
-        prediction_dataframe = calculate_metrics(metrics, **prediction_dict)
-
-        if is_inference_metric:
-            registry = ModelRegistry()
-            registry.force_cleanup()
-
-        return prediction_dataframe
+    #     return prediction_dataframe
 
     def get_report(self, test_data: CompressionInputData):
         def create_df(iterator):
@@ -428,34 +546,63 @@ class FedCore(Fedot):
             change_val = ((opt - orig) / orig * 100).round(2)
             change_val['mode'] = 'change'
             return change_val
+        
 
         eval_regime = ['original', 'fedcore']
-        prediction_list = [self.predict(test_data, output_mode=mode) for mode in eval_regime]
-        prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
+        predictions = {mode: self.predict(test_data, output_mode=mode).predict.predict for mode in eval_regime}
+        targets = torch.concat([x[1] for x in test_data.val_dataloader], dim=0)
+        # prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
+
         problem = self.manager.automl_config.fedot_config.problem
-        quality_metrics_list  = [name for name in self.manager.automl_config.fedot_config.metrics if name not in COMPUTATIONAL_METRICS]
-        computational_metrics = [name for name in self.manager.automl_config.fedot_config.metrics if name in COMPUTATIONAL_METRICS]
-        quality_metrics_list = [self.evaluate_metric(prediction=prediction,
-                                                     target=test_data.val_dataloader,
-                                                     problem=self.manager.automl_config.fedot_config.problem,
-                                                     metrics=quality_metrics_list)
-                                for prediction in prediction_list]
-        computational_metrics_list = [self.evaluate_metric(prediction=prediction,
-                                                           target=test_data.val_dataloader,
-                                                           problem=f'computational_{regime}',
-                                                           metrics=computational_metrics)
-                                      for prediction, regime in zip(prediction_list, eval_regime)]
+        metrics = self.manager.automl_config.fedot_config.metric
+        quality_metrics_list  = [name for name in metrics if name not in COMPUTATIONAL_METRICS]
+        computational_metrics = [name for name in metrics if name in COMPUTATIONAL_METRICS]
+
+        from fedcore.metrics.quality import MetricFactory, _to_df
+
+        quality_metrics = {mode: calculate_metrics(quality_metrics_list, targets, predictions[mode]) for mode in predictions}
+        assert isinstance(test_data.val_dataloader, DataLoader), f'{type(test_data.val_dataloader)}'
+        computational_metrics = {mode: _to_df({metric_name: MetricFactory.get_metric(metric_name).get_value(getattr(self, f"{mode}_model"), test_data.val_dataloader) for metric_name in computational_metrics}, 3) 
+                                 for mode in eval_regime}
         
-        quality_df = create_df(zip(quality_metrics_list, eval_regime))
-        compute_df = create_df(zip(computational_metrics_list, eval_regime))
-        result = dict(quality_comparison=quality_df, computational_comparison=compute_df)
-        for tp, df in result.items():
-            result[tp] = (pd.concat([df, calculate_metric_changes(df)], axis=0)
-                          .reset_index()
-                          .rename(columns={'index': 'metric'})
-                          .pivot(index='metric', columns='mode')
-                          .reindex(columns=['original', 'fedcore', 'change'], level=1)
-            )
+        # Create dataframes for both metric types
+        quality_df = create_df(zip([quality_metrics[mode] for mode in eval_regime], eval_regime))
+        compute_df = create_df(zip([computational_metrics[mode] for mode in eval_regime], eval_regime))
+        
+        # Combine both dataframes
+        combined_df = pd.concat([quality_df, compute_df], axis=0)
+        
+        # Add change column
+        result = (pd.concat([combined_df, calculate_metric_changes(combined_df)], axis=0)
+                .reset_index()
+                .rename(columns={'index': 'metric'})
+                .pivot(index='metric', columns='mode')
+                .reindex(columns=['original', 'fedcore', 'change'], level=1))
+        
+        return result
+        
+        
+        # quality_metrics_list = [self.evaluate_metric(prediction=prediction,
+        #                                              target=test_data.val_dataloader,
+        #                                              problem=self.manager.automl_config.fedot_config.problem,
+        #                                              metrics=quality_metrics_list)
+        #                         for prediction in prediction_list]
+        # computational_metrics_list = [self.evaluate_metric(prediction=prediction,
+        #                                                    target=test_data.val_dataloader,
+        #                                                    problem=f'computational_{regime}',
+        #                                                    metrics=computational_metrics)
+        #                               for prediction, regime in zip(prediction_list, eval_regime)]
+        # print('~~~@@@', computational_metrics_list, quality_metrics_list)
+        # quality_df = create_df(zip(quality_metrics_list, eval_regime))
+        # compute_df = create_df(zip(computational_metrics_list, eval_regime))
+        # result = dict(quality_comparison=quality_df, computational_comparison=compute_df)
+        # for tp, df in result.items():
+        #     result[tp] = (pd.concat([df, calculate_metric_changes(df)], axis=0)
+        #                   .reset_index()
+        #                   .rename(columns={'index': 'metric'})
+        #                   .pivot(index='metric', columns='mode')
+        #                   .reindex(columns=['original', 'fedcore', 'change'], level=1)
+        #     )
         return result
 
     def load(self, path):

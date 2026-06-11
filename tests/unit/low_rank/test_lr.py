@@ -1,16 +1,10 @@
-from copy import deepcopy
 import pytest
 from pymonad.either import Either
 
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
 from fedcore.api.api_configs import (
-    APIConfigTemplate, 
-    AutoMLConfigTemplate, 
-    FedotConfigTemplate, 
     LearningConfigTemplate, 
-    ModelArchitectureConfigTemplate, 
-    NeuralModelConfigTemplate, 
     LowRankTemplate
     )
 from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
@@ -18,20 +12,19 @@ from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.tools.example_utils import get_scenario_for_api
-from fedcore.repository.constanst_repository import SLRStrategiesEnum
+from fedcore.repository.constant_repository import SLRStrategiesEnum
 
 
 METRIC_TO_OPTIMISE = ['accuracy', 'latency']
 LOSS = 'cross_entropy'
 PEFT_PROBLEM = 'low_rank'
-INITIAL_ASSUMPTION = 'ResNet18'
+INITIAL_MODEL_ASSUMPTION = 'ResNet18'
 PRETRAIN_SCENARIO = 'from_checkpoint'
 
 def get_api_template():
     learning_template = LearningConfigTemplate(
         criterion=LOSS,
         learning_strategy=PRETRAIN_SCENARIO,
-        peft_strategy=PEFT_PROBLEM,
         peft_strategy_params=LowRankTemplate()
     )
     return learning_template
@@ -67,8 +60,8 @@ def test_lrs(low_rank_strategy):
     input_data.train_dataloader = train_dataloader
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
-        peft_task=learning_config.config['peft_strategy'],
-        model=INITIAL_ASSUMPTION,
+        peft_task=PEFT_PROBLEM,
+        model=INITIAL_MODEL_ASSUMPTION,
         learning_params=learning_config.learning_strategy_params
     )
     train_data = Either.insert(input_data).then(data_cls.check_input_data).value

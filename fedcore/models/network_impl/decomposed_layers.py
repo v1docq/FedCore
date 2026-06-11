@@ -55,6 +55,8 @@ class IDecomposed(abc.ABC):
                                'three_layers': self._forward3}
 
     def compose_weight_for_inference(self):
+        if self.U is None or self.S is None or self.Vh is None:
+            return
         self.compose_mode = self.compose_mode or self._evaluate_compose_mode()
         self._compose_dict[self.compose_mode]()
         self._current_forward = self._forward_dict[self.compose_mode]
@@ -269,11 +271,12 @@ class DecomposedConv2d(Conv2d, IDecomposed):
         return W
     
     def _forward1(self, x):
+        weight = self.U if self.U is not None else self.weight
         if self.bias is not None:
-            return torch.nn.functional.conv2d(x, self.U, self.bias,
+            return torch.nn.functional.conv2d(x, weight, self.bias,
                 self.stride, self.padding, self.dilation, self.groups)
         else:
-            return torch.nn.functional.conv2d(x, self.U, None,
+            return torch.nn.functional.conv2d(x, weight, None,
                 self.stride, self.padding, self.dilation, self.groups)
     
     def _forward2(self, x):
@@ -423,10 +426,11 @@ class DecomposedLinear(nn.Linear, IDecomposed):
         return x
     
     def _forward1(self, x):
+        weight = self.U if self.U is not None else self.weight
         if self.bias is not None:
-            return torch.nn.functional.linear(x, self.U, self.bias)
+            return torch.nn.functional.linear(x, weight, self.bias)
         else:
-            return torch.nn.functional.linear(x, self.U)
+            return torch.nn.functional.linear(x, weight)
     
 
 class DecomposedEmbedding(nn.Embedding, IDecomposed):
@@ -464,7 +468,8 @@ class DecomposedEmbedding(nn.Embedding, IDecomposed):
         super().decompose(W)
     
     def _forward1(self, x):
-        return torch.nn.functional.embedding(x, self.U, 
+        weight = self.U if self.U is not None else self.weight
+        return torch.nn.functional.embedding(x, weight, 
             self.padding_idx, self.max_norm, self.norm_type, self.scale_grad_by_freq, self.sparse)
 
     def _forward2(self, x):
@@ -652,8 +657,9 @@ class DecomposedConv1d(nn.Conv1d, IDecomposed):
         IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode)
 
     def _forward1(self, x):
+        weight = self.U if self.U is not None else self.weight
         return conv1d(
-            x, self.U, self.bias, self.stride, self.padding, self.dilation, self.groups
+            x, weight, self.bias, self.stride, self.padding, self.dilation, self.groups
         )
     
     def _forward2(self, x):

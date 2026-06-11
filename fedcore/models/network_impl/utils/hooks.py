@@ -1,5 +1,6 @@
 import bitsandbytes as bnb
 import os
+from typing import Union
 from abc import abstractmethod, ABC
 from datetime import datetime
 from enum import Enum
@@ -11,9 +12,15 @@ import torch
 from tqdm import tqdm
 
 from tdecomp.grad_proj.tensorgrad.prepared_tg import ULTG, ParallelTG
+print('@@@ before bt')
+
+from fedcore.models.network_impl.utils._base import BaseTrainer
+print('@@@ before op')
 
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.abstraction.accessor import Accessor
+print('@@@ before dlh')
+
 from fedcore.api.utils.data import DataLoaderHandler
 
 try:
@@ -28,12 +35,25 @@ def now_for_file():
     return datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
 
 class BaseHook(ABC):
-    _SUMMON_KEY: str
-    _hook_place: int = 1
+    _summon_key: Union[str, tuple]
+    _hook_place: float = 1
 
-    def __init__(self, params, model):
-        self.params: dict = params
-        self.model: torch.nn.Module = model
+    def __init__(self, trainer: BaseTrainer):
+        self.hookable_trainer = trainer
+        self.params: dict = trainer.params
+        self.model = trainer.model
+
+    @property
+    def _hook_place(self):
+        return self._hook_place
+    
+    def is_epoch_arrived_default(self, current_epoch, epoch_each_param):
+        if not epoch_each_param:
+            return False
+        if epoch_each_param != -1:
+            return not current_epoch % epoch_each_param
+        else:
+            return current_epoch == self.hookable_trainer.epochs
 
     def __call__(self, epoch, **kws):
         trigger_result = self.trigger(epoch, kws)
@@ -43,11 +63,11 @@ class BaseHook(ABC):
             self.action(epoch, kws)
 
     @abstractmethod
-    def trigger(self, epoch, kws):
+    def trigger(self, epoch: int, kws: dict) -> bool:
         pass
 
     @abstractmethod
-    def action(self, epoch, kws):
+    def action(self, epoch: int, kws: dict):
         pass
 
     def _filter_kw(self):
@@ -57,7 +77,7 @@ class BaseHook(ABC):
     def check_init(cls, d: dict):
         if isinstance(d, OperationParameters):
             d = d.to_dict()
-        summons = cls._SUMMON_KEY if not isinstance(cls._SUMMON_KEY, str) else (cls._SUMMON_KEY,)
+        summons = cls._summon_key if not isinstance(cls._summon_key, str) else (cls._summon_key,)
         return any(d[summon] is not None for summon in summons if summon in d.keys())
 
     def __repr__(self):
@@ -68,25 +88,19 @@ class BaseHook(ABC):
 
 
 class Saver(BaseHook):
-    _SUMMON_KEY = 'save_each'
+    _summon_key = 'save_each'
     _hook_place = 100
-    _hook_place = 100
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.save_each = params.get('save_each', False)
-        self.checkpoint_folder = params.get('checkpoint_folder', '.')
+    def __init__(self, trainer: BaseTrainer):
+        super().__init__(trainer)
+        self.save_each = self.params.get('save_each', False)
+        self.checkpoint_folder = self.params.get('checkpoint_folder', '.')
 
-    def trigger(self, epoch, kw) -> bool:
-        if not self.save_each:
-            return False
-        if self.save_each != -1:
-            return not epoch % self.save_each
-        else:
-            return epoch == self.params.get('epochs', 0)
+    def trigger(self, epoch, kws) -> bool:
+        return self.is_epoch_arrived_default(epoch, self.save_each)
 
-    def action(self, epoch, kw):
-        name = kw.get('name', '') or self.params.get('name', '')
+    def action(self, epoch, kws):
+        name = kws.get('name', '') or self.params.get('name', '')
         path_pref = Path(self.checkpoint_folder)
         save_only = self.params.get('save_only', '')
         to_save = self.model if not save_only else Accessor.get_module(self.model, save_only)
@@ -112,14 +126,16 @@ class Saver(BaseHook):
                            )
 
 class FitReport(BaseHook):
-    _SUMMON_KEY = 'log_each'
+    _summon_key = 'log_each'
     _hook_place = 10
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.log_interval = params.get('log_each', 1)
+    def __init__(self, trainer: BaseTrainer):
+        super().__init__(trainer)
+        self.log_interval = self.params.get('log_each', 1)
 
-    def trigger(self, epoch, kw) -> bool:
+    def trigger(self, epoch, kws) -> bool:
+        if not self.log_interval:
+            return False
         return epoch % self.log_interval == 0
 
     def action(self, epoch, kws):
@@ -150,15 +166,15 @@ class FitReport(BaseHook):
 
 
 class EarlyStopping(BaseHook):
-    _SUMMON_KEY = 'early_stop_after'
+    _summon_key = 'early_stop_after'
     _hook_place = 90
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.counts = params.get('early_stop_after', 5)
-        self.horizon = params.get('horizon', 15)
-        self.angle_tol = params.get('angle_tol', 2.5)
-        if Evaluator.check_init(params):
+    def __init__(self, trainer: BaseTrainer):
+        super().__init__(trainer)
+        self.counts = self.params.get('early_stop_after', 5)
+        self.horizon = self.params.get('horizon', 15)
+        self.angle_tol = self.params.get('angle_tol', 2.5)
+        if Evaluator.check_init(self.params):
             self._check_in_history = 'val_loss'
         else:
             self._check_in_history = 'train_loss'
@@ -187,12 +203,12 @@ class EarlyStopping(BaseHook):
 
 
 class Evaluator(BaseHook):
-    _SUMMON_KEY = 'eval_each'
+    _summon_key = 'eval_each'
     _hook_place = 80
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.eval_each = params.get('eval_each', 1)
+    def __init__(self, trainer: BaseTrainer):
+        super().__init__(trainer)
+        self.eval_each = self.params.get('eval_each', 1)
         self.device = next(iter(self.model.parameters())).device
 
     def trigger(self, epoch, kws):
@@ -223,8 +239,8 @@ class OptimizerGen(BaseHook):
     _check_field = '_structure_changed__'
     _hook_place = -100
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
+    def __init__(self, trainer: BaseTrainer):
+        super().__init__(trainer)
         self.__gen = self.__get_optimizer_gen(
             self.params.get('optimizer', 'adam')
         )
@@ -256,11 +272,10 @@ class OptimizerGen(BaseHook):
 
 class SchedulerRenewal(BaseHook):
     _hook_place = -90
-    _hook_place = -90
-    _SUMMON_KEY = ('scheduler_step_each', 'scheduler')
+    _summon_key = ('scheduler_step_each', 'scheduler')
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
+    def __init__(self, trainer: BaseTrainer):
+        super().__init__(trainer)
         self.__gen = self.__get_scheduler_gen(
             self.params.get('sch_type', 'one_cycle')
         )
@@ -305,18 +320,18 @@ class SchedulerRenewal(BaseHook):
 
 
 class Freezer(BaseHook):
-    _SUMMON_KEY = ('frozen_prop', 'refreeze_each')
+    _summon_key = ('frozen_prop', 'refreeze_each')
     _hook_place = -10
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
+    def __init__(self, trainer: BaseTrainer):
+        super().__init__(trainer)
         self.frozen_prop = self.params.get('frozen_prop', 0.5)
         self.approach = self.params.get('freeze_approach', 'random')
         self.refreeze_each = self.params.get('refreeze_each', 1)
-        self.__criterions = {
+        self.__rules = {
             'random': self.__uniform_mask,
         }
-        self.criterion = self.__criterions[self.approach]
+        self.rule = self.__rules[self.approach]
 
     def __uniform_mask(self):
         prob = np.random.random(1)[0]
@@ -324,7 +339,7 @@ class Freezer(BaseHook):
 
     def __freeze(self):
         for name, layer in self.model.named_modules():
-            if self.criterion(layer, name):
+            if self.rule(layer, name):
                 for p in layer.parameters():
                     p.requires_grad = False
 
@@ -341,55 +356,8 @@ class Freezer(BaseHook):
             self.__freeze()
         
 
-
-class Freezer(BaseHook):
-    _SUMMON_KEY = ('frozen_prop', 'refreeze_each')
-    _hook_place = -10
-
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.frozen_prop = self.params.get('frozen_prop', 0.5)
-        self.approach = self.params.get('freeze_approach', 'random')
-        self.refreeze_each = self.params.get('refreeze_each', 1)
-        self.__criterions = {
-            'random': self.__uniform_mask,
-        }
-        self.criterion = self.__criterions[self.approach]
-
-    def __uniform_mask(self):
-        prob = np.random.random(1)[0]
-        return prob < self.frozen_prop
-
-    def __freeze(self):
-        for name, layer in self.model.named_modules():
-            if self.criterion(layer, name):
-                for p in layer.parameters():
-                    p.requires_grad = False
-
-    def __unfreeze(self):
-        for p in self.model.parameters():
-            p.requires_grad = True
-
-    def trigger(self, epoch, kws):
-        return self.refreeze_each and epoch % self.refreeze_each == 0
-
-    def action(self, epoch, kws):
-        self.__unfreeze()
-        if epoch != self.params.epochs:
-            self.__freeze()
-        
-
-class LoggingHooks(Enum):
-    evaluator = Evaluator
-    fit_report = FitReport
-    saver = Saver
-
-
-class ModelLearningHooks(Enum):
-    freezer = Freezer
-    optimizer_gen = OptimizerGen
-    scheduler_renewal = SchedulerRenewal
-    early_stopping = EarlyStopping
+LOGGING_HOOKS = [Evaluator, FitReport, Saver]
+MODEL_LEARNING_HOOKS = [Freezer, OptimizerGen, SchedulerRenewal, EarlyStopping]
 
 
 class Optimizers(Enum):

@@ -12,18 +12,13 @@ import numpy as np
 
 from fedcore.models.network_impl.utils.interfaces import ITrainer, IHookable
 from fedcore.architecture.computational.devices import default_device
-from fedcore.repository.constant_repository import (
-    ModelLearningHooks,
-    LoggingHooks,
-    StructureCriterions,
-    TorchLossesConstant,
-)
+
 
 HookType = Literal['start', 'end', 'batch_start', 'batch_end', 'validation']
 
 class BaseTrainer(ITrainer, IHookable):
     
-    def __init__(self, params: Optional[Dict] = None):
+    def __init__(self, model: Union['PreTrainedModel', 'Module', None], params: Optional[Dict] = None):
         self.params = params or {}
         self.learning_params = self.params.get('custom_learning_params', {})
         
@@ -48,11 +43,8 @@ class BaseTrainer(ITrainer, IHookable):
             'learning_rates': []
         }
         
-        self.model: Union['PreTrainedModel', 'Module', None] = self.params.get("model", None)
+        self.model = model
         self.device = default_device()
-            
-    def register_additional_hooks(self, hooks: Iterable[Enum]) -> None:
-        self._additional_hooks.extend(hooks)
     
     def _init_hooks(self) -> None:
         raise NotImplementedError("Subclasses must implement _init_hooks")
@@ -69,37 +61,6 @@ class BaseTrainer(ITrainer, IHookable):
     @abstractmethod
     def predict(self, input_data: Any, output_mode: str = "default") -> Any:
         pass
-    
-    # def save_model(self, path: str) -> None:
-    #     if self.model is not None:
-    #         if hasattr(self.model, 'save_pretrained'):
-    #             self.model.save_pretrained(path)
-    #         else:
-    #             torch.save(self.model.state_dict(), path)
-    #         print(f"Model saved to {path}")
-    #     else:
-    #         print("No model to save")
-    
-    # def load_model(self, path: str) -> None:
-    #     """Load the model - default implementation"""
-    #     if os.path.exists(path):
-    #         if self.model is None:
-    #             print("Model not initialized, cannot load weights")
-    #             return
-                
-    #         if hasattr(self.model, 'from_pretrained'):
-    #             self.model = self.model.from_pretrained(path)
-    #         else:
-    #             state_dict = torch.load(path, map_location=self.device)
-    #             self.model.load_state_dict(state_dict)
-    #         print(f"Model loaded from {path}")
-    #     else:
-    #         print(f"Model path {path} does not exist")
-    
-    # def _clear_cache(self):
-    #     """Clear CUDA cache - shared by BaseNeuralModel and LLMTrainer"""
-    #     with torch.no_grad():
-    #         torch.cuda.empty_cache()
 
     def _clear_cache(self):
         """Clear GPU cache using ModelRegistry cleanup methods."""
@@ -113,16 +74,20 @@ class BaseTrainer(ITrainer, IHookable):
                     torch.cuda.empty_cache()
 
     def _compute_loss(self, criterion, model_output, target, stage='train', epoch=None):
+        from fedcore.repository.constant_repository import (
+            StructureCriterions,
+            TorchLossesConstant,
+        )
         if hasattr(model_output, 'loss'):
             quality_loss = model_output.loss
         else:
             quality_loss = criterion(model_output, target)
         if isinstance(model_output, torch.Tensor):
-            additional_losses = {name: coef * criterion(model_output, target)
-                                 for name, (criterion, coef) in self.custom_criterions.items()
+            additional_losses = {name: custom_criterion_weight * criterion(model_output, target)
+                                 for name, (criterion, custom_criterion_weight) in self.custom_criterions.items()
                                  if hasattr(TorchLossesConstant, name)}
-            additional_losses.update({name: coef * criterion(self.model)
-                                      for name, (criterion, coef) in self.custom_criterions.items()
+            additional_losses.update({name: custom_criterion_weight * criterion(self.model)
+                                      for name, (criterion, custom_criterion_weight) in self.custom_criterions.items()
                                       if hasattr(StructureCriterions, name)})
             for name, val in additional_losses.items():
                 self.history[f'{stage}_{name}_loss'].append((epoch, val))

@@ -12,7 +12,7 @@ from fedot.core.repository.tasks import (
 from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
                                      LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     NeuralModelConfigTemplate, DeviceConfigTemplate, ComputeConfigTemplate,
+                                     TrainingTemplate, DeviceConfigTemplate, ComputeConfigTemplate,
                                      LowRankTemplate)
 from fedcore.architecture.dataset.api_loader import ApiLoader
 from fedcore.data.dataloader import load_data

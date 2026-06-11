@@ -9,7 +9,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import Dataset
 
 from fedcore.models.network_impl.llm_trainer import LLMTrainer
-from fedcore.models.network_impl.hooks import (
+from fedcore.models.network_impl.utils.hooks import (
     LoggingHooks, ModelLearningHooks, 
     Saver, FitReport, EarlyStopping, Evaluator,
     OptimizerGen, SchedulerRenewal, Freezer

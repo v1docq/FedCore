@@ -7,15 +7,15 @@ from sklearn.metrics import (
     mean_squared_error,
     mean_squared_log_error,
 )
-from fedcore.metrics.metric_impl import QualityMetric
+from fedcore.metrics.quality import QualityMetric
 
-from fedcore.metrics.metric_impl import (
-    Accuracy,
-    F1,
-    Precision,
-    Logloss,
-    ROCAUC,
-)
+# from fedcore.metrics.metric_impl import (
+#     Accuracy,
+#     F1,
+#     Precision,
+#     Logloss,
+#     ROCAUC,
+# )
 from typing import Optional, Any, Dict, Sequence
 
 
@@ -44,7 +44,16 @@ class EvaluateMetric(QualityMetric):
 
     metric_name: str = ""
     result_key: Optional[str] = None
-    _metric = _EVALUATE.load(metric_name)
+    _metric = None  
+
+    @classmethod
+    def _get_metric(cls):
+        """Lazy load the metric instance."""
+        if cls._metric is None:
+            if not cls.metric_name:
+                raise ValueError(f"metric_name must be set for {cls.__name__}")
+            cls._metric = _EVALUATE.load(cls.metric_name)
+        return cls._metric
 
     @classmethod
     def metric(cls, target: Sequence[Any] | None, predict: Sequence[Any] | None, **kwargs: Any) -> float:
@@ -57,7 +66,8 @@ class EvaluateMetric(QualityMetric):
         if references is None or predictions is None:
             raise ValueError("Both references and predictions are required.")
 
-        res = cls._metric.compute(references=references, predictions=predictions, **kwargs)
+        metric_instance = cls._get_metric()
+        res = metric_instance.compute(references=references, predictions=predictions, **kwargs)
 
         # Normalize evaluate output to float
         if isinstance(res, dict):
@@ -79,22 +89,37 @@ class EvaluateMetric(QualityMetric):
     def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
         out = pipeline.predict(reference_data, output_mode=cls.output_mode)
         preds = out.predict.predict
-        preds = preds.detach().cpu().tolist()
-
-        loader = getattr(reference_data.features, f"{cls.split}_dataloader")
-        ds = loader.dataset
-
-        if hasattr(ds, "references"):
-            refs = ds.references
-        elif hasattr(ds, "targets"):
-            refs = ds.targets
-        elif hasattr(ds, "labels"):
-            refs = ds.labels
+        
+        if isinstance(preds, torch.Tensor):
+            preds = preds.detach().cpu().tolist()
+        elif isinstance(preds, list):
+            pass
         else:
-            it = iter(ds)
-            refs = [ex[1] for ex in it]
+            try:
+                preds = list(preds)
+            except (TypeError, ValueError):
+                raise TypeError(f"Unexpected prediction type: {type(preds)}. Expected torch.Tensor or list.")
 
-        return cls.metric(refs, preds)
+        refs = None
+        if hasattr(out, 'target') and out.target is not None:
+            refs = out.target
+        else:
+            loader = getattr(reference_data, f"{cls.split}_dataloader")
+            ds = loader.dataset
+
+            if hasattr(ds, "references"):
+                refs = ds.references
+            elif hasattr(ds, "targets"):
+                refs = ds.targets
+            elif hasattr(ds, "labels"):
+                refs = ds.labels
+            else:
+                it = iter(ds)
+                refs = [ex[1] for ex in it]
+
+        result = cls.metric(refs, preds)
+        assert result is not None, f"{cls.__name__}.metric() returned None"
+        return float(result)
 
     def compute(self, y_true: Sequence[Any] | None = None, y_pred: Sequence[Any] | None = None, *, references: Sequence[Any] | None = None, predictions: Sequence[Any] | None = None, **kwargs: Any) -> Dict[str, Any]:
         if references is None and y_true is not None:
@@ -103,7 +128,8 @@ class EvaluateMetric(QualityMetric):
             predictions = y_pred
         if references is None or predictions is None:
             raise ValueError("Both references and predictions are required.")
-        return self._metric.compute(predictions=predictions, references=references, **kwargs)
+        metric_instance = self._get_metric()
+        return metric_instance.compute(predictions=predictions, references=references, **kwargs)
 
 
 class NLPAccuracy(EvaluateMetric):
@@ -111,7 +137,6 @@ class NLPAccuracy(EvaluateMetric):
     metric_name = "accuracy"
     result_key = "accuracy"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)
     
     
 # =============================== Additional NLP Metrics ================================
@@ -121,18 +146,15 @@ class NLPPrecision(EvaluateMetric):
     metric_name = "precision"
     result_key = "precision"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)
 
 class NLPRecall(EvaluateMetric):
     """Recall for NLP classification tasks."""
     metric_name = "recall"
     result_key = "recall"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)
 
 class NLPF1(EvaluateMetric):
     """F1 score for NLP classification tasks."""
     metric_name = "f1"
     result_key = "f1"
     output_mode = "labels"
-    _metric = _EVALUATE.load(metric_name)

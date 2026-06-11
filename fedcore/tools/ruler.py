@@ -8,9 +8,9 @@ from fedot.core.pipelines.pipeline import Pipeline
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 from fedcore.architecture.computational.devices import default_device, extract_device
-from fedcore.metrics.metric_impl import (
-    Accuracy, Precision, F1, RMSE, MSE, MAE, MAPE, SMAPE, R2
-)
+# from fedcore.metrics.metric_impl import (
+#     Accuracy, Precision, F1, RMSE, MSE, MAE, MAPE, SMAPE, R2
+# )
 from functools import partial
 from fedcore.tools.registry.model_registry import ModelRegistry
 from fedcore.api.utils.data import DataLoaderHandler
@@ -108,6 +108,7 @@ class PerformanceEvaluator:
         self._cuda_available = torch.cuda.is_available()
         
         self._initialize_model(model)
+        self.data_loader = data
         self._initialize_data_loader(data, collate_fn)
 
         
@@ -153,28 +154,32 @@ class PerformanceEvaluator:
 
     def _initialize_data_loader(self, data: Union[DataLoader, str], collate_fn: Optional[Callable]) -> None:
         """Initialize data loader for evaluation"""
-        if not self._need_wrap:
-            self.data_loader = data
-            return
+        # if not self._need_wrap:
+        #     self.data_loader = data
+        #     return
+        from fedcore.data.data import CompressionInputData
 
         if isinstance(data, DataLoader):
+            self.data_loader = data
+            return
             collate_fn = data.collate_fn
             dataset = data.dataset
+        elif isinstance(data, CompressionInputData):
+            self.data_loader = data.test_dataloader
+            return
         elif isinstance(data, str):
             # TODO: Implement dataset loading from directory
             raise NotImplementedError("Dataset loading from directory not implemented")
         else:
                 dataset = data
 
-        self.data_loader = partial(
-            DataLoaderHandler.check_convert,
-            dataloader=DataLoader(
+        self.data_loader = DataLoader(
                 dataset, 
                 batch_size=self.batch_size, 
                 shuffle=False, 
                 collate_fn=collate_fn
             )
-        )
+        
 
     @torch.no_grad()
     def evaluate(self):
@@ -212,6 +217,7 @@ class PerformanceEvaluator:
     
     def _generate_example_batch(self, num_samples, return_sample=False, device='cpu', metric=''):
         num_samples = num_samples or float('inf')
+        self._need_wrap = False
         dataloader = self.data_loader(max_batches=num_samples) if self._need_wrap else self.data_loader
         count = 0
         for batch in tqdm(
