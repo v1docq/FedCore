@@ -24,13 +24,7 @@ METRIC_TO_OPTIMISE = ['MulticlassAccuracy__10', 'Latency']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
 PEFT_PROBLEM = 'training'
-
-from torchvision import models
-
-pretrained_resnet152 = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
-pretrained_resnet152.fc = torch.nn.Linear(2048, 10) 
-INITIAL_ASSUMPTION = pretrained_resnet152 
-
+INITIAL_ASSUMPTION = 'ResNet18'
 train_dataloader_params = {"batch_size": 64,
                            'shuffle': True,
                            'is_train': True,
