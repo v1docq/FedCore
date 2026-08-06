@@ -8,9 +8,23 @@ import logging
 from datetime import datetime
 from model_logic import model_manager
 from loader_bundle import LoaderBundle
+from fedcore_ops import (
+    detect_capabilities,
+    load_torch_module,
+    run_operation,
+    export_via_fedcore,
+    example_input_from_loader,
+    load_dataloader_from_bundle,
+)
 
 from werkzeug.utils import secure_filename
 import shutil
+import sys
+from pathlib import Path as _Path
+
+_REPO_ROOT = str(_Path(__file__).resolve().parents[1])
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 # Настройка логирования
 log_dir = "results/logs"
@@ -220,41 +234,86 @@ def health_check():
         "timestamp": datetime.now().isoformat()
     })
 
-# Эндпоинт для экспорта модели
+# Эндпоинт для экспорта модели (FedCore: ONNX / TensorRT / TorchScript)
 @app.route('/export', methods=['POST'])
 def export_model():
-    """Экспорт модели в указанный формат"""
+    """Export via FedCore (fedcore.tools.export / FedCore.export)."""
     try:
-        # Получаем параметры из запроса
-        data = request.get_json()
-        
-        # Проверяем наличие модели (в виде тензора или файла)
+        data = request.get_json() or {}
         if 'model_path' not in data:
             return jsonify({"error": "model_path must be provided"}), 400
-        
-        # Загружаем модель
+
         model_path = data['model_path']
         if not os.path.exists(model_path):
             return jsonify({"error": "Model file not found"}), 404
-        
-        model = torch.load(model_path)
-        
-        # Получаем параметры экспорта
-        export_format = data.get('format', 'torchscript')
+
+        model = load_torch_module(model_path)
+        export_format = data.get('format', 'onnx')
         export_dir = data.get('export_dir', 'results/exports')
         model_name = data.get('model_name', 'model')
-        
-        # Экспортируем модель
-        result = model_manager.export_model(model, export_format, export_dir, model_name)
-        
-        if "error" in result:
-            return jsonify(result), 500
-        
+        loader_path = data.get('loader_path')
+
+        loader = None
+        if loader_path and os.path.exists(loader_path):
+            loader = load_dataloader_from_bundle(loader_path)
+        dummy = example_input_from_loader(loader)
+
+        result = export_via_fedcore(
+            model,
+            framework=export_format,
+            export_dir=export_dir,
+            model_name=model_name,
+            example_input=dummy,
+        )
         return jsonify(result)
-        
     except Exception as e:
-        logger.error(f"Error during model export: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.exception("Error during FedCore export")
+        return jsonify({"error": str(e) or repr(e)}), 500
+
+
+@app.route('/model_capabilities', methods=['POST'])
+def model_capabilities():
+    """Detect FedCore ops available for a loaded .pt module."""
+    try:
+        data = request.get_json() or {}
+        model_path = data.get('model_path')
+        if not model_path or not os.path.exists(model_path):
+            return jsonify({"error": "Model file not found"}), 404
+        model = load_torch_module(model_path)
+        caps = detect_capabilities(model, kind=data.get('kind', 'auto'))
+        return jsonify(caps.to_dict())
+    except Exception as e:
+        logger.exception("Error detecting capabilities")
+        return jsonify({"error": str(e) or repr(e)}), 500
+
+
+@app.route('/fedcore_op', methods=['POST'])
+def fedcore_op():
+    """Run FedCore operation: quantize / prune / low_rank / export_*."""
+    try:
+        data = request.get_json() or {}
+        operation = data.get('operation')
+        model_path = data.get('model_path')
+        if not operation or not model_path:
+            return jsonify({"error": "operation and model_path are required"}), 400
+        if not os.path.exists(model_path):
+            return jsonify({"error": "Model file not found"}), 404
+
+        result = run_operation(
+            operation,
+            model_path,
+            loader_path=data.get('loader_path'),
+            export_dir=data.get('export_dir', 'results/exports'),
+            model_name=data.get('model_name', 'model'),
+            pruning_ratio=float(data.get('pruning_ratio', 0.3)),
+            kind=data.get('kind', 'auto'),
+        )
+        return jsonify(result)
+    except PermissionError as e:
+        return jsonify({"error": str(e)}), 403
+    except Exception as e:
+        logger.exception("Error running FedCore op")
+        return jsonify({"error": str(e) or repr(e)}), 500
 
 # Эндпоинт для экспорта частей модели
 @app.route('/export_parts', methods=['POST'])
@@ -323,15 +382,27 @@ def analyze_model():
             return jsonify({"error": f"Device profile not found: {arch_file}"}), 404
 
         result = model_manager.analyze_model(model)
-        
+
         if "error" in result:
             return jsonify(result), 500
-            
+
+        try:
+            kind = data.get("kind", "auto")
+            result["capabilities"] = detect_capabilities(model, kind=kind).to_dict()
+        except Exception as cap_err:
+            logger.warning(f"capabilities detection failed: {cap_err}")
+            result["capabilities"] = {
+                "operations": [],
+                "kind": "unknown",
+                "suggested_kind": "other",
+                "findings": [],
+            }
+
         return jsonify(result)
         
     except Exception as e:
-        logger.error(f"Error during model analysis: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.exception("Error during model analysis")
+        return jsonify({"error": str(e) or repr(e)}), 500
 
 # Эндпоинт для анализа лог файла
 @app.route('/analyze_log', methods=['POST'])

@@ -307,6 +307,15 @@ document.getElementById('selectedArch')?.addEventListener('change', () => {
     updateModelProfilePair();
     loadDeviceProfileOps();
 });
+document.getElementById('modelKindSelect')?.addEventListener('change', () => {
+    if (lastCapabilities) renderFedCoreOps(lastCapabilities);
+});
+document.getElementById('exportDir')?.addEventListener('input', () => {
+    if (lastCapabilities) renderSaveHints(resolveActiveKind(lastCapabilities));
+});
+document.getElementById('exportModelName')?.addEventListener('input', () => {
+    if (lastCapabilities) renderSaveHints(resolveActiveKind(lastCapabilities));
+});
 
 async function analyzeModel() {
     const selectedModel = document.getElementById('selectedModel').value;
@@ -336,7 +345,8 @@ async function analyzeModel() {
             },
             body: JSON.stringify({
                 model_path: modelPath,
-                architecture_file: selectedArch
+                architecture_file: selectedArch,
+                kind: getSelectedKind(),
             })
         });
         
@@ -359,10 +369,154 @@ async function analyzeModel() {
 
         updateModelGraph(graph, analysis);
         updateLayersList(graph, analysis);
+        lastCapabilities = result.capabilities || null;
+        renderFedCoreOps(lastCapabilities);
 
         showNotification('Model analysis complete', 'success');
     } catch (error) {
         showNotification(`Analysis error: ${error.message}`, 'error');
+    }
+}
+
+const KIND_OPS = {
+    convolutional: ['quantize', 'prune'],
+    attention_embedding: ['quantize', 'prune', 'low_rank'],
+    other: ['quantize', 'prune'],
+};
+
+const OP_LABELS = {
+    quantize: 'Quantize (FedCore PTQ)',
+    prune: 'Prune (FedCore)',
+    low_rank: 'Low-rank (FedCore)',
+};
+
+const OP_FILE_SUFFIX = {
+    quantize: '_int8.pt',
+    prune: '_pruned.pt',
+    low_rank: '_lowrank.pt',
+};
+
+let lastCapabilities = null;
+
+function getSelectedKind() {
+    return document.getElementById('modelKindSelect')?.value || 'auto';
+}
+
+function resolveActiveKind(capabilities) {
+    const selected = getSelectedKind();
+    if (selected !== 'auto') return selected;
+    return (capabilities && capabilities.suggested_kind) || (capabilities && capabilities.kind) || 'other';
+}
+
+function renderFindings(capabilities) {
+    const box = document.getElementById('modelFindings');
+    if (!box) return;
+    if (!capabilities) {
+        box.innerHTML = '<p class="card-hint">Сначала Analyze — здесь будут предупреждения о найденных блоках.</p>';
+        return;
+    }
+    const findings = capabilities.findings || [];
+    const suggested = capabilities.suggested_kind || capabilities.kind || 'other';
+    const items = findings.map((f) => `<li>${f}</li>`).join('');
+    box.innerHTML = `
+        <div class="findings-title">Найдено в модели</div>
+        <ul class="findings-list">${items}</ul>
+        <p class="findings-suggest">Авто-предложение: <strong>${suggested}</strong>. Можно сменить тип вручную выше.</p>
+    `;
+}
+
+function renderSaveHints(activeKind) {
+    const hints = document.getElementById('opsSaveHints');
+    if (!hints) return;
+    const exportDir = document.getElementById('exportDir')?.value || 'results/exports';
+    const name = document.getElementById('exportModelName')?.value || 'model_export';
+    const ops = KIND_OPS[activeKind] || KIND_OPS.other;
+    hints.innerHTML = ops.map((op) => {
+        const path = `${exportDir}/${name}${OP_FILE_SUFFIX[op] || '.pt'}`;
+        return `<div class="ops-save-hint"><span class="ops-save-op">${OP_LABELS[op] || op}</span><code>${path}</code></div>`;
+    }).join('');
+}
+
+function renderFedCoreOps(capabilities) {
+    const box = document.getElementById('fedcoreOpsButtons');
+    const kindLabel = document.getElementById('modelKindLabel');
+    if (!box) return;
+
+    renderFindings(capabilities);
+
+    if (!capabilities) {
+        if (kindLabel) kindLabel.textContent = 'Сначала Analyze Model';
+        box.innerHTML = '';
+        renderSaveHints('convolutional');
+        return;
+    }
+
+    const activeKind = resolveActiveKind(capabilities);
+    const allowedOps = KIND_OPS[activeKind] || KIND_OPS.other;
+    const flags = [
+        capabilities.has_conv ? 'conv' : null,
+        capabilities.has_emb ? 'emb' : null,
+        capabilities.has_attn ? 'attn' : null,
+    ].filter(Boolean).join(', ');
+
+    if (kindLabel) {
+        const mode = getSelectedKind() === 'auto' ? 'авто' : 'вручную';
+        kindLabel.textContent = `Активный тип: ${activeKind} (${mode})${flags ? ` · в модели: ${flags}` : ''}`;
+    }
+
+    const allCompress = ['quantize', 'prune', 'low_rank'];
+    box.innerHTML = allCompress.map((op) => {
+        const allowed = allowedOps.includes(op);
+        return `<button type="button" class="btn btn-primary btn-block" data-fedcore-op="${op}" ${allowed ? '' : 'disabled'}>
+            ${OP_LABELS[op] || op}${allowed ? '' : ' — n/a'}
+        </button>`;
+    }).join('');
+
+    box.querySelectorAll('[data-fedcore-op]').forEach((btn) => {
+        btn.addEventListener('click', () => runFedCoreOp(btn.getAttribute('data-fedcore-op')));
+    });
+    renderSaveHints(activeKind);
+}
+
+async function runFedCoreOp(operation) {
+    const selectedModel = document.getElementById('selectedModel').value;
+    const selectedLoader = document.getElementById('selectedLoader')?.value;
+    const exportDir = document.getElementById('exportDir')?.value || 'results/exports';
+    const exportModelName = document.getElementById('exportModelName')?.value || 'model_export';
+
+    if (!selectedModel) {
+        showNotification('Select a model first', 'error');
+        return;
+    }
+    if (!selectedLoader) {
+        showNotification('Select a loader .pt (needed for FedCore compress ops)', 'error');
+        return;
+    }
+
+    showNotification(`Running FedCore ${operation}…`, 'info');
+    try {
+        const response = await fetch('/fedcore_op', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                operation,
+                model_path: `results/models/${selectedModel}`,
+                loader_path: `results/loaders/${selectedLoader}`,
+                export_dir: exportDir,
+                model_name: exportModelName,
+                kind: getSelectedKind(),
+            }),
+        });
+        const result = await response.json();
+        if (result.error) {
+            showNotification(result.error, 'error');
+            return;
+        }
+        if (result.file) {
+            addExportResult(operation, result.file, result.message || `${operation} done`);
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
     }
 }
 
@@ -551,102 +705,70 @@ async function exportModel() {
     const exportFormat = document.getElementById('exportFormat').value;
     const exportDir = document.getElementById('exportDir').value;
     const exportModelName = document.getElementById('exportModelName').value;
-    
+    const selectedLoader = document.getElementById('selectedLoader')?.value;
+
     if (!selectedModel) {
         showNotification('Please select a model to export', 'error');
         return;
     }
-    
-    showNotification(`Exporting ${selectedModel} to ${exportFormat} format...`, 'info');
-    
+
+    showNotification(`FedCore export → ${exportFormat}…`, 'info');
+
     try {
-        // Формируем путь к модели
-        const modelPath = `results/models/${selectedModel}`;
-        
-        // Call API to export model
+        const body = {
+            model_path: `results/models/${selectedModel}`,
+            format: exportFormat,
+            export_dir: exportDir,
+            model_name: exportModelName,
+        };
+        if (selectedLoader) {
+            body.loader_path = `results/loaders/${selectedLoader}`;
+        }
+
         const response = await fetch('/export', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model_path: modelPath,
-                format: exportFormat,
-                export_dir: exportDir,
-                model_name: exportModelName
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
         });
-        
+
         const result = await response.json();
-        
         if (result.error) {
             showNotification(`Export error: ${result.error}`, 'error');
             return;
         }
-        
-        showNotification(`Export completed successfully!`, 'success');
-        
-        // Add to results
-        addExportResult(exportModelName, exportFormat, exportDir);
+
+        const saved = result.file || `${exportDir}/${exportModelName}.${exportFormat === 'torchscript' ? 'pt' : exportFormat === 'tensorrt' ? 'engine' : 'onnx'}`;
+        addExportResult(exportFormat, saved, result.message || 'Export completed', result.via || 'FedCore.export');
     } catch (error) {
         showNotification(`Export error: ${error.message}`, 'error');
     }
 }
-function addExportResult(name, format, dir) {
+
+function addExportResult(operation, filePath, note, via) {
     const resultsContainer = document.getElementById('exportResults');
+    if (!resultsContainer) return;
+
+    const empty = resultsContainer.querySelector('.results-empty');
+    if (empty) empty.remove();
+
     const resultItem = document.createElement('div');
     resultItem.className = 'result-item';
+    const viaLine = via ? `<div class="result-via">${via}</div>` : '';
     resultItem.innerHTML = `
-        <div>
-            <div class="result-name">${name} (${format})</div>
-            <div class="result-path">${dir}/model_export.${format}</div>
-        </div>
-        <div class="result-actions">
-            <button><i class="fas fa-download"></i></button>
-            <button><i class="fas fa-trash"></i></button>
+        <div class="result-body">
+            <div class="result-name">${operation}</div>
+            <div class="result-path">Сохранено: <code>${filePath}</code></div>
+            ${viaLine}
+            ${note ? `<div class="result-note">${note}</div>` : ''}
         </div>
     `;
-    resultsContainer.appendChild(resultItem);
+    resultsContainer.prepend(resultItem);
 }
-
-// Split points functionality
-const addSplitPointBtn = document.getElementById('addSplitPointBtn');
-const splitPointInput = document.getElementById('splitPointInput');
-const splitPointsList = document.getElementById('splitPointsList');
-
-addSplitPointBtn.addEventListener('click', addSplitPoint);
-splitPointInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addSplitPoint();
-});
-
-function addSplitPoint() {
-    const pointValue = splitPointInput.value.trim();
-    if (!pointValue) return;
-    
-    const splitPoint = document.createElement('div');
-    splitPoint.className = 'split-point';
-    splitPoint.innerHTML = `
-        <div class="split-point-info">
-            <div class="split-point-name">${pointValue}</div>
-            <div class="split-point-type">Layer Index</div>
-        </div>
-        <div class="split-point-actions">
-            <button class="action-btn"><i class="fas fa-edit"></i></button>
-            <button class="action-btn"><i class="fas fa-trash"></i></button>
-        </div>
-    `;
-    
-    splitPointsList.appendChild(splitPoint);
-    splitPointInput.value = '';
-    
-    showNotification(`Added split point: ${pointValue}`, 'success');
-}
-
-// Export parts functionality
-const exportPartsBtn = document.getElementById('exportPartsBtn');
-exportPartsBtn.addEventListener('click', exportParts);
 
 async function exportParts() {
+    // Legacy local split/export — disabled; use FedCore export/ops instead.
+    showNotification('Use FedCore Export / Operations', 'info');
+    return;
     const selectedModel = document.getElementById('selectedModel').value;
     
     if (!selectedModel) {
@@ -658,8 +780,7 @@ async function exportParts() {
     
     try {
         // Формируем путь к модели
-        const modelPath = `results/models/${selectedModel}`;
-        
+        const modelPath = `results/models/${selectedModel}`;        
         // Call API to export parts
         const response = await fetch('/export_parts', {
             method: 'POST',

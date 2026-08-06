@@ -59,7 +59,7 @@ class ZeroShotPruner(BaseHook):
     (``criterion_for_pruner``) to be reused in subclasses that depend on
     backward passes (e.g. :class:`PrunerWithGrad`, :class:`PrunerWithReg`).
     """
-    _SUMMON_KEY = 'prune_each'
+    _summon_key = 'prune_each'
     HOOK_PLACE = 50
 
     def __init__(self, pruner: tp.BasePruner, pruning_iterations: int, prune_each: int, trainer):
@@ -137,12 +137,8 @@ class PrunerWithGrad(ZeroShotPruner):
     This is useful for importance metrics that rely on gradients
     (e.g. Taylor-based criteria).
     """
-    _SUMMON_KEY = 'prune_each'
+    _summon_key = 'prune_each'
     HOOK_PLACE = 50
-
-    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
-        """Attach the hook to a trainer (no extra state beyond base class)."""
-        super().link_to_trainer(hookable_trainer)
 
     def action(self, epoch, kws):
         """Accumulate gradients on validation data, then prune and validate.
@@ -163,12 +159,8 @@ class PrunerWithReg(ZeroShotPruner):
     ``pruner.update_regularizer()`` and ``pruner.regularize(model)`` during
     training, and only then runs the structured pruning step.
     """
-    _SUMMON_KEY = 'prune_each'
+    _summon_key = 'prune_each'
     HOOK_PLACE = 50
-            
-    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
-        """Attach the hook to a trainer (no extra state beyond base class)."""
-        super().link_to_trainer(hookable_trainer)
 
     def _regularize_model_params(self, pruner: Union[tp.BNScalePruner, tp.GroupNormPruner], train_dataloader):
         """Regularize params, that have small magnitude during training process  
@@ -228,7 +220,7 @@ class PrunerInDepth(ZeroShotPruner):
     * allocates a pruning budget and prunes weights using
       :func:`torch.nn.utils.prune.l1_unstructured`.
     """
-    _SUMMON_KEY = 'prune_each'
+    _summon_key = 'prune_each'
     HOOK_PLACE = 50
 
     _ACTIVATION_TI_REPLACE = [torch.nn.ReLU, torch.nn.GELU]
