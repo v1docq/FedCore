@@ -140,17 +140,13 @@
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title"><i class="fas fa-cube"></i> Export Configuration</h2>
+                    <h2 class="card-title"><i class="fas fa-download"></i> FedCore Export</h2>
                     <div class="form-group">
-                        <label for="exportFormat">Export Format</label>
+                        <label for="exportFormat">Format</label>
                         <select id="exportFormat" class="form-control">
-                            <option value="torchscript">TorchScript (.pt)</option>
                             <option value="onnx">ONNX (.onnx)</option>
-                            <option value="tflite">TensorFlow Lite (.tflite)</option>
                             <option value="tensorrt">TensorRT (.engine)</option>
-                            <option value="openvino">OpenVINO (.xml)</option>
-                            <option value="tvm">TVM (.so)</option>
-                            <option value="tensorflow">TensorFlow (.pb)</option>
+                            <option value="torchscript">TorchScript (.pt)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -162,40 +158,36 @@
                         <input type="text" id="exportModelName" value="model_export" placeholder="Name for exported model">
                     </div>
                     <button class="btn btn-success btn-block" id="exportBtn">
-                        <i class="fas fa-download"></i> Export Model
+                        <i class="fas fa-download"></i> Export via FedCore
                     </button>
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="exportProgress"></div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title"><i class="fas fa-split"></i> Split Points</h2>
+                    <h2 class="card-title"><i class="fas fa-cogs"></i> FedCore Operations</h2>
                     <div class="form-group">
-                        <label for="splitPointInput">Add Custom Split Point</label>
-                        <div class="split-point-input">
-                            <input type="text" id="splitPointInput" placeholder="Enter layer index or name">
-                            <button class="btn btn-primary" id="addSplitPointBtn">
-                                <i class="fas fa-plus"></i> Add
-                            </button>
-                        </div>
+                        <label for="modelKindSelect">Тип модели</label>
+                        <select id="modelKindSelect" class="form-control">
+                            <option value="auto">Автоматическое определение</option>
+                            <option value="convolutional">Свёртка (conv)</option>
+                            <option value="attention_embedding">Внимание + embeddings</option>
+                            <option value="other">Другое</option>
+                        </select>
                     </div>
-                    <div class="split-points" id="splitPointsList">
-                        <!-- Split points will be listed here -->
+                    <div id="modelFindings" class="findings-box">
+                        <p class="card-hint">Сначала Analyze — здесь будут предупреждения о найденных блоках.</p>
                     </div>
-                    <button class="btn btn-warning btn-block" id="exportPartsBtn">
-                        <i class="fas fa-layer-group"></i> Export Parts
-                    </button>
+                    <p id="modelKindLabel" class="card-hint">Выберите тип или оставьте авто</p>
+                    <div id="fedcoreOpsButtons" class="fedcore-ops-buttons"></div>
+                    <div id="opsSaveHints" class="ops-save-hints"></div>
                 </div>
             </div>
         </div>
 
         <div class="card" style="margin-top: 1.5rem;">
-            <h2 class="card-title"><i class="fas fa-file-alt"></i> Export Results</h2>
+            <h2 class="card-title"><i class="fas fa-file-alt"></i> Результаты операций</h2>
+            <p class="card-hint">Пути сохранения quantize / prune / export появляются здесь.</p>
             <div id="exportResults">
-                <p>No exports yet. Export a model to see results here.</p>
+                <p class="results-empty">Пока пусто. Запустите Export или Quantize / Prune.</p>
             </div>
         </div>
     </div>

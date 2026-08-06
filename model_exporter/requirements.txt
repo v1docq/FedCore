@@ -9,6 +9,13 @@ onnx
 Flask==2.3.3
 Werkzeug==2.3.7
 
+# FedCore.export API (fedcore.api.main.FedCore)
+evaluate
+dask
+distributed
+bokeh
+pynvml
+
 # Optional export backends — install only what you need; not required for /upload, /files, /analyze_model.
 # tvm is not reliably available via pip (especially on Windows); build from Apache TVM docs if needed.
 # openvino

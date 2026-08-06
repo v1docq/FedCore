@@ -110,6 +110,16 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
 
     def _init_hooks(self):
         for hook_elem in chain(self.BASE_HOOKS, self._additional_hooks):
+            # Pre-built hook instances (e.g. pruning agents) are linked as-is.
+            if isinstance(hook_elem, BaseHook):
+                if hasattr(hook_elem, "link_to_trainer"):
+                    hook_elem.link_to_trainer(self)
+                else:
+                    hook_elem.hookable_trainer = self
+                    hook_elem.params = self.params
+                    hook_elem.model = self.model
+                self.hooks.append(hook_elem)
+                continue
             hook_type: type[BaseHook] = hook_elem
             if not hook_type.check_init(self.params):
                 continue

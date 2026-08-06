@@ -510,6 +510,88 @@ input:focus, select:focus, textarea:focus {
     background: var(--light-gray);
 }
 
+.fedcore-ops-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fedcore-ops-buttons .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.findings-box {
+    margin: 0.5rem 0 0.85rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 8px;
+    background: var(--light-gray);
+    border-left: 3px solid #c9a227;
+}
+
+.findings-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--text-secondary);
+}
+
+.findings-list {
+    margin: 0 0 0.5rem 1.1rem;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.findings-suggest {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.ops-save-hints {
+    margin-top: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.ops-save-hint {
+    font-size: 0.8rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 6px;
+    background: var(--light-gray);
+}
+
+.ops-save-op {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+}
+
+.ops-save-hint code,
+.result-path code {
+    font-size: 0.78rem;
+    word-break: break-all;
+}
+
+.result-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.result-via,
+.result-note {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 0.2rem;
+}
+
+.results-empty {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
 .device-ops-panel {
     margin: 0.75rem 0 1rem;
     border: 1px solid var(--border);
