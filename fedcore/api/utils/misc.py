@@ -5,6 +5,21 @@ from torch.nn import Module
 from functools import wraps
 
 
+import torch
+from contextlib import contextmanager
+
+@contextmanager
+def cuda_transfer():
+    """Context that automatically places tensors on CUDA."""
+    original_default = torch.get_default_device()
+    try:
+        torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
+        yield
+    finally:
+        torch.set_default_device(original_default)
+
+
+
 def camel_to_snake(camel_case_string):
             import re
             s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
