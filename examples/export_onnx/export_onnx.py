@@ -1,20 +1,28 @@
-"""Smoke-тест экспорта модели в ONNX через FedCore.export().
+"""Smoke-тест экспорта модели через FedCore.export().
 
-Сценарий:
+Поддерживаемые форматы (как в model_exporter WebUI):
+* torchscript → .pt
+* onnx → .onnx
+* tensorrt → .engine
+
+Сценарий (onnx по умолчанию):
 1. Создать FedCore с минимальным api_config (без fit / без датасета).
 2. Взять ResNet18 из реестра FedCore со случайными весами.
-3. Экспортировать через FedCore.export() → файл .onnx.
-4. Проверить структуру через onnx.checker; вывести размер файла.
-5. Сравнить ответы PyTorch и ONNX Runtime на одном dummy batch.
-6. Проверить dynamic axes для batch=1 и batch=4.
+3. Экспортировать через FedCore.export().
+3.1. Для onnx: checker, размер, сравнение с PyTorch, dynamic batch.
+3.2. Для torchscript: загрузка и forward на dummy.
+3.3. Для tensorrt: экспорт (требует NVIDIA TensorRT); при отсутствии SDK — ошибка.
 
 Запуск::
 
-    python examples/export_onnx/export_onnx_new.py
+    python examples/export_onnx/export_onnx.py
+    python examples/export_onnx/export_onnx.py --format torchscript
+    python examples/export_onnx/export_onnx.py --format tensorrt
 """
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -34,19 +42,17 @@ from fedcore.api.config_factory import ConfigFactory
 from fedcore.api.main import FedCore
 from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.backbone.convolutional.resnet import CLF_MODELS
-
-try:
-    import onnx
-except ImportError as error:
-    raise SystemExit(
-        "Нужен пакет onnx для onnx.checker. Установка: pip install onnx"
-    ) from error
-
+from fedcore.tools.export import normalize_framework
 
 OUTPUT_DIR = REPO_ROOT / "results" / "export_onnx"
-ONNX_PATH = OUTPUT_DIR / "resnet18_smoke.onnx"
 SEED = 42
 MAX_ABS_DIFF = 1e-4
+
+_FORMAT_SUFFIX = {
+    "torchscript": ".pt",
+    "onnx": ".onnx",
+    "tensorrt": ".engine",
+}
 
 
 class FedCoreOnnxRunner(nn.Module):
@@ -100,32 +106,19 @@ def create_model() -> nn.Module:
     return model.cpu().eval()
 
 
-def main() -> None:
-    for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8", errors="replace")
-
-    torch.manual_seed(SEED)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    print("_____FedCore + ResNet18 (random weights)_____")
-    fedcore = build_fedcore()
-    model = create_model()
-    dummy = torch.randn(1, 3, 224, 224)
-
-    print("1. FedCore.export → ONNX")
-    exported = fedcore.export(
-        framework="ONNX",
-        framework_config={
-            "output_path": str(ONNX_PATH),
-            "opset_version": 17,
-            "input_names": ["input"],
-            "output_names": ["logits"],
-            "example_inputs": dummy,
-        },
-        supplementary_data={"model_to_export": model},
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="FedCore multi-format export smoke")
+    parser.add_argument(
+        "--format",
+        default="onnx",
+        choices=["torchscript", "onnx", "tensorrt", "pt", "engine", "trt"],
+        help="Export format (default: onnx)",
     )
-    print(f"    saved: {exported}")
+    return parser.parse_args()
+
+
+def verify_onnx(model: nn.Module, exported: Path, dummy: torch.Tensor) -> None:
+    import onnx
 
     print("2. onnx.checker")
     onnx.checker.check_model(onnx.load(str(exported)))
@@ -162,6 +155,83 @@ def main() -> None:
                     f"Expected shape={expected}, got {tuple(output.shape)}"
                 )
             print(f"   dynamic batch={batch_size}: OK, shape={tuple(output.shape)}")
+
+
+def verify_torchscript(model: nn.Module, exported: Path, dummy: torch.Tensor) -> None:
+    print("2. Load TorchScript / PyTorch artifact and forward")
+    size_mib = exported.stat().st_size / 1024**2
+    print(f"   size: {size_mib:.3f} MiB")
+    try:
+        loaded = torch.jit.load(str(exported), map_location="cpu")
+    except Exception:
+        loaded = torch.load(str(exported), map_location="cpu")
+    loaded.eval()
+    with torch.inference_mode():
+        pt_out = model(dummy)
+        ts_out = loaded(dummy)
+        if pt_out.shape != ts_out.shape:
+            raise RuntimeError(
+                f"Shape mismatch: PyTorch {tuple(pt_out.shape)} "
+                f"vs loaded {tuple(ts_out.shape)}"
+            )
+        max_diff = float(torch.max(torch.abs(pt_out - ts_out)).item())
+    print(f"   max |PyTorch − loaded| = {max_diff:.6e}")
+    if max_diff > MAX_ABS_DIFF:
+        raise RuntimeError(
+            f"Too large discrepancy: {max_diff:.6e} > {MAX_ABS_DIFF}"
+        )
+
+
+def verify_tensorrt(exported: Path) -> None:
+    size_mib = exported.stat().st_size / 1024**2
+    print("2. TensorRT engine written")
+    print(f"   size: {size_mib:.3f} MiB")
+    if exported.suffix.lower() != ".engine" or size_mib <= 0:
+        raise RuntimeError(f"Unexpected TensorRT artifact: {exported}")
+
+
+def main() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+    args = parse_args()
+    backend = normalize_framework(args.format)
+    suffix = _FORMAT_SUFFIX[backend]
+    output_path = OUTPUT_DIR / f"resnet18_smoke{suffix}"
+
+    torch.manual_seed(SEED)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    print("_____FedCore + ResNet18 (random weights)_____")
+    fedcore = build_fedcore()
+    model = create_model()
+    dummy = torch.randn(1, 3, 224, 224)
+
+    print(f"1. FedCore.export → {backend}")
+    try:
+        exported = fedcore.export(
+            framework=backend,
+            framework_config={
+                "output_path": str(output_path),
+                "opset_version": 17,
+                "input_names": ["input"],
+                "output_names": ["logits"],
+                "example_inputs": dummy,
+            },
+            supplementary_data={"model_to_export": model},
+        )
+    except ImportError as error:
+        raise SystemExit(str(error)) from error
+
+    print(f"    saved: {exported}")
+
+    if backend == "onnx":
+        verify_onnx(model, exported, dummy)
+    elif backend == "torchscript":
+        verify_torchscript(model, exported, dummy)
+    else:
+        verify_tensorrt(exported)
 
     print(f"Done. Results: {OUTPUT_DIR}")
 
