@@ -29,7 +29,7 @@ from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
 from fedcore.data.data import CompressionInputData, CompressionOutputData
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.tools.export import export_model
+from fedcore.tools.export import export_model, default_output_path
 # from fedcore.repository.constant_repository import (
 #     FEDOT_API_PARAMS,
 #     FEDOT_ASSUMPTIONS,
@@ -664,25 +664,27 @@ class FedCore(Fedot):
             framework_config: dict = None,
             supplementary_data: dict = None,
     ):
-        """Export a model to ONNX (other frameworks fall back to ONNX).
+        """Export a model to torchscript, ONNX, or TensorRT.
 
         Parameters
         ----------
         framework :
-            Target format name (e.g. ``\"ONNX\"``). Unimplemented formats are
-            exported as ONNX without raising.
+            Target format. Supported: ``torchscript`` / ``pt``, ``onnx``,
+            ``tensorrt`` / ``engine``. Any other name is exported as ONNX
+            without raising. TensorRT raises if the SDK is missing.
         framework_config :
             Export options: ``output_path``, ``example_inputs``,
             ``opset_version``, ``input_names``, ``output_names``,
-            ``dynamic_axes``, ``do_constant_folding``.
+            ``dynamic_axes``, ``do_constant_folding``, ``workspace_size``.
         supplementary_data :
-            Must provide ``model_to_export``. Example input may also be passed
-            as ``example_inputs`` or ``dummy_input``.
+            Must provide ``model_to_export``. Optional ``example_inputs`` /
+            ``dummy_input``; if omitted, a default ``(1, 3, 224, 224)``
+            tensor is generated.
 
         Returns
         -------
         pathlib.Path
-            Path to the written ``.onnx`` file.
+            Path to the written artifact (``.pt``, ``.onnx``, or ``.engine``).
         """
         framework_config = dict(framework_config or {})
         supplementary_data = dict(supplementary_data or {})
@@ -698,13 +700,11 @@ class FedCore(Fedot):
             example_input = supplementary_data.get("example_inputs")
         if example_input is None:
             example_input = supplementary_data.get("dummy_input")
-        if example_input is None:
-            raise ValueError(
-                "example input is required: pass framework_config['example_inputs'] "
-                "or supplementary_data['example_inputs'] / ['dummy_input']"
-            )
 
-        output_path = framework_config.get("output_path", "converted-model.onnx")
+        output_path = framework_config.get("output_path")
+        if output_path is None:
+            output_path = default_output_path(framework)
+
         return export_model(
             model,
             framework,
