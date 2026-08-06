@@ -28,8 +28,8 @@ from torch.utils.data import DataLoader
 from fedcore.api.utils.checkers_collection import DataCheck
 from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
 from fedcore.data.data import CompressionInputData, CompressionOutputData
-from fedcore.inference.onnx import ONNXInferenceModel
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer
+from fedcore.tools.export import export_model
 # from fedcore.repository.constant_repository import (
 #     FEDOT_API_PARAMS,
 #     FEDOT_ASSUMPTIONS,
@@ -664,6 +664,56 @@ class FedCore(Fedot):
             framework_config: dict = None,
             supplementary_data: dict = None,
     ):
+        """Export a model to ONNX (other frameworks fall back to ONNX).
+
+        Parameters
+        ----------
+        framework :
+            Target format name (e.g. ``\"ONNX\"``). Unimplemented formats are
+            exported as ONNX without raising.
+        framework_config :
+            Export options: ``output_path``, ``example_inputs``,
+            ``opset_version``, ``input_names``, ``output_names``,
+            ``dynamic_axes``, ``do_constant_folding``.
+        supplementary_data :
+            Must provide ``model_to_export``. Example input may also be passed
+            as ``example_inputs`` or ``dummy_input``.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to the written ``.onnx`` file.
+        """
+        framework_config = dict(framework_config or {})
+        supplementary_data = dict(supplementary_data or {})
+
+        model = supplementary_data.get("model_to_export")
+        if model is None:
+            raise ValueError(
+                "supplementary_data['model_to_export'] is required for export"
+            )
+
+        example_input = framework_config.get("example_inputs")
+        if example_input is None:
+            example_input = supplementary_data.get("example_inputs")
+        if example_input is None:
+            example_input = supplementary_data.get("dummy_input")
+        if example_input is None:
+            raise ValueError(
+                "example input is required: pass framework_config['example_inputs'] "
+                "or supplementary_data['example_inputs'] / ['dummy_input']"
+            )
+
+        output_path = framework_config.get("output_path", "converted-model.onnx")
+        return export_model(
+            model,
+            framework,
+            output_path,
+            example_input,
+            framework_config,
+        )
+
+    #=========================LEGACY============================================= 
         # if self.framework_config is None and framework_config is None:
         #     return self.logger.info(
         #         "You must specify configuration for model convertation"
@@ -682,7 +732,6 @@ class FedCore(Fedot):
         #         )
         #         converted_model = ONNXInferenceModel("converted-model.onnx")
         # return converted_model
-        pass
 
     def shutdown(self):
         """Shutdown Dask client"""
