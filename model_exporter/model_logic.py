@@ -8,6 +8,7 @@ from datetime import datetime
 from model_exporter import ModelExporter
 from model_splitter import ModelSplitter
 from model_analyzer import ModelAnalyzer
+from model_graph_view import ModelGraphBuilder
 from log_analizer import LogAnalyzer
 
 # Настройка логирования
@@ -153,34 +154,73 @@ class ModelManager:
             return {"error": str(e)}
     
     def analyze_model(self, model):
-        """Анализирует модель"""
+        """Анализирует модель и строит представление графа/слоёв для UI."""
         try:
+            if not isinstance(model, nn.Module):
+                return {
+                    "error": (
+                        f"Expected torch.nn.Module, got {type(model).__name__}. "
+                        "Upload a full module checkpoint, not a bare state_dict."
+                    )
+                }
+
+            # Graph/layers view: input = model only (I/O contract of ModelGraphBuilder)
+            graph_view = ModelGraphBuilder().build(model).to_dict()
+
             parts_info = self.splitter.get_parts_info(model)
-            
-            # Преобразуем все несериализуемые объекты в строки
-            def make_serializable(obj):
-                if isinstance(obj, dict):
-                    return {key: make_serializable(value) for key, value in obj.items()}
-                elif isinstance(obj, list):
-                    return [make_serializable(item) for item in obj]
-                elif hasattr(obj, '__class__'):
-                    return str(obj.__class__.__name__)
-                else:
-                    return obj
-            
-            # Применяем сериализацию ко всем частям информации
-            processed_parts_info = make_serializable(parts_info)
-            
-            result = {
-                "model_analysis": processed_parts_info,
-                "total_layers": processed_parts_info['total_layers'],
-                "supported_layers": processed_parts_info['supported_layers'],
-                "unsupported_layers": processed_parts_info['unsupported_layers']
+
+            # Drop live module refs before JSON; keep name/type/supported for UI
+            serializable_layers = []
+            for layer in parts_info.get("model_layers", []):
+                serializable_layers.append({
+                    "name": layer.get("name"),
+                    "type": layer.get("type"),
+                    "supported": bool(layer.get("supported")),
+                })
+
+            model_analysis = {
+                "model_layers": serializable_layers,
+                "split_points": parts_info.get("split_points", []),
+                "parts_info": [
+                    {
+                        "part_index": p.get("part_index"),
+                        "start_layer": p.get("start_layer"),
+                        "end_layer": p.get("end_layer"),
+                        "layers_count": p.get("layers_count"),
+                        "supported_layers": p.get("supported_layers"),
+                        "unsupported_layers": p.get("unsupported_layers"),
+                        "is_npu_part": p.get("is_npu_part"),
+                    }
+                    for p in parts_info.get("parts_info", [])
+                ],
+                "total_layers": parts_info.get("total_layers", 0),
+                "supported_layers": parts_info.get("supported_layers", 0),
+                "unsupported_layers": parts_info.get("unsupported_layers", 0),
             }
-            
-            logger.info(f"Model analyzed successfully: {processed_parts_info['total_layers']} layers")
+
+            # Overlay support flags onto leaf modules / nodes by qualified name
+            support_by_name = {L["name"]: L["supported"] for L in serializable_layers}
+            for layer in graph_view.get("modules", graph_view.get("layers", [])):
+                layer["supported"] = support_by_name.get(layer["name"])
+            for node in graph_view.get("nodes", []):
+                if node.get("is_leaf"):
+                    node["supported"] = support_by_name.get(node["name"])
+                else:
+                    node["supported"] = None
+
+            result = {
+                "graph": graph_view,
+                "model_analysis": model_analysis,
+                "total_layers": model_analysis["total_layers"],
+                "supported_layers": model_analysis["supported_layers"],
+                "unsupported_layers": model_analysis["unsupported_layers"],
+            }
+
+            logger.info(
+                f"Model analyzed successfully: {graph_view.get('total_modules', 0)} modules"
+            )
             return result
-            
+
         except Exception as e:
             logger.error(f"Error during model analysis: {e}")
             return {"error": str(e)}
@@ -220,28 +260,65 @@ class ModelManager:
             logger.error(f"Error getting supported operations: {e}")
             return {"error": str(e)}
     
+    # filename stem → short alias shown in UI (file stays under device_architectures/)
+    DEVICE_PROFILE_ALIASES = {
+        "rk3588s_arch": "Rockchip RK3588S",
+        "Jetson_arch": "NVIDIA Jetson",
+        "Hailo_8_arch": "Hailo-8",
+        "Google_tpu_arch": "Google Edge TPU",
+        "Huawei_acend_arch": "Huawei Ascend",
+        "Xilinx_arch": "AMD Xilinx",
+        "gowin_arch": "GOWIN FPGA",
+        "k510_arch": "Canaan K510",
+        "NMcard_arch": "NeuralMatrix",
+    }
+
     def get_architectures(self):
-        """Получает список всех доступных архитектур"""
+        """List all device profile JSON files from device_architectures/."""
         try:
             import glob
-            arch_files = glob.glob("device_architectures/*.json")
+
+            arch_dir = "device_architectures"
+            arch_files = sorted(glob.glob(os.path.join(arch_dir, "*.json")))
             architectures = []
             for arch_file in arch_files:
                 try:
-                    with open(arch_file, 'r') as f:
+                    with open(arch_file, "r", encoding="utf-8") as f:
                         arch_data = json.load(f)
-                        architectures.append({
-                            "name": arch_data.get("name", os.path.basename(arch_file)),
-                            "file": arch_file,
-                            "cpu_framework": arch_data.get("cpu_framework", "Unknown"),
-                            "npu_framework": arch_data.get("npu_framework", "Unknown")
-                        })
+                    stem = os.path.splitext(os.path.basename(arch_file))[0]
+                    alias = self.DEVICE_PROFILE_ALIASES.get(
+                        stem, arch_data.get("name", stem)
+                    )
+                    rel = arch_file.replace("\\", "/")
+                    architectures.append({
+                        "alias": alias,
+                        "name": alias,
+                        "file": rel,
+                        "filename": os.path.basename(arch_file),
+                        "cpu_framework": arch_data.get("cpu_framework", "Unknown"),
+                        "npu_framework": arch_data.get("npu_framework", "Unknown"),
+                    })
                 except Exception as e:
                     logger.error(f"Error loading architecture {arch_file}: {e}")
             return {"architectures": architectures}
         except Exception as e:
             logger.error(f"Error getting architectures: {e}")
             return {"error": str(e)}
+
+    def set_device_architecture(self, arch_file: str) -> bool:
+        """Switch analyzer/splitter device profile from a JSON path."""
+        path = arch_file
+        if not os.path.exists(path):
+            candidate = os.path.join("device_architectures", os.path.basename(path))
+            if os.path.exists(candidate):
+                path = candidate
+            else:
+                return False
+        device_arch = self.load_architecture(path)
+        self.device_arch = device_arch
+        self.analyzer = ModelAnalyzer(device_arch)
+        self.splitter = ModelSplitter(device_arch)
+        return True
 
 # Инициализация менеджера моделей
 model_manager = ModelManager()
