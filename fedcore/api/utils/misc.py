@@ -3,6 +3,8 @@ from torch.ao.quantization.utils import _normalize_kwargs
 from torch import Tensor
 from torch.nn import Module
 from functools import wraps
+import functools
+import inspect
 
 
 import torch
@@ -18,6 +20,30 @@ def cuda_transfer():
     finally:
         torch.set_default_device(original_default)
 
+def trace_methods(cls):
+    """Class decorator that wraps all methods with print statements"""
+    for name, method in inspect.getmembers(cls, inspect.isfunction):
+        if not name.startswith('__'):  # Skip special methods
+            setattr(cls, name, trace_method(method))
+    return cls
+
+def trace_method(method):
+    """Decorator for individual methods"""
+    @functools.wraps(method)
+    def wrapper(*args, **kwargs):
+        try:
+            print(f"Entering: {method.__name__}")
+            print(f"  Args: {args[1:] if args else '()'}")  # Skip self
+            print(f"  Kwargs: {kwargs}")
+            result = method(*args, **kwargs)
+            print(f"Exiting: {method.__name__} -> {result}")
+            print()
+            return result
+        except:
+            import traceback
+            print(traceback.format_exc())
+            raise
+    return wrapper
 
 
 def camel_to_snake(camel_case_string):

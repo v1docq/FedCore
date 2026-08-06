@@ -112,7 +112,9 @@ def _problem_based_output_convertor(problem):
         wraps(metric)
         def _wrapped_output(cls, target, predict, **metric_kw):
             if problem is not None:
-                assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor)
+                if isinstance(predict, CompressionOutputData):
+                    predict = predict.predict
+                assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor), f'Current types are: {type(target)} and {type(predict)}'
             try: 
                 return metric(cls, target, predict, **metric_kw)
             except (ValueError):
@@ -213,7 +215,7 @@ class MetricFactory:
         return new_metric
     
     @classmethod
-    def get_computational(cls, metric_name: str, problem: str = None) -> QualityMetric:
+    def get_computational(cls, metric_name: str, model_regime: str = 'model_after') -> QualityMetric:
         if metric_name in LOADED_METRICS:
             return LOADED_METRICS[metric_name]
 
@@ -231,7 +233,7 @@ class MetricFactory:
             if isinstance(reference_data, CompressionInputData):
                 reference_data = reference_data.train_dataloader
             assert isinstance(reference_data, torch.utils.data.DataLoader), f'{type(reference_data)}'
-            pe = PerformanceEvaluator(pipeline, data=reference_data)
+            pe = PerformanceEvaluator(pipeline, data=reference_data, model_regime=model_regime)
             metric = getattr(pe, method_name)(
                 device=torch.device('cpu') if is_cpu else torch.device('cuda')
             )
