@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
 </head>
 <body>
     <header>
@@ -40,16 +39,27 @@
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title"><i class="fas fa-cogs"></i> Architecture</h2>
-                    <div class="drop-zone" id="archDropZone">
-                        <i class="fas fa-sliders-h"></i>
-                        <p>Drag & drop architecture file here</p>
-                        <p class="small">Supports .json files</p>
-                        <button class="btn btn-primary" id="archSelectBtn">Browse Files</button>
-                        <input type="file" id="archFileInput" accept=".json" style="display: none;">
+                    <h2 class="card-title"><i class="fas fa-database"></i> Dataloader Upload</h2>
+                    <p class="card-hint"><code>.pt</code> bundle с данными (features/targets + shape)</p>
+                    <div class="drop-zone" id="loaderDropZone">
+                        <i class="fas fa-folder-open"></i>
+                        <p>Drag & drop loader bundle here</p>
+                        <p class="small">.pt</p>
+                        <button class="btn btn-primary" id="loaderSelectBtn">Browse Loaders</button>
+                        <input type="file" id="loaderFileInput" accept=".pt,.pth" style="display: none;">
                     </div>
-                    <div class="file-list" id="archFileList">
-                        <!-- Architecture files will be listed here -->
+                    <div class="file-list" id="loaderFileList"></div>
+                    <div class="form-group" style="margin-top: 0.75rem;">
+                        <label for="selectedLoader">Select Loader</label>
+                        <select id="selectedLoader" class="form-control">
+                            <option value="">-- Select a loader --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="inspectLoaderBtn">
+                        <i class="fas fa-info-circle"></i> Show Loader Info
+                    </button>
+                    <div id="loaderInfoPanel" class="loader-info-panel">
+                        <p class="layers-empty">Загрузите loader_*.pt и нажмите Show Loader Info.</p>
                     </div>
                 </div>
 
@@ -62,10 +72,23 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="selectedArch">Select Architecture</label>
+                        <label for="selectedArch">Device profile</label>
                         <select id="selectedArch" class="form-control">
-                            <option value="">-- Select an architecture --</option>
+                            <option value="">-- Select device profile --</option>
                         </select>
+                    </div>
+                    <div id="modelProfilePair" class="model-profile-pair">
+                        <div class="pair-model" id="pairModelName">model.pt</div>
+                        <div class="pair-json" id="pairJsonName">device_profile.json</div>
+                    </div>
+                    <div class="device-ops-panel">
+                        <div class="device-ops-header">
+                            <span>Available ops</span>
+                            <span id="deviceOpsCount" class="device-ops-count">0</span>
+                        </div>
+                        <div id="deviceOpsList" class="device-ops-list">
+                            <p class="layers-empty">Select a device profile</p>
+                        </div>
                     </div>
                     <button class="btn btn-primary btn-block" id="analyzeBtn">
                         <i class="fas fa-search"></i> Analyze Model
@@ -73,7 +96,7 @@
                     <div class="stats-grid">
                         <div class="stat-card stat-primary">
                             <div class="stat-value" id="totalLayers">0</div>
-                            <div class="stat-label">Total Layers</div>
+                            <div class="stat-label">Modules</div>
                         </div>
                         <div class="stat-card stat-success">
                             <div class="stat-value" id="supportedLayers">0</div>
@@ -94,16 +117,23 @@
                         <div class="visualization-header">
                             <div class="tabs">
                                 <div class="tab active" data-tab="graph">Graph View</div>
-                                <div class="tab" data-tab="layers">Layers List</div>
+                                <div class="tab" data-tab="layers">Modules</div>
                             </div>
                         </div>
                         <div class="visualization-content">
-                            <div id="modelGraph">
-                                <svg width="100%" height="100%" viewBox="0 0 800 400">
-                                    <rect x="50" y="50" width="700" height="300" fill="#f0f0f0" stroke="#ccc" stroke-width="1"/>
-                                    <text x="400" y="200" font-family="Arial" font-size="20" text-anchor="middle" fill="#333">Model Structure Visualization</text>
-                                    <text x="400" y="230" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">Drag & drop model to see structure</text>
-                                </svg>
+                            <div id="graphContent" class="tab-content active">
+                                <div id="modelGraph">
+                                    <svg width="100%" height="100%" viewBox="0 0 800 400">
+                                        <rect x="50" y="50" width="700" height="300" fill="#f0f0f0" stroke="#ccc" stroke-width="1"/>
+                                        <text x="400" y="200" font-family="Arial" font-size="20" text-anchor="middle" fill="#333">Model Structure Visualization</text>
+                                        <text x="400" y="230" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">Upload a .pt model and run Analyze</text>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div id="layersContent" class="tab-content" style="display: none;">
+                                <div id="layersList" class="layers-list">
+                                    <p class="layers-empty">No layers yet. Run Analyze Model.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
