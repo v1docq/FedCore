@@ -675,6 +675,7 @@ class PruningTemplate(TrainingTemplate):
     """
 
     """Example of specific node template"""
+    prune_each: int = -1,
     importance: str = "magnitude" # main
     importance_norm: int = 1 # main
     pruning_ratio: float = 0.5 # main

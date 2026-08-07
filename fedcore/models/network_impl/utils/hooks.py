@@ -44,7 +44,7 @@ class BaseHook(ABC):
         self.model = trainer.model
 
     @property
-    def _hook_place(self):
+    def hook_place(self):
         return self._hook_place
     
     def is_epoch_arrived_default(self, current_epoch, epoch_each_param):

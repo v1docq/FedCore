@@ -20,10 +20,11 @@ from fedcore.api.main import FedCore
 ### low_rank) and appropriate loss function both for model and compute ###
 ##########################################################################
 
-METRIC_TO_OPTIMISE = ['MulticlassAccuracy__10', 'Latency']
+METRIC_TO_OPTIMISE = ['MulticlassAccuracy__10', 'Latency', 
+                    #   'Throughput',
+                       'ModelSize']
 LOSS = 'cross_entropy'
 PROBLEM = 'classification'
-PEFT_PROBLEM = 'training'
 
 from torchvision import models
 
@@ -66,15 +67,6 @@ model_config = ModelArchitectureConfigTemplate(input_dim=None,
                                                output_dim=None,
                                                depth=6)
 
-pretrain_config = TrainingTemplate(epochs=1,
-                                            log_each=10,
-                                            eval_each=15,
-                                            save_each=50,
-                                            criterion='cross_entropy',
-                                            model_architecture=model_config,
-                                            custom_learning_params=dict(use_early_stopping={'patience': 30,
-                                                                                            'maximise_task': False,
-                                                                                            'delta': 0.01}))
 fedot_config = FedotConfigTemplate(problem='classification',
                                    metric=METRIC_TO_OPTIMISE,
                                    pop_size=1,
@@ -99,16 +91,16 @@ finetune_config = TrainingTemplate(epochs=3,
 # )
 
 peft_config = PruningTemplate(importance="magnitude",
-                              save_each=10,
-                              eval_each=10,
+                              prune_each=-1,
+                              epochs=1,
+                              save_each=0,
+                              eval_each=5,
                               pruning_ratio=0.8,
-                              finetune_params=finetune_config
+                            #   finetune_params=finetune_config
                               )
 
 learning_config = LearningConfigTemplate(criterion='cross_entropy',
                                          learning_strategy='from_checkpoint',
-                                         learning_strategy_params=pretrain_config,
-                                          
                                          peft_strategy_params=[peft_config])
 
 api_template = APIConfigTemplate(automl_config=automl_config,

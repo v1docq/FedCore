@@ -16,32 +16,7 @@ from typing import Union
 
 import functools
 import inspect
-
-def trace_methods(cls):
-    """Class decorator that wraps all methods with print statements"""
-    for name, method in inspect.getmembers(cls, inspect.isfunction):
-        if not name.startswith('__'):  # Skip special methods
-            setattr(cls, name, trace_method(method))
-    return cls
-
-def trace_method(method):
-    """Decorator for individual methods"""
-    @functools.wraps(method)
-    def wrapper(*args, **kwargs):
-        try:
-            print(f"Entering: {method.__name__}")
-            print(f"  Args: {args[1:] if args else '()'}")  # Skip self
-            print(f"  Kwargs: {kwargs}")
-            result = method(*args, **kwargs)
-            print(f"Exiting: {method.__name__} -> {result}")
-            print()
-            return result
-        except:
-            import traceback
-            print(traceback.format_exc())
-            raise
-    return wrapper
-
+from fedcore.api.utils.misc import trace_methods
 
 @trace_methods
 class BasePruner(BaseCompressionModel):
@@ -136,13 +111,15 @@ class BasePruner(BaseCompressionModel):
 
         self.pruner = self._init_pruner_with_model_after(input_data)
 
+        super()._init_trainer_with_model_after(input_data, [])
         if (self.pruner is not None):
-            pruner_hooks = BaseNeuralModel.filter_hooks_by_params(self.params, self.DEFAULT_HOOKS)
-            pruner_hooks = [pruner_hook_type(self.pruner, self.pruning_iterations, self.prune_each) for pruner_hook_type in pruner_hooks]
+            pruner_hooks = [ZeroShotPruner(self.pruner, self.pruning_iterations, self.prune_each, self.trainer)]
         else:
             pruner_hooks = []
 
-        super()._init_trainer_with_model_after(input_data, pruner_hooks)
+        print('@@@@@@ Pruner Hooks', [type(pruner_hook) for pruner_hook in pruner_hooks], self.pruner)
+        self.trainer.hooks.extend(pruner_hooks)
+
 
         self.logger.info(f' Initialisation of {self.pruner_name} pruning agent '.center(80, '='))
         self.logger.info(f' Pruning importance - {self.importance_name} '.center(80, '='))
@@ -206,7 +183,7 @@ class BasePruner(BaseCompressionModel):
         return pruner
 
     def fit(self, input_data: InputData):
-        super()._prepare_trainer_and_model_to_fit(input_data)
+        self._init_trainer_model_before_model_after_and_incapsulate_hooks(input_data)
         self.trainer.fit(input_data)
 
         # Record post-pruning state in registry

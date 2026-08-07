@@ -30,8 +30,9 @@ import torch_pruning as tp
 if TYPE_CHECKING:
     from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
     
+from fedcore.api.utils.misc import trace_methods
 
-
+@trace_methods
 class ZeroShotPruner(BaseHook):
     """Epoch-based pruning hook using a preconfigured Torch-Pruning pruner.
 
@@ -61,15 +62,15 @@ class ZeroShotPruner(BaseHook):
     _SUMMON_KEY = 'prune_each'
     HOOK_PLACE = 50
 
-    def __init__(self, pruner: tp.BasePruner, pruning_iterations: int, prune_each: int):
-        super().__init__()
+    def __init__(self, pruner: tp.BasePruner, pruning_iterations: int, prune_each: int, trainer):
+        super().__init__(trainer=trainer)
         self.pruner = pruner
         self.pruning_iterations = pruning_iterations
         self.prune_each = prune_each
+        self.link_to_trainer(trainer)
         
 
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
-        super().link_to_trainer(hookable_trainer)
         self.criterion_for_pruner = hookable_trainer.criterion
         self.device = default_device()
 
@@ -127,7 +128,7 @@ class ZeroShotPruner(BaseHook):
         self.pruning_operation()
         PruningValidator.validate_pruned_layers(self.hookable_trainer.model)
 
-
+@trace_methods
 class PrunerWithGrad(ZeroShotPruner):
     """Pruning hook that accumulates gradients on a validation loader.
 
