@@ -193,37 +193,37 @@ print(report)
 
 В репозитории представлены примеры использования библиотеки для разных сценариев. Каждый пример сопровождается пошаговой инструкцией по запуску.
 
-### Пример 1. Сжатие модели ResNet-18 методом pruning
+### Пример 1. Сжатие модели ResNet-152 методом pruning
 
-**Назначение:** показать применение прунинга к модели ResNet-18 и оценить изменение качества, размера модели и времени инференса.
+**Назначение:** показать применение прунинга к модели ResNet-152 и оценить изменение качества, размера модели и времени инференса.
 
 **Путь к примеру:**
 
 ```text
-examples/pruning_resnet18/
+examples/pruning_resnet152/
 ```
 
 **Инструкция по запуску скрипта:**
 
 ```bash
-cd examples/pruning_resnet18
-python run_pruning_resnet18.py
+cd examples/pruning_resnet152
+python run_pruning_resnet152.py
 ```
 
 **Инструкция по запуску ноутбука:**
 
 ```bash
-jupyter notebook examples/pruning_resnet18/resnet18_pruning_demo.ipynb
+jupyter notebook examples/pruning_resnet152/resnet152_pruning_demo.ipynb
 ```
 
 **Ожидаемый результат:**
 
-- загрузка или подготовка модели ResNet-18;
+- загрузка или подготовка модели ResNet-152;
 - применение метода pruning;
 - оценка качества модели до и после сжатия;
 - вывод размера модели до и после сжатия;
 - вывод времени инференса;
-- сохранение отчёта в `results/pruning_resnet18/metrics.csv`.
+- сохранение отчёта в `results/pruning_resnet152/metrics.csv`.
 
 ### Пример 2. Малоранговое разложение модели
 
@@ -232,20 +232,20 @@ jupyter notebook examples/pruning_resnet18/resnet18_pruning_demo.ipynb
 **Путь к примеру:**
 
 ```text
-examples/low_rank_resnet18/
+examples/low_rank_ann/
 ```
 
 **Инструкция по запуску скрипта:**
 
 ```bash
-cd examples/low_rank_resnet18
-python run_low_rank_resnet18.py
+cd examples/low_rank_ann
+python run_low_rank_ann.py
 ```
 
 **Инструкция по запуску ноутбука:**
 
 ```bash
-jupyter notebook examples/low_rank_resnet18/resnet18_low_rank_demo.ipynb
+jupyter notebook examples/low_rank_ann/ann_low_rank_demo.ipynb
 ```
 
 **Ожидаемый результат:**
@@ -254,7 +254,7 @@ jupyter notebook examples/low_rank_resnet18/resnet18_low_rank_demo.ipynb
 - применение малорангового разложения;
 - сохранение сжатой модели;
 - сравнение метрик качества и размера модели;
-- сохранение отчёта в `results/low_rank_resnet18/metrics.csv`.
+- сохранение отчёта в `results/low_rank_ann/metrics.csv`.
 
 ### Пример 3. Квантизация модели
 
