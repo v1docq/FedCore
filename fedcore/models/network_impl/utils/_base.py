@@ -82,6 +82,7 @@ class BaseTrainer(ITrainer, IHookable):
             quality_loss = model_output.loss
         else:
             quality_loss = criterion(model_output, target)
+        additional_losses = {}
         if isinstance(model_output, torch.Tensor):
             additional_losses = {name: custom_criterion_weight * criterion(model_output, target)
                                  for name, (criterion, custom_criterion_weight) in self.custom_criterions.items()
