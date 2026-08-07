@@ -2,6 +2,7 @@
 # FedCore
 
 <p align="center">
+
   <b>Открытая библиотека для автоматизации создания, сжатия, адаптации и портирования моделей машинного обучения</b>
 </p>
 
@@ -348,29 +349,6 @@ curl http://localhost:5000/health
 ```
 
 ---
-
-## Рекомендуемая структура каталога `examples`
-
-```text
-examples/
-├── pruning_resnet18/
-│   ├── README.md
-│   ├── run_pruning_resnet18.py
-│   └── resnet18_pruning_demo.ipynb
-├── low_rank_resnet18/
-│   ├── README.md
-│   ├── run_low_rank_resnet18.py
-│   └── resnet18_low_rank_demo.ipynb
-├── quantization_resnet18/
-│   ├── README.md
-│   ├── run_quantization_resnet18.py
-│   └── resnet18_quantization_demo.ipynb
-└── export_onnx/
-    ├── README.md
-    ├── export_to_onnx.py
-    └── resnet18_export_onnx_demo.ipynb
-```
-
 ---
 
 ## Документация и туториалы
