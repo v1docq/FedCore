@@ -22,7 +22,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from fedcore.tools.export import normalize_framework
+from fedcore.tools.export import (
+    export_model as export_artifact,
+    normalize_framework,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -252,15 +256,14 @@ def export_via_fedcore(
     if example_input is None:
         example_input = example_input_from_loader(None)
 
-    fc = _get_fedcore()
-    path = fc.export(
-        framework=backend,
-        framework_config={
-            "output_path": str(output_path),
-            "example_inputs": example_input,
+    path = export_artifact(
+        model,
+        backend,
+        output_path,
+        example_input,
+        {
             "opset_version": opset_version,
         },
-        supplementary_data={"model_to_export": model},
     )
 
     path = Path(path)
@@ -269,7 +272,7 @@ def export_via_fedcore(
 
     return {
         "message": f"Exported via FedCore.export to {backend}",
-        "via": "FedCore.export",
+        "via": "fedcore.tools.export.export_model",
         "framework": backend,
         "file": str(path).replace("\\", "/"),
         "size_bytes": path.stat().st_size,

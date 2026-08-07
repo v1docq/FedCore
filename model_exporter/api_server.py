@@ -331,7 +331,10 @@ def export_parts():
         if not model_path or not os.path.exists(model_path):
             return jsonify({"error": "Model file not found"}), 404
         
-        model = torch.load(model_path)
+        try:
+            model = torch.load(model_path, map_location="cpu", weights_only=False)
+        except TypeError:
+            model = torch.load(model_path, map_location="cpu")
         
         # Экспортируем части
         result = model_manager.export_parts(model, export_dir, architecture_file)
