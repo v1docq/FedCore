@@ -7,7 +7,7 @@ services:
       dockerfile: model_exporter/Dockerfile
     container_name: model-exporter-app
     ports:
-      - "5023:5000"
+      - "5000:5000"
     volumes:
       - ./device_architectures:/app/device_architectures
       - ./templates:/app/templates

@@ -1,12 +1,12 @@
 # Model Splitter and Exporter
 
-Этота утилита предоставляет решение для анализа, разделения и экспорта нейронных сетей в различные форматы для разных устройств (CPU, NPU). Поддерживает экспорт в TorchScript, ONNX, TensorFlow Lite, TensorRT, OpenVINO, TVM и TensorFlow.
+Этота утилита предоставляет решение для анализа, разделения и экспорта нейронных сетей в различные форматы для разных устройств (CPU, NPU). Поддерживает экспорт в TorchScript, ONNX, TensorRT.
 
 ## Возможности
 
 - **Анализ модели**: Определение поддерживаемых и неподдерживаемых операций
 - **Разделение модели**: Автоматическое разделение на части для CPU и NPU
-- **Экспорт в различные форматы**: TorchScript, ONNX, TensorRT
+- **Экспорт в различные форматы**: TorchScript, ONNX, TensorRT.
 - **Графический интерфейс**: Удобное управление через GUI
 - **REST API**: Веб-интерфейс для удаленного управления
 - **Логирование**: Полное логирование всех операций
@@ -75,7 +75,7 @@ curl -X POST http://localhost:5000/upload \
 
 #### Экспорт модели
 ```bash
-curl -X POST http://localhost:5000/export \ 
+curl -X POST http://localhost:5000/export \
   -H "Content-Type: application/json" \
   -d '{
     "model_path": "results/models/12345_model.pt",
@@ -114,7 +114,7 @@ curl -X POST http://localhost:5000/analyze_model \
     "Sub",
     "Mul",
     "Div"
-  ],
+  ]
 }
 ```
 
