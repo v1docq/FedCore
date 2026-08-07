@@ -6,7 +6,7 @@
 
 - **Анализ модели**: Определение поддерживаемых и неподдерживаемых операций
 - **Разделение модели**: Автоматическое разделение на части для CPU и NPU
-- **Экспорт в различные форматы**: TorchScript, ONNX, TFLite, TensorRT, OpenVINO, TVM, TensorFlow
+- **Экспорт в различные форматы**: TorchScript, ONNX, TensorRT
 - **Графический интерфейс**: Удобное управление через GUI
 - **REST API**: Веб-интерфейс для удаленного управления
 - **Логирование**: Полное логирование всех операций
@@ -131,8 +131,4 @@ curl -X POST http://localhost:5000/analyze_model \
 |--------|----------|
 | **TorchScript** | Стандартный формат PyTorch |
 | **ONNX** | Открытый формат обмена |
-| **TFLite** | Формат TensorFlow Lite |
 | **TensorRT** | Формат NVIDIA TensorRT |
-| **OpenVINO** | Формат Intel OpenVINO |
-| **TVM** | Формат Apache TVM |
-| **TensorFlow** | Формат TensorFlow |
