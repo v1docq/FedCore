@@ -308,7 +308,7 @@ python export_to_onnx.py
 **Инструкция по запуску ноутбука:**
 
 ```bash
-jupyter notebook examples/export_onnx/resnet18_export_onnx_demo.ipynb
+jupyter notebook examples/resnet18_export_onnx_demo.ipynb
 ```
 
 **Ожидаемый результат:**
