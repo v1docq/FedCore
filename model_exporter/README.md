@@ -36,8 +36,16 @@ pip install -r requirements.txt
 
 ### Docker запуск
 
+Перед использованием для экспорта раскомментировать соответствующие библиотеки в model_exporter/requirements.txt. По умолчанию доступен только onnx.
+
+Без gpu
 ```bash
 docker-compose up -d
+```
+
+C gpu
+```bash
+GPU_IDS=0 docker-compose up -d
 ```
 
 ## Использование
@@ -67,7 +75,7 @@ curl -X POST http://localhost:5000/upload \
 
 #### Экспорт модели
 ```bash
-curl -X POST http://localhost:5000/export \
+curl -X POST http://localhost:5000/export \ 
   -H "Content-Type: application/json" \
   -d '{
     "model_path": "results/models/12345_model.pt",
