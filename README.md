@@ -374,13 +374,16 @@ docs/
 
 ## Запуск через Docker
 
-Для контейнерного запуска демонстрационного модуля экспорта моделей можно использовать Docker.
 
+Без gpu
 ```bash
-cd deployment/model_exporter
-docker compose up --build
+docker-compose up -d
 ```
 
+C gpu
+```bash
+GPU_IDS=0 docker-compose up -d
+```
 Проверка сервиса:
 
 ```bash
