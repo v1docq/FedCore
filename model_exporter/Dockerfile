@@ -9,13 +9,15 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Копирование файлов зависимостей
-COPY requirements.txt .
+COPY model_exporter/requirements.txt .
 
 # Установка Python зависимостей
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копирование исходного кода
-COPY . .
+COPY model_exporter/ .
+
+COPY fedcore/ ./fedcore/
 
 # Создание необходимых директорий
 RUN mkdir -p device_architectures templates results/models results/exports results/analysis results/logs
