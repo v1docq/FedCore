@@ -323,19 +323,12 @@ jupyter notebook examples/export_onnx/resnet18_export_onnx_demo.ipynb
 
 **Назначение:** показать запуск вспомогательного сервиса экспорта моделей через Docker-контейнер.
 
-**Путь к примеру:**
-
-```text
-deployment/model_exporter/
-```
 
 **Инструкция по запуску:**
-
-```bash
-cd deployment/model_exporter
+```text
+cd model_exporter
 docker compose up --build
 ```
-
 После запуска сервис будет доступен по адресу:
 
 ```text
