@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Exporter | AI Model Management</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span>Model Exporter</span>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="left-column">
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-upload"></i> Model Upload</h2>
+                    <div class="drop-zone" id="modelDropZone">
+                        <i class="fas fa-file-upload"></i>
+                        <p>Drag & drop your model file here</p>
+                        <p class="small">Supports .pt, .pth, .onnx files</p>
+                        <button class="btn btn-primary" id="modelSelectBtn">Browse Files</button>
+                        <input type="file" id="modelFileInput" accept=".pt,.pth,.onnx" style="display: none;">
+                    </div>
+                    <div class="file-list" id="modelFileList">
+                        <!-- Model files will be listed here -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-database"></i> Dataloader Upload</h2>
+                    <p class="card-hint"><code>.pt</code> bundle с данными (features/targets + shape)</p>
+                    <div class="drop-zone" id="loaderDropZone">
+                        <i class="fas fa-folder-open"></i>
+                        <p>Drag & drop loader bundle here</p>
+                        <p class="small">.pt</p>
+                        <button class="btn btn-primary" id="loaderSelectBtn">Browse Loaders</button>
+                        <input type="file" id="loaderFileInput" accept=".pt,.pth" style="display: none;">
+                    </div>
+                    <div class="file-list" id="loaderFileList"></div>
+                    <div class="form-group" style="margin-top: 0.75rem;">
+                        <label for="selectedLoader">Select Loader</label>
+                        <select id="selectedLoader" class="form-control">
+                            <option value="">-- Select a loader --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="inspectLoaderBtn">
+                        <i class="fas fa-info-circle"></i> Show Loader Info
+                    </button>
+                    <div id="loaderInfoPanel" class="loader-info-panel">
+                        <p class="layers-empty">Загрузите loader_*.pt и нажмите Show Loader Info.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-chart-network"></i> Model Analysis</h2>
+                    <div class="form-group">
+                        <label for="selectedModel">Select Model</label>
+                        <select id="selectedModel" class="form-control">
+                            <option value="">-- Select a model --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="selectedArch">Device profile</label>
+                        <select id="selectedArch" class="form-control">
+                            <option value="">-- Select device profile --</option>
+                        </select>
+                    </div>
+                    <div id="modelProfilePair" class="model-profile-pair">
+                        <div class="pair-model" id="pairModelName">model.pt</div>
+                        <div class="pair-json" id="pairJsonName">device_profile.json</div>
+                    </div>
+                    <div class="device-ops-panel">
+                        <div class="device-ops-header">
+                            <span>Available ops</span>
+                            <span id="deviceOpsCount" class="device-ops-count">0</span>
+                        </div>
+                        <div id="deviceOpsList" class="device-ops-list">
+                            <p class="layers-empty">Select a device profile</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="analyzeBtn">
+                        <i class="fas fa-search"></i> Analyze Model
+                    </button>
+                    <div class="stats-grid">
+                        <div class="stat-card stat-primary">
+                            <div class="stat-value" id="totalLayers">0</div>
+                            <div class="stat-label">Modules</div>
+                        </div>
+                        <div class="stat-card stat-success">
+                            <div class="stat-value" id="supportedLayers">0</div>
+                            <div class="stat-label">Supported</div>
+                        </div>
+                        <div class="stat-card stat-warning">
+                            <div class="stat-value" id="unsupportedLayers">0</div>
+                            <div class="stat-label">Unsupported</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-cube"></i> Model Visualization</h2>
+                    <div class="visualization-container">
+                        <div class="visualization-header">
+                            <div class="tabs">
+                                <div class="tab active" data-tab="graph">Graph View</div>
+                                <div class="tab" data-tab="layers">Modules</div>
+                            </div>
+                        </div>
+                        <div class="visualization-content">
+                            <div id="graphContent" class="tab-content active">
+                                <div id="modelGraph">
+                                    <svg width="100%" height="100%" viewBox="0 0 800 400">
+                                        <rect x="50" y="50" width="700" height="300" fill="#f0f0f0" stroke="#ccc" stroke-width="1"/>
+                                        <text x="400" y="200" font-family="Arial" font-size="20" text-anchor="middle" fill="#333">Model Structure Visualization</text>
+                                        <text x="400" y="230" font-family="Arial" font-size="14" text-anchor="middle" fill="#666">Upload a .pt model and run Analyze</text>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div id="layersContent" class="tab-content" style="display: none;">
+                                <div id="layersList" class="layers-list">
+                                    <p class="layers-empty">No layers yet. Run Analyze Model.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-download"></i> FedCore Export</h2>
+                    <div class="form-group">
+                        <label for="exportFormat">Format</label>
+                        <select id="exportFormat" class="form-control">
+                            <option value="onnx">ONNX (.onnx)</option>
+                            <option value="tensorrt">TensorRT (.engine)</option>
+                            <option value="torchscript">TorchScript (.pt)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exportDir">Export Directory</label>
+                        <input type="text" id="exportDir" value="results/exports" placeholder="Path to export directory">
+                    </div>
+                    <div class="form-group">
+                        <label for="exportModelName">Model Name</label>
+                        <input type="text" id="exportModelName" value="model_export" placeholder="Name for exported model">
+                    </div>
+                    <button class="btn btn-success btn-block" id="exportBtn">
+                        <i class="fas fa-download"></i> Export via FedCore
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-cogs"></i> FedCore Operations</h2>
+                    <div class="form-group">
+                        <label for="modelKindSelect">Тип модели</label>
+                        <select id="modelKindSelect" class="form-control">
+                            <option value="auto">Автоматическое определение</option>
+                            <option value="convolutional">Свёртка (conv)</option>
+                            <option value="attention_embedding">Внимание + embeddings</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </div>
+                    <div id="modelFindings" class="findings-box">
+                        <p class="card-hint">Сначала Analyze — здесь будут предупреждения о найденных блоках.</p>
+                    </div>
+                    <p id="modelKindLabel" class="card-hint">Выберите тип или оставьте авто</p>
+                    <div id="fedcoreOpsButtons" class="fedcore-ops-buttons"></div>
+                    <div id="opsSaveHints" class="ops-save-hints"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+            <h2 class="card-title"><i class="fas fa-file-alt"></i> Результаты операций</h2>
+            <p class="card-hint">Пути сохранения quantize / prune / export появляются здесь.</p>
+            <div id="exportResults">
+                <p class="results-empty">Пока пусто. Запустите Export или Quantize / Prune.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Model Exporter Tool &copy; 2023 | AI Model Management System</p>
+        </div>
+    </footer>
+
+    <div class="notification" id="notification">
+        <span id="notificationMessage"></span>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

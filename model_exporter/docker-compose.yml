@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  model-exporter:
+    build: 
+      context: ..
+      dockerfile: model_exporter/Dockerfile
+    container_name: model-exporter-app
+    ports:
+      - "5023:5000"
+    volumes:
+      - ./device_architectures:/app/device_architectures
+      - ./templates:/app/templates
+      - ./results:/app/results
+      - ./static:/app/static
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - model-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${GPU_IDS:-0}"]
+              capabilities: ["gpu"]
+
+networks:
+  model-network:
+    driver: bridge
