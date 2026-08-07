@@ -18,6 +18,7 @@ from fedcore.architecture.abstraction.accessor import Accessor
 from fedcore.models.network_impl.utils.hooks import BaseHook
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
 
+from fedcore.api.utils.misc import trace_methods
 
 class OnetimeRankPruner(BaseHook):
     """Single-shot rank pruning hook for decomposed layers.
@@ -39,9 +40,9 @@ class OnetimeRankPruner(BaseHook):
     _SUMMON_KEY = ('rank_prune_each', 'strategy')
     _hook_place = 50
 
-    def __init__(self, params, model):
+    def __init__(self, trainer):
         """Initialize the one-time rank pruner."""
-        super().__init__(params, model)
+        super().__init__(trainer)
         self.__done = False
 
     @classmethod
@@ -85,6 +86,8 @@ class OnetimeRankPruner(BaseHook):
             ``True`` if the pruning action should be executed at this epoch,
             ``False`` otherwise.
         """
+        # print('###########', epoch, '%%', self.params.get('rank_prune_each', -1), '%%', self.params.get('epochs', 1))
+
         if self.__done:
             return False
         rank_prune_each = self.params.get('rank_prune_each', -1)
@@ -110,6 +113,8 @@ class OnetimeRankPruner(BaseHook):
         After pruning, ``compose_weight_for_inference`` is called on each
         pruned :class:`IDecomposed` layer to update its weight representation.
         """
+        if self.__done:
+            return
         self.__done = True
         non_adaptive_threshold = self.params.get('non_adaptive_threshold', .75)
         strategy = self.params.get('strategy', 'explained_variance')
@@ -119,6 +124,7 @@ class OnetimeRankPruner(BaseHook):
                                        threshold=non_adaptive_threshold,
                                        strategy=strategy,
                                        module_name=name)
+                print('@@@@@', name, 'TRH', non_adaptive_threshold)
                 module.compose_weight_for_inference()
 
 

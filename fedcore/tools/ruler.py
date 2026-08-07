@@ -61,6 +61,9 @@ class TimingResult:
     max: float
     unit: str = "ms"
 
+
+from fedcore.api.utils.misc import trace_methods
+
 class PerformanceEvaluator:
     """
     Comprehensive model performance evaluator for measuring inference metrics
@@ -76,7 +79,7 @@ class PerformanceEvaluator:
     def __init__(
         self,
         model: Callable,
-        model_regime: str = 'model_after',
+        model_regime: str = 'model_after', # deprecated
         data: Union[DataLoader, str] = None,
         device: Optional[torch.device] = None,
         batch_size: int = DEFAULT_BATCH_SIZE,
@@ -96,11 +99,11 @@ class PerformanceEvaluator:
             n_batches: Number of batches to process
             collate_fn: Function to collate data into batches
         """
-        self.model_regime = model_regime
+        # self.model_regime = model_regime
         self.n_batches = n_batches
         self.batch_size = batch_size
         self._need_wrap = need_wrap
-        self.device = device
+        self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         self._registry = ModelRegistry()
 
         
@@ -124,6 +127,7 @@ class PerformanceEvaluator:
 
     def _initialize_model(self, model: Callable) -> None:
         """Initialize model and handle different model types"""
+
         try:
             if isinstance(model, Pipeline):
                 self.model = self._extract_model_from_pipeline(model)
@@ -141,10 +145,12 @@ class PerformanceEvaluator:
             logger.error(f"Failed to initialize model: {e}")
             raise
 
-    def _extract_model_from_pipeline(self, pipeline: Pipeline) -> Callable:
+    def _extract_model_from_pipeline(self, pipeline: Union[Pipeline, torch.nn.Module]) -> Callable:
         """Extract model from FEDOT pipeline"""
+        if isinstance(pipeline, torch.nn.Module):
+            return pipeline
         try:
-            model = getattr(pipeline.operator.root_node.fitted_operation, self.model_regime)
+            model = getattr(pipeline.operator.root_node.fitted_operation, 'model_after')
             # Try to get device from pipeline if available
             self.device = extract_device(model)
             return model
@@ -343,6 +349,7 @@ class PerformanceEvaluator:
     def measure_model_size(self, device=None) -> Tuple[float, float]:
         """Measure model size in MB
         device is for compatibility, not used"""
+        print('@@@ NUMEL:', sum(p.numel() for p in self.model.parameters()),)
         try:
             model_summary = summary(self.model, verbose=0)
             size_mb = model_summary.total_param_bytes / self.BYTES_TO_MB

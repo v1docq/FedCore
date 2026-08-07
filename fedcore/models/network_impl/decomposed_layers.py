@@ -10,6 +10,8 @@ from fedcore.algorithm.low_rank.decomposer import DECOMPOSERS
 from fedcore.architecture.utils.misc import count_params
 from fedcore.architecture.abstraction.placeholders import ParameterPlaceHolder
 
+from fedcore.api.utils.misc import trace_methods
+
 __all__ = [
     'IDecomposed',
     'DecomposedConv2d',
@@ -21,7 +23,7 @@ __all__ = [
 def _diag_tensor_check(t: torch.Tensor):
     return torch.diag(t) if t.ndim == 1 else t
     
-
+# @trace_methods
 class IDecomposed(abc.ABC):
     _weight_name = ['weight']
     _compose_mode_matrices = {
@@ -37,15 +39,10 @@ class IDecomposed(abc.ABC):
         self.decomposing_mode = decomposing_mode
         self.method = method
         self.decomposer_params = decomposer_params or {}
-        if decomposing_mode is not None:
-            self.decompose()
-            self._current_forward = self._forward3
-        else:
-            self.U = None
-            self.S = None
-            self.Vh = None
-            self.decomposing = None
-            self._current_forward = self._forward1
+        self.__is_composed = False
+        self.decompose()
+        self._current_forward = self._forward3
+
         self._initial_params_num = count_params(self)
         self._compose_dict = {'one_layer': self._one_layer_compose,
                                'two_layers': self._two_layers_compose,
@@ -55,11 +52,14 @@ class IDecomposed(abc.ABC):
                                'three_layers': self._forward3}
 
     def compose_weight_for_inference(self):
-        if self.U is None or self.S is None or self.Vh is None:
+        if self.__is_composed:
             return
         self.compose_mode = self.compose_mode or self._evaluate_compose_mode()
+        print('@@@' 'compose mode', self.compose_mode)
+        print({name: type(mod) for name, mod in self.named_parameters()})
         self._compose_dict[self.compose_mode]()
         self._current_forward = self._forward_dict[self.compose_mode]
+        self.__is_composed = True
 
     def _evaluate_compose_mode(self: nn.Module):
         """Evaluate the best composition mode to minimize parameters.
@@ -101,9 +101,12 @@ class IDecomposed(abc.ABC):
 
     def set_U_S_Vh(self, u: torch.Tensor, s: torch.Tensor, vh: torch.Tensor) -> None:
         """Update U, S, Vh matrices."""
-        self.U = Parameter(u)
-        self.S = Parameter(s)
-        self.Vh = Parameter(vh)
+        self.register_parameter('U', Parameter(u))
+        self.register_parameter('S', Parameter(s))
+        self.register_parameter('Vh', Parameter(vh))
+        # self.U = Parameter(u)
+        # self.S = Parameter(s)
+        # self.Vh = Parameter(vh)
 
     def get_U_S_Vh(self):
         return self.U, self.S, self.Vh
@@ -364,6 +367,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
             self.Vh.reshape(*self.decomposing['Vh2d'])
         )
 
+# @trace_methods
 class DecomposedLinear(nn.Linear, IDecomposed):
     """Extends the Linear layer by implementing the singular value decomposition of
     the weight matrix.
@@ -393,7 +397,10 @@ class DecomposedLinear(nn.Linear, IDecomposed):
             device=device,
             dtype=dtype,
         )
-        self.load_state_dict(base_module.state_dict())
+        try:
+            self.load_state_dict(base_module.state_dict(), strict=False, assign=True)
+        except:
+            self.load_state_dict(base_module.state_dict()) # for compatibility wuh torch older than 2.8
         # assert self.bias is not None
         IDecomposed.__init__(self, decomposing_mode, decomposer, compose_mode, decomposer_params)
 

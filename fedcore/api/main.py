@@ -40,11 +40,9 @@ from fedcore.api.api_configs import ConfigTemplate
 from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
 from fedcore.tools.registry.model_registry import ModelRegistry
 from fedcore.api.utils.misc import extract_fitted_operation
+from fedcore.metrics import COMPUTATIONAL_METRICS
 
 warnings.filterwarnings("ignore")
-
-# TODO
-COMPUTATIONAL_METRICS = ['Latency', 'Power', 'Throughput']
 
 
 
@@ -167,32 +165,30 @@ class FedCore(Fedot):
         Returns:
             torch.nn.Module or None: Original model
         """
-        if self.fedcore_model is None:
-            return None
-        return getattr(self.fedcore_model, 'model_before', self.fedcore_model)
+        return self.__original_model
 
-    def get_model_by_regime(self, regime: str = 'model_after'):
-        """Get model by regime name.
-        Args:
-            regime: 'model_after' for compressed, 'model_before' for original
+    # def get_model_by_regime(self, regime: str = 'model_after'):
+    #     """Get model by regime name.
+    #     Args:
+    #         regime: 'model_after' for compressed, 'model_before' for original
 
-        Returns:
-            torch.nn.Module: Requested model or fallback to fedcore_model
+    #     Returns:
+    #         torch.nn.Module: Requested model or fallback to fedcore_model
 
-        Raises:
-            ValueError: If fedcore_model is not initialized
-        """
-        if self.fedcore_model is None:
-            raise ValueError("fedcore_model is not initialized. Call fit() first.")
+    #     Raises:
+    #         ValueError: If fedcore_model is not initialized
+    #     """
+    #     if self.fedcore_model is None:
+    #         raise ValueError("fedcore_model is not initialized. Call fit() first.")
 
-        model = getattr(self.fedcore_model, regime, None)
-        if model is None:
-            self.logger.warning(
-                f"Regime '{regime}' not found in fedcore_model. "
-                f"Using fedcore_model directly."
-            )
-            model = self.fedcore_model
-        return model
+    #     model = getattr(self.fedcore_model, regime, None)
+    #     if model is None:
+    #         self.logger.warning(
+    #             f"Regime '{regime}' not found in fedcore_model. "
+    #             f"Using fedcore_model directly."
+    #         )
+    #         model = self.fedcore_model
+    #     return model
 
     def _save_metrics_from_evaluator(self):
         """Collect and save metrics from evaluator to registry after fit."""
@@ -254,32 +250,31 @@ class FedCore(Fedot):
         Returns:
             torch.nn.Module or None: Original model
         """
-        if self.fedcore_model is None:
-            return None
-        return getattr(self.fedcore_model, 'model_before', self.fedcore_model)
+        return self.__original_model
+        
 
-    def get_model_by_regime(self, regime: str = 'model_after'):
-        """Get model by regime name.
-        Args:
-            regime: 'model_after' for compressed, 'model_before' for original
+    # def get_model_by_regime(self, regime: str = 'model_after'):
+    #     """Get model by regime name.
+    #     Args:
+    #         regime: 'model_after' for compressed, 'model_before' for original
 
-        Returns:
-            torch.nn.Module: Requested model or fallback to fedcore_model
+    #     Returns:
+    #         torch.nn.Module: Requested model or fallback to fedcore_model
 
-        Raises:
-            ValueError: If fedcore_model is not initialized
-        """
-        if self.fedcore_model is None:
-            raise ValueError("fedcore_model is not initialized. Call fit() first.")
+    #     Raises:
+    #         ValueError: If fedcore_model is not initialized
+    #     """
+    #     if self.fedcore_model is None:
+    #         raise ValueError("fedcore_model is not initialized. Call fit() first.")
 
-        model = getattr(self.fedcore_model, regime, None)
-        if model is None:
-            self.logger.warning(
-                f"Regime '{regime}' not found in fedcore_model. "
-                f"Using fedcore_model directly."
-            )
-            model = self.fedcore_model
-        return model
+    #     model = getattr(self.fedcore_model, regime, None)
+    #     if model is None:
+    #         self.logger.warning(
+    #             f"Regime '{regime}' not found in fedcore_model. "
+    #             f"Using fedcore_model directly."
+    #         )
+    #         model = self.fedcore_model
+    #     return model
 
     def _save_metrics_from_evaluator(self):
         """Collect and save metrics from evaluator to registry after fit."""
@@ -356,6 +351,7 @@ class FedCore(Fedot):
         input_data.model = torch_model
 
         input_data.supplementary_data.is_auto_preprocessed = True
+        self.__original_model = torch_model
         return train_data
 
     def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
@@ -425,6 +421,7 @@ class FedCore(Fedot):
             x = self.__init_fedcore_backend(x)
             x = self.__init_dask(x)
             x = self.__init_solver_no_evo(x)
+            self.original_model = self.manager.solver.model_before
             fitted_solver = self.manager.solver.fit(x)
         self.optimised_model = fitted_solver.model
 
@@ -549,7 +546,8 @@ class FedCore(Fedot):
         
 
         eval_regime = ['original', 'fedcore']
-        predictions = {mode: self.predict(test_data, output_mode=mode).predict.predict for mode in eval_regime}
+        predictions = {mode: self.predict(test_data, output_mode=mode) for mode in eval_regime}
+        predictions = {mode: val.predict for mode, val in predictions.items() if hasattr(val, 'predict')}
         targets = torch.concat([x[1] for x in test_data.val_dataloader], dim=0)
         # prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
 
@@ -562,8 +560,11 @@ class FedCore(Fedot):
 
         quality_metrics = {mode: calculate_metrics(quality_metrics_list, targets, predictions[mode]) for mode in predictions}
         assert isinstance(test_data.val_dataloader, DataLoader), f'{type(test_data.val_dataloader)}'
-        computational_metrics = {mode: _to_df({metric_name: MetricFactory.get_metric(metric_name).get_value(getattr(self, f"{mode}_model"), test_data.val_dataloader) for metric_name in computational_metrics}, 3) 
-                                 for mode in eval_regime}
+        computational_metrics = {mode: _to_df(
+            {metric_name: MetricFactory.get_metric(metric_name).get_value(getattr(self, f"{mode}_model"), test_data.val_dataloader) 
+                for metric_name in computational_metrics},
+            3) 
+        for mode in eval_regime}
         
         # Create dataframes for both metric types
         quality_df = create_df(zip([quality_metrics[mode] for mode in eval_regime], eval_regime))

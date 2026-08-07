@@ -35,6 +35,7 @@ from tdecomp.matrix.decomposer import DECOMPOSERS
 from fedcore.algorithm.low_rank.reassembly import TransMLA, FlatLLM
 from external.transmlacore.modify_config import settings
 
+from fedcore.api.utils.misc import trace_methods
 
 def _get_all_decomposer_params():
     """Dynamically extract all unique parameters from all decomposer classes.
@@ -52,7 +53,7 @@ def _get_all_decomposer_params():
 
 _DECOMPOSER_PARAMS = _get_all_decomposer_params()
 
-
+# @trace_methods
 class LowRankModel(BaseCompressionModel):
     """Compression model that applies low-rank (SVD-based) decomposition.
 
@@ -137,31 +138,58 @@ class LowRankModel(BaseCompressionModel):
 
         return batch
 
-    def _init_model(self, input_data):
-        model = super()._init_model(input_data, self._additional_hooks)
+    # def _init_model(self, input_data):
+    #     model = super()._init_model(input_data, self._additional_hooks)
 
-        if self._model_id_before:
-            self._registry.update_metrics(
-                fedcore_id=self._fedcore_id,
-                model_id=self._model_id_before,
-                metrics={},
-                stage="before",
-                mode=self.__class__.__name__
-            )
+    #     if self._model_id_before:
+    #         self._registry.update_metrics(
+    #             fedcore_id=self._fedcore_id,
+    #             model_id=self._model_id_before,
+    #             metrics={},
+    #             stage="before",
+    #             mode=self.__class__.__name__
+    #         )
 
 
+    #     decompose_module(
+    #         model,
+    #         self.decomposing_mode,
+    #         self.decomposer,
+    #         self.compose_mode,
+    #         self.decomposer_params
+    #     )
+    #     model.to(self.device)
+
+    #     self.model_after = model
+
+    #     return self.model_after
+    
+    def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
+        print('Prepare original model for Low Rank Truncation'.center(80, '='))
+
+        super()._init_model_before_model_after(input_data)
         decompose_module(
-            model,
+            self.model_after,
             self.decomposing_mode,
             self.decomposer,
             self.compose_mode,
             self.decomposer_params
         )
-        model.to(self.device)
+        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@222', {n: type(p) for n, p in self.model_after.named_parameters()})
+        self.model_after.to(self.device)
+        # if self._model_id_before: #TODO after big merge I don't know, do we need that "if". See PR "Model registry #33"
+        #     self._registry.update_metrics(
+        #         fedcore_id=self._fedcore_id,
+        #         model_id=self._model_id_before,
+        #         metrics={},
+        #         stage="before",
+        #         mode=self.__class__.__name__
+        #     )
+        
+        from fedcore.algorithm.low_rank.hooks import OnetimeRankPruner
+        super()._init_trainer_with_model_after(input_data, [])
+        self.trainer.hooks.append(OnetimeRankPruner(self.trainer))
 
-        self.model_after = model
-
-        return self.model_after
 
     def fit(self, input_data) -> None:
         """Train the model with low-rank–aware hooks and estimate compression.
@@ -181,9 +209,9 @@ class LowRankModel(BaseCompressionModel):
             Trained and decomposed model instance (``self.model_after``) with
             ``_structure_changed__`` flag set to ``True``.
         """
-        model_after = self._init_model(input_data)
+        self._init_trainer_model_before_model_after_and_incapsulate_hooks(input_data)
         # base_params = self._estimate_params(self.model_before, example_batch)
-        self.trainer.model = self.model_after
+        # self.trainer.model = self.model_after
         self.model_after = self.trainer.fit(input_data)
 
         if self._model_id_after:
@@ -200,50 +228,51 @@ class LowRankModel(BaseCompressionModel):
         # check params
         example_batch = self._get_example_input(input_data)#.to(extract_device(self.model_before))
         self.estimate_params(example_batch, self.model_before, self.model_after)
+        assert not self.model_before is self.model_after
         self.model_after._structure_changed__ = True
         return self.model_after
 
-    def compress(self, model: nn.Module):
-        """Compose weights of all decomposed layers for inference.
+    # def compress(self, model: nn.Module):
+    #     """Compose weights of all decomposed layers for inference.
 
-        This helper iterates over all modules of the given ``model`` and,
-        for each instance of :class:`IDecomposed`, calls
-        :meth:`IDecomposed.compose_weight_for_inference` to materialize the
-        effective weight matrix.
+    #     This helper iterates over all modules of the given ``model`` and,
+    #     for each instance of :class:`IDecomposed`, calls
+    #     :meth:`IDecomposed.compose_weight_for_inference` to materialize the
+    #     effective weight matrix.
 
-        Parameters
-        ----------
-        model : nn.Module
-            Model whose decomposed layers should be switched to inference form.
-        """
-        for module in model.modules():
-            if isinstance(module, IDecomposed):
-                # module.inference_mode = True
-                module.compose_weight_for_inference()
+    #     Parameters
+    #     ----------
+    #     model : nn.Module
+    #         Model whose decomposed layers should be switched to inference form.
+    #     """
+    #     for module in model.modules():
+    #         if isinstance(module, IDecomposed):
+    #             # module.inference_mode = True
+    #             module.compose_weight_for_inference()
 
-        model_type = getattr(getattr(model, 'config', None), 'model_type', None)
+        # model_type = getattr(getattr(model, 'config', None), 'model_type', None)
 
-        if model_type in settings:
-            from transformers import AutoTokenizer
+        # if model_type in settings:
+        #     from transformers import AutoTokenizer
 
-            model_name = getattr(model.config, "name_or_path", None)
-            if model_name is None:
-                raise ValueError("Can't find model name in config to load tokenizer")
+        #     model_name = getattr(model.config, "name_or_path", None)
+        #     if model_name is None:
+        #         raise ValueError("Can't find model name in config to load tokenizer")
 
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-            trans_mla = TransMLA()
-            model = trans_mla.reassemble(model, tokenizer=tokenizer)
+        #     tokenizer = AutoTokenizer.from_pretrained(model_name)
+        #     trans_mla = TransMLA()
+        #     model = trans_mla.reassemble(model, tokenizer=tokenizer)
 
-        if model_type in ['llama', 'mistral']:
-            from transformers import AutoTokenizer
+        # if model_type in ['llama', 'mistral']:
+        #     from transformers import AutoTokenizer
 
-            model_name = getattr(model.config, "name_or_path", None)
-            if model_name is None:
-                raise ValueError("Can't find model name in config to load tokenizer")
+        #     model_name = getattr(model.config, "name_or_path", None)
+        #     if model_name is None:
+        #         raise ValueError("Can't find model name in config to load tokenizer")
 
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-            flat_llm = FlatLLM()
-            model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
+        #     tokenizer = AutoTokenizer.from_pretrained(model_name)
+        #     flat_llm = FlatLLM()
+        #     model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
 
     def load_model(self, model, state_dict_path: str) -> None:
         """Load a decomposed (SVD-based) checkpoint into a model.
@@ -269,12 +298,38 @@ class LowRankModel(BaseCompressionModel):
         )
         model.to(self.device)
 
-    def predict_for_fit(self, input_data, output_mode: str = 'fedcore'):
-        """Return model after training."""
-        return self.predict(input_data, output_mode)
+    # def predict_for_fit(self, input_data, output_mode: str = 'fedcore'):
+    #     """Return model after training."""
+    #     return self.predict(input_data, output_mode)
 
-    def predict(self, input_data, output_mode: str = 'fedcore'):
-        """Prediction using compressed model."""
+    # def predict(self, input_data, output_mode: str = 'fedcore'):
+    #     """Prediction using compressed model."""
+    #     if output_mode == 'fedcore':
+    #         self.trainer.model = self.model_after
+    #     else:
+    #         self.trainer.model = self.model_before
+    #     return self.trainer.predict(input_data, output_mode)
+
+    def predict_for_fit(self, input_data: InputData, output_mode: str = 'fedcore'):
+        """Return the model object (before or after pruning) after `fit`.
+
+        This helper is used in FedCore pipelines that expect a model object
+        instead of predictions right after training.
+        """
+        return self.model_after if output_mode == 'fedcore' else self.model_before
+
+    def predict(self, input_data: InputData, output_mode: str = 'fedcore'):
+        """Run prediction using either the pruned or original model.
+
+        Parameters
+        ----------
+        input_data : InputData
+            Data for inference.
+        output_mode : str, optional
+            If ``"fedcore"`` (default), use the pruned model
+            ``self.model_after``; otherwise use the original model
+            ``self.model_before``.
+        """
         if output_mode == 'fedcore':
             self.trainer.model = self.model_after
         else:

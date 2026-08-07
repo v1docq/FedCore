@@ -1,0 +1,1 @@
+COMPUTATIONAL_METRICS = ['Latency', 'Power', 'Throughput', 'ModelSize']

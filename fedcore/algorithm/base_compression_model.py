@@ -23,7 +23,8 @@ from abc import ABC, abstractmethod
 from fedcore.architecture.comptutaional.devices import default_device
 import logging
 
-class BaseCompressionModel(ABC):
+# class BaseCompressionModel(ABC ):
+class BaseCompressionModel:
     """Class responsible for NN model implementation.
 
     Attributes:
@@ -213,34 +214,34 @@ class BaseCompressionModel(ABC):
         )
         return model_id
 
-    # def _init_model(self, input_data, additional_hooks=tuple()):
+    def _init_model(self, input_data, additional_hooks=tuple()):
 
-    #     model = input_data.model
+        model = input_data.model
 
-    #     # Support passing a filesystem path to a checkpoint/model at the node input
-    #     if isinstance(model, str):
-    #         logger.info(f"Loading model from path: {model}")
-    #         device = default_device()
-    #         loaded = torch.load(model, map_location=device)
-    #         if isinstance(loaded, dict) and "model" in loaded:
-    #             model = loaded["model"]
-    #         else:
-    #             model = loaded
-    #         logger.info(f"Model loaded: type={type(model).__name__}")
+        # Support passing a filesystem path to a checkpoint/model at the node input
+        if isinstance(model, str):
+            # logger.info(f"Loading model from path: {model}")
+            device = default_device()
+            loaded = torch.load(model, map_location=device)
+            if isinstance(loaded, dict) and "model" in loaded:
+                model = loaded["model"]
+            else:
+                model = loaded
+            # logger.info(f"Model loaded: type={type(model).__name__}")
 
-    #     if not isinstance(model, torch.nn.Module):
-    #         raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
+        if not isinstance(model, torch.nn.Module):
+            raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
 
-    #     logger.info("Calling model_before setter")
-    #     self.model_before = model
-    #     logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
+        # logger.info("Calling model_before setter")
+        self.model_before = model
+        # logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
 
-    #     # Create trainer using factory
-    #     self.trainer = create_trainer_from_input_data(input_data, self.params)
-    #     self.trainer.register_additional_hooks(additional_hooks)
-    #     self.trainer.model = model
+        # Create trainer using factory
+        self.trainer = create_trainer_from_input_data(input_data, self.params)
+        self.trainer.register_additional_hooks(additional_hooks)
+        self.trainer.model = model
 
-    #     return model
+        return model
     
     def _get_model_or_load_from_path(self, input_data):
         model = input_data.model
@@ -275,7 +276,7 @@ class BaseCompressionModel(ABC):
         self._init_model_before_model_after(input_data)
         self._init_trainer_with_model_after(input_data, additional_hooks)
 
-    @abstractmethod
+    # @abstractmethod
     def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
         """This method in child class should initialize self.model_before, self.model_after, add it to self.trainer with additional 
         childclass-specific hooks.
@@ -295,7 +296,7 @@ class BaseCompressionModel(ABC):
         pass
 
     def _get_example_input(self, input_data: InputData):
-        b = next(iter(input_data.features.val_dataloader))
+        b = next(iter(input_data.val_dataloader))
         if isinstance(b, (list, tuple)) and len(b) >= 2:
             return b[0]
         return b
