@@ -62,7 +62,6 @@ class ZeroShotPruner(BaseHook):
     _summon_key = 'prune_each'
     HOOK_PLACE = 50
 
-<<<<<<< HEAD
     def __init__(self, pruner: tp.BasePruner, pruning_iterations: int, prune_each: int, trainer):
         super().__init__(trainer=trainer)
         self.pruner = pruner
@@ -72,21 +71,6 @@ class ZeroShotPruner(BaseHook):
         
 
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
-=======
-    def __init__(self, pruner: tp.BasePruner, pruning_iterations: int, prune_each: int):
-        # Linked to trainer later via link_to_trainer (not constructed as BaseHook(trainer)).
-        self.hookable_trainer = None
-        self.params = {}
-        self.model = None
-        self.pruner = pruner
-        self.pruning_iterations = pruning_iterations
-        self.prune_each = prune_each
-
-    def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
-        self.hookable_trainer = hookable_trainer
-        self.params = hookable_trainer.params
-        self.model = hookable_trainer.model
->>>>>>> refs/remotes/origin/export
         self.criterion_for_pruner = hookable_trainer.criterion
         self.device = default_device()
 
