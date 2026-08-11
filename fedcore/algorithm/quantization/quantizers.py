@@ -43,7 +43,9 @@ from fedcore.repository.constant_repository import TorchLossesConstant
 from fedcore.models.network_impl.utils.hooks import Optimizers
 from fedcore.tools.registry.model_registry import ModelRegistry
 
+from fedcore.api.utils.misc import trace_methods
 
+# @trace_methods
 class BaseQuantizer(BaseCompressionModel):
     """Base class for model quantization in FedCore.
 
@@ -149,7 +151,7 @@ class BaseQuantizer(BaseCompressionModel):
         }
 
         for hook_elem in QuantizationHooks:
-            hook: BaseHook = hook_elem.value(hook_params, self.quant_model)
+            hook: BaseHook = hook_elem.value(self.trainer)
             if hook._hook_place == 'post':
                 self._on_epoch_end.append(hook)
             else:
@@ -238,7 +240,7 @@ class BaseQuantizer(BaseCompressionModel):
         return example_input.to(self.device)
 
     def _init_model(self, input_data):
-        model = input_data.target
+        model = input_data.model
         if isinstance(model, str):
             loaded = torch.load(model, map_location=self.device)
             if isinstance(loaded, dict) and "model" in loaded:
@@ -318,12 +320,12 @@ class BaseQuantizer(BaseCompressionModel):
                 self.quant_model.eval()
             elif self.quant_type == 'static':
                 prepare(self.quant_model, inplace=True)
-                self.quant_model.eval()
+                self.quant_model.to(self.device).eval()
                 with torch.no_grad():
                     for batch, _ in input_data.val_dataloader:
                         self.quant_model(batch.to(self.device))
             elif self.quant_type == 'qat':
-                self.quant_model.train()
+                self.quant_model.to(self.device).train()
                 prepare_qat(self.quant_model, inplace=True)
 
             self.logger.info("[PREPARE] Model prepared successfully.")
@@ -358,7 +360,7 @@ class BaseQuantizer(BaseCompressionModel):
             in ``self.model_after``.
         """
         self._init_model(input_data)
-        self._init_hooks(input_data)
+        # self._init_hooks(input_data)
         self.quant_model = self._prepare_model(input_data)
         
         hook_args = {'model': self.quant_model}

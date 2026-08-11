@@ -34,9 +34,9 @@ class DynamicQuantizationHook(BaseHook):
     _SUMMON_KEY = 'quantization'
     _hook_place = 'post'
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
-        self.dtype = params.get('dtype', None)
+    def __init__(self, trainer):
+        super().__init__(trainer)
+        self.dtype = self.hookable_trainer.params.get('dtype', None)
 
     def trigger(self, quant_type, **kwargs):
         return quant_type == 'dynamic'
@@ -121,13 +121,16 @@ class QATHook(BaseHook):
     _SUMMON_KEY = 'quantization'
     _hook_place = 'post'
 
-    def __init__(self, params, model):
-        super().__init__(params, model)
+    def __init__(self, trainer):
+        super().__init__(trainer)
+        params = self.hookable_trainer.params
         self.epochs = params.get("epochs", 2)
         self.optimizer = params.get("optimizer", optim.Adam)
         self.criterion = params.get("criterion", nn.CrossEntropyLoss())
         self.learning_rate = params.get("lr", 0.001)
-        self.train_dataloader = params['input_data'].features.train_dataloader
+        print('@@@@@@@@@@@@@@@@ PARAMS', params.keys())
+
+        self.train_dataloader = params['input_data'].train_dataloader
         if isinstance(self.criterion, tuple):
             self.criterion = self.criterion[0]
         
