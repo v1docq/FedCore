@@ -685,7 +685,7 @@ class PruningTemplate(TrainingTemplate):
     finetune_params: TrainingTemplate = None
     
 @dataclass
-class QuantTemplate(TrainingTemplate):
+class QuantizationTemplate(TrainingTemplate):
     """Configuration for model quantization.
 
     Attributes
