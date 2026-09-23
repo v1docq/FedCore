@@ -151,7 +151,8 @@ python -m venv .venv
 
 ```bash
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install uv
+uv sync
 ```
 
 ### 4. Установка библиотеки в режиме разработки
