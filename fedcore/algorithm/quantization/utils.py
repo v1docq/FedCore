@@ -243,7 +243,7 @@ class QDQWrapper(Accessor):
             act_type = get_qconfig_dtypes(qconfig)[0]
         except Exception:
             act_type = None
-        return act_type is torch.float32
+        return act_type in {torch.quint8, torch.qint8}
     
     @staticmethod
     def is_leaf_quantizable(module: nn.Module, 
@@ -303,14 +303,20 @@ class QDQWrapper(Accessor):
         )
 
         with torch.no_grad():
-            for name, module in m.named_modules():
+            # Snapshot the tree before replacing modules. Static INT8 operators
+            # need quantized inputs; each wrapper restores float outputs for
+            # surrounding operations (including residual additions).
+            for name, module in list(m.named_modules()):
+                if not name or mode == 'dynamic':
+                    continue
                 if allow and type(module) not in allow:
                     continue
 
-                if cls.__is_conventional_module(module) and cls.is_leaf_quantizable(module, example_input, mode):
+                if cls.__is_conventional_module(module) and not list(module.children()):
                     if cls.__qconfig_requires_qdq(module):
                         wrapped = QDQWrapping(module, 'both')
                         cls.set_module(m, name, wrapped)
+        return m
 
 
 class QDQWrapping(nn.Module, IDelegator):

@@ -98,7 +98,8 @@ class Cifar10Data:
             batch_size=config.batch_size,
             shuffle=True,
             num_workers=0,
-            generator=generator,
+            # FEDOT deep-copies the loader; torch 2.3 generators are not pickleable.
+            # main() seeds the global generator before creating the loader.
             collate_fn=self._collate_one_hot if one_hot else None,
         )
         self.calibration = DataLoader(
@@ -199,7 +200,7 @@ def main() -> None:
     fedot_config = FedotConfigTemplate(
         problem='classification',
         metric= [
-            'BinaryAccuracy',
+            'MulticlassAccuracy__10',
                 'Latency', 
                 'ModelSize'
                 ],

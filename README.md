@@ -211,6 +211,9 @@ cd examples/pruning_resnet152
 python run_pruning_resnet152.py
 ```
 
+Для быстрой проверки на CPU вместо полного обучения: `python run_pruning_resnet152.py --smoke`.
+Отчёт этой проверки сохраняется в `results/pruning_resnet152_smoke/metrics.csv`.
+
 **Инструкция по запуску ноутбука:**
 
 ```bash

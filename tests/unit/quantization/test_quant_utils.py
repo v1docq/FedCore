@@ -59,12 +59,21 @@ def test_is_leaf_quantizable_linear():
     assert isinstance(res, bool)
 
 def test_add_quant_entry_exit_inserts_wrappers():
-    seq = nn.Sequential(nn.Linear(4,4), nn.Linear(4,2))
-    from torch.ao.quantization import default_qconfig
+    seq = nn.Sequential(nn.Linear(4,8), nn.ReLU(), nn.Linear(8,2)).eval()
+    from torch.ao.quantization import default_qconfig, prepare, convert
     for m in seq: m.qconfig = default_qconfig
     inp = torch.randn(2,4)
     m2 = QDQWrapper.add_quant_entry_exit(deepcopy(seq), inp, allow={nn.Linear}, mode='static')
     assert isinstance(m2[0], QDQWrapping) and isinstance(m2[-1], QDQWrapping)
+    prepare(m2, inplace=True)
+    m2(inp)
+    convert(m2, inplace=True)
+    output = m2(inp)
+    assert isinstance(m2[0].base, nn.quantized.Linear)
+    assert isinstance(m2[-1].base, nn.quantized.Linear)
+    assert output.shape == (2, 2)
+    assert output.dtype == torch.float32
+    assert torch.isfinite(output).all()
 
 @pytest.fixture
 def simple_dl():

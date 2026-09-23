@@ -235,7 +235,7 @@ class MetricFactory:
             assert isinstance(reference_data, torch.utils.data.DataLoader), f'{type(reference_data)}'
             pe = PerformanceEvaluator(pipeline, data=reference_data, model_regime=model_regime)
             metric = getattr(pe, method_name)(
-                device=torch.device('cpu') if is_cpu else torch.device('cuda')
+                device=torch.device('cpu') if is_cpu or not torch.cuda.is_available() else torch.device('cuda')
             )
             if isinstance(metric, tuple):
                 return float(metric[0])
