@@ -83,6 +83,18 @@ api_template = APIConfigTemplate(automl_config=automl_config,
                                  learning_config=learning_config)
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--smoke', action='store_true',
+                        help='Check training, pruning and reporting on a small CIFAR-10 subset.')
+    args = parser.parse_args()
+    if args.smoke:
+        peft_config[1].update(epochs=1, prune_each=1, eval_each=1)
+        fedot_config[1].update(timeout=0.001, n_jobs=1)
+        train_dataloader_params.update(subset=0.002, batch_size=16, num_workers=0)
+        test_dataloader_params.update(subset=0.0064, batch_size=16, num_workers=0)
+
     APIConfig = ConfigFactory.from_template(api_template)
     api_config = APIConfig()
     fedcore_compressor = FedCore(api_config)
@@ -91,7 +103,7 @@ if __name__ == "__main__":
     fedcore_compressor.fit(fedcore_train_data)
     model_comparison = fedcore_compressor.get_report(fedcore_test_data)
     print(model_comparison)
-    save_path = (REPO_ROOT / 'results' / 'pruning_resnet152/')
+    save_path = REPO_ROOT / 'results' / ('pruning_resnet152_smoke' if args.smoke else 'pruning_resnet152')
     save_path.mkdir(parents=True, exist_ok=True)
     model_comparison.to_csv(save_path / 'metrics.csv')
     _ = 1

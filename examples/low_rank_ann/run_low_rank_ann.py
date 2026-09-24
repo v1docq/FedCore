@@ -172,21 +172,24 @@ def create_dataloaders(X_train, y_train, X_val, y_val, X_test, y_test, batch_siz
         batch_size=batch_size, 
         shuffle=True,
         num_workers=4,
-        pin_memory=True
+        pin_memory=True,
+        persistent_workers=False
     )
     val_dataloader = DataLoader(
         val_dataset, 
         batch_size=batch_size, 
         shuffle=False,
         num_workers=4,
-        pin_memory=True
+        pin_memory=True,
+        persistent_workers=False
     )
     test_dataloader = DataLoader(
         test_dataset, 
         batch_size=batch_size, 
         shuffle=False,
         num_workers=4,
-        pin_memory=True
+        pin_memory=True,
+        persistent_workers=False
     )
     
     return train_dataloader, val_dataloader, test_dataloader
@@ -230,67 +233,67 @@ def prepare():
     # Return the prepared components
     return model, train_dataloader, val_dataloader, test_dataloader
 
-model, train_loader, val_loader, test_loader = prepare()
+def main():
+    model, train_loader, val_loader, test_loader = prepare()
 
 
-example_batch = next(iter(train_loader))
-example_input = example_batch[0]  
+    example_batch = next(iter(train_loader))
+    example_input = example_batch[0]
 
 
-compression_data = CompressionInputData(
-    features=example_input,  
-    target=model, 
-    train_dataloader=train_loader,
-    val_dataloader=val_loader,
-    test_dataloader=test_loader,
-    task=Task(TaskTypesEnum.classification),  
-    input_dim=example_batch[0].size(-1),
-)
+    compression_data = CompressionInputData(
+        features=example_input,
+        target=model,
+        train_dataloader=train_loader,
+        val_dataloader=val_loader,
+        test_dataloader=test_loader,
+        task=Task(TaskTypesEnum.classification),
+        input_dim=example_batch[0].size(-1),
+    )
 
-################################################################################
-### CONFIGURE FEDCORE WITH LLMTrainer AND LOW_RANK PEFT ###
-################################################################################
+    ################################################################################
+    ### CONFIGURE FEDCORE WITH LLMTrainer AND LOW_RANK PEFT ###
+    ################################################################################
 
-peft_config = LowRankTemplate(
-    strategy='explained_variance',
-    rank_prune_each=1, 
-    custom_criterions=None,
-    non_adaptive_threshold=0.7,  
-    epochs=10,
-    log_each=1,
-    eval_each=1,
-    decomposer='svd', 
-    rank=None,  
-    distortion_factor=0.6, 
-    random_init='normal',  
-    power=3,
-)
+    peft_config = LowRankTemplate(
+        strategy='explained_variance',
+        rank_prune_each=1,
+        custom_criterions=None,
+        non_adaptive_threshold=0.7,
+        epochs=10,
+        log_each=1,
+        eval_each=1,
+        decomposer='svd',
+        rank=None,
+        distortion_factor=0.6,
+        random_init='normal',
+        power=3,
+    )
 
-fedot_config = FedotConfigTemplate(
-    problem='classification',
-    metric= [
-        'BinaryAccuracy',
-              'Latency', 
-              'ModelSize'
-              ],
-    pop_size=1,
-    timeout=0.1,
-    initial_assumption=model
-)
+    fedot_config = FedotConfigTemplate(
+        problem='classification',
+        metric= [
+            'BinaryAccuracy',
+                  'Latency',
+                  'ModelSize'
+                  ],
+        pop_size=1,
+        timeout=0.1,
+        initial_assumption=model
+    )
 
-device_config = DeviceConfigTemplate(device='cuda' if torch.cuda.is_available() else 'cpu')
+    device_config = DeviceConfigTemplate(device='cuda' if torch.cuda.is_available() else 'cpu')
 
-automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
+    automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
 
 
-learning_config = LearningConfigTemplate(criterion='cross_entropy',
-                                         learning_strategy='from_checkpoint',                                          
-                                         peft_strategy_params=[peft_config])
+    learning_config = LearningConfigTemplate(criterion='cross_entropy',
+                                             learning_strategy='from_checkpoint',
+                                             peft_strategy_params=[peft_config])
 
-api_template = APIConfigTemplate(automl_config=automl_config,
-                                 learning_config=learning_config)
+    api_template = APIConfigTemplate(automl_config=automl_config,
+                                     learning_config=learning_config)
 
-if __name__ == "__main__":
     APIConfig = ConfigFactory.from_template(api_template)
     api_config = APIConfig()
     fedcore_compressor = FedCore(api_config)
@@ -300,3 +303,6 @@ if __name__ == "__main__":
     save_path = (REPO_ROOT / 'results' / 'low_rank_ann/')
     save_path.mkdir(parents=True, exist_ok=True)
     model_comparison.to_csv(save_path / 'metrics.csv')
+
+if __name__ == "__main__":
+    main()
