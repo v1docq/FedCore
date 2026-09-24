@@ -201,7 +201,7 @@ class MetricFactory:
             if suffix and problem == 'classification':
                 metric_kw['num_classes'] = suffix
             instance = cls(**metric_kw)
-            print('@@@~', predict.size())
+            #print('@@@~', predict.size())
             instance.update(predict.cpu(), target.cpu())
             result = instance.compute()
             del instance

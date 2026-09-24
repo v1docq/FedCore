@@ -18,7 +18,7 @@ import functools
 import inspect
 from fedcore.api.utils.misc import trace_methods
 
-@trace_methods
+#@trace_methods
 class BasePruner(BaseCompressionModel):
     """Base class for model pruning implementations.
 
@@ -117,7 +117,7 @@ class BasePruner(BaseCompressionModel):
         else:
             pruner_hooks = []
 
-        print('@@@@@@ Pruner Hooks', [type(pruner_hook) for pruner_hook in pruner_hooks], self.pruner)
+        #print('@@@@@@ Pruner Hooks', [type(pruner_hook) for pruner_hook in pruner_hooks], self.pruner)
         self.trainer.hooks.extend(pruner_hooks)
 
 

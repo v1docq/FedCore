@@ -349,7 +349,7 @@ class PerformanceEvaluator:
     def measure_model_size(self, device=None) -> Tuple[float, float]:
         """Measure model size in MB
         device is for compatibility, not used"""
-        print('@@@ NUMEL:', sum(p.numel() for p in self.model.parameters()),)
+        #print('@@@ NUMEL:', sum(p.numel() for p in self.model.parameters()),)
         try:
             model_summary = summary(self.model, verbose=0)
             size_mb = model_summary.total_param_bytes / self.BYTES_TO_MB

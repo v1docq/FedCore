@@ -23,7 +23,7 @@ __all__ = [
 def _diag_tensor_check(t: torch.Tensor):
     return torch.diag(t) if t.ndim == 1 else t
     
-# @trace_methods
+# #@trace_methods
 class IDecomposed(abc.ABC):
     _weight_name = ['weight']
     _compose_mode_matrices = {
@@ -55,7 +55,7 @@ class IDecomposed(abc.ABC):
         if self.__is_composed:
             return
         self.compose_mode = self.compose_mode or self._evaluate_compose_mode()
-        print('@@@' 'compose mode', self.compose_mode)
+        #print('@@@' 'compose mode', self.compose_mode)
         print({name: type(mod) for name, mod in self.named_parameters()})
         self._compose_dict[self.compose_mode]()
         self._current_forward = self._forward_dict[self.compose_mode]
@@ -367,7 +367,7 @@ class DecomposedConv2d(Conv2d, IDecomposed):
             self.Vh.reshape(*self.decomposing['Vh2d'])
         )
 
-# @trace_methods
+# #@trace_methods
 class DecomposedLinear(nn.Linear, IDecomposed):
     """Extends the Linear layer by implementing the singular value decomposition of
     the weight matrix.

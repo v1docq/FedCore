@@ -45,7 +45,7 @@ from fedcore.tools.registry.model_registry import ModelRegistry
 
 from fedcore.api.utils.misc import trace_methods
 
-# @trace_methods
+# #@trace_methods
 class BaseQuantizer(BaseCompressionModel):
     """Base class for model quantization in FedCore.
 
@@ -93,7 +93,7 @@ class BaseQuantizer(BaseCompressionModel):
         self.device = params.get("device", default_device())
         self.quant_type = params.get("quant_type", 'dynamic')
         self.backend = params.get("backend", 'fbgemm')
-        self.dtype = params.get("dtype", torch.qint8)
+        self.dtype = params.get("dtype", torch.float16)
         self.allow_emb = params.get("allow_emb", False)
         self.allow_conv = params.get("allow_conv", True)
         self.inplace = params.get("inplace", False)
@@ -332,8 +332,8 @@ class BaseQuantizer(BaseCompressionModel):
             return self.quant_model
 
         except Exception as e:
-            self.logger.info("[PREPARE ERROR] Exception during preparation:")
-            traceback.print_exc()
+            # self.logger.info("[PREPARE ERROR] Exception during preparation:")
+            # traceback.print_exc()
             return self.model_before.eval()
 
     def fit(self, input_data: InputData):

@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     
 from fedcore.api.utils.misc import trace_methods
 
-@trace_methods
+#@trace_methods
 class ZeroShotPruner(BaseHook):
     """Epoch-based pruning hook using a preconfigured Torch-Pruning pruner.
 
@@ -128,7 +128,7 @@ class ZeroShotPruner(BaseHook):
         self.pruning_operation()
         PruningValidator.validate_pruned_layers(self.hookable_trainer.model)
 
-@trace_methods
+#@trace_methods
 class PrunerWithGrad(ZeroShotPruner):
     """Pruning hook that accumulates gradients on a validation loader.
 
