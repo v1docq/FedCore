@@ -1,0 +1,780 @@
+{
+  "experiment": "training_cost_controls",
+  "protocol": {
+    "seed": 41,
+    "batch_size": 64,
+    "baseline_epochs": 20,
+    "finetune_epochs": 2,
+    "learning_rate": 0.001,
+    "quality_tolerance": 0.05,
+    "device": "cpu",
+    "measurement_repeats": 10,
+    "warmup": 3,
+    "threads": 1,
+    "artifact_format": "torchscript",
+    "selection_cost": "file_bytes",
+    "quality_scale": 1.0,
+    "cost_scale": 1048576.0,
+    "hypervolume_reference": [
+      2.0,
+      2.0
+    ],
+    "repeat_stage": "pilot",
+    "repeat_seeds": [
+      41
+    ],
+    "repeat_rationale": "One real-data implementation pilot; no population inference",
+    "primary_comparison": "compression versus independently trained baseline",
+    "minimum_baseline_quality": null
+  },
+  "source_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+  "baseline_training": {
+    "initial_sha256": "16c037855436f0291cd059241aae12c675d9c309d28b0f9cbc83149ec23c9377",
+    "trained_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+    "epochs": 20,
+    "steps": 120,
+    "seconds": 0.23363709999830462,
+    "status": "trained_on_train"
+  },
+  "records": [
+    {
+      "variant": "full_finetune",
+      "starting_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "epochs": 2,
+      "steps": 12,
+      "training_seconds_including_setup": 0.02391889999853447,
+      "teacher_forward_seconds": 0.0,
+      "teacher_forwards": 0,
+      "updated_parameters": 12354,
+      "updated_parameters_note": "requires_grad parameters",
+      "dense_baseline_parameters": 12354,
+      "adapter_tensor_bytes": 0,
+      "adapter_file_bytes": null,
+      "unmerged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merge_error": null,
+      "training_memory": {
+        "status": "sampled",
+        "peak_bytes": 732327936,
+        "before_bytes": 732291072,
+        "after_bytes": 732311552,
+        "sampling_interval_seconds": 0.002,
+        "method": "process RSS; includes baseline, optimizer and library buffers; short peaks may be missed"
+      },
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\training\\full_finetune.pt",
+          "format": "torchscript",
+          "sha256": "0ad4d0fdcabc010d02de64b38ace82fa001dc142e2f37a1b355ea6c0a0e98ac5",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.1251,
+          "latency_p95_ms": 0.132135,
+          "throughput": 507614.2131979697,
+          "end_to_end_p50_ms": 0.12874999999999998,
+          "end_to_end_p95_ms": 0.13315,
+          "file_bytes": 58747,
+          "tensor_state_bytes": 49416,
+          "cpu_rss_before_bytes": 732360704,
+          "cpu_rss_after_bytes": 732594176,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.005656000001181383
+        },
+        "raw_inference_ms": [
+          0.1268,
+          0.1247,
+          0.1246,
+          0.1239,
+          0.1259,
+          0.1365,
+          0.1255,
+          0.1238,
+          0.1233,
+          0.1258
+        ],
+        "raw_end_to_end_ms": [
+          0.1345,
+          0.1315,
+          0.1277,
+          0.1272,
+          0.1291,
+          0.1284,
+          0.128,
+          0.1261,
+          0.1308,
+          0.1291
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "lora",
+      "starting_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "epochs": 2,
+      "steps": 12,
+      "training_seconds_including_setup": 0.3914422000016202,
+      "teacher_forward_seconds": 0.0,
+      "teacher_forwards": 0,
+      "updated_parameters": 3328,
+      "updated_parameters_note": "requires_grad parameters",
+      "dense_baseline_parameters": 12354,
+      "adapter_tensor_bytes": 13312,
+      "adapter_file_bytes": 15254,
+      "unmerged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merge_error": {
+        "absolute": 5.304813385009766e-06,
+        "denominator": 66.86470302700135,
+        "relative": 7.933652801639711e-08,
+        "status": "measured"
+      },
+      "training_memory": {
+        "status": "sampled",
+        "peak_bytes": 733396992,
+        "before_bytes": 732528640,
+        "after_bytes": 733396992,
+        "sampling_interval_seconds": 0.002,
+        "method": "process RSS; includes baseline, optimizer and library buffers; short peaks may be missed"
+      },
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\training\\lora.pt",
+          "format": "torchscript",
+          "sha256": "a4bef1f30e95d9adf266e31843d4059f58965c77eddfa62ed39aa8b2503387f0",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.0875,
+          "latency_p95_ms": 0.12986999999999996,
+          "throughput": 671281.728550451,
+          "end_to_end_p50_ms": 0.08074999999999999,
+          "end_to_end_p95_ms": 0.082765,
+          "file_bytes": 58747,
+          "tensor_state_bytes": 49416,
+          "cpu_rss_before_bytes": 733642752,
+          "cpu_rss_after_bytes": 733843456,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.005714099999750033
+        },
+        "raw_inference_ms": [
+          0.0883,
+          0.0807,
+          0.0962,
+          0.144,
+          0.1126,
+          0.0816,
+          0.077,
+          0.0867,
+          0.101,
+          0.0853
+        ],
+        "raw_end_to_end_ms": [
+          0.0838,
+          0.0815,
+          0.0814,
+          0.0807,
+          0.08,
+          0.0811,
+          0.0808,
+          0.08,
+          0.08,
+          0.0803
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "student_only",
+      "starting_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "epochs": 2,
+      "steps": 12,
+      "training_seconds_including_setup": 0.020791300001292257,
+      "teacher_forward_seconds": 0.0,
+      "teacher_forwards": 0,
+      "updated_parameters": 12354,
+      "updated_parameters_note": "requires_grad parameters",
+      "dense_baseline_parameters": 12354,
+      "adapter_tensor_bytes": 0,
+      "adapter_file_bytes": null,
+      "unmerged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merge_error": null,
+      "training_memory": {
+        "status": "sampled",
+        "peak_bytes": 733872128,
+        "before_bytes": 733843456,
+        "after_bytes": 733872128,
+        "sampling_interval_seconds": 0.002,
+        "method": "process RSS; includes baseline, optimizer and library buffers; short peaks may be missed"
+      },
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\training\\student_only.pt",
+          "format": "torchscript",
+          "sha256": "0ad4d0fdcabc010d02de64b38ace82fa001dc142e2f37a1b355ea6c0a0e98ac5",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.12485,
+          "latency_p95_ms": 0.12747,
+          "throughput": 512122.9094982796,
+          "end_to_end_p50_ms": 0.13295,
+          "end_to_end_p95_ms": 0.154745,
+          "file_bytes": 58747,
+          "tensor_state_bytes": 49416,
+          "cpu_rss_before_bytes": 733851648,
+          "cpu_rss_after_bytes": 733859840,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.005659599999489728
+        },
+        "raw_inference_ms": [
+          0.1252,
+          0.1225,
+          0.1256,
+          0.124,
+          0.1243,
+          0.1245,
+          0.129,
+          0.1254,
+          0.124,
+          0.1252
+        ],
+        "raw_end_to_end_ms": [
+          0.134,
+          0.1435,
+          0.1372,
+          0.1319,
+          0.1308,
+          0.1278,
+          0.1295,
+          0.1312,
+          0.1438,
+          0.1637
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "distillation",
+      "starting_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "epochs": 2,
+      "steps": 12,
+      "training_seconds_including_setup": 0.4690466000029119,
+      "teacher_forward_seconds": 0.0017847999952209648,
+      "teacher_forwards": 12,
+      "updated_parameters": 12354,
+      "updated_parameters_note": "requires_grad parameters",
+      "dense_baseline_parameters": 12354,
+      "adapter_tensor_bytes": 0,
+      "adapter_file_bytes": null,
+      "unmerged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merge_error": null,
+      "training_memory": {
+        "status": "sampled",
+        "peak_bytes": 734330880,
+        "before_bytes": 733859840,
+        "after_bytes": 734330880,
+        "sampling_interval_seconds": 0.002,
+        "method": "process RSS; includes baseline, optimizer and library buffers; short peaks may be missed"
+      },
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\training\\distillation.pt",
+          "format": "torchscript",
+          "sha256": "93b2eb92e0ddc26a104e87fbc7c26776de803c217c72de9e40c4cf20df268f59",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.0923,
+          "latency_p95_ms": 0.10031999999999999,
+          "throughput": 708199.62376895,
+          "end_to_end_p50_ms": 0.08299999999999999,
+          "end_to_end_p95_ms": 0.137165,
+          "file_bytes": 58747,
+          "tensor_state_bytes": 49416,
+          "cpu_rss_before_bytes": 734310400,
+          "cpu_rss_after_bytes": 734322688,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.004265500003384659
+        },
+        "raw_inference_ms": [
+          0.0957,
+          0.0948,
+          0.0936,
+          0.091,
+          0.1041,
+          0.0943,
+          0.0824,
+          0.0793,
+          0.0778,
+          0.0907
+        ],
+        "raw_end_to_end_ms": [
+          0.0875,
+          0.1315,
+          0.1418,
+          0.0915,
+          0.0827,
+          0.0822,
+          0.0815,
+          0.0811,
+          0.082,
+          0.0833
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "qat_float_control",
+      "starting_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "epochs": 2,
+      "steps": 12,
+      "training_seconds_including_setup": 0.01732339999944088,
+      "teacher_forward_seconds": 0.0,
+      "teacher_forwards": 0,
+      "updated_parameters": 12354,
+      "updated_parameters_note": "requires_grad parameters",
+      "dense_baseline_parameters": 12354,
+      "adapter_tensor_bytes": 0,
+      "adapter_file_bytes": null,
+      "unmerged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merge_error": null,
+      "training_memory": {
+        "status": "sampled",
+        "peak_bytes": 734343168,
+        "before_bytes": 734322688,
+        "after_bytes": 734343168,
+        "sampling_interval_seconds": 0.002,
+        "method": "process RSS; includes baseline, optimizer and library buffers; short peaks may be missed"
+      },
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\training\\qat_float_control.pt",
+          "format": "torchscript",
+          "sha256": "0ad4d0fdcabc010d02de64b38ace82fa001dc142e2f37a1b355ea6c0a0e98ac5",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.13155,
+          "latency_p95_ms": 0.134135,
+          "throughput": 486359.1458317501,
+          "end_to_end_p50_ms": 0.13579999999999998,
+          "end_to_end_p95_ms": 0.14996999999999996,
+          "file_bytes": 58747,
+          "tensor_state_bytes": 49416,
+          "cpu_rss_before_bytes": 734322688,
+          "cpu_rss_after_bytes": 734326784,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.0039437999985239
+        },
+        "raw_inference_ms": [
+          0.1332,
+          0.132,
+          0.1292,
+          0.1319,
+          0.1311,
+          0.1312,
+          0.1312,
+          0.1349,
+          0.1325,
+          0.1287
+        ],
+        "raw_end_to_end_ms": [
+          0.1605,
+          0.1371,
+          0.1356,
+          0.1346,
+          0.1353,
+          0.1362,
+          0.1357,
+          0.1359,
+          0.1351,
+          0.1361
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "qat",
+      "starting_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+      "optimizer": "Adam",
+      "learning_rate": 0.001,
+      "epochs": 2,
+      "steps": 12,
+      "training_seconds_including_setup": 0.47841369999878225,
+      "teacher_forward_seconds": 0.0,
+      "teacher_forwards": 0,
+      "updated_parameters": 12354,
+      "updated_parameters_note": "QAT updates float prepared weights before conversion",
+      "dense_baseline_parameters": 12354,
+      "adapter_tensor_bytes": 0,
+      "adapter_file_bytes": null,
+      "unmerged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merged_quality": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "merge_error": null,
+      "training_memory": {
+        "status": "sampled",
+        "peak_bytes": 736768000,
+        "before_bytes": 734326784,
+        "after_bytes": 736768000,
+        "sampling_interval_seconds": 0.002,
+        "method": "process RSS; includes baseline, optimizer and library buffers; short peaks may be missed"
+      },
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\training\\qat.pt",
+          "format": "torchscript",
+          "sha256": "63223d0cda90bf5c73b9b73b3c4fc2ca0f52efacfe6639496dae1ffdb7d006c4",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.05475,
+          "latency_p95_ms": 0.06114999999999999,
+          "throughput": 1149631.758577331,
+          "end_to_end_p50_ms": 0.05665,
+          "end_to_end_p95_ms": 0.062875,
+          "file_bytes": 26717,
+          "tensor_state_bytes": 12984,
+          "cpu_rss_before_bytes": 736817152,
+          "cpu_rss_after_bytes": 737517568,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.009066700000403216
+        },
+        "raw_inference_ms": [
+          0.0573,
+          0.0567,
+          0.0552,
+          0.0543,
+          0.0538,
+          0.054,
+          0.0643,
+          0.0561,
+          0.0523,
+          0.0527
+        ],
+        "raw_end_to_end_ms": [
+          0.0604,
+          0.058,
+          0.0577,
+          0.0649,
+          0.0562,
+          0.0566,
+          0.0563,
+          0.0565,
+          0.0564,
+          0.0567
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    }
+  ],
+  "claim_status": "not_established",
+  "test_used": false
+}

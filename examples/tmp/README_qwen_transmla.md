@@ -1,3 +1,7 @@
+# Historical TransMLA integration note
+
+The commands below are retained as historical documentation. The old scripts are retired and return a nonzero unsupported status; they do not establish model quality or runtime support. Use the licensed-document LM scenario described in `docs/petra/examples.md`. Full FLAT-LLM/TransMLA comparison requires its own verified model, calibration/test documents, and hardware protocol.
+
 # Qwen2.5-0.5B TransMLA Integration Example
 
 This example demonstrates how to use TransMLA (Multi-head Latent Attention) with Qwen2.5-0.5B model using the FedCore framework.

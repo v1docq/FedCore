@@ -573,6 +573,7 @@ class AutoMLConfigTemplate(ConfigTemplate):
 
     mutation_agent: Literal['random'] = 'random'
     mutation_strategy: Literal['params_mutation_strategy'] = 'params_mutation_strategy'
+    search_trace_path: Optional[str] = None
     optimizer: Optional[Any] = None  ### TODO which optimizers may be used? anything except FedCoreEvoOptimizer
 
 

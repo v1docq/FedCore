@@ -10,6 +10,10 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/experiments/protocol.py',
+    'fedcore/experiments/runner.py',
+    'fedcore/experiments/scenarios.py',
+    'fedcore/interfaces/search_trace.py',
     'fedcore/architecture/comptutaional/devices.py',
     'fedcore/repository/data/compression_model_repository.json',
     'fedcore/repository/data/compression_data_operation_repository.json',
@@ -77,5 +81,10 @@ from fedot.core.operations.operation import Operation
 original = Operation.fit
 from fedcore.api.main import FedCore
 assert Operation.fit is original
+from fedcore.experiments import ExperimentProtocol, ExperimentRunner
+from fedcore.experiments.scenarios import build_tabular
+bundle = build_tabular(seed=42)
+assert bundle.task == 'classification'
+assert ExperimentProtocol().device == 'cpu'
 """
     run(['-c', code], outside, env)

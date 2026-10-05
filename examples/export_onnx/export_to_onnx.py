@@ -15,7 +15,8 @@
 Используемые элементы FedCore:
 * CLF_MODELS — реестр архитектур; отсюда берётся ResNet18;
 * ONNXInferenceModel — загрузка .onnx и инференс через ONNX Runtime.
-FedCore.export() не используется: метод сейчас пустой (pass).
+Этот учебный сценарий проверяет torch.onnx.export и ONNXInferenceModel.
+Публичный FedCore.export и измерение исполняемого артефакта проверяет общий контур экспериментов.
 
 Классы примера:
 * ResNet18ExperimentModel — создание и частичное обучение FP32 ResNet18;

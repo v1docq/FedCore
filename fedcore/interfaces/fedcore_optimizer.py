@@ -15,7 +15,7 @@ from golem.core.optimisers.opt_history_objects.individual import Individual
 from golem.core.optimisers.optimization_parameters import GraphRequirements
 from golem.core.optimisers.optimizer import GraphGenerationParams
 from golem.core.optimisers.populational_optimizer import _try_unfit_graph
-from pymonad.either import Either
+from fedcore.interfaces.search_trace import SearchTrace, individual_record
 
 from fedcore.interfaces.fedcore_dispatcher import FedcoreDispatcher
 from fedcore.repository.constant_repository import (
@@ -38,6 +38,7 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         super().__init__(objective, initial_graphs, requirements,
                          graph_generation_params, graph_optimizer_params)
         # self.operators.remove(self.crossover)
+        self.search_trace = SearchTrace(optimisation_params.get('trace_path'))
         self.evaluated_population = []
         self.requirements = requirements
         self.initial_graphs = initial_graphs
@@ -184,6 +185,10 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
             self._log_to_history(next_population, label, metadata)
         self._iteration_callback(next_population, self)
         self.population = next_population
+        self.search_trace.record('population', generation=self.current_generation_num,
+                                 label=label,
+                                 individuals=[individual_record(item) for item in next_population],
+                                 archive=[individual_record(item) for item in self.generations.best_individuals])
         self.log.info(f'Generation num: {self.current_generation_num} size: {len(next_population)}')
         self.log.info(f'Best individuals: {str(self.generations)}')
         if self.generations.stagnation_iter_count > 0:
@@ -253,6 +258,11 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
     def _optimise_loop(self, population_to_eval, evaluator):
         opt_data = (population_to_eval, evaluator)
         opt_data = self._update_requirements(*opt_data)
+        self.search_trace.record('requirements',
+                                 mutation_probability=self.graph_optimizer_params.mutation_prob,
+                                 crossover_probability=self.graph_optimizer_params.crossover_prob,
+                                 population_size=self.graph_optimizer_params.pop_size,
+                                 max_depth=self.requirements.max_depth)
         fitness_data = self._evolve_population(*opt_data)
         reg_data = self.get_structure_unique_population(*fitness_data)
         evaluated_population = self._update_population(*reg_data)
@@ -260,11 +270,19 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
 
     def optimise(self, objective: ObjectiveFunction) -> Sequence[Graph]:
         with self.timer, self._progressbar as pbar:
-            evaluator = self.eval_dispatcher.dispatch(objective, self.timer)
+            evaluator = self.search_trace.evaluator(self.eval_dispatcher.dispatch(objective, self.timer))
+            self.search_trace.record('configuration',
+                                     mutation_probability=self.graph_optimizer_params.mutation_prob,
+                                     crossover_probability=self.graph_optimizer_params.crossover_prob,
+                                     selection=str(self.graph_optimizer_params.selection_types),
+                                     objective_names=list(self.objective.metric_names),
+                                     mutation_agent=type(self.mutation.agent).__name__,
+                                     mutation_operators=[getattr(op, '__name__', str(op))
+                                                         for op in self.graph_optimizer_params.mutation_types],
+                                     crossover_operators=[str(op) for op in self.graph_optimizer_params.crossover_types],
+                                     timeout_minutes=str(self.requirements.timeout),
+                                     max_generations=self.requirements.num_of_generations)
             population_to_eval, evaluator = self._initial_population(evaluator)
-            population_to_eval, evaluator = Either.insert(objective). \
-                then(lambda objective: self.eval_dispatcher.dispatch(objective, self.timer)). \
-                then(lambda evaluator: self._initial_population(evaluator)).value
             self.evaluated_population.append(population_to_eval)
             while not self.stop_optimization():
                 population_to_eval = self._optimise_loop(population_to_eval=population_to_eval,
@@ -273,5 +291,8 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
                 pbar.update()
             pbar.close()
         self._update_population(self.best_individuals, None, 'final_choices')
+        self.search_trace.record('stopped', generations=self.current_generation_num,
+                                 elapsed_minutes=self.timer.minutes_from_start,
+                                 criterion='GOLEM stop_optimization: timeout/generation/stagnation criteria')
         best_models = [ind.graph for ind in self.best_individuals]
         return best_models
