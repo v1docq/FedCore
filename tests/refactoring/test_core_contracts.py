@@ -116,6 +116,17 @@ def test_output_task_defaults_are_independent():
     assert second.task.task_type is TaskTypesEnum.classification
 
 
+def test_lookup_marker_is_immutable_and_parent_is_resolved():
+    from dataclasses import FrozenInstanceError
+    from fedcore.api.api_configs import LookUp
+    marker = LookUp(None)
+    with pytest.raises(FrozenInstanceError):
+        marker.value = 4
+    parent = ConfigFactory.from_template(TrainingTemplate(log_each=7))()
+    child = ConfigFactory.from_template(TrainingTemplate())(parent=parent)
+    assert child.log_each == 7
+
+
 def test_invalid_lora_epochs_rejected_before_resources(tmp_path, monkeypatch):
     import distributed
     from fedcore.api.api_configs import LoraTemplate

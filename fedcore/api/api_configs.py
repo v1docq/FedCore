@@ -202,7 +202,7 @@ def validate_config(config):
     return config
 
 
-@dataclass
+@dataclass(frozen=True)
 class LookUp:
     """Marker wrapper for values inherited from a parent config.
 
