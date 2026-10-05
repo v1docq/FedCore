@@ -38,22 +38,22 @@ class BasePruner(BaseCompressionModel):
     params : dict, optional
         Configuration dictionary. Common keys include:
 
-        * ``"pruner_name"`` – name of the pruner in :data:`PRUNERS`
+        * ``"pruner_name"`` вЂ“ name of the pruner in :data:`PRUNERS`
           (default: ``"meta_pruner"``).
-        * ``"importance"`` – name of the importance metric in
+        * ``"importance"`` вЂ“ name of the importance metric in
           :data:`PRUNING_IMPORTANCE` (default: ``"MagnitudeImportance"``).
-        * ``"pruning_ratio"`` – target global pruning ratio (float, default
+        * ``"pruning_ratio"`` вЂ“ target global pruning ratio (float, default
           ``0.5``).
-        * ``"prune_each"`` – epoch interval for pruning hooks (default ``-1``,
+        * ``"prune_each"`` вЂ“ epoch interval for pruning hooks (default ``-1``,
           i.e. never triggered unless explicitly set).
-        * ``"pruning_iterations"`` – number of iterative pruning steps used
+        * ``"pruning_iterations"`` вЂ“ number of iterative pruning steps used
           by the pruner (default ``1``).
-        * ``"importance_norm"`` – norm order for importance aggregation
+        * ``"importance_norm"`` вЂ“ norm order for importance aggregation
           (stored but not directly used here).
-        * ``"importance_reduction"`` – reduction mode for group importance
+        * ``"importance_reduction"`` вЂ“ reduction mode for group importance
           (passed as ``group_reduction`` to importance object, default
           ``"mean"``).
-        * ``"importance_normalize"`` – normalization strategy for importance
+        * ``"importance_normalize"`` вЂ“ normalization strategy for importance
           (passed as ``normalizer`` to importance object, default ``"mean"``).
           For ``importance_name == "lamp"`` this is overridden to ``"lamp"``.
         * Any additional keys supported by :class:`BaseCompressionModel` and
@@ -62,7 +62,11 @@ class BasePruner(BaseCompressionModel):
 
     DEFAULT_HOOKS: list[type['ZeroShotPruner']] = [PrunerWithGrad, PrunerWithReg, ZeroShotPruner, PrunerInDepth]
 
-    def __init__(self, params: dict = {}):
+    def __init__(self, params=None):
+        params = params.to_dict() if hasattr(params, "to_dict") else dict(params or {})
+        from fedcore.repository.capabilities import require_supported
+        if params.get('importance') in ('activation_entropy', 'custom_depth'):
+            require_supported('pruning.activation_entropy')
         super().__init__(params)
 
         # pruning params
@@ -93,7 +97,7 @@ class BasePruner(BaseCompressionModel):
     def __repr__(self):
         """Return a short string representation with the pruner name."""
         return self.pruner_name
-    
+
 
 
     def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
@@ -125,7 +129,7 @@ class BasePruner(BaseCompressionModel):
         self.logger.info(f' Pruning importance - {self.importance_name} '.center(80, '='))
         self.logger.info(f' Pruning ratio - {self.pruning_ratio} '.center(80, '='))
         self.logger.info(f' Pruning importance norm -  {self.importance_norm} '.center(80, '='))
-        
+
     def _setup_pruner_validation_params_from_model(self, input_data: InputData):
         """Set params like <code>self.ignored_layers</code> and <code>self.channel_group</code>
          for future pass to pruner __init__
@@ -137,12 +141,12 @@ class BasePruner(BaseCompressionModel):
         # Handle dict-like batches (e.g., LLM) by picking the first value or a specific key
         if isinstance(batch_dict, dict):
             if 'input_ids' in batch_dict:
-                self.data_batch_for_calib = batch_dict['input_ids'].to(default_device())
+                self.data_batch_for_calib = batch_dict['input_ids'].to(self.device)
             else:
-                self.data_batch_for_calib = next(iter(batch_dict.values())).to(default_device())
+                self.data_batch_for_calib = next(iter(batch_dict.values())).to(self.device)
         else:
             # legacy: assume batch is a list/tuple and pick first element
-            self.data_batch_for_calib = batch_dict[0].to(default_device())
+            self.data_batch_for_calib = batch_dict[0].to(self.device)
         n_classes = input_data.task.task_params['forecast_length'] \
             if input_data.task.task_type.value.__contains__('forecasting') else input_data.num_classes
         self.validator = PruningValidator(model=self.model_after,
@@ -156,7 +160,7 @@ class BasePruner(BaseCompressionModel):
 
         if 'activation' in self.importance_name:
             return pruner
-        
+
         if 'group' in self.importance_name:
             pruner_type = PRUNERS["group_norm_pruner"]
         elif self.importance_name in ['bn_scale']:

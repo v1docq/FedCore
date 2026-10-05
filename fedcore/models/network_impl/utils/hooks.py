@@ -1,4 +1,3 @@
-import bitsandbytes as bnb
 import os
 from typing import Union
 from abc import abstractmethod, ABC
@@ -11,23 +10,19 @@ from pathlib import Path
 import torch
 from tqdm import tqdm
 
-from tdecomp.grad_proj.tensorgrad.prepared_tg import ULTG, ParallelTG
-print('@@@ before bt')
+from fedcore.repository.lazy_registry import LazyFactory
+ULTG = LazyFactory("tdecomp.grad_proj.tensorgrad.prepared_tg", "ULTG")
+ParallelTG = LazyFactory("tdecomp.grad_proj.tensorgrad.prepared_tg", "ParallelTG")
 
 from fedcore.models.network_impl.utils._base import BaseTrainer
-print('@@@ before op')
 
 from fedot.core.operations.operation_parameters import OperationParameters
 from fedcore.architecture.abstraction.accessor import Accessor
-print('@@@ before dlh')
 
 from fedcore.api.utils.data import DataLoaderHandler
 
-try:
-    import bitsandbytes as bnb
-    BNB_AVAILABLE = True
-except ImportError:
-    BNB_AVAILABLE = False
+from importlib.util import find_spec
+BNB_AVAILABLE = find_spec("bitsandbytes") is not None
 
 VERBOSE = True
 
@@ -46,7 +41,7 @@ class BaseHook(ABC):
     @property
     def hook_place(self):
         return self._hook_place
-    
+
     def is_epoch_arrived_default(self, current_epoch, epoch_each_param):
         if not epoch_each_param:
             return False
@@ -150,7 +145,7 @@ class FitReport(BaseHook):
 
         (tr_e, train_loss) = history['train_loss'][-1]
         val_losses = history.get('val_loss', [])
-        
+
         (va_e, val_loss) = history['val_loss'][-1] if val_losses else (None, None)
 
         print(f'Train # epoch: {tr_e}, value: {train_loss}')
@@ -180,7 +175,7 @@ class EarlyStopping(BaseHook):
             self._check_in_history = 'val_loss'
         else:
             self._check_in_history = 'train_loss'
-        self.__last_record = None 
+        self.__last_record = None
 
     def trigger(self, epoch, kws) -> bool:
         if epoch < self.horizon:
@@ -188,7 +183,7 @@ class EarlyStopping(BaseHook):
         hist = kws['history'][self._check_in_history][-self.horizon:]
         angle = self._estimate_angle(hist)
         return -self.angle_tol <= angle <= self.angle_tol
-        
+
     def action(self, epoch, kws):
         last_record = kws['history'][self._check_in_history][-1]
         if last_record is not self.__last_record:
@@ -196,7 +191,7 @@ class EarlyStopping(BaseHook):
         self.__last_record = last_record
         if not self.count:
             kws['trainer_objects']['stop'] = True
-    
+
     def _estimate_angle(self, history):
         x, y = np.array(list(zip(*history)))
         slope = np.linalg.solve(x[..., None], y[..., None])[0]
@@ -356,7 +351,7 @@ class Freezer(BaseHook):
         self.__unfreeze()
         if epoch != self.params.epochs:
             self.__freeze()
-        
+
 
 LOGGING_HOOKS = [Evaluator, FitReport, Saver]
 MODEL_LEARNING_HOOKS = [Freezer, OptimizerGen, SchedulerRenewal, EarlyStopping]
@@ -370,13 +365,11 @@ class Optimizers(Enum):
     adadelta = torch.optim.Adadelta
     ultg = ULTG
     paralleltg = ParallelTG
+    adam_bnb_8bit = LazyFactory("bitsandbytes.optim", "Adam8bit")
+    adamw_bnb_8bit = LazyFactory("bitsandbytes.optim", "AdamW8bit")
+    sgd_bnb_8bit = LazyFactory("bitsandbytes.optim", "SGD8bit")
 
 
 class Schedulers(Enum):
     one_cycle = (torch.optim.lr_scheduler.OneCycleLR,
                  {'learning_rate': 'max_lr', 'epochs': 'total_steps'})
-
-if BNB_AVAILABLE:
-    Optimizers.adam_bnb_8bit = bnb.optim.Adam8bit
-    Optimizers.adamw_bnb_8bit = bnb.optim.AdamW8bit
-    Optimizers.sgd_bnb_8bit = bnb.optim.SGD8bit

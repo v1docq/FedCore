@@ -1,76 +1,28 @@
-# FLAT-LLM Quick Start Guide
+# Local calibration absorption contracts
 
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from fedcore.external.flatllmcore.core import AbsorptionCompressor
+The MLP path implements `nystrom_least_squares_pseudoinverse`: for actual
+intermediate activations Z entering `down_proj`, C = Z.T @ Z and retained
+channel indices I, the new row-weight matrix is
+`W_down @ C[:, I] @ pinv(C[I, I])`. This follows the Nyström reconstruction
+orientation in [FLAT-LLM Appendix C](https://arxiv.org/html/2505.23966v4#A3),
+with a pseudoinverse for dependent/zero channels instead of the paper's invertible
+selected matrix. Ridge leverage scores are measured from C, never random.
+Gate/up weights and biases select the same channels; down bias is preserved.
 
-# 1. Load model
-model = AutoModelForCausalLM.from_pretrained(
-    "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-    torch_dtype=torch.float16,
-    device_map="auto"
-)
-tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+`tolerance` is a hard lower bound on retained calibration activation squared
+norm. `sparsity_ratio` is the maximum retained fraction. An incompatible request
+raises before modifying the affected weights. Metadata reports actual method,
+rank, tolerance and measured retained energy. These are calibration contracts;
+model accuracy, speed and physical energy require separate measurements.
 
-# 2. Prepare calibration data
-texts = ["Hello, how are you?", "The quick brown fox...", ...]  # 8-16 texts are enough
-inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
-calibration_inputs = inputs.input_ids
+The attention path absorbs a headwise PCA basis into V and O weights and V bias.
+Calibration uses actual activations entering `o_proj`, aggregating query heads
+that share a KV head. The selected uniform rank must meet every KV-group tolerance.
+The existing transformer forward/cache patch is experimental and does not establish
+parity for every Transformers family/version or cache implementation. The standalone
+random importance selector is blocked by the capability registry.
 
-# 3. Create compressor
-compressor = AbsorptionCompressor(
-    model=model,
-    target_sparsity=0.7,  # 70% retention = 30% compression
-    tolerance=0.96,
-    device="cuda"
-)
-
-# 4. Choose layers to compress (every 3rd layer)
-num_layers = len(model.model.layers)
-layers_to_compress = list(range(0, num_layers, 3))
-
-# 5. Collect activations (one forwarded pass)
-compressor.collect_all_activations(
-    layer_indices=layers_to_compress,
-    calibration_input_ids=calibration_inputs
-)
-
-# 6. Apply compression
-for layer_idx in layers_to_compress:
-    compressor.apply_absorption_mlp(layer_idx, sparsity_ratio=0.7)
-    compressor.apply_absorption_attention(layer_idx, sparsity_ratio=0.7)
-
-# 7. Patch for inference
-compressor.patch_compressed_layers(layers_to_compress)
-
-# 8. Generation
-output = model.generate(**tokenizer("Hello, I am", return_tensors="pt"), max_length=50)
-print(tokenizer.decode(output[0]))
-```
-
-## Expexted Results
-
-### TinyLlama 1.1B
-- **Reduction**: 8-10% of the initial size
-- **Quality**: Slightly worse than an original model
-- **Time**: ~90 seconds
-
-### Llama-2 7B (assumption)
-- **Reduction**: 15-20% of the initial size
-- **Quality**: <2% degradation on benchmarks
-- **Time**: ~5-10 minutes
-
-## Recommended params
-
-| Model | Layers | Sparsity | Tolerance | Expected Reduction |
-|-------|--------|----------|-----------|--------------------|
-| 1B    | 30-40% | 0.7      | 0.96      | 8-12%              |
-| 7B    | 25-35% | 0.8      | 0.98      | 15-20%             |
-| 13B+  | 20-30% | 0.85     | 0.99      | 12-18%             |
-
-## Main files
-
-- `external/flatllmcore/core/absorption.py` - main realization
-- `apply_flatllm_absorption.py` - working example
-
-
+Use the independent model returned by `compressor.model` after compression.
+The constructor preserves the supplied model. Tests use local duplicate channels,
+identity/zero Gram matrices and actual CPU operations; no large-model benchmark or
+model-download result is claimed.

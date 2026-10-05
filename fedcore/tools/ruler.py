@@ -1,449 +1,180 @@
+"""Measured inference costs with explicit units and device availability."""
+import io
 import time
-from typing import Union
-import numpy as np
-import torch
-from torchinfo import summary
-import pynvml
-from fedot.core.pipelines.pipeline import Pipeline
-from torch.utils.data.dataloader import DataLoader
-from tqdm import tqdm
-from fedcore.architecture.computational.devices import default_device, extract_device
-# from fedcore.metrics.metric_impl import (
-#     Accuracy, Precision, F1, RMSE, MSE, MAE, MAPE, SMAPE, R2
-# )
-from functools import partial
-from fedcore.tools.registry.model_registry import ModelRegistry
-from fedcore.api.utils.data import DataLoaderHandler
-from fedcore.tools.edge_device import PowerEstimator
-from time import time
-
-
-import time
-from typing import Union, Dict, List, Tuple, Optional, Callable
-import numpy as np
-import torch
-from torchinfo import summary
-from fedot.core.pipelines.pipeline import Pipeline
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-import logging
+from copy import deepcopy
 from dataclasses import dataclass
-from contextlib import contextmanager
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
 
-# Local imports
-from fedcore.architecture.computational.devices import default_device
-from functools import partial
-from fedcore.api.utils.data import DataLoaderHandler
-from fedcore.tools.edge_device import PowerEstimator
 
-# Configure logging
-logger = logging.getLogger(__name__)
+class MeasurementUnavailable(RuntimeError):
+    code='measurement_unavailable'
 
-# @dataclass
-# class PerformanceMetrics:
-#     """Data class to store performance metrics"""
-#     model_size: Tuple[float, float]  # (mean, std)
-    
-#     cpu_latency: Tuple[float, float]  # (mean, std)
-#     cpu_throughput: Tuple[float, float]  # (mean, std)
-#     cpu_energy_consumption: Optional[float] = None
-
-#     gpu_latency: Tuple[float, float]  # (mean, std)
-#     gpu_throughput: Tuple[float, float]  # (mean, std)
-#     gpu_energy_consumption: Optional[float] = None
 
 @dataclass
 class TimingResult:
-    """Data class to store timing results"""
-    mean: float
-    std: float
-    min: float
-    max: float
-    unit: str = "ms"
+    mean:float
+    std:float
+    min:float
+    max:float
+    unit:str='ms'
 
-
-from fedcore.api.utils.misc import trace_methods
 
 class PerformanceEvaluator:
-    """
-    Comprehensive model performance evaluator for measuring inference metrics
-    including latency, throughput, model size, and quality metrics.
-    """
-    
-    # Constants
-    BYTES_TO_MB = 1 << 20
-    WARMUP_BATCHES = 3
-    DEFAULT_NUM_RUNS = 100
-    DEFAULT_BATCH_SIZE = 32
+    BYTES_TO_MB=1<<20
+    WARMUP_BATCHES=3
+    DEFAULT_NUM_RUNS=100
+    DEFAULT_BATCH_SIZE=32
+    def __init__(self,model,model_regime='model_after',data=None,device=None,batch_size=32,
+                 n_batches=8,collate_fn=None,need_wrap=False,warmup_batches=3,
+                 clock=None,power_reader=None,synchronize=None):
+        if not isinstance(n_batches,int) or n_batches<=0:raise ValueError('n_batches must be positive')
+        if not isinstance(model,torch.nn.Module):
+            if hasattr(model,'model'):model=model.model
+            elif hasattr(model,'operator'):model=getattr(model.operator.root_node.fitted_operation,model_regime)
+            else:raise TypeError('Performance evaluation requires nn.Module')
+        self.model=deepcopy(model).eval()
+        self.device=torch.device(device or ('cuda' if torch.cuda.is_available() else 'cpu'))
+        self.n_batches=n_batches;self.batch_size=batch_size;self.warmup_batches=warmup_batches
+        self._clock=clock or time.perf_counter;self._power_reader=power_reader;self._synchronize=synchronize
+        self._cuda_available=torch.cuda.is_available()
+        self._need_wrap=need_wrap;self.measurement_info={}
+        if hasattr(data,'test_dataloader'):data=data.test_dataloader
+        if data is None:raise ValueError('Measurement data is required')
+        self.data_loader=data if isinstance(data,DataLoader) or need_wrap else DataLoader(data,batch_size=batch_size,shuffle=False,collate_fn=collate_fn)
 
-    def __init__(
-        self,
-        model: Callable,
-        model_regime: str = 'model_after', # deprecated
-        data: Union[DataLoader, str] = None,
-        device: Optional[torch.device] = None,
-        batch_size: int = DEFAULT_BATCH_SIZE,
-        n_batches: int = 8,
-        collate_fn: Optional[Callable] = None,
-        need_wrap: bool = False
-    ):
-        """
-        Initialize PerformanceEvaluator.
-        
-        Args:
-            model: The model to evaluate (callable, Pipeline, or model container)
-            model_regime: Model regime for Pipeline objects
-            data: DataLoader or dataset path for evaluation
-            device: Device to run evaluation on
-            batch_size: Number of samples per batch
-            n_batches: Number of batches to process
-            collate_fn: Function to collate data into batches
-        """
-        # self.model_regime = model_regime
-        self.n_batches = n_batches
-        self.batch_size = batch_size
-        self._need_wrap = need_wrap
-        self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
-        self._registry = ModelRegistry()
+    def _sync(self,device):
+        if self._synchronize is not None:self._synchronize()
+        elif device.type=='cuda':torch.cuda.synchronize(device)
 
-        
-        self._init_metrics()
-        self._cuda_available = torch.cuda.is_available()
-        
-        self._initialize_model(model)
-        self.data_loader = data
-        self._initialize_data_loader(data, collate_fn)
-
-        
-
-    def _init_metrics(self) -> None:
-        """Initialize all performance metrics to None"""
-        self._metrics = {
-            'latency': None,
-            'throughput': None, 
-            'model_size': None,
-            'energy_consumption': None
-        }
-
-    def _initialize_model(self, model: Callable) -> None:
-        """Initialize model and handle different model types"""
-
-        try:
-            if isinstance(model, Pipeline):
-                self.model = self._extract_model_from_pipeline(model)
-            elif hasattr(model, "model"):
-                self.model = model.model  # Model container
+    def _generate_example_batch(self,num_samples=None,return_sample=False,device='cpu',metric=''):
+        limit=self.n_batches if num_samples is None else num_samples
+        if not isinstance(limit,int) or limit<=0:raise ValueError('Measurement limit must be positive')
+        loader=self.data_loader(max_batches=limit) if self._need_wrap else self.data_loader
+        count=0
+        for batch in loader:
+            features=batch[0] if isinstance(batch,(tuple,list)) else batch
+            if return_sample:
+                for sample in features:
+                    yield sample.to(device).unsqueeze(0)
+                    count+=1
+                    if count>=limit:return
             else:
-                self.model = model
-            if self.device is None:
-                self.device = extract_device(self.model)
-            else:
-                self.model.to(self.device)
-            self.model.eval()  # Set to evaluation mode
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize model: {e}")
-            raise
+                yield features.to(device)
+                count+=1
+                if count>=limit:return
 
-    def _extract_model_from_pipeline(self, pipeline: Union[Pipeline, torch.nn.Module]) -> Callable:
-        """Extract model from FEDOT pipeline"""
-        if isinstance(pipeline, torch.nn.Module):
-            return pipeline
+    def _warmup(self,device):
+        for batch in self._generate_example_batch(self.warmup_batches,device=device) if self.warmup_batches else ():
+            self.model(batch)
+        self._sync(device)
+
+    def _record(self,name,device,count,unit):
+        if not count:raise MeasurementUnavailable('No measurement batches available')
+        self.measurement_info[name]={'device':str(device),'measured_batches':count,
+            'warmup_batches':self.warmup_batches,'unit':unit,'scope':'whole model inference'}
+
+    @torch.no_grad()
+    def measure_latency(self,device=torch.device('cpu'),num_samples=None):
+        device=torch.device(device);self.model.to(device);self._warmup(device)
+        values=[]
+        for batch in self._generate_example_batch(num_samples,device=device):
+            self._sync(device);start=self._clock();self.model(batch);self._sync(device)
+            values.append((self._clock()-start)*1000)
+        self._record('latency',device,len(values),'ms/batch')
+        return float(np.mean(values)),float(np.std(values))
+
+    @torch.no_grad()
+    def measure_throughput(self,device=torch.device('cpu'),num_iterations=30):
+        if num_iterations<=0:raise ValueError('num_iterations must be positive')
+        device=torch.device(device);self.model.to(device);self._warmup(device)
+        values=[];count=0
+        for batch in self._generate_example_batch(self.n_batches,device=device):
+            count+=1
+            for _ in range(num_iterations):
+                self._sync(device);start=self._clock();self.model(batch);self._sync(device)
+                elapsed=self._clock()-start
+                if elapsed<=0:raise MeasurementUnavailable('Nonpositive measured elapsed time')
+                values.append(len(batch)/elapsed)
+        self._record('throughput',device,count,'samples/s')
+        return float(np.mean(values)),float(np.std(values))
+
+    def _read_power_watts(self,device):
+        if self._power_reader is not None:return float(self._power_reader())
+        if device.type!='cuda' or not torch.cuda.is_available():
+            raise MeasurementUnavailable('CUDA device and NVML power readings are required')
         try:
-            model = getattr(pipeline.operator.root_node.fitted_operation, 'model_after')
-            # Try to get device from pipeline if available
-            self.device = extract_device(model)
-            return model
-        except AttributeError as e:
-            logger.error(f"Failed to extract model from pipeline: {e}")
-            raise
+            import pynvml
+            pynvml.nvmlInit()
+            handle=pynvml.nvmlDeviceGetHandleByIndex(device.index or 0)
+            return pynvml.nvmlDeviceGetPowerUsage(handle)/1000.0
+        except Exception as exc:raise MeasurementUnavailable(f'NVML power reading unavailable: {exc}') from exc
 
-    def _initialize_data_loader(self, data: Union[DataLoader, str], collate_fn: Optional[Callable]) -> None:
-        """Initialize data loader for evaluation"""
-        # if not self._need_wrap:
-        #     self.data_loader = data
-        #     return
-        from fedcore.data.data import CompressionInputData
+    def _eval_single_power(self,batch,device=None):
+        """Trapezoidal device energy estimate in joules, elapsed seconds, mean watts."""
+        device=torch.device(device or self.device)
+        self._sync(device)
+        power_start=self._read_power_watts(device);start=self._clock()
+        self.model(batch);self._sync(device)
+        end=self._clock();power_end=self._read_power_watts(device)
+        elapsed=end-start
+        if elapsed<=0 or not np.isfinite([power_start,power_end,elapsed]).all() or min(power_start,power_end)<0:
+            raise MeasurementUnavailable('Invalid power/timing samples')
+        watts=(power_start+power_end)/2
+        return watts*elapsed,elapsed,watts
 
-        if isinstance(data, DataLoader):
-            self.data_loader = data
-            return
-            collate_fn = data.collate_fn
-            dataset = data.dataset
-        elif isinstance(data, CompressionInputData):
-            self.data_loader = data.test_dataloader
-            return
-        elif isinstance(data, str):
-            # TODO: Implement dataset loading from directory
-            raise NotImplementedError("Dataset loading from directory not implemented")
-        else:
-                dataset = data
+    @torch.no_grad()
+    def _measure_power_energy(self,device,num_samples):
+        device=torch.device(device)
+        self._read_power_watts(device) # availability before inference effects
+        self.model.to(device);self._warmup(device)
+        measurements=[self._eval_single_power(batch,device) for batch in self._generate_example_batch(num_samples,device=device)]
+        self._record('energy',device,len(measurements),'J/batch')
+        self.measurement_info['energy'].update(scope='whole device over inference interval',estimator='endpoint trapezoidal NVML power')
+        return measurements
 
-        self.data_loader = DataLoader(
-                dataset, 
-                batch_size=self.batch_size, 
-                shuffle=False, 
-                collate_fn=collate_fn
-            )
-        
+    def measure_energy(self,device=torch.device('cpu'),num_samples=None):
+        values=[m[0] for m in self._measure_power_energy(device,num_samples)]
+        return float(np.mean(values)),float(np.std(values))
+
+    def measure_power(self,device=torch.device('cpu'),num_samples=None):
+        measured=self._measure_power_energy(device,num_samples)
+        mean=sum(m[0] for m in measured)/sum(m[1] for m in measured)
+        self.measurement_info['power']={**self.measurement_info['energy'],'unit':'W'}
+        return float(mean),float(np.std([m[2] for m in measured]))
+
+    measure_power_consumption=measure_energy
+    measure_energy_consumption=measure_energy
+
+    def measure_model_size(self,device=None):
+        """Serialized state size in MiB, including quantized packed weights/buffers."""
+        buffer=io.BytesIO();torch.save(self.model.state_dict(),buffer)
+        return len(buffer.getvalue())/self.BYTES_TO_MB,0.
 
     @torch.no_grad()
     def evaluate(self):
-        """
-        Comprehensive model evaluation.
-        
-        Returns:
-            PerformanceMetrics object containing all evaluation results
-        """
-        logger.info("Starting model evaluation...")
-        devices = [torch.device('cpu')]
-
-        if self._cuda_available:
-            devices.append(self.device)
-
-        metrics = {
-            'latency': self.measure_latency,
-            'throughput': self.measure_throughput,
-            'power_consumption': self.measure_power_consumption
-        }
-
-        result = {'model_size': self.measure_model_size()}
-        for device in devices:
-            # Warm up if using CUDA
-            self.model.to(device)
-            if str(device.type) != 'cpu':
-                self._warmup_cuda()
-
-            # Measure performance metrics
-            result.update({
-                device.type + '_' + metric: method(device) for metric, method in metrics.items()
-            })
-        
+        result={'model_size':self.measure_model_size()}
+        for device in [torch.device('cpu')]+([self.device] if self.device.type=='cuda' else []):
+            for name,method in [('latency',self.measure_latency),('throughput',self.measure_throughput),('power',self.measure_power),('energy',self.measure_energy)]:
+                try:result[f'{device.type}_{name}']=method(device)
+                except MeasurementUnavailable as exc:result[f'{device.type}_{name}']={'status':'unavailable','reason':str(exc)}
+        result['measurement_info']=self.measurement_info
         return result
-    
-    def _generate_example_batch(self, num_samples, return_sample=False, device='cpu', metric=''):
-        num_samples = num_samples or float('inf')
-        self._need_wrap = False
-        dataloader = self.data_loader(max_batches=num_samples) if self._need_wrap else self.data_loader
-        count = 0
-        for batch in tqdm(
-            dataloader,
-            desc=f"Measuring {metric}",
-            unit="batch"
-        ):
-            
-            features = batch[0] if isinstance(batch, (tuple, list)) else batch
-            if return_sample:
-                for sample in features:
-                    sample = sample.to(device).unsqueeze(0)  # Add batch dimension
-                    yield sample
-                    count += return_sample
-                    if num_samples <= count:
-                        return
-                    
-            else:
-                features = features.to(device)
-                yield features
-                count += return_sample
-                if num_samples <= count:
-                    return
-    
-    @torch.no_grad()
-    def measure_power_consumption(self, device=torch.device('cpu'), num_samples=None):
-        """Measure inference power consumption"""
-        if device.type == 'cpu':
-            return float('inf'), float('inf')
-        self.model.to(device)
-        powers = []
-        for sample in self._generate_example_batch(num_samples, device=device, return_sample=False, metric='latency'):
-            powers.append(self._eval_single_power(sample))        
-        powers = np.array(powers)
-        return float(np.mean(powers)), float(np.std(powers))
-    
-    def _eval_single_power(self, batch):
-        index = self.device.index or 0
-        pynvml.nvmlInit()
-        handle = pynvml.nvmlDeviceGetHandleByIndex(index)
-        if self.device.type == 'cuda':
-            torch.cuda.synchronize()
-        
-        # Measurement
-        start_power = pynvml.nvmlDeviceGetPowerUsage(handle)
-        
-        output = self.model(batch)
-        
-        # CRITICAL: Wait for GPU to finish
-        if self.device.type == 'cuda':
-            torch.cuda.synchronize()
-        end_power = pynvml.nvmlDeviceGetPowerUsage(handle)
-        return end_power - start_power
-        
 
-    @torch.no_grad()
-    def measure_latency(self, device, num_samples: Optional[int] = None) -> Tuple[float, float]:
-        """Measure inference latency"""
-        method = self._cuda_latency_eval if device.type != 'cpu' else self._cpu_latency_eval
-        self.model.to(device)
-        latencies = []
-        for sample in self._generate_example_batch(num_samples, device=device, return_sample=False, metric='latency'):
-            latencies.append(method(sample))        
-        latencies = np.array(latencies)
-        return float(np.mean(latencies)), float(np.std(latencies))
+    def generate_report(self):return str(self.evaluate())
+    def __enter__(self):return self
+    def __exit__(self,*args):return False
 
-    def _cuda_latency_eval(self, sample: torch.Tensor) -> float:
-        """Measure latency on CUDA device"""
-        start_event = torch.cuda.Event(enable_timing=True)
-        end_event = torch.cuda.Event(enable_timing=True)
-        torch.cuda.synchronize()
 
-        start_event.record()
-        self.model(sample)
-        end_event.record()
-        torch.cuda.synchronize()
-        
-        return start_event.elapsed_time(end_event)
+def format_size(num,bytes=False):
+    factor=1024 if bytes else 1000;suffix='B' if bytes else ''
+    for unit in ['', 'K','M','G','T','P']:
+        if num<factor:return f'{num:.2f}{unit}{suffix}'
+        num/=factor
+    return f'{num:.2f}P{suffix}'
 
-    def _cpu_latency_eval(self, sample: torch.Tensor) -> float:
-        """Measure latency on CPU"""
-        start_time = time.perf_counter()
-        self.model(sample)
-        end_time = time.perf_counter()
-        return (end_time - start_time) * 1000  # Convert to milliseconds
 
-    @torch.no_grad()
-    def measure_throughput(self, device, num_iterations: int = 30) -> Tuple[float, float]:
-        """Measure inference throughput"""
-        throughputs = []
-        self.model.to(device)
-        method = self._cuda_throughput_eval if str(device.type) != 'cpu' else self._cpu_throughput_eval
-        for batch in self._generate_example_batch(self.n_batches, device=device, metric='throughput', return_sample=False):
-            batch_throughputs = method(batch, num_iterations)
-            throughputs.extend(batch_throughputs)
-        
-        throughputs = np.array(throughputs)
-        return float(np.mean(throughputs)), float(np.std(throughputs))
-
-    def _cuda_throughput_eval(self, batch: torch.Tensor, num_iterations: int) -> List[float]:
-        """Measure throughput on CUDA"""
-        start_events = [torch.cuda.Event(enable_timing=True) for _ in range(num_iterations)]
-        end_events = [torch.cuda.Event(enable_timing=True) for _ in range(num_iterations)]
-        torch.cuda.synchronize()
-        for i in range(num_iterations):
-            start_events[i].record()
-            self.model(batch)
-            end_events[i].record()
-            torch.cuda.synchronize()
-        times = [s.elapsed_time(e) for s, e in zip(start_events, end_events)]
-        return [len(batch) / (t / 1000) for t in times]  # samples per second
-
-    def _cpu_throughput_eval(self, batch: torch.Tensor, num_iterations: int) -> List[float]:
-        """Measure throughput on CPU"""
-        times = []
-        for _ in range(num_iterations):
-            start_time = time.perf_counter()
-            self.model(batch)
-            end_time = time.perf_counter()
-            times.append(end_time - start_time)
-        return [len(batch) / t for t in times]  # samples per second
-
-    def measure_model_size(self, device=None) -> Tuple[float, float]:
-        """Measure model size in MB
-        device is for compatibility, not used"""
-        #print('@@@ NUMEL:', sum(p.numel() for p in self.model.parameters()),)
-        try:
-            model_summary = summary(self.model, verbose=0)
-            size_mb = model_summary.total_param_bytes / self.BYTES_TO_MB
-            return round(size_mb, 3), 0.0  # std is 0 for deterministic measurement
-        except Exception as e:
-            logger.warning(f"Model size measurement failed: {e}")
-            # Fallback: calculate size manually
-            total_params = sum(p.numel() for p in self.model.parameters())
-            size_mb = (total_params * 4) / self.BYTES_TO_MB  # Assume float32
-            return round(size_mb, 3), 0.0
-
-    @torch.no_grad()
-    def _warmup_cuda(self, n_batches: int = WARMUP_BATCHES) -> None:
-        """Warm up CUDA by performing dummy computations"""
-        if not self._cuda_available:
-            return
-            
-        logger.info("Warming up CUDA...")
-        for batch in self._generate_example_batch(n_batches, device=self.device):
-            _ = self.model(batch)
-        torch.cuda.synchronize()
-
-    def generate_report(self) -> str:
-        """Generate a comprehensive performance report"""
-        metrics = self.evaluate()
-        
-        report = [
-            "=" * 50,
-            "MODEL PERFORMANCE REPORT",
-            "=" * 50,
-            f"Device: {self.device}",
-            f"Batch size: {self.batch_size}",
-            "",
-            "LATENCY:",
-            f"  Mean: {metrics.latency[0]:.2f} ± {metrics.latency[1]:.2f} ms",
-            "",
-            "THROUGHPUT:",
-            f"  Mean: {metrics.throughput[0]:.2f} ± {metrics.throughput[1]:.2f} samples/s",
-            "",
-            "MODEL SIZE:",
-            f"  {metrics.model_size[0]:.2f} MB",
-            "",
-            "CLASSIFICATION METRICS:",
-        ]
-        
-        for name, value in metrics.classification_metrics.items():
-            report.append(f"  {name}: {value:.4f}")
-            
-        report.extend([
-            "",
-            "REGRESSION METRICS:",
-        ])
-        
-        for name, value in metrics.regression_metrics.items():
-            report.append(f"  {name}: {value:.4f}")
-            
-        if metrics.energy_consumption:
-            report.extend([
-                "",
-                "ENERGY CONSUMPTION:",
-                f"  {metrics.energy_consumption:.2f} Joules",
-            ])
-            
-        report.append("=" * 50)
-        
-        return "\n".join(report)
-
-    def __enter__(self):
-        """Context manager support"""
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Cleanup on context exit"""
-        if self._cuda_available:
-            torch.cuda.empty_cache()
-
-# Utility functions (keep these at module level)
-def format_size(num: int, bytes: bool = False) -> str:
-    """Format number to human-readable size"""
-    factor = 1024 if bytes else 1000
-    suffix = "B" if bytes else ""
-    for unit in ["", "K", "M", "G", "T", "P"]:
-        if num < factor:
-            return f"{num:.2f}{unit}{suffix}"
-        num /= factor
-    return f"{num:.2f}P{suffix}"
-
-def format_duration(seconds: float, return_raw: bool = False) -> Union[str, float]:
-    """Format duration to human-readable time"""
-    if seconds >= 1:
-        value, unit = seconds, "s"
-    elif seconds >= 1e-3:
-        value, unit = seconds * 1e3, "ms"
-    else:
-        value, unit = seconds * 1e6, "μs"
-    
-    return value if return_raw else f"{value:.2f} {unit}"
+def format_duration(seconds,return_raw=False):
+    value,unit=(seconds,'s') if seconds>=1 else ((seconds*1e3,'ms') if seconds>=1e-3 else (seconds*1e6,'μs'))
+    return value if return_raw else f'{value:.2f} {unit}'

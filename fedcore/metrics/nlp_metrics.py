@@ -31,7 +31,6 @@ def _get_evaluate():
             raise ImportError("The 'evaluate' package is required for NLP metrics. Install it using `pip install evaluate`.") from e
     return _EVALUATE
 
-_get_evaluate()
 
 # =============================== NLP Metrics ================================
 
@@ -44,7 +43,7 @@ class EvaluateMetric(QualityMetric):
 
     metric_name: str = ""
     result_key: Optional[str] = None
-    _metric = None  
+    _metric = None
 
     @classmethod
     def _get_metric(cls):
@@ -52,7 +51,7 @@ class EvaluateMetric(QualityMetric):
         if cls._metric is None:
             if not cls.metric_name:
                 raise ValueError(f"metric_name must be set for {cls.__name__}")
-            cls._metric = _EVALUATE.load(cls.metric_name)
+            cls._metric = _get_evaluate().load(cls.metric_name)
         return cls._metric
 
     @classmethod
@@ -89,7 +88,7 @@ class EvaluateMetric(QualityMetric):
     def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
         out = pipeline.predict(reference_data, output_mode=cls.output_mode)
         preds = out.predict.predict
-        
+
         if isinstance(preds, torch.Tensor):
             preds = preds.detach().cpu().tolist()
         elif isinstance(preds, list):
@@ -137,8 +136,8 @@ class NLPAccuracy(EvaluateMetric):
     metric_name = "accuracy"
     result_key = "accuracy"
     output_mode = "labels"
-    
-    
+
+
 # =============================== Additional NLP Metrics ================================
 
 class NLPPrecision(EvaluateMetric):

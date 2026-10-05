@@ -1,554 +1,238 @@
-import os
+"""Authenticated local service over persistent, isolated v1 jobs.
+
+Use ``create_app`` for WSGI/test clients or ``python -m model_exporter.api_server``.
+Only allowlisted state_dict model bundles and tensor datasets may be uploaded.
+"""
+from __future__ import annotations
+import argparse
+import hmac
 import json
-import torch
-import torch.nn as nn
-from flask import Flask, request, jsonify, send_file, render_template_string
-from werkzeug.utils import secure_filename
-import logging
-from datetime import datetime
-from model_logic import model_manager
-from loader_bundle import LoaderBundle
-from fedcore_ops import (
-    detect_capabilities,
-    load_torch_module,
-    run_operation,
-    export_via_fedcore,
-    example_input_from_loader,
-    load_dataloader_from_bundle,
-)
+import os
+import re
+import secrets
+import uuid
+from pathlib import Path
+from flask import Flask, jsonify, request, send_file
+from werkzeug.exceptions import RequestEntityTooLarge, HTTPException
 
-from werkzeug.utils import secure_filename
-import shutil
-import sys
-from pathlib import Path as _Path
-
-_REPO_ROOT = str(_Path(__file__).resolve().parents[1])
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
-
-# Настройка логирования
-log_dir = "results/logs"
-os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, f"api_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
-
-logger = logging.getLogger(__name__)
-
-app = Flask(__name__)
-
-# Разрешенные типы файлов
-ALLOWED_EXTENSIONS = {'pt', 'pth', 'onnx', 'tflite', 'engine', 'xml', 'pb', 'json'}
-UPLOAD_FOLDER = 'results/models'
-LOADER_FOLDER = 'results/loaders'
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['LOADER_FOLDER'] = LOADER_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(LOADER_FOLDER, exist_ok=True)
+from fedcore.external_runtime.contracts import CompressionRequest, ContractError, DeviceProfile, InputSpec
+from fedcore.external_runtime.jobs import JobRunner, JobStore
+from fedcore.external_runtime.models import load_model_bundle
+from fedcore.external_runtime.security import confined_path, safe_load, safe_save
+from .loader_bundle import LoaderBundle
+from .model_logic import ModelManager
 
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def create_app(*, storage_root=None, token=None, python_executable=None, recover=True,
+               max_bytes=64 * 1024 * 1024, max_timeout=120):
+    root = Path(storage_root or os.environ.get("FEDCORE_SERVICE_ROOT", "results/service")).resolve()
+    uploads = root / "uploads"
+    uploads.mkdir(parents=True, exist_ok=True)
+    store = JobStore(root / "jobs")
+    if recover:
+        store.recover_interrupted()
+    runner = JobRunner(store, python_executable=python_executable)
+    app = Flask(__name__, template_folder="templates", static_folder="static")
+    secret = token or os.environ.get("FEDCORE_API_TOKEN") or secrets.token_urlsafe(32)
+    if not isinstance(secret, str) or not secret.isascii() or not 16 <= len(secret) <= 256:
+        raise ValueError("Service bearer token must contain at least 16 characters")
+    app.config.update(MAX_CONTENT_LENGTH=max_bytes + 16384, API_TOKEN=secret, JOB_STORE=store,
+                      JOB_RUNNER=runner, STORAGE_ROOT=root, UPLOAD_ROOT=uploads)
 
-# Эндпоинт для получения Web UI
-@app.route('/')
-def index():
-    """Возвращает Web UI"""
-    try:
-        # Читаем содержимое web_ui.html
-        with open('templates/web_ui.html', 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        return html_content
-    except Exception as e:
-        logger.error(f"Error loading web UI: {e}")
-        return "Web UI not found", 404
+    def upload_path(identifier):
+        if not isinstance(identifier, str) or not re.fullmatch(r"[0-9a-f]{32}\.fcb", identifier):
+            raise ContractError("invalid_artifact_id", "Select an artifact id returned by /upload")
+        return confined_path(uploads, identifier)
 
-# Эндпоинт для получения Web UI через API
-@app.route('/webui', methods=['GET'])
-def get_webui():
-    """Возвращает Web UI через API"""
-    try:
-        # Читаем содержимое web_ui.html
-        with open('templates/web_ui.html', 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        return html_content
-    except Exception as e:
-        logger.error(f"Error loading web UI: {e}")
-        return jsonify({"error": "Web UI not found"}), 500
+    @app.before_request
+    def access_boundary():
+        if request.endpoint in ("health", "index", "static"):
+            return None
+        supplied = request.headers.get("Authorization", "")
+        if not hmac.compare_digest(supplied, "Bearer " + secret):
+            return jsonify({"error": {"code": "unauthorized", "message": "Valid bearer token required"}}), 401
+        if request.is_json:
+            if len(request.get_data(cache=True)) > 65536:
+                raise ContractError("size_limit", "JSON request exceeds 64 KiB")
+            data = request.get_json()
+            if not isinstance(data, dict):
+                raise ContractError("invalid_schema", "JSON requests must be objects")
+            forbidden = {"model_path", "loader_path", "validation_loader_path", "export_dir", "architecture_file", "log_file", "path"}
+            if set(data) & forbidden:
+                raise ContractError("invalid_path", "Filesystem paths are not accepted; use uploaded artifact ids")
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    """Загрузка моделей / архитектур на сервер."""
-    try:
-        if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
-        
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-        
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-            
-            return jsonify({
-                "message": "File uploaded successfully",
-                "filename": filename,
-                "original_name": filename,
-                "path": file_path,
-                "kind": "model_or_arch",
-            })
-        else:
-            return jsonify({"error": "Invalid file type"}), 400
-            
-    except Exception as e:
-        logger.error(f"Error uploading file: {e}")
-        return jsonify({"error": str(e)}), 500
+    @app.errorhandler(ContractError)
+    def contract_error(error):
+        return jsonify({"error": error.to_dict()}), 400
 
+    @app.errorhandler(RequestEntityTooLarge)
+    def too_large(error):
+        return jsonify({"error": {"code": "size_limit", "message": "Request exceeds upload byte limit"}}), 413
 
-@app.route('/upload_loader', methods=['POST'])
-def upload_loader():
-    """Загрузка FedCore loader bundle (.pt) — данные, не модель."""
-    try:
-        if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
+    @app.errorhandler(Exception)
+    def unexpected(error):
+        # Do not return server paths or traceback contents to clients.
+        app.logger.exception("Service operation failed")
+        return jsonify({"error": {"code": "service_error", "message": "Service operation failed"}}), 500
 
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
+    @app.errorhandler(HTTPException)
+    def http_error(error):
+        return jsonify({"error": {"code": "http_error", "message": error.name}}), error.code
 
-        if not allowed_file(file.filename) or not file.filename.lower().endswith(('.pt', '.pth')):
-            return jsonify({"error": "Loader must be a .pt / .pth bundle"}), 400
+    @app.get("/health")
+    def health():
+        return jsonify({"status": "healthy", "contract_version": 1})
 
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['LOADER_FOLDER'], filename)
-        file.save(file_path)
+    @app.get("/")
+    @app.get("/webui")
+    def index():
+        return send_file(Path(__file__).parent / "templates" / "web_ui.html")
 
+    @app.post("/upload")
+    @app.post("/upload_loader")
+    def upload():
+        kind = "loader" if request.path == "/upload_loader" else request.form.get("kind")
+        if kind not in ("model", "dataset", "example", "loader"):
+            raise ContractError("unsupported_kind", "Declare model, dataset, example or loader before upload")
+        file = request.files.get("file")
+        if file is None or not file.filename:
+            raise ContractError("missing_file", "A tensor archive file is required")
+        identifier = uuid.uuid4().hex + ".fcb"
+        path = confined_path(uploads, identifier, must_exist=False)
+        total = 0
         try:
-            meta = LoaderBundle.inspect(file_path).to_dict()
-        except Exception as inspect_error:
-            os.remove(file_path)
-            return jsonify({
-                "error": f"Invalid loader bundle: {inspect_error}"
-            }), 400
-
-        return jsonify({
-            "message": "Loader uploaded successfully",
-            "filename": filename,
-            "original_name": filename,
-            "path": file_path,
-            "kind": "loader",
-            "meta": meta,
-        })
-    except Exception as e:
-        logger.error(f"Error uploading loader: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/loaders', methods=['GET'])
-def list_loaders():
-    """Список загруженных loader bundles + краткие метаданные."""
-    try:
-        loaders = []
-        folder = app.config['LOADER_FOLDER']
-        if not os.path.isdir(folder):
-            return jsonify({"loaders": []})
-
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-            if not os.path.isfile(file_path):
-                continue
-            entry = {
-                "name": filename,
-                "path": file_path,
-                "size": os.path.getsize(file_path),
-                "modified": datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat(),
-                "meta": None,
-            }
-            try:
-                entry["meta"] = LoaderBundle.inspect(file_path).to_dict()
-            except Exception as e:
-                entry["meta_error"] = str(e)
-            loaders.append(entry)
-        return jsonify({"loaders": loaders})
-    except Exception as e:
-        logger.error(f"Error listing loaders: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/inspect_loader', methods=['POST'])
-def inspect_loader():
-    """Метаданные одного loader bundle (без тензоров в ответе)."""
-    try:
-        data = request.get_json() or {}
-        loader_path = data.get('loader_path') or data.get('path')
-        if not loader_path:
-            filename = data.get('filename')
-            if filename:
-                loader_path = os.path.join(app.config['LOADER_FOLDER'], filename)
-        if not loader_path or not os.path.exists(loader_path):
-            return jsonify({"error": "Loader file not found"}), 404
-        meta = LoaderBundle.inspect(loader_path).to_dict()
-        return jsonify({"meta": meta, "path": loader_path})
-    except Exception as e:
-        logger.error(f"Error inspecting loader: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/files', methods=['GET'])
-def get_files():
-    """Получение списка загруженных файлов"""
-    try:
-        files = []
-        for filename in os.listdir(UPLOAD_FOLDER):
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            if os.path.isfile(file_path):
-                file_info = {
-                    "name": filename,
-                    "path": file_path,
-                    "size": os.path.getsize(file_path),
-                    "modified": datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat()
-                }
-                files.append(file_info)
-        
-        return jsonify({"files": files})
-    except Exception as e:
-        logger.error(f"Error getting files: {e}")
-        return jsonify({"error": str(e)}), 500
-    
-# Эндпоинт для проверки состояния сервера
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Проверка состояния сервера"""
-    return jsonify({
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat()
-    })
-
-# Эндпоинт для экспорта модели (FedCore: ONNX / TensorRT / TorchScript)
-@app.route('/export', methods=['POST'])
-def export_model():
-    """Export via FedCore (fedcore.tools.export / FedCore.export)."""
-    try:
-        data = request.get_json() or {}
-        if 'model_path' not in data:
-            return jsonify({"error": "model_path must be provided"}), 400
-
-        model_path = data['model_path']
-        if not os.path.exists(model_path):
-            return jsonify({"error": "Model file not found"}), 404
-
-        model = load_torch_module(model_path)
-        export_format = data.get('format', 'onnx')
-        export_dir = data.get('export_dir', 'results/exports')
-        model_name = data.get('model_name', 'model')
-        loader_path = data.get('loader_path')
-
-        loader = None
-        if loader_path and os.path.exists(loader_path):
-            loader = load_dataloader_from_bundle(loader_path)
-        dummy = example_input_from_loader(loader)
-
-        result = export_via_fedcore(
-            model,
-            framework=export_format,
-            export_dir=export_dir,
-            model_name=model_name,
-            example_input=dummy,
-        )
-        return jsonify(result)
-    except Exception as e:
-        logger.exception("Error during FedCore export")
-        return jsonify({"error": str(e) or repr(e)}), 500
-
-
-@app.route('/model_capabilities', methods=['POST'])
-def model_capabilities():
-    """Detect FedCore ops available for a loaded .pt module."""
-    try:
-        data = request.get_json() or {}
-        model_path = data.get('model_path')
-        if not model_path or not os.path.exists(model_path):
-            return jsonify({"error": "Model file not found"}), 404
-        model = load_torch_module(model_path)
-        caps = detect_capabilities(model, kind=data.get('kind', 'auto'))
-        return jsonify(caps.to_dict())
-    except Exception as e:
-        logger.exception("Error detecting capabilities")
-        return jsonify({"error": str(e) or repr(e)}), 500
-
-
-@app.route('/fedcore_op', methods=['POST'])
-def fedcore_op():
-    """Run FedCore operation: quantize / prune / low_rank / export_*."""
-    try:
-        data = request.get_json() or {}
-        operation = data.get('operation')
-        model_path = data.get('model_path')
-        if not operation or not model_path:
-            return jsonify({"error": "operation and model_path are required"}), 400
-        if not os.path.exists(model_path):
-            return jsonify({"error": "Model file not found"}), 404
-
-        result = run_operation(
-            operation,
-            model_path,
-            loader_path=data.get('loader_path'),
-            export_dir=data.get('export_dir', 'results/exports'),
-            model_name=data.get('model_name', 'model'),
-            pruning_ratio=float(data.get('pruning_ratio', 0.3)),
-            kind=data.get('kind', 'auto'),
-        )
-        return jsonify(result)
-    except PermissionError as e:
-        return jsonify({"error": str(e)}), 403
-    except Exception as e:
-        logger.exception("Error running FedCore op")
-        return jsonify({"error": str(e) or repr(e)}), 500
-
-# Эндпоинт для экспорта частей модели
-@app.route('/export_parts', methods=['POST'])
-def export_parts():
-    """Экспорт частей модели с разделением"""
-    try:
-        data = request.get_json()
-        
-        # Получаем параметры
-        model_path = data.get('model_path')
-        export_dir = data.get('export_dir', 'results/exports')
-        architecture_file = data.get('architecture_file')
-        
-        # Загружаем модель
-        if not model_path or not os.path.exists(model_path):
-            return jsonify({"error": "Model file not found"}), 404
-        
-        try:
-            model = torch.load(model_path, map_location="cpu", weights_only=False)
-        except TypeError:
-            model = torch.load(model_path, map_location="cpu")
-        
-        # Экспортируем части
-        result = model_manager.export_parts(model, export_dir, architecture_file)
-        
-        if "error" in result:
-            return jsonify(result), 500
-            
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.error(f"Error during parts export: {e}")
-        return jsonify({"error": str(e)}), 500
-
-# Эндпоинт для анализа модели
-@app.route('/analyze_model', methods=['POST'])
-def analyze_model():
-    """Анализ модели"""
-    try:
-        data = request.get_json()
-        
-        # Получаем путь к модели
-        model_path = data.get('model_path')
-        if not model_path:
-            return jsonify({"error": "Model path not provided"}), 400
-        
-        # Проверяем существование файла
-        if not os.path.exists(model_path):
-            return jsonify({"error": "Model file not found"}), 404
-        
-        # Full nn.Module checkpoints (not bare state_dict)
-        try:
-            model = torch.load(model_path, map_location="cpu", weights_only=False)
-        except TypeError:
-            model = torch.load(model_path, map_location="cpu")
-
-        if isinstance(model, dict) and isinstance(model.get("model"), nn.Module):
-            model = model["model"]
-        elif isinstance(model, dict) and "state_dict" in model and not isinstance(model, nn.Module):
-            return jsonify({
-                "error": (
-                    "Checkpoint contains state_dict only, not a full nn.Module. "
-                    "Save with torch.save(model, path) or include the module object."
-                )
-            }), 400
-
-        arch_file = data.get("architecture_file") or data.get("device_profile")
-        if arch_file and not model_manager.set_device_architecture(arch_file):
-            return jsonify({"error": f"Device profile not found: {arch_file}"}), 404
-
-        result = model_manager.analyze_model(model)
-
-        if "error" in result:
-            return jsonify(result), 500
-
-        try:
-            kind = data.get("kind", "auto")
-            result["capabilities"] = detect_capabilities(model, kind=kind).to_dict()
-        except Exception as cap_err:
-            logger.warning(f"capabilities detection failed: {cap_err}")
-            result["capabilities"] = {
-                "operations": [],
-                "kind": "unknown",
-                "suggested_kind": "other",
-                "findings": [],
-            }
-
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.exception("Error during model analysis")
-        return jsonify({"error": str(e) or repr(e)}), 500
-
-# Эндпоинт для анализа лог файла
-@app.route('/analyze_log', methods=['POST'])
-def analyze_log():
-    """Анализ лог файла"""
-    try:
-        data = request.get_json()
-        log_file_path = data.get('log_file')
-        
-        if not log_file_path or not os.path.exists(log_file_path):
-            return jsonify({"error": "Log file not found"}), 404
-        
-        # Анализируем лог
-        result = model_manager.analyze_log(log_file_path)
-        
-        if "error" in result:
-            return jsonify(result), 500
-            
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.error(f"Error during log analysis: {e}")
-        return jsonify({"error": str(e)}), 500
-
-# Эндпоинт для получения списка поддерживаемых операций
-@app.route('/supported_ops', methods=['GET'])
-def get_supported_ops():
-    """Получение списка поддерживаемых операций"""
-    try:
-        result = model_manager.get_supported_ops()
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"Error getting supported operations: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/device_profile_ops', methods=['GET', 'POST'])
-def device_profile_ops():
-    """Ops declared by a device profile JSON from device_architectures/."""
-    try:
-        if request.method == 'POST':
-            data = request.get_json() or {}
-            arch_file = data.get('architecture_file') or data.get('file')
-        else:
-            arch_file = request.args.get('architecture_file') or request.args.get('file')
-
-        if not arch_file:
-            return jsonify({"error": "architecture_file is required"}), 400
-
-        path = arch_file
-        if not os.path.exists(path):
-            candidate = os.path.join("device_architectures", os.path.basename(path))
-            if os.path.exists(candidate):
-                path = candidate
+            with path.open("wb") as output:
+                while True:
+                    chunk = file.stream.read(65536)
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total > max_bytes:
+                        raise ContractError("size_limit", "Uploaded artifact exceeds byte limit")
+                    output.write(chunk)
+            if kind == "model":
+                load_model_bundle(path, max_bytes)
+            elif kind == "loader":
+                bundle = LoaderBundle.load(path)
+                # Convert legacy tensor loader schema to the v1 explicit dataset schema.
+                import torch
+                safe_save({"kind": "fedcore_tensor_dataset", "version": 1,
+                            "features": bundle["features"], "targets": bundle["targets"]}, path)
+                kind = "dataset"
             else:
-                return jsonify({"error": f"Device profile not found: {arch_file}"}), 404
+                value = safe_load(path, max_bytes)
+                import torch
+                if kind == "example" and type(value) is not torch.Tensor:
+                    raise ContractError("invalid_example", "Example archive must contain one tensor")
+                if kind == "dataset":
+                    if not isinstance(value, dict) or set(value) != {"kind", "version", "features", "targets"} or value["kind"] != "fedcore_tensor_dataset" or type(value["version"]) is not int or value["version"] != 1:
+                        raise ContractError("invalid_dataset", "Invalid versioned tensor dataset")
+                    x, y = value["features"], value["targets"]
+                    if type(x) is not torch.Tensor or type(y) is not torch.Tensor or not x.ndim or not y.ndim or x.shape[0] != y.shape[0] or not len(x):
+                        raise ContractError("invalid_dataset", "Features and targets need aligned nonempty sample axes")
+            return jsonify({"id": identifier, "filename": identifier, "kind": kind, "size_bytes": path.stat().st_size}), 201
+        except Exception:
+            path.unlink(missing_ok=True)
+            raise
 
-        with open(path, "r", encoding="utf-8") as f:
-            arch_data = json.load(f)
+    @app.get("/files")
+    @app.get("/loaders")
+    def files():
+        return jsonify({"files": [{"id": p.name, "size_bytes": p.stat().st_size} for p in sorted(uploads.glob("*.fcb"))]})
 
-        supported = list(arch_data.get("supported_ops") or [])
-        unsupported = list(arch_data.get("unsupported_ops") or [])
-        # stable unique order
-        seen = set()
-        supported_unique = []
-        for op in supported:
-            if op not in seen:
-                seen.add(op)
-                supported_unique.append(op)
+    def enqueue(payload):
+        contract = CompressionRequest.parse(payload)
+        if contract.resources.max_bytes > max_bytes or contract.resources.timeout_seconds > max_timeout:
+            raise ContractError("resource_limit", "Requested resources exceed service limits")
+        for name in (contract.model, contract.example, contract.data.validation, contract.data.train, contract.data.calibration):
+            if name is not None:
+                upload_path(name)
+        job_id = runner.submit(contract, uploads)
+        return jsonify({"id": job_id, "state": "queued", "status_url": f"/jobs/{job_id}"}), 202
 
-        return jsonify({
-            "name": arch_data.get("name", os.path.basename(path)),
-            "file": path.replace("\\", "/"),
-            "cpu_framework": arch_data.get("cpu_framework"),
-            "npu_framework": arch_data.get("npu_framework"),
-            "supported_ops": supported_unique,
-            "unsupported_ops": unsupported,
-            "supported_count": len(supported_unique),
-            "unsupported_count": len(unsupported),
-        })
-    except Exception as e:
-        logger.error(f"Error reading device profile ops: {e}")
-        return jsonify({"error": str(e)}), 500
+    @app.post("/jobs")
+    def create_job():
+        return enqueue(request.get_json())
 
-# Эндпоинт для получения информации об архитектуре
-@app.route('/architecture', methods=['GET'])
-def get_architecture():
-    """Получение информации об архитектуре"""
+    @app.get("/jobs/<job_id>")
+    def get_job(job_id):
+        value = store.get(job_id)
+        # Result paths are job-relative; caller can only download this job's artifact.
+        return jsonify(value)
+
+    @app.post("/jobs/<job_id>/cancel")
+    def cancel_job(job_id):
+        runner.cancel(job_id)
+        return jsonify(store.get(job_id))
+
+    @app.delete("/jobs/<job_id>")
+    def delete_job(job_id):
+        store.delete(job_id)
+        return jsonify({"id": job_id, "state": "deleted"})
+
+    @app.get("/jobs/<job_id>/artifact")
+    def artifact(job_id):
+        job = store.get(job_id)
+        if job["state"] != "succeeded":
+            raise ContractError("artifact_unavailable", "Job has no successful artifact")
+        return send_file(confined_path(store.directory(job_id), job["result"]["artifact"]), as_attachment=True)
+
+    @app.post("/export")
+    def export():
+        payload = dict(request.get_json())
+        payload["method"] = "export"
+        return enqueue(payload)
+
+    @app.post("/fedcore_op")
+    def operation():
+        payload = dict(request.get_json())
+        selected = payload.pop("operation", None)
+        allowed = {"low_rank": "svd", "export_torchscript": "export", "export_onnx": "export"}
+        if selected not in allowed:
+            raise ContractError("unsupported_operation", "Operation is outside the enabled service allowlist")
+        payload["method"] = allowed[selected]
+        if selected.startswith("export_"):
+            payload["artifact_format"] = selected.removeprefix("export_")
+        return enqueue(payload)
+
+    @app.post("/analyze_model")
+    def analyze():
+        payload = request.get_json()
+        if set(payload) - {"model_id", "example_id", "input_spec", "profile"}:
+            raise ContractError("invalid_schema", "Unexpected analysis fields")
+        model = load_model_bundle(upload_path(payload.get("model_id")), max_bytes)
+        example = safe_load(upload_path(payload.get("example_id")), max_bytes)
+        InputSpec.parse(payload.get("input_spec")).validate_tensor(example)
+        profile = DeviceProfile.parse(payload.get("profile", {}))
+        value = ModelManager(profile).analyze_model(model, example)
+        return jsonify(value), 400 if "error" in value else 200
+
+    @app.get("/architectures")
+    def architectures():
+        return jsonify(ModelManager().get_architectures())
+
+    @app.post("/export_parts")
+    def unsupported_legacy_partition():
+        raise ContractError("unsupported_service_operation", "Partition export is a local ModelManager operation requiring actual intermediate inputs")
+
+    return app
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--storage-root", default="results/service")
+    parser.add_argument("--port", type=int, default=5000)
+    parser.add_argument("--host", choices=("127.0.0.1", "0.0.0.0"), default="127.0.0.1")
+    args = parser.parse_args()
+    token = os.environ.get("FEDCORE_API_TOKEN")
+    if not token:
+        raise SystemExit("Set FEDCORE_API_TOKEN (at least 16 characters) before starting the local service")
+    app = create_app(storage_root=args.storage_root, token=token)
     try:
-        device_arch = model_manager.device_arch
-        return jsonify({
-            "architecture": device_arch,
-            "name": device_arch.get("name", "Unknown"),
-            "cpu_framework": device_arch.get("cpu_framework", "Unknown"),
-            "npu_framework": device_arch.get("npu_framework", "Unknown")
-        })
-    except Exception as e:
-        logger.error(f"Error getting architecture info: {e}")
-        return jsonify({"error": str(e)}), 500
-
-# Эндпоинт для получения списка всех доступных архитектур
-@app.route('/architectures', methods=['GET'])
-def get_architectures():
-    """Получение списка всех доступных архитектур"""
-    try:
-        result = model_manager.get_architectures()
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"Error getting architectures: {e}")
-        return jsonify({"error": str(e)}), 500
+        app.run(host=args.host, port=args.port, debug=False)
+    finally:
+        app.config["JOB_RUNNER"].close()
 
 
-# Эндпоинт для получения лог файла
-@app.route('/logs/<log_file>', methods=['GET'])
-def get_log_file(log_file):
-    """Получение лог файла"""
-    try:
-        # Проверяем, что файл существует
-        log_path = os.path.join("results/logs", log_file)
-        if not os.path.exists(log_path):
-            return jsonify({"error": "Log file not found"}), 404
-        
-        return send_file(log_path, as_attachment=True)
-    except Exception as e:
-        logger.error(f"Error retrieving log file: {e}")
-        return jsonify({"error": str(e)}), 500
-
-def _reset_session_uploads():
-    """Session uploads are not kept across server restarts."""
-    for folder in (UPLOAD_FOLDER, LOADER_FOLDER):
-        if os.path.isdir(folder):
-            shutil.rmtree(folder, ignore_errors=True)
-        os.makedirs(folder, exist_ok=True)
-
-
-if __name__ == '__main__':
-    os.makedirs("device_architectures", exist_ok=True)
-    os.makedirs("templates", exist_ok=True)
-    os.makedirs("results/exports", exist_ok=True)
-    os.makedirs("results/analysis", exist_ok=True)
-    os.makedirs("results/logs", exist_ok=True)
-    os.makedirs("api_logs", exist_ok=True)
-    _reset_session_uploads()
-
-    logger.info("Starting REST API server. ..")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+if __name__ == "__main__":
+    main()

@@ -31,9 +31,9 @@
       ],
       "description": "Implementations of FedCore Pruning strategy"
     },
-        "fedcore_low_rank": {
+    "fedcore_low_rank": {
       "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
-      "input_type": "[DataTypesEnum.ts,DataTypesEnum.table]",
+      "input_type": "[DataTypesEnum.ts, DataTypesEnum.table]",
       "output_type": "[DataTypesEnum.table]",
       "accepted_node_types": [
         "any"
@@ -81,6 +81,23 @@
         "non-default"
       ],
       "description": "Implementations of FedCore Detection strategy"
+    },
+    "fedcore_lora": {
+      "tasks": "[TaskTypesEnum.classification, TaskTypesEnum.ts_forecasting, TaskTypesEnum.regression]",
+      "input_type": "[DataTypesEnum.ts, DataTypesEnum.table]",
+      "output_type": "[DataTypesEnum.table]",
+      "accepted_node_types": [
+        "any"
+      ],
+      "forbidden_node_types": "[]",
+      "strategies": [
+        "fedcore.interfaces.fedcore_strategy",
+        "FedcoreLoraStrategy"
+      ],
+      "tags": [
+        "non-default"
+      ],
+      "description": "Local LoRA adapter training"
     }
   },
   "operations": {
@@ -100,6 +117,13 @@
     },
     "detection_model": {
       "meta": "fedcore_detection",
+      "presets": [],
+      "tags": [
+        "non-default"
+      ]
+    },
+    "lora_model": {
+      "meta": "fedcore_lora",
       "presets": [],
       "tags": [
         "non-default"

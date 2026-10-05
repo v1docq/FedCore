@@ -1,0 +1,10 @@
+include README.md LICENSE pyproject.toml
+recursive-include fedcore/repository/data *.json
+recursive-include model_exporter/templates *.html
+recursive-include model_exporter/static *.js *.css
+recursive-include model_exporter/device_architectures *.json
+prune tests
+prune examples
+prune build
+prune dist
+global-exclude __pycache__ *.py[cod]

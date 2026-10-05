@@ -14,6 +14,8 @@ from fedot.api.api_utils.api_composer import ApiComposer
 import fedot.utilities.define_metric_by_task as define_metric_by_task
 from fedot.api.main import Fedot
 from fedot.core.composer.gp_composer.gp_composer import GPComposer
+import fedot.core.pipelines.verification as pipeline_verification
+import fedot.core.pipelines.verification_rules as verification_rules
 from fedcore.architecture.utils.paths import PROJECT_PATH
 from fedcore.interfaces.search_space import get_fedcore_search_space
 from fedcore.repository.fedcore_impl.abstract import (
@@ -36,7 +38,22 @@ from fedcore.repository.fedcore_impl.metrics import MetricsRepository as Fedcore
 
 # FEDCORE_METRIC_REPO = FedcoreMetric()
 
+_DEFAULT_ROOT_VALIDATOR = verification_rules.has_final_operation_as_model
+
+
+def _has_fedcore_root_or_model(pipeline):
+    operation = pipeline.root_node.operation.operation_type.split('/')[0]
+    if operation in {'training_model', 'low_rank_model', 'pruning_model',
+                     'quantization_model', 'distilation_model', 'lora_model'}:
+        return
+    return _DEFAULT_ROOT_VALIDATOR(pipeline)
+
 FEDOT_METHOD_TO_REPLACE = {
+    (verification_rules, 'has_final_operation_as_model'): _has_fedcore_root_or_model,
+    (pipeline_verification, 'has_final_operation_as_model'): _has_fedcore_root_or_model,
+    (pipeline_verification, 'common_rules'): [
+        _has_fedcore_root_or_model if rule is _DEFAULT_ROOT_VALIDATOR else rule
+        for rule in pipeline_verification.common_rules],
     #(Fedot, 'fit'),
     #(GPComposer, '_convert_opt_results_to_pipeline'),
     (PipelineObjectiveEvaluate, 'evaluate'): evaluate_objective_fedcore,
@@ -44,8 +61,8 @@ FEDOT_METHOD_TO_REPLACE = {
     (DataSourceSplitter, "build"): build_fedcore_dataproducer,
 
     (metrics_repository, "MetricsRepository"): FedcoreMetric,
-    (metrics_repository.MetricsRepository, 'get_metric'): FedcoreMetric.get_metric, 
-    (metrics_repository.MetricsRepository, 'get_metric_class'): FedcoreMetric.get_metric_class, 
+    (metrics_repository.MetricsRepository, 'get_metric'): FedcoreMetric.get_metric,
+    (metrics_repository.MetricsRepository, 'get_metric_class'): FedcoreMetric.get_metric_class,
 
     (define_metric_by_task, "MetricByTask"): FedcoreMetricByTask,
     (define_metric_by_task.MetricByTask, "compute_default_metric"): FedcoreMetricByTask.compute_default_metric,
@@ -65,132 +82,81 @@ FEDOT_METHOD_TO_REPLACE = {
 }
 
 
-DEFAULT_METHODS = [
-    getattr(class_impl[0], class_impl[1]) for class_impl in FEDOT_METHOD_TO_REPLACE
-]
+# Descriptors are captured before any explicit adaptation, preserving static methods.
+from copy import deepcopy
+from inspect import getattr_static
+from threading import RLock, get_ident
+
+DEFAULT_METHODS = [getattr_static(owner, name) for owner, name in FEDOT_METHOD_TO_REPLACE]
 
 
 class FedcoreModels:
-    def __init__(self):
-        self.fedcore_data_operation_path = pathlib.Path(
-            PROJECT_PATH,
-            "fedcore",
-            "repository",
-            "data",
-            "compression_data_operation_repository.json",
-        )
-        self.base_data_operation_path = pathlib.Path("data_operation_repository.json")
+    """Explicit reversible FEDOT adaptation. Nested scopes restore their exact parent state."""
+    _lock = RLock()
+    _stack = []
 
-        self.fedcore_model_path = pathlib.Path(
-            PROJECT_PATH,
-            "fedcore",
-            "repository",
-            "data",
-            "compression_model_repository.json",
-        )
-        self.base_model_path = pathlib.Path("model_repository.json")
+    def __init__(self):
+        from importlib.resources import files
+        resources = files('fedcore.repository.data')
+        self.fedcore_data_operation_path = str(resources.joinpath('compression_data_operation_repository.json'))
+        self.fedcore_model_path = str(resources.joinpath('compression_model_repository.json'))
+        self._frames = []
 
     def _replace_operation(self, to_fedcore=True):
-        for (cls, method_name), fedcore_method in FEDOT_METHOD_TO_REPLACE.items():
-            new_method = fedcore_method if to_fedcore else getattr(cls, method_name)
-            setattr(cls, method_name, new_method)
-            from types import ModuleType
-
-            def is_module(obj):
-                """Check if an object is a module"""
-                return isinstance(obj, ModuleType)
-            
-            import sys 
-            if is_module(cls):
-                sys.modules[getattr(cls, '__name__')] = cls
+        for ((owner, name), replacement), original in zip(FEDOT_METHOD_TO_REPLACE.items(), DEFAULT_METHODS):
+            setattr(owner, name, replacement if to_fedcore else original)
 
     def setup_repository(self):
-        OperationTypesRepository.__repository_dict__.update(
-            {
-                "data_operation": {
-                    "file": self.fedcore_data_operation_path,
-                    "initialized_repo": True,
-                    "default_tags": [],
-                }
-            }
-        )
-
-        OperationTypesRepository.assign_repo(
-            "data_operation", self.fedcore_data_operation_path
-        )
-
-        OperationTypesRepository.__repository_dict__.update(
-            {
-                "model": {
-                    "file": self.fedcore_data_operation_path,
-                    "initialized_repo": True,
-                    "default_tags": [],
-                }
-            }
-        )
-        OperationTypesRepository.assign_repo("model", self.fedcore_model_path)
-        # replace mutations
-        self._replace_operation(to_fedcore=True)
+        # FEDOT adaptation changes process-global objects. Hold the reentrant lock
+        # for the entire scope so other FedCore scopes cannot interleave it.
+        self._lock.acquire()
+        try:
+            methods = {(owner, name): getattr_static(owner, name) for owner, name in FEDOT_METHOD_TO_REPLACE}
+            repositories = deepcopy(OperationTypesRepository.__repository_dict__)
+            initialized = dict(OperationTypesRepository.__initialized_repositories__)
+            frame = (self, methods, repositories, initialized, get_ident())
+            self._stack.append(frame)
+            self._frames.append(frame)
+        except BaseException:
+            self._lock.release()
+            raise
+        try:
+            for kind, path in [('data_operation', self.fedcore_data_operation_path),
+                               ('model', self.fedcore_model_path)]:
+                OperationTypesRepository.__repository_dict__[kind] = {
+                    'file': path, 'initialized_repo': None, 'default_tags': []}
+                OperationTypesRepository.assign_repo(kind, path)
+            self._replace_operation()
+        except BaseException:
+            self.setup_default_repository()
+            raise
         return OperationTypesRepository
 
     def setup_default_repository(self):
-        """
-        Switching to fedot models.
-        """
-        OperationTypesRepository.__repository_dict__.update(
-            {
-                "data_operation": {
-                    "file": self.base_data_operation_path,
-                    "initialized_repo": None,
-                    "default_tags": [
-                        OperationTypesRepository.DEFAULT_DATA_OPERATION_TAGS
-                    ],
-                }
-            }
-        )
-        OperationTypesRepository.assign_repo(
-            "data_operation", self.base_data_operation_path
-        )
-
-        OperationTypesRepository.__repository_dict__.update(
-            {
-                "model": {
-                    "file": self.base_model_path,
-                    "initialized_repo": None,
-                    "default_tags": [],
-                }
-            }
-        )
-        OperationTypesRepository.assign_repo("model", self.base_model_path)
-        self._replace_operation(to_fedcore=False)
+        if not self._frames:
+            return OperationTypesRepository
+        frame = self._frames[-1]
+        if frame[4] != get_ident():
+            raise RuntimeError('FEDOT adaptation must be restored by its installing thread')
+        if not self._stack or self._stack[-1] is not frame:
+            raise RuntimeError('FEDOT adaptation scopes must close in reverse installation order')
+        try:
+            for (owner, name), original in frame[1].items():
+                setattr(owner, name, original)
+            OperationTypesRepository.__repository_dict__.clear()
+            OperationTypesRepository.__repository_dict__.update(frame[2])
+            OperationTypesRepository.__initialized_repositories__.clear()
+            OperationTypesRepository.__initialized_repositories__.update(frame[3])
+            self._stack.pop()
+            self._frames.pop()
+        finally:
+            self._lock.release()
         return OperationTypesRepository
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Switching to fedot models.
-        """
-        OperationTypesRepository.__repository_dict__.update(
-            {
-                "data_operation": {
-                    "file": self.base_data_operation_path,
-                    "initialized_repo": None,
-                    "default_tags": [
-                        OperationTypesRepository.DEFAULT_DATA_OPERATION_TAGS
-                    ],
-                }
-            }
-        )
-        OperationTypesRepository.assign_repo(
-            "data_operation", self.base_data_operation_path
-        )
+    def __enter__(self):
+        self.setup_repository()
+        return self
 
-        OperationTypesRepository.__repository_dict__.update(
-            {
-                "model": {
-                    "file": self.base_model_path,
-                    "initialized_repo": None,
-                    "default_tags": [],
-                }
-            }
-        )
-        OperationTypesRepository.assign_repo("model", self.base_model_path)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.setup_default_repository()
+        return False

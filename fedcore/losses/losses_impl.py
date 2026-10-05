@@ -1,84 +1,49 @@
+"""Stable distillation divergences: teacher first, student second.
+
+Teacher logits are detached. Alpha=0 is KL(teacher||student), alpha=1 is
+KL(student||teacher); interior alpha is the normalized alpha divergence.
+"""
 import torch
+from torch.nn import functional as F
 
 
-def alpha_divergence(teacher_logits, student_logits, alpha, reduction="none", clip=1e3):
-    """Compute alpha-divergence distillation loss.
-
-    Args:
-        teacher_logits: Logits from the teacher network.
-        student_logits: Logits from the student network.
-        alpha: Divergence coefficient in ``[0, 1]``. Values near 0 approximate
-            ``KL(teacher || student)``; values near 1 approximate
-            ``KL(student || teacher)``.
-        reduction: Reduction mode applied across the batch.
-        clip: Clamp value for numerical stability.
-    """
-    assert isinstance(alpha, float)
-    q_prob = torch.nn.functional.softmax(teacher_logits, dim=1)
-    p_prob = torch.nn.functional.softmax(student_logits, dim=1)
-    alpha_is_small = abs(alpha) < 1e-3
-    alpha_is_big = abs(alpha - 1.0) < 1e-3
-    if alpha_is_small:
-        lndiff = q_prob.log() - p_prob.log()
-        lndiff.clamp_(-clip, clip)
-        loss = torch.sum(q_prob * lndiff, dim=1)  # KL(q||p)
-    elif alpha_is_big:
-        loss = torch.sum(p_prob * (p_prob.log() - q_prob.log()), dim=1)  # KL(p||q)
-    else:
-        iw_ratio = torch.pow(p_prob / q_prob, alpha)
-        iw_ratio = iw_ratio.clamp(0, clip)
-        loss = (
-            1.0 / (alpha * (alpha - 1.0)) * ((iw_ratio * q_prob).sum(1) - 1.0)
-        )  # D_a(p||q)
-
-    if reduction == "mean":
+def reduce_loss(loss,reduction):
+    if reduction in ('mean','batchmean'):
         return loss.mean()
-    elif reduction == "sum":
+    if reduction == 'sum':
         return loss.sum()
-    return loss
+    if reduction == 'none':
+        return loss
+    raise ValueError(f'Unknown reduction: {reduction}')
 
 
-def f_divergence(teacher_logits, student_logits, alpha, iw_clip=1e3, p_normalize=False):
-    """Compute f-divergence distillation loss.
+def alpha_divergence(teacher_logits,student_logits,alpha,reduction='none',clip=1e3):
+    if teacher_logits.shape != student_logits.shape or student_logits.ndim < 2:
+        raise ValueError('Matching logits with a class dimension are required')
+    q = F.log_softmax(teacher_logits.detach(),dim=-1)
+    p = F.log_softmax(student_logits,dim=-1)
+    a = torch.as_tensor(alpha,device=p.device,dtype=p.dtype)
+    if not torch.isfinite(a).all() or ((a<0)|(a>1)).any():
+        raise ValueError('alpha must be finite and in [0,1]')
+    a = torch.broadcast_to(a,p.shape[:-1])
+    safe_a = a.clamp(1e-4,1-1e-4)
+    log_mass = torch.logsumexp((1-safe_a[...,None])*q + safe_a[...,None]*p,dim=-1).clamp(max=0)
+    middle = -torch.expm1(log_mass)/(safe_a*(1-safe_a))
+    forward = (q.exp()*(q-p)).sum(-1)
+    reverse = (p.exp()*(p-q)).sum(-1)
+    loss = torch.where(a == 0,forward,torch.where(a == 1,reverse,middle))
+    return reduce_loss(loss,reduction)
 
-    Args:
-        teacher_logits: Logits from the teacher network.
-        student_logits: Logits from the student network.
-        alpha: Divergence coefficient in ``[0, 1]``.
-        iw_clip: Clamp value for the importance-ratio term.
-        p_normalize: Whether to normalize student probabilities before
-            computing the divergence.
+
+def f_divergence(teacher_logits,student_logits,alpha,iw_clip=1e3,p_normalize=False):
+    """Return detached diagnostic and exact differentiable student loss.
+
+    This is the alpha-divergence itself, not an importance-ratio surrogate.
+    ``p_normalize=True`` accepts nonnegative normalized student probabilities.
     """
-    assert isinstance(alpha, float)
-    teacher_prob = torch.nn.functional.softmax(teacher_logits, dim=1).detach()
-    student_prob = (
-        student_logits.detach()
-        if p_normalize
-        else torch.nn.functional.softmax(student_logits, dim=1).detach()
-    )
-    teacher_log_prob = torch.nn.functional.log_softmax(
-        teacher_logits, dim=1
-    )  # gradient is only backpropagated here
-    importance_ratio = student_prob / teacher_prob
-
-    alpha_is_small = abs(alpha) < 1e-3
-    alpha_is_big = abs(alpha - 1.0) < 1e-3
-    if alpha_is_small:
-        importance_ratio = importance_ratio.clamp(0, iw_clip)
-        f = -importance_ratio.log()
-        f_base = 0
-        rho_f = importance_ratio.log() - 1.0
-    elif alpha_is_big:
-        f = importance_ratio * importance_ratio.log()
-        f_base = 0
-        rho_f = importance_ratio
-    else:
-        iw_alpha = torch.pow(importance_ratio, alpha)
-        iw_alpha = iw_alpha.clamp(0, iw_clip)
-        f = iw_alpha / alpha / (alpha - 1.0)
-        f_base = 1.0 / alpha / (alpha - 1.0)
-        rho_f = iw_alpha / alpha + f_base
-
-    loss = torch.sum(teacher_prob * (f - f_base), dim=1)
-    grad_loss = -torch.sum(teacher_prob * rho_f * teacher_log_prob, dim=1)
-    return loss, grad_loss
+    if p_normalize:
+        if (student_logits < 0).any() or not torch.allclose(student_logits.sum(-1),torch.ones_like(student_logits.sum(-1))):
+            raise ValueError('Normalized student probabilities are required')
+        student_logits = student_logits.clamp_min(torch.finfo(student_logits.dtype).tiny).log()
+    loss = alpha_divergence(teacher_logits,student_logits,alpha)
+    return loss.detach(),loss

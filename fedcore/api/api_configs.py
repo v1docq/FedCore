@@ -28,18 +28,21 @@ from inspect import signature, isclass
 from numbers import Number
 from pathlib import Path
 from typing import (
-    get_origin, get_args,   
-    Any, Callable, Dict, Iterable, List, Literal, Optional, Union, 
+    get_origin, get_args,
+    Any, Callable, Dict, Iterable, List, Literal, Optional, Union,
 )
+from collections.abc import Mapping, Iterable as IterableABC, Callable as CallableABC
+from types import UnionType
 import logging
+from math import isfinite
 
 from torch.ao.quantization.utils import _normalize_kwargs
 from torch.nn import Module
 
 from fedcore.repository.constant_repository import (
     FedotTaskEnum,
-    Schedulers, 
-    Optimizers, 
+    Schedulers,
+    Optimizers,
     # PEFTStrategies,
     SLRStrategiesEnum,
     TaskTypesEnum,
@@ -58,6 +61,8 @@ __all__ = [
     'QuantizationTemplate',
     'FedotConfigTemplate',
     'PruningTemplate',
+    'LoraTemplate',
+    'LoRATemplate',
     'APIConfigTemplate',
     'get_nested',
     'LookUp',
@@ -88,7 +93,7 @@ def get_nested(root: object, k: str):
     return reduce(getattr, path, root), last
 
 
-class MisconfigurationError(BaseException):
+class MisconfigurationError(ValueError):
     """Aggregated configuration validation error.
 
     Instances of this error contain a list of underlying exceptions
@@ -97,15 +102,104 @@ class MisconfigurationError(BaseException):
     messages line by line.
     """
 
-    def __init__(self, exs, *args):
-        super().__init__(*args)
-        self.exs = exs
+    def __init__(self, exs, *args, field=None):
+        self.exs = list(exs) if isinstance(exs, (list, tuple)) else [exs]
+        self.field = field
+        self.fields = tuple(error.field for error in self.exs
+                            if isinstance(error, MisconfigurationError) and error.field is not None)
+        super().__init__(str(self), *args)
 
     def __repr__(self):
         return '\n'.join([f'\t{str(x)}' for x in self.exs])
 
     def __str__(self):
         return self.__repr__()
+
+
+def matches_annotation(value, annotation):
+    """Validate closed alternatives before examining their members."""
+    origin, args = get_origin(annotation), get_args(annotation)
+    if annotation is Any:
+        return True
+    if annotation in (int, float) and isinstance(value, bool):
+        return False
+    if origin in (Union, UnionType):
+        return any(matches_annotation(value, option) for option in args)
+    if origin is Literal:
+        return any(type(value) is type(option) and value == option for option in args)
+    if annotation is None or annotation is type(None):
+        return value is None
+    if annotation is Callable or origin is CallableABC:
+        return callable(value)
+    if isclass(annotation) and issubclass(annotation, Enum):
+        return (value is None or isinstance(value, annotation) or
+                isinstance(value, str) and any(value in (member.name, member.value) for member in annotation))
+    if origin is not None:
+        if not isinstance(value, origin):
+            return False
+        if isinstance(value, Mapping) and args:
+            return all(matches_annotation(k, args[0]) and matches_annotation(v, args[1])
+                       for k, v in value.items())
+        if isinstance(value, IterableABC) and args:
+            if origin is tuple and len(args) > 1 and args[-1] is not Ellipsis:
+                return len(value) == len(args) and all(matches_annotation(v, a) for v, a in zip(value, args))
+            return all(matches_annotation(v, args[0]) for v in value)
+        return True
+    return isinstance(value, annotation) if isclass(annotation) else True
+
+
+def validate_config(config):
+    """Validate fields and dependent numeric settings without starting resources."""
+    errors = []
+    def visit(section, path=''):
+        invalid = set()
+        for key, value in section.items():
+            field = f'{path}.{key}' if path else key
+            try:
+                section.check(key, value)
+            except MisconfigurationError as error:
+                errors.append(error)
+                invalid.add(key)
+            if isinstance(value, ConfigTemplate):
+                visit(value, field)
+            elif isinstance(value, (list, tuple)):
+                for i, item in enumerate(value):
+                    if isinstance(item, ConfigTemplate):
+                        visit(item, f'{field}[{i}]')
+        if isinstance(section, DistributedConfigTemplate):
+            for key in ('n_workers', 'threads_per_worker'):
+                if key not in invalid and getattr(section, key) <= 0:
+                    errors.append(MisconfigurationError(f'{path}.{key}: must be positive', field=key))
+        if isinstance(section, TrainingTemplate) and 'epochs' not in invalid and section.epochs < 0:
+            errors.append(MisconfigurationError(f'{path}.epochs: must be nonnegative', field='epochs'))
+        if isinstance(section, LowRankTemplate):
+            if 'distortion_factor' not in invalid and not 0 < section.distortion_factor <= 1:
+                errors.append(MisconfigurationError(f'{path}.distortion_factor: expected (0, 1]', field='distortion_factor'))
+            if 'rank' not in invalid and section.rank is not None and (section.rank <= 0 or isinstance(section.rank, float) and section.rank > 1):
+                errors.append(MisconfigurationError(f'{path}.rank: expected positive integer or fraction in (0, 1]', field='rank'))
+        if isinstance(section, PruningTemplate) and 'pruning_ratio' not in invalid and not 0 <= section.pruning_ratio <= 1:
+            errors.append(MisconfigurationError(f'{path}.pruning_ratio: expected [0, 1]', field='pruning_ratio'))
+        if isinstance(section, LoraTemplate):
+            if invalid:
+                return
+            if section.epochs <= 0:
+                errors.append(MisconfigurationError(f'{path}.epochs: LoRA requires a positive integer', field='epochs'))
+            if section.lora_r <= 0 or any(v is not None and v <= 0 for v in (section.rank, section.r)):
+                errors.append(MisconfigurationError(f'{path}.lora_r: rank must be positive', field='lora_r'))
+            if section.rank is not None and section.r is not None and section.rank != section.r:
+                errors.append(MisconfigurationError(f'{path}.rank: conflicts with r', field='rank'))
+            if not isfinite(section.lora_alpha) or not 0 <= section.lora_dropout < 1:
+                errors.append(MisconfigurationError(f'{path}: invalid LoRA alpha or dropout', field='lora_dropout'))
+            if section.use_peft:
+                errors.append(MisconfigurationError(f'{path}.use_peft: this operation supports local LoRA only', field='use_peft'))
+            if section.target_layers is not None and section.lora_target_modules is not None and section.target_layers != section.lora_target_modules:
+                errors.append(MisconfigurationError(f'{path}.target_layers: conflicting aliases', field='target_layers'))
+    visit(config)
+    if errors:
+        raise MisconfigurationError(errors)
+    from fedcore.repository.capabilities import validate_requested_modes
+    validate_requested_modes(config.to_dict())
+    return config
 
 
 @dataclass
@@ -172,7 +266,7 @@ class ConfigTemplate:
             Annotation object for the field (can be a type, :class:`Enum`,
             :data:`Union`, :data:`Literal`, etc.).
         """
-        obj = cls if ConfigTemplate in cls.__bases__ else cls.__bases__[0]
+        obj = getattr(cls, '__template__', cls)
         return signature(obj.__init__).parameters[key].annotation
 
     @classmethod
@@ -200,33 +294,12 @@ class ConfigTemplate:
             If the value does not match any of the allowed types for the
             field.
         """
-        # we don't check parental attr
         if key == '_parent':
-            return   
-
-        def _check_primal(annotation, key, val):
-            if isclass(annotation):
-                if issubclass(annotation, Enum):
-                    if val is not None and not hasattr(annotation, val):
-                        return ValueError(
-                            f'`{val}` not supported as {key} at config {cls.__name__}. Options: {annotation._member_names_}')
-                elif not isinstance(val, annotation):
-                    return TypeError(f'`Passed `{val}` at config: {cls.__name__}, field: {key}. Expected: {annotation}')
-            elif annotation is Callable and not hasattr(val, '__call__'):
-                return TypeError(f'`Passed `{val}` at config: {cls.__name__}, field: {key}, is not callable!')
-            elif get_origin(annotation) is Literal and not val in get_args(annotation):
-                return ValueError(f'Passed value `{val}` at config {cls.__name__}. Supported: {get_args(annotation)}')
-            return False
-
-        def _check(annotation, key, val):   
-            options = get_args(annotation) or (annotation,)
-            exs = [_check_primal(option, key, val)
-                               for option in options]
-            if exs and all(exs):
-                raise MisconfigurationError(exs)
-        
+            return
         annotation = cls.get_annotation(key)
-        _check(annotation, key, val)
+        if not matches_annotation(val, annotation):
+            raise MisconfigurationError(
+                f'{cls.__name__}.{key}: expected {annotation}, got {val!r}', field=key)
 
     def __new__(cls, *args, **kwargs):
         """Normalize constructor arguments and return them without instantiation.
@@ -257,7 +330,7 @@ class ConfigTemplate:
                                      args))
         allowed_parameters.update(complemented_args)
         return cls, allowed_parameters
-    
+
     def __repr__(self):
         """Return a multi-line representation with field names and values."""
         params_str = "\n".join(f"{k}: {getattr(self, k)}" for k in self.__slots__)
@@ -310,12 +383,15 @@ class ConfigTemplate:
         Nested objects that implement :meth:`to_dict` are converted
         recursively.
         """
-        ret = {}
-        for k, v in self.items():
-            if hasattr(v, "to_dict"):
-                v = v.to_dict()
-            ret[k] = v
-        return ret
+        def convert(value):
+            if isinstance(value, ConfigTemplate):
+                return value.to_dict()
+            if isinstance(value, dict):
+                return {key: convert(item) for key, item in value.items()}
+            if isinstance(value, (list, tuple)):
+                return type(value)(convert(item) for item in value)
+            return value
+        return {key: convert(value) for key, value in self.items()}
 
     @property
     def config(self):
@@ -468,7 +544,7 @@ class FedotConfigTemplate(ConfigTemplate):
     task_params: Optional[TaskTypesEnum] = None
     metric: Optional[Iterable[str]] = None  ###
     n_jobs: int = -1
-    initial_assumption: Union[Module, str, dict] = None
+    initial_assumption: Optional[Union[Module, str, dict]] = None
     available_operations: Optional[Iterable[str]] = None
     optimizer: Optional[Any] = None
 
@@ -534,6 +610,9 @@ class TrainingTemplate(ConfigTemplate):
     custom_learning_params: dict = None
     custom_criterions: dict = None
     model_architecture: ModelArchitectureConfigTemplate = None
+    model_factory: Optional[Callable] = None
+    model_factory_before: Optional[Callable] = None
+    model_factory_after: Optional[Callable] = None
 
 
 @dataclass
@@ -555,7 +634,7 @@ class LearningConfigTemplate(ExtendableConfigTemplate):
     """
     learning_strategy: Literal['from_scratch', 'checkpoint'] = 'from_scratch'
     criterion: Union[Callable, TorchLossesConstant] = LookUp(None)
-    peft_strategy_params: TrainingTemplate = None
+    peft_strategy_params: Union[TrainingTemplate, List[TrainingTemplate]] = None
     learning_strategy_params: TrainingTemplate = None
     fedcore_id = None
 
@@ -651,6 +730,24 @@ class LowRankTemplate(TrainingTemplate):
 
 
 @dataclass
+class LoraTemplate(TrainingTemplate):
+    """Local LoRA training; aliases normalize at the public API boundary."""
+    lora_r: int = 8
+    lora_alpha: Union[int, float] = 16.0
+    lora_dropout: float = 0.0
+    lora_target_modules: Optional[List[str]] = None
+    lora_bias: Literal['none'] = 'none'
+    use_peft: bool = False
+    rank: Optional[int] = None
+    r: Optional[int] = None
+    target_layers: Optional[List[str]] = None
+    lr: float = 0.001
+
+
+LoRATemplate = LoraTemplate
+
+
+@dataclass
 class PruningTemplate(TrainingTemplate):
     """Configuration for structured/unstructured pruning.
 
@@ -675,15 +772,15 @@ class PruningTemplate(TrainingTemplate):
     """
 
     """Example of specific node template"""
-    prune_each: int = -1,
+    prune_each: int = -1
     importance: str = "magnitude" # main
     importance_norm: int = 1 # main
     pruning_ratio: float = 0.5 # main
-    importance_reduction: str = 'max' # drop 
+    importance_reduction: str = 'max' # drop
     importance_normalize: str = 'max' # drop
     pruning_iterations: int = 1 # drop
     finetune_params: TrainingTemplate = None
-    
+
 @dataclass
 class QuantizationTemplate(TrainingTemplate):
     """Configuration for model quantization.

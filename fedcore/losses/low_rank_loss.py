@@ -1,92 +1,38 @@
+"""Regularizers on the canonical factors, including grouped/spatial matrices."""
 import torch
-from torch.linalg import matrix_norm, vector_norm
-from torch.nn.modules import Module
-from torch import Tensor
+from torch import nn
+from fedcore.models.network_impl.decomposed_layers import IDecomposed
 
 
-class SVDLoss(Module):
-    """Base class for singular value decomposition losses.
+def _zero(model):
+    p = next(model.parameters(),None)
+    return p.sum()*0 if p is not None else torch.tensor(0.)
 
-    Args:
-        factor: The hyperparameter by which the calculated loss function is multiplied
-            (default: ``1``).
-    """
 
-    def __init__(self, factor: float = 1.0) -> None:
+class SVDLoss(nn.Module):
+    def __init__(self,factor=1.):
         super().__init__()
         self.factor = factor
 
 
 class OrthogonalLoss(SVDLoss):
-    """Orthogonality regularizer for unitary matrices obtained by SVD decomposition.
-
-    Args:
-        factor: The hyperparameter by which the calculated loss function is multiplied
-            (default: ``1``).
-    """
-
-    def __init__(self, factor: float = 1.0) -> None:
-        super().__init__(factor=factor)
-
-    def forward(self, model: Module) -> Tensor:
-        """Calculates orthogonality loss.
-
-        Args:
-            model: Optimizable module containing SVD decomposed layers.
-        """
-        loss = 0
-        n = 0
-        for name, parameter in model.named_parameters():
-            if name.split(".")[-1] == "U":
-                if len(parameter.size()) < 3:
-                    U = parameter
-                else:
-                    n, c, w, h = parameter.size()
-                    decompose_shape = (n, c * w * h)
-                    U = parameter.reshape(decompose_shape)
-                n += 1
-                r = U.size()[1]
-                E = torch.eye(r, device=U.device)
-                loss += matrix_norm(U.transpose(0, 1) @ U - E) ** 2 / r
-
-            elif name.split(".")[-1] == "Vh":
-                if len(parameter.size()) < 3:
-                    Vh = parameter
-                else:
-                    n, c, w, h = parameter.size()
-                    decompose_shape = (n, c * w * h)
-                    Vh = parameter.reshape(decompose_shape)
-                r = Vh.size()[0]
-                E = torch.eye(r, device=Vh.device)
-                loss += matrix_norm(Vh @ Vh.transpose(0, 1) - E) ** 2 / r
-        if not n:
-            return 0
-        return self.factor * loss / n
+    def forward(self,model):
+        penalties = []
+        for module in model.modules():
+            if isinstance(module,IDecomposed) and module.U is not None:
+                u,_,vh = module.get_U_S_Vh()
+                rank = u.shape[-1]
+                eye = torch.eye(rank,device=u.device,dtype=u.dtype)
+                penalties.append(((u.transpose(-2,-1)@u-eye).square().sum(dim=(-2,-1)) +
+                                  (vh@vh.transpose(-2,-1)-eye).square().sum(dim=(-2,-1))).mean()/rank)
+        return self.factor*torch.stack(penalties).mean() if penalties else _zero(model)
 
 
 class HoyerLoss(SVDLoss):
-    """Hoyer regularizer for matrix with singular values obtained by SVD decomposition.
-
-    Args:
-        factor: Multiplier applied to the computed loss (default: ``1``).
-    """
-
-    def __init__(self, factor: float = 1.0) -> None:
-        super().__init__(factor=factor)
-
-    def forward(self, model: Module) -> Tensor:
-        """Calculates Hoyer loss.
-
-        Args:
-            model: Optimizable module containing SVD decomposed layers.
-        """
-        loss = 0
-        n = 0
-        for name, parameter in model.named_parameters():
-            if name.split(".")[-1] == "S":
-                n += 1
-                S = parameter
-                loss += vector_norm(S, ord=1) / vector_norm(S, ord=2)
-        if not n:
-            return 0
-        return self.factor * loss / n
+    def forward(self,model):
+        values = []
+        for name,p in model.named_parameters():
+            if name.split('.')[-1] == 'S':
+                norm = p.norm()
+                values.append(p.abs().sum()/norm.clamp_min(torch.finfo(p.dtype).tiny))
+        return self.factor*torch.stack(values).mean() if values else _zero(model)

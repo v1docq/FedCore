@@ -17,7 +17,6 @@ import torch
 from torch import nn
 import inspect
 
-from transformers import AutoTokenizer
 
 from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning_in_place
 from fedcore.algorithm.low_rank.svd_tools import load_svd_state_dict, decompose_module
@@ -32,8 +31,6 @@ from fedcore.repository.constant_repository import (
 from fedcore.algorithm.base_compression_model import BaseCompressionModel
 from tdecomp._base import Decomposer
 from tdecomp.matrix.decomposer import DECOMPOSERS
-from fedcore.algorithm.low_rank.reassembly import TransMLA, FlatLLM
-from external.transmlacore.modify_config import settings
 
 from fedcore.api.utils.misc import trace_methods
 
@@ -81,11 +78,12 @@ class LowRankModel(BaseCompressionModel):
     _additional_hooks = [LRHooks]
 
     def __init__(self, params: Optional[OperationParameters] = {}):
-        super().__init__(params or {})
+        params = params or {}
+        super().__init__(params)
         self.decomposing_mode = params.get("decomposing_mode", DECOMPOSE_MODE)
         self.decomposer = params.get('decomposer', 'svd')
         self.compose_mode = params.get("compose_mode", None)
-        self.device = default_device()
+        self.device = params.get("device", default_device())
 
         self.decomposer_params = self._extract_decomposer_params(params)
 
@@ -163,19 +161,18 @@ class LowRankModel(BaseCompressionModel):
     #     self.model_after = model
 
     #     return self.model_after
-    
+
     def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
         print('Prepare original model for Low Rank Truncation'.center(80, '='))
 
         super()._init_model_before_model_after(input_data)
-        decompose_module(
+        self.model_after = decompose_module(
             self.model_after,
             self.decomposing_mode,
             self.decomposer,
             self.compose_mode,
             self.decomposer_params
         )
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@222', {n: type(p) for n, p in self.model_after.named_parameters()})
         self.model_after.to(self.device)
         # if self._model_id_before: #TODO after big merge I don't know, do we need that "if". See PR "Model registry #33"
         #     self._registry.update_metrics(
@@ -185,7 +182,7 @@ class LowRankModel(BaseCompressionModel):
         #         stage="before",
         #         mode=self.__class__.__name__
         #     )
-        
+
         from fedcore.algorithm.low_rank.hooks import OnetimeRankPruner
         super()._init_trainer_with_model_after(input_data, [])
         self.trainer.hooks.append(OnetimeRankPruner(self.trainer))
@@ -253,8 +250,7 @@ class LowRankModel(BaseCompressionModel):
         # model_type = getattr(getattr(model, 'config', None), 'model_type', None)
 
         # if model_type in settings:
-        #     from transformers import AutoTokenizer
-
+        #
         #     model_name = getattr(model.config, "name_or_path", None)
         #     if model_name is None:
         #         raise ValueError("Can't find model name in config to load tokenizer")
@@ -264,8 +260,7 @@ class LowRankModel(BaseCompressionModel):
         #     model = trans_mla.reassemble(model, tokenizer=tokenizer)
 
         # if model_type in ['llama', 'mistral']:
-        #     from transformers import AutoTokenizer
-
+        #
         #     model_name = getattr(model.config, "name_or_path", None)
         #     if model_name is None:
         #         raise ValueError("Can't find model name in config to load tokenizer")

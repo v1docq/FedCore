@@ -16,9 +16,9 @@ from fedcore.repository.model_repository import (
     LOW_RANK_MODELS,
     DETECTION_MODELS,
     TRAINING_MODELS,
+    LORA_MODELS,
 )
 
-from fedcore.models.network_impl.llm_trainer import LLMTrainer
 from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 
 class FedCoreStrategy(EvaluationStrategy):
@@ -39,6 +39,9 @@ class FedCoreStrategy(EvaluationStrategy):
             supplementary_data=predict_data.supplementary_data,
         )
         output_data.predict = prediction
+        output_data.target = getattr(prediction, 'target', None)
+        if getattr(prediction, 'idx', None) is not None:
+            output_data.idx = prediction.idx
         return output_data
 
     def __init__(
@@ -102,6 +105,10 @@ class FedcoreTrainingStrategy(FedCoreStrategy):
 
 class FedcoreLowRankStrategy(FedCoreStrategy):
     _operations_by_types = LOW_RANK_MODELS
+
+
+class FedcoreLoraStrategy(FedCoreStrategy):
+    _operations_by_types = LORA_MODELS
 
 
 class FedcorePruningStrategy(FedCoreStrategy):

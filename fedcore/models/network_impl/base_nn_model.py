@@ -65,8 +65,8 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
 
     @property
     def model_before(self):
-        return self.model 
-    
+        return self.model
+
     @property
     def model_after(self):
         return self.model
@@ -226,7 +226,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         """
         self.__substitute_device_quant()
         return self._predict_model(input_data, output_mode)
-    
+
     @staticmethod
     def filter_hooks_by_params(params, hook_types) -> list:
         filtered_hooks = []
@@ -237,29 +237,33 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
         return filtered_hooks
 
     @torch.no_grad()
-    def _predict_model(
-            self, x_test: CompressionInputData, output_mode: str = "default"
-    ):
-        model: torch.nn.Module = self.model or x_test.model
-        device = self.device 
-        model.to(device)
-        model.eval()
-        prediction = []
+    def _predict_model(self, x_test: CompressionInputData, output_mode: str = 'default'):
+        model = self.model if self.model is not None else x_test.model
+        if model is None:
+            raise ValueError('A model is required for prediction')
+        model.to(self.device)
+        modes = [(child, child.training) for child in model.modules()]
+        prediction, targets = [], []
         dataloader = DataLoaderHandler.check_convert(x_test.val_dataloader,
-                                                     mode=self.batch_type,
-                                                     max_batches=self.calib_batch_limit)
+            mode=self.batch_type, max_batches=self.calib_batch_limit)
         if self.task_type is None:
             self.task_type = x_test.task.task_type
-
-        for i, batch in tqdm(enumerate(dataloader, 1), total=len(dataloader)):  ###TODO why val_dataloader???
-            *inputs, targets = batch
-            inputs = tuple(inputs_.to(self.device) for inputs_ in inputs if hasattr(inputs_, 'to'))
-            prediction.append(model(*inputs))
-            del inputs
-            del batch
-            if i % self._clear_each == 0:
-                self._clear_cache()
-        return self._convert_predict(torch.concat(prediction), output_mode, x_test)
+        try:
+            model.eval()
+            for batch in dataloader:
+                *inputs, target = batch
+                inputs = tuple(value.to(self.device) for value in inputs)
+                prediction.append(model(*inputs).detach().cpu())
+                targets.append(torch.as_tensor(target).detach().cpu())
+        finally:
+            for child, training in modes:
+                child.training = training
+        if not prediction:
+            raise ValueError('Evaluation source is empty')
+        output = self._convert_predict(torch.cat(prediction), output_mode, x_test)
+        output.target = torch.cat(targets)
+        output.idx = np.arange(len(output.target))
+        return output
 
     def _convert_predict(self, pred: Tensor, output_mode: str = "labels", input_data: Union[CompressionInputData, InputData] = None):
         assert isinstance(pred, torch.Tensor), "Prediction convertion failed, prediction is not a Tensor"

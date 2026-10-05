@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Union
 import torch_pruning as tp
 if TYPE_CHECKING:
     from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
-    
+
 from fedcore.api.utils.misc import trace_methods
 
 #@trace_methods
@@ -68,11 +68,11 @@ class ZeroShotPruner(BaseHook):
         self.pruning_iterations = pruning_iterations
         self.prune_each = prune_each
         self.link_to_trainer(trainer)
-        
+
 
     def link_to_trainer(self, hookable_trainer: 'BaseNeuralModel'):
         self.criterion_for_pruner = hookable_trainer.criterion
-        self.device = default_device()
+        self.device = torch.device(hookable_trainer.device)
 
     @classmethod
     def check_init(cls, d: dict):
@@ -163,7 +163,7 @@ class PrunerWithReg(ZeroShotPruner):
     HOOK_PLACE = 50
 
     def _regularize_model_params(self, pruner: Union[tp.BNScalePruner, tp.GroupNormPruner], train_dataloader):
-        """Regularize params, that have small magnitude during training process  
+        """Regularize params, that have small magnitude during training process
         See https://github.com/VainF/Torch-Pruning?tab=readme-ov-file#sparse-training-optional
         """
         pruner.update_regularizer()  # <== initialize regularizer. Define model groups for pruning
@@ -467,4 +467,4 @@ def define_pruner_hook_type(importance_name: str) -> type[ZeroShotPruner]:
         callback = PrunerWithGrad
     elif zeroshot_pruner:
         callback = ZeroShotPruner
-    return callback  
+    return callback

@@ -2,7 +2,7 @@
 
 I/O contract
 ------------
-Save:   DataLoader → ``*.pt`` dict with tensors + structural metadata
+Save:   DataLoader → non-pickle ``*.fcb`` tensor archive + structural metadata
 Load:   path → metadata (and optional tensors)
 
 No train/test/calibration roles — the server is a generic ops wrapper;
@@ -43,7 +43,7 @@ class LoaderBundleMeta:
 
 
 class LoaderBundle:
-    """Build / load / inspect portable ``.pt`` dataloader bundles."""
+    """Build / load / inspect non-pickle ``.fcb`` dataloader bundles."""
 
     @classmethod
     def from_dataloader(
@@ -93,21 +93,33 @@ class LoaderBundle:
             name=name or path.stem,
             num_classes=num_classes,
         )
-        torch.save(bundle, path)
+        from fedcore.external_runtime.security import safe_save
+        safe_save(bundle, path)
         return path
 
     @classmethod
     def load(cls, path: Union[str, Path]) -> Dict[str, Any]:
         path = Path(path)
-        try:
-            obj = torch.load(path, map_location="cpu", weights_only=False)
-        except TypeError:
-            obj = torch.load(path, map_location="cpu")
+        from fedcore.external_runtime.security import safe_load
+        obj = safe_load(path)
         if not isinstance(obj, dict) or obj.get("kind") != BUNDLE_KIND:
             raise ValueError(
                 f"Not a FedCore loader bundle ({path.name}). "
                 f"Expected kind={BUNDLE_KIND}."
             )
+        if type(obj.get("version")) is not int or obj.get("version") != BUNDLE_VERSION:
+            raise ValueError("Unsupported loader bundle version")
+        features, targets = obj.get("features"), obj.get("targets")
+        if type(features) is not torch.Tensor or type(targets) is not torch.Tensor:
+            raise ValueError("Loader bundle must contain feature and target tensors")
+        if features.ndim < 1 or targets.ndim < 1 or not len(features) or len(features) != len(targets):
+            raise ValueError("Feature and target sample axes must be aligned and nonempty")
+        if obj.get("num_samples") != len(features) or obj.get("sample_shape") != list(features.shape[1:]):
+            raise ValueError("Loader metadata does not match the tensor shapes")
+        if type(obj.get("batch_size")) is not int or not 1 <= obj["batch_size"] <= 1000000:
+            raise ValueError("Invalid loader batch size")
+        if obj.get("dtype") != str(features.dtype).removeprefix("torch."):
+            raise ValueError("Loader dtype metadata does not match features")
         return obj
 
     @classmethod

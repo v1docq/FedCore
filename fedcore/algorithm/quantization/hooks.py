@@ -1,17 +1,8 @@
-"""Training hooks for model quantization.
+"""Historical trainer helpers, outside the supported quantization operation.
 
-This module defines several quantization hooks that can be attached to
-:class:`BaseNeuralModel`:
-
-* :class:`DynamicQuantizationHook` – post-training dynamic quantization (PTQ)
-  using :func:`torch.ao.quantization.quantize_dynamic`.
-* :class:`StaticQuantizationHook` – post-training static quantization with
-  calibration on a validation loader.
-* :class:`QATHook` – quantization-aware training (QAT) hook that prepares
-  the model for QAT and later converts it to a quantized version.
-
-All hooks inherit from :class:`AbstractQuantizationHook`, which implements
-common scheduling and backend configuration.
+These hooks do not own prepare/convert or prove a QAT conversion. Use
+BaseQuantizer.fit for the supported prepare -> train/calibrate -> convert
+contract and its explicit QuantizationResult. Kept for import compatibility.
 """
 
 import torch
@@ -22,15 +13,7 @@ from fedcore.models.network_impl.utils.hooks import BaseHook
 
 
 class DynamicQuantizationHook(BaseHook):
-    """Hook for dynamic post-training quantization (PTQ).
-
-    At the scheduled epochs, this hook calls
-    :func:`torch.ao.quantization.quantize_dynamic` on the model using the
-    provided module mapping and dtype. The model is temporarily put into
-    eval mode during quantization and then switched back to train mode.
-
-    Quantization type identifier: ``"dynamic"``.
-    """
+    """Legacy eval/device preparation helper; it does not convert a model."""
     _SUMMON_KEY = 'quantization'
     _hook_place = 'post'
 
@@ -50,20 +33,7 @@ class DynamicQuantizationHook(BaseHook):
 
 
 class StaticQuantizationHook(BaseHook):
-    """Hook for static post-training quantization with calibration.
-
-    At the scheduled epochs, this hook:
-
-    1. Puts the model into eval mode.
-    2. Calls :func:`torch.quantization.prepare` to insert observers.
-    3. Runs a calibration pass over ``kws["val_loader"]`` under
-       ``torch.no_grad()``.
-    4. Calls :func:`torch.quantization.convert` to produce the quantized
-       model.
-    5. Switches the model back to train mode.
-
-    Quantization type identifier: ``"static"``.
-    """
+    """Legacy calibration helper; it does not prepare or convert a model."""
     _SUMMON_KEY = 'quantization'
     _hook_place = 'post'
 
@@ -103,21 +73,7 @@ class StaticQuantizationHook(BaseHook):
 
 
 class QATHook(BaseHook):
-    """Hook for quantization-aware training (QAT).
-
-    This hook has two distinct phases controlled by epochs:
-
-    * At ``epoch == prepare_qat_after_epoch`` it prepares the model for QAT
-      by calling :func:`torch.quantization.prepare_qat` in-place.
-    * At ``epoch == quant_each`` (or at the last epoch if ``quant_each == -1``),
-      it converts the QAT-prepared model into a quantized model via
-      :func:`torch.quantization.convert`.
-
-    Between these two phases, the trainer can perform regular training steps
-    on the QAT-prepared model.
-
-    Quantization type identifier: ``"qat"``.
-    """
+    """Legacy training helper; use BaseQuantizer for prepared QAT conversion."""
     _SUMMON_KEY = 'quantization'
     _hook_place = 'post'
 
@@ -133,7 +89,7 @@ class QATHook(BaseHook):
         self.train_dataloader = params['input_data'].train_dataloader
         if isinstance(self.criterion, tuple):
             self.criterion = self.criterion[0]
-        
+
     def trigger(self, quant_type, **kwargs):
         """Determine whether to prepare QAT or convert at the current epoch.
 

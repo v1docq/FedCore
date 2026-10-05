@@ -1,110 +1,97 @@
+"""Rank policies evaluated on a true, nonnegative singular spectrum.
+
+explained_variance retains squared Frobenius norm; absolute_sum retains nuclear
+norm; energy retains cumulative softmax mass (not Frobenius energy). Quantile
+keeps a threshold fraction of components, including ties deterministically.
+"""
 from enum import Enum
 from functools import partial
-from joblib import cpu_count
-from math import floor, ceil
-
+from math import ceil
 import torch
-
 from fedcore.models.network_impl.decomposed_layers import IDecomposed
-from fedcore.architecture.utils.misc import _contiguous, count_params
-from fedcore.architecture.utils.misc import EnumNoValue
-
-__all__ = [
-    'rank_threshold_pruning',
-    'rank_threshold_pruning_in_place',
-    'S_STRATEGIES',
-]
 
 
-def rank_threshold_pruning_in_place(
-        decomposed_module: IDecomposed,
-        threshold: float = 0.75,
-        strategy: str = "explained_variance",
-        module_name: str = "",
-        round_to_times=4
-) -> None:
-    """Prune the weight matrices to the threshold (in-place).
-    Args:
-        conv: The optimizable layer.
-        threshold: hyperparameter must be in the range (0, 1].
-    Raises:
-        Assertion Error: If ``threshold`` is not in (0, 1].
-    """
-    assert 0 < threshold <= 1, "Threshold must be in the range (0, 1]"
-
-    if hasattr(decomposed_module, 'S') and decomposed_module.S is None:
-        return
-    decomposed_module._anti_three_layers_compose()
-
-    U, S, Vh = decomposed_module.get_U_S_Vh()
-    
-
-    threshold = decomposed_module._get_threshold() or threshold  # for cases of per-layer adaptive thresholds
-
-    if strategy in SLRStrategies:
-        indices = _apply_S_strategy(S, strategy, threshold, round_to_times=round_to_times)
-        initial_size = count_params(decomposed_module)
-    else:
-        # TODO Grad-based & approx. error
-        raise ValueError(f'Unknown strategy: `{strategy}`')
-    decomposed_module.set_U_S_Vh(
-        _contiguous(U[:, indices]),
-        _contiguous(S[indices]),
-        _contiguous(Vh[indices, :]),
-    )
-    print(
-        "After rank pruning left only {} % of {} layer params".format(
-            round(100 * (count_params(decomposed_module) / initial_size)), module_name
-        )
-    )
+def _validate(S, threshold, round_to_times=1):
+    if not 0 < threshold <= 1:
+        raise ValueError('Threshold must be in (0, 1]')
+    if isinstance(round_to_times,bool) or not isinstance(round_to_times,int) or round_to_times <= 0:
+        raise ValueError('round_to_times must be a positive integer')
+    if S.ndim != 1 or not S.numel() or not torch.isfinite(S).all():
+        raise ValueError('A nonempty finite one-dimensional spectrum is required')
+    if (S < 0).any():
+        raise ValueError('Rank policies require singular values; canonicalize trained factors')
 
 
-def _apply_S_strategy(S, strategy, threshold, round_to_times=1):
-    S, indices = S.sort(descending=True)
-    n_components = SLRStrategiesEnum[strategy].value(S, threshold)
-    # n_cpu = cpu_count()
-    # channels_per_device = max(floor(n_components / n_cpu), 1)
-    # n_components = channels_per_device * n_cpu
-    n_components = ceil(n_components / round_to_times) * round_to_times  # for architecture
-    n_components = min(n_components, len(indices))
-    return indices[:n_components]
-
-
-def _quantile_strategy(S, threshold) -> int:
-    thr_value = torch.quantile(S, threshold)
-    n_components = max((S > thr_value).sum().item(), 1)
-    return n_components
+def _first_reaching(masses, threshold):
+    if threshold == 1:
+        # Preserve every nonzero contribution, independently of accumulation rounding.
+        nz = torch.nonzero(masses > 0).reshape(-1)
+        return int(nz[-1])+1 if len(nz) else 1
+    if not torch.any(masses > 0):
+        return 1  # zero operator: retain one zero component for valid layer shapes
+    cumulative = masses.to(torch.float64).cumsum(0)
+    target = cumulative[-1]*threshold
+    return min(int(torch.searchsorted(cumulative,target).item())+1,len(masses))
 
 
 def _explained_variance_strategy(S, threshold):
-    explained_variance = torch.cumsum(torch.square(S), 0)  # .div_(n_samples - 1) scaling by scalar doesn't matter
-    explained_variance /= (explained_variance[-1].item())
-    n_components = max((explained_variance > threshold).sum().item(), 1)
-    return n_components
+    scale = S.max()
+    return _first_reaching((S/scale).square() if scale > 0 else S,threshold)
+
+
+def _abssum_strategy(S, threshold):
+    scale = S.max()
+    return _first_reaching(S/scale if scale > 0 else S,threshold)
 
 
 def _energy_strategy(S, threshold):
-    energies = torch.exp(S)
-    energies = energies / torch.sum(energies)
-    n_components = max((energies > threshold).sum().item(), 1)
-    return n_components
+    return _first_reaching(torch.softmax(S.to(torch.float64),dim=0),threshold)
 
-    
-def _abssum_strategy(S, threshold):
-    abssums = torch.cumsum(S, 0)
-    abssums /= (abssums[-1].item())
-    n_components = max((abssums > threshold).sum().item(), 1)
-    return n_components
+
+def _quantile_strategy(S, threshold):
+    return max(1,ceil(threshold*len(S)))
 
 
 class SLRStrategiesEnum(Enum):
-    """Rank pruning strategies based on singular values"""
     quantile = partial(_quantile_strategy)
     explained_variance = partial(_explained_variance_strategy)
     energy = partial(_energy_strategy)
     absolute_sum = partial(_abssum_strategy)
 
 
-SLRStrategies = EnumNoValue(SLRStrategiesEnum)
+SLRStrategies = tuple(member.name for member in SLRStrategiesEnum)
+S_STRATEGIES = SLRStrategies
+
+
+def _apply_S_strategy(S,strategy,threshold,round_to_times=1):
+    _validate(S,threshold,round_to_times)
+    if strategy not in SLRStrategies:
+        raise ValueError(f'Unknown strategy: {strategy}')
+    sorted_values,indices = S.sort(descending=True,stable=True)
+    rank = SLRStrategiesEnum[strategy].value(sorted_values,threshold)
+    return indices[:min(ceil(rank/round_to_times)*round_to_times,len(S))]
+
+
+def rank_threshold_pruning_in_place(decomposed_module:IDecomposed,threshold=.75,
+                                    strategy='explained_variance',module_name='',round_to_times=4):
+    if not isinstance(decomposed_module,IDecomposed):
+        raise TypeError('Expected a decomposed layer')
+    threshold = decomposed_module._get_threshold() or threshold
+    # Re-SVD makes decisions invariant to all equivalent trained factorizations,
+    # including CUR initialization; the error bound is for this actual operator.
+    matrix = decomposed_module.factor_matrix().detach()
+    if not torch.isfinite(matrix).all():
+        raise ValueError('Cannot prune a nonfinite operator')
+    with torch.no_grad():
+        u,s,vh = torch.linalg.svd(matrix,full_matrices=False)
+        spectra = s.unbind(0) if s.ndim == 2 else (s,)
+        indices = [_apply_S_strategy(v,strategy,threshold,round_to_times) for v in spectra]
+        # Uniform rank per group permits a grouped kernel; use the largest request.
+        rank = max(len(i) for i in indices)
+        decomposed_module.set_U_S_Vh(u[...,:rank],s[...,:rank],vh[...,:rank,:])
+    decomposed_module.rank_pruning_info = {'method':'operator_svd','strategy':strategy,
+                                         'threshold':float(threshold),'rank':rank}
+
 
 rank_threshold_pruning = rank_threshold_pruning_in_place
+__all__ = ['rank_threshold_pruning','rank_threshold_pruning_in_place','S_STRATEGIES']

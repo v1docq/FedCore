@@ -1,662 +1,328 @@
+"""Public FedCore facade with explicit runtime ownership."""
 import logging
-import os
-import warnings
 from copy import deepcopy
-from datetime import datetime
-from copy import deepcopy
-from datetime import datetime
 from functools import partial
-from typing import Union, Optional, Callable
-import numpy as np
-import pandas as pd
+from pathlib import Path
 import torch
-import torch.nn
-
-from fedcore.api.utils.misc import camel_to_snake
-from fedcore.repository.initializer_industrial_models import FedcoreModels
-FEDCORE_IMPLEMENTATIONS = FedcoreModels().setup_repository()
-
+import pandas as pd
 from fedot.api.main import Fedot
-from fedot.core.data.data import InputData, OutputData
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.pipelines.pipeline_builder import PipelineBuilder
-from fedot.core.repository.dataset_types import DataTypesEnum
-from pymonad.either import Either
-from pymonad.maybe import Maybe
-from torch import Tensor
-from torch.utils.data import DataLoader
-from fedcore.api.utils.checkers_collection import DataCheck
-from fedcore.architecture.abstraction.decorators import DaskServer, exception_handler
-from fedcore.data.data import CompressionInputData, CompressionOutputData
-from fedcore.models.network_impl.utils.trainer_factory import create_trainer
-from fedcore.tools.export import export_model, default_output_path
-# from fedcore.repository.constant_repository import (
-#     FEDOT_API_PARAMS,
-#     FEDOT_ASSUMPTIONS,
-#     # FEDOT_GET_METRICS,
-# )
-from fedcore.metrics.quality import calculate_metrics
-from fedcore.api.api_configs import ConfigTemplate
-from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
-from fedcore.tools.registry.model_registry import ModelRegistry
-from fedcore.api.utils.misc import extract_fitted_operation
-from fedcore.metrics import COMPUTATIONAL_METRICS
+from fedcore.api.api_configs import ConfigTemplate, validate_config
+from fedcore.api.utils.misc import camel_to_snake, extract_fitted_operation
+from fedcore.api.utils.evaluation import predict_module, predict_modules, evaluation_loader
+from fedcore.data.data import CompressionInputData
+from fedcore.repository.initializer_industrial_models import FedcoreModels
+from fedcore.tools.registry.checkpoint_manager import CheckpointManager, CheckpointError
 
-warnings.filterwarnings("ignore")
 
+class _PipelineInputData(CompressionInputData):
+    """FEDOT copies metadata/models while preserving the existing data sources."""
+    def __deepcopy__(self, memo):
+        copied = type(self).__new__(type(self))
+        memo[id(self)] = copied
+        for name, value in vars(self).items():
+            setattr(copied, name, value if name.endswith('_dataloader') else deepcopy(value, memo))
+        return copied
 
 
 class FedCore(Fedot):
-    """This class is used to run Fedot in model compression mode as FedCore.
-
-    Args:
-        input_config: dictionary with the parameters of the experiment.
-        output_folder: path to the folder where the results will be saved.
-
-    Example:
-        First, configure experiment and instantiate FedotIndustrial class::
-
-            from fedcore.api.main import FedCore
-
-            model = FedCore()
-
-    """
-
     def __init__(self, api_config: ConfigTemplate, **kwargs):
-        super(Fedot, self).__init__()
-        api_config.update(kwargs)
-        self.manager = api_config
-        self.logger = logging.Logger('Fedcore')
+        self._external_dask_client = kwargs.pop('dask_client', None)
+        self._external_dask_cluster = kwargs.pop('dask_cluster', None)
+        if not isinstance(api_config, ConfigTemplate):
+            raise TypeError('api_config must be a materialized ConfigTemplate')
+        self.manager = deepcopy(api_config)
+        self.manager.update(kwargs)
+        validate_config(self.manager)
+        self.logger = logging.getLogger('Fedcore')
         self.fedcore_model = None
+        self.__original_model = None
+        self._owns_dask = False
+        self._adaptation = FedcoreModels()
+        self.metric_dict = None
 
-    def __init_fedcore_backend(self, input_data: Optional[InputData] = None):
-        self.logger.info('-' * 50)
-        self.logger.info('Initialising Fedcore Repository')
-        self.logger.info('Initialising Fedcore Evolutionary Optimisation params')
-        self.repo = FEDCORE_IMPLEMENTATIONS
+    @property
+    def original_model(self):
+        return self.__original_model
 
+    @property
+    def compressed_model(self):
+        operation = self.fedcore_model
+        if isinstance(operation, Pipeline):
+            operation = extract_fitted_operation(operation)
+        compressed = getattr(operation, 'model_after', None)
+        return compressed if compressed is not None else (operation if isinstance(operation, torch.nn.Module) else None)
 
+    @property
+    def fedcore_model_for_inference(self):
+        return self.compressed_model
+
+    def __init_fedcore_backend(self, input_data=None):
+        from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
         if not isinstance(self.manager.automl_config.optimizer, partial):
-            fedcore_opt = partial(FedcoreEvoOptimizer, optimisation_params={
+            optimizer = partial(FedcoreEvoOptimizer, optimisation_params={
                 'mutation_strategy': self.manager.automl_config.mutation_strategy,
                 'mutation_agent': self.manager.automl_config.mutation_agent})
-            self.manager.automl_config.optimizer = fedcore_opt
-            self.manager.automl_config.fedot_config.optimizer = fedcore_opt
-            # self.manager.automl_config.config.update({'optimizer': fedcore_opt})
-        return input_data
-
-    def __init_solver(self, input_data: Optional[InputData] = None):
-        self.logger.info('Initialising solver')
-        self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
-                                    use_input_preprocessing=False,
-                                    use_auto_preprocessing=False)
-        # initial_assumption = FEDOT_ASSUMPTIONS[self.manager.learning_config.peft_strategy]
-        # initial_assumption = initial_assumption(
-        #     params=self.manager.learning_config.peft_strategy_params.to_dict())
-        initial_pipeline = self.__build_assumption()
-        self.manager.solver.params.data.update({'initial_assumption': initial_pipeline})
+            self.manager.automl_config.optimizer = optimizer
+            self.manager.automl_config.fedot_config.optimizer = optimizer
         return input_data
 
     def __init_dask(self, input_data):
-        self.logger.info('-' * 50)
-        self.logger.info('Initialising Dask Server')
-        dask_server = DaskServer(self.manager.compute_config.distributed)
-        self.manager.dask_client = dask_server.client
-        self.manager.dask_cluster = dask_server.cluster
-        self.logger.info(f'Link Dask Server - {self.manager.dask_client.dashboard_link}')
-        self.logger.info('-' * 50)
-        return input_data
-
-    def __init_solver_no_evo(self, input_data: Optional[Union[InputData, np.array]] = None):
-        self.logger.info('Initialising solver')
-        # self.manager.solver = Fedot(**self.manager.automl_config.fedot_config,
-        #                             use_input_preprocessing=False,
-        #                             use_auto_preprocessing=False)
-        self.manager.solver = self.__build_assumption()
-        return input_data
-    
-    def __build_assumption(self):
-        def camel_to_snake(camel_case_string):
-            import re
-            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel_case_string)
-            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-        
-        initial_assumption = PipelineBuilder()
-        peft_strategy_params = self.manager.learning_config.peft_strategy_params
-        # check if atomized strategy
-        if not isinstance(peft_strategy_params, (list, tuple)):
-            peft_strategy_params = (peft_strategy_params,)
-        
-        tokenizer = None
-        learning_strategy_params = self.manager.learning_config.learning_strategy_params
-        if learning_strategy_params is not None:
-            if hasattr(learning_strategy_params, 'tokenizer'):
-                tokenizer = learning_strategy_params.tokenizer
-            elif isinstance(learning_strategy_params, dict) and 'tokenizer' in learning_strategy_params:
-                tokenizer = learning_strategy_params['tokenizer']
-            elif hasattr(learning_strategy_params, 'to_dict'):
-                learning_params_dict = learning_strategy_params.to_dict()
-                tokenizer = learning_params_dict.get('tokenizer') or learning_params_dict.get('custom_learning_params', {}).get('tokenizer')
-        
-        for peft_strategy_conf in peft_strategy_params:
-            params_dict = peft_strategy_conf.to_dict()
-            if tokenizer is not None and 'tokenizer' not in params_dict:
-                params_dict['tokenizer'] = tokenizer
-            initial_assumption.add_node(
-                operation_type=camel_to_snake(peft_strategy_conf.__class__.__name__) + '_model',
-                params=params_dict
-            )
-
-        return initial_assumption.build()
-
-    @property
-    def compressed_model(self):
-        """Get compressed (optimized) model.
-        Returns:
-            torch.nn.Module or None: Compressed model
-        """
-        if self.fedcore_model is None:
-            return None
-        return getattr(self.fedcore_model, 'model_after', self.fedcore_model)
-
-    @property
-    def original_model(self):
-        """Get original (before compression) model.
-        Returns:
-            torch.nn.Module or None: Original model
-        """
-        return self.__original_model
-
-    # def get_model_by_regime(self, regime: str = 'model_after'):
-    #     """Get model by regime name.
-    #     Args:
-    #         regime: 'model_after' for compressed, 'model_before' for original
-
-    #     Returns:
-    #         torch.nn.Module: Requested model or fallback to fedcore_model
-
-    #     Raises:
-    #         ValueError: If fedcore_model is not initialized
-    #     """
-    #     if self.fedcore_model is None:
-    #         raise ValueError("fedcore_model is not initialized. Call fit() first.")
-
-    #     model = getattr(self.fedcore_model, regime, None)
-    #     if model is None:
-    #         self.logger.warning(
-    #             f"Regime '{regime}' not found in fedcore_model. "
-    #             f"Using fedcore_model directly."
-    #         )
-    #         model = self.fedcore_model
-    #     return model
-
-    def _save_metrics_from_evaluator(self):
-        """Collect and save metrics from evaluator to registry after fit."""
-        if not hasattr(self.manager, 'solver') or self.manager.solver is None:
-            return
-
-        if not hasattr(self.manager.solver, 'history') or self.manager.solver.history is None:
-            return
-
-        fedcore_id = None
-        model_id = None
-
-        if self.fedcore_model is not None:
-            if hasattr(self.fedcore_model, 'operator') and hasattr(self.fedcore_model.operator, 'root_node'):
-                fitted_op = getattr(self.fedcore_model.operator.root_node, 'fitted_operation', None)
-                if fitted_op is not None:
-                    fedcore_id = getattr(fitted_op, '_fedcore_id', None)
-                    if fedcore_id:
-                        model_id = getattr(fitted_op, '_model_id_after', None) or getattr(fitted_op, '_model_id_before', None)
-
-        if fedcore_id and model_id:
-            registry = ModelRegistry()
-            registry.save_metrics_from_evaluator(
-                solver=self.manager.solver,
-                fedcore_id=fedcore_id,
-                model_id=model_id
-            )
-
-    def __build_assumption(self):
-        initial_assumption = PipelineBuilder()
-        peft_strategy_params = self.manager.learning_config.peft_strategy_params
-        if not isinstance(peft_strategy_params, (list, tuple)):
-            peft_strategy_params = (peft_strategy_params,)
-        for peft_strategy_conf in peft_strategy_params:
-            params = peft_strategy_conf.to_dict()
-            cls_name = peft_strategy_conf.__class__.__name__
-            if cls_name.endswith('Config'):
-                cls_name = cls_name[:-6] + 'Template'
-            operation_type = camel_to_snake(cls_name.replace('Template', '')) + '_model'
-            initial_assumption.add_node(
-                operation_type=operation_type,
-                params=params
-            )
-        return initial_assumption.build()
-
-    @property
-    def compressed_model(self):
-        """Get compressed (optimized) model.
-        Returns:
-            torch.nn.Module or None: Compressed model
-        """
-        if self.fedcore_model is None:
-            return None
-        return getattr(self.fedcore_model, 'model_after', self.fedcore_model)
-
-    @property
-    def original_model(self):
-        """Get original (before compression) model.
-        Returns:
-            torch.nn.Module or None: Original model
-        """
-        return self.__original_model
-        
-
-    # def get_model_by_regime(self, regime: str = 'model_after'):
-    #     """Get model by regime name.
-    #     Args:
-    #         regime: 'model_after' for compressed, 'model_before' for original
-
-    #     Returns:
-    #         torch.nn.Module: Requested model or fallback to fedcore_model
-
-    #     Raises:
-    #         ValueError: If fedcore_model is not initialized
-    #     """
-    #     if self.fedcore_model is None:
-    #         raise ValueError("fedcore_model is not initialized. Call fit() first.")
-
-    #     model = getattr(self.fedcore_model, regime, None)
-    #     if model is None:
-    #         self.logger.warning(
-    #             f"Regime '{regime}' not found in fedcore_model. "
-    #             f"Using fedcore_model directly."
-    #         )
-    #         model = self.fedcore_model
-    #     return model
-
-    def _save_metrics_from_evaluator(self):
-        """Collect and save metrics from evaluator to registry after fit."""
-        if not hasattr(self.manager, 'solver') or self.manager.solver is None:
-            return
-
-        if not hasattr(self.manager.solver, 'history') or self.manager.solver.history is None:
-            return
-
-        fedcore_id = None
-        model_id = None
-
-        if self.fedcore_model is not None:
-            if hasattr(self.fedcore_model, 'operator') and hasattr(self.fedcore_model.operator, 'root_node'):
-                fitted_op = getattr(self.fedcore_model.operator.root_node, 'fitted_operation', None)
-                if fitted_op is not None:
-                    fedcore_id = getattr(fitted_op, '_fedcore_id', None)
-                    if fedcore_id:
-                        model_id = getattr(fitted_op, '_model_id_after', None) or getattr(fitted_op, '_model_id_before', None)
-
-        if fedcore_id and model_id:
-            registry = ModelRegistry()
-            registry.save_metrics_from_evaluator(
-                solver=self.manager.solver,
-                fedcore_id=fedcore_id,
-                model_id=model_id
-            )
-
-    def _process_input_data(self, input_data):
-        # data_cls = DataCheck(model=self.manager.automl_config.fedot_config['initial_assumption'],
-        #                      learning_params=self.manager.learning_config.learning_strategy_params
-        #                      )
-        # train_data = Either.insert(input_data).then(data_cls.check_input_data).value
-        train_data = input_data
-        # ### TODO del workaround
-        # train_data.train_dataloader = train_data.features.train_dataloader
-        # train_data.val_dataloader = train_data.features.val_dataloader
-        # ###
-        # model_params = self.learning_params.model_architecture
-        # if any([model_params.input_dim is None, model_params.output_dim is None]):
-        #     model_params.input_dim = self.manager.learning_config.learning_strategy_params.model_architecture.input_dim
-        #     model_params.output_dim = self.manager.learning_config.learning_strategy_params.model_architecture
-
-        from fedcore.models.backbone.backbone_loader import load_backbone
-        from fedcore.architecture.computational.devices import default_device
-
-        def _init_model_from_backbone(model, learning_params):
-            model_is_pretrain_torch_backbone = isinstance(model, str)
-            model_is_pretrain_backbone_with_weights = isinstance(model, dict)
-            model_is_custom_callable_object = isinstance(model, Callable)
-            if model_is_pretrain_torch_backbone:
-                torch_model = load_backbone(torch_model=model)
-            elif model_is_pretrain_backbone_with_weights:
-                if self.model['path_to_model'].__contains__('.pth'):
-                        torch_model = torch.load(model['path_to_model'], weights_only=False,
-                                                    map_location=default_device())
-                else:
-                    torch_model = load_backbone(torch_model=model,
-                                                model_params=learning_params)
-                    if model_is_pretrain_backbone_with_weights:
-                        try:
-                            torch_model.load_model(model['path_to_model'])
-                        except:
-                            loaded_state_dict = torch.load(model['path_to_model'], weights_only=True,
-                                                        map_location=default_device())
-                            # verified_state_dict = self._check_state_dict(loaded_state_dict, input_data, compression_dataset)
-                            # torch_model.load_state_dict(verified_state_dict)
-            elif model_is_custom_callable_object:
-                torch_model = model
-            return torch_model
-
-        torch_model = _init_model_from_backbone(self.manager.automl_config.fedot_config['initial_assumption'], 
-                                                self.manager.learning_config.learning_strategy_params)
-        input_data.model = torch_model
-
-        input_data.supplementary_data.is_auto_preprocessed = True
-        self.__original_model = torch_model
-        return train_data
-
-    def _pretrain_before_optimise(self, fedot_pipeline: Pipeline, train_data: InputData):
-        pretrained_model = fedot_pipeline.fit(train_data)
-        fedcore_trainer = fedot_pipeline.operator.root_node.operation.fitted_operation
-        path_to_save_pretrain = os.path.join(self.manager.compute_config.output_folder)
-        os.makedirs(path_to_save_pretrain, exist_ok=True)
-        path_to_model = os.path.join(path_to_save_pretrain,
-                                     f'pretrain_model_checkpoint_at_{fedcore_trainer.epochs}_epoch.pt')
-        fedcore_trainer.save_model(path_to_model)
-        train_data.target = pretrained_model.predict
-        return train_data
-
-    def __abstract_predict(self, predict_data: InputData, output_mode):
-        if self.fedcore_model is None:
-            learning_params = self.manager.learning_config.peft_strategy_params.to_dict()
-            learning_params['model'] = predict_data.target
-            # scenario where we load pretrain model and use it only for inference
-            task_type = learning_params.get('task_type', 'training')
-            self.fedcore_model = create_trainer(task_type=task_type, params=learning_params, model=learning_params['model'])
-            #predict_data = predict_data.features # InputData to CompressionInputData
-        predict = self.fedcore_model.predict(predict_data, output_mode)
-        return predict
-
-    def fit(self, input_data: CompressionInputData, manually_done: bool = False, **kwargs):
-        """
-        Method for training Industrial model.
-
-        Args:
-            input_data: tuple with train_features and train_target
-            **kwargs: additional parameters
-
-        """
-
-        def fit_function(train_data):
-            pretrain_before_optimise = self.manager.learning_config.config['learning_strategy'] == 'from_scratch'
-            if pretrain_before_optimise:
-                model_learning_pipeline = PipelineBuilder().add_node(operation_type='training_model',
-                    params=self.manager.learning_config.learning_strategy_params.to_dict()
-                )
-                model_learning_pipeline = model_learning_pipeline.build()
-                train_data = self._pretrain_before_optimise(model_learning_pipeline, train_data)
-
-            fitted_solver = self.manager.solver.fit(train_data)
-            return fitted_solver
-
-        # with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
+        if self._external_dask_client is not None:
+            self.manager.dask_client = self._external_dask_client
+            self.manager.dask_cluster = self._external_dask_cluster
+            return input_data
+        from distributed import Client, LocalCluster
+        params = self.manager.compute_config.distributed
+        params = params.to_dict() if hasattr(params, 'to_dict') else dict(params or {})
+        params = params.get('cluster_params', params)
+        cluster = LocalCluster(**params)
         try:
-            self.fedcore_model = Maybe.insert(self._process_input_data(input_data)). \
-                then(self.__init_fedcore_backend). \
-                then(self.__init_dask). \
-                then(self.__init_solver). \
-                then(fit_function). \
-                maybe(None, lambda solver: solver)
+            client = Client(cluster)
+        except BaseException:
+            cluster.close()
+            raise
+        self.manager.dask_client, self.manager.dask_cluster = client, cluster
+        self._owns_dask = True
+        return input_data
 
-            self._save_metrics_from_evaluator()
+    def __build_assumption(self):
+        builder = PipelineBuilder()
+        configs = self.manager.learning_config.peft_strategy_params
+        configs = configs if isinstance(configs, (tuple, list)) else (configs,)
+        learning = self.manager.learning_config.learning_strategy_params
+        tokenizer = learning.get('tokenizer') or learning.get('custom_learning_params', {}).get('tokenizer')
+        for config in configs:
+            params = config.to_dict()
+            params['device'] = self.manager.device_config.device
+            if config.get_default_name() == 'Lora':
+                rank, r = params.pop('rank'), params.pop('r')
+                params['lora_r'] = rank or r or params['lora_r']
+                aliases = params.pop('target_layers')
+                if aliases is not None:
+                    params['lora_target_modules'] = aliases
+            if tokenizer is not None:
+                params.setdefault('tokenizer', tokenizer)
+            name = config.get_default_name().removesuffix('Config')
+            builder.add_node(operation_type=camel_to_snake(name) + '_model', params=params)
+        return builder.build()
 
-            return self.fedcore_model
-        except KeyboardInterrupt:
-            self.fedcore_model = self.manager.solver
-            self._save_metrics_from_evaluator()
-            return self.fedcore_model
+    def __init_solver(self, data=None):
+        settings = self.manager.automl_config.fedot_config.to_dict()
+        self.manager.solver = Fedot(**settings, use_input_preprocessing=False, use_auto_preprocessing=False)
+        self.manager.solver.params.data['initial_assumption'] = self.__build_assumption()
+        return data
 
-    def fit_no_evo(self, input_data: tuple, manually_done=False, **kwargs):
-        with exception_handler(Exception, on_exception=self.shutdown, suppress=False):
-            x = self._process_input_data(input_data)
-            x = self.__init_fedcore_backend(x)
-            x = self.__init_dask(x)
-            x = self.__init_solver_no_evo(x)
-            self.original_model = self.manager.solver.model_before
-            fitted_solver = self.manager.solver.fit(x)
-        self.optimised_model = fitted_solver.model
+    def __init_solver_no_evo(self, data=None):
+        self.manager.solver = self.__build_assumption()
+        return data
 
-        self.fedcore_model = extract_fitted_operation(self.manager.solver)
-        return fitted_solver
+    def _resolve_model(self, specification):
+        if isinstance(specification, torch.nn.Module):
+            return specification
+        if isinstance(specification, dict):
+            path = specification.get('path_to_model') or specification.get('checkpoint_path')
+            template = specification.get('model')
+            factory = specification.get('model_factory')
+            if path is None:
+                raise CheckpointError('Checkpoint input requires path_to_model or checkpoint_path')
+            if template is None and factory is None and specification.get('model_type'):
+                from fedcore.models.backbone.backbone_loader import load_backbone
+                template = load_backbone(specification, self.manager.learning_config.learning_strategy_params)
+            return CheckpointManager('.').load_from_file(str(path), 'cpu', model=template, model_factory=factory)
+        if isinstance(specification, (str, Path)):
+            if Path(specification).is_file():
+                return CheckpointManager('.').load_from_file(str(specification), 'cpu')
+            from fedcore.models.backbone.backbone_loader import load_backbone
+            return load_backbone(str(specification), self.manager.learning_config.learning_strategy_params)
+        raise TypeError('Expected torch.nn.Module, backbone name or checkpoint specification')
 
-    def predict(self, predict_data: tuple, output_mode: str = 'fedcore', **kwargs):
-        """
-        Method to obtain prediction labels from trained Industrial model.
+    def _process_input_data(self, data):
+        if not isinstance(data, CompressionInputData):
+            raise TypeError('input_data must be CompressionInputData')
+        specification = data.model
+        if specification is None:
+            specification = self.manager.automl_config.fedot_config.initial_assumption
+        model = self._resolve_model(specification)
+        processed = _PipelineInputData.__new__(_PipelineInputData)
+        processed.__dict__.update(vars(data))
+        processed.model = model
+        processed.supplementary_data = deepcopy(data.supplementary_data)
+        processed.supplementary_data.is_auto_preprocessed = True
+        if self.__original_model is None:
+            self.__original_model = deepcopy(model)
+        return processed
 
-        Args:
-            predict_data: tuple with test_features and test_target
+    def _save_metrics_from_evaluator(self):
+        solver = self.manager.solver
+        if getattr(solver, 'history', None) is None:
+            return
+        operation = extract_fitted_operation(self.fedcore_model) if isinstance(self.fedcore_model, Pipeline) else self.fedcore_model
+        fedcore_id = getattr(operation, '_fedcore_id', None)
+        model_id = getattr(operation, '_model_id_after', None)
+        if fedcore_id and model_id:
+            from fedcore.tools.registry.model_registry import ModelRegistry
+            ModelRegistry().save_metrics_from_evaluator(solver, fedcore_id, model_id)
 
-        Returns:
-            the array with prediction values
+    def _pretrain_before_optimise(self, data):
+        pipeline = PipelineBuilder().add_node('training_model',
+            params={**self.manager.learning_config.learning_strategy_params.to_dict(),
+                    'device': self.manager.device_config.device}).build()
+        pipeline.fit(data)
+        operation = extract_fitted_operation(pipeline)
+        trained = getattr(operation, 'model', None) or getattr(operation, 'model_after', None)
+        if trained is None:
+            raise RuntimeError('Pretraining did not produce a model')
+        data.model = trained
+        return data
 
-        """
-        result = Maybe.insert(self._process_input_data(predict_data)). \
-            then(self.__init_fedcore_backend). \
-            then(lambda data: self.__abstract_predict(data, output_mode)). \
-            maybe(None, lambda output: output)
+    def fit(self, input_data, manually_done=False, **kwargs):
+        validate_config(self.manager)
+        with self._adaptation:
+            try:
+                data = self._process_input_data(input_data)
+                self.__init_fedcore_backend(data)
+                self.__init_dask(data)
+                if self.manager.solver is None:
+                    self.__init_solver(data)
+                if self.manager.learning_config.learning_strategy == 'from_scratch' and not manually_done:
+                    data = self._pretrain_before_optimise(data)
+                self.fedcore_model = self.manager.solver.fit(data, **kwargs)
+                self._save_metrics_from_evaluator()
+                return self.fedcore_model
+            finally:
+                self.shutdown()
 
-        if hasattr(result, 'predictions') and hasattr(result, 'label_ids'):
-            pred_values = torch.tensor(result.predictions)
-            target_values = torch.tensor(result.label_ids) if result.label_ids is not None else None
+    def fit_no_evo(self, input_data, manually_done=False, **kwargs):
+        validate_config(self.manager)
+        with self._adaptation:
+            try:
+                data = self._process_input_data(input_data)
+                self.__init_fedcore_backend(data)
+                self.__init_dask(data)
+                if self.manager.solver is None:
+                    self.__init_solver_no_evo(data)
+                fitted = self.manager.solver.fit(data)
+                operation = extract_fitted_operation(self.manager.solver) if isinstance(self.manager.solver, Pipeline) else self.manager.solver
+                self.fedcore_model = operation
+                self.optimised_model = self.compressed_model
+                return fitted
+            finally:
+                self.shutdown()
 
-            self.manager.predicted_labels = OutputData(
-                idx=torch.arange(len(pred_values)),
-                task=getattr(predict_data, 'task', None),
-                predict=pred_values,
-                target=target_values,
-                data_type=DataTypesEnum.table,
-            )
-
-        elif isinstance(result, OutputData):
-            self.manager.predicted_labels = result
-        elif hasattr(result, 'predict'):
-            pred_value = result.predict if result.predict is not None else getattr(result, 'model', None)
-            if pred_value is None:
-                raise ValueError("Result has 'predict' attribute but it is None, and 'model' is also unavailable")
-            self.manager.predicted_labels = pred_value if isinstance(pred_value, OutputData) else result
+    def predict(self, predict_data, output_mode='fedcore', **kwargs):
+        if output_mode not in ('fedcore', 'original', 'default', 'model_before', 'model_after', 'raw', 'labels', 'probs'):
+            raise ValueError(f'Unsupported output_mode: {output_mode!r}')
+        data = self._process_input_data(predict_data)
+        if output_mode in ('original', 'default', 'model_before'):
+            model = self.original_model
         else:
-            pred_values = torch.tensor(result) if not isinstance(result, torch.Tensor) else result
-            self.manager.predicted_labels = OutputData(
-                idx=torch.arange(len(pred_values)),
-                task=getattr(predict_data, 'task', None),
-                predict=pred_values,
-                target=None,
-                data_type=DataTypesEnum.table,
-            )
-
-        return self.manager.predicted_labels
-
-    # def evaluate_metric(
-    #         self,
-    #         prediction: OutputData,
-    #         target: DataLoader,
-    #         problem: str = "computational",
-    #         metrics: list = ['Latency']
-    # ) -> pd.DataFrame:
-    #     """
-    #     Method to calculate metrics.
-
-    #     Available metrics for classification task: 'f1', 'accuracy', 'precision', 'roc_auc', 'logloss'.
-
-    #     Available metrics for regression task: 'r2', 'rmse', 'mse', 'mae', 'median_absolute_error',
-    #     'explained_variance_score', 'max_error', 'd2_absolute_error_score', 'msle', 'mape'.
-
-    #     Args:
-    #         metric_type:
-    #         predicton:
-    #         target: target values
-
-    #     Returns:
-    #         pandas DataFrame with calculated metrics
-
-    #     """
-    #     # is_inference_metric = problem.__contains__("computational")
-    #     # is_fedcore_model = problem.__contains__('fedcore')
-    #     # model_regime = 'model_after' if is_fedcore_model else 'model_before'
-
-
-    #     prediction_dict = {}
-    #     if is_inference_metric:
-    #         model_to_evaluate = self.get_model_by_regime(model_regime)
-    #         prediction_dict = dict(model=model_to_evaluate, dataset=target.target, model_regime=model_regime) #hardcode
-    #         # preproc_target = preproc_target(target)
-    #     else:
-    #         prediction_dict = dict(target)
-    #     metrics = metrics or self.manager.automl_config.fedot_config.metric
-
-    #     prediction_dataframe = calculate_metrics(metrics, **prediction_dict)
-
-    #     # if is_inference_metric:
-    #     #     registry = ModelRegistry()
-    #     #     registry.force_cleanup()
-
-    #     return prediction_dataframe
-
-    def get_report(self, test_data: CompressionInputData):
-        def create_df(iterator):
-            df_list = []
-            for metric_dict, col in iterator:
-                if isinstance(metric_dict, dict):
-                    df = pd.DataFrame.from_dict(metric_dict).T
-                elif isinstance(metric_dict, pd.DataFrame):
-                    df = metric_dict
-                    df = df.T
+            model = self.compressed_model or self.original_model
+        if isinstance(model, torch.nn.Module):
+            result = predict_module(model, data, kwargs.get('split', 'val'))
+            if data.task.task_type.name == 'classification' and output_mode != 'raw':
+                if output_mode == 'labels':
+                    result.predict = result.predict.argmax(dim=-1)
                 else:
-                    raise TypeError('Unknown type of metrics passed')
-                df['mode'] = col
-                df_list.append(df)
-            df_total = pd.concat(df_list, axis=0)
-            return df_total
-
-        def calculate_metric_changes(metric_df: pd.DataFrame, metric: list = None):
-            orig = metric_df[(metric_df['mode'] != 'fedcore')].drop('mode', axis=1)
-            opt = metric_df[metric_df['mode'] == 'fedcore'].drop('mode', axis=1)
-            change_val = ((opt - orig) / orig * 100).round(2)
-            change_val['mode'] = 'change'
-            return change_val
-        
-
-        eval_regime = ['original', 'fedcore']
-        predictions = {mode: self.predict(test_data, output_mode=mode) for mode in eval_regime}
-        predictions = {mode: val.predict for mode, val in predictions.items() if hasattr(val, 'predict')}
-        targets = torch.concat([x[1] for x in test_data.val_dataloader], dim=0)
-        # prediction_list = [x if isinstance(x, OutputData) else getattr(x, 'predict', x) for x in prediction_list]
-
-        problem = self.manager.automl_config.fedot_config.problem
-        metrics = self.manager.automl_config.fedot_config.metric
-        quality_metrics_list  = [name for name in metrics if name not in COMPUTATIONAL_METRICS]
-        computational_metrics = [name for name in metrics if name in COMPUTATIONAL_METRICS]
-
-        from fedcore.metrics.quality import MetricFactory, _to_df
-
-        quality_metrics = {mode: calculate_metrics(quality_metrics_list, targets, predictions[mode]) for mode in predictions}
-        assert isinstance(test_data.val_dataloader, DataLoader), f'{type(test_data.val_dataloader)}'
-        computational_metrics = {mode: _to_df(
-            {metric_name: MetricFactory.get_metric(metric_name).get_value(getattr(self, f"{mode}_model"), test_data.val_dataloader) 
-                for metric_name in computational_metrics},
-            3) 
-        for mode in eval_regime}
-        
-        # Create dataframes for both metric types
-        quality_df = create_df(zip([quality_metrics[mode] for mode in eval_regime], eval_regime))
-        compute_df = create_df(zip([computational_metrics[mode] for mode in eval_regime], eval_regime))
-        
-        # Combine both dataframes
-        combined_df = pd.concat([quality_df, compute_df], axis=0)
-        
-        # Add change column
-        result = (pd.concat([combined_df, calculate_metric_changes(combined_df)], axis=0)
-                .reset_index()
-                .rename(columns={'index': 'metric'})
-                .pivot(index='metric', columns='mode')
-                .reindex(columns=['original', 'fedcore', 'change'], level=1))
-        
-        return result
-        
-        
-        # quality_metrics_list = [self.evaluate_metric(prediction=prediction,
-        #                                              target=test_data.val_dataloader,
-        #                                              problem=self.manager.automl_config.fedot_config.problem,
-        #                                              metrics=quality_metrics_list)
-        #                         for prediction in prediction_list]
-        # computational_metrics_list = [self.evaluate_metric(prediction=prediction,
-        #                                                    target=test_data.val_dataloader,
-        #                                                    problem=f'computational_{regime}',
-        #                                                    metrics=computational_metrics)
-        #                               for prediction, regime in zip(prediction_list, eval_regime)]
-        # print('~~~@@@', computational_metrics_list, quality_metrics_list)
-        # quality_df = create_df(zip(quality_metrics_list, eval_regime))
-        # compute_df = create_df(zip(computational_metrics_list, eval_regime))
-        # result = dict(quality_comparison=quality_df, computational_comparison=compute_df)
-        # for tp, df in result.items():
-        #     result[tp] = (pd.concat([df, calculate_metric_changes(df)], axis=0)
-        #                   .reset_index()
-        #                   .rename(columns={'index': 'metric'})
-        #                   .pivot(index='metric', columns='mode')
-        #                   .reindex(columns=['original', 'fedcore', 'change'], level=1)
-        #     )
+                    result.predict = torch.softmax(result.predict, dim=-1)
+        elif self.fedcore_model is not None:
+            with self._adaptation:
+                result = self.fedcore_model.predict(data, output_mode)
+        else:
+            raise ValueError('No model is available for prediction')
+        self.manager.predicted_labels = result
         return result
 
-    def load(self, path):
-        """Loads saved Industrial model from disk
+    def get_report(self, test_data, split='val'):
+        data = self._process_input_data(test_data)
+        models = {'original': self.original_model, 'fedcore': self.compressed_model or self.original_model}
+        _, target, predictions = predict_modules(models, data, split)
+        from fedcore.metrics import COMPUTATIONAL_METRICS
+        from fedcore.metrics.quality import calculate_metrics, MetricFactory
+        metrics = self.manager.automl_config.fedot_config.metric or []
+        values = {}
+        for mode, model in models.items():
+            quality = [metric for metric in metrics if metric not in COMPUTATIONAL_METRICS]
+            result = calculate_metrics(quality, target, predictions[mode])
+            values[mode] = result.iloc[0].to_dict() if not result.empty else {}
+            for metric in metrics:
+                if metric in COMPUTATIONAL_METRICS:
+                    values[mode][metric] = MetricFactory.get_metric(metric).get_value(model, evaluation_loader(data, split))
+        frame = pd.DataFrame(values)
+        original, compressed = frame['original'], frame['fedcore']
+        frame['change'] = ((compressed - original) / original * 100).round(2)
+        frame.loc[(original == 0) & (compressed == 0), 'change'] = 0.0
+        frame.index.name = 'metric'
+        # Preserve the original two-level report columns.
+        frame.columns = pd.MultiIndex.from_product([[0], frame.columns], names=[None, 'mode'])
+        self.metric_dict = frame
+        return frame
 
-        Args:
-            path (str): path to the model
+    def save(self, mode='all', **kwargs):
+        modes = ('model', 'metrics', 'prediction', 'opt_hist')
+        if mode not in (*modes, 'all'):
+            raise ValueError(f'Unsupported save mode: {mode!r}')
+        folder = Path(kwargs.get('path', self.manager.compute_config.output_folder))
+        folder.mkdir(parents=True, exist_ok=True)
+        artifacts = {}
+        for kind in modes if mode == 'all' else (mode,):
+            if kind == 'model':
+                model = self.compressed_model or self.original_model
+                if model is None:
+                    raise ValueError('No model is available to save')
+                target = folder / 'model.pt'
+                manager = CheckpointManager(str(folder), auto_cleanup=False)
+                manager.save_to_file(manager.serialize_to_bytes(model), str(target))
+            elif kind == 'metrics':
+                if self.metric_dict is None:
+                    if mode == 'all':
+                        continue
+                    raise ValueError('Call get_report before saving metrics')
+                target = folder / 'metrics.csv'
+                self.metric_dict.to_csv(target)
+            elif kind == 'prediction':
+                output = getattr(self.manager, 'predicted_labels', None)
+                if output is None:
+                    if mode == 'all':
+                        continue
+                    raise ValueError('Call predict before saving predictions')
+                target = folder / 'labels.csv'
+                pd.DataFrame(torch.as_tensor(output.predict).cpu().numpy()).to_csv(target, index=False)
+            else:
+                history = getattr(self.manager.solver, 'history', None)
+                if history is None:
+                    if mode == 'all':
+                        continue
+                    raise ValueError('Optimization history is unavailable')
+                target = folder / 'optimization_history.json'
+                history.save(str(target))
+            artifacts[kind] = target
+        return artifacts
 
-        """
+    def load(self, path, *, model=None, model_factory=None):
+        target = Path(path)
+        if target.is_dir():
+            target = target / 'model.pt'
+        restored = CheckpointManager(str(target.parent), auto_cleanup=False).load_from_file(
+            str(target), 'cpu', model=model, model_factory=model_factory)
+        self.fedcore_model = restored
+        self.__original_model = deepcopy(restored)
+        return restored
 
-    def save(self, mode: str = 'all', **kwargs):
-        is_fedot_solver = self.manager.condition_check.solver_is_fedot_class(self.manager.solver)
-
-        def save_model(api_manager):
-            return Either(value=api_manager.solver,
-                          monoid=[api_manager.solver,
-                                  api_manager.condition_check.solver_is_fedot_class(
-                                      api_manager.solver)]). \
-                either(left_function=lambda pipeline: pipeline.save(path=api_manager.compute_config.output_folder,
-                                                                    create_subdir=True, is_datetime_in_path=True),
-                       right_function=lambda solver: solver.current_pipeline.save(
-                           path=api_manager.compute_config.output_folder,
-                           create_subdir=True,
-                           is_datetime_in_path=True))
-
-        def save_opt_hist(api_manager):
-            return self.manager.solver.history.save(
-                f"{self.manager.compute_config.output_folder}/optimization_history.json")
-
-        def save_metrics(api_manager):
-            return self.metric_dict.to_csv(
-                f'{self.manager.compute_config.output_folder}/metrics.csv')
-
-        def save_preds(api_manager):
-            return pd.DataFrame(api_manager.predicted_labels).to_csv(
-                f'{self.manager.compute_config.output_folder}/labels.csv')
-
-        method_dict = {'metrics': save_metrics, 'model': save_model, 'opt_hist': save_opt_hist,
-                       'prediction': save_preds}
-        self.manager.create_folder(self.manager.compute_config.output_folder)
-        if not is_fedot_solver:
-            del method_dict['opt_hist']
-
-        def save_all(api_manager):
-            for method in method_dict.values():
-                try:
-                    method(api_manager)
-                except Exception as ex:
-                    self.manager.logger.info(f'Error during saving. Exception - {ex}')
-
-        Either(value=self.manager, monoid=[self.manager, mode.__contains__('all')]). \
-            either(left_function=lambda api_manager: method_dict[mode](self.manager),
-                   right_function=lambda api_manager: save_all(api_manager))
+    def shutdown(self):
+        if not self._owns_dask:
+            return
+        self._owns_dask = False
+        client = getattr(self.manager, 'dask_client', None)
+        cluster = getattr(self.manager, 'dask_cluster', None)
+        self.manager.dask_client = self.manager.dask_cluster = None
+        try:
+            if client is not None:
+                client.close()
+        finally:
+            if cluster is not None:
+                cluster.close()
 
     def export(
             self,
@@ -670,8 +336,8 @@ class FedCore(Fedot):
         ----------
         framework :
             Target format. Supported: ``torchscript`` / ``pt``, ``onnx``,
-            ``tensorrt`` / ``engine``. Any other name is exported as ONNX
-            without raising. TensorRT raises if the SDK is missing.
+            ``tensorrt`` / ``engine``. Unknown names raise ValueError.
+            TensorRT raises if the SDK is missing.
         framework_config :
             Export options: ``output_path``, ``example_inputs``,
             ``opset_version``, ``input_names``, ``output_names``,
@@ -686,6 +352,7 @@ class FedCore(Fedot):
         pathlib.Path
             Path to the written artifact (``.pt``, ``.onnx``, or ``.engine``).
         """
+        from fedcore.tools.export import export_model, default_output_path
         framework_config = dict(framework_config or {})
         supplementary_data = dict(supplementary_data or {})
 
@@ -712,34 +379,3 @@ class FedCore(Fedot):
             example_input,
             framework_config,
         )
-
-    #=========================LEGACY============================================= 
-        # if self.framework_config is None and framework_config is None:
-        #     return self.logger.info(
-        #         "You must specify configuration for model convertation"
-        #     )
-        # else:
-        #     if framework == "ONNX":
-        #         example_input = next(iter(self.train_data.features.val_dataloader))[
-        #             0
-        #         ][0]
-        #         self.framework_config["example_inputs"] = torch.unsqueeze(
-        #             example_input, dim=0
-        #         )
-        #         onnx_config = Torch2ONNXConfig(**self.framework_config)
-        #         supplementary_data["model_to_export"].export(
-        #             "converted-model.onnx", onnx_config
-        #         )
-        #         converted_model = ONNXInferenceModel("converted-model.onnx")
-        # return converted_model
-
-    def shutdown(self):
-        """Shutdown Dask client"""
-        # if self.manager.dask_client is not None:
-        if hasattr(self.manager, 'dask_client'):
-            self.manager.dask_client.close()
-            del self.manager.dask_client
-        if hasattr(self.manager, 'dask_cluster'):
-            # if self.manager.dask_cluster is not None:
-            self.manager.dask_cluster.close()
-            del self.manager.dask_cluster

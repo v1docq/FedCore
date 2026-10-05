@@ -24,12 +24,11 @@ from golem.core.optimisers.genetic.operators.selection import SelectionTypesEnum
 from golem.core.tuning.optuna_tuner import OptunaTuner
 from torch import nn
 
-from fedcore.architecture.dataset.task_specified.object_detection_datasets import YOLODataset
-from fedcore.architecture.dataset.datasets_from_source import CustomDatasetForImages
-from fedcore.architecture.dataset.task_specified.segmentation_dataset import (
-    SegmentationDataset,
-    SemanticSegmentationDataset,
-)
+from fedcore.repository.lazy_registry import LazyFactory
+YOLODataset = LazyFactory("fedcore.architecture.dataset.task_specified.object_detection_datasets", "YOLODataset")
+CustomDatasetForImages = LazyFactory("fedcore.architecture.dataset.datasets_from_source", "CustomDatasetForImages")
+SegmentationDataset = LazyFactory("fedcore.architecture.dataset.task_specified.segmentation_dataset", "SegmentationDataset")
+SemanticSegmentationDataset = LazyFactory("fedcore.architecture.dataset.task_specified.segmentation_dataset", "SemanticSegmentationDataset")
 
 from fedcore.models.network_impl.decomposed_layers import DecomposableLayers  # noqa
 
@@ -54,7 +53,7 @@ from fedcore.losses.low_rank_loss import HoyerLoss, OrthogonalLoss
 from fedcore.architecture.utils.misc import EnumNoValue
 
 from fedcore.models.network_impl.utils.hooks import (
-    Optimizers, Schedulers, LOGGING_HOOKS, MODEL_LEARNING_HOOKS 
+    Optimizers, Schedulers, LOGGING_HOOKS, MODEL_LEARNING_HOOKS
 )  # noqa
 from fedcore.algorithm.low_rank.rank_pruning import SLRStrategiesEnum  # noqa
 
