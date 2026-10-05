@@ -1,1 +1,6 @@
 *.ts linguist-vendored
+# Keep the published ZIP byte-identical to its source entrypoints on Windows/Linux.
+examples/__init__.py text eol=lf
+examples/README.md text eol=lf
+examples/petra/* text eol=lf
+docs/petra/examples.md text eol=lf
