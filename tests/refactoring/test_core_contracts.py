@@ -108,6 +108,14 @@ def test_union_optional_checks_every_supplied_value():
         C(value=True)
 
 
+def test_output_task_defaults_are_independent():
+    from fedcore.data.data import CompressionOutputData
+    first, second = CompressionOutputData(), CompressionOutputData()
+    assert first.task is not second.task
+    first.task.task_type = TaskTypesEnum.regression
+    assert second.task.task_type is TaskTypesEnum.classification
+
+
 def test_invalid_lora_epochs_rejected_before_resources(tmp_path, monkeypatch):
     import distributed
     from fedcore.api.api_configs import LoraTemplate

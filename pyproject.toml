@@ -45,7 +45,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest==8.4.2", "pytest-cov>=5,<6", "hypothesis==6.112.0", "build>=1.2,<2"]
+test = ["pytest==8.4.2", "pytest-cov>=5,<6", "hypothesis==6.112.0", "build>=1.2,<2", "setuptools>=68,<81", "wheel>=0.43,<1"]
 llm = ["transformers==4.44.2", "accelerate==0.34.2", "datasets==2.20.0", "evaluate==0.4.6", "sentencepiece>=0.2,<1"]
 gpu = ["bitsandbytes>=0.43,<1; platform_system == 'Linux'", "nvidia-ml-py>=12,<14"]
 export = ["onnx==1.16.2", "onnxruntime==1.18.1", "onnxruntime-extensions>=0.11,<0.13"]
