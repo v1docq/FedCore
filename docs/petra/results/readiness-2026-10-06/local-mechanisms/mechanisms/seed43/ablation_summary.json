@@ -1,0 +1,10 @@
+{
+  "experiments": [
+    "rank",
+    "regularization",
+    "order",
+    "training",
+    "validity"
+  ],
+  "claim": "Single implementation pilot; empirical superiority not established"
+}

@@ -316,7 +316,8 @@ def compare_search_runs(manifests, *, bootstrap_samples=1000, seed=0):
             shared = sorted(reference.keys() & runs.keys())
             for item in shared:
                 left, right = runs[item], reference[item]
-                if left["data"]["roles"] != right["data"]["roles"] or left["baseline_training"]["state_sha256"] != right["baseline_training"]["state_sha256"]:
+                from .protocol import role_content_identity
+                if role_content_identity(left["data"]["roles"]) != role_content_identity(right["data"]["roles"]) or left["baseline_training"]["state_sha256"] != right["baseline_training"]["state_sha256"]:
                     raise ProtocolError("Paired methods must share all data roles and the trained baseline within a seed")
                 if any(record.get("cache_hit") for run in (left, right) for record in run["candidates"]):
                     raise ProtocolError("Cached computation cannot support a fair wall-time comparison")

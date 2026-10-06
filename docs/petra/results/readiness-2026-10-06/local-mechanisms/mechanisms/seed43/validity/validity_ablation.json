@@ -1,0 +1,548 @@
+{
+  "experiment": "early_late_validation",
+  "proposal_count": 2,
+  "distribution": "identical_ordered_stream",
+  "runs": {
+    "early": {
+      "records": [
+        {
+          "proposal_index": 0,
+          "predicted_valid": true,
+          "executed": true,
+          "success": true,
+          "check_seconds": 7.320000440813601e-05,
+          "execution_seconds": 0.4954913999972632,
+          "result": {
+            "candidate_id": "55cf84ba5aec1489e38a",
+            "status": "succeeded",
+            "operations": {
+              "implementation": "FedCore BaseQuantizer",
+              "mode": "dynamic",
+              "backend": "fbgemm",
+              "training_steps": 0,
+              "calibration_role": "calibration",
+              "training_role": "train"
+            },
+            "validation": {
+              "metric": "accuracy",
+              "value": 0.9882352941176471,
+              "loss": 0.0117647058823529,
+              "macro_f1": 0.9875457875457876,
+              "cross_entropy": 0.02801985666155815,
+              "samples": 85,
+              "direction": "maximize"
+            },
+            "measurement": {
+              "status": "succeeded",
+              "artifact": {
+                "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\validity\\attempt-1.pt",
+                "format": "torchscript",
+                "sha256": "75eab811e19f470b1eebbb43d9da5d683a70996d09f581567cfa42bfe1e52429",
+                "device": "cpu",
+                "threads": 1
+              },
+              "profile": {
+                "device": "cpu",
+                "format": "torchscript",
+                "threads": 1,
+                "warmup": 3,
+                "repeats": 10,
+                "batch_size": 64,
+                "input_shape": [
+                  64,
+                  30
+                ],
+                "dtype": "torch.float32",
+                "synchronization": "synchronous CPU",
+                "concurrency": 1,
+                "idle_device_required": true,
+                "units": {
+                  "latency_p50_ms": "ms/batch",
+                  "latency_p95_ms": "ms/batch",
+                  "throughput": "samples/s",
+                  "file_bytes": "bytes",
+                  "tensor_state_bytes": "bytes",
+                  "cpu_rss_before_bytes": "bytes",
+                  "cpu_rss_after_bytes": "bytes",
+                  "cuda_peak_allocated_bytes": "bytes",
+                  "cuda_peak_reserved_bytes": "bytes",
+                  "load_seconds": "s"
+                },
+                "runtime": "torch.jit",
+                "hardware": "CPU"
+              },
+              "metrics": {
+                "latency_p50_ms": 0.0571,
+                "latency_p95_ms": 0.091515,
+                "throughput": 973384.030418251,
+                "end_to_end_p50_ms": 0.0973,
+                "end_to_end_p95_ms": 0.14812999999999993,
+                "file_bytes": 24961,
+                "tensor_state_bytes": 12972,
+                "cpu_rss_before_bytes": 761946112,
+                "cpu_rss_after_bytes": 761946112,
+                "cuda_peak_allocated_bytes": null,
+                "cuda_peak_reserved_bytes": null,
+                "cuda_allocated_before_bytes": null,
+                "cuda_reserved_before_bytes": null,
+                "cuda_allocated_increment_bytes": null,
+                "cuda_reserved_increment_bytes": null,
+                "load_seconds": 0.012730300004477613
+              },
+              "raw_inference_ms": [
+                0.0562,
+                0.0497,
+                0.0523,
+                0.058,
+                0.0624,
+                0.056,
+                0.0534,
+                0.0897,
+                0.093,
+                0.0868
+              ],
+              "raw_end_to_end_ms": [
+                0.1038,
+                0.0977,
+                0.1007,
+                0.0921,
+                0.0969,
+                0.081,
+                0.077,
+                0.1844,
+                0.1034,
+                0.085
+              ],
+              "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+              "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+              "quality_parity_checked": true
+            }
+          },
+          "error": null
+        },
+        {
+          "proposal_index": 1,
+          "predicted_valid": false,
+          "executed": false,
+          "success": false,
+          "check_seconds": 3.37999954354018e-05,
+          "execution_seconds": 0.0,
+          "result": null,
+          "error": null
+        }
+      ],
+      "wall_seconds": 0.4956067999883089,
+      "successful_fraction": 0.5,
+      "failed_execution_seconds": 0,
+      "archive": {
+        "archive_ids": [
+          "55cf84ba5aec1489e38a"
+        ],
+        "feasible_ids": [
+          "55cf84ba5aec1489e38a"
+        ],
+        "excluded_ids": [],
+        "objectives": {
+          "55cf84ba5aec1489e38a": [
+            0.0117647058823529,
+            0.023804664611816406
+          ]
+        },
+        "hypervolume": 3.9291413138894473,
+        "candidate_hypervolume_contributions": {
+          "55cf84ba5aec1489e38a": 3.9291413138894473
+        },
+        "reference": [
+          2.0,
+          2.0
+        ],
+        "directions": [
+          "minimize quality loss",
+          "minimize file_bytes"
+        ],
+        "scales": [
+          1.0,
+          1048576.0
+        ],
+        "quality_tolerance": 0.05,
+        "scope": "nondominated among evaluated feasible candidates; no global optimality guarantee",
+        "fitness_role": "validation",
+        "hypervolume_role": "archive reporting; not GOLEM selection fitness"
+      }
+    },
+    "late": {
+      "records": [
+        {
+          "proposal_index": 0,
+          "predicted_valid": true,
+          "executed": true,
+          "success": true,
+          "check_seconds": 5.329999839887023e-05,
+          "execution_seconds": 0.5313782000011997,
+          "result": {
+            "candidate_id": "55cf84ba5aec1489e38a",
+            "status": "succeeded",
+            "operations": {
+              "implementation": "FedCore BaseQuantizer",
+              "mode": "dynamic",
+              "backend": "fbgemm",
+              "training_steps": 0,
+              "calibration_role": "calibration",
+              "training_role": "train"
+            },
+            "validation": {
+              "metric": "accuracy",
+              "value": 0.9882352941176471,
+              "loss": 0.0117647058823529,
+              "macro_f1": 0.9875457875457876,
+              "cross_entropy": 0.02801985666155815,
+              "samples": 85,
+              "direction": "maximize"
+            },
+            "measurement": {
+              "status": "succeeded",
+              "artifact": {
+                "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\validity\\attempt-2.pt",
+                "format": "torchscript",
+                "sha256": "75eab811e19f470b1eebbb43d9da5d683a70996d09f581567cfa42bfe1e52429",
+                "device": "cpu",
+                "threads": 1
+              },
+              "profile": {
+                "device": "cpu",
+                "format": "torchscript",
+                "threads": 1,
+                "warmup": 3,
+                "repeats": 10,
+                "batch_size": 64,
+                "input_shape": [
+                  64,
+                  30
+                ],
+                "dtype": "torch.float32",
+                "synchronization": "synchronous CPU",
+                "concurrency": 1,
+                "idle_device_required": true,
+                "units": {
+                  "latency_p50_ms": "ms/batch",
+                  "latency_p95_ms": "ms/batch",
+                  "throughput": "samples/s",
+                  "file_bytes": "bytes",
+                  "tensor_state_bytes": "bytes",
+                  "cpu_rss_before_bytes": "bytes",
+                  "cpu_rss_after_bytes": "bytes",
+                  "cuda_peak_allocated_bytes": "bytes",
+                  "cuda_peak_reserved_bytes": "bytes",
+                  "load_seconds": "s"
+                },
+                "runtime": "torch.jit",
+                "hardware": "CPU"
+              },
+              "metrics": {
+                "latency_p50_ms": 0.0678,
+                "latency_p95_ms": 0.08021,
+                "throughput": 975907.2888075633,
+                "end_to_end_p50_ms": 0.0826,
+                "end_to_end_p95_ms": 0.08885,
+                "file_bytes": 24961,
+                "tensor_state_bytes": 12972,
+                "cpu_rss_before_bytes": 761958400,
+                "cpu_rss_after_bytes": 762097664,
+                "cuda_peak_allocated_bytes": null,
+                "cuda_peak_reserved_bytes": null,
+                "cuda_allocated_before_bytes": null,
+                "cuda_reserved_before_bytes": null,
+                "cuda_allocated_increment_bytes": null,
+                "cuda_reserved_increment_bytes": null,
+                "load_seconds": 0.009426500007975847
+              },
+              "raw_inference_ms": [
+                0.075,
+                0.0801,
+                0.0738,
+                0.0501,
+                0.0479,
+                0.0604,
+                0.0783,
+                0.0803,
+                0.0618,
+                0.0481
+              ],
+              "raw_end_to_end_ms": [
+                0.0658,
+                0.0769,
+                0.0819,
+                0.0864,
+                0.0847,
+                0.0893,
+                0.0697,
+                0.0645,
+                0.0833,
+                0.0883
+              ],
+              "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+              "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+              "quality_parity_checked": true
+            }
+          },
+          "error": null
+        },
+        {
+          "proposal_index": 1,
+          "predicted_valid": false,
+          "executed": true,
+          "success": false,
+          "check_seconds": 3.530000685714185e-05,
+          "execution_seconds": 0.0021733000030508265,
+          "result": null,
+          "error": {
+            "type": "UnsupportedOperation",
+            "message": "not_applicable: Unsupported quantization backend: none"
+          }
+        }
+      ],
+      "wall_seconds": 0.5336494999937713,
+      "successful_fraction": 0.5,
+      "failed_execution_seconds": 0.0021733000030508265,
+      "archive": {
+        "archive_ids": [
+          "55cf84ba5aec1489e38a"
+        ],
+        "feasible_ids": [
+          "55cf84ba5aec1489e38a"
+        ],
+        "excluded_ids": [],
+        "objectives": {
+          "55cf84ba5aec1489e38a": [
+            0.0117647058823529,
+            0.023804664611816406
+          ]
+        },
+        "hypervolume": 3.9291413138894473,
+        "candidate_hypervolume_contributions": {
+          "55cf84ba5aec1489e38a": 3.9291413138894473
+        },
+        "reference": [
+          2.0,
+          2.0
+        ],
+        "directions": [
+          "minimize quality loss",
+          "minimize file_bytes"
+        ],
+        "scales": [
+          1.0,
+          1048576.0
+        ],
+        "quality_tolerance": 0.05,
+        "scope": "nondominated among evaluated feasible candidates; no global optimality guarantee",
+        "fitness_role": "validation",
+        "hypervolume_role": "archive reporting; not GOLEM selection fitness"
+      }
+    }
+  },
+  "mismatches": [],
+  "status": "completed",
+  "claim_status": "not_established",
+  "budget_mode": "equal_proposal_count; wall time measured separately",
+  "protocol": {
+    "seed": 43,
+    "batch_size": 64,
+    "baseline_epochs": 20,
+    "finetune_epochs": 0,
+    "learning_rate": 0.001,
+    "quality_tolerance": 0.05,
+    "device": "cpu",
+    "measurement_repeats": 10,
+    "warmup": 3,
+    "threads": 1,
+    "artifact_format": "torchscript",
+    "selection_cost": "file_bytes",
+    "quality_scale": 1.0,
+    "cost_scale": 1048576.0,
+    "hypervolume_reference": [
+      2.0,
+      2.0
+    ],
+    "repeat_stage": "pilot",
+    "repeat_seeds": [
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
+    "repeat_rationale": "Real-data implementation pilot; no population inference",
+    "primary_comparison": "compression versus independently trained baseline",
+    "minimum_baseline_quality": null
+  },
+  "proposals": [
+    {
+      "method": "ptq",
+      "parameters": {
+        "mode": "dynamic",
+        "backend": "fbgemm"
+      },
+      "chain": []
+    },
+    {
+      "method": "ptq",
+      "parameters": {
+        "mode": "dynamic",
+        "backend": "none"
+      },
+      "chain": []
+    }
+  ],
+  "baseline_training": {
+    "actual_work_seconds": 0.18397990000084974,
+    "checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\validity\\baseline.json",
+    "cost_scope": "common role/source/state verification, training and state persistence; final JSON publication/hash excluded",
+    "epochs": 20,
+    "identity_sha256": "37f2f259d35f5f6960ff16a97b65eed198cede9a91dee69fcde9d2b9e45a94fa",
+    "initial_sha256": "16b31bfbe7c7043537e67c3a366d8883cc2e47aa2b00f4554c08098df4761155",
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "persistence_seconds": 0.010734499999671243,
+    "preparation_seconds": 0.19729379999625962,
+    "reused": true,
+    "seconds": 0.4416828999965219,
+    "state_sha256": "23b804556837cb2dc5bbf22e64d54b8089e9558c9955db33fdf3f61725d68959",
+    "status": "trained_on_train",
+    "steps": 120,
+    "train_loss": [
+      0.6984933018684387,
+      0.6906517744064331,
+      0.6451334953308105,
+      0.6260287165641785,
+      0.5929356813430786,
+      0.5684075355529785,
+      0.5508705377578735,
+      0.5277721881866455,
+      0.4910494089126587,
+      0.47848203778266907,
+      0.43096616864204407,
+      0.4910362660884857,
+      0.39164721965789795,
+      0.40024179220199585,
+      0.36924466490745544,
+      0.3408859372138977,
+      0.287172794342041,
+      0.29445067048072815,
+      0.25910094380378723,
+      0.300628662109375,
+      0.21357685327529907,
+      0.2100943773984909,
+      0.17712955176830292,
+      0.1708938330411911,
+      0.19468075037002563,
+      0.13929429650306702,
+      0.1316741555929184,
+      0.13361065089702606,
+      0.11456267535686493,
+      0.13333047926425934,
+      0.14093255996704102,
+      0.11250171065330505,
+      0.12124637514352798,
+      0.07990173250436783,
+      0.04770318418741226,
+      0.03881026431918144,
+      0.09510894119739532,
+      0.06636720895767212,
+      0.09988842159509659,
+      0.07787327468395233,
+      0.04652884975075722,
+      0.014537806622684002,
+      0.0489165335893631,
+      0.06794867664575577,
+      0.054763905704021454,
+      0.0459098145365715,
+      0.0626399889588356,
+      0.09647087007761002,
+      0.08737105131149292,
+      0.029363347217440605,
+      0.05447198078036308,
+      0.04464022070169449,
+      0.03623289614915848,
+      0.04367123544216156,
+      0.11101238429546356,
+      0.029429981485009193,
+      0.03778184950351715,
+      0.012448843568563461,
+      0.03870466724038124,
+      0.006894424557685852,
+      0.04614562168717384,
+      0.04459195211529732,
+      0.05554748699069023,
+      0.025784099474549294,
+      0.031016478314995766,
+      0.01634366251528263,
+      0.03524504229426384,
+      0.008113913238048553,
+      0.032225802540779114,
+      0.03209131583571434,
+      0.06140599772334099,
+      0.052774276584386826,
+      0.015519835986196995,
+      0.05372750386595726,
+      0.027737582102417946,
+      0.038337405771017075,
+      0.005016263108700514,
+      0.08668976277112961,
+      0.03355967625975609,
+      0.024666469544172287,
+      0.015604364685714245,
+      0.008111586794257164,
+      0.025083079934120178,
+      0.1614234745502472,
+      0.022606175392866135,
+      0.005861568730324507,
+      0.023432178422808647,
+      0.06764340400695801,
+      0.021985717117786407,
+      0.014053745195269585,
+      0.023885000497102737,
+      0.019302191212773323,
+      0.05421251431107521,
+      0.01120814774185419,
+      0.016916802152991295,
+      0.01796983927488327,
+      0.021102122962474823,
+      0.011370714753866196,
+      0.014412370510399342,
+      0.046785470098257065,
+      0.021745340898633003,
+      0.015990611165761948,
+      0.014195729047060013,
+      0.040560945868492126,
+      0.020049750804901123,
+      0.02542169950902462,
+      0.010696829296648502,
+      0.0035660334397107363,
+      0.01048669870942831,
+      0.020159024745225906,
+      0.031664930284023285,
+      0.021508650854229927,
+      0.009027198888361454,
+      0.03024173341691494,
+      0.011218463070690632,
+      0.017761865630745888,
+      0.010658349841833115,
+      0.042073410004377365,
+      0.006812243722379208,
+      0.019141755998134613
+    ],
+    "trained_sha256": "23b804556837cb2dc5bbf22e64d54b8089e9558c9955db33fdf3f61725d68959",
+    "training_role": "train",
+    "training_seconds": 0.23224640000262298,
+    "training_steps": 120,
+    "wall_seconds": 0.4416828999965219,
+    "source_checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\shared_baseline\\baseline.json",
+    "source_checkpoint_sha256": "debb35ee2b3244e5d015ee62223b2ad67be9f7ebac9554d4b60a0f570b4bed03",
+    "reuse_persistence_seconds": 0.010523699995246716,
+    "checkpoint_sha256": "f098550b305783a3e5c9ccf9c172c33aca212d0e35917858a14e2b1850f79d2f",
+    "state_file_sha256": "0470ede148f9d49b17c0a6df438629acef1dd2fb729547f7f8dd59bfafd96233"
+  },
+  "checker": "explicit caller-provided existing checker; predictions independently executed in late mode",
+  "test_used": false
+}

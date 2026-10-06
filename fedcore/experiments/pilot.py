@@ -87,30 +87,38 @@ def search_pilot(root, *, seeds=(41, 42, 43), device='cpu', max_evaluations=6,
     return summary
 
 
-def ablation_pilot(root, *, seed=42, baseline_epochs=20):
+def ablation_pilot(root, *, seed=42, baseline_epochs=20, finetune_epochs=2,
+                   ranks=(8, 15), repeat_seeds=None):
     from .ablations import (RegularizationVariant, run_order_ablation, run_rank_ablation,
                            run_regularization_ablation, run_training_cost_controls,
                            run_validity_ablation)
     from fedcore.algorithm.quantization.quantizers import validate_quantization_request
     bundle = build_tabular(seed)
-    protocol = ExperimentProtocol(seed=seed, baseline_epochs=baseline_epochs, finetune_epochs=2,
+    protocol = ExperimentProtocol(seed=seed, baseline_epochs=baseline_epochs, finetune_epochs=finetune_epochs,
         batch_size=64, learning_rate=.001, measurement_repeats=10, warmup=3,
-        repeat_seeds=(seed,), repeat_rationale='One real-data implementation pilot; no population inference')
+        repeat_seeds=tuple(repeat_seeds or (seed,)), repeat_rationale='Real-data implementation pilot; no population inference')
     plan = {'protocol': protocol.to_dict(), 'dataset': bundle.metadata['dataset'],
-            'seed': seed, 'layer': '0', 'ranks': [8, 15], 'ridge': 1e-6,
+            'seed': seed, 'layer': '0', 'ranks': list(ranks), 'ridge': 1e-6,
             'claim': 'Single implementation pilot; empirical superiority not established',
             'environment': environment_manifest()}
     _save(root / 'ablation_plan.json', plan)
+    from .baseline import prepare_baseline
+    _, baseline_training = prepare_baseline(bundle, protocol, root / 'shared_baseline')
+    baseline_checkpoint = baseline_training['checkpoint']
     results = {}
-    results['rank'] = run_rank_ablation(bundle, protocol, root / 'rank', layer_path='0', ranks=(8, 15), ridge=1e-6)
+    results['rank'] = run_rank_ablation(bundle, protocol, root / 'rank', layer_path='0', ranks=ranks,
+                                      ridge=1e-6, baseline_checkpoint=baseline_checkpoint)
     variants = (RegularizationVariant('none', 0.), RegularizationVariant('hoyer', .001),
                 RegularizationVariant('orthogonal', .001, 'rank'),
                 RegularizationVariant('orthogonal', .015, 'rank_squared'),
                 RegularizationVariant('norm', .001))
     results['regularization'] = run_regularization_ablation(bundle, protocol, root / 'regularization',
-                                                          variants=variants, layer_path='0', rank=15)
-    results['order'] = run_order_ablation(bundle, protocol, root / 'order', rank=1)
-    results['training'] = run_training_cost_controls(bundle, protocol, root / 'training', lora_rank=8)
+                                                          variants=variants, layer_path='0', rank=15,
+                                                          baseline_checkpoint=baseline_checkpoint)
+    results['order'] = run_order_ablation(bundle, protocol, root / 'order', rank=1,
+                                         baseline_checkpoint=baseline_checkpoint)
+    results['training'] = run_training_cost_controls(bundle, protocol, root / 'training', lora_rank=8,
+                                                     baseline_checkpoint=baseline_checkpoint)
     proposals = (CandidateSpec('ptq', {'mode': 'dynamic', 'backend': 'fbgemm'}),
                  CandidateSpec('ptq', {'mode': 'dynamic', 'backend': 'none'}))
     def validator(candidate):
@@ -121,7 +129,8 @@ def ablation_pilot(root, *, seed=42, baseline_epochs=20):
         except ValueError:
             return False
     results['validity'] = run_validity_ablation(bundle, replace(protocol, finetune_epochs=0),
-                                              root / 'validity', proposals=proposals, validator=validator)
+                                              root / 'validity', proposals=proposals, validator=validator,
+                                              baseline_checkpoint=baseline_checkpoint)
     _save(root / 'ablation_summary.json', {'experiments': list(results), 'claim': plan['claim']})
     return results
 

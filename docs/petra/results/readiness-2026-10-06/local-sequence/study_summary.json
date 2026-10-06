@@ -1,0 +1,39 @@
+{
+  "claim": "real local replicates; no H1-H4 superiority claim",
+  "failures": [],
+  "paired_results": [],
+  "runs": [
+    {
+      "group": "sequence",
+      "path": "..\\work\\experiment-readiness\\local-sequence\\sequence\\seed41",
+      "seed": 41,
+      "status": "completed"
+    },
+    {
+      "group": "sequence",
+      "path": "..\\work\\experiment-readiness\\local-sequence\\sequence\\seed42",
+      "seed": 42,
+      "status": "completed"
+    },
+    {
+      "group": "sequence",
+      "path": "..\\work\\experiment-readiness\\local-sequence\\sequence\\seed43",
+      "seed": 43,
+      "status": "completed"
+    },
+    {
+      "group": "sequence",
+      "path": "..\\work\\experiment-readiness\\local-sequence\\sequence\\seed44",
+      "seed": 44,
+      "status": "completed"
+    },
+    {
+      "group": "sequence",
+      "path": "..\\work\\experiment-readiness\\local-sequence\\sequence\\seed45",
+      "seed": 45,
+      "status": "completed"
+    }
+  ],
+  "status": "completed",
+  "wall_seconds": 27.827100399998017
+}

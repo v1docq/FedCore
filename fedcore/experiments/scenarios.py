@@ -12,6 +12,7 @@ import json
 import math
 from pathlib import Path
 import re
+import tempfile
 from typing import Mapping, Sequence
 
 import numpy as np
@@ -151,7 +152,8 @@ def build_cv_digits(seed: int = 42) -> ExperimentBundle:
 
 def build_cv_dataset(dataset: str, data_dir: Path, *, architecture: str = "resnet18",
                      seed: int = 42, resolution: int | None = None,
-                     max_samples: int | None = None, dataset_revision: str | None = None) -> ExperimentBundle:
+                     max_samples: int | None = None, dataset_revision: str | None = None,
+                     storage_dir: Path | None = None, max_materialized_bytes: int = 256 * 1024 * 1024) -> ExperimentBundle:
     """Local CIFAR10/ImageNette route; all changed heads really train from scratch.
 
     A subset is an explicitly labeled pilot. No historical checkpoint is loaded.
@@ -165,6 +167,8 @@ def build_cv_dataset(dataset: str, data_dir: Path, *, architecture: str = "resne
     resolution = resolution or (32 if dataset == "cifar10" else 128)
     if resolution < 16:
         raise ValueError("ResNet resolution must be at least 16")
+    if type(max_materialized_bytes) is not int or max_materialized_bytes <= 0:
+        raise ValueError("CV materialization limit must be a positive integer")
     transform = transforms.Compose([transforms.Resize((resolution, resolution)), transforms.ToTensor()])
     directory = Path(data_dir)
     try:
@@ -197,13 +201,31 @@ def build_cv_dataset(dataset: str, data_dir: Path, *, architecture: str = "resne
     labels = np.asarray(train_data.targets)
     train, rest = train_test_split(train_ids, test_size=.25, random_state=seed + 2, stratify=labels[train_ids])
     validation, calibration = train_test_split(rest, test_size=.4, random_state=seed + 3, stratify=labels[rest])
-    def materialize(data, index, prefix):
-        pairs = [data[int(i)] for i in index]
-        return TensorSplit(torch.stack([image for image, _ in pairs]), torch.tensor([label for _, label in pairs], dtype=torch.long),
-                           tuple(f"{prefix}:{int(i)}" for i in index))
-    splits = {role: materialize(train_data, index, f"{dataset}:official_train") for role, index in
+    tensor_bytes = (len(train_ids) + len(test_ids)) * (3 * resolution * resolution * 4 + 8)
+    if storage_dir is None and 2 * tensor_bytes > max_materialized_bytes:
+        raise ScenarioUnavailable("CV tensors and owned copies exceed the materialization limit; supply storage_dir for file-backed NPY splits")
+    storage = None
+    if storage_dir is not None:
+        Path(storage_dir).mkdir(parents=True, exist_ok=True)
+        storage = Path(tempfile.mkdtemp(prefix=f"{dataset}-s{seed}-", dir=storage_dir))
+    def materialize(data, index, prefix, role):
+        shape = (len(index), 3, resolution, resolution)
+        x = np.lib.format.open_memmap(storage / f"{role}-x.npy", mode="w+", dtype=np.float32, shape=shape) if storage else np.empty(shape, dtype=np.float32)
+        y = np.lib.format.open_memmap(storage / f"{role}-y.npy", mode="w+", dtype=np.int64, shape=(len(index),)) if storage else np.empty(len(index), dtype=np.int64)
+        for row, sample_index in enumerate(index):
+            image, label = data[int(sample_index)]
+            if tuple(image.shape) != shape[1:] or image.dtype != torch.float32:
+                raise ScenarioUnavailable("CV preprocessing must yield finite float32 RGB images with the declared shape")
+            x[row], y[row] = image.numpy(), label
+        ids = tuple(f"{prefix}:{int(i)}" for i in index)
+        if storage:
+            x.flush(); y.flush()
+            del x, y
+            return TensorSplit.from_npy(storage / f"{role}-x.npy", storage / f"{role}-y.npy", ids)
+        return TensorSplit(torch.from_numpy(x), torch.from_numpy(y), ids)
+    splits = {role: materialize(train_data, index, f"{dataset}:official_train", role) for role, index in
               dict(train=train, validation=validation, calibration=calibration).items()}
-    splits["test"] = materialize(test_data, test_ids, f"{dataset}:official_test")
+    splits["test"] = materialize(test_data, test_ids, f"{dataset}:official_test", "test")
     constructor = models.resnet18 if architecture == "resnet18" else models.resnet50
     def factory():
         model = constructor(weights=None, num_classes=10)
@@ -217,6 +239,9 @@ def build_cv_dataset(dataset: str, data_dir: Path, *, architecture: str = "resne
                                       "resolution": [resolution, resolution], "classes": train_data.class_to_idx,
                                       "max_samples": max_samples, "subset_status": "pilot_subset" if max_samples else "full_dataset",
                                       "raw_source_path": str(directory),
+                                      "tensor_storage": "npy_copy_on_write" if storage else "owned_in_memory",
+                                      "tensor_bytes": tensor_bytes, "materialization_limit_bytes": max_materialized_bytes,
+                                      "memory_scope": "one image loading workspace with NPY; OS page cache/resident pages and model execution not capped" if storage else "preallocated arrays with TensorSplit owned copy; no image list/stack",
                                       "preprocessing": "deterministic resize and [0,1] conversion; no fitted statistics",
                                       "initial_state": "from scratch including fc/conv1; runner must train every changed layer"})
 

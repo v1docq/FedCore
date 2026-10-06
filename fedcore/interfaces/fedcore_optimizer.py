@@ -150,28 +150,32 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         return differences
 
     def _extend_population(self, pop: PopulationT, target_pop_size: int, mutation_prob: list = None) -> PopulationT:
-        verifier, new_population, new_ind = self.graph_generation_params.verifier, list(pop), 'empty'
+        verifier, new_population = self.graph_generation_params.verifier, list(pop)
         # redefine golem's individual verification rules excluding unnecessary checks
         verifier._rules = FEDCORE_GRAPH_VALIDATION
+        if not pop or len(new_population) >= target_pop_size:
+            return new_population
         pop_graphs = [ind.graph for ind in new_population]
-        for iter_num in range(self.graph_generation_attempts):
-            for repr_attempt in range(self.min_reproduce_attempt):
+        for _ in range(self.graph_generation_attempts):
+            for _ in range(self.min_reproduce_attempt):
                 random_ind = choice(pop)
-                new_ind = self.mutation(random_ind)
-                if isinstance(new_ind, Individual):
-                    mut_diff = self.compare_dicts(
-                        random_ind.graph.nodes[0].parameters,
-                        new_ind.graph.nodes[0].parameters
-                    )
-                    # self.log.message(f'Successful mutation at attempt number: {repr_attempt}. '
-                    #                  f'Obtain new pipeline - {new_ind.graph.descriptive_id}')
+                result = self.mutation(random_ind)
+                # GOLEM returns [] when mutation fails, and some versions return
+                # a population even for one parent. Verify only real individuals.
+                candidates = [result] if isinstance(result, Individual) else result if isinstance(result, (list, tuple)) else ()
+                added = False
+                for candidate in candidates:
+                    if not isinstance(candidate, Individual):
+                        continue
+                    if candidate.graph not in pop_graphs and verifier(candidate.graph):
+                        new_population.append(candidate)
+                        pop_graphs.append(candidate.graph)
+                        added = True
+                    if len(new_population) >= target_pop_size:
+                        return new_population
+                if added:
                     break
-            is_valid_graph = verifier(new_ind.graph)
-            is_new_graph = new_ind.graph not in pop_graphs
-            if all([is_new_graph, is_valid_graph]):
-                new_population.append(new_ind)
-                pop_graphs.append(new_ind.graph)
-            if len(new_population) == target_pop_size:
+            if len(new_population) >= target_pop_size:
                 break
         return new_population
 

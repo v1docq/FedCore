@@ -8,7 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from dataclasses import dataclass, field, fields
+from dataclasses import InitVar, dataclass, field, fields
 from types import MappingProxyType
 from typing import Mapping
 
@@ -49,6 +49,12 @@ def stable_hash(value):
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
+def role_content_identity(roles):
+    """Ignore transport location while retaining IDs, shape and tensor hashes."""
+    return {role: {key: value for key, value in info.items() if key != 'storage'}
+            for role, info in roles.items()}
+
+
 def freeze_mapping(value):
     def freeze(item):
         if isinstance(item, dict):
@@ -60,11 +66,21 @@ def freeze_mapping(value):
 
 
 def tensor_hash(value):
-    tensor = value.detach().cpu().contiguous()
+    tensor = value.detach()
     descriptor = canonical_json({"shape": list(tensor.shape), "dtype": str(tensor.dtype)})
     digest = hashlib.sha256(descriptor.encode("utf-8"))
-    digest.update(tensor.reshape(-1).view(torch.uint8).numpy().tobytes())
+    # Splitting the sample axis preserves the old contiguous byte order without
+    # an entire file-backed tensor's temporary byte string or CPU copy.
+    rows = max(1, (8 * 1024 * 1024) // max(1, tensor[0].numel() * tensor.element_size())) if tensor.ndim and len(tensor) else 1
+    batches = tensor.split(rows) if tensor.ndim else (tensor,)
+    for batch in batches:
+        digest.update(batch.cpu().contiguous().reshape(-1).view(torch.uint8).numpy().tobytes())
     return digest.hexdigest()
+
+
+def _finite_tensor(value):
+    rows = max(1, (8 * 1024 * 1024) // max(1, value[0].numel() * value.element_size()))
+    return all(bool(torch.isfinite(batch).all()) for batch in value.split(rows))
 
 
 @dataclass(frozen=True)
@@ -75,8 +91,27 @@ class TensorSplit:
     unit_ids: tuple[str, ...] = ()
     intervals: tuple[tuple[int, int], ...] = ()
     _hashes: tuple[str, str] = field(init=False, repr=False)
+    _backing: Mapping = field(default_factory=dict, init=False, repr=False, compare=False)
+    _files: InitVar[Mapping | None] = field(default=None, kw_only=True)
 
-    def __post_init__(self):
+    def __post_init__(self, _files):
+        if _files:
+            import numpy as np
+            from .measurement import file_hash
+            if set(_files) != {"x", "y"}:
+                raise ProtocolError("File backing requires x/y NPY descriptors")
+            values = []
+            for axis in ("x", "y"):
+                info = _files[axis]
+                if set(info) != {"path", "sha256"} or file_hash(info["path"]) != info["sha256"]:
+                    raise ProtocolError("File-backed split hash mismatch")
+                array = np.load(info["path"], mmap_mode="c", allow_pickle=False)
+                if not isinstance(array, np.memmap):
+                    raise ProtocolError("File-backed splits require NPY arrays")
+                values.append(torch.from_numpy(array))
+            object.__setattr__(self, "x", values[0])
+            object.__setattr__(self, "y", values[1])
+            object.__setattr__(self, "_backing", freeze_mapping(_files))
         if not isinstance(self.x, torch.Tensor) or not isinstance(self.y, torch.Tensor):
             raise ProtocolError("Split x/y must be torch tensors")
         if self.x.ndim == 0 or self.y.ndim == 0 or len(self.x) == 0 or len(self.x) != len(self.y):
@@ -93,8 +128,8 @@ class TensorSplit:
         if intervals and (len(intervals) != len(ids) or any(len(pair) != 2 or
                 any(type(end) is not int for end in pair) or pair[0] > pair[1] for pair in intervals)):
             raise ProtocolError("Intervals must be aligned inclusive integer start/end pairs")
-        x, y = self.x.detach().cpu().clone(), self.y.detach().cpu().clone()
-        if not torch.isfinite(x).all() or not torch.isfinite(y).all():
+        x, y = (self.x, self.y) if self._backing else (self.x.detach().cpu().clone(), self.y.detach().cpu().clone())
+        if not _finite_tensor(x) or not _finite_tensor(y):
             raise ProtocolError("Split tensors must be finite after train-only preprocessing")
         object.__setattr__(self, "x", x)
         object.__setattr__(self, "y", y)
@@ -104,15 +139,34 @@ class TensorSplit:
         object.__setattr__(self, "_hashes", (tensor_hash(x), tensor_hash(y)))
 
     def verify_integrity(self):
+        if self._backing:
+            from .measurement import file_hash
+            if any(file_hash(info["path"]) != info["sha256"] for info in self._backing.values()):
+                raise ProtocolError("File-backed split hash mismatch")
         if (tensor_hash(self.x), tensor_hash(self.y)) != self._hashes:
             raise ProtocolError("A frozen split tensor was modified in place")
 
     def manifest(self):
         self.verify_integrity()
-        return {"ids": list(self.ids), "unit_ids": list(self.unit_ids),
+        result = {"ids": list(self.ids), "unit_ids": list(self.unit_ids),
                 "intervals": [list(pair) for pair in self.intervals],
                 "x_sha256": self._hashes[0], "y_sha256": self._hashes[1],
                 "x_shape": list(self.x.shape), "y_shape": list(self.y.shape)}
+        if self._backing:
+            result["storage"] = {"kind": "npy_copy_on_write", "files": json_value(self._backing),
+                                 "scope": "bounded loading copies; OS page cache and resident pages are not capped"}
+        return result
+
+    @classmethod
+    def from_npy(cls, x_path, y_path, ids, unit_ids=(), intervals=(), *, expected_hashes=None):
+        """Load owned copy-on-write mappings, with safe data-only NPY replay."""
+        from pathlib import Path
+        from .measurement import file_hash
+        files = {axis: {"path": str(Path(path).resolve()), "sha256": file_hash(path)}
+                 for axis, path in (("x", x_path), ("y", y_path))}
+        if expected_hashes is not None and tuple(files[axis]["sha256"] for axis in ("x", "y")) != tuple(expected_hashes):
+            raise ProtocolError("File-backed split hash mismatch")
+        return cls(torch.empty(0), torch.empty(0), tuple(ids), tuple(unit_ids), tuple(intervals), _files=files)
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass
 import hashlib
 import json
 import math
@@ -15,7 +15,8 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from .math_checks import approximate_layer, factor_diagnostics, orthogonal_penalty, relative_error, matched_rank_policy_audit
+from .math_checks import approximate_layer, factor_diagnostics, orthogonal_penalty, matched_rank_policy_audit
+from .streaming import capture_moments, layer_error, model_error
 
 
 def _hash_model(model):
@@ -55,16 +56,30 @@ def _synchronize(device):
         torch.cuda.synchronize(device)
 
 
-def _quality(model, split, task):
+def _quality(model, split, task, batch_size=16):
+    if type(batch_size) is not int or batch_size <= 0:
+        raise ValueError("Quality batch size must be a positive integer")
+    if task not in ("classification", "regression", "forecasting"):
+        raise ValueError("Ablation quality supports classification/regression/forecasting")
+    total, count = 0., 0
+    device = next(model.parameters(), split.x).device
     with torch.inference_mode():
-        output = model(split.x.to(next(model.parameters(), split.x).device)).detach().cpu()
-    if task == "classification":
-        value, name = float((output.argmax(-1) == split.y).double().mean()), "accuracy"
-    else:
-        if output.shape != split.y.shape:
-            raise ValueError("Regression predictions and targets must have identical shape")
-        value, name = float((output.double() - split.y).square().mean()), "mean_squared_error"
-    return {"name": name, "value": value, "role": "validation", "samples": len(split.x)}
+        for x, target in _loader(split, batch_size):
+            output = model(x.to(device)).detach().cpu()
+            if not torch.isfinite(output).all():
+                raise ValueError("Quality predictions must be finite")
+            if task == "classification":
+                if output.ndim != 2 or target.ndim != 1 or len(output) != len(target):
+                    raise ValueError("Classification requires [N,C] scores and [N] labels")
+                total += int((output.argmax(-1) == target).sum())
+                count += len(target)
+            else:
+                if output.shape != target.shape:
+                    raise ValueError("Regression predictions and targets must have identical shape")
+                total += float((output.double() - target).square().sum())
+                count += target.numel()
+    return {"name": "accuracy" if task == "classification" else "mean_squared_error",
+            "value": total / count, "role": "validation", "samples": len(split.x)}
 
 
 def _train(model, split, protocol, *, regularizer=None, criterion=None):
@@ -97,21 +112,9 @@ def _save_report(root, name, report):
     return report
 
 
-def _prepare_baseline(bundle, protocol):
-    from .protocol import validate_roles
-    validate_roles(bundle)
-    model = deepcopy(bundle.original_model).eval()
-    initial_hash = _hash_model(model)
-    with torch.random.fork_rng():
-        torch.manual_seed(protocol.seed)
-        _synchronize(protocol.device)
-        start = time.perf_counter()
-        model, history = _train(model, bundle.train, replace(protocol, finetune_epochs=protocol.baseline_epochs), criterion=_loss(bundle.task))
-        _synchronize(protocol.device)
-        seconds = time.perf_counter() - start
-    return model.cpu().eval(), {"initial_sha256": initial_hash, "trained_sha256": _hash_model(model),
-                               "epochs": protocol.baseline_epochs, "steps": len(history), "seconds": seconds,
-                               "status": "trained_on_train" if history else "provided_state; pretraining_not_verified_by_this_helper"}
+def _prepare_baseline(bundle, protocol, output_dir, checkpoint=None):
+    from .baseline import prepare_baseline
+    return prepare_baseline(bundle, protocol, output_dir, checkpoint=checkpoint)
 
 
 class _TrainingRSS:
@@ -151,7 +154,8 @@ class _TrainingRSS:
                 "method": "process RSS; includes baseline, optimizer and library buffers; short peaks may be missed"}
 
 
-def run_rank_ablation(bundle, protocol, output_dir, *, layer_path="", ranks=(1,), ridge=0.0):
+def run_rank_ablation(bundle, protocol, output_dir, *, layer_path="", ranks=(1,), ridge=0.0,
+                      moment_max_bytes=256 * 1024 * 1024, baseline_checkpoint=None):
     """Calibration fits M; validation evaluates layer and network before/after FT.
 
     No access to bundle.test is made. The caller freezes a selected configuration
@@ -159,33 +163,24 @@ def run_rank_ablation(bundle, protocol, output_dir, *, layer_path="", ranks=(1,)
     on the real operator; matched-rank comparisons hold factor storage fixed.
     """
     from .measurement import measure_artifact
-    original, baseline_training = _prepare_baseline(bundle, protocol)
+    experiment_start = time.perf_counter()
+    original, baseline_training = _prepare_baseline(bundle, protocol, output_dir, baseline_checkpoint)
     layer = original.get_submodule(layer_path) if layer_path else original
-    captured = []
-    handle = layer.register_forward_pre_hook(lambda _layer, values: captured.append(values[0].detach().cpu()))
-    try:
-        with torch.inference_mode():
-            original(bundle.calibration.x.cpu())
-        calibration = torch.cat(captured)
-        captured.clear()
-        with torch.inference_mode():
-            original(bundle.validation.x.cpu())
-        evaluation = torch.cat(captured)
-    finally:
-        handle.remove()
-    with torch.inference_mode():
-        reference_output = layer(evaluation)
+    moment_start = time.perf_counter()
+    moments, moment_memory = capture_moments(original, layer, bundle.calibration, protocol.batch_size,
+                                             max_bytes=moment_max_bytes)
+    moment_seconds = time.perf_counter() - moment_start
     records = []
-    policy_audits = {str(rank): matched_rank_policy_audit(layer, evaluation, rank) for rank in ranks}
+    policy_audits = {str(rank): matched_rank_policy_audit(layer, None, rank) for rank in ranks}
     for rank in ranks:
         for weighted in (False, True):
             start = time.perf_counter()
-            replacement, diagnostics = approximate_layer(layer, calibration, rank, weighted=weighted, ridge=ridge)
-            calibration_seconds = time.perf_counter() - start
+            replacement, diagnostics = approximate_layer(layer, None, rank, weighted=weighted, ridge=ridge,
+                                                          calibration_moments=moments if weighted else None)
+            approximation_seconds = time.perf_counter() - start
             candidate = _replace(deepcopy(original), layer_path, replacement).eval()
-            with torch.inference_mode():
-                error_before = relative_error(reference_output, replacement(evaluation))
-            quality_before = _quality(candidate, bundle.validation, bundle.task)
+            error_before = layer_error(original, layer, replacement, bundle.validation, protocol.batch_size)
+            quality_before = _quality(candidate, bundle.validation, bundle.task, protocol.batch_size)
             factors_before = factor_diagnostics(candidate)
             with torch.random.fork_rng():
                 torch.manual_seed(protocol.seed)
@@ -195,20 +190,26 @@ def run_rank_ablation(bundle, protocol, output_dir, *, layer_path="", ranks=(1,)
                 _synchronize(protocol.device)
                 train_seconds = time.perf_counter() - train_start
             final_layer = candidate.get_submodule(layer_path) if layer_path else candidate
-            with torch.inference_mode():
-                error_after = relative_error(reference_output, final_layer(evaluation.to(protocol.device)).cpu())
+            error_after = layer_error(original, layer, final_layer, bundle.validation, protocol.batch_size)
             label = f"{'weighted' if weighted else 'ordinary'}-r{rank}"
             measurement = measure_artifact(candidate, bundle.validation.x[:protocol.batch_size],
                                            Path(output_dir) / (label + '.pt'), format=protocol.artifact_format,
                                            device=protocol.device, repeats=protocol.measurement_repeats, warmup=protocol.warmup)
             records.append({"variant": label, "requested_rank": rank, "groups": diagnostics,
-                            "calibration_source": "calibration", "calibration_seconds": calibration_seconds,
+                            "calibration_source": "calibration",
+                            "calibration_seconds": approximation_seconds + (moment_seconds if weighted else 0.),
+                            "operator_approximation_seconds": approximation_seconds,
+                            "second_moment_seconds": moment_seconds if weighted else 0.,
+                            "calibration_cost_accounting": "weighted variant charged full shared moment capture; ordinary SVD requires no capture",
                             "layer_error_before": error_before, "layer_error_after": error_after,
-                            "quality_before": quality_before, "quality_after": _quality(candidate, bundle.validation, bundle.task),
+                            "quality_before": quality_before, "quality_after": _quality(candidate, bundle.validation, bundle.task, protocol.batch_size),
                             "factors_before": factors_before, "factors_after": factor_diagnostics(candidate),
                             "training_seconds": train_seconds, "training_steps": len(history), "measurement": measurement})
     report = {"experiment": "rank_second_moment", "layer_path": layer_path, "source_sha256": _hash_model(original), "rank_policy_audits": policy_audits,
               "protocol": asdict(protocol), "baseline_training": baseline_training, "ridge": ridge, "records": records,
+              "activation_memory": moment_memory,
+              "shared_second_moment_preparation_seconds": moment_seconds,
+              "actual_wall_seconds": time.perf_counter() - experiment_start,
               "claim_status": {"layer_error": "measured_on_validation", "network_quality_advantage": "not_established"}}
     return _save_report(output_dir, "rank_ablation.json", report)
 
@@ -256,13 +257,13 @@ def _regularizer(variant):
     return None
 
 
-def run_regularization_ablation(bundle, protocol, output_dir, *, variants, layer_path="", rank=1):
+def run_regularization_ablation(bundle, protocol, output_dir, *, variants, layer_path="", rank=1, baseline_checkpoint=None):
     from fedcore.losses.regularization_losses import LaiMSE, LaiMAE
     from .measurement import measure_artifact
     records = []
-    original, baseline_training = _prepare_baseline(bundle, protocol)
+    original, baseline_training = _prepare_baseline(bundle, protocol, output_dir, baseline_checkpoint)
     layer = original.get_submodule(layer_path) if layer_path else original
-    replacement, _ = approximate_layer(layer, bundle.calibration.x, rank)
+    replacement, _ = approximate_layer(layer, None, rank)
     common = _replace(deepcopy(original), layer_path, replacement)
     common_hash = _hash_model(common)
     for index, variant in enumerate(variants):
@@ -272,7 +273,7 @@ def run_regularization_ablation(bundle, protocol, output_dir, *, variants, layer
             if bundle.task == "classification":
                 raise ValueError("Lai is a residual loss; it is supported only for regression/forecasting")
             criterion = (LaiMSE if variant.name == "lai_mse" else LaiMAE)(variant.coefficient)
-        before = {"quality": _quality(candidate.eval(), bundle.validation, bundle.task), "factors": factor_diagnostics(candidate)}
+        before = {"quality": _quality(candidate.eval(), bundle.validation, bundle.task, protocol.batch_size), "factors": factor_diagnostics(candidate)}
         with torch.random.fork_rng():
             torch.manual_seed(protocol.seed)
             _synchronize(protocol.device)
@@ -283,7 +284,7 @@ def run_regularization_ablation(bundle, protocol, output_dir, *, variants, layer
         records.append({"variant": asdict(variant), "starting_sha256": common_hash,
                         "supervised_loss": variant.name if variant.name.startswith("lai") else type(criterion).__name__,
                         "coefficient_role": "residual_weight_factor" if variant.name.startswith("lai") else "additive_penalty",
-                        "before": before, "after": {"quality": _quality(candidate, bundle.validation, bundle.task), "factors": factor_diagnostics(candidate)},
+                        "before": before, "after": {"quality": _quality(candidate, bundle.validation, bundle.task, protocol.batch_size), "factors": factor_diagnostics(candidate)},
                         "training_seconds": elapsed, "steps": len(history), "history": history,
                         "measurement": measure_artifact(candidate, bundle.validation.x[:protocol.batch_size],
                              Path(output_dir) / f"regularization-{index}.pt", format=protocol.artifact_format, device=protocol.device,
@@ -332,7 +333,7 @@ def compare_validation_timing(proposals, validate, execute, *, summarize=None):
             "claim_status": "not_established", "budget_mode": "equal_proposal_count; wall time measured separately"}
 
 
-def run_order_ablation(bundle, protocol, output_dir, *, pruning_amount=.25, rank=1):
+def run_order_ablation(bundle, protocol, output_dir, *, pruning_amount=.25, rank=1, baseline_checkpoint=None):
     """Pr→LR versus LR→Pr through the common real candidate interpreter."""
     from .runner import apply_candidate
     from .protocol import CandidateSpec
@@ -340,7 +341,7 @@ def run_order_ablation(bundle, protocol, output_dir, *, pruning_amount=.25, rank
     pruning = CandidateSpec("pruning", {"amount": pruning_amount, "finetune_epochs": 0})
     low_rank = CandidateSpec("svd", {"rank": rank, "finetune_epochs": 0})
     candidates = [CandidateSpec("chain", chain=chain) for chain in ((pruning, low_rank), (low_rank, pruning))]
-    original, baseline_training = _prepare_baseline(bundle, protocol)
+    original, baseline_training = _prepare_baseline(bundle, protocol, output_dir, baseline_checkpoint)
     records = []
     for candidate in candidates:
         with torch.random.fork_rng():
@@ -351,7 +352,7 @@ def run_order_ablation(bundle, protocol, output_dir, *, pruning_amount=.25, rank
             model, history = _train(model, bundle.train, protocol, criterion=_loss(bundle.task))
             _synchronize(protocol.device)
         records.append({"chain": [step.to_dict() for step in candidate.chain], "parameters": dict(candidate.parameters), "operations": evidence,
-                        "wall_seconds": time.perf_counter() - start, "steps": len(history), "quality": _quality(model, bundle.validation, bundle.task),
+                        "wall_seconds": time.perf_counter() - start, "steps": len(history), "quality": _quality(model, bundle.validation, bundle.task, protocol.batch_size),
                         "factors": factor_diagnostics(model),
                         "measurement": measure_artifact(model, bundle.validation.x[:protocol.batch_size], Path(output_dir) / f"order-{len(records)}.pt",
                               format=protocol.artifact_format, device=protocol.device, repeats=protocol.measurement_repeats, warmup=protocol.warmup)})
@@ -359,7 +360,7 @@ def run_order_ablation(bundle, protocol, output_dir, *, pruning_amount=.25, rank
              "protocol": asdict(protocol), "baseline_training": baseline_training, "claim_status": "not_established"})
 
 
-def run_validity_ablation(bundle, protocol, output_dir, *, proposals, validator):
+def run_validity_ablation(bundle, protocol, output_dir, *, proposals, validator, baseline_checkpoint=None):
     """Real fixed-stream replay with an explicitly supplied existing checker.
 
     This adapter does not define a second applicability checker. It evaluates
@@ -369,7 +370,7 @@ def run_validity_ablation(bundle, protocol, output_dir, *, proposals, validator)
     from .runner import apply_candidate, quality_metrics
     from .measurement import measure_artifact
     from .search import archive_summary
-    original, baseline_training = _prepare_baseline(bundle, protocol)
+    original, baseline_training = _prepare_baseline(bundle, protocol, output_dir, baseline_checkpoint)
     root = Path(output_dir)
     baseline = {"validation": quality_metrics(original, bundle.validation, bundle.task, protocol.batch_size, protocol.device)}
     attempt = 0
@@ -400,7 +401,7 @@ def _merged_lora(model):
     return result
 
 
-def run_training_cost_controls(bundle, protocol, output_dir, *, lora_rank=1, backend="fbgemm"):
+def run_training_cost_controls(bundle, protocol, output_dir, *, lora_rank=1, backend="fbgemm", baseline_checkpoint=None):
     """Equal Adam/lr/epochs/data: full FT, LoRA, student-only, KD, QAT/float.
 
     Teacher forward time is part of the KD total; adapter storage is separate
@@ -422,7 +423,7 @@ def run_training_cost_controls(bundle, protocol, output_dir, *, lora_rank=1, bac
         raise ValueError("Training-cost controls require positive finetune_epochs")
     if str(protocol.device) != "cpu":
         raise ValueError("This paired suite uses the checked CPU QAT profile")
-    original, baseline_training = _prepare_baseline(bundle, protocol)
+    original, baseline_training = _prepare_baseline(bundle, protocol, output_dir, baseline_checkpoint)
     source_hash = _hash_model(original)
     records = []
     for name in ("full_finetune", "lora", "student_only", "distillation", "qat_float_control", "qat"):
@@ -475,7 +476,7 @@ def run_training_cost_controls(bundle, protocol, output_dir, *, lora_rank=1, bac
             training_seconds = time.perf_counter() - start
         if _hash_model(original) != source_hash:
             raise RuntimeError("A training control mutated the shared baseline")
-        unmerged_quality = _quality(model, bundle.validation, bundle.task)
+        unmerged_quality = _quality(model, bundle.validation, bundle.task, protocol.batch_size)
         adapter = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()
                    if any(part in key.split('.') for part in LoRALayer.adapter_layer_names)} if name == "lora" else {}
         adapter_file = None
@@ -487,8 +488,7 @@ def run_training_cost_controls(bundle, protocol, output_dir, *, lora_rank=1, bac
         updated = sum(p.numel() for p in model.parameters() if p.requires_grad)
         inference_model = _merged_lora(model) if name == "lora" else model
         if name == "lora":
-            with torch.inference_mode():
-                merge_error = relative_error(model(bundle.validation.x), inference_model(bundle.validation.x))
+            merge_error = model_error(model, inference_model, bundle.validation, protocol.batch_size)
         else:
             merge_error = None
         records.append({"variant": name, "starting_sha256": source_hash, "optimizer": "Adam", "learning_rate": protocol.learning_rate,
@@ -499,7 +499,7 @@ def run_training_cost_controls(bundle, protocol, output_dir, *, lora_rank=1, bac
                         "dense_baseline_parameters": sum(p.numel() for p in original.parameters()),
                         "adapter_tensor_bytes": sum(v.numel() * v.element_size() for v in adapter.values()),
                         "adapter_file_bytes": adapter_file.stat().st_size if adapter_file else None,
-                        "unmerged_quality": unmerged_quality, "merged_quality": _quality(inference_model, bundle.validation, bundle.task),
+                        "unmerged_quality": unmerged_quality, "merged_quality": _quality(inference_model, bundle.validation, bundle.task, protocol.batch_size),
                         "merge_error": merge_error,
                         "training_memory": memory.report(),
                         "measurement": measure_artifact(inference_model, bundle.validation.x[:protocol.batch_size], Path(output_dir) / f"{name}.pt",

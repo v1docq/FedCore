@@ -124,7 +124,7 @@ def activation_rows(layer, inputs):
     return tuple(group_patches[:, group].transpose(1, 2).reshape(-1, group_patches.shape[2]) for group in range(layer.groups))
 
 
-def approximate_layer(layer, calibration_inputs, rank, *, weighted=False, ridge=0.0):
+def approximate_layer(layer, calibration_inputs, rank, *, weighted=False, ridge=0.0, calibration_moments=None):
     """Return independent canonical FedCore factors, equal storage at equal rank."""
     from fedcore.models.network_impl.decomposed_layers import DecomposedLinear, DecomposedConv1d, DecomposedConv2d, IDecomposed
     constructors = {nn.Linear: DecomposedLinear, nn.Conv1d: DecomposedConv1d, nn.Conv2d: DecomposedConv2d}
@@ -132,11 +132,16 @@ def approximate_layer(layer, calibration_inputs, rank, *, weighted=False, ridge=
         raise ValueError("Only checked Linear/Conv1d/Conv2d layers are supported")
     result = deepcopy(layer) if isinstance(layer, IDecomposed) else constructors[type(layer)](layer, decomposer="svd")
     matrices = layer_matrices(layer)
-    rows = activation_rows(layer, calibration_inputs) if weighted else (None,) * len(matrices)
+    if calibration_moments is not None:
+        if not weighted or len(calibration_moments) != len(matrices):
+            raise ValueError("One calibration moment per group is required for weighted approximation")
+        moments = calibration_moments
+    else:
+        moments = tuple(second_moment(x) for x in activation_rows(layer, calibration_inputs)) if weighted else (None,) * len(matrices)
     factors, diagnostics = [], []
-    for matrix, x in zip(matrices, rows):
+    for matrix, moment in zip(matrices, moments):
         if weighted:
-            evidence = weighted_svd(matrix, second_moment(x), rank, ridge=ridge)
+            evidence = weighted_svd(matrix, moment, rank, ridge=ridge)
             approximation = evidence.pop("approximation")
         else:
             approximation = truncated_svd(matrix, rank)

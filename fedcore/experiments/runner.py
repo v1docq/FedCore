@@ -7,6 +7,7 @@ import json
 import math
 import platform
 import random
+import shutil
 import subprocess
 import time
 from contextlib import contextmanager
@@ -20,7 +21,7 @@ from fedcore.tools.atomic_json import write_atomic_json
 from .measurement import file_hash, load_artifact, _call_loaded, measure_artifact
 from .protocol import (ROLES, CandidateSpec, ExperimentBundle, ExperimentProtocol,
                        ProtocolError, TensorSplit, canonical_json, json_value,
-                       stable_hash, tensor_hash, validate_roles)
+                       role_content_identity, stable_hash, tensor_hash, validate_roles)
 
 
 class UnsupportedOperation(RuntimeError):
@@ -402,7 +403,8 @@ def apply_candidate(model, bundle, protocol, candidate):
 
 class ExperimentRunner:
     """Each instance owns one run; final test access starts after selection freezes."""
-    def __init__(self, bundle, protocol, output_dir, *, cache_dir=None, use_cache=False, external_preparation_seconds=0.0):
+    def __init__(self, bundle, protocol, output_dir, *, cache_dir=None, use_cache=False, external_preparation_seconds=0.0,
+                 baseline_checkpoint=None):
         preparation_start = time.perf_counter()
         if isinstance(external_preparation_seconds, bool) or not isinstance(external_preparation_seconds, (int, float)) or not math.isfinite(external_preparation_seconds) or external_preparation_seconds < 0:
             raise ProtocolError("External data preparation cost must be finite nonnegative seconds")
@@ -418,6 +420,7 @@ class ExperimentRunner:
             raise ProtocolError("A run directory already contains a manifest; choose a new directory")
         self.cache_dir = Path(cache_dir).resolve() if cache_dir else self.output_dir / "cache"
         self.use_cache = use_cache
+        self.baseline_checkpoint = baseline_checkpoint
         self.initial_model = copy.deepcopy(bundle.original_model).cpu()
         self.environment = environment_manifest()
         self.manifest = {"version": 1, "status": "created", "protocol": protocol.to_dict(),
@@ -448,32 +451,50 @@ class ExperimentRunner:
         self.manifest["preparation_seconds"] = self.preparation_seconds
         self.manifest["status"] = "running"
         self._save()
-        tensors = {role: {"x": getattr(self.bundle, role).x, "y": getattr(self.bundle, role).y}
-                   for role in ROLES}
+        tensors, backing_files = {}, {}
+        for role in ROLES:
+            split = getattr(self.bundle, role)
+            if split._backing:
+                files = {}
+                for axis in ("x", "y"):
+                    name = f"{role}-{axis}.npy"
+                    target = self.output_dir / name
+                    shutil.copyfile(split._backing[axis]["path"], target)
+                    files[axis] = {"path": str(target.resolve()), "sha256": file_hash(target)}
+                    backing_files[name] = files[axis]
+                tensors[role] = {"files": files}
+            else:
+                tensors[role] = {"x": split.x, "y": split.y}
         torch.save(tensors, self.output_dir / "data.pt")
         torch.save(self.initial_model.state_dict(), self.output_dir / "initial_state.pt")
         self.manifest["replay_files"] = {name: {"path": str((self.output_dir / name).resolve()),
                                                 "sha256": file_hash(self.output_dir / name)}
                                          for name in ("data.pt", "initial_state.pt")}
+        self.manifest["replay_files"].update(backing_files)
         start = time.perf_counter()
-        self.baseline_model = copy.deepcopy(self.initial_model)
         self.manifest["baseline_training"] = {"status": "running"}
         try:
-            with _seeded(self.protocol.seed, self.protocol.device):
-                training = train_model(self.baseline_model, self.bundle.train, self.bundle.task,
-                                       epochs=self.protocol.baseline_epochs, batch_size=self.protocol.batch_size,
-                                       learning_rate=self.protocol.learning_rate, device=self.protocol.device,
-                                       seed=self.protocol.seed)
+            from .baseline import prepare_baseline
+            self.baseline_model, training = prepare_baseline(self.bundle, self.protocol, self.output_dir,
+                                                           checkpoint=self.baseline_checkpoint, environment=self.environment)
         except BaseException as error:
             self.manifest["baseline_training"] = {"status": "interrupted" if isinstance(error, KeyboardInterrupt) else "failed",
                                                    "wall_seconds": time.perf_counter() - start,
                                                    "reason": type(error).__name__}
             self._save()
             raise
-        self.baseline_model.cpu()
-        self.manifest["baseline_training"] = {"status": "succeeded", **training, "wall_seconds": time.perf_counter() - start,
-                                               "state_sha256": model_state_hash(self.baseline_model)}
-        torch.save(self.baseline_model.state_dict(), self.output_dir / "baseline_state.pt")
+        self.manifest["baseline_training"] = {**training, "training_status": training["status"], "status": "succeeded"}
+        if training["reused"]:
+            # Charge the same common training work to each paired method; retain
+            # actual verification time separately instead of implying retraining.
+            self.started -= training["wall_seconds"]
+        self.manifest["baseline_cost_accounting"] = {"mode": "common_baseline_preparation_charged_per_run",
+                    "charged_common_baseline_seconds": training["wall_seconds"],
+                    "charged_training_seconds": training["training_seconds"],
+                    "actual_training_or_verification_seconds": training["actual_work_seconds"]}
+        self.manifest["replay_files"].update({name: {"path": str((self.output_dir / name).resolve()),
+                                                   "sha256": file_hash(self.output_dir / name)}
+                                             for name in ("baseline_state.pt", "baseline.json")})
         self.baseline_record = self._evaluate(CandidateSpec("baseline"))
         if self.baseline_record["status"] != "succeeded":
             raise RuntimeError("Baseline export/validation failed; no valid paired experiment")
@@ -484,7 +505,7 @@ class ExperimentRunner:
             raise ProtocolError("Baseline fails the prospectively frozen quality threshold")
 
     def _cache_key(self, candidate):
-        data = {role: getattr(self.bundle, role).manifest() for role in ROLES if role != "test"}
+        data = role_content_identity({role: getattr(self.bundle, role).manifest() for role in ROLES if role != "test"})
         return stable_hash({"candidate": candidate.to_dict(), "baseline": model_state_hash(self.baseline_model),
                             "data": data, "protocol": self.protocol.to_dict(), "environment": self.environment})
 
@@ -650,11 +671,17 @@ class ExperimentRunner:
         splits = {}
         for role in ROLES:
             info = manifest["data"]["roles"][role]
-            splits[role] = TensorSplit(data[role]["x"], data[role]["y"], tuple(info["ids"]),
-                                       tuple(info["unit_ids"]), tuple(tuple(pair) for pair in info["intervals"]))
+            arguments = (tuple(info["ids"]), tuple(info["unit_ids"]), tuple(tuple(pair) for pair in info["intervals"]))
+            if "files" in data[role]:
+                files = data[role]["files"]
+                splits[role] = TensorSplit.from_npy(files["x"]["path"], files["y"]["path"], *arguments,
+                                                  expected_hashes=(files["x"]["sha256"], files["y"]["sha256"]))
+            else:
+                splits[role] = TensorSplit(data[role]["x"], data[role]["y"], *arguments)
         bundle = ExperimentBundle(**splits, task=manifest["data"]["task"], original_model=model,
                                   metadata=manifest["data"]["metadata"])
-        return cls(bundle, ExperimentProtocol.from_dict(manifest["protocol"]), output_dir)
+        checkpoint = files.get("baseline.json", {}).get("path") if manifest.get("baseline_training", {}).get("training_status") == "trained_on_train" else None
+        return cls(bundle, ExperimentProtocol.from_dict(manifest["protocol"]), output_dir, baseline_checkpoint=checkpoint)
 
 
 def load_run(path):

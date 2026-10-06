@@ -114,6 +114,11 @@ def test_rank_and_regularization_ablation_public_real_path(bundle, tmp_path):
     before = deepcopy(bundle.original_model.state_dict())
     ranks = run_rank_ablation(bundle, protocol, tmp_path / "rank", layer_path="0", ranks=(1, 4))
     assert len(ranks["records"]) == 4
+    assert ranks["shared_second_moment_preparation_seconds"] > 0
+    for record in ranks["records"]:
+        weighted = record["variant"].startswith("weighted")
+        assert record["second_moment_seconds"] == (ranks["shared_second_moment_preparation_seconds"] if weighted else 0.)
+        assert record["calibration_seconds"] == record["operator_approximation_seconds"] + record["second_moment_seconds"]
     assert all(record["training_steps"] == 2 and record["measurement"]["status"] == "succeeded" for record in ranks["records"])
     regularization = run_regularization_ablation(bundle, protocol, tmp_path / "regularization", layer_path="0", rank=2,
         variants=[RegularizationVariant("none", 0), RegularizationVariant("hoyer", .001),

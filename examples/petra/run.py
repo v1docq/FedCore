@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from time import perf_counter
 
 from fedcore.experiments.scenarios import (
     ScenarioUnavailable, build_cv_digits, build_cv_dataset, build_tabular, build_ts_regression,
@@ -22,7 +23,13 @@ def main(argv=None, *, default_scenario=None, default_methods=None, default_cv_d
     parser.add_argument("--dataset-revision")
     parser.add_argument("--resolution", type=int)
     parser.add_argument("--max-samples", type=int, help="Explicit real-data pilot subset; omitted means full dataset")
+    parser.add_argument("--storage-dir", type=Path,
+                        help="File-backed CV tensors; default is output-dir/input_storage")
+    parser.add_argument("--max-materialized-mib", type=int, default=256,
+                        help="Declared in-memory CV materialization limit")
     parser.add_argument("--epochs", type=int, default=20, help="Actual common baseline training epochs")
+    parser.add_argument("--baseline-checkpoint", type=Path,
+                        help="Verified baseline.json; all original training settings must match")
     parser.add_argument("--finetune-epochs", type=int, default=3, help="Equal candidate update budget")
     parser.add_argument("--lr", type=float, default=.001)
     parser.add_argument("--batch-size", type=int, default=64)
@@ -48,8 +55,11 @@ def main(argv=None, *, default_scenario=None, default_methods=None, default_cv_d
     args = parser.parse_args(argv)
     if args.epochs < 1:
         parser.error("--epochs must be positive: these examples require a trained common baseline")
+    if args.max_materialized_mib < 1:
+        parser.error("--max-materialized-mib must be positive")
     if not 0 < args.rank_ratio <= 1 or not 0 < args.pruning_ratio < 1:
         parser.error("--rank-ratio must be in (0,1]; --pruning-ratio must be in (0,1)")
+    preparation_started = perf_counter()
     try:
         if args.scenario == "cv":
             if args.cv_dataset == "digits":
@@ -58,7 +68,9 @@ def main(argv=None, *, default_scenario=None, default_methods=None, default_cv_d
                 if args.data is None:
                     raise ScenarioUnavailable("CIFAR10/ImageNette requires --data with local original data")
                 bundle = build_cv_dataset(args.cv_dataset, args.data, architecture=args.architecture, seed=args.seed,
-                                          resolution=args.resolution, max_samples=args.max_samples, dataset_revision=args.dataset_revision)
+                                          resolution=args.resolution, max_samples=args.max_samples, dataset_revision=args.dataset_revision,
+                                          storage_dir=args.storage_dir or args.output_dir / "input_storage",
+                                          max_materialized_bytes=args.max_materialized_mib * 1024 * 1024)
         elif args.scenario == "tabular":
             bundle = build_tabular(args.seed)
         elif args.scenario == "open_sequence":
@@ -96,7 +108,10 @@ def main(argv=None, *, default_scenario=None, default_methods=None, default_cv_d
     candidates = [CandidateSpec(method, {"threshold": args.rank_ratio, "strategy": "quantile"} if method == "svd" else
                               {"amount": args.pruning_ratio} if method == "pruning" else
                               {"pruning_ratio": args.pruning_ratio} if method == "structural_pruning" else {}) for method in args.methods]
-    result = ExperimentRunner(bundle, protocol, args.output_dir).run(candidates)
+    preparation_seconds = perf_counter() - preparation_started
+    result = ExperimentRunner(bundle, protocol, args.output_dir,
+                              baseline_checkpoint=args.baseline_checkpoint,
+                              external_preparation_seconds=preparation_seconds).run(candidates)
     # The full record is saved by the runner. Keep CLI output concise and secret-free.
     print(json.dumps({"output_dir": str(args.output_dir), "scenario": args.scenario,
                       "seed": args.seed, "manifest_status": result.get("status", "recorded")}, indent=2))

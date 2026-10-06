@@ -1,0 +1,1493 @@
+{
+  "experiment": "regularization",
+  "protocol": {
+    "seed": 42,
+    "batch_size": 64,
+    "baseline_epochs": 20,
+    "finetune_epochs": 2,
+    "learning_rate": 0.001,
+    "quality_tolerance": 0.05,
+    "device": "cpu",
+    "measurement_repeats": 10,
+    "warmup": 3,
+    "threads": 1,
+    "artifact_format": "torchscript",
+    "selection_cost": "file_bytes",
+    "quality_scale": 1.0,
+    "cost_scale": 1048576.0,
+    "hypervolume_reference": [
+      2.0,
+      2.0
+    ],
+    "repeat_stage": "pilot",
+    "repeat_seeds": [
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
+    "repeat_rationale": "Real-data implementation pilot; no population inference",
+    "primary_comparison": "compression versus independently trained baseline",
+    "minimum_baseline_quality": null
+  },
+  "baseline_training": {
+    "actual_work_seconds": 0.18639529999927618,
+    "checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed42\\regularization\\baseline.json",
+    "cost_scope": "common role/source/state verification, training and state persistence; final JSON publication/hash excluded",
+    "epochs": 20,
+    "identity_sha256": "6b6c041bec3d6814a7fe18d6c86ab8074c95a153ed7a8d1881d9758a77e67700",
+    "initial_sha256": "349d8c21a66ad39243c72a157c20de2f889eb2e19a6feee7194dd44d850c8365",
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "persistence_seconds": 0.011639999996987171,
+    "preparation_seconds": 0.1936243999953149,
+    "reused": true,
+    "seconds": 0.6475812999997288,
+    "state_sha256": "06b469683928f42a07b0c217c6ef11064f71732d00ff1499462932dd79b0397f",
+    "status": "trained_on_train",
+    "steps": 120,
+    "train_loss": [
+      0.7027491927146912,
+      0.6751447916030884,
+      0.646596372127533,
+      0.6225624680519104,
+      0.5838354825973511,
+      0.597469687461853,
+      0.5288910865783691,
+      0.5382794141769409,
+      0.48410138487815857,
+      0.47678327560424805,
+      0.44064873456954956,
+      0.3732500374317169,
+      0.3995056450366974,
+      0.3423019349575043,
+      0.32990938425064087,
+      0.37336936593055725,
+      0.31433650851249695,
+      0.2555267810821533,
+      0.2580767273902893,
+      0.2631846070289612,
+      0.2901601791381836,
+      0.19404055178165436,
+      0.1574021428823471,
+      0.2079886496067047,
+      0.17094403505325317,
+      0.15060272812843323,
+      0.1522885262966156,
+      0.20034471154212952,
+      0.12478221207857132,
+      0.16329160332679749,
+      0.17639048397541046,
+      0.13108518719673157,
+      0.09504317492246628,
+      0.09692712128162384,
+      0.12919174134731293,
+      0.038552530109882355,
+      0.17027167975902557,
+      0.06936288625001907,
+      0.12175814807415009,
+      0.05350298061966896,
+      0.07870057970285416,
+      0.07443550229072571,
+      0.051359377801418304,
+      0.08361520618200302,
+      0.10383541882038116,
+      0.07745738327503204,
+      0.12740837037563324,
+      0.03328198939561844,
+      0.034587543457746506,
+      0.08273660391569138,
+      0.16262313723564148,
+      0.050128061324357986,
+      0.06201658025383949,
+      0.06269587576389313,
+      0.07976045459508896,
+      0.01950922980904579,
+      0.132297545671463,
+      0.05926278233528137,
+      0.06634773313999176,
+      0.053911253809928894,
+      0.07897502928972244,
+      0.049891483038663864,
+      0.1183728575706482,
+      0.06574952602386475,
+      0.027188453823328018,
+      0.027399273589253426,
+      0.038025859743356705,
+      0.06485963612794876,
+      0.1074785366654396,
+      0.017698002979159355,
+      0.0849902406334877,
+      0.0403047613799572,
+      0.032404836267232895,
+      0.10384508967399597,
+      0.09396351873874664,
+      0.04385528713464737,
+      0.03153789043426514,
+      0.007539181504398584,
+      0.018451660871505737,
+      0.10232435166835785,
+      0.05472349002957344,
+      0.08432547003030777,
+      0.015494473278522491,
+      0.043873924762010574,
+      0.1325843781232834,
+      0.017610276117920876,
+      0.0210398118942976,
+      0.05956115573644638,
+      0.022129669785499573,
+      0.07093635946512222,
+      0.06195773929357529,
+      0.09745163470506668,
+      0.014853131026029587,
+      0.0332331582903862,
+      0.024909211322665215,
+      0.07879683375358582,
+      0.04245671629905701,
+      0.03552094101905823,
+      0.01603603921830654,
+      0.09133578091859818,
+      0.058938004076480865,
+      0.008069249801337719,
+      0.02615479752421379,
+      0.08742590993642807,
+      0.03254712000489235,
+      0.045301489531993866,
+      0.038117364048957825,
+      0.01285012811422348,
+      0.027208901941776276,
+      0.10897374153137207,
+      0.06128744035959244,
+      0.00960985291749239,
+      0.015584249049425125,
+      0.006150722503662109,
+      0.1223503053188324,
+      0.042614083737134933,
+      0.01263902336359024,
+      0.010054267942905426,
+      0.022926833480596542,
+      0.013467839919030666
+    ],
+    "trained_sha256": "06b469683928f42a07b0c217c6ef11064f71732d00ff1499462932dd79b0397f",
+    "training_role": "train",
+    "training_seconds": 0.4392470000020694,
+    "training_steps": 120,
+    "wall_seconds": 0.6475812999997288,
+    "source_checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed42\\shared_baseline\\baseline.json",
+    "source_checkpoint_sha256": "2e4caaf3edbc6a06e33f66f4fe766e0879b7b9a7f62d9b8a0cf318d564f9801d",
+    "reuse_persistence_seconds": 0.010246500009088777,
+    "checkpoint_sha256": "49657b6692ac0619ea34a5f36dac481454cc2b05ce5a28e5c31832a4087a73f2",
+    "state_file_sha256": "53634bbb145b93e37eb1c51697c15f99a642566235d595deec0c5c365d448e30"
+  },
+  "coefficient_selection_role": "validation_only",
+  "rank": 15,
+  "records": [
+    {
+      "variant": {
+        "name": "none",
+        "coefficient": 0.0,
+        "normalization": null
+      },
+      "starting_sha256": "722f0734ea9e9ff8afbbbcfe8bb8e816b23847b60bc4915fbd534a84b83f7054",
+      "supervised_loss": "CrossEntropyLoss",
+      "coefficient_role": "additive_penalty",
+      "before": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.530366897583008,
+                1.6935350894927979,
+                1.6465258598327637,
+                1.598701000213623,
+                1.5739367008209229,
+                1.5156649351119995,
+                1.458072543144226,
+                1.4348450899124146,
+                1.3995622396469116,
+                1.381292462348938,
+                1.3377050161361694,
+                1.3207515478134155,
+                1.2448691129684448,
+                1.2209205627441406,
+                1.2193665504455566,
+                3.254735361224448e-07,
+                2.2727468262928596e-07,
+                2.089023212192842e-07,
+                1.8180500660491816e-07,
+                1.7332753543541912e-07,
+                1.585311935059508e-07,
+                1.4021669869634934e-07,
+                1.3043656110767188e-07,
+                1.2500906620971364e-07,
+                1.1633049012971242e-07,
+                1.1474417505041856e-07,
+                1.00767294952675e-07,
+                9.02833576787998e-08,
+                7.336765861509775e-08,
+                6.709409916538789e-08
+              ]
+            ],
+            "coefficient_l1": 22.57611656188965,
+            "coefficient_l2": 5.951871395111084,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.87298321723938,
+            "vh_norm": 3.872982978820801,
+            "orthogonality_per_rank": 8.940933388622285e-13
+          }
+        ]
+      },
+      "after": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.598581314086914,
+                1.7425429821014404,
+                1.6684434413909912,
+                1.6320724487304688,
+                1.6103410720825195,
+                1.5619988441467285,
+                1.472358226776123,
+                1.4623280763626099,
+                1.396957516670227,
+                1.374178171157837,
+                1.3555089235305786,
+                1.328890323638916,
+                1.2615748643875122,
+                1.2394763231277466,
+                1.2193286418914795,
+                2.601519497602567e-07,
+                2.3622756373242737e-07,
+                2.1068680666758155e-07,
+                1.8884411190356332e-07,
+                1.751803750948966e-07,
+                1.5817920484550996e-07,
+                1.524579715805885e-07,
+                1.4930763825304894e-07,
+                1.3350218353025411e-07,
+                1.1966359636517154e-07,
+                1.0928100380169781e-07,
+                9.84967059025621e-08,
+                9.388275401533974e-08,
+                6.948441466647637e-08,
+                5.499383348706033e-08
+              ]
+            ],
+            "coefficient_l1": 22.636859893798828,
+            "coefficient_l2": 5.966841220855713,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.9057748317718506,
+            "vh_norm": 3.88616943359375,
+            "orthogonality_per_rank": 0.0025480566546320915
+          }
+        ]
+      },
+      "training_seconds": 0.023951899987878278,
+      "steps": 12,
+      "history": [
+        {
+          "supervised": 0.04381484165787697,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.12588760256767273,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.023593593388795853,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.025639524683356285,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.019788464531302452,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.025593843311071396,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.03414315730333328,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.11469782888889313,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.0179453007876873,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.01935574598610401,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.012144830077886581,
+          "penalty": 0.0
+        },
+        {
+          "supervised": 0.02144443988800049,
+          "penalty": 0.0
+        }
+      ],
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed42\\regularization\\regularization-0.pt",
+          "format": "torchscript",
+          "sha256": "3251bb13ea1a67478bbf7116582dd901b2672641aa163a571b4fdc5783b430d6",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.36624999999999996,
+          "latency_p95_ms": 0.6320749999999999,
+          "throughput": 175722.79728727933,
+          "end_to_end_p50_ms": 0.13215,
+          "end_to_end_p95_ms": 0.4873799999999996,
+          "file_bytes": 56439,
+          "tensor_state_bytes": 43596,
+          "cpu_rss_before_bytes": 749084672,
+          "cpu_rss_after_bytes": 749084672,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.012617800006410107
+        },
+        "raw_inference_ms": [
+          0.4191,
+          0.612,
+          0.1698,
+          0.1624,
+          0.2139,
+          0.4961,
+          0.4671,
+          0.1398,
+          0.3134,
+          0.6485
+        ],
+        "raw_end_to_end_ms": [
+          0.1669,
+          0.1964,
+          0.0928,
+          0.0896,
+          0.2654,
+          0.2071,
+          0.0974,
+          0.0891,
+          0.0888,
+          0.669
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": {
+        "name": "hoyer",
+        "coefficient": 0.001,
+        "normalization": null
+      },
+      "starting_sha256": "722f0734ea9e9ff8afbbbcfe8bb8e816b23847b60bc4915fbd534a84b83f7054",
+      "supervised_loss": "CrossEntropyLoss",
+      "coefficient_role": "additive_penalty",
+      "before": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.530366897583008,
+                1.6935350894927979,
+                1.6465258598327637,
+                1.598701000213623,
+                1.5739367008209229,
+                1.5156649351119995,
+                1.458072543144226,
+                1.4348450899124146,
+                1.3995622396469116,
+                1.381292462348938,
+                1.3377050161361694,
+                1.3207515478134155,
+                1.2448691129684448,
+                1.2209205627441406,
+                1.2193665504455566,
+                3.254735361224448e-07,
+                2.2727468262928596e-07,
+                2.089023212192842e-07,
+                1.8180500660491816e-07,
+                1.7332753543541912e-07,
+                1.585311935059508e-07,
+                1.4021669869634934e-07,
+                1.3043656110767188e-07,
+                1.2500906620971364e-07,
+                1.1633049012971242e-07,
+                1.1474417505041856e-07,
+                1.00767294952675e-07,
+                9.02833576787998e-08,
+                7.336765861509775e-08,
+                6.709409916538789e-08
+              ]
+            ],
+            "coefficient_l1": 22.57611656188965,
+            "coefficient_l2": 5.951871395111084,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.87298321723938,
+            "vh_norm": 3.872982978820801,
+            "orthogonality_per_rank": 8.940933388622285e-13
+          }
+        ]
+      },
+      "after": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.598625659942627,
+                1.7425912618637085,
+                1.6684792041778564,
+                1.632093906402588,
+                1.6103541851043701,
+                1.5619844198226929,
+                1.4720278978347778,
+                1.4621597528457642,
+                1.3968541622161865,
+                1.3740326166152954,
+                1.3553341627120972,
+                1.3287665843963623,
+                1.2606631517410278,
+                1.2387417554855347,
+                1.2176860570907593,
+                3.7589305179608345e-07,
+                2.2896902862612478e-07,
+                2.1093600821586733e-07,
+                1.892651226853559e-07,
+                1.726529603729432e-07,
+                1.536922837885868e-07,
+                1.495653236815997e-07,
+                1.3937714982148464e-07,
+                1.3492864070485666e-07,
+                1.2692783002421493e-07,
+                1.1487058060311028e-07,
+                1.0069133082879489e-07,
+                8.649805494087559e-08,
+                7.052806694218816e-08,
+                6.416550490939699e-08
+              ]
+            ],
+            "coefficient_l1": 22.632713317871094,
+            "coefficient_l2": 5.965978622436523,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.9057719707489014,
+            "vh_norm": 3.8861703872680664,
+            "orthogonality_per_rank": 0.0025484547950327396
+          }
+        ]
+      },
+      "training_seconds": 0.0756725999963237,
+      "steps": 12,
+      "history": [
+        {
+          "supervised": 0.04381484165787697,
+          "penalty": 0.0037931124679744244
+        },
+        {
+          "supervised": 0.12588359415531158,
+          "penalty": 0.0037932032719254494
+        },
+        {
+          "supervised": 0.023596864193677902,
+          "penalty": 0.003793322015553713
+        },
+        {
+          "supervised": 0.025642193853855133,
+          "penalty": 0.0037934223655611277
+        },
+        {
+          "supervised": 0.019792821258306503,
+          "penalty": 0.003793447744101286
+        },
+        {
+          "supervised": 0.025595465674996376,
+          "penalty": 0.003793468466028571
+        },
+        {
+          "supervised": 0.03414111211895943,
+          "penalty": 0.003793464507907629
+        },
+        {
+          "supervised": 0.11470034718513489,
+          "penalty": 0.003793471958488226
+        },
+        {
+          "supervised": 0.017947988584637642,
+          "penalty": 0.0037935241125524044
+        },
+        {
+          "supervised": 0.01935688778758049,
+          "penalty": 0.0037935764994472265
+        },
+        {
+          "supervised": 0.012146946042776108,
+          "penalty": 0.0037936025764793158
+        },
+        {
+          "supervised": 0.021444033831357956,
+          "penalty": 0.003793626092374325
+        }
+      ],
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed42\\regularization\\regularization-1.pt",
+          "format": "torchscript",
+          "sha256": "0a042d71acfcc920ae1435f95f1972b68f4adefc7c3bed50ea71c22cd3e65524",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.11175,
+          "latency_p95_ms": 0.1741399999999999,
+          "throughput": 543063.215952482,
+          "end_to_end_p50_ms": 0.09875,
+          "end_to_end_p95_ms": 0.11365499999999998,
+          "file_bytes": 56439,
+          "tensor_state_bytes": 43596,
+          "cpu_rss_before_bytes": 749187072,
+          "cpu_rss_after_bytes": 749383680,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.003965600000810809
+        },
+        "raw_inference_ms": [
+          0.0874,
+          0.0953,
+          0.0961,
+          0.2069,
+          0.1256,
+          0.1197,
+          0.1232,
+          0.1341,
+          0.0864,
+          0.1038
+        ],
+        "raw_end_to_end_ms": [
+          0.1034,
+          0.1209,
+          0.0979,
+          0.0978,
+          0.096,
+          0.0895,
+          0.104,
+          0.1048,
+          0.0933,
+          0.0996
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": {
+        "name": "orthogonal",
+        "coefficient": 0.001,
+        "normalization": "rank"
+      },
+      "starting_sha256": "722f0734ea9e9ff8afbbbcfe8bb8e816b23847b60bc4915fbd534a84b83f7054",
+      "supervised_loss": "CrossEntropyLoss",
+      "coefficient_role": "additive_penalty",
+      "before": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.530366897583008,
+                1.6935350894927979,
+                1.6465258598327637,
+                1.598701000213623,
+                1.5739367008209229,
+                1.5156649351119995,
+                1.458072543144226,
+                1.4348450899124146,
+                1.3995622396469116,
+                1.381292462348938,
+                1.3377050161361694,
+                1.3207515478134155,
+                1.2448691129684448,
+                1.2209205627441406,
+                1.2193665504455566,
+                3.254735361224448e-07,
+                2.2727468262928596e-07,
+                2.089023212192842e-07,
+                1.8180500660491816e-07,
+                1.7332753543541912e-07,
+                1.585311935059508e-07,
+                1.4021669869634934e-07,
+                1.3043656110767188e-07,
+                1.2500906620971364e-07,
+                1.1633049012971242e-07,
+                1.1474417505041856e-07,
+                1.00767294952675e-07,
+                9.02833576787998e-08,
+                7.336765861509775e-08,
+                6.709409916538789e-08
+              ]
+            ],
+            "coefficient_l1": 22.57611656188965,
+            "coefficient_l2": 5.951871395111084,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.87298321723938,
+            "vh_norm": 3.872982978820801,
+            "orthogonality_per_rank": 8.940933388622285e-13
+          }
+        ]
+      },
+      "after": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.5985617637634277,
+                1.7424533367156982,
+                1.668433666229248,
+                1.6320000886917114,
+                1.610319972038269,
+                1.5619394779205322,
+                1.4723387956619263,
+                1.4622641801834106,
+                1.3969578742980957,
+                1.3741796016693115,
+                1.3554623126983643,
+                1.3288905620574951,
+                1.2615492343902588,
+                1.2394508123397827,
+                1.2193509340286255,
+                2.689014308998594e-07,
+                2.3877564103713667e-07,
+                2.2737059168775886e-07,
+                1.9479087143281504e-07,
+                1.7271626973069942e-07,
+                1.5831119526410475e-07,
+                1.5270492781382927e-07,
+                1.3608676852072676e-07,
+                1.3127292675108038e-07,
+                1.2079063083092478e-07,
+                1.1187122339606503e-07,
+                9.754749896728754e-08,
+                8.831226239180978e-08,
+                5.984097839473179e-08,
+                5.3154369794583545e-08
+              ]
+            ],
+            "coefficient_l1": 22.636859893798828,
+            "coefficient_l2": 5.966841220855713,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.905709981918335,
+            "vh_norm": 3.8861563205718994,
+            "orthogonality_per_rank": 0.0025392998941242695
+          }
+        ]
+      },
+      "training_seconds": 0.02526729999226518,
+      "steps": 12,
+      "history": [
+        {
+          "supervised": 0.04381484165787697,
+          "penalty": 8.940933566499204e-16
+        },
+        {
+          "supervised": 0.12588760256767273,
+          "penalty": 1.125581761129979e-07
+        },
+        {
+          "supervised": 0.023593604564666748,
+          "penalty": 2.956982712021272e-07
+        },
+        {
+          "supervised": 0.02563946321606636,
+          "penalty": 4.966114488524909e-07
+        },
+        {
+          "supervised": 0.019788147881627083,
+          "penalty": 6.641228651460551e-07
+        },
+        {
+          "supervised": 0.02559380792081356,
+          "penalty": 7.866469218242855e-07
+        },
+        {
+          "supervised": 0.03414379060268402,
+          "penalty": 9.23633763250109e-07
+        },
+        {
+          "supervised": 0.11469853669404984,
+          "penalty": 1.1349592341503012e-06
+        },
+        {
+          "supervised": 0.01794540323317051,
+          "penalty": 1.3852866231900407e-06
+        },
+        {
+          "supervised": 0.019355619326233864,
+          "penalty": 1.664873025220004e-06
+        },
+        {
+          "supervised": 0.012144563719630241,
+          "penalty": 1.950314526766306e-06
+        },
+        {
+          "supervised": 0.021444132551550865,
+          "penalty": 2.255520257676835e-06
+        }
+      ],
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed42\\regularization\\regularization-2.pt",
+          "format": "torchscript",
+          "sha256": "7ca5f3b97529f611b8a45cf7c9c85b0f417550e410f9f19bc6fc8787d6d46921",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.1417,
+          "latency_p95_ms": 0.16118999999999997,
+          "throughput": 483128.2554540651,
+          "end_to_end_p50_ms": 0.1591,
+          "end_to_end_p95_ms": 0.16144,
+          "file_bytes": 56439,
+          "tensor_state_bytes": 43596,
+          "cpu_rss_before_bytes": 749449216,
+          "cpu_rss_after_bytes": 750379008,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.003446200003963895
+        },
+        "raw_inference_ms": [
+          0.0951,
+          0.0865,
+          0.1223,
+          0.1378,
+          0.1456,
+          0.1131,
+          0.1488,
+          0.1541,
+          0.1558,
+          0.1656
+        ],
+        "raw_end_to_end_ms": [
+          0.1596,
+          0.1596,
+          0.158,
+          0.1599,
+          0.1597,
+          0.1586,
+          0.1627,
+          0.1559,
+          0.1555,
+          0.1568
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": {
+        "name": "orthogonal",
+        "coefficient": 0.015,
+        "normalization": "rank_squared"
+      },
+      "starting_sha256": "722f0734ea9e9ff8afbbbcfe8bb8e816b23847b60bc4915fbd534a84b83f7054",
+      "supervised_loss": "CrossEntropyLoss",
+      "coefficient_role": "additive_penalty",
+      "before": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.530366897583008,
+                1.6935350894927979,
+                1.6465258598327637,
+                1.598701000213623,
+                1.5739367008209229,
+                1.5156649351119995,
+                1.458072543144226,
+                1.4348450899124146,
+                1.3995622396469116,
+                1.381292462348938,
+                1.3377050161361694,
+                1.3207515478134155,
+                1.2448691129684448,
+                1.2209205627441406,
+                1.2193665504455566,
+                3.254735361224448e-07,
+                2.2727468262928596e-07,
+                2.089023212192842e-07,
+                1.8180500660491816e-07,
+                1.7332753543541912e-07,
+                1.585311935059508e-07,
+                1.4021669869634934e-07,
+                1.3043656110767188e-07,
+                1.2500906620971364e-07,
+                1.1633049012971242e-07,
+                1.1474417505041856e-07,
+                1.00767294952675e-07,
+                9.02833576787998e-08,
+                7.336765861509775e-08,
+                6.709409916538789e-08
+              ]
+            ],
+            "coefficient_l1": 22.57611656188965,
+            "coefficient_l2": 5.951871395111084,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.87298321723938,
+            "vh_norm": 3.872982978820801,
+            "orthogonality_per_rank": 8.940933388622285e-13
+          }
+        ]
+      },
+      "after": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.5985617637634277,
+                1.7424533367156982,
+                1.668433666229248,
+                1.6320000886917114,
+                1.610319972038269,
+                1.5619394779205322,
+                1.4723387956619263,
+                1.4622641801834106,
+                1.3969578742980957,
+                1.3741796016693115,
+                1.3554623126983643,
+                1.3288905620574951,
+                1.2615492343902588,
+                1.2394508123397827,
+                1.2193509340286255,
+                2.689014308998594e-07,
+                2.3877564103713667e-07,
+                2.2737059168775886e-07,
+                1.9479087143281504e-07,
+                1.7271626973069942e-07,
+                1.5831119526410475e-07,
+                1.5270492781382927e-07,
+                1.3608676852072676e-07,
+                1.3127292675108038e-07,
+                1.2079063083092478e-07,
+                1.1187122339606503e-07,
+                9.754749896728754e-08,
+                8.831226239180978e-08,
+                5.984097839473179e-08,
+                5.3154369794583545e-08
+              ]
+            ],
+            "coefficient_l1": 22.636859893798828,
+            "coefficient_l2": 5.966841220855713,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.905709981918335,
+            "vh_norm": 3.8861563205718994,
+            "orthogonality_per_rank": 0.0025392998941242695
+          }
+        ]
+      },
+      "training_seconds": 0.031056299994816072,
+      "steps": 12,
+      "history": [
+        {
+          "supervised": 0.04381484165787697,
+          "penalty": 8.940933566499204e-16
+        },
+        {
+          "supervised": 0.12588760256767273,
+          "penalty": 1.1255816900757054e-07
+        },
+        {
+          "supervised": 0.023593604564666748,
+          "penalty": 2.956982712021272e-07
+        },
+        {
+          "supervised": 0.02563946321606636,
+          "penalty": 4.966114488524909e-07
+        },
+        {
+          "supervised": 0.019788147881627083,
+          "penalty": 6.641228651460551e-07
+        },
+        {
+          "supervised": 0.02559380792081356,
+          "penalty": 7.866468649808667e-07
+        },
+        {
+          "supervised": 0.03414379060268402,
+          "penalty": 9.236336495632713e-07
+        },
+        {
+          "supervised": 0.11469853669404984,
+          "penalty": 1.1349591204634635e-06
+        },
+        {
+          "supervised": 0.01794540323317051,
+          "penalty": 1.385286509503203e-06
+        },
+        {
+          "supervised": 0.019355619326233864,
+          "penalty": 1.6648729115331662e-06
+        },
+        {
+          "supervised": 0.012144563719630241,
+          "penalty": 1.9503142993926303e-06
+        },
+        {
+          "supervised": 0.021444132551550865,
+          "penalty": 2.2555198029294843e-06
+        }
+      ],
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed42\\regularization\\regularization-3.pt",
+          "format": "torchscript",
+          "sha256": "1528c9943e175cb2a07e745886c672cc07b883dd695f63c54b68c52e958af045",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.12185,
+          "latency_p95_ms": 0.16075499999999998,
+          "throughput": 502354.7880690738,
+          "end_to_end_p50_ms": 0.16645,
+          "end_to_end_p95_ms": 0.185585,
+          "file_bytes": 56439,
+          "tensor_state_bytes": 43596,
+          "cpu_rss_before_bytes": 750481408,
+          "cpu_rss_after_bytes": 751308800,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.005321200005710125
+        },
+        "raw_inference_ms": [
+          0.1519,
+          0.1311,
+          0.1215,
+          0.1222,
+          0.168,
+          0.1161,
+          0.12,
+          0.1044,
+          0.1249,
+          0.1139
+        ],
+        "raw_end_to_end_ms": [
+          0.1651,
+          0.1485,
+          0.1877,
+          0.1678,
+          0.1633,
+          0.183,
+          0.1703,
+          0.1574,
+          0.1799,
+          0.1486
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": {
+        "name": "norm",
+        "coefficient": 0.001,
+        "normalization": null
+      },
+      "starting_sha256": "722f0734ea9e9ff8afbbbcfe8bb8e816b23847b60bc4915fbd534a84b83f7054",
+      "supervised_loss": "CrossEntropyLoss",
+      "coefficient_role": "additive_penalty",
+      "before": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.530366897583008,
+                1.6935350894927979,
+                1.6465258598327637,
+                1.598701000213623,
+                1.5739367008209229,
+                1.5156649351119995,
+                1.458072543144226,
+                1.4348450899124146,
+                1.3995622396469116,
+                1.381292462348938,
+                1.3377050161361694,
+                1.3207515478134155,
+                1.2448691129684448,
+                1.2209205627441406,
+                1.2193665504455566,
+                3.254735361224448e-07,
+                2.2727468262928596e-07,
+                2.089023212192842e-07,
+                1.8180500660491816e-07,
+                1.7332753543541912e-07,
+                1.585311935059508e-07,
+                1.4021669869634934e-07,
+                1.3043656110767188e-07,
+                1.2500906620971364e-07,
+                1.1633049012971242e-07,
+                1.1474417505041856e-07,
+                1.00767294952675e-07,
+                9.02833576787998e-08,
+                7.336765861509775e-08,
+                6.709409916538789e-08
+              ]
+            ],
+            "coefficient_l1": 22.57611656188965,
+            "coefficient_l2": 5.951871395111084,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 3.87298321723938,
+            "vh_norm": 3.872982978820801,
+            "orthogonality_per_rank": 8.940933388622285e-13
+          }
+        ]
+      },
+      "after": {
+        "quality": {
+          "name": "accuracy",
+          "value": 0.9882352941176471,
+          "role": "validation",
+          "samples": 85
+        },
+        "factors": [
+          {
+            "layer": "0",
+            "stored_rank": 15,
+            "actual_rank": [
+              15
+            ],
+            "operator_spectrum": [
+              [
+                2.670891523361206,
+                1.8108381032943726,
+                1.7445005178451538,
+                1.7295079231262207,
+                1.6919474601745605,
+                1.6443934440612793,
+                1.608534574508667,
+                1.5509706735610962,
+                1.462248682975769,
+                1.454674243927002,
+                1.4390138387680054,
+                1.3998535871505737,
+                1.333120584487915,
+                1.3058053255081177,
+                1.2829371690750122,
+                3.4377805491203617e-07,
+                2.3720423314443906e-07,
+                2.2123872156498692e-07,
+                1.9513750260102825e-07,
+                1.7784584827040817e-07,
+                1.6160825566657877e-07,
+                1.4327484620935138e-07,
+                1.380764302894022e-07,
+                1.1673319022520445e-07,
+                1.0996083688041836e-07,
+                1.0282558093877014e-07,
+                9.600680073162948e-08,
+                8.854657806978139e-08,
+                8.340575874399292e-08,
+                7.235860977061748e-08
+              ]
+            ],
+            "coefficient_l1": 22.72810935974121,
+            "coefficient_l2": 5.988930702209473,
+            "coefficient_status": "separate_trainable_coefficients",
+            "u_norm": 4.0218071937561035,
+            "vh_norm": 3.9610490798950195,
+            "orthogonality_per_rank": 0.010836709290742874
+          }
+        ]
+      },
+      "training_seconds": 0.03854069999943022,
+      "steps": 12,
+      "history": [
+        {
+          "supervised": 0.04381484165787697,
+          "penalty": 0.036352310329675674
+        },
+        {
+          "supervised": 0.12621565163135529,
+          "penalty": 0.03580813109874725
+        },
+        {
+          "supervised": 0.023196609690785408,
+          "penalty": 0.0354359969496727
+        },
+        {
+          "supervised": 0.02484128624200821,
+          "penalty": 0.03497259318828583
+        },
+        {
+          "supervised": 0.018986932933330536,
+          "penalty": 0.03445577993988991
+        },
+        {
+          "supervised": 0.024608725681900978,
+          "penalty": 0.03392944112420082
+        },
+        {
+          "supervised": 0.033930737525224686,
+          "penalty": 0.03337027132511139
+        },
+        {
+          "supervised": 0.11572840064764023,
+          "penalty": 0.03281175345182419
+        },
+        {
+          "supervised": 0.017211856320500374,
+          "penalty": 0.03230995684862137
+        },
+        {
+          "supervised": 0.01821449212729931,
+          "penalty": 0.031795717775821686
+        },
+        {
+          "supervised": 0.011441200040280819,
+          "penalty": 0.03126733377575874
+        },
+        {
+          "supervised": 0.019732968881726265,
+          "penalty": 0.030732452869415283
+        }
+      ],
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed42\\regularization\\regularization-4.pt",
+          "format": "torchscript",
+          "sha256": "7eefef773530678a02283549e55e9f751f78f53705a3ab1b259e3f07a074bd1c",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.08675,
+          "latency_p95_ms": 0.08944,
+          "throughput": 735294.1176470589,
+          "end_to_end_p50_ms": 0.0973,
+          "end_to_end_p95_ms": 0.11279,
+          "file_bytes": 56439,
+          "tensor_state_bytes": 43596,
+          "cpu_rss_before_bytes": 751308800,
+          "cpu_rss_after_bytes": 752160768,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.0033022999996319413
+        },
+        "raw_inference_ms": [
+          0.089,
+          0.0885,
+          0.0851,
+          0.0853,
+          0.0877,
+          0.0898,
+          0.0868,
+          0.0862,
+          0.0867,
+          0.0853
+        ],
+        "raw_end_to_end_ms": [
+          0.0933,
+          0.0904,
+          0.0887,
+          0.0893,
+          0.0958,
+          0.0988,
+          0.1145,
+          0.1107,
+          0.1106,
+          0.1027
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    }
+  ],
+  "claim_status": "not_established"
+}

@@ -1,0 +1,14 @@
+{
+  "external_cold_import": {
+    "changed_environment_keys": [
+      "WANDB_MODE"
+    ],
+    "error": "Benchmark changed caller environment or thread configuration",
+    "status": "failed",
+    "threads_after": 16,
+    "threads_before": 16
+  },
+  "first_scratch_external_launch": "ModuleNotFoundError from invoking scratch script outside module path; rerun through runpy",
+  "first_scratch_cifar_report": "input successfully built; JSON serialization rejected mappingproxy metadata; rerun uses bundle.manifest()",
+  "failed_local_seed_runs": []
+}

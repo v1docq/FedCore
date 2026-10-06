@@ -4,14 +4,27 @@ This module re-exports decomposers from tdecomp for backward compatibility.
 """
 
 from typing import Dict, Type
-from tdecomp.matrix.decomposer import (
-    SVDDecomposition,
-    RandomizedSVD as TdecompRandomizedSVD,
-    TwoSidedRandomSVD,
-    CURDecomposition,
-    DECOMPOSERS as TDECOMP_DECOMPOSERS
-)
-from tdecomp._base import Decomposer
+import os
+
+# tdecomp 0.2.18 imports prepared_tg, which sets WANDB_MODE='offline'.
+# Importing a decomposition operator must preserve the caller's logging policy.
+_wandb_was_present = 'WANDB_MODE' in os.environ
+_wandb_before = os.environ.get('WANDB_MODE')
+try:
+    from tdecomp.matrix.decomposer import (
+        SVDDecomposition,
+        RandomizedSVD as TdecompRandomizedSVD,
+        TwoSidedRandomSVD,
+        CURDecomposition,
+        DECOMPOSERS as TDECOMP_DECOMPOSERS
+    )
+    from tdecomp._base import Decomposer
+finally:
+    if _wandb_was_present:
+        os.environ['WANDB_MODE'] = _wandb_before
+    else:
+        os.environ.pop('WANDB_MODE', None)
+    del _wandb_was_present, _wandb_before
 
 __all__ = [
     'SVDDecomposition',
