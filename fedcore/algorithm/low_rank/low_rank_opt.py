@@ -269,6 +269,25 @@ class LowRankModel(BaseCompressionModel):
         #     flat_llm = FlatLLM()
         #     model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
 
+    def compress_weighted(self, model, calibration, **options):
+        """Execute the explicit CPU weighted profile without implicit training.
+
+        Existing fit and load_model signatures keep their historical behavior.
+        The returned result contains an independent model, immutable plan and
+        numerical evidence. Any trainer owning the input graph must rebuild
+        its optimizer before further training.
+        """
+        from fedcore.algorithm.low_rank.execution import transform_weighted
+        result = transform_weighted(model, calibration, **options)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def load_model(self, model, state_dict_path: str) -> None:
         """Load a decomposed (SVD-based) checkpoint into a model.
 
@@ -284,14 +303,21 @@ class LowRankModel(BaseCompressionModel):
             Path to the serialized state dict file containing decomposed
             parameters.
         """
-        load_svd_state_dict(
+        restored = load_svd_state_dict(
             model=model,
             state_dict_path=state_dict_path,
             decomposing_mode=self.decomposing_mode,
             compose_mode=self.compose_mode,
             decomposer_params=self.decomposer_params,
         )
-        model.to(self.device)
+        restored.to(self.device)
+        self.model_after = restored
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = restored
+            # A pre-existing optimizer owns the old Parameters. The trainer must
+            # rebuild it before continuing training with this restored graph.
+            trainer._fedcore_requires_optimizer_rebuild = True
 
     # def predict_for_fit(self, input_data, output_mode: str = 'fedcore'):
     #     """Return model after training."""

@@ -115,13 +115,29 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
     example = safe_load(confined_path(root, request.example), request.resources.max_bytes)
     request.input_spec.validate_tensor(example)
     validation, targets = _dataset(confined_path(root, request.data.validation), request.input_spec, request.resources.max_bytes)
+    calibration = None
     for name in (request.data.train, request.data.calibration):
         if name is not None:
-            _dataset(confined_path(root, name), request.input_spec, request.resources.max_bytes)
+            decoded, _ = _dataset(confined_path(root, name), request.input_spec, request.resources.max_bytes)
+            if name == request.data.calibration:
+                calibration = decoded
     timings["data_decode_seconds"] = time.perf_counter() - stage_started
     decisions = []
     stage_started = time.perf_counter()
-    compressed = _factorize(model, request, decisions).cpu().eval() if request.method == "svd" else model
+    weighted_evidence = None
+    if request.method == "weighted_svd":
+        from fedcore.algorithm.low_rank.execution import transform_weighted
+        from fedcore.algorithm.low_rank.plans import MetricPolicy
+        options = request.weighted
+        transformed = transform_weighted(model, calibration, rank=request.rank,
+            policy=MetricPolicy(options.ridge, options.rcond, options.nullspace_policy),
+            batch_size=options.batch_size, max_workspace_bytes=options.max_workspace_bytes,
+            max_peak_bytes=options.max_peak_bytes)
+        compressed = transformed.model.eval()
+        weighted_evidence = transformed.evidence
+        decisions = weighted_evidence['layers']
+    else:
+        compressed = _factorize(model, request, decisions).cpu().eval() if request.method == "svd" else model
     timings["transformation_seconds"] = time.perf_counter() - stage_started
     if not decisions and request.method == "svd":
         raise ContractError("unsupported_architecture", "No supported Linear/Conv layer to compress")
@@ -175,6 +191,11 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
                                         "repetitions": request.resources.repetitions, "warmup": 1, "threads": request.resources.threads,
                                         "latency_method": "perf_counter_wall_clock", "artifact_bytes": artifact.stat().st_size,
                                         "energy": {"status": "unsupported", "reason": "No calibrated energy meter is configured"}}}}
+    if weighted_evidence is not None:
+        result['request_version'] = request.version
+        result['weighted_transform'] = weighted_evidence
+        result['provenance']['calibration_sha256'] = hashlib.sha256(
+            confined_path(root, request.data.calibration).read_bytes()).hexdigest()
     timings["provenance_and_result_seconds"] = time.perf_counter() - stage_started
     timings["execute_plan_seconds"] = time.perf_counter() - worker_started
     return result

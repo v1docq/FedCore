@@ -260,6 +260,9 @@ def _materialize_decomposed(model):
 
 def apply_candidate(model, bundle, protocol, candidate):
     """Execute a declared operation on an independent copy, never a no-op stub."""
+    from fedcore.algorithm.low_rank.topology import inspect_topology
+    if inspect_topology(model).storage_aliases:
+        raise UnsupportedOperation("Candidate copying does not support shared storage views")
     model = copy.deepcopy(model)
     method, parameters = candidate.method, json_value(candidate.parameters)
     if method == "chain":
@@ -335,6 +338,28 @@ def apply_candidate(model, bundle, protocol, candidate):
         return model, {"implementation": "FedCore BasePruner dependency graph + Torch-Pruning step", "pruning_ratio": ratio,
                        "parameters_before": before, "parameters_after": after,
                        "representation": "structurally removed channels; decomposed inputs materialized first", **evidence}
+    if method == "weighted_svd":
+        allowed = {"rank", "rank_ratio", "parameter_fraction", "target_paths", "ridge", "rcond",
+                   "nullspace_policy", "max_workspace_bytes", "max_peak_bytes", "finetune_epochs"}
+        if set(parameters) - allowed:
+            raise ProtocolError("Unknown weighted SVD parameters")
+        if protocol.device != "cpu":
+            raise UnsupportedOperation("The first weighted SVD profile requires CPU")
+        from fedcore.algorithm.low_rank.execution import transform_weighted
+        from fedcore.algorithm.low_rank.plans import MetricPolicy
+        options = {key: value for key, value in parameters.items()
+                   if key not in {"ridge", "rcond", "nullspace_policy", "finetune_epochs"}}
+        result = transform_weighted(model, bundle.calibration.x,
+            policy=MetricPolicy(parameters.get("ridge", 0.0), parameters.get("rcond"),
+                                parameters.get("nullspace_policy", "support_only")),
+            batch_size=protocol.batch_size, **options)
+        model = result.model
+        training = train_model(model, bundle.train, bundle.task,
+            epochs=parameters.get("finetune_epochs", protocol.finetune_epochs),
+            batch_size=protocol.batch_size, learning_rate=protocol.learning_rate,
+            device=protocol.device, seed=protocol.seed)
+        return model, {"implementation": "FedCore shared weighted transform interpreter",
+                       "weighted_transform": result.evidence, **training}
     if method == "svd":
         if set(parameters) - {"threshold", "strategy", "decomposer", "finetune_epochs", "rank", "rank_ratio"}:
             raise ProtocolError("Unknown SVD parameters")
@@ -421,6 +446,9 @@ class ExperimentRunner:
         self.cache_dir = Path(cache_dir).resolve() if cache_dir else self.output_dir / "cache"
         self.use_cache = use_cache
         self.baseline_checkpoint = baseline_checkpoint
+        from fedcore.algorithm.low_rank.topology import inspect_topology
+        if inspect_topology(bundle.original_model).storage_aliases:
+            raise UnsupportedOperation("Experiment copying does not support shared storage views")
         self.initial_model = copy.deepcopy(bundle.original_model).cpu()
         self.environment = environment_manifest()
         self.manifest = {"version": 1, "status": "created", "protocol": protocol.to_dict(),

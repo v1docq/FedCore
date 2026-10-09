@@ -131,6 +131,36 @@ class Resources:
 
 
 @dataclass(frozen=True)
+class WeightedOptions:
+    """Versioned CPU weighted-SVD profile; never interpreted as ordinary SVD."""
+    ridge: float = 0.0
+    rcond: float | None = None
+    nullspace_policy: str = "support_only"
+    batch_size: int = 16
+    max_workspace_bytes: int = 256 * 1024 * 1024
+    max_peak_bytes: int = 12 * 1024 * 1024 * 1024
+    method_version: int = 1
+
+    def __post_init__(self):
+        if type(self.method_version) is not int or self.method_version != 1:
+            raise ContractError("unsupported_method_version", "Only weighted-SVD method version 1 is supported")
+        for name, value in (("ridge", self.ridge), ("rcond", self.rcond)):
+            if value is not None and (type(value) not in (int, float) or not math.isfinite(value) or value < 0):
+                raise ContractError("invalid_metric", f"{name} must be finite and nonnegative", name)
+        if self.ridge is None or self.nullspace_policy not in ("support_only", "preserve_nullspace"):
+            raise ContractError("invalid_metric", "Weighted profile requires an explicit supported metric policy")
+        _integer(self.batch_size, 1, 100000, "weighted.batch_size")
+        _integer(self.max_workspace_bytes, 1024, 12 * 1024 ** 3, "weighted.max_workspace_bytes")
+        _integer(self.max_peak_bytes, 1024, 12 * 1024 ** 3, "weighted.max_peak_bytes")
+        if self.max_workspace_bytes > self.max_peak_bytes:
+            raise ContractError("invalid_resources", "Workspace cannot exceed the process planning limit")
+
+    @classmethod
+    def parse(cls, payload):
+        return cls(**_object(payload, tuple(cls.__dataclass_fields__)))
+
+
+@dataclass(frozen=True)
 class CompressionRequest:
     model: str
     example: str
@@ -145,14 +175,24 @@ class CompressionRequest:
     profile: DeviceProfile = DeviceProfile()
     resources: Resources = Resources()
     version: int = 1
+    weighted: WeightedOptions | None = None
 
     def __post_init__(self):
         relative_name(self.model)
         relative_name(self.example)
-        if type(self.version) is not int or self.version != 1:
-            raise ContractError("unsupported_version", "Only contract version 1 is supported")
-        if self.task not in ("classification", "regression") or self.method not in ("svd", "export"):
-            raise ContractError("unsupported_method", "Only SVD/export on tensor classification/regression models is supported")
+        if type(self.version) is not int or self.version not in (1, 2):
+            raise ContractError("unsupported_version", "Only contract versions 1 and 2 are supported")
+        if self.task not in ("classification", "regression") or self.method not in ("svd", "weighted_svd", "export"):
+            raise ContractError("unsupported_method", "Only declared tensor classification/regression profiles are supported")
+        if self.method == "weighted_svd":
+            if self.version != 2 or not isinstance(self.weighted, WeightedOptions):
+                raise ContractError("unsupported_profile", "Weighted SVD requires contract v2 and WeightedOptions")
+            if not isinstance(self.data, DataRoles) or self.data.calibration is None:
+                raise ContractError("missing_calibration", "Weighted SVD requires a separate calibration artifact", "data.calibration")
+            if self.rank is None:
+                raise ContractError("invalid_rank", "External weighted profile requires an explicit rank", "rank")
+        elif self.version != 1 or self.weighted is not None:
+            raise ContractError("unsupported_profile", "Ordinary SVD/export keep the existing v1 contract")
         if self.method == "export" and (self.rank is not None or self.retained_energy != 1):
             raise ContractError("conflicting_rank", "Export requests cannot set compression parameters")
         if self.artifact_format not in ("torchscript", "onnx"):
@@ -169,7 +209,10 @@ class CompressionRequest:
             raise ContractError("invalid_schema", "Request fields must be validated contract values")
 
     def to_dict(self):
-        return asdict(self)
+        result = asdict(self)
+        if self.weighted is None:
+            result.pop("weighted")
+        return result
 
     @classmethod
     def parse(cls, payload):
@@ -177,9 +220,10 @@ class CompressionRequest:
         p = _object(payload, allowed, ("model", "example", "input_spec", "data", "version"))
         roles = _object(p["data"], ("validation", "train", "calibration"), ("validation",))
         resources = _object(p.get("resources", {}), tuple(Resources.__dataclass_fields__))
-        return cls(**{k: v for k, v in p.items() if k not in ("input_spec", "data", "profile", "resources")},
+        weighted = WeightedOptions.parse(p["weighted"]) if p.get("weighted") is not None else None
+        return cls(**{k: v for k, v in p.items() if k not in ("input_spec", "data", "profile", "resources", "weighted")},
                    input_spec=InputSpec.parse(p["input_spec"]), data=DataRoles(**roles),
-                   profile=DeviceProfile.parse(p.get("profile", {})), resources=Resources(**resources))
+                   profile=DeviceProfile.parse(p.get("profile", {})), resources=Resources(**resources), weighted=weighted)
 
 
 @dataclass(frozen=True)
@@ -193,6 +237,6 @@ def plan_request(request: CompressionRequest) -> ExecutionPlan:
     if not isinstance(request, CompressionRequest):
         raise ContractError("invalid_schema", "Planner consumes a validated CompressionRequest")
     steps = ("load_safe_model", "validate_inputs", "evaluate", "export", "record_provenance")
-    if request.method == "svd":
-        steps = steps[:2] + ("svd",) + steps[2:]
+    if request.method in ("svd", "weighted_svd"):
+        steps = steps[:2] + (request.method,) + steps[2:]
     return ExecutionPlan(request, steps=steps, artifact_name="compressed.pt" if request.artifact_format == "torchscript" else "compressed.onnx")
