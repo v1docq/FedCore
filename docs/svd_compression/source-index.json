@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-10-09",
+  "base_commit": "8c0e748d6400fdb28fe17c54e2b3cfbb1a0eda08",
+  "notes": [
+    {
+      "id": 1,
+      "method": "AFLRC / Bolaco",
+      "source_file": "1. Adaptive Feature-based Low-Rank Compression of Large Language Models via Bayesian Optimization.md",
+      "source_sha256": "799cd66d728592bd76d4e0bc88a9ca5377d9692d0d735c6dbab1b2336e22039a"
+    },
+    {
+      "id": 2,
+      "method": "ARS",
+      "source_file": "2. Adaptive Rank Selections for Low-Rank Approximation of Language Models.md",
+      "source_sha256": "4a46775b5edcbef47dee2782803b1f44ff408bd62c23468e8600611ecc7c69f1"
+    },
+    {
+      "id": 3,
+      "method": "ASVD",
+      "source_file": "3. ASVD - Activation-aware Singular Value Decomposition for Compressing Large Language Models.md",
+      "source_sha256": "090f26f4cb809971be018c6eaa0d522a5180a9ec1cd8fcd84fcbdac034796ed1"
+    },
+    {
+      "id": 4,
+      "method": "Basis Sharing",
+      "source_file": "4. Basis Sharing - Cross-Layer Parameter Sharing for Large Language Model Compression.md",
+      "source_sha256": "e2320a01dcdb0810ff8a59dc690d8f158e21a3ef62e574cb38bb8f6ed98c4175"
+    },
+    {
+      "id": 5,
+      "method": "AFM / Features Are Low-Rank",
+      "source_file": "5. Compressing Transformers - Features Are Low-Rank, but Weights Are Not!.md",
+      "source_sha256": "52e668e4aca3ae0c24bb565b079f9eaf41c2d766cf46308d78e4abc362916a31"
+    },
+    {
+      "id": 6,
+      "method": "Dobi-SVD",
+      "source_file": "6. Dobi-SVD - Differentiable SVD for LLM Compression and Some New Perspectives.md",
+      "source_sha256": "1f2ac6cacaa135e46c25436420288d51aea44845aed8151141f058886268fde9"
+    },
+    {
+      "id": 7,
+      "method": "DRONE",
+      "source_file": "7. DRONE - Data-aware Low-rank Compression for Large NLP Models.md",
+      "source_sha256": "c067325e59b60d0eb566d7315335f506ab3734b2508ee838a11cd1a97f87e720"
+    },
+    {
+      "id": 8,
+      "method": "RankDyna",
+      "source_file": "8. Dynamic Low-rank Estimation for Transformer-based Language Models.md",
+      "source_sha256": "70c77e290b8c9554cb3a471d12c0f950d0e1919a1307974a5d2f58a05e6aa531"
+    },
+    {
+      "id": 9,
+      "method": "EoRA",
+      "source_file": "9. EoRA - Training-free Compensation for Compressed LLM with Eigenspace Low-Rank Approximation.md",
+      "source_sha256": "3038d55f0cb863522ccc98ae26e1b7865850a64ee8472fbb7e7f303414391d06"
+    },
+    {
+      "id": 10,
+      "method": "ESPACE",
+      "source_file": "10. ESPACE - Dimensionality Reduction of Activations for Model Compression.md",
+      "source_sha256": "aee80715111db213c758a290a8f334430ab5e579225eb172ef205cfdd26bfb72"
+    },
+    {
+      "id": 11,
+      "method": "FLAR-SVD",
+      "source_file": "11. FLAR-SVD - Fast and Latency-Aware Singular Value Decomposition for Model Compression.md",
+      "source_sha256": "8789639d1d6c625511837c284c7a97935d34c43200c1219c254c3ae4e4a5fd78"
+    },
+    {
+      "id": 12,
+      "method": "FLAT-LLM",
+      "source_file": "12. FLAT-LLM Fine-grained Low-rank Activation Space Transformation for Large Language Model Compression.md",
+      "source_sha256": "8422d00d17f647e78da5a006b9c7404b47e9211d44a737e25382e76a09391617"
+    },
+    {
+      "id": 13,
+      "method": "GroupReduce",
+      "source_file": "13. GroupReduce - Block-Wise Low-Rank Approximation for Neural Language Model Shrinking.md",
+      "source_sha256": "1e80b361bd9a4dd7e732e7f3202145dcd8137c0a6d614fff6b646d247632126e"
+    },
+    {
+      "id": 14,
+      "method": "FWSVD",
+      "source_file": "14. Language model compression with weighted low-rank factorization.md",
+      "source_sha256": "c1497951add7e4d89310d8633104c1a071ee36edbc31b91416def7207b3a37da"
+    },
+    {
+      "id": 15,
+      "method": "LightFormer",
+      "source_file": "15. LightFormer - Light-weight Transformer Using SVD-based Weight Transfer and Parameter Sharing.md",
+      "source_sha256": "8c25f750b03ea70a64bf224173d4ca48c1fa718072052d693ac91f43441a7421"
+    },
+    {
+      "id": 16,
+      "method": "LRT",
+      "source_file": "16. Lightweight and Efficient End-to-End Speech Recognition Using Low-Rank Transformer.md",
+      "source_sha256": "a87ae07ec99e17b975d108ffd480ae6a086a02a27aeb05036638a84dad1df6b6"
+    },
+    {
+      "id": 17,
+      "method": "Activation-aware mixed-rank ViT",
+      "source_file": "17. Memory-Efficient Vision Transformers - An Activation-Aware Mixed-Rank Compression Strategy.md",
+      "source_sha256": "58e7cd01f50571fdb81867024ca49db4db13dd0fe3eaa2633665f69eaadb886f"
+    },
+    {
+      "id": 18,
+      "method": "MoDeGPT",
+      "source_file": "18. MoDeGPT - Modular Decomposition for Large Language Model Compression.md",
+      "source_sha256": "ee895982216d4f2a981b26f6d84f23b643420953197fe778db3a10147fdd7149"
+    },
+    {
+      "id": 19,
+      "method": "PELA",
+      "source_file": "19. PELA - Learning Parameter-Efficient Models with Low-Rank Approximation.md",
+      "source_sha256": "acde7666ab06350237ffc7ae935219270b14da46c32a22dc458db472105da8da"
+    },
+    {
+      "id": 20,
+      "method": "SliceGPT",
+      "source_file": "20. SliceGPT - Compress Large Language Models by Deleting Rows and Columns.md",
+      "source_sha256": "ba84580f093ea33c2a4ca55b9893d7ffc77f853d74f01ac5f4d3bfaad3846b1c"
+    },
+    {
+      "id": 21,
+      "method": "SVD-LLM",
+      "source_file": "21. SVD-LLM - Truncation-aware Singular Value Decomposition for Large Language Model Compression.md",
+      "source_sha256": "3f2e5c417c5238f6469d903b5bbcc6a21f37fd6f9f8c0fd3f4bb92d88ee1d67c"
+    },
+    {
+      "id": 22,
+      "method": "SVD-LLM V2",
+      "source_file": "22. SVD-LLM V2 - Optimizing Singular Value Truncation for Large Language Model Compression.md",
+      "source_sha256": "94f57fc6118f5bca0854e3ce5a8a8479e5b389e9a10ad2e749b06826a9147b41"
+    },
+    {
+      "id": 23,
+      "method": "LASER",
+      "source_file": "23. The Truth is in There - Improving Reasoning in Language Models with Layer-Selective Rank Reduction.md",
+      "source_sha256": "aff6f37b855b4e76b7e38f07e0889d3af6bb17b1d29b7a601bedd26fc964d6c3"
+    },
+    {
+      "id": 24,
+      "method": "CTR AFM",
+      "source_file": "24. Unified Low-rank Compression Framework for Click-through Rate Prediction.md",
+      "source_sha256": "d5fc77f1a63286e4a3d7c3f96719502f00212ccd7a3d6ea6311c6f8b45acf3e2"
+    }
+  ]
+}
