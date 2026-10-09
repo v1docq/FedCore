@@ -1,0 +1,125 @@
+{
+  "cache_hit": false,
+  "cache_key": "ea674fcc73f143d8beafc8e78ed333b654c10d6bc4cb99b1ba4812c873b0ae03",
+  "candidate_id": "a8557c4fdd57f193e76e",
+  "completed_seconds": 1.333230399999593,
+  "configuration": {
+    "chain": [],
+    "method": "baseline",
+    "parameters": {}
+  },
+  "measurement": {
+    "artifact": {
+      "device": "cpu",
+      "format": "torchscript",
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\digits\\seed43-evolution\\candidates\\001-a8557c4fdd57f193e76e\\model.pt",
+      "sha256": "296f3691152614efa5adb6540906ae8d130a5b1f3e4b15033dbc524457af6cb3",
+      "threads": 1
+    },
+    "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+    "metrics": {
+      "cpu_rss_after_bytes": 834842624,
+      "cpu_rss_before_bytes": 834420736,
+      "cuda_allocated_before_bytes": null,
+      "cuda_allocated_increment_bytes": null,
+      "cuda_peak_allocated_bytes": null,
+      "cuda_peak_reserved_bytes": null,
+      "cuda_reserved_before_bytes": null,
+      "cuda_reserved_increment_bytes": null,
+      "end_to_end_p50_ms": 0.8082,
+      "end_to_end_p95_ms": 0.83772,
+      "file_bytes": 290245,
+      "latency_p50_ms": 0.82025,
+      "latency_p95_ms": 0.8902599999999999,
+      "load_seconds": 0.008323500002006767,
+      "tensor_state_bytes": 274920,
+      "throughput": 76849.18347742557
+    },
+    "profile": {
+      "batch_size": 64,
+      "concurrency": 1,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "format": "torchscript",
+      "hardware": "CPU",
+      "idle_device_required": true,
+      "input_shape": [
+        64,
+        1,
+        8,
+        8
+      ],
+      "repeats": 10,
+      "runtime": "torch.jit",
+      "synchronization": "synchronous CPU",
+      "threads": 1,
+      "units": {
+        "cpu_rss_after_bytes": "bytes",
+        "cpu_rss_before_bytes": "bytes",
+        "cuda_peak_allocated_bytes": "bytes",
+        "cuda_peak_reserved_bytes": "bytes",
+        "file_bytes": "bytes",
+        "latency_p50_ms": "ms/batch",
+        "latency_p95_ms": "ms/batch",
+        "load_seconds": "s",
+        "tensor_state_bytes": "bytes",
+        "throughput": "samples/s"
+      },
+      "warmup": 3
+    },
+    "quality_parity_checked": true,
+    "raw_end_to_end_ms": [
+      0.8232,
+      0.8055,
+      0.8126,
+      0.8109,
+      0.8496,
+      0.8208,
+      0.8039,
+      0.8053,
+      0.794,
+      0.7927
+    ],
+    "raw_inference_ms": [
+      0.8053,
+      0.83,
+      0.8108,
+      0.8138,
+      0.8234,
+      0.8171,
+      0.8518,
+      0.9079,
+      0.7992,
+      0.8687
+    ],
+    "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+    "status": "succeeded"
+  },
+  "operation": {
+    "implementation": "independent trained baseline clone",
+    "training_steps": 0
+  },
+  "result_model_sha256": "6633d49041abf603ed9ee8ded7908512e7de23cc573866f2d1f7d06a0d04afb8",
+  "source_model_sha256": "6633d49041abf603ed9ee8ded7908512e7de23cc573866f2d1f7d06a0d04afb8",
+  "stages_seconds": {
+    "export_reload_measure": 0.07758339999782038,
+    "operation": 0.0011081000011472497,
+    "validation": 0.02383940000072471
+  },
+  "started_seconds": 1.224033700000291,
+  "status": "succeeded",
+  "validation": {
+    "cross_entropy": 0.1369287073612213,
+    "direction": "maximize",
+    "loss": 0.029739776951672847,
+    "macro_f1": 0.9701850517222326,
+    "metric": "accuracy",
+    "samples": 269,
+    "value": 0.9702602230483272
+  },
+  "validation_predictions": {
+    "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\digits\\seed43-evolution\\candidates\\001-a8557c4fdd57f193e76e\\validation_predictions.pt",
+    "sha256": "2b10751fd04241d8885bb5315eeda21a5f46da0285bdceadf292e462518662ca"
+  },
+  "wall_seconds": 0.10919649999777903
+}

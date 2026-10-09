@@ -1,0 +1,125 @@
+{
+  "cache_hit": false,
+  "cache_key": "9adfc4c0d9d9b21566d8da5ac815870d79b050a4b775eaa44ca5cc2f6672b779",
+  "candidate_id": "a8557c4fdd57f193e76e",
+  "completed_seconds": 1.3372127000002365,
+  "configuration": {
+    "chain": [],
+    "method": "baseline",
+    "parameters": {}
+  },
+  "measurement": {
+    "artifact": {
+      "device": "cpu",
+      "format": "torchscript",
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\digits\\seed42-random\\candidates\\001-a8557c4fdd57f193e76e\\model.pt",
+      "sha256": "8a9e3dbf046cfe66e6676b7f2566d112a6582e99ef0cd2a1e5d55bb1f8224581",
+      "threads": 1
+    },
+    "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+    "metrics": {
+      "cpu_rss_after_bytes": 812560384,
+      "cpu_rss_before_bytes": 811913216,
+      "cuda_allocated_before_bytes": null,
+      "cuda_allocated_increment_bytes": null,
+      "cuda_peak_allocated_bytes": null,
+      "cuda_peak_reserved_bytes": null,
+      "cuda_reserved_before_bytes": null,
+      "cuda_reserved_increment_bytes": null,
+      "end_to_end_p50_ms": 0.8494,
+      "end_to_end_p95_ms": 0.92224,
+      "file_bytes": 290245,
+      "latency_p50_ms": 0.8402000000000001,
+      "latency_p95_ms": 0.886425,
+      "load_seconds": 0.010665499998140149,
+      "tensor_state_bytes": 274920,
+      "throughput": 75813.215191073
+    },
+    "profile": {
+      "batch_size": 64,
+      "concurrency": 1,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "format": "torchscript",
+      "hardware": "CPU",
+      "idle_device_required": true,
+      "input_shape": [
+        64,
+        1,
+        8,
+        8
+      ],
+      "repeats": 10,
+      "runtime": "torch.jit",
+      "synchronization": "synchronous CPU",
+      "threads": 1,
+      "units": {
+        "cpu_rss_after_bytes": "bytes",
+        "cpu_rss_before_bytes": "bytes",
+        "cuda_peak_allocated_bytes": "bytes",
+        "cuda_peak_reserved_bytes": "bytes",
+        "file_bytes": "bytes",
+        "latency_p50_ms": "ms/batch",
+        "latency_p95_ms": "ms/batch",
+        "load_seconds": "s",
+        "tensor_state_bytes": "bytes",
+        "throughput": "samples/s"
+      },
+      "warmup": 3
+    },
+    "quality_parity_checked": true,
+    "raw_end_to_end_ms": [
+      0.8254,
+      0.835,
+      0.8645,
+      0.8434,
+      0.9433,
+      0.8554,
+      0.8371,
+      0.8255,
+      0.8691,
+      0.8965
+    ],
+    "raw_inference_ms": [
+      0.8297,
+      0.8438,
+      0.8565,
+      0.8209,
+      0.8268,
+      0.8636,
+      0.8372,
+      0.9051,
+      0.8432,
+      0.815
+    ],
+    "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+    "status": "succeeded"
+  },
+  "operation": {
+    "implementation": "independent trained baseline clone",
+    "training_steps": 0
+  },
+  "result_model_sha256": "faae2aa7c7f64ff9d76811ec089a6ae42b717f0d89e3b4a81c9b38042fc847e0",
+  "source_model_sha256": "faae2aa7c7f64ff9d76811ec089a6ae42b717f0d89e3b4a81c9b38042fc847e0",
+  "stages_seconds": {
+    "export_reload_measure": 0.07979450000129873,
+    "operation": 0.0008739000004425179,
+    "validation": 0.024835000000166474
+  },
+  "started_seconds": 1.2262613999992027,
+  "status": "succeeded",
+  "validation": {
+    "cross_entropy": 0.130225270986557,
+    "direction": "maximize",
+    "loss": 0.026022304832713727,
+    "macro_f1": 0.9738050080413536,
+    "metric": "accuracy",
+    "samples": 269,
+    "value": 0.9739776951672863
+  },
+  "validation_predictions": {
+    "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\digits\\seed42-random\\candidates\\001-a8557c4fdd57f193e76e\\validation_predictions.pt",
+    "sha256": "74ba03724730afffdde2e865b4119b9af4e40e7c0e63867a7fdcea765a1b75d8"
+  },
+  "wall_seconds": 0.11095099999874947
+}

@@ -102,21 +102,30 @@ def _latency(model, example, repetitions):
 
 
 def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
+    worker_started = time.perf_counter()
+    timings = {}
     request = plan.request
     root = Path(job_dir)
     torch.set_num_threads(request.resources.threads)
     model_path = confined_path(root, request.model)
+    stage_started = time.perf_counter()
     model = load_model_bundle(model_path, request.resources.max_bytes)
+    timings["model_load_seconds"] = time.perf_counter() - stage_started
+    stage_started = time.perf_counter()
     example = safe_load(confined_path(root, request.example), request.resources.max_bytes)
     request.input_spec.validate_tensor(example)
     validation, targets = _dataset(confined_path(root, request.data.validation), request.input_spec, request.resources.max_bytes)
     for name in (request.data.train, request.data.calibration):
         if name is not None:
             _dataset(confined_path(root, name), request.input_spec, request.resources.max_bytes)
+    timings["data_decode_seconds"] = time.perf_counter() - stage_started
     decisions = []
+    stage_started = time.perf_counter()
     compressed = _factorize(model, request, decisions).cpu().eval() if request.method == "svd" else model
+    timings["transformation_seconds"] = time.perf_counter() - stage_started
     if not decisions and request.method == "svd":
         raise ContractError("unsupported_architecture", "No supported Linear/Conv layer to compress")
+    stage_started = time.perf_counter()
     with torch.inference_mode():
         before = model(validation)
         after = compressed(validation)
@@ -125,10 +134,13 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
         difference = torch.linalg.vector_norm((after - before).to(torch.float64))
         norm = torch.linalg.vector_norm(before.to(torch.float64))
         relative = float(difference / norm) if norm > 0 else (0.0 if difference == 0 else float("inf"))
+    timings["validation_seconds"] = time.perf_counter() - stage_started
     if relative > request.max_relative_error:
         raise ContractError("error_budget_exceeded", f"Validation output relative error {relative:g} exceeds {request.max_relative_error:g}")
     from fedcore.tools.export import export_model
+    stage_started = time.perf_counter()
     artifact = export_model(compressed, request.artifact_format, confined_path(root, plan.artifact_name, must_exist=False), example)
+    timings["export_seconds"] = time.perf_counter() - stage_started
     parameters_before = sum(p.numel() for p in model.parameters())
     parameters_after = sum(p.numel() for p in compressed.parameters())
     def version(name):
@@ -137,7 +149,13 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
         except importlib.metadata.PackageNotFoundError:
             return "uninstalled-source"
     from fedcore import __version__ as code_version
-    return {"version": 1, "status": "succeeded", "artifact": artifact.name,
+    stage_started = time.perf_counter()
+    baseline_latency = _latency(model, example, request.resources.repetitions)
+    compressed_latency = _latency(compressed, example, request.resources.repetitions)
+    timings["inference_measurement_seconds"] = time.perf_counter() - stage_started
+    stage_started = time.perf_counter()
+    result = {"version": 1, "status": "succeeded", "artifact": artifact.name,
+            "timings": timings,
             "artifact_format": request.artifact_format, "input_spec": asdict(request.input_spec),
             "profile": asdict(request.profile), "task": request.task, "method": request.method,
             "parameters": {"rank": request.rank, "retained_energy": request.retained_energy,
@@ -149,11 +167,14 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
             "metrics": {"relative_output_error": relative,
                         "baseline": {"quality": quality_before, "parameters": parameters_before,
                                      "tensor_bytes": sum(p.numel() * p.element_size() for p in model.parameters()),
-                                     "latency_ms": _latency(model, example, request.resources.repetitions)},
+                                     "latency_ms": baseline_latency},
                         "compressed": {"quality": quality_after, "parameters": parameters_after,
                                        "tensor_bytes": sum(p.numel() * p.element_size() for p in compressed.parameters()),
-                                       "latency_ms": _latency(compressed, example, request.resources.repetitions)},
+                                       "latency_ms": compressed_latency},
                         "measurement": {"device": "cpu", "batch_size": example.shape[0], "validation_samples": validation.shape[0],
                                         "repetitions": request.resources.repetitions, "warmup": 1, "threads": request.resources.threads,
                                         "latency_method": "perf_counter_wall_clock", "artifact_bytes": artifact.stat().st_size,
                                         "energy": {"status": "unsupported", "reason": "No calibrated energy meter is configured"}}}}
+    timings["provenance_and_result_seconds"] = time.perf_counter() - stage_started
+    timings["execute_plan_seconds"] = time.perf_counter() - worker_started
+    return result

@@ -1,10 +1,6 @@
-from fedcore.tools.visualisation.optimisation_history_vis import OptHistoryVisualizer
+"""Retired historical prototype examples/api_example/pruning/time_series_task/result_viz/history_viz.py; no successful experiment is implemented here."""
+import sys
 
-OPT_HISTORY = './history_90_min.json'
-SAVE_FOLDER = 'examples/api_example/pruning/time_series_task/result_viz/history_vis'
 if __name__ == "__main__":
-    visualiser = OptHistoryVisualizer(history=OPT_HISTORY, folder=SAVE_FOLDER)
-    visualiser.boxplots_gif_create()
-    visualiser.pareto_gif_create()
-    visualiser.visualise_history()
-    print('End')
+    print("Historical prototype retired after the PETRA audit. See docs/petra/examples.md and python -m examples.petra.run --help.", file=sys.stderr)
+    raise SystemExit(2)

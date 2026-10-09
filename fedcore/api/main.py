@@ -63,7 +63,8 @@ class FedCore(Fedot):
         if not isinstance(self.manager.automl_config.optimizer, partial):
             optimizer = partial(FedcoreEvoOptimizer, optimisation_params={
                 'mutation_strategy': self.manager.automl_config.mutation_strategy,
-                'mutation_agent': self.manager.automl_config.mutation_agent})
+                'mutation_agent': self.manager.automl_config.mutation_agent,
+                'trace_path': self.manager.automl_config.search_trace_path})
             self.manager.automl_config.optimizer = optimizer
             self.manager.automl_config.fedot_config.optimizer = optimizer
         return input_data

@@ -1,1 +1,8 @@
 *.ts linguist-vendored
+# Keep the published ZIP byte-identical to its source entrypoints on Windows/Linux.
+examples/__init__.py text eol=lf
+examples/README.md text eol=lf
+examples/petra/* text eol=lf
+docs/petra/examples.md text eol=lf
+# Preserve the recorded evidence bytes and hashes across Windows/Linux checkouts.
+docs/petra/results/readiness-2026-10-06/** -text whitespace=cr-at-eol

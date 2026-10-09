@@ -1,0 +1,1969 @@
+{
+  "baseline_cost_accounting": {
+    "actual_training_or_verification_seconds": 0.020573200003127567,
+    "charged_common_baseline_seconds": 0.17195250000804663,
+    "charged_training_seconds": 0.1454278000019258,
+    "mode": "common_baseline_preparation_charged_per_run"
+  },
+  "baseline_training": {
+    "actual_work_seconds": 0.020573200003127567,
+    "checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\baseline.json",
+    "checkpoint_sha256": "a1d1d9baad5c9fc5f8463f53bd23d2c7e3c2f909c0b0884346f854410a5bded8",
+    "cost_scope": "common role/source/state verification, training and state persistence; final JSON publication/hash excluded",
+    "epochs": 20,
+    "identity_sha256": "86dcac4b399418c467b9d4ea9af0eb1b47e61ca5327fe0e7b26bde6c05c1d905",
+    "initial_sha256": "f43bbca5980f7e85874e59a18de4e80c3c81f76579331962035e1bdc414df764",
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "persistence_seconds": 0.020794500000192784,
+    "preparation_seconds": 0.004523200012044981,
+    "reuse_persistence_seconds": 0.010608500000671484,
+    "reused": true,
+    "seconds": 0.17195250000804663,
+    "source_checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\shared_baselines\\ts_regression\\seed43\\baseline.json",
+    "source_checkpoint_sha256": "8796561d1ec56c9c5f6aa544142cae2ff731646db690fa4c11980a910073f85c",
+    "state_file_sha256": "6b7e8affe6c1d2ddeec978a52c376b3d1bc853a720f5b96b1e2d085a29b211e0",
+    "state_sha256": "0c6e5fe16409047ad3dd073c3a8c9883749ca1afefab0cd5460050d7fafb54fe",
+    "status": "succeeded",
+    "steps": 40,
+    "train_loss": [
+      13.827139854431152,
+      31.6433048248291,
+      14.302789688110352,
+      15.44370174407959,
+      14.576947212219238,
+      9.108555793762207,
+      12.041289329528809,
+      27.919002532958984,
+      13.374537467956543,
+      12.288164138793945,
+      13.949481964111328,
+      3.3731884956359863,
+      13.073110580444336,
+      6.872103691101074,
+      11.519271850585938,
+      17.53374671936035,
+      12.165346145629883,
+      8.746688842773438,
+      11.526984214782715,
+      10.828961372375488,
+      11.552234649658203,
+      6.5658416748046875,
+      11.49567985534668,
+      3.301464319229126,
+      8.633854866027832,
+      25.00685691833496,
+      10.576129913330078,
+      3.5859062671661377,
+      9.593132972717285,
+      8.131208419799805,
+      9.064201354980469,
+      8.073892593383789,
+      8.41606330871582,
+      10.375421524047852,
+      8.070409774780273,
+      11.685379028320312,
+      8.530014038085938,
+      3.1186258792877197,
+      7.23113489151001,
+      9.598082542419434
+    ],
+    "trained_sha256": "0c6e5fe16409047ad3dd073c3a8c9883749ca1afefab0cd5460050d7fafb54fe",
+    "training_role": "train",
+    "training_seconds": 0.1454278000019258,
+    "training_status": "trained_on_train",
+    "training_steps": 40,
+    "wall_seconds": 0.17195250000804663
+  },
+  "candidate_plan": [
+    {
+      "chain": [],
+      "method": "baseline",
+      "parameters": {}
+    },
+    {
+      "chain": [],
+      "method": "train",
+      "parameters": {}
+    },
+    {
+      "chain": [],
+      "method": "svd",
+      "parameters": {
+        "strategy": "quantile",
+        "threshold": 0.5
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "cache_hit": false,
+      "cache_key": "7513216d28b5eb81e0d3f935dfae09829119953b0eceeb1493dd20cc39c87ac2",
+      "candidate_id": "a8557c4fdd57f193e76e",
+      "completed_seconds": 4.948322399999597,
+      "configuration": {
+        "chain": [],
+        "method": "baseline",
+        "parameters": {}
+      },
+      "measurement": {
+        "artifact": {
+          "device": "cpu",
+          "format": "torchscript",
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\candidates\\001-a8557c4fdd57f193e76e\\model.pt",
+          "sha256": "d66ed1d26e3e780c07a90630f0e2ec66610e40997211664775e4894c9bb75980",
+          "threads": 1
+        },
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "metrics": {
+          "cpu_rss_after_bytes": 805789696,
+          "cpu_rss_before_bytes": 806072320,
+          "cuda_allocated_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "end_to_end_p50_ms": 0.38615,
+          "end_to_end_p95_ms": 0.46795499999999995,
+          "file_bytes": 89321,
+          "latency_p50_ms": 0.3082,
+          "latency_p95_ms": 0.39392499999999975,
+          "load_seconds": 0.008413699993980117,
+          "tensor_state_bytes": 75404,
+          "throughput": 43453.96983052953
+        },
+        "profile": {
+          "batch_size": 14,
+          "concurrency": 1,
+          "device": "cpu",
+          "dtype": "torch.float32",
+          "format": "torchscript",
+          "hardware": "CPU",
+          "idle_device_required": true,
+          "input_shape": [
+            14,
+            24,
+            144
+          ],
+          "repeats": 30,
+          "runtime": "torch.jit",
+          "synchronization": "synchronous CPU",
+          "threads": 1,
+          "units": {
+            "cpu_rss_after_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "file_bytes": "bytes",
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "load_seconds": "s",
+            "tensor_state_bytes": "bytes",
+            "throughput": "samples/s"
+          },
+          "warmup": 10
+        },
+        "quality_parity_checked": true,
+        "raw_end_to_end_ms": [
+          0.3157,
+          0.3096,
+          0.319,
+          0.3096,
+          0.3095,
+          0.3087,
+          0.3086,
+          0.3172,
+          0.3195,
+          0.3369,
+          0.337,
+          0.3194,
+          0.3133,
+          0.3255,
+          0.3808,
+          0.4548,
+          0.4846,
+          0.4337,
+          0.3973,
+          0.3915,
+          0.3957,
+          0.4528,
+          0.4176,
+          0.452,
+          0.4426,
+          0.4689,
+          0.4668,
+          0.4634,
+          0.4574,
+          0.4419
+        ],
+        "raw_inference_ms": [
+          0.3116,
+          0.3177,
+          0.3071,
+          0.3063,
+          0.316,
+          0.3092,
+          0.3074,
+          0.3145,
+          0.3064,
+          0.3087,
+          0.3072,
+          0.307,
+          0.3061,
+          0.3057,
+          0.3185,
+          0.306,
+          0.3061,
+          0.3065,
+          0.3067,
+          0.3447,
+          0.4908,
+          0.4342,
+          0.3183,
+          0.3096,
+          0.3072,
+          0.3209,
+          0.3416,
+          0.309,
+          0.3067,
+          0.3077
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "status": "succeeded"
+      },
+      "operation": {
+        "implementation": "independent trained baseline clone",
+        "training_steps": 0
+      },
+      "result_model_sha256": "0c6e5fe16409047ad3dd073c3a8c9883749ca1afefab0cd5460050d7fafb54fe",
+      "source_model_sha256": "0c6e5fe16409047ad3dd073c3a8c9883749ca1afefab0cd5460050d7fafb54fe",
+      "stages_seconds": {
+        "export_reload_measure": 0.08601260000432376,
+        "operation": 0.0012220999924466014,
+        "validation": 0.028444899988244288
+      },
+      "started_seconds": 4.825230100002955,
+      "status": "succeeded",
+      "test": {
+        "direction": "minimize",
+        "loss": 14.34509563446045,
+        "metric": "mse",
+        "samples": 42,
+        "value": 14.34509563446045
+      },
+      "test_predictions": {
+        "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\test-a8557c4fdd57f193e76e.pt",
+        "sha256": "61a41c4cea6bb0f4e7b188b28140facb8adbfe146b5656bc5cf63fe47c0e63b3"
+      },
+      "test_wall_seconds": 0.020961599992006086,
+      "validation": {
+        "direction": "minimize",
+        "loss": 17.830120086669922,
+        "metric": "mse",
+        "samples": 14,
+        "value": 17.830120086669922
+      },
+      "validation_predictions": {
+        "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\candidates\\001-a8557c4fdd57f193e76e\\validation_predictions.pt",
+        "sha256": "a053692195cf9ec1aa3d0052bcc4b1748c0a89fdc43144eb6a612625b3888c1e"
+      },
+      "wall_seconds": 0.12309179999283515
+    },
+    {
+      "cache_hit": false,
+      "cache_key": "5a088159fe8b56b5af7687d4f0098343615c697d2bf40db12ca09aca488ba600",
+      "candidate_id": "fadf8b12d4e146bd4fec",
+      "completed_seconds": 5.109064300006139,
+      "configuration": {
+        "chain": [],
+        "method": "train",
+        "parameters": {}
+      },
+      "measurement": {
+        "artifact": {
+          "device": "cpu",
+          "format": "torchscript",
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\candidates\\002-fadf8b12d4e146bd4fec\\model.pt",
+          "sha256": "92a6cf39c61786802852b1c37edf7fb1f43c3a8e35e261f7547c33ff0222d9ee",
+          "threads": 1
+        },
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "metrics": {
+          "cpu_rss_after_bytes": 810930176,
+          "cpu_rss_before_bytes": 810405888,
+          "cuda_allocated_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "end_to_end_p50_ms": 0.45799999999999996,
+          "end_to_end_p95_ms": 0.47717,
+          "file_bytes": 89321,
+          "latency_p50_ms": 0.31515000000000004,
+          "latency_p95_ms": 0.43960999999999995,
+          "load_seconds": 0.010838900008820929,
+          "tensor_state_bytes": 75404,
+          "throughput": 42469.285605945675
+        },
+        "profile": {
+          "batch_size": 14,
+          "concurrency": 1,
+          "device": "cpu",
+          "dtype": "torch.float32",
+          "format": "torchscript",
+          "hardware": "CPU",
+          "idle_device_required": true,
+          "input_shape": [
+            14,
+            24,
+            144
+          ],
+          "repeats": 30,
+          "runtime": "torch.jit",
+          "synchronization": "synchronous CPU",
+          "threads": 1,
+          "units": {
+            "cpu_rss_after_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "file_bytes": "bytes",
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "load_seconds": "s",
+            "tensor_state_bytes": "bytes",
+            "throughput": "samples/s"
+          },
+          "warmup": 10
+        },
+        "quality_parity_checked": true,
+        "raw_end_to_end_ms": [
+          0.3171,
+          0.3219,
+          0.4473,
+          0.4674,
+          0.4603,
+          0.4644,
+          0.4632,
+          0.4609,
+          0.4618,
+          0.4585,
+          0.4629,
+          0.4563,
+          0.4551,
+          0.4347,
+          0.4463,
+          0.4555,
+          0.4506,
+          0.4907,
+          0.4796,
+          0.4686,
+          0.4724,
+          0.4578,
+          0.4582,
+          0.4742,
+          0.4475,
+          0.4548,
+          0.4545,
+          0.4623,
+          0.4092,
+          0.3787
+        ],
+        "raw_inference_ms": [
+          0.4559,
+          0.4738,
+          0.3314,
+          0.3319,
+          0.3113,
+          0.3086,
+          0.315,
+          0.3279,
+          0.3068,
+          0.3244,
+          0.4197,
+          0.3297,
+          0.317,
+          0.3668,
+          0.3094,
+          0.3082,
+          0.3041,
+          0.3036,
+          0.3153,
+          0.3497,
+          0.3181,
+          0.3089,
+          0.3153,
+          0.3024,
+          0.3018,
+          0.3184,
+          0.304,
+          0.3025,
+          0.3038,
+          0.3038
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "status": "succeeded"
+      },
+      "operation": {
+        "epochs": 2,
+        "implementation": "fixed-budget torch Adam",
+        "learning_rate": 0.001,
+        "optimizer": "Adam",
+        "train_loss": [
+          6.432168006896973,
+          17.00661277770996,
+          7.09028959274292,
+          5.571501731872559
+        ],
+        "training_role": "train",
+        "training_steps": 4
+      },
+      "result_model_sha256": "7c7122bd204f060b1c06cb7803b574e39ea4be3189bcb053336f2835a3c6cd63",
+      "source_model_sha256": "0c6e5fe16409047ad3dd073c3a8c9883749ca1afefab0cd5460050d7fafb54fe",
+      "stages_seconds": {
+        "export_reload_measure": 0.10058650000428315,
+        "operation": 0.017997300004935823,
+        "validation": 0.028604599996469915
+      },
+      "started_seconds": 4.9547766000032425,
+      "status": "succeeded",
+      "test": {
+        "direction": "minimize",
+        "loss": 14.917539596557617,
+        "metric": "mse",
+        "samples": 42,
+        "value": 14.917539596557617
+      },
+      "test_predictions": {
+        "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\test-fadf8b12d4e146bd4fec.pt",
+        "sha256": "047bd0d0b4eb960188f97bf493653b81e387ec5ca52a34cf14c009e8651755cc"
+      },
+      "test_wall_seconds": 0.024689900004887022,
+      "validation": {
+        "direction": "minimize",
+        "loss": 16.017114639282227,
+        "metric": "mse",
+        "samples": 14,
+        "value": 16.017114639282227
+      },
+      "validation_predictions": {
+        "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\candidates\\002-fadf8b12d4e146bd4fec\\validation_predictions.pt",
+        "sha256": "9b48317da7710ecd50fa7b964e36c7ac65476409a512d438969b142c5e21164d"
+      },
+      "wall_seconds": 0.15428719999908935
+    },
+    {
+      "cache_hit": false,
+      "cache_key": "6f6c33b984298030eeb900d060dfa036aadb7df1799ee5621a59c32a772cb31b",
+      "candidate_id": "f71db8df54de63e32301",
+      "completed_seconds": 5.310389400008717,
+      "configuration": {
+        "chain": [],
+        "method": "svd",
+        "parameters": {
+          "strategy": "quantile",
+          "threshold": 0.5
+        }
+      },
+      "measurement": {
+        "artifact": {
+          "device": "cpu",
+          "format": "torchscript",
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\candidates\\003-f71db8df54de63e32301\\model.pt",
+          "sha256": "33f19e1d7f793f509202410da7d1399f0da60de65b28b22ffb3806c45f9f8d68",
+          "threads": 1
+        },
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "metrics": {
+          "cpu_rss_after_bytes": 814456832,
+          "cpu_rss_before_bytes": 814469120,
+          "cuda_allocated_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "end_to_end_p50_ms": 0.53925,
+          "end_to_end_p95_ms": 0.5605950000000001,
+          "file_bytes": 69205,
+          "latency_p50_ms": 0.53175,
+          "latency_p95_ms": 0.557485,
+          "load_seconds": 0.008791300002485514,
+          "tensor_state_bytes": 48272,
+          "throughput": 26176.37893424743
+        },
+        "profile": {
+          "batch_size": 14,
+          "concurrency": 1,
+          "device": "cpu",
+          "dtype": "torch.float32",
+          "format": "torchscript",
+          "hardware": "CPU",
+          "idle_device_required": true,
+          "input_shape": [
+            14,
+            24,
+            144
+          ],
+          "repeats": 30,
+          "runtime": "torch.jit",
+          "synchronization": "synchronous CPU",
+          "threads": 1,
+          "units": {
+            "cpu_rss_after_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "file_bytes": "bytes",
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "load_seconds": "s",
+            "tensor_state_bytes": "bytes",
+            "throughput": "samples/s"
+          },
+          "warmup": 10
+        },
+        "quality_parity_checked": true,
+        "raw_end_to_end_ms": [
+          0.5422,
+          0.5327,
+          0.5306,
+          0.5361,
+          0.5413,
+          0.5311,
+          0.5336,
+          0.5425,
+          0.5329,
+          0.5354,
+          0.561,
+          0.5385,
+          0.535,
+          0.5397,
+          0.5362,
+          0.5498,
+          0.5552,
+          0.5396,
+          0.5416,
+          0.5456,
+          0.5389,
+          0.5364,
+          0.5475,
+          0.5425,
+          0.5344,
+          0.5293,
+          0.5601,
+          0.5418,
+          0.5307,
+          0.5741
+        ],
+        "raw_inference_ms": [
+          0.5352,
+          0.5287,
+          0.5279,
+          0.5529,
+          0.5328,
+          0.5281,
+          0.5358,
+          0.5596,
+          0.5549,
+          0.5331,
+          0.5267,
+          0.5319,
+          0.5344,
+          0.5256,
+          0.5315,
+          0.5388,
+          0.5355,
+          0.5281,
+          0.5309,
+          0.5386,
+          0.5316,
+          0.5276,
+          0.5627,
+          0.5249,
+          0.5229,
+          0.5402,
+          0.5379,
+          0.5303,
+          0.5285,
+          0.5274
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "status": "succeeded"
+      },
+      "operation": {
+        "epochs": 2,
+        "implementation": "FedCore decompose_module + rank_threshold_pruning_in_place",
+        "learning_rate": 0.001,
+        "optimizer": "Adam",
+        "ranks": [
+          {
+            "method": "operator_svd",
+            "rank": 16,
+            "strategy": "quantile",
+            "threshold": 0.5
+          },
+          {
+            "method": "operator_svd",
+            "rank": 32,
+            "strategy": "quantile",
+            "threshold": 0.5
+          },
+          {
+            "method": "operator_svd",
+            "rank": 1,
+            "strategy": "quantile",
+            "threshold": 0.5
+          }
+        ],
+        "train_loss": [
+          8.705497741699219,
+          19.693317413330078,
+          8.524551391601562,
+          9.612462997436523
+        ],
+        "training_role": "train",
+        "training_steps": 4
+      },
+      "result_model_sha256": "c6a549ba7deb3735a41b119f6812a95b1115465c9c42106949e2a01013ff99d5",
+      "source_model_sha256": "0c6e5fe16409047ad3dd073c3a8c9883749ca1afefab0cd5460050d7fafb54fe",
+      "stages_seconds": {
+        "export_reload_measure": 0.1382389000063995,
+        "operation": 0.02410809999855701,
+        "validation": 0.023730700006126426
+      },
+      "started_seconds": 5.116357599996263,
+      "status": "succeeded",
+      "test": {
+        "direction": "minimize",
+        "loss": 14.182165145874023,
+        "metric": "mse",
+        "samples": 42,
+        "value": 14.182165145874023
+      },
+      "test_predictions": {
+        "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\test-f71db8df54de63e32301.pt",
+        "sha256": "c39b0057ef1f9173d03fe767e7446c1e5e39a34d09731bb284612b6364fdad6d"
+      },
+      "test_wall_seconds": 0.022759499988751486,
+      "validation": {
+        "direction": "minimize",
+        "loss": 16.372467041015625,
+        "metric": "mse",
+        "samples": 14,
+        "value": 16.372467041015625
+      },
+      "validation_predictions": {
+        "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\candidates\\003-f71db8df54de63e32301\\validation_predictions.pt",
+        "sha256": "0261fa1167e92b9e2da6a16b84256bf740b9583f6917ae35639f599329dd90d4"
+      },
+      "wall_seconds": 0.19403140000940766
+    }
+  ],
+  "cost_selection_comparison": {
+    "latency_choice": {
+      "candidate_id": "fadf8b12d4e146bd4fec",
+      "dispersion_kind": "raw repeat range; not a confidence interval",
+      "file_bytes": 89321,
+      "latency_p50_ms": 0.31515000000000004,
+      "repeat_max_ms": 0.4738,
+      "repeat_min_ms": 0.3018,
+      "repeats": 30
+    },
+    "same_choice": false,
+    "scope": "fixed evaluated feasible set; single-run observation does not establish H3",
+    "size_choice": {
+      "candidate_id": "f71db8df54de63e32301",
+      "dispersion_kind": "raw repeat range; not a confidence interval",
+      "file_bytes": 69205,
+      "latency_p50_ms": 0.53175,
+      "repeat_max_ms": 0.5627,
+      "repeat_min_ms": 0.5229,
+      "repeats": 30
+    },
+    "status": "measured"
+  },
+  "data": {
+    "metadata": {
+      "dataset": "AppliancesEnergy .ts archive",
+      "evidence_scope": "regression of aggregate energy; not future forecasting",
+      "file_sha256": {
+        "AppliancesEnergy_TEST.ts": "0e73676156bdce593059cd03785db9fd5616c1620ba87893b0f0903ef80f2248",
+        "AppliancesEnergy_TRAIN.ts": "bbc65fcfa5c01655bb0ec7d558335d44b9c81979d7246f485bbc95a9759a5bff"
+      },
+      "forecast_horizon": null,
+      "initial_state": "untrained; shared runner must train baseline",
+      "license": "verify archive terms before publication",
+      "preprocessing": {
+        "fitted_on": "train",
+        "imputation": "median",
+        "mean": [
+          21.725316467232922,
+          39.92376944455369,
+          20.426204973356636,
+          39.95052880897582,
+          22.21323356344853,
+          39.12406272451643,
+          20.77384058830324,
+          38.89094938787869,
+          19.52738051095479,
+          50.68818647238383,
+          7.711701555913044,
+          56.44846063120078,
+          20.16744017330507,
+          35.35820581375713,
+          21.94542795690199,
+          42.980436722250985,
+          19.369235424928263,
+          41.576980318821654,
+          7.2726851930646506,
+          755.7519116886718,
+          79.81018518618015,
+          3.9966581899028544,
+          38.7168427434559,
+          3.580597941110024
+        ],
+        "median": [
+          21.600000381469727,
+          39.496665954589844,
+          20.100000381469727,
+          40.09000015258789,
+          22.0,
+          38.5,
+          20.566667556762695,
+          38.20000076293945,
+          19.200000762939453,
+          49.09000015258789,
+          7.12666654586792,
+          56.96333312988281,
+          19.790000915527344,
+          35.0,
+          22.0,
+          42.66166687011719,
+          19.0,
+          40.900001525878906,
+          6.800000190734863,
+          756.1333618164062,
+          84.16666412353516,
+          3.5,
+          40.0,
+          3.25
+        ],
+        "scale": [
+          1.6875153573648551,
+          3.935250045638499,
+          2.275077340759521,
+          4.1661848091131635,
+          2.0692380902108947,
+          3.3604235178158564,
+          2.205859314218893,
+          4.45226379182958,
+          1.985618278172539,
+          8.70094171974201,
+          6.069996813065013,
+          31.52184721965919,
+          2.2713911838876886,
+          5.090248657291258,
+          2.102869887592477,
+          5.2304018840753645,
+          2.13253988303641,
+          4.243706009841443,
+          5.382457427435434,
+          7.2216064349528875,
+          15.873697550461124,
+          2.49544452773238,
+          12.17976472418113,
+          4.036775516791376
+        ],
+        "scaling": "population_std"
+      },
+      "preprocessing_fit_ids": [
+        "AppliancesEnergy:archive_train:37",
+        "AppliancesEnergy:archive_train:87",
+        "AppliancesEnergy:archive_train:92",
+        "AppliancesEnergy:archive_train:54",
+        "AppliancesEnergy:archive_train:79",
+        "AppliancesEnergy:archive_train:46",
+        "AppliancesEnergy:archive_train:8",
+        "AppliancesEnergy:archive_train:33",
+        "AppliancesEnergy:archive_train:45",
+        "AppliancesEnergy:archive_train:19",
+        "AppliancesEnergy:archive_train:14",
+        "AppliancesEnergy:archive_train:88",
+        "AppliancesEnergy:archive_train:90",
+        "AppliancesEnergy:archive_train:39",
+        "AppliancesEnergy:archive_train:24",
+        "AppliancesEnergy:archive_train:6",
+        "AppliancesEnergy:archive_train:71",
+        "AppliancesEnergy:archive_train:23",
+        "AppliancesEnergy:archive_train:18",
+        "AppliancesEnergy:archive_train:42",
+        "AppliancesEnergy:archive_train:86",
+        "AppliancesEnergy:archive_train:82",
+        "AppliancesEnergy:archive_train:31",
+        "AppliancesEnergy:archive_train:76",
+        "AppliancesEnergy:archive_train:27",
+        "AppliancesEnergy:archive_train:10",
+        "AppliancesEnergy:archive_train:63",
+        "AppliancesEnergy:archive_train:94",
+        "AppliancesEnergy:archive_train:91",
+        "AppliancesEnergy:archive_train:26",
+        "AppliancesEnergy:archive_train:69",
+        "AppliancesEnergy:archive_train:29",
+        "AppliancesEnergy:archive_train:25",
+        "AppliancesEnergy:archive_train:43",
+        "AppliancesEnergy:archive_train:41",
+        "AppliancesEnergy:archive_train:70",
+        "AppliancesEnergy:archive_train:3",
+        "AppliancesEnergy:archive_train:72",
+        "AppliancesEnergy:archive_train:53",
+        "AppliancesEnergy:archive_train:40",
+        "AppliancesEnergy:archive_train:73",
+        "AppliancesEnergy:archive_train:61",
+        "AppliancesEnergy:archive_train:7",
+        "AppliancesEnergy:archive_train:28",
+        "AppliancesEnergy:archive_train:52",
+        "AppliancesEnergy:archive_train:48",
+        "AppliancesEnergy:archive_train:78",
+        "AppliancesEnergy:archive_train:60",
+        "AppliancesEnergy:archive_train:32",
+        "AppliancesEnergy:archive_train:47",
+        "AppliancesEnergy:archive_train:36",
+        "AppliancesEnergy:archive_train:4",
+        "AppliancesEnergy:archive_train:85",
+        "AppliancesEnergy:archive_train:80",
+        "AppliancesEnergy:archive_train:34",
+        "AppliancesEnergy:archive_train:65",
+        "AppliancesEnergy:archive_train:75",
+        "AppliancesEnergy:archive_train:50",
+        "AppliancesEnergy:archive_train:35",
+        "AppliancesEnergy:archive_train:93",
+        "AppliancesEnergy:archive_train:30",
+        "AppliancesEnergy:archive_train:66",
+        "AppliancesEnergy:archive_train:59",
+        "AppliancesEnergy:archive_train:17",
+        "AppliancesEnergy:archive_train:51",
+        "AppliancesEnergy:archive_train:16",
+        "AppliancesEnergy:archive_train:58",
+        "AppliancesEnergy:archive_train:21",
+        "AppliancesEnergy:archive_train:49",
+        "AppliancesEnergy:archive_train:64",
+        "AppliancesEnergy:archive_train:68"
+      ],
+      "raw_source_path": "datasets\\time_series_regression\\multi_dim\\AppliancesEnergy",
+      "scenario": "ts_appliances_regression",
+      "source": "https://www.timeseriesregression.org/",
+      "split_assumption": "archive TRAIN/TEST roles; timestamp spans checked for raw overlap; chronological role ordering not claimed",
+      "target_mean": 14.066338539123535,
+      "target_scale": 3.9149868488311768,
+      "target_units": "kWh (derived archive header; raw UCI Appliances is Wh)"
+    },
+    "roles": {
+      "calibration": {
+        "ids": [
+          "AppliancesEnergy:archive_train:56",
+          "AppliancesEnergy:archive_train:15",
+          "AppliancesEnergy:archive_train:38",
+          "AppliancesEnergy:archive_train:2",
+          "AppliancesEnergy:archive_train:55",
+          "AppliancesEnergy:archive_train:57",
+          "AppliancesEnergy:archive_train:84",
+          "AppliancesEnergy:archive_train:5",
+          "AppliancesEnergy:archive_train:81",
+          "AppliancesEnergy:archive_train:12"
+        ],
+        "intervals": [
+          [
+            1453741200,
+            1453827000
+          ],
+          [
+            1460998800,
+            1461084600
+          ],
+          [
+            1459616400,
+            1459702200
+          ],
+          [
+            1454000400,
+            1454086200
+          ],
+          [
+            1458666000,
+            1458751800
+          ],
+          [
+            1459530000,
+            1459615800
+          ],
+          [
+            1462899600,
+            1462985400
+          ],
+          [
+            1459702800,
+            1459788600
+          ],
+          [
+            1458493200,
+            1458579000
+          ],
+          [
+            1454259600,
+            1454345400
+          ]
+        ],
+        "unit_ids": [],
+        "x_sha256": "f36b0d71163e1d7084ef0e271336d75e180a771182a69fdf8acafa2eaa6eb281",
+        "x_shape": [
+          10,
+          24,
+          144
+        ],
+        "y_sha256": "150ef072ebb2511f0b358347a5b43cf14224e7c338d14150ebc909b183492ab1",
+        "y_shape": [
+          10,
+          1
+        ]
+      },
+      "test": {
+        "ids": [
+          "AppliancesEnergy:archive_test:0",
+          "AppliancesEnergy:archive_test:1",
+          "AppliancesEnergy:archive_test:2",
+          "AppliancesEnergy:archive_test:3",
+          "AppliancesEnergy:archive_test:4",
+          "AppliancesEnergy:archive_test:5",
+          "AppliancesEnergy:archive_test:6",
+          "AppliancesEnergy:archive_test:7",
+          "AppliancesEnergy:archive_test:8",
+          "AppliancesEnergy:archive_test:9",
+          "AppliancesEnergy:archive_test:10",
+          "AppliancesEnergy:archive_test:11",
+          "AppliancesEnergy:archive_test:12",
+          "AppliancesEnergy:archive_test:13",
+          "AppliancesEnergy:archive_test:14",
+          "AppliancesEnergy:archive_test:15",
+          "AppliancesEnergy:archive_test:16",
+          "AppliancesEnergy:archive_test:17",
+          "AppliancesEnergy:archive_test:18",
+          "AppliancesEnergy:archive_test:19",
+          "AppliancesEnergy:archive_test:20",
+          "AppliancesEnergy:archive_test:21",
+          "AppliancesEnergy:archive_test:22",
+          "AppliancesEnergy:archive_test:23",
+          "AppliancesEnergy:archive_test:24",
+          "AppliancesEnergy:archive_test:25",
+          "AppliancesEnergy:archive_test:26",
+          "AppliancesEnergy:archive_test:27",
+          "AppliancesEnergy:archive_test:28",
+          "AppliancesEnergy:archive_test:29",
+          "AppliancesEnergy:archive_test:30",
+          "AppliancesEnergy:archive_test:31",
+          "AppliancesEnergy:archive_test:32",
+          "AppliancesEnergy:archive_test:33",
+          "AppliancesEnergy:archive_test:34",
+          "AppliancesEnergy:archive_test:35",
+          "AppliancesEnergy:archive_test:36",
+          "AppliancesEnergy:archive_test:37",
+          "AppliancesEnergy:archive_test:38",
+          "AppliancesEnergy:archive_test:39",
+          "AppliancesEnergy:archive_test:40",
+          "AppliancesEnergy:archive_test:41"
+        ],
+        "intervals": [
+          [
+            1458925200,
+            1459011000
+          ],
+          [
+            1458061200,
+            1458147000
+          ],
+          [
+            1453050000,
+            1453135800
+          ],
+          [
+            1460394000,
+            1460479800
+          ],
+          [
+            1460566800,
+            1460652600
+          ],
+          [
+            1461690000,
+            1461775800
+          ],
+          [
+            1461258000,
+            1461343800
+          ],
+          [
+            1455987600,
+            1456073400
+          ],
+          [
+            1456938000,
+            1457023800
+          ],
+          [
+            1455037200,
+            1455123000
+          ],
+          [
+            1458406800,
+            1458492600
+          ],
+          [
+            1456160400,
+            1456246200
+          ],
+          [
+            1459962000,
+            1460047800
+          ],
+          [
+            1462986000,
+            1463071800
+          ],
+          [
+            1460826000,
+            1460911800
+          ],
+          [
+            1457888400,
+            1457974200
+          ],
+          [
+            1462035600,
+            1462121400
+          ],
+          [
+            1459875600,
+            1459961400
+          ],
+          [
+            1461517200,
+            1461603000
+          ],
+          [
+            1459184400,
+            1459270200
+          ],
+          [
+            1460912400,
+            1460998200
+          ],
+          [
+            1455555600,
+            1455641400
+          ],
+          [
+            1459357200,
+            1459443000
+          ],
+          [
+            1455642000,
+            1455727800
+          ],
+          [
+            1453222800,
+            1453308600
+          ],
+          [
+            1457197200,
+            1457283000
+          ],
+          [
+            1454605200,
+            1454691000
+          ],
+          [
+            1454432400,
+            1454518200
+          ],
+          [
+            1463504400,
+            1463590200
+          ],
+          [
+            1460134800,
+            1460220600
+          ],
+          [
+            1454864400,
+            1454950200
+          ],
+          [
+            1461171600,
+            1461257400
+          ],
+          [
+            1455296400,
+            1455382200
+          ],
+          [
+            1457629200,
+            1457715000
+          ],
+          [
+            1462122000,
+            1462207800
+          ],
+          [
+            1453309200,
+            1453395000
+          ],
+          [
+            1460307600,
+            1460393400
+          ],
+          [
+            1463850000,
+            1463935800
+          ],
+          [
+            1461862800,
+            1461948600
+          ],
+          [
+            1457456400,
+            1457542200
+          ],
+          [
+            1452618000,
+            1452703800
+          ],
+          [
+            1464109200,
+            1464195000
+          ]
+        ],
+        "unit_ids": [],
+        "x_sha256": "705ea27c0162a7b72b2d8865a3bc84645cd64e5b4d5e69e35672c196aea69eef",
+        "x_shape": [
+          42,
+          24,
+          144
+        ],
+        "y_sha256": "b48504b13bca0a8b80962ec1aa33ade2f261a9b246fcbeefeaa63a3f993e24df",
+        "y_shape": [
+          42,
+          1
+        ]
+      },
+      "train": {
+        "ids": [
+          "AppliancesEnergy:archive_train:37",
+          "AppliancesEnergy:archive_train:87",
+          "AppliancesEnergy:archive_train:92",
+          "AppliancesEnergy:archive_train:54",
+          "AppliancesEnergy:archive_train:79",
+          "AppliancesEnergy:archive_train:46",
+          "AppliancesEnergy:archive_train:8",
+          "AppliancesEnergy:archive_train:33",
+          "AppliancesEnergy:archive_train:45",
+          "AppliancesEnergy:archive_train:19",
+          "AppliancesEnergy:archive_train:14",
+          "AppliancesEnergy:archive_train:88",
+          "AppliancesEnergy:archive_train:90",
+          "AppliancesEnergy:archive_train:39",
+          "AppliancesEnergy:archive_train:24",
+          "AppliancesEnergy:archive_train:6",
+          "AppliancesEnergy:archive_train:71",
+          "AppliancesEnergy:archive_train:23",
+          "AppliancesEnergy:archive_train:18",
+          "AppliancesEnergy:archive_train:42",
+          "AppliancesEnergy:archive_train:86",
+          "AppliancesEnergy:archive_train:82",
+          "AppliancesEnergy:archive_train:31",
+          "AppliancesEnergy:archive_train:76",
+          "AppliancesEnergy:archive_train:27",
+          "AppliancesEnergy:archive_train:10",
+          "AppliancesEnergy:archive_train:63",
+          "AppliancesEnergy:archive_train:94",
+          "AppliancesEnergy:archive_train:91",
+          "AppliancesEnergy:archive_train:26",
+          "AppliancesEnergy:archive_train:69",
+          "AppliancesEnergy:archive_train:29",
+          "AppliancesEnergy:archive_train:25",
+          "AppliancesEnergy:archive_train:43",
+          "AppliancesEnergy:archive_train:41",
+          "AppliancesEnergy:archive_train:70",
+          "AppliancesEnergy:archive_train:3",
+          "AppliancesEnergy:archive_train:72",
+          "AppliancesEnergy:archive_train:53",
+          "AppliancesEnergy:archive_train:40",
+          "AppliancesEnergy:archive_train:73",
+          "AppliancesEnergy:archive_train:61",
+          "AppliancesEnergy:archive_train:7",
+          "AppliancesEnergy:archive_train:28",
+          "AppliancesEnergy:archive_train:52",
+          "AppliancesEnergy:archive_train:48",
+          "AppliancesEnergy:archive_train:78",
+          "AppliancesEnergy:archive_train:60",
+          "AppliancesEnergy:archive_train:32",
+          "AppliancesEnergy:archive_train:47",
+          "AppliancesEnergy:archive_train:36",
+          "AppliancesEnergy:archive_train:4",
+          "AppliancesEnergy:archive_train:85",
+          "AppliancesEnergy:archive_train:80",
+          "AppliancesEnergy:archive_train:34",
+          "AppliancesEnergy:archive_train:65",
+          "AppliancesEnergy:archive_train:75",
+          "AppliancesEnergy:archive_train:50",
+          "AppliancesEnergy:archive_train:35",
+          "AppliancesEnergy:archive_train:93",
+          "AppliancesEnergy:archive_train:30",
+          "AppliancesEnergy:archive_train:66",
+          "AppliancesEnergy:archive_train:59",
+          "AppliancesEnergy:archive_train:17",
+          "AppliancesEnergy:archive_train:51",
+          "AppliancesEnergy:archive_train:16",
+          "AppliancesEnergy:archive_train:58",
+          "AppliancesEnergy:archive_train:21",
+          "AppliancesEnergy:archive_train:49",
+          "AppliancesEnergy:archive_train:64",
+          "AppliancesEnergy:archive_train:68"
+        ],
+        "intervals": [
+          [
+            1456333200,
+            1456419000
+          ],
+          [
+            1454778000,
+            1454863800
+          ],
+          [
+            1457110800,
+            1457196600
+          ],
+          [
+            1457715600,
+            1457801400
+          ],
+          [
+            1458838800,
+            1458924600
+          ],
+          [
+            1455210000,
+            1455295800
+          ],
+          [
+            1463677200,
+            1463763000
+          ],
+          [
+            1460739600,
+            1460825400
+          ],
+          [
+            1459789200,
+            1459875000
+          ],
+          [
+            1455901200,
+            1455987000
+          ],
+          [
+            1463936400,
+            1464022200
+          ],
+          [
+            1463245200,
+            1463331000
+          ],
+          [
+            1454518800,
+            1454604600
+          ],
+          [
+            1458579600,
+            1458665400
+          ],
+          [
+            1462381200,
+            1462467000
+          ],
+          [
+            1454346000,
+            1454431800
+          ],
+          [
+            1464195600,
+            1464281400
+          ],
+          [
+            1453395600,
+            1453481400
+          ],
+          [
+            1454691600,
+            1454777400
+          ],
+          [
+            1456074000,
+            1456159800
+          ],
+          [
+            1462726800,
+            1462812600
+          ],
+          [
+            1460480400,
+            1460566200
+          ],
+          [
+            1462294800,
+            1462380600
+          ],
+          [
+            1456851600,
+            1456937400
+          ],
+          [
+            1459270800,
+            1459356600
+          ],
+          [
+            1461949200,
+            1462035000
+          ],
+          [
+            1452790800,
+            1452876600
+          ],
+          [
+            1456592400,
+            1456678200
+          ],
+          [
+            1462554000,
+            1462639800
+          ],
+          [
+            1460221200,
+            1460307000
+          ],
+          [
+            1461430800,
+            1461516600
+          ],
+          [
+            1462640400,
+            1462726200
+          ],
+          [
+            1453827600,
+            1453913400
+          ],
+          [
+            1453914000,
+            1453999800
+          ],
+          [
+            1458752400,
+            1458838200
+          ],
+          [
+            1458320400,
+            1458406200
+          ],
+          [
+            1457802000,
+            1457887800
+          ],
+          [
+            1455469200,
+            1455555000
+          ],
+          [
+            1456506000,
+            1456591800
+          ],
+          [
+            1457370000,
+            1457455800
+          ],
+          [
+            1455728400,
+            1455814200
+          ],
+          [
+            1454173200,
+            1454259000
+          ],
+          [
+            1455382800,
+            1455468600
+          ],
+          [
+            1452963600,
+            1453049400
+          ],
+          [
+            1454950800,
+            1455036600
+          ],
+          [
+            1461344400,
+            1461430200
+          ],
+          [
+            1463590800,
+            1463676600
+          ],
+          [
+            1453568400,
+            1453654200
+          ],
+          [
+            1462467600,
+            1462553400
+          ],
+          [
+            1463158800,
+            1463244600
+          ],
+          [
+            1462813200,
+            1462899000
+          ],
+          [
+            1457974800,
+            1458060600
+          ],
+          [
+            1457542800,
+            1457628600
+          ],
+          [
+            1459443600,
+            1459529400
+          ],
+          [
+            1454086800,
+            1454172600
+          ],
+          [
+            1459011600,
+            1459097400
+          ],
+          [
+            1463331600,
+            1463417400
+          ],
+          [
+            1460048400,
+            1460134200
+          ],
+          [
+            1456765200,
+            1456851000
+          ],
+          [
+            1455814800,
+            1455900600
+          ],
+          [
+            1453136400,
+            1453222200
+          ],
+          [
+            1461603600,
+            1461689400
+          ],
+          [
+            1458147600,
+            1458233400
+          ],
+          [
+            1457283600,
+            1457369400
+          ],
+          [
+            1461085200,
+            1461171000
+          ],
+          [
+            1456246800,
+            1456332600
+          ],
+          [
+            1461776400,
+            1461862200
+          ],
+          [
+            1452877200,
+            1452963000
+          ],
+          [
+            1453654800,
+            1453740600
+          ],
+          [
+            1463072400,
+            1463158200
+          ],
+          [
+            1453482000,
+            1453567800
+          ]
+        ],
+        "unit_ids": [],
+        "x_sha256": "44232f7e5d506b3efa963eb13778f9f614338e7d09cc7735db6d30a58be13d2c",
+        "x_shape": [
+          71,
+          24,
+          144
+        ],
+        "y_sha256": "a6356682bbc734c7508a1b0cecb959e94a275b990fbad767eefff51efc659f0a",
+        "y_shape": [
+          71,
+          1
+        ]
+      },
+      "validation": {
+        "ids": [
+          "AppliancesEnergy:archive_train:77",
+          "AppliancesEnergy:archive_train:67",
+          "AppliancesEnergy:archive_train:89",
+          "AppliancesEnergy:archive_train:62",
+          "AppliancesEnergy:archive_train:11",
+          "AppliancesEnergy:archive_train:9",
+          "AppliancesEnergy:archive_train:13",
+          "AppliancesEnergy:archive_train:83",
+          "AppliancesEnergy:archive_train:20",
+          "AppliancesEnergy:archive_train:74",
+          "AppliancesEnergy:archive_train:0",
+          "AppliancesEnergy:archive_train:1",
+          "AppliancesEnergy:archive_train:22",
+          "AppliancesEnergy:archive_train:44"
+        ],
+        "intervals": [
+          [
+            1464282000,
+            1464367800
+          ],
+          [
+            1452531600,
+            1452617400
+          ],
+          [
+            1455123600,
+            1455209400
+          ],
+          [
+            1452704400,
+            1452790200
+          ],
+          [
+            1463763600,
+            1463849400
+          ],
+          [
+            1458234000,
+            1458319800
+          ],
+          [
+            1463418000,
+            1463503800
+          ],
+          [
+            1462208400,
+            1462294200
+          ],
+          [
+            1464022800,
+            1464108600
+          ],
+          [
+            1459098000,
+            1459183800
+          ],
+          [
+            1456678800,
+            1456764600
+          ],
+          [
+            1457024400,
+            1457110200
+          ],
+          [
+            1460653200,
+            1460739000
+          ],
+          [
+            1456419600,
+            1456505400
+          ]
+        ],
+        "unit_ids": [],
+        "x_sha256": "6e2e50d9d75efc6a50092559cf7425e7243446dc0035754d9f0cce25b6095160",
+        "x_shape": [
+          14,
+          24,
+          144
+        ],
+        "y_sha256": "d38f7c3b8acdafde48a52c3f7460bc88e07bb2202fcdb8337fd38c7897e67f00",
+        "y_shape": [
+          14,
+          1
+        ]
+      }
+    },
+    "task": "regression"
+  },
+  "empirical_claim": "pilot only; superiority is not established",
+  "environment": {
+    "cpu_processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+    "cuda_devices": [
+      "NVIDIA GeForce RTX 4080"
+    ],
+    "git_revision": "469f1a0589ddc4f33f2a64da6974306ddf295a56",
+    "machine": "AMD64",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "python": "3.10.0",
+    "source_files": {
+      "fedcore\\__init__.py": "c10dd264f3fa0e3248cd9978d601c3eef8402ee356ca17c4417ca1a465fd61dd",
+      "fedcore\\algorithm\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\algorithm\\base_compression_model.py": "7ad5ffc52c65321c39d5b451bde2b39cba0595908c412d68884b137595f2a9fd",
+      "fedcore\\algorithm\\distillation\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\algorithm\\distillation\\distilator.py": "55affc72483d80280910f7055ddb6279cf998a26224e83e5753dd812a2ec0c9a",
+      "fedcore\\algorithm\\distillation\\hooks.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\algorithm\\low_rank\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\algorithm\\low_rank\\decomposer.py": "24785d2b9c6187366a8b0172b8255a8a710bc9dcbf6bf2477c749f2d4d4deea5",
+      "fedcore\\algorithm\\low_rank\\hooks.py": "a42856c770ce4e173c116aee489d49d9040ba13eba8044ee3bf325388861092e",
+      "fedcore\\algorithm\\low_rank\\lora_operation.py": "3733e2c241c4c5c030b478de7f982e4d1ba50531c3f4c10180132ffd90b5095f",
+      "fedcore\\algorithm\\low_rank\\low_rank_opt.py": "c55b4b55cdd4862302e01df48a5d391bffe75d07400e6d76fdd3c46fb8b898c5",
+      "fedcore\\algorithm\\low_rank\\rank_distortion.py": "5b2038d2afcb034e83b5013cc2ee84819ca46ae1d461f928c7d3a88f0f5dea3d",
+      "fedcore\\algorithm\\low_rank\\rank_pruning.py": "9358ba6609e309b3edadd77a8e47a20d7fc21bd08fd3cfbe29111e51b5e70202",
+      "fedcore\\algorithm\\low_rank\\reassembly\\__init__.py": "8d759342ad78a86c94083730dfddc18ed090cfc94cebdc94b41d44d0ff8515a7",
+      "fedcore\\algorithm\\low_rank\\reassembly\\config_mixins.py": "cd728c8c7dca2c7d1e64d8a2aa73725ff60cb45dda9dd0c2770d00cb0693349d",
+      "fedcore\\algorithm\\low_rank\\reassembly\\core_reassemblers.py": "4839e3b72e1a90368f987bac9a21134713e86e6627a1967c434f276256aabc61",
+      "fedcore\\algorithm\\low_rank\\reassembly\\decomposed_recreation.py": "d6af123f5deef24911f169b56225a9b1cb859f005578b72756631e573af2913d",
+      "fedcore\\algorithm\\low_rank\\reassembly\\flatllm_reassembler.py": "34385cf9618b7738a579847fb131617a36b14a2234ad1bffc96c2afec63c4b9a",
+      "fedcore\\algorithm\\low_rank\\reassembly\\transmla_reassembler.py": "8814f78cecc56f1b466519498026201c414f952d4734a511a8cb2c23105c1dca",
+      "fedcore\\algorithm\\low_rank\\svd_tools.py": "9b2a8b5cdafe441e41b6d858169764c26088cbeedf2fe0894f9c0ae34573fd7b",
+      "fedcore\\algorithm\\pruning\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\algorithm\\pruning\\hooks.py": "026f914a8369b52d22e5b29321a9261f740f3b9ec30ae98b2b2212ffb68a0922",
+      "fedcore\\algorithm\\pruning\\pruners.py": "647eb5a65bc5d38f076a4cdd35c8b0f09504b31c420cad96a24adc12a3a1111b",
+      "fedcore\\algorithm\\pruning\\pruning_validation.py": "e410134dcee1fe65d7ec54b6b16c763011e1e6e8f15d60991213e58528baa4bb",
+      "fedcore\\algorithm\\pruning\\sfp_tools.py": "46186c230f5248fa599ba281bce06ce08bfefa109e8a2d92c9f28ed7e647bc42",
+      "fedcore\\algorithm\\quantization\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\algorithm\\quantization\\hooks.py": "e5a96084b3f3600d0e87eb1650e240aeefbab84180e03f3f67f65e04291a58e6",
+      "fedcore\\algorithm\\quantization\\quantizers.py": "0300ddce365ed012b4ba685db1c31c5cf0f4f3c41faff88138abfd068b20faaa",
+      "fedcore\\algorithm\\quantization\\utils.py": "475628565a0059d53f274aeaa061b43672eee626dbd90cbcfa35d7c9c423ed06",
+      "fedcore\\api\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\api\\api_configs.py": "632ec8280b25cd04ff3421beeb85428c785cb1fa34140d7c0ec628ff8cb81ae1",
+      "fedcore\\api\\config_factory.py": "8300dcf5a8fecbb6c73d64e998a54fe472ff14c7868c4ecba1fcc1ef9900321d",
+      "fedcore\\api\\llm_config.py": "9074a1dcd8bbd41f2530157511726e9843d749856fcf5b040819a3c6b8406fec",
+      "fedcore\\api\\main.py": "6b01470fb4089434f025d2aab2817a682cf26f7daf7f448c6988d97ceb4e6059",
+      "fedcore\\api\\nlp_configs.py": "10b1ad2012e024619210f61a10a3d3b7032241f70454d24ae769eeb9aec908d0",
+      "fedcore\\api\\utils\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\api\\utils\\api_init.py": "4730ff02e1a3c4748a20846a7860a899639fc2aae15b7a1ddeced9ca9d9a6d87",
+      "fedcore\\api\\utils\\checkers_collection.py": "2036188afe76c3a50fc9cfe8c968620404ad3e3ae0a762d7a67facf986fd18c7",
+      "fedcore\\api\\utils\\data.py": "e86812b955067b03e9970aa684c8784a8c338899d3d7073bc675568d74e1a2b7",
+      "fedcore\\api\\utils\\evaluation.py": "b1999dd523f5a0ec6024038286321cc4a3f3c1df14fa92df002e9f1477b62b5b",
+      "fedcore\\api\\utils\\misc.py": "21d6363d7cbf84a3237d425efb74a351ce2c069b2047903186367018062ec680",
+      "fedcore\\api\\utils\\plugins\\nlp_plugin.py": "915b8b838f203c4a0cf55bdf51b213e4c20268d84f5bc393089afb5dfd85a600",
+      "fedcore\\architecture\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\abstraction\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\abstraction\\accessor.py": "28b5e8eac4ada6568217073b040dc8c0cfa44be97103e42887b5492feaec4639",
+      "fedcore\\architecture\\abstraction\\decorators.py": "49ac59c51523f510d6382284ab53414f8a8b47fec8bb2d6dc32bd8df14fa3fbe",
+      "fedcore\\architecture\\abstraction\\delegator.py": "204df2d01d0cb03e191f6d0c40d514166f394402e63f1eed71cc960a3fc95840",
+      "fedcore\\architecture\\abstraction\\placeholders.py": "db1c946c954a690ba4d07a294c16308fc353e4ffb3d09cfa10f798af4bfcbfa0",
+      "fedcore\\architecture\\comptutaional\\__init__.py": "28e2f10d26882935939f42770e7969955c3c88fabdcf2affd2ddc1b20a8b4a23",
+      "fedcore\\architecture\\comptutaional\\devices.py": "66b6e17841dc6c973446a4e7529239a0724c71a7bf8fff11437ebef16c17e6fc",
+      "fedcore\\architecture\\computational\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\computational\\devices.py": "66b6e17841dc6c973446a4e7529239a0724c71a7bf8fff11437ebef16c17e6fc",
+      "fedcore\\architecture\\dataset\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\dataset\\api_loader.py": "f0d8737874d68e5b53dcd92adae026765a4a39c3f82b36b5d7611e0b2252ac4a",
+      "fedcore\\architecture\\dataset\\custom_loader.py": "90259c97d30abf60657aa47b265513435f3718fef8821b3ee407a672f6954da0",
+      "fedcore\\architecture\\dataset\\datasets_from_source.py": "794b04a0a2cdf40db1397ecd9acfc17dbb88b7958ab9f74ee6b82443b3500006",
+      "fedcore\\architecture\\dataset\\splitters.py": "362331d24aa31e572da4fa61ec955145b677bbbe800195c5dcbb8469ae368bc0",
+      "fedcore\\architecture\\dataset\\task_specified\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\dataset\\task_specified\\classification_datasets.py": "d0ca23a93aa8855f64e27fc770289ec536437072e04348260d281f4fb366d37f",
+      "fedcore\\architecture\\dataset\\task_specified\\dummy_clf.py": "9c5d37e9bd5adb25b2d7470332f8d8e2db85ebea8479f410fbd46609fbdbcc22",
+      "fedcore\\architecture\\dataset\\task_specified\\object_detection_datasets.py": "b9ba70688f4b6b9b58bc13fb461ddc4c5adfca4f1f72a674ddc103cc27983e15",
+      "fedcore\\architecture\\dataset\\task_specified\\segmentation_dataset.py": "752e5dd44721e8256d28f44c092bbc7a859cbb07ae4d15fcb0096f7ceafc4fb9",
+      "fedcore\\architecture\\dataset\\task_specified\\ts_dataset.py": "702bb5b7c450a639a9f7d0d658949c9216e4fc3a4ed7ad77fde41d4e98f4c8b7",
+      "fedcore\\architecture\\dataset\\utils.py": "038fca76f6a05fd71b07897ff597dda48b635ded96464996dd958458c8cbe4ee",
+      "fedcore\\architecture\\preprocessing\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\preprocessing\\data_convertor.py": "ec8f246a234a55dd02b89fcbbfce00dd612fb70bfe0dace44097e415cc7d2132",
+      "fedcore\\architecture\\settings\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\settings\\computational.py": "334c2ccc108b1e811ab89a03f1ab214b90252595ec4317a3ff338fa8372f12f6",
+      "fedcore\\architecture\\utils\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\utils\\loader.py": "6a11cd5b3897006d6595df242490908e3a13da3d66ac2638e5fcaef1e7002d83",
+      "fedcore\\architecture\\utils\\misc.py": "b5a2b40c9f77c4b86db4dac4d70bb8f291fd3a7d76d52a7e65e0a6de112357b3",
+      "fedcore\\architecture\\utils\\paths.py": "d5f66b854e82c0d93978c81747cb67a7e41c295847527cab85f7755924b57753",
+      "fedcore\\architecture\\visualisation\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\architecture\\visualisation\\visualization.py": "f63c3c5a8f19abafcf4045aae4eeb45e379cad01a16bb3eedc76446efc31da8a",
+      "fedcore\\data\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\data\\data.py": "75248ab7663c020b616e1f7e933b763f4a0313053a047d70b34bce114a38902e",
+      "fedcore\\data\\dataloader.py": "91b29eb7b3e79b5937e88f8328dcc27d7ae848fdfe20970b16019b6f98774c48",
+      "fedcore\\experiments\\__init__.py": "a7c46fa6087d25fdb136c4efb48452d2adac539de6f89c3db983db3d765bb0dc",
+      "fedcore\\experiments\\ablations.py": "16e90fce51a55dced482c86316c02eec9005d527088ce54dc330f83a59faf3e9",
+      "fedcore\\experiments\\baseline.py": "554422a40bd31f1eed9a93399793ca66e6c1b8e75f109cc64cf747d8357da943",
+      "fedcore\\experiments\\external_benchmark.py": "5976e942e75f6423c89341bfb596185f6c0be6cccf3cd007998ad48ddb0750fc",
+      "fedcore\\experiments\\local_study.py": "e3fdf2d31c245a765612b90e7ad6e078f6d186715704ca32f80f4f78a02baaf1",
+      "fedcore\\experiments\\math_checks.py": "f10e2034464ecd0b4084d28dba867b73f261ad6d6011f487198f591f2464e1de",
+      "fedcore\\experiments\\measurement.py": "aaa497dabc1a7274751c09a45287385b32e4105dc8a8ec0eef7a263cabafc8b2",
+      "fedcore\\experiments\\pilot.py": "0a5d3d3af0c83931069159b3557dc56c76497b74950e5946152ac55e5748f377",
+      "fedcore\\experiments\\protocol.py": "2934b60fa84ed0b1f57b00988aaea7315f7937a0007dfa235e11b10e8efc292d",
+      "fedcore\\experiments\\remeasure.py": "e55a501834f14b4050ec4e01e26880fb95227bb25fdff34b8931a3542962c62f",
+      "fedcore\\experiments\\reporting.py": "7ec0787995dc82108f47dcca644b0ab58227bd79b1d146f144a5bacbc111275c",
+      "fedcore\\experiments\\runner.py": "993ca8ebd37dac95ee00be410318490ec1551ba241f318deaef8dfd395460646",
+      "fedcore\\experiments\\scenarios.py": "a7f026d65f6d52f35a283ad3a8eaa5c07b31e75255ae4affa189b4226ad179bb",
+      "fedcore\\experiments\\search.py": "c93d47218b24922b5680c289fdb4b364720b385caae5489430890aa4330c5b9c",
+      "fedcore\\experiments\\streaming.py": "db933d506f6d779b8d8b1bd030963363366872f96fff17bce64ddf413602ae47",
+      "fedcore\\external_runtime\\__init__.py": "5b5f242321cb9b40e9abd20f38219803bb56943c2c97ead71ab77d16015a6def",
+      "fedcore\\external_runtime\\adapters.py": "6dd455b5121d3d39d2218d4d6e8acc7eefd8149764a183d7a4dda0b7097aaf37",
+      "fedcore\\external_runtime\\client.py": "fa9db55eaa64c2da1b90d8ef8623927e2ec78810c98f28876c01e2d6f0bb4a68",
+      "fedcore\\external_runtime\\contracts.py": "5b83299f6d8f314c0d28b1529405aa17679cdbcfac80331ab79ac979b33c5346",
+      "fedcore\\external_runtime\\execution.py": "a585936855f0b304f2b90e15bf63b8122ecc037112c6718dd77953c5692952c7",
+      "fedcore\\external_runtime\\industrial_manifest.py": "3132e4f91b0eb87b16cc386ee82a81720c3e5ea7b3f295464067d6ef3ab2cc37",
+      "fedcore\\external_runtime\\jobs.py": "130f7317a212a40527a321f079480db66c68e2c2e6f6248b50983f118926e906",
+      "fedcore\\external_runtime\\models.py": "cfd435d294d6b9970c741bbbdb08a217c23ff721dd7fd69eccb9d031a77c0e1f",
+      "fedcore\\external_runtime\\security.py": "a076f79d26dd0e44dbd363387f14d934dc764efba46e96dc5771ad08727648dc",
+      "fedcore\\external_runtime\\worker.py": "c1d726f7aea8d0b040554ca35c4f4f67907eb309818953eb551269f981117c94",
+      "fedcore\\inference\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\inference\\onnx.py": "28f3196cd92d7116e4e6abdfa79d307ad529d8f4807467c3366da88bfe266517",
+      "fedcore\\interfaces\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\interfaces\\fedcore_dispatcher.py": "2e2e462576a6feef442d9203f4c6ade4950ebf992cb18eaebde8a8ec01badc0c",
+      "fedcore\\interfaces\\fedcore_optimizer.py": "a856bab09c5b907bb5fee4f652628cd7408d92f771780c66b5b14a2426d8a0a5",
+      "fedcore\\interfaces\\fedcore_strategy.py": "34e241694019234e8dab899bbc257a467974b7e0974900ff94efcb252fe5b86a",
+      "fedcore\\interfaces\\search_space.py": "aa8153853c1b77cddff9b5e8dd7a01c0c832164b5a9214c3cfc0124c3da0ab18",
+      "fedcore\\interfaces\\search_trace.py": "11aa64faca15a4e1880227a0f52b11fa47fd197233d321cc646e462b1d5198eb",
+      "fedcore\\losses\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\losses\\distilation_loss.py": "ebc8864027c1aff11f4457b6479788c97acf3fa5a9725dfec3d128d4fe69333a",
+      "fedcore\\losses\\losses_impl.py": "338e2864bca7e71e4f7c8306835bdd6c8c8dea7bfe0f9513adf6a66b967f3d3f",
+      "fedcore\\losses\\low_rank_loss.py": "648f625f36c06006531ce348c0c4f6763955621a6d20f72e93fbab368be84f18",
+      "fedcore\\losses\\regularization_losses.py": "e6e75e7e03f66f99efe45f28b9fbf5e06f774db717d875ee33b27d81eabad910",
+      "fedcore\\losses\\utils.py": "8db343807575afa09a22f25068c52173594af9dff0ece492c8f016660f99c7da",
+      "fedcore\\metrics\\__init__.py": "7089e437691ab3b57160d96b1c1b7571b9c34c840b767ac6516954eebd99e395",
+      "fedcore\\metrics\\api_metric.py": "36a6bda48f676445eb8cd8b3aab30842d42729cf32c5ae02f0845e4a2fa8dfaf",
+      "fedcore\\metrics\\cv_metrics.py": "b655fdbbf7e1bfd524b84931f5c0ca2f835d932d6c55baa62618d52408624ab9",
+      "fedcore\\metrics\\metric_impl.py": "5956cdc348da270aa285ab584cfe7d794c70600caebc92ef77ad3462afbd3fbf",
+      "fedcore\\metrics\\multiobjective\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\metrics\\multiobjective\\hypervolume.py": "c7c0216216c3e9e1d384680d5b02b8a095e96b7909e7196c3ef3e70931a72a37",
+      "fedcore\\metrics\\multiobjective\\multi_objective.py": "460fa40416cef3b65d148660e968685098b407ef7f8244d782d3d16bcb8814d1",
+      "fedcore\\metrics\\nlp_metrics.py": "4fdee24b7ed0977633010e1159918da5f162264efae50642216e15fa5ff8bf20",
+      "fedcore\\metrics\\pareto.py": "dceebe24265a50aff22c8c467dd5cbbcbbafd11ec99ac8d9e0bbd0f2df32b232",
+      "fedcore\\metrics\\quality.py": "f71e710450a4ea8d726bfb1a0fe91ba19ccbc6319310d0dde8e3686c8c36e029",
+      "fedcore\\models\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\backbone\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\backbone\\backbone_loader.py": "37c7be6223e699a1bb7f7471abbcc37db2c4692242084041aed0c51c2116a102",
+      "fedcore\\models\\backbone\\convolutional\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\backbone\\convolutional\\densenet.py": "6f3ec5614454fa33e725b4b4ac4390350c594829fb06dfd5a60d5c878dc7d320",
+      "fedcore\\models\\backbone\\convolutional\\efficientnet.py": "b05cdd910e7803b1bacc575ab15a33e6b2e0d11e66d8c282b882836e170ca921",
+      "fedcore\\models\\backbone\\convolutional\\inception.py": "fd85902ba732637098f1b27d4d651a6134758fcf995c5ef0b657c1521a063741",
+      "fedcore\\models\\backbone\\convolutional\\mobilenet.py": "6ba62c0d010cddaf68aef4110bf9ab5f88fb6dab900fe512143494b3d093f792",
+      "fedcore\\models\\backbone\\convolutional\\resnet.py": "414296cb6301d169ccc611684d2b1d4808888458607fbc722dc154b7009c8b6b",
+      "fedcore\\models\\backbone\\custom\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\backbone\\custom\\custom.py": "f4d45d0aace8d2bfde51f027a223fe987a3e09110c9986bc20dcb5bc72d58806",
+      "fedcore\\models\\backbone\\custom\\custom_object_detection.py": "6103eab19180ca9f5c096f6ff42aba3d624a374b671d228d72acc1d817517f2a",
+      "fedcore\\models\\backbone\\encoder_decoder\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\backbone\\encoder_decoder\\unet.py": "2572e9dc06f720b94b0b5af5e361d3f1832088d5301d873f3e1a83cab450ba15",
+      "fedcore\\models\\backbone\\pretrain_model\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\backbone\\pretrain_model\\chronos.py": "e57f5d410450dc228ea39ac2292f6d72a481937fd05726d36cc1b304ff6c7deb",
+      "fedcore\\models\\backbone\\pretrain_model\\segformer.py": "f8073eebe2a5bee1af67c88edd663994488d830f3ea8ba2215a85b211a663a4e",
+      "fedcore\\models\\backbone\\transformers\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\backbone\\transformers\\linformer.py": "d349e619316d4459ed4ebfeabfe8c84d6a747a35c001e165b938153ae7ae1520",
+      "fedcore\\models\\backbone\\transformers\\tst.py": "8a0835dbc55910ae7086e69f742fdbf1d53f3dbcc354bf3e18930cec7160af5b",
+      "fedcore\\models\\network_impl\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\network_impl\\base_nn_model.py": "c756882bc659312bb3b75fe354aaed30337d8a8c15251ce7f85bfaadf031945e",
+      "fedcore\\models\\network_impl\\decomposed_layers.py": "bfa91db4c9815f83748431dd917ea1d0745493d6675d4a678f429c692d012072",
+      "fedcore\\models\\network_impl\\interfaces.py": "120bdecaad1cf0675f79b82caf4436e3a0bb5e6bfd43f9fe322094d5069ada80",
+      "fedcore\\models\\network_impl\\layers.py": "571293195dbd75b0c12612d692533c13096cd48902d6e9e89cacd393c17b9021",
+      "fedcore\\models\\network_impl\\llm_trainer.py": "df9161f20e594026d488ea62bd78208b315a98b8b00d8819218932a1c0d7a084",
+      "fedcore\\models\\network_impl\\trainer_factory.py": "ab0fd68807f207001b44a52551a815c39b5c2620aaaa8b7b2e98a5c25ddefadb",
+      "fedcore\\models\\network_impl\\utils\\_base.py": "4c0b1a249b57b8b92fd0d7c22421e63b829c7ae044acb67448a765b186f2d298",
+      "fedcore\\models\\network_impl\\utils\\hooks.py": "4aba26f34562b2773b4fd888431ebb2f6da1b4e968123fa2a2f2f383744311d5",
+      "fedcore\\models\\network_impl\\utils\\hooks_collection.py": "21f410bdffc3ccf55038498cce5f4ffa5519a81c4d67fe4250f9464ec6acd50a",
+      "fedcore\\models\\network_impl\\utils\\interfaces.py": "364385df97e88cfc9569e4274c7ef2cae97d980f5bcf162b7ea7af272cb4c13c",
+      "fedcore\\models\\network_impl\\utils\\trainer_factory.py": "e4ad27fbbe86d8b0b9b1212832ff0b305a889399258a978f39d6588e7730ed6e",
+      "fedcore\\models\\network_modules\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\network_modules\\activation.py": "be7c0a485a282aea441846ec39e0dec143e7e71b2b5bfd0586c8abdc34e167bd",
+      "fedcore\\models\\network_modules\\layers\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\models\\network_modules\\layers\\attention_layers.py": "a521410f94782611795c2b5e86b365a3c8d8c3c103aa92d729ffe8c3dcaa1101",
+      "fedcore\\models\\network_modules\\layers\\backbone.py": "7455118d911098a112dd2d4490df1cbc8913140d787b2cd5b00a329c8ab09621",
+      "fedcore\\models\\network_modules\\layers\\conv_layers.py": "cad55c84eca8f5efcdce3bfa31e3997561f35625cdde859976f6fea8666dc737",
+      "fedcore\\models\\network_modules\\layers\\head_layers.py": "87cbc1f9a01c59a94e096c0fdaf096d4d222697b90acbc055b191aa796607b45",
+      "fedcore\\models\\network_modules\\layers\\linear_layers.py": "023f64bf2bc47366bcfb6bf2fe48c6a12af60fa99503b33775671a37eb5708e4",
+      "fedcore\\models\\network_modules\\layers\\lora.py": "ac453ea88a521337c8f96fca764b69d68b61d1742963772ae5026f6071bc2740",
+      "fedcore\\models\\network_modules\\layers\\padding_layers.py": "133d0ef2083bac6237d9ab6e40ef256e7fbb03aa5220f81d4877661ff24f716f",
+      "fedcore\\models\\network_modules\\layers\\pooling_layers.py": "7d0b29c3723c7b13c8add0e4f0afff667f64385cc4d7cb65620b8b7f0c1b711d",
+      "fedcore\\models\\network_modules\\layers\\sequential_layers.py": "316152518a9f0ed418bb59c5d1226db68b6a87c699766f62b458e8b21cbb6c94",
+      "fedcore\\models\\network_modules\\layers\\special.py": "33fd6c7a29802e259fc9449a39fd0abd86d133c09a7eb42b2de3422e4dcfa257",
+      "fedcore\\models\\network_modules\\losses.py": "4a3a6aa19349a779a3a4f323fa2bc501ead529320cd2771e9bd1a15f605fd735",
+      "fedcore\\models\\network_modules\\other.py": "780e15df67981ccaaec4e6c16354b303e3f7a15d58d00149523a4e00aaffa42b",
+      "fedcore\\models\\network_modules\\reversible.py": "3622f3e0606316ddc5fee98bd1ea493bbc87da8e7aad6ab3c9bc46de95c4e15b",
+      "fedcore\\repository\\IndustrialOperationParameters.py": "8a131fc93d8153e1c779b5e82a9e1e40c4768ddef2d5b4d5ea7883743b2a2883",
+      "fedcore\\repository\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\repository\\capabilities.py": "ce57241f94681a5855561c16e8d37960a01a4c3a0097235fc17a75c3b052cb92",
+      "fedcore\\repository\\config_repository.py": "ae6b1862c7a83757a9acc7667e6373088a035077fd09ab7f4830e3c7281fbb38",
+      "fedcore\\repository\\constanst_repository.py": "3496b82e65eb41ed4918892d4cea91f5b2fddf28e8e846d659623819db1ada31",
+      "fedcore\\repository\\constant_repository.py": "4b1f2ccac0329a0f2be18348deca53d7ba09aa10f3bef8c173ee2ce2b78fe6dd",
+      "fedcore\\repository\\data\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\repository\\fedcore_impl\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\repository\\fedcore_impl\\abstract.py": "62cdbdac90da287699e4d48f66bd1e3b1781f1c3114ce4eadd8cab3dfbb1911e",
+      "fedcore\\repository\\fedcore_impl\\data.py": "ce98cb85d79d36688823acb1b918d8f5088d79ed49ad0f6194d4d6f1cfb67436",
+      "fedcore\\repository\\fedcore_impl\\metrics.py": "890a19e983cfb64ecc15691841494e0a00e4615526e531f2975cca460aee2ce5",
+      "fedcore\\repository\\fedcore_impl\\optimisation.py": "409bee29f7fc5b053db847cd1aa2da7ddb7c4a2ef5f13e7af3e4e3847b614b55",
+      "fedcore\\repository\\initializer_industrial_models.py": "02b594cdbb320c10568368b58f3d5990335a5c1740b5301eb58325a2c80a33c3",
+      "fedcore\\repository\\lazy_registry.py": "fd5df8dc903925ab83ee14cb53d135c44631cedb211034fc195d20e30abd9b68",
+      "fedcore\\repository\\model_repository.py": "4a32e04e9980c6bd69e9fe227f580deef7b0364f9253f5f8ff3d8ed55e0f6f16",
+      "fedcore\\repository\\setups.py": "d650efa382d16f44a02de77f99605f1d63a123c56f2cdd317bcae2045bec95fa",
+      "fedcore\\tools\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fedcore\\tools\\atomic_json.py": "87f0d9237e523b752147fbdd27b7cdd903f610f29c58780a42b313e0aadbb020",
+      "fedcore\\tools\\benchmark.py": "0807638dfa7a310fd6845650d1f73edfc21660c94f1e541aa52bf92006ceabf2",
+      "fedcore\\tools\\edge_device.py": "b0f5b7f87c4e0f78daf29d217a1f2f0c5afb4a0ddd5baac47b583f4a2a8a03d0",
+      "fedcore\\tools\\example_utils.py": "b015b412c87620727c4c3bc0651286a899d93b4b1ef4216fa710d8a8d1d2ae7c",
+      "fedcore\\tools\\export.py": "b0381705442c4a62ab80dc66cad52c4bc5f17b8c6770c6c653bc5c9e7a2f7c37",
+      "fedcore\\tools\\index_resolver.py": "bcc2b865c75b2ecfc57943465f8dc321a1e8d18eca9cb8e32e4b6023bd5eb920",
+      "fedcore\\tools\\registry\\__init__.py": "a1938482e18f74beb0b8df549b316ff83f548ae12fe315671381ed0b2b8061ca",
+      "fedcore\\tools\\registry\\checkpoint_manager.py": "b267263ca2308614816acea47a677cf586da4e30b8a7b8bda7219fed21719cdc",
+      "fedcore\\tools\\registry\\metrics_tracker.py": "7e0c3277965200c5fb89720ed8766feeadbc7c377029eb2d33ed7656fc4c4ef5",
+      "fedcore\\tools\\registry\\model_registry.py": "bb9dd7ff712d94f38397ae05de7affcef3aaf7af158ff00ec2511b4542b636d3",
+      "fedcore\\tools\\registry\\registry_storage.py": "aa1e00bf2aa0f63281dd8793b6d25a86617cff7fe927273459615bfc3a7ee81f",
+      "fedcore\\tools\\ruler.py": "487ae2309179be2ef9dfc4331f363377f1676e543176518dd2da289d31b018d9",
+      "fedcore\\tools\\scheduler.py": "852b44c47f4826226d3b84eaf1c61c845e7cd6bdcf2ed7802271f428b89b9139",
+      "fedcore\\tools\\visualisation\\optimisation_history_vis.py": "d0fa1f80ce669b9f866cc19cf0ad36bc9325c8ded07ea9764808fe00de506782",
+      "fedcore\\tools\\visualisation\\vis_utils.py": "698ab5b9e71674be14262d9f442513ac67c1f95a7deda26632be77436c98e206",
+      "fedcore\\tools\\viz.py": "6299f21a55aca7a2fdf4754851cf10724399a9d54139f45da51293996b543a01"
+    },
+    "source_sha256": "5afb46f83900a8fb2a7106c6a9891e9ce9f26e770bb2a8f349bf25bd534171fe",
+    "torch_cuda_build": "12.1",
+    "versions": {
+      "fedot": "0.7.5",
+      "numpy": "1.26.4",
+      "onnx": "1.15.0",
+      "onnxruntime": "1.15.1",
+      "optuna": "4.9.0",
+      "scikit-learn": "1.5.2",
+      "tdecomp": "0.2.18",
+      "thegolem": "0.4.1",
+      "torch": "2.2.0+cu121"
+    }
+  },
+  "external_preparation_seconds": 4.301718599992455,
+  "external_preparation_status": "charged",
+  "initial_model_sha256": "f43bbca5980f7e85874e59a18de4e80c3c81f76579331962035e1bdc414df764",
+  "preparation_seconds": 4.590580399992177,
+  "protocol": {
+    "artifact_format": "torchscript",
+    "baseline_epochs": 20,
+    "batch_size": 64,
+    "cost_scale": 1048576.0,
+    "device": "cpu",
+    "finetune_epochs": 2,
+    "hypervolume_reference": [
+      2.0,
+      2.0
+    ],
+    "learning_rate": 0.001,
+    "measurement_repeats": 30,
+    "minimum_baseline_quality": null,
+    "primary_comparison": "compression versus independently trained baseline",
+    "quality_scale": 15.32712173461914,
+    "quality_tolerance": 0.05,
+    "repeat_rationale": "pilot; confirmatory repeat count requires paired variance",
+    "repeat_seeds": [
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
+    "repeat_stage": "pilot",
+    "seed": 43,
+    "selection_cost": "file_bytes",
+    "threads": 1,
+    "warmup": 10
+  },
+  "replay_files": {
+    "baseline.json": {
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\baseline.json",
+      "sha256": "a1d1d9baad5c9fc5f8463f53bd23d2c7e3c2f909c0b0884346f854410a5bded8"
+    },
+    "baseline_state.pt": {
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\baseline_state.pt",
+      "sha256": "6b7e8affe6c1d2ddeec978a52c376b3d1bc853a720f5b96b1e2d085a29b211e0"
+    },
+    "data.pt": {
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\data.pt",
+      "sha256": "1879fcda4eb279c8ea04082e8367cfaae12c1c8f0c9605abcbda985a469a7205"
+    },
+    "initial_state.pt": {
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-comparisons\\ts_regression\\seed43\\initial_state.pt",
+      "sha256": "38cf9545b75692d334da881ea6a445bf85c66eb9361a9dfb2d2d49b9fd678743"
+    }
+  },
+  "selection": {
+    "archive_ids": [
+      "fadf8b12d4e146bd4fec",
+      "f71db8df54de63e32301"
+    ],
+    "candidate_hypervolume_contributions": {
+      "f71db8df54de63e32301": 0.01787571150931644,
+      "fadf8b12d4e146bd4fec": 0.04439416483910752
+    },
+    "directions": [
+      "minimize quality loss",
+      "minimize file_bytes"
+    ],
+    "excluded_ids": [],
+    "feasible_ids": [
+      "a8557c4fdd57f193e76e",
+      "fadf8b12d4e146bd4fec",
+      "f71db8df54de63e32301"
+    ],
+    "fitness_role": "validation",
+    "hypervolume": 1.8464917751087206,
+    "hypervolume_role": "archive reporting; not GOLEM selection fitness",
+    "objectives": {
+      "a8557c4fdd57f193e76e": [
+        1.1633051785840063,
+        0.08518314361572266
+      ],
+      "f71db8df54de63e32301": [
+        1.0682023229472615,
+        0.06599903106689453
+      ],
+      "fadf8b12d4e146bd4fec": [
+        1.0450177741528999,
+        0.08518314361572266
+      ]
+    },
+    "quality_tolerance": 0.05,
+    "reference": [
+      2.0,
+      2.0
+    ],
+    "scales": [
+      15.32712173461914,
+      1048576.0
+    ],
+    "scope": "nondominated among evaluated feasible candidates; no global optimality guarantee"
+  },
+  "status": "succeeded",
+  "test_gate": {
+    "selected_ids": [
+      "fadf8b12d4e146bd4fec",
+      "f71db8df54de63e32301"
+    ],
+    "selection_role": "validation",
+    "selection_sha256": "d8c4cce89d9b9fed9067d03028f4e197cb2bfba8544dccab783ab0c2813ebc1a",
+    "status": "completed"
+  },
+  "version": 1,
+  "wall_seconds": 5.3879166999977315
+}

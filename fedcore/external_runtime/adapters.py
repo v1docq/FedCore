@@ -58,7 +58,8 @@ class CompressedTensorEstimator:
             error = self.result.get("error", {})
             raise ContractError(error.get("code", "compression_failed"), error.get("message", "Compression failed"))
         artifact = Path(self.result["job_directory"]) / self.result["artifact"]
-        self.model = torch.jit.load(str(artifact), map_location="cpu").eval()
+        with artifact.open("rb") as stream:
+            self.model = torch.jit.load(stream, map_location="cpu").eval()
         return self
 
     def _scores(self, features):

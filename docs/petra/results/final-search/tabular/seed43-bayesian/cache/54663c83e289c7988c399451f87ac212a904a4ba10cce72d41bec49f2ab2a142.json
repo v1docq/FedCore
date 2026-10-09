@@ -1,0 +1,123 @@
+{
+  "cache_hit": false,
+  "cache_key": "54663c83e289c7988c399451f87ac212a904a4ba10cce72d41bec49f2ab2a142",
+  "candidate_id": "a8557c4fdd57f193e76e",
+  "completed_seconds": 0.3429862000011781,
+  "configuration": {
+    "chain": [],
+    "method": "baseline",
+    "parameters": {}
+  },
+  "measurement": {
+    "artifact": {
+      "device": "cpu",
+      "format": "torchscript",
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\tabular\\seed43-bayesian\\candidates\\001-a8557c4fdd57f193e76e\\model.pt",
+      "sha256": "7bf5ebfc5c7a8b71ac670b98740a7c63020a80c01291050889ba9c99084b1855",
+      "threads": 1
+    },
+    "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+    "metrics": {
+      "cpu_rss_after_bytes": 748982272,
+      "cpu_rss_before_bytes": 748929024,
+      "cuda_allocated_before_bytes": null,
+      "cuda_allocated_increment_bytes": null,
+      "cuda_peak_allocated_bytes": null,
+      "cuda_peak_reserved_bytes": null,
+      "cuda_reserved_before_bytes": null,
+      "cuda_reserved_increment_bytes": null,
+      "end_to_end_p50_ms": 0.0869,
+      "end_to_end_p95_ms": 0.12212999999999999,
+      "file_bytes": 58703,
+      "latency_p50_ms": 0.08835000000000001,
+      "latency_p95_ms": 0.13665,
+      "load_seconds": 0.004019299998617498,
+      "tensor_state_bytes": 49416,
+      "throughput": 658639.4977873828
+    },
+    "profile": {
+      "batch_size": 64,
+      "concurrency": 1,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "format": "torchscript",
+      "hardware": "CPU",
+      "idle_device_required": true,
+      "input_shape": [
+        64,
+        30
+      ],
+      "repeats": 10,
+      "runtime": "torch.jit",
+      "synchronization": "synchronous CPU",
+      "threads": 1,
+      "units": {
+        "cpu_rss_after_bytes": "bytes",
+        "cpu_rss_before_bytes": "bytes",
+        "cuda_peak_allocated_bytes": "bytes",
+        "cuda_peak_reserved_bytes": "bytes",
+        "file_bytes": "bytes",
+        "latency_p50_ms": "ms/batch",
+        "latency_p95_ms": "ms/batch",
+        "load_seconds": "s",
+        "tensor_state_bytes": "bytes",
+        "throughput": "samples/s"
+      },
+      "warmup": 3
+    },
+    "quality_parity_checked": true,
+    "raw_end_to_end_ms": [
+      0.1278,
+      0.088,
+      0.0823,
+      0.1101,
+      0.0895,
+      0.1152,
+      0.0858,
+      0.0814,
+      0.0814,
+      0.0816
+    ],
+    "raw_inference_ms": [
+      0.0817,
+      0.079,
+      0.0794,
+      0.0781,
+      0.0932,
+      0.1339,
+      0.1389,
+      0.1094,
+      0.0835,
+      0.0946
+    ],
+    "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+    "status": "succeeded"
+  },
+  "operation": {
+    "implementation": "independent trained baseline clone",
+    "training_steps": 0
+  },
+  "result_model_sha256": "ea67fb5bc1bd482543d440a66f704479ae41ccf0b845f634b0d7816e700be549",
+  "source_model_sha256": "ea67fb5bc1bd482543d440a66f704479ae41ccf0b845f634b0d7816e700be549",
+  "stages_seconds": {
+    "export_reload_measure": 0.037836899999092566,
+    "operation": 0.0004140999990340788,
+    "validation": 0.009125100001256214
+  },
+  "started_seconds": 0.29163319999861415,
+  "status": "succeeded",
+  "validation": {
+    "cross_entropy": 0.028912998735904694,
+    "direction": "maximize",
+    "loss": 0.0117647058823529,
+    "macro_f1": 0.9875457875457876,
+    "metric": "accuracy",
+    "samples": 85,
+    "value": 0.9882352941176471
+  },
+  "validation_predictions": {
+    "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\tabular\\seed43-bayesian\\candidates\\001-a8557c4fdd57f193e76e\\validation_predictions.pt",
+    "sha256": "9b71d4e4581f9f752d5e857c11063dc27dbf63423dab84d45aa03a685f92001f"
+  },
+  "wall_seconds": 0.05135280000104103
+}

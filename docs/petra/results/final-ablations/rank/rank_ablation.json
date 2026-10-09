@@ -1,0 +1,1071 @@
+{
+  "experiment": "rank_second_moment",
+  "layer_path": "0",
+  "source_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+  "rank_policy_audits": {
+    "8": {
+      "status": "completed",
+      "records": [
+        {
+          "strategy": "quantile",
+          "threshold": 0.25,
+          "requested_rank": 8,
+          "obtained_rank": 8,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.5670398975239786e-05,
+            "denominator": 4.991094346004546,
+            "relative": 3.1396719614775864e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 1400
+        },
+        {
+          "strategy": "explained_variance",
+          "threshold": 0.4789332555235405,
+          "requested_rank": 8,
+          "obtained_rank": 8,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.5670398975239786e-05,
+            "denominator": 4.991094346004546,
+            "relative": 3.1396719614775864e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 1400
+        },
+        {
+          "strategy": "absolute_sum",
+          "threshold": 0.3557151422385527,
+          "requested_rank": 8,
+          "obtained_rank": 8,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.5670398975239786e-05,
+            "denominator": 4.991094346004546,
+            "relative": 3.1396719614775864e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 1400
+        },
+        {
+          "strategy": "energy",
+          "threshold": 0.41555380467714204,
+          "requested_rank": 8,
+          "obtained_rank": 8,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.5670398975239786e-05,
+            "denominator": 4.991094346004546,
+            "relative": 3.1396719614775864e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 1400
+        }
+      ],
+      "interpretation": "Matched criteria retain the same operator-SVD prefix; thresholds mean different quantities"
+    },
+    "15": {
+      "status": "completed",
+      "records": [
+        {
+          "strategy": "quantile",
+          "threshold": 0.48333333333333334,
+          "requested_rank": 15,
+          "obtained_rank": 15,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.0377139942889492e-05,
+            "denominator": 6.048632594803642,
+            "relative": 1.7156175020126787e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 2513
+        },
+        {
+          "strategy": "explained_variance",
+          "threshold": 0.7193559532891063,
+          "requested_rank": 15,
+          "obtained_rank": 15,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.0377139942889492e-05,
+            "denominator": 6.048632594803642,
+            "relative": 1.7156175020126787e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 2513
+        },
+        {
+          "strategy": "absolute_sum",
+          "threshold": 0.6045136528322991,
+          "requested_rank": 15,
+          "obtained_rank": 15,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.0377139942889492e-05,
+            "denominator": 6.048632594803642,
+            "relative": 1.7156175020126787e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 2513
+        },
+        {
+          "strategy": "energy",
+          "threshold": 0.6452187831108067,
+          "requested_rank": 15,
+          "obtained_rank": 15,
+          "status": "matched",
+          "operator_error_from_common_svd": {
+            "absolute": 1.0377139942889492e-05,
+            "denominator": 6.048632594803642,
+            "relative": 1.7156175020126787e-06,
+            "status": "measured"
+          },
+          "factor_parameters": 2513
+        }
+      ],
+      "interpretation": "Matched criteria retain the same operator-SVD prefix; thresholds mean different quantities"
+    }
+  },
+  "protocol": {
+    "seed": 41,
+    "batch_size": 64,
+    "baseline_epochs": 20,
+    "finetune_epochs": 2,
+    "learning_rate": 0.001,
+    "quality_tolerance": 0.05,
+    "device": "cpu",
+    "measurement_repeats": 10,
+    "warmup": 3,
+    "threads": 1,
+    "artifact_format": "torchscript",
+    "selection_cost": "file_bytes",
+    "quality_scale": 1.0,
+    "cost_scale": 1048576.0,
+    "hypervolume_reference": [
+      2.0,
+      2.0
+    ],
+    "repeat_stage": "pilot",
+    "repeat_seeds": [
+      41
+    ],
+    "repeat_rationale": "One real-data implementation pilot; no population inference",
+    "primary_comparison": "compression versus independently trained baseline",
+    "minimum_baseline_quality": null
+  },
+  "baseline_training": {
+    "initial_sha256": "16c037855436f0291cd059241aae12c675d9c309d28b0f9cbc83149ec23c9377",
+    "trained_sha256": "ceb9187a35f4d436fce7014503b085e51fcc4efb29e16852343c2e5e0233c0a4",
+    "epochs": 20,
+    "steps": 120,
+    "seconds": 0.2147813000010501,
+    "status": "trained_on_train"
+  },
+  "ridge": 1e-06,
+  "records": [
+    {
+      "variant": "ordinary-r8",
+      "requested_rank": 8,
+      "groups": [
+        {
+          "requested_rank": 8,
+          "actual_rank": 8,
+          "ridge": 0.0
+        }
+      ],
+      "calibration_source": "calibration",
+      "calibration_seconds": 0.0014005999983055517,
+      "layer_error_before": {
+        "absolute": 31.8727768498648,
+        "denominator": 87.92953018399912,
+        "relative": 0.36248091833504203,
+        "status": "measured"
+      },
+      "layer_error_after": {
+        "absolute": 32.01507585202672,
+        "denominator": 87.92953018399912,
+        "relative": 0.3640992483984934,
+        "status": "measured"
+      },
+      "quality_before": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "quality_after": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "factors_before": [
+        {
+          "layer": "0",
+          "stored_rank": 8,
+          "actual_rank": [
+            8
+          ],
+          "operator_spectrum": [
+            [
+              2.673349380493164,
+              1.7560758590698242,
+              1.7226754426956177,
+              1.6519099473953247,
+              1.5811141729354858,
+              1.494781494140625,
+              1.4834460020065308,
+              1.431470274925232,
+              2.0894601959753345e-07,
+              1.793673618522007e-07,
+              1.3574323531884147e-07,
+              1.2818597383557062e-07,
+              1.199503429916149e-07,
+              1.0555349660990032e-07,
+              9.7083947991905e-08,
+              8.782897964465519e-08,
+              8.420182950885646e-08,
+              7.922984934793931e-08,
+              7.149354530611163e-08,
+              7.053618134023054e-08,
+              6.915973216337079e-08,
+              6.305390343186446e-08,
+              6.149736009319895e-08,
+              5.945748426938735e-08,
+              5.762355570482214e-08,
+              5.659312662942284e-08,
+              5.057060903368438e-08,
+              4.189035962554044e-08,
+              3.7407318131954526e-08,
+              3.150747929225872e-08
+            ]
+          ],
+          "coefficient_l1": 13.794821739196777,
+          "coefficient_l2": 4.991094589233398,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 2.828427314758301,
+          "vh_norm": 2.8284270763397217,
+          "orthogonality_per_rank": 3.068134938818967e-13
+        }
+      ],
+      "factors_after": [
+        {
+          "layer": "0",
+          "stored_rank": 8,
+          "actual_rank": [
+            8
+          ],
+          "operator_spectrum": [
+            [
+              2.776777505874634,
+              1.7772634029388428,
+              1.736515760421753,
+              1.6232644319534302,
+              1.6126632690429688,
+              1.5063068866729736,
+              1.4911203384399414,
+              1.4565623998641968,
+              2.2903734020474076e-07,
+              1.8689686953621276e-07,
+              1.5645214546111674e-07,
+              1.2601296361935965e-07,
+              1.1180293313373113e-07,
+              1.0192866284342017e-07,
+              9.75101670519507e-08,
+              9.363967734543621e-08,
+              9.192217476083897e-08,
+              8.978591381492151e-08,
+              8.252291650023835e-08,
+              7.546110936118566e-08,
+              7.023273695949683e-08,
+              6.911181316127113e-08,
+              6.32068832828736e-08,
+              6.167308441717978e-08,
+              5.5801095300012094e-08,
+              5.241256673116368e-08,
+              4.809145082163013e-08,
+              4.749043824858745e-08,
+              4.23223660561689e-08,
+              1.3661733966330303e-08
+            ]
+          ],
+          "coefficient_l1": 13.817058563232422,
+          "coefficient_l2": 4.99859619140625,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 2.8510260581970215,
+          "vh_norm": 2.8340952396392822,
+          "orthogonality_per_rank": 0.0018134695710614324
+        }
+      ],
+      "training_seconds": 0.024854300001607044,
+      "training_steps": 12,
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\rank\\ordinary-r8.pt",
+          "format": "torchscript",
+          "sha256": "9bc8a703523621afa8de7e38135e130dcf082979e4a25ee0c54732fd430ae747",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.1283,
+          "latency_p95_ms": 0.13606,
+          "throughput": 492952.3222675806,
+          "end_to_end_p50_ms": 0.1325,
+          "end_to_end_p95_ms": 0.14789,
+          "file_bytes": 51615,
+          "tensor_state_bytes": 39144,
+          "cpu_rss_before_bytes": 691814400,
+          "cpu_rss_after_bytes": 723120128,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.004635499997675652
+        },
+        "raw_inference_ms": [
+          0.131,
+          0.1305,
+          0.1282,
+          0.1274,
+          0.1284,
+          0.1402,
+          0.1303,
+          0.1274,
+          0.127,
+          0.1279
+        ],
+        "raw_end_to_end_ms": [
+          0.1362,
+          0.1327,
+          0.1316,
+          0.1319,
+          0.1308,
+          0.1323,
+          0.1325,
+          0.1325,
+          0.137,
+          0.1568
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "weighted-r8",
+      "requested_rank": 8,
+      "groups": [
+        {
+          "requested_rank": 8,
+          "actual_rank": 8,
+          "moment_rank": 30,
+          "ridge": 1e-06,
+          "rcond": null,
+          "condition_number": 289390.6606093748,
+          "nullspace_policy": "preserve_operator_at_full_rank_else_zero",
+          "weighted_error_squared": 2.092803051936423
+        }
+      ],
+      "calibration_source": "calibration",
+      "calibration_seconds": 0.004038899998704437,
+      "layer_error_before": {
+        "absolute": 16.102231877600833,
+        "denominator": 87.92953018399912,
+        "relative": 0.18312655422934374,
+        "status": "measured"
+      },
+      "layer_error_after": {
+        "absolute": 17.101032111081174,
+        "denominator": 87.92953018399912,
+        "relative": 0.194485653173581,
+        "status": "measured"
+      },
+      "quality_before": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "quality_after": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "factors_before": [
+        {
+          "layer": "0",
+          "stored_rank": 8,
+          "actual_rank": [
+            8
+          ],
+          "operator_spectrum": [
+            [
+              2.6548478603363037,
+              1.6530686616897583,
+              1.5370512008666992,
+              1.467578411102295,
+              1.442038655281067,
+              1.301619052886963,
+              1.2370668649673462,
+              1.1842536926269531,
+              2.0130384825733927e-07,
+              1.957591138079806e-07,
+              1.3657653141763149e-07,
+              1.1803409449839819e-07,
+              1.1311683323356192e-07,
+              9.789626886913538e-08,
+              9.091302644037569e-08,
+              7.765117260305487e-08,
+              7.546250202494775e-08,
+              7.257058598497679e-08,
+              6.818176245815266e-08,
+              6.542028074818518e-08,
+              6.101013383386089e-08,
+              6.007795150253514e-08,
+              5.6996576347501104e-08,
+              5.464984198511047e-08,
+              4.874706149848862e-08,
+              4.610236103985699e-08,
+              4.460038383058418e-08,
+              4.202627934546399e-08,
+              3.973867634954331e-08,
+              3.8995956685994315e-08
+            ]
+          ],
+          "coefficient_l1": 12.477522850036621,
+          "coefficient_l2": 4.582972526550293,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 2.82842755317688,
+          "vh_norm": 2.8284270763397217,
+          "orthogonality_per_rank": 2.720574416789634e-13
+        }
+      ],
+      "factors_after": [
+        {
+          "layer": "0",
+          "stored_rank": 8,
+          "actual_rank": [
+            8
+          ],
+          "operator_spectrum": [
+            [
+              2.778388738632202,
+              1.6544044017791748,
+              1.5276055335998535,
+              1.5007789134979248,
+              1.4574499130249023,
+              1.3330422639846802,
+              1.2773230075836182,
+              1.1954691410064697,
+              1.8542942825661157e-07,
+              1.7282744124713645e-07,
+              1.3839508028468117e-07,
+              1.2669462989833846e-07,
+              1.0539566375200593e-07,
+              1.0265769390116475e-07,
+              9.373393083933479e-08,
+              8.410099638922475e-08,
+              7.392768708314179e-08,
+              7.223076892159952e-08,
+              6.93528718898051e-08,
+              6.692095411153787e-08,
+              6.349602443833646e-08,
+              6.253217321727789e-08,
+              6.018816378627889e-08,
+              5.6766527478657736e-08,
+              5.415159876065445e-08,
+              5.0510465143815964e-08,
+              4.63571048214817e-08,
+              4.332767744585908e-08,
+              4.1283140461700896e-08,
+              4.065821457288621e-08
+            ]
+          ],
+          "coefficient_l1": 12.504570007324219,
+          "coefficient_l2": 4.591403484344482,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 2.8574624061584473,
+          "vh_norm": 2.842827081680298,
+          "orthogonality_per_rank": 0.0025631245225667953
+        }
+      ],
+      "training_seconds": 0.024509700000635348,
+      "training_steps": 12,
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\rank\\weighted-r8.pt",
+          "format": "torchscript",
+          "sha256": "44b469281eab55d24ba01cf1f465dce85a3d60a738fcc8c22da4574eda173b80",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.11960000000000001,
+          "latency_p95_ms": 0.13565999999999998,
+          "throughput": 531076.259231599,
+          "end_to_end_p50_ms": 0.1192,
+          "end_to_end_p95_ms": 0.13474499999999998,
+          "file_bytes": 51627,
+          "tensor_state_bytes": 39144,
+          "cpu_rss_before_bytes": 724492288,
+          "cpu_rss_after_bytes": 724877312,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.0048712999996496364
+        },
+        "raw_inference_ms": [
+          0.119,
+          0.1202,
+          0.12,
+          0.1138,
+          0.1094,
+          0.1229,
+          0.1199,
+          0.1461,
+          0.1193,
+          0.1145
+        ],
+        "raw_end_to_end_ms": [
+          0.1271,
+          0.141,
+          0.1145,
+          0.1175,
+          0.0928,
+          0.0811,
+          0.1001,
+          0.1226,
+          0.1209,
+          0.121
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "ordinary-r15",
+      "requested_rank": 15,
+      "groups": [
+        {
+          "requested_rank": 15,
+          "actual_rank": 15,
+          "ridge": 0.0
+        }
+      ],
+      "calibration_source": "calibration",
+      "calibration_seconds": 0.0014951999983168207,
+      "layer_error_before": {
+        "absolute": 20.256482790925574,
+        "denominator": 87.92953018399912,
+        "relative": 0.23037178463864608,
+        "status": "measured"
+      },
+      "layer_error_after": {
+        "absolute": 20.83683361968067,
+        "denominator": 87.92953018399912,
+        "relative": 0.23697196580122784,
+        "status": "measured"
+      },
+      "quality_before": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "quality_after": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "factors_before": [
+        {
+          "layer": "0",
+          "stored_rank": 15,
+          "actual_rank": [
+            15
+          ],
+          "operator_spectrum": [
+            [
+              2.673348903656006,
+              1.7560770511627197,
+              1.7226784229278564,
+              1.6519091129302979,
+              1.5811129808425903,
+              1.4947810173034668,
+              1.483445644378662,
+              1.4314695596694946,
+              1.3798763751983643,
+              1.3698277473449707,
+              1.3166592121124268,
+              1.3067104816436768,
+              1.2521612644195557,
+              1.21174156665802,
+              1.1904358863830566,
+              2.3711729113529145e-07,
+              2.1775295522274973e-07,
+              1.916120453415715e-07,
+              1.8780831112508167e-07,
+              1.5651994544896297e-07,
+              1.486077252366158e-07,
+              1.3727881764680205e-07,
+              1.355834200467143e-07,
+              1.2322763609518006e-07,
+              1.1547381006948854e-07,
+              1.1469681737708015e-07,
+              1.0353057433576396e-07,
+              9.441474446703069e-08,
+              7.861709860890187e-08,
+              5.543033410049247e-08
+            ]
+          ],
+          "coefficient_l1": 22.822235107421875,
+          "coefficient_l2": 6.048632621765137,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 3.872983694076538,
+          "vh_norm": 3.872983694076538,
+          "orthogonality_per_rank": 8.56022880618007e-13
+        }
+      ],
+      "factors_after": [
+        {
+          "layer": "0",
+          "stored_rank": 15,
+          "actual_rank": [
+            15
+          ],
+          "operator_spectrum": [
+            [
+              2.7901742458343506,
+              1.7693228721618652,
+              1.7335871458053589,
+              1.6343551874160767,
+              1.6199262142181396,
+              1.516891598701477,
+              1.4925270080566406,
+              1.4735480546951294,
+              1.3959746360778809,
+              1.3866807222366333,
+              1.3213112354278564,
+              1.312556266784668,
+              1.234912395477295,
+              1.22934091091156,
+              1.2044541835784912,
+              2.2572719160507404e-07,
+              2.1925184512383566e-07,
+              1.8676747970403085e-07,
+              1.8020236325355654e-07,
+              1.644372673581529e-07,
+              1.5167719880082586e-07,
+              1.4617309318509797e-07,
+              1.4001032866417518e-07,
+              1.316518307703518e-07,
+              1.205417987648616e-07,
+              1.0744772538373581e-07,
+              9.359377628470611e-08,
+              7.683402003522133e-08,
+              7.520525002746581e-08,
+              6.302320798567962e-08
+            ]
+          ],
+          "coefficient_l1": 22.86087417602539,
+          "coefficient_l2": 6.058180809020996,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 3.8987765312194824,
+          "vh_norm": 3.8843021392822266,
+          "orthogonality_per_rank": 0.0019628528971225023
+        }
+      ],
+      "training_seconds": 0.024221900002885377,
+      "training_steps": 12,
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\rank\\ordinary-r15.pt",
+          "format": "torchscript",
+          "sha256": "7eba0a00888a2692307d22d0a66067314bd67b0169b801ddbc19b57b461a1b34",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.13205,
+          "latency_p95_ms": 0.14462999999999998,
+          "throughput": 478647.8199087578,
+          "end_to_end_p50_ms": 0.13585,
+          "end_to_end_p95_ms": 0.14196,
+          "file_bytes": 56171,
+          "tensor_state_bytes": 43596,
+          "cpu_rss_before_bytes": 724938752,
+          "cpu_rss_after_bytes": 725499904,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.0046652000019093975
+        },
+        "raw_inference_ms": [
+          0.1344,
+          0.1322,
+          0.1285,
+          0.1301,
+          0.1521,
+          0.1331,
+          0.1301,
+          0.1319,
+          0.1292,
+          0.1355
+        ],
+        "raw_end_to_end_ms": [
+          0.138,
+          0.1357,
+          0.135,
+          0.1362,
+          0.1341,
+          0.1338,
+          0.1361,
+          0.136,
+          0.1452,
+          0.1347
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "variant": "weighted-r15",
+      "requested_rank": 15,
+      "groups": [
+        {
+          "requested_rank": 15,
+          "actual_rank": 15,
+          "moment_rank": 30,
+          "ridge": 1e-06,
+          "rcond": null,
+          "condition_number": 289390.6606093748,
+          "nullspace_policy": "preserve_operator_at_full_rank_else_zero",
+          "weighted_error_squared": 0.25782442927437227
+        }
+      ],
+      "calibration_source": "calibration",
+      "calibration_seconds": 0.002520600002753781,
+      "layer_error_before": {
+        "absolute": 7.771326143025807,
+        "denominator": 87.92953018399912,
+        "relative": 0.08838129951068459,
+        "status": "measured"
+      },
+      "layer_error_after": {
+        "absolute": 9.669028259731821,
+        "denominator": 87.92953018399912,
+        "relative": 0.10996337907752556,
+        "status": "measured"
+      },
+      "quality_before": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "quality_after": {
+        "name": "accuracy",
+        "value": 0.9764705882352941,
+        "role": "validation",
+        "samples": 85
+      },
+      "factors_before": [
+        {
+          "layer": "0",
+          "stored_rank": 15,
+          "actual_rank": [
+            15
+          ],
+          "operator_spectrum": [
+            [
+              2.6671242713928223,
+              1.6945816278457642,
+              1.6071224212646484,
+              1.506150245666504,
+              1.4808554649353027,
+              1.4033422470092773,
+              1.3409417867660522,
+              1.3054935932159424,
+              1.274314522743225,
+              1.218428134918213,
+              1.1592477560043335,
+              1.0996332168579102,
+              1.0749040842056274,
+              0.9809801578521729,
+              0.9474520683288574,
+              2.527526419271453e-07,
+              2.336617370701788e-07,
+              1.7914901206950162e-07,
+              1.6111306422317284e-07,
+              1.44746607588786e-07,
+              1.3440188695312827e-07,
+              1.1725358461944779e-07,
+              1.1574449132467635e-07,
+              9.616750418217634e-08,
+              9.25665162299083e-08,
+              8.559521091910938e-08,
+              8.039289411954087e-08,
+              7.169685289909467e-08,
+              6.517184658605402e-08,
+              5.916711032227795e-08
+            ]
+          ],
+          "coefficient_l1": 20.760568618774414,
+          "coefficient_l2": 5.583737373352051,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 3.87298321723938,
+          "vh_norm": 3.872983455657959,
+          "orthogonality_per_rank": 4.942285187874151e-13
+        }
+      ],
+      "factors_after": [
+        {
+          "layer": "0",
+          "stored_rank": 15,
+          "actual_rank": [
+            15
+          ],
+          "operator_spectrum": [
+            [
+              2.777139186859131,
+              1.7074698209762573,
+              1.6044659614562988,
+              1.540284514427185,
+              1.5016264915466309,
+              1.431222915649414,
+              1.363065242767334,
+              1.3340680599212646,
+              1.3038920164108276,
+              1.2506779432296753,
+              1.176546335220337,
+              1.1050028800964355,
+              1.0837013721466064,
+              1.005886435508728,
+              0.9583434462547302,
+              2.5336873932246817e-07,
+              1.9742242329812143e-07,
+              1.7701704280170816e-07,
+              1.6255086165983812e-07,
+              1.5213905157906993e-07,
+              1.39812641464232e-07,
+              1.3051256075868878e-07,
+              1.232743187529195e-07,
+              1.1083198359074231e-07,
+              9.885975060797136e-08,
+              9.025660574479843e-08,
+              8.39790530449136e-08,
+              7.896279186070387e-08,
+              6.953271025622598e-08,
+              6.35954293670693e-08
+            ]
+          ],
+          "coefficient_l1": 20.834470748901367,
+          "coefficient_l2": 5.600766181945801,
+          "coefficient_status": "separate_trainable_coefficients",
+          "u_norm": 3.9036977291107178,
+          "vh_norm": 3.8939223289489746,
+          "orthogonality_per_rank": 0.0019088139524683356
+        }
+      ],
+      "training_seconds": 0.02487969999856432,
+      "training_steps": 12,
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-ablations\\rank\\weighted-r15.pt",
+          "format": "torchscript",
+          "sha256": "4e5e9e3006dc4cda9ffaed5472c0d7d9870c55a269b9d93370c9eff80175b08b",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.1649,
+          "latency_p95_ms": 0.18154499999999998,
+          "throughput": 445899.81188601686,
+          "end_to_end_p50_ms": 0.1709,
+          "end_to_end_p95_ms": 0.175885,
+          "file_bytes": 56107,
+          "tensor_state_bytes": 43596,
+          "cpu_rss_before_bytes": 725610496,
+          "cpu_rss_after_bytes": 726061056,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.005345599998690886
+        },
+        "raw_inference_ms": [
+          0.0875,
+          0.0855,
+          0.1034,
+          0.1312,
+          0.1631,
+          0.1678,
+          0.1692,
+          0.1914,
+          0.1695,
+          0.1667
+        ],
+        "raw_end_to_end_ms": [
+          0.1744,
+          0.1712,
+          0.1453,
+          0.1572,
+          0.1414,
+          0.1674,
+          0.1739,
+          0.1706,
+          0.1771,
+          0.1721
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    }
+  ],
+  "claim_status": {
+    "layer_error": "measured_on_validation",
+    "network_quality_advantage": "not_established"
+  }
+}

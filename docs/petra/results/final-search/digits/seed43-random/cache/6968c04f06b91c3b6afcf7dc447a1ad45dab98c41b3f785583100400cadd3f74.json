@@ -1,0 +1,177 @@
+{
+  "cache_hit": false,
+  "cache_key": "6968c04f06b91c3b6afcf7dc447a1ad45dab98c41b3f785583100400cadd3f74",
+  "candidate_id": "271046b594c30f3c86de",
+  "completed_seconds": 2.7278981000017666,
+  "configuration": {
+    "chain": [],
+    "method": "svd",
+    "parameters": {
+      "finetune_epochs": 1,
+      "rank_ratio": 0.7
+    }
+  },
+  "measurement": {
+    "artifact": {
+      "device": "cpu",
+      "format": "torchscript",
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\digits\\seed43-random\\candidates\\005-271046b594c30f3c86de\\model.pt",
+      "sha256": "bd085fd83d67d8a5047124d24901a8b438b2dc25748e8fccf8d42ef49f5eca8a",
+      "threads": 1
+    },
+    "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+    "metrics": {
+      "cpu_rss_after_bytes": 827052032,
+      "cpu_rss_before_bytes": 826093568,
+      "cuda_allocated_before_bytes": null,
+      "cuda_allocated_increment_bytes": null,
+      "cuda_peak_allocated_bytes": null,
+      "cuda_peak_reserved_bytes": null,
+      "cuda_reserved_before_bytes": null,
+      "cuda_reserved_increment_bytes": null,
+      "end_to_end_p50_ms": 1.0171000000000001,
+      "end_to_end_p95_ms": 1.2622699999999998,
+      "file_bytes": 225012,
+      "latency_p50_ms": 1.0263,
+      "latency_p95_ms": 1.352515,
+      "load_seconds": 0.007503100001486018,
+      "tensor_state_bytes": 201624,
+      "throughput": 57127.555119164506
+    },
+    "profile": {
+      "batch_size": 64,
+      "concurrency": 1,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "format": "torchscript",
+      "hardware": "CPU",
+      "idle_device_required": true,
+      "input_shape": [
+        64,
+        1,
+        8,
+        8
+      ],
+      "repeats": 10,
+      "runtime": "torch.jit",
+      "synchronization": "synchronous CPU",
+      "threads": 1,
+      "units": {
+        "cpu_rss_after_bytes": "bytes",
+        "cpu_rss_before_bytes": "bytes",
+        "cuda_peak_allocated_bytes": "bytes",
+        "cuda_peak_reserved_bytes": "bytes",
+        "file_bytes": "bytes",
+        "latency_p50_ms": "ms/batch",
+        "latency_p95_ms": "ms/batch",
+        "load_seconds": "s",
+        "tensor_state_bytes": "bytes",
+        "throughput": "samples/s"
+      },
+      "warmup": 3
+    },
+    "quality_parity_checked": true,
+    "raw_end_to_end_ms": [
+      1.3412,
+      1.1658,
+      1.024,
+      1.01,
+      1.0066,
+      1.0401,
+      1.0102,
+      1.0585,
+      1.0083,
+      0.9939
+    ],
+    "raw_inference_ms": [
+      1.0317,
+      1.0209,
+      1.0137,
+      0.9874,
+      0.9989,
+      1.0027,
+      1.1315,
+      1.3648,
+      1.3139,
+      1.3375
+    ],
+    "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+    "status": "succeeded"
+  },
+  "operation": {
+    "epochs": 1,
+    "implementation": "FedCore decompose_module + rank_threshold_pruning_in_place",
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "ranks": [
+      {
+        "method": "operator_svd",
+        "rank": 6,
+        "rank_bound": 9,
+        "strategy": "rank_ratio"
+      },
+      {
+        "method": "operator_svd",
+        "rank": 11,
+        "rank_bound": 16,
+        "strategy": "rank_ratio"
+      },
+      {
+        "method": "operator_svd",
+        "rank": 44,
+        "rank_bound": 64,
+        "strategy": "rank_ratio"
+      },
+      {
+        "method": "operator_svd",
+        "rank": 7,
+        "rank_bound": 10,
+        "strategy": "rank_ratio"
+      }
+    ],
+    "train_loss": [
+      0.35414230823516846,
+      0.19161418080329895,
+      0.1299678236246109,
+      0.2553485333919525,
+      0.09283361583948135,
+      0.11617416143417358,
+      0.13552430272102356,
+      0.21944430470466614,
+      0.19086845219135284,
+      0.10063402354717255,
+      0.2145915925502777,
+      0.12905094027519226,
+      0.09818896651268005,
+      0.11464592814445496,
+      0.09557920694351196,
+      0.05712279677391052,
+      0.14479364454746246
+    ],
+    "training_role": "train",
+    "training_steps": 17
+  },
+  "result_model_sha256": "020a191a137e6418676287ffeccb0bd1d3958a62279bf6482ca3e9c40997b289",
+  "source_model_sha256": "6633d49041abf603ed9ee8ded7908512e7de23cc573866f2d1f7d06a0d04afb8",
+  "stages_seconds": {
+    "export_reload_measure": 0.12276310000015656,
+    "operation": 0.09815689999959432,
+    "validation": 0.026765700000396464
+  },
+  "started_seconds": 2.4735966000007465,
+  "status": "succeeded",
+  "validation": {
+    "cross_entropy": 0.23090317845344543,
+    "direction": "maximize",
+    "loss": 0.07434944237918217,
+    "macro_f1": 0.9230176748739989,
+    "metric": "accuracy",
+    "samples": 269,
+    "value": 0.9256505576208178
+  },
+  "validation_predictions": {
+    "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-search\\digits\\seed43-random\\candidates\\005-271046b594c30f3c86de\\validation_predictions.pt",
+    "sha256": "54915215dad8a4f46b207cfd00d31accbe29130587a0d9817f46ccb732aed41c"
+  },
+  "wall_seconds": 0.25430120000237366
+}

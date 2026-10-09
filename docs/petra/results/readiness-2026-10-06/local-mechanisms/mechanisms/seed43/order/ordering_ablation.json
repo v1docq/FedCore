@@ -1,0 +1,656 @@
+{
+  "experiment": "operator_order",
+  "records": [
+    {
+      "chain": [
+        {
+          "method": "pruning",
+          "parameters": {
+            "amount": 0.25,
+            "finetune_epochs": 0
+          },
+          "chain": []
+        },
+        {
+          "method": "svd",
+          "parameters": {
+            "rank": 1,
+            "finetune_epochs": 0
+          },
+          "chain": []
+        }
+      ],
+      "parameters": {},
+      "operations": {
+        "implementation": "ordered compression chain",
+        "steps": [
+          {
+            "implementation": "torch global L1 unstructured pruning",
+            "amount": 0.25,
+            "pruned_weight_count": 3040,
+            "representation": "dense masked weights; no claimed structural size saving",
+            "training_steps": 0,
+            "epochs": 0,
+            "train_loss": [],
+            "optimizer": "Adam",
+            "learning_rate": 0.001,
+            "training_role": "train"
+          },
+          {
+            "implementation": "FedCore decompose_module + rank_threshold_pruning_in_place",
+            "ranks": [
+              {
+                "method": "operator_svd",
+                "strategy": "explicit_rank",
+                "rank": 1,
+                "rank_bound": 30
+              },
+              {
+                "method": "operator_svd",
+                "strategy": "explicit_rank",
+                "rank": 1,
+                "rank_bound": 64
+              },
+              {
+                "method": "operator_svd",
+                "strategy": "explicit_rank",
+                "rank": 1,
+                "rank_bound": 2
+              }
+            ],
+            "training_steps": 0,
+            "epochs": 0,
+            "train_loss": [],
+            "optimizer": "Adam",
+            "learning_rate": 0.001,
+            "training_role": "train"
+          }
+        ]
+      },
+      "wall_seconds": 0.044908700001542456,
+      "steps": 12,
+      "quality": {
+        "name": "accuracy",
+        "value": 0.9882352941176471,
+        "role": "validation",
+        "samples": 85
+      },
+      "factors": [
+        {
+          "layer": "0",
+          "stored_rank": 1,
+          "actual_rank": [
+            1
+          ],
+          "operator_spectrum": [
+            [
+              3.009275436401367,
+              1.776113265350432e-07,
+              3.6338693831794444e-08,
+              3.172247531324501e-08,
+              2.969016676956926e-08,
+              2.8511601968261857e-08,
+              2.7229111410065343e-08,
+              2.4853621383158497e-08,
+              2.409597499308802e-08,
+              2.356270378811587e-08,
+              2.0697996205853997e-08,
+              1.9784817339996152e-08,
+              1.9085934610529875e-08,
+              1.8395152068251264e-08,
+              1.6942200531389062e-08,
+              1.508715108400338e-08,
+              1.358888201963282e-08,
+              1.1891364337657251e-08,
+              1.1022242674130212e-08,
+              1.0014078455355957e-08,
+              9.803875933300787e-09,
+              5.238181000066788e-09,
+              4.986589363653593e-09,
+              3.9009253605115646e-09,
+              3.1130549249525075e-09,
+              2.7842019800772277e-09,
+              1.7345263003676337e-09,
+              1.2210888966635025e-09,
+              4.6492676375464725e-10,
+              7.385737854637142e-11
+            ]
+          ],
+          "coefficient_l1": null,
+          "coefficient_l2": null,
+          "coefficient_status": "absorbed_into_factors",
+          "u_norm": 1.0882158279418945,
+          "vh_norm": 2.7653298377990723,
+          "orthogonality_per_rank": 44.2171745300293
+        },
+        {
+          "layer": "2",
+          "stored_rank": 1,
+          "actual_rank": [
+            1
+          ],
+          "operator_spectrum": [
+            [
+              3.1529736518859863,
+              1.7431027572456514e-06,
+              1.2371071989036864e-06,
+              1.0858327641471988e-06,
+              7.900754326328752e-07,
+              7.881474743953731e-07,
+              6.38187430013204e-07,
+              6.027654535500915e-07,
+              5.822672619615332e-07,
+              4.7193586283356126e-07,
+              4.4769973328584456e-07,
+              4.131111666083598e-07,
+              3.1271878242478124e-07,
+              2.7305461003379605e-07,
+              2.3065899767971132e-07,
+              1.9998425671019504e-07,
+              1.9105765147742204e-07,
+              1.4603752163111494e-07,
+              1.346513158750895e-07,
+              1.2605808308308042e-07,
+              1.1650821818420809e-07,
+              1.0460406940637768e-07,
+              1.0001407702020515e-07,
+              9.477042084427012e-08,
+              7.921244105091318e-08,
+              7.377474275926943e-08,
+              7.005704105722543e-08,
+              6.347571712694844e-08,
+              5.8727614771214576e-08,
+              5.8095238841815444e-08,
+              5.5097778783874674e-08,
+              5.292706006798653e-08,
+              5.1693593405843785e-08,
+              4.92841074617445e-08,
+              4.422986066288104e-08,
+              4.0427558190003765e-08,
+              4.0275260460020945e-08,
+              3.799113201807813e-08,
+              3.6670915193326437e-08,
+              3.547760485389517e-08,
+              3.4200279941387635e-08,
+              3.229790124237297e-08,
+              3.158908867817445e-08,
+              3.071065535209527e-08,
+              2.8755074765740574e-08,
+              2.8460931389417965e-08,
+              2.601754900410924e-08,
+              2.4980908008842562e-08,
+              2.396017428907271e-08,
+              2.240610008641397e-08,
+              2.1848823195114164e-08,
+              2.0146238455254206e-08,
+              1.934863291808142e-08,
+              1.8608876217740544e-08,
+              1.7191823076245782e-08,
+              1.485343670282191e-08,
+              1.4175764562196491e-08,
+              1.3613044913540762e-08,
+              1.147286177172191e-08,
+              1.0436314923367718e-08,
+              4.50319737055338e-09,
+              4.381267793007737e-09,
+              2.9720921279619006e-09,
+              8.837405807149423e-10
+            ]
+          ],
+          "coefficient_l1": null,
+          "coefficient_l2": null,
+          "coefficient_status": "absorbed_into_factors",
+          "u_norm": 1.064335584640503,
+          "vh_norm": 2.9623866081237793,
+          "orthogonality_per_rank": 60.479705810546875
+        },
+        {
+          "layer": "4",
+          "stored_rank": 1,
+          "actual_rank": [
+            1
+          ],
+          "operator_spectrum": [
+            [
+              1.1438980102539062,
+              3.379054547281157e-08
+            ]
+          ],
+          "coefficient_l1": null,
+          "coefficient_l2": null,
+          "coefficient_status": "absorbed_into_factors",
+          "u_norm": 1.0153447389602661,
+          "vh_norm": 1.1266103982925415,
+          "orthogonality_per_rank": 0.07345238327980042
+        }
+      ],
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\order\\order-0.pt",
+          "format": "torchscript",
+          "sha256": "16299ef9c6fd2c30102a692fa14e88916d4dcf4bb1dfe09a26c1ebb37775cae2",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.0879,
+          "latency_p95_ms": 0.090075,
+          "throughput": 746355.6851311952,
+          "end_to_end_p50_ms": 0.0807,
+          "end_to_end_p95_ms": 0.09769,
+          "file_bytes": 15819,
+          "tensor_state_bytes": 2440,
+          "cpu_rss_before_bytes": 760500224,
+          "cpu_rss_after_bytes": 760803328,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.004550600002403371
+        },
+        "raw_inference_ms": [
+          0.0813,
+          0.0754,
+          0.0815,
+          0.0903,
+          0.0882,
+          0.0887,
+          0.0857,
+          0.0876,
+          0.089,
+          0.0898
+        ],
+        "raw_end_to_end_ms": [
+          0.0994,
+          0.0917,
+          0.0952,
+          0.0956,
+          0.0853,
+          0.0761,
+          0.0513,
+          0.0489,
+          0.0478,
+          0.0481
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    },
+    {
+      "chain": [
+        {
+          "method": "svd",
+          "parameters": {
+            "rank": 1,
+            "finetune_epochs": 0
+          },
+          "chain": []
+        },
+        {
+          "method": "pruning",
+          "parameters": {
+            "amount": 0.25,
+            "finetune_epochs": 0
+          },
+          "chain": []
+        }
+      ],
+      "parameters": {},
+      "operations": {
+        "implementation": "ordered compression chain",
+        "steps": [
+          {
+            "implementation": "FedCore decompose_module + rank_threshold_pruning_in_place",
+            "ranks": [
+              {
+                "method": "operator_svd",
+                "strategy": "explicit_rank",
+                "rank": 1,
+                "rank_bound": 30
+              },
+              {
+                "method": "operator_svd",
+                "strategy": "explicit_rank",
+                "rank": 1,
+                "rank_bound": 64
+              },
+              {
+                "method": "operator_svd",
+                "strategy": "explicit_rank",
+                "rank": 1,
+                "rank_bound": 2
+              }
+            ],
+            "training_steps": 0,
+            "epochs": 0,
+            "train_loss": [],
+            "optimizer": "Adam",
+            "learning_rate": 0.001,
+            "training_role": "train"
+          },
+          {
+            "implementation": "torch global L1 unstructured pruning",
+            "amount": 0.25,
+            "pruned_weight_count": 3040,
+            "representation": "dense masked weights; no claimed structural size saving",
+            "training_steps": 0,
+            "epochs": 0,
+            "train_loss": [],
+            "optimizer": "Adam",
+            "learning_rate": 0.001,
+            "training_role": "train"
+          }
+        ]
+      },
+      "wall_seconds": 0.032668600004399195,
+      "steps": 12,
+      "quality": {
+        "name": "accuracy",
+        "value": 0.9882352941176471,
+        "role": "validation",
+        "samples": 85
+      },
+      "factors": [],
+      "measurement": {
+        "status": "succeeded",
+        "artifact": {
+          "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\order\\order-1.pt",
+          "format": "torchscript",
+          "sha256": "c03ebd56c35c0c1e9f3b0aa320147de6e53d820029cd8e32f943c33300c6f50e",
+          "device": "cpu",
+          "threads": 1
+        },
+        "profile": {
+          "device": "cpu",
+          "format": "torchscript",
+          "threads": 1,
+          "warmup": 3,
+          "repeats": 10,
+          "batch_size": 64,
+          "input_shape": [
+            64,
+            30
+          ],
+          "dtype": "torch.float32",
+          "synchronization": "synchronous CPU",
+          "concurrency": 1,
+          "idle_device_required": true,
+          "units": {
+            "latency_p50_ms": "ms/batch",
+            "latency_p95_ms": "ms/batch",
+            "throughput": "samples/s",
+            "file_bytes": "bytes",
+            "tensor_state_bytes": "bytes",
+            "cpu_rss_before_bytes": "bytes",
+            "cpu_rss_after_bytes": "bytes",
+            "cuda_peak_allocated_bytes": "bytes",
+            "cuda_peak_reserved_bytes": "bytes",
+            "load_seconds": "s"
+          },
+          "runtime": "torch.jit",
+          "hardware": "CPU"
+        },
+        "metrics": {
+          "latency_p50_ms": 0.0808,
+          "latency_p95_ms": 0.08900499999999999,
+          "throughput": 780868.7164470474,
+          "end_to_end_p50_ms": 0.08935,
+          "end_to_end_p95_ms": 0.096855,
+          "file_bytes": 59047,
+          "tensor_state_bytes": 49416,
+          "cpu_rss_before_bytes": 760676352,
+          "cpu_rss_after_bytes": 760856576,
+          "cuda_peak_allocated_bytes": null,
+          "cuda_peak_reserved_bytes": null,
+          "cuda_allocated_before_bytes": null,
+          "cuda_reserved_before_bytes": null,
+          "cuda_allocated_increment_bytes": null,
+          "cuda_reserved_increment_bytes": null,
+          "load_seconds": 0.004653000010875985
+        },
+        "raw_inference_ms": [
+          0.0804,
+          0.0794,
+          0.0787,
+          0.0812,
+          0.0803,
+          0.0813,
+          0.094,
+          0.0829,
+          0.0825,
+          0.0789
+        ],
+        "raw_end_to_end_ms": [
+          0.0872,
+          0.0862,
+          0.0978,
+          0.0887,
+          0.0834,
+          0.0922,
+          0.0942,
+          0.09,
+          0.0957,
+          0.0883
+        ],
+        "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+        "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+        "quality_parity_checked": true
+      }
+    }
+  ],
+  "protocol": {
+    "seed": 43,
+    "batch_size": 64,
+    "baseline_epochs": 20,
+    "finetune_epochs": 2,
+    "learning_rate": 0.001,
+    "quality_tolerance": 0.05,
+    "device": "cpu",
+    "measurement_repeats": 10,
+    "warmup": 3,
+    "threads": 1,
+    "artifact_format": "torchscript",
+    "selection_cost": "file_bytes",
+    "quality_scale": 1.0,
+    "cost_scale": 1048576.0,
+    "hypervolume_reference": [
+      2.0,
+      2.0
+    ],
+    "repeat_stage": "pilot",
+    "repeat_seeds": [
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
+    "repeat_rationale": "Real-data implementation pilot; no population inference",
+    "primary_comparison": "compression versus independently trained baseline",
+    "minimum_baseline_quality": null
+  },
+  "baseline_training": {
+    "actual_work_seconds": 0.1940823999902932,
+    "checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\order\\baseline.json",
+    "cost_scope": "common role/source/state verification, training and state persistence; final JSON publication/hash excluded",
+    "epochs": 20,
+    "identity_sha256": "37f2f259d35f5f6960ff16a97b65eed198cede9a91dee69fcde9d2b9e45a94fa",
+    "initial_sha256": "16b31bfbe7c7043537e67c3a366d8883cc2e47aa2b00f4554c08098df4761155",
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "persistence_seconds": 0.010734499999671243,
+    "preparation_seconds": 0.19729379999625962,
+    "reused": true,
+    "seconds": 0.4416828999965219,
+    "state_sha256": "23b804556837cb2dc5bbf22e64d54b8089e9558c9955db33fdf3f61725d68959",
+    "status": "trained_on_train",
+    "steps": 120,
+    "train_loss": [
+      0.6984933018684387,
+      0.6906517744064331,
+      0.6451334953308105,
+      0.6260287165641785,
+      0.5929356813430786,
+      0.5684075355529785,
+      0.5508705377578735,
+      0.5277721881866455,
+      0.4910494089126587,
+      0.47848203778266907,
+      0.43096616864204407,
+      0.4910362660884857,
+      0.39164721965789795,
+      0.40024179220199585,
+      0.36924466490745544,
+      0.3408859372138977,
+      0.287172794342041,
+      0.29445067048072815,
+      0.25910094380378723,
+      0.300628662109375,
+      0.21357685327529907,
+      0.2100943773984909,
+      0.17712955176830292,
+      0.1708938330411911,
+      0.19468075037002563,
+      0.13929429650306702,
+      0.1316741555929184,
+      0.13361065089702606,
+      0.11456267535686493,
+      0.13333047926425934,
+      0.14093255996704102,
+      0.11250171065330505,
+      0.12124637514352798,
+      0.07990173250436783,
+      0.04770318418741226,
+      0.03881026431918144,
+      0.09510894119739532,
+      0.06636720895767212,
+      0.09988842159509659,
+      0.07787327468395233,
+      0.04652884975075722,
+      0.014537806622684002,
+      0.0489165335893631,
+      0.06794867664575577,
+      0.054763905704021454,
+      0.0459098145365715,
+      0.0626399889588356,
+      0.09647087007761002,
+      0.08737105131149292,
+      0.029363347217440605,
+      0.05447198078036308,
+      0.04464022070169449,
+      0.03623289614915848,
+      0.04367123544216156,
+      0.11101238429546356,
+      0.029429981485009193,
+      0.03778184950351715,
+      0.012448843568563461,
+      0.03870466724038124,
+      0.006894424557685852,
+      0.04614562168717384,
+      0.04459195211529732,
+      0.05554748699069023,
+      0.025784099474549294,
+      0.031016478314995766,
+      0.01634366251528263,
+      0.03524504229426384,
+      0.008113913238048553,
+      0.032225802540779114,
+      0.03209131583571434,
+      0.06140599772334099,
+      0.052774276584386826,
+      0.015519835986196995,
+      0.05372750386595726,
+      0.027737582102417946,
+      0.038337405771017075,
+      0.005016263108700514,
+      0.08668976277112961,
+      0.03355967625975609,
+      0.024666469544172287,
+      0.015604364685714245,
+      0.008111586794257164,
+      0.025083079934120178,
+      0.1614234745502472,
+      0.022606175392866135,
+      0.005861568730324507,
+      0.023432178422808647,
+      0.06764340400695801,
+      0.021985717117786407,
+      0.014053745195269585,
+      0.023885000497102737,
+      0.019302191212773323,
+      0.05421251431107521,
+      0.01120814774185419,
+      0.016916802152991295,
+      0.01796983927488327,
+      0.021102122962474823,
+      0.011370714753866196,
+      0.014412370510399342,
+      0.046785470098257065,
+      0.021745340898633003,
+      0.015990611165761948,
+      0.014195729047060013,
+      0.040560945868492126,
+      0.020049750804901123,
+      0.02542169950902462,
+      0.010696829296648502,
+      0.0035660334397107363,
+      0.01048669870942831,
+      0.020159024745225906,
+      0.031664930284023285,
+      0.021508650854229927,
+      0.009027198888361454,
+      0.03024173341691494,
+      0.011218463070690632,
+      0.017761865630745888,
+      0.010658349841833115,
+      0.042073410004377365,
+      0.006812243722379208,
+      0.019141755998134613
+    ],
+    "trained_sha256": "23b804556837cb2dc5bbf22e64d54b8089e9558c9955db33fdf3f61725d68959",
+    "training_role": "train",
+    "training_seconds": 0.23224640000262298,
+    "training_steps": 120,
+    "wall_seconds": 0.4416828999965219,
+    "source_checkpoint": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\experiment-readiness\\local-mechanisms\\mechanisms\\seed43\\shared_baseline\\baseline.json",
+    "source_checkpoint_sha256": "debb35ee2b3244e5d015ee62223b2ad67be9f7ebac9554d4b60a0f570b4bed03",
+    "reuse_persistence_seconds": 0.010963100008666515,
+    "checkpoint_sha256": "518a034afdc32ea642a6f88fceb30625887c9be186d6718d048f47121c48684b",
+    "state_file_sha256": "0470ede148f9d49b17c0a6df438629acef1dd2fb729547f7f8dd59bfafd96233"
+  },
+  "claim_status": "not_established"
+}

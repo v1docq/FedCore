@@ -113,8 +113,12 @@ def export_to_torchscript(model: nn.Module, output_path: PathLike, example_input
         for compile_model in compilers:
             try:
                 compiled = compile_model()
-                compiled.save(str(temporary))
-                loaded = torch.jit.load(str(temporary), map_location=example_input.device).eval()
+                # Binary streams avoid the native filename encoding boundary on
+                # Windows (PyTorch 2.2 rejects otherwise valid Unicode paths).
+                with temporary.open('wb') as stream:
+                    torch.jit.save(compiled, stream)
+                with temporary.open('rb') as stream:
+                    loaded = torch.jit.load(stream, map_location=example_input.device).eval()
                 with torch.inference_mode():
                     _same_output(loaded(example_input), expected)
                 return _publish(temporary, path, spec, "torchscript")
