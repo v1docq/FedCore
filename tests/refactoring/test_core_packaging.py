@@ -10,6 +10,15 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/method_specs.py',
+    'fedcore/algorithm/low_rank/method_execution.py',
+    'fedcore/algorithm/low_rank/statistical_profiles.py',
+    'fedcore/algorithm/low_rank/statistical_collectors.py',
+    'fedcore/algorithm/low_rank/structured_profiles.py',
+    'fedcore/algorithm/low_rank/structured_layers.py',
+    'fedcore/algorithm/low_rank/factor_recovery.py',
+    'fedcore/experiments/svd_rank_policies.py',
+    'fedcore/experiments/svd_profile_measurement.py',
     'fedcore/algorithm/low_rank/execution.py',
     'fedcore/algorithm/low_rank/plans.py',
     'fedcore/algorithm/low_rank/statistics.py',
@@ -120,5 +129,17 @@ with artifact.open('rb') as stream:
     reloaded = torch.jit.load(stream)
 torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]), rtol=1e-12, atol=1e-12)
 assert Path(fedcore.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+from fedcore.algorithm.low_rank.method_specs import ASVD, AFM, DRONE, SVDLLMV2
+from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
+assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
+for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
+    result = facade.compress_profile(model, x, spec, rank=2, target_paths=('',))
+    manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(x), result.model(x))
+    artifact = export_model(restored.eval(), 'torchscript', Path.cwd() / 'p2.pt', x[:1])
+    with artifact.open('rb') as stream:
+        reloaded = torch.jit.load(stream)
+    torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]))
 """
     run(['-c', code], outside, env)

@@ -1,6 +1,6 @@
 # Архитектура низкоранговых методов FedCore
 
-Статус: **план утверждён; основа P0–P1 реализована**, 09.10.2026. Основание — PR [#86](https://github.com/v1docq/FedCore/pull/86), коммит `8c0e748d6400fdb28fe17c54e2b3cfbb1a0eda08`, и сопоставление 24 обзоров в [METHODS.md](METHODS.md). Архитектурное предложение ниже сохранено как полный план. Фактические возможности этапа описаны в [IMPLEMENTATION.md](IMPLEMENTATION.md), проверки — в [VALIDATION.md](VALIDATION.md). Методы P2–P5 пока не реализованы.
+Статус: **основа P0–P1 и ограниченные профили P2 реализованы**, 09.10.2026, [PR #140](https://github.com/v1docq/FedCore/pull/140). Основание — PR [#86](https://github.com/v1docq/FedCore/pull/86), коммит `8c0e748d6400fdb28fe17c54e2b3cfbb1a0eda08`, и сопоставление 24 обзоров в [METHODS.md](METHODS.md). Архитектурное предложение ниже сохранено как полный план. Фактические возможности описаны в [IMPLEMENTATION.md](IMPLEMENTATION.md) и [IMPLEMENTATION_P2.md](IMPLEMENTATION_P2.md), проверки — в [VALIDATION.md](VALIDATION.md) и [VALIDATION_P2.md](VALIDATION_P2.md). P3–P5 остаются в плане; большие сравнительные эксперименты P2 ещё не проведены.
 
 Сводная задача: [#108](https://github.com/v1docq/FedCore/issues/108). Номера всех 31 подзадачи, зависимости и покрытие методов приведены в [ISSUES.md](ISSUES.md).
 

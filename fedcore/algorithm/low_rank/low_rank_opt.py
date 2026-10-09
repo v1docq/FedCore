@@ -288,6 +288,19 @@ class LowRankModel(BaseCompressionModel):
             trainer._fedcore_requires_optimizer_rebuild = True
         return result
 
+    def compress_profile(self, model, calibration, method_spec, **options):
+        """Execute a named, versioned P2 method with explicit data and resources."""
+        from fedcore.algorithm.low_rank.method_execution import transform_method
+        result = transform_method(model, calibration, method_spec, **options)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def load_model(self, model, state_dict_path: str) -> None:
         """Load a decomposed (SVD-based) checkpoint into a model.
 

@@ -91,11 +91,61 @@ def describe_model(model):
     return _describe_model(model, {}, '')
 
 
+def _buffer_paths(model):
+    from fedcore.algorithm.low_rank.topology import module_paths
+    return {f'{path}.{name}' if path else name: tensor
+            for path, module in module_paths(model).items()
+            for name, tensor in module._buffers.items() if tensor is not None}
+
+
+def _buffer_aliases(model):
+    groups = {}
+    for path, value in _buffer_paths(model).items():
+        groups.setdefault(id(value), []).append(path)
+    return tuple(tuple(group) for group in groups.values() if len(group)>1)
+
+
+def _retie_buffers(model, groups):
+    from fedcore.algorithm.low_rank.topology import module_paths
+    paths, buffers = module_paths(model), _buffer_paths(model)
+    for group in groups:
+        source = buffers[group[0]]
+        for path in group[1:]:
+            owner, _, name = path.rpartition('.')
+            paths[owner]._buffers[name] = source
+
+
+def _validate_tied_buffers(model, state):
+    groups = _buffer_aliases(model)
+    for group in groups:
+        values = [state.get(path) for path in group]
+        if any(not isinstance(value, torch.Tensor) for value in values) or any(
+                value.shape!=values[0].shape or value.dtype!=values[0].dtype
+                or not torch.equal(value,values[0]) for value in values[1:]):
+            raise CheckpointError('Conflicting state values for a shared buffer')
+    return groups
+
+
 def _describe_model(model, seen, path):
     """Only encode constructors from a fixed allowlist; never arbitrary Python."""
     if id(model) in seen:
         return {'type': 'ModuleAlias', 'target': seen[id(model)]}
     seen[id(model)] = path
+    from fedcore.algorithm.low_rank.structured_layers import (FactorizedLinear,
+        ResidualLinear, SharedBasisLinear, GroupedEmbedding, GroupedLMHead)
+    structured = (FactorizedLinear, ResidualLinear, SharedBasisLinear, GroupedEmbedding, GroupedLMHead)
+    if type(model) in structured:
+        children = {}
+        names = ('left', 'right') if type(model) is FactorizedLinear else (
+            ('base', 'residual') if type(model) is ResidualLinear else (
+            ('table',) if type(model) is GroupedLMHead else ()))
+        for name in names:
+            child_path = f'{path}.{name}' if path else name
+            children[name] = _describe_model(getattr(model, name), seen, child_path)
+            if children[name] is None:
+                return None
+        return {'type': type(model).__name__, 'config': model.representation_config(),
+                'dtype': str(next(model.parameters()).dtype), 'children': children}
     from fedcore.models.network_impl.decomposed_layers import IDecomposed, DecomposableLayers
     from fedcore.models.network_modules.layers.lora import LoRALayer, Linear, Embedding, Conv2d
     if isinstance(model, IDecomposed):
@@ -179,6 +229,50 @@ def _build_model(description, seen, path):
     from fedcore.models.network_impl.decomposed_layers import DecomposableLayers
     decomposed = {cls.__name__: cls for cls in DecomposableLayers.values()}
     kind = description.get('type')
+    structured_names = ('FactorizedLinear', 'ResidualLinear', 'SharedBasisLinear',
+                        'GroupedEmbedding', 'GroupedLMHead')
+    if kind in structured_names:
+        from fedcore.algorithm.low_rank.structured_layers import (FactorizedLinear,
+            ResidualLinear, SharedBasisLinear, GroupedEmbedding, GroupedLMHead)
+        from fedcore.algorithm.low_rank.structured_profiles import FactorPair
+        config, children = description.get('config'), description.get('children')
+        if (not isinstance(config, dict) or config.get('layer_type') != kind
+                or type(config.get('version')) is not int or config['version'] != 1
+                or description.get('dtype') not in ('torch.float32', 'torch.float64')
+                or not isinstance(children, dict)):
+            raise CheckpointError('Invalid P2 representation descriptor')
+        dtype = getattr(torch, description['dtype'][6:])
+        def child(name):
+            return _build_model(children.get(name), seen, f'{path}.{name}' if path else name)
+        try:
+            if kind == 'FactorizedLinear':
+                model = FactorizedLinear(config['in_features'], config['out_features'],
+                    config['rank'], config['bias'], dtype=dtype)
+                seen[path] = model
+                model.left, model.right = child('left'), child('right')
+            elif kind == 'SharedBasisLinear':
+                model = SharedBasisLinear(config['in_features'], config['out_features'],
+                    config['rank'], config['bias'], dtype=dtype)
+            elif kind == 'ResidualLinear':
+                base = child('base')
+                pair = FactorPair(torch.zeros(config['out_features'], config['residual_rank'], dtype=dtype),
+                                  torch.zeros(config['residual_rank'], config['in_features'], dtype=dtype))
+                model = ResidualLinear(base, pair, freeze_base=config['freeze_base'])
+                seen[path] = model
+                model.residual = child('residual')
+            elif kind == 'GroupedEmbedding':
+                model = GroupedEmbedding(config['num_embeddings'], config['embedding_dim'],
+                    config['group_sizes'], config['ranks'], padding_idx=config['padding_idx'], dtype=dtype)
+            else:
+                table = child('table')
+                if type(table) is not GroupedEmbedding:
+                    raise ValueError('A grouped head requires its explicit grouped table')
+                bias = torch.zeros(table.num_embeddings, dtype=dtype) if config['bias'] else None
+                model = GroupedLMHead(table, bias)
+        except (KeyError, TypeError, ValueError, RuntimeError) as error:
+            raise CheckpointError(f'Invalid P2 representation: {error}') from error
+        seen[path] = model
+        return model
     if kind in decomposed:
         from fedcore.algorithm.low_rank.svd_tools import restore_svd_representation
         metadata = description.get('representation')
@@ -264,10 +358,18 @@ class CheckpointManager:
             payload = {'format': self.FORMAT, 'version': self.VERSION,
                        'architecture': describe_model(model),
                        'topology': {'version': 1, 'module_aliases': topology.module_aliases,
-                                    'parameter_aliases': topology.parameter_aliases},
+                                    'parameter_aliases': topology.parameter_aliases,
+                                    'buffer_aliases': _buffer_aliases(model)},
                        'state_dict': _clone_state_value(model.state_dict()),
                        'training': {name: child.training for name, child in model.named_modules()}}
             payload['requires_grad'] = {name: param.requires_grad for name, param in model.named_parameters()}
+            evidence = getattr(model, '_fedcore_method_evidence', None)
+            if evidence is not None:
+                import json
+                try:
+                    payload['method_evidence'] = json.loads(json.dumps(evidence, allow_nan=False))
+                except (TypeError, ValueError) as error:
+                    raise CheckpointError('Method evidence must be finite JSON metadata') from error
         else:
             raise CheckpointError('A torch.nn.Module or valid weights checkpoint is required')
         buffer = io.BytesIO()
@@ -359,6 +461,22 @@ class CheckpointManager:
                 if any(params[path].shape != params[group[0]].shape for path in group):
                     raise CheckpointError('Incompatible checkpoint parameter aliases')
             retie_parameters(candidate, graph['parameter_aliases'])
+            groups = graph.get('buffer_aliases', _buffer_aliases(candidate))
+            buffers = _buffer_paths(candidate)
+            if (not isinstance(groups,(tuple,list)) or any(
+                    not isinstance(group,(tuple,list)) or len(group)<2
+                    or len(set(group))!=len(group) or any(path not in buffers for path in group)
+                    for group in groups)):
+                raise CheckpointError('Invalid checkpoint buffer aliases')
+            flattened = [path for group in groups for path in group]
+            if len(flattened)!=len(set(flattened)):
+                raise CheckpointError('Overlapping checkpoint buffer aliases')
+            for group in groups:
+                source = buffers[group[0]]
+                if any(buffers[path].shape!=source.shape or buffers[path].dtype!=source.dtype for path in group):
+                    raise CheckpointError('Incompatible checkpoint buffer aliases')
+            _retie_buffers(candidate,groups)
+        buffer_ties = _validate_tied_buffers(candidate,state)
         try:
             topology = validate_tied_state(candidate, state)
         except TopologyError as error:
@@ -374,11 +492,18 @@ class CheckpointManager:
         candidate.to(device or 'cpu')
         # assign=True and device conversion may each replace Parameter objects.
         retie_parameters(candidate, topology.parameter_aliases)
+        _retie_buffers(candidate,buffer_ties)
         training = payload.get('training', {})
         for name, child in candidate.named_modules():
             child.training = training.get(name, child.training)
         for name, param in candidate.named_parameters():
             param.requires_grad_(payload.get('requires_grad', {}).get(name, param.requires_grad))
+        if 'method_evidence' in payload:
+            import json
+            try:
+                candidate._fedcore_method_evidence = json.loads(json.dumps(payload['method_evidence'], allow_nan=False))
+            except (TypeError, ValueError) as error:
+                raise CheckpointError('Invalid finite method evidence') from error
         return candidate
 
     def load_from_file(self, checkpoint_path, device=None, *, model=None, model_factory=None):

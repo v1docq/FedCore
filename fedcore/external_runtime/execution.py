@@ -11,7 +11,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
-from .contracts import ContractError, ExecutionPlan
+from .contracts import ContractError, ExecutionPlan, P2_EXTERNAL_METHODS
 from .models import load_model_bundle
 from .security import confined_path, safe_load
 
@@ -116,16 +116,31 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
     request.input_spec.validate_tensor(example)
     validation, targets = _dataset(confined_path(root, request.data.validation), request.input_spec, request.resources.max_bytes)
     calibration = None
+    calibration_targets = None
     for name in (request.data.train, request.data.calibration):
         if name is not None:
-            decoded, _ = _dataset(confined_path(root, name), request.input_spec, request.resources.max_bytes)
+            decoded, decoded_targets = _dataset(confined_path(root, name), request.input_spec, request.resources.max_bytes)
             if name == request.data.calibration:
                 calibration = decoded
+                calibration_targets = decoded_targets
     timings["data_decode_seconds"] = time.perf_counter() - stage_started
     decisions = []
     stage_started = time.perf_counter()
     weighted_evidence = None
-    if request.method == "weighted_svd":
+    method_evidence = None
+    if request.method in P2_EXTERNAL_METHODS:
+        from fedcore.algorithm.low_rank.method_execution import transform_method
+        options = request.method_profile
+        transformed = transform_method(model, calibration, options.spec, rank=request.rank,
+            target_paths=options.target_paths,
+            labels=calibration_targets if request.method=='fwsvd' else None,
+            group_labels=calibration_targets if request.method=='bolaco' else None,
+            batch_size=options.batch_size, max_workspace_bytes=options.max_workspace_bytes,
+            max_peak_bytes=options.max_peak_bytes)
+        compressed = transformed.model.eval()
+        method_evidence = transformed.evidence
+        decisions = method_evidence['layers']
+    elif request.method == "weighted_svd":
         from fedcore.algorithm.low_rank.execution import transform_weighted
         from fedcore.algorithm.low_rank.plans import MetricPolicy
         options = request.weighted
@@ -194,6 +209,11 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
     if weighted_evidence is not None:
         result['request_version'] = request.version
         result['weighted_transform'] = weighted_evidence
+        result['provenance']['calibration_sha256'] = hashlib.sha256(
+            confined_path(root, request.data.calibration).read_bytes()).hexdigest()
+    if method_evidence is not None:
+        result['request_version'] = request.version
+        result['method_transform'] = method_evidence
         result['provenance']['calibration_sha256'] = hashlib.sha256(
             confined_path(root, request.data.calibration).read_bytes()).hexdigest()
     timings["provenance_and_result_seconds"] = time.perf_counter() - stage_started
