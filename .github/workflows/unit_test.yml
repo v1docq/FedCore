@@ -33,9 +33,9 @@ jobs:
           python -m pip install -e ".[test,experiments]"
           python -m pip check
       - name: Collect autonomous CPU suite
-        run: python -m pytest --collect-only -q tests/refactoring tests/petra
+        run: python -m pytest --collect-only -q tests/refactoring tests/petra tests/unit/algorithm/low_rank tests/unit/low_rank/test_statistical_profiles.py tests/unit/low_rank/test_statistical_collectors.py
       - name: Run autonomous CPU suite
-        run: python -m pytest -q tests/refactoring tests/petra
+        run: python -m pytest -q tests/refactoring tests/petra tests/unit/algorithm/low_rank tests/unit/low_rank/test_statistical_profiles.py tests/unit/low_rank/test_statistical_collectors.py
       - name: Check examples and archives for published credentials
         run: python scripts/check_example_secrets.py examples
       - name: Build wheel and sdist
@@ -68,4 +68,4 @@ jobs:
           python -m pip install -e ".[test,export,service,experiments]"
           python -m pip check
       - name: Run CPU regressions with actual export and service integrations
-        run: python -m pytest -q tests/refactoring tests/petra
+        run: python -m pytest -q tests/refactoring tests/petra tests/unit/algorithm/low_rank tests/unit/low_rank/test_statistical_profiles.py tests/unit/low_rank/test_statistical_collectors.py

@@ -10,6 +10,21 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/method_specs.py',
+    'fedcore/algorithm/low_rank/method_execution.py',
+    'fedcore/algorithm/low_rank/statistical_profiles.py',
+    'fedcore/algorithm/low_rank/statistical_collectors.py',
+    'fedcore/algorithm/low_rank/structured_profiles.py',
+    'fedcore/algorithm/low_rank/structured_layers.py',
+    'fedcore/algorithm/low_rank/factor_recovery.py',
+    'fedcore/experiments/svd_rank_policies.py',
+    'fedcore/experiments/svd_profile_measurement.py',
+    'fedcore/algorithm/low_rank/execution.py',
+    'fedcore/algorithm/low_rank/plans.py',
+    'fedcore/algorithm/low_rank/statistics.py',
+    'fedcore/algorithm/low_rank/approximation.py',
+    'fedcore/algorithm/low_rank/allocation.py',
+    'fedcore/algorithm/low_rank/topology.py',
     'fedcore/experiments/protocol.py',
     'fedcore/experiments/runner.py',
     'fedcore/experiments/scenarios.py',
@@ -33,8 +48,13 @@ def run(args, cwd, env=None):
     return result
 
 
-def test_wheel_sdist_and_installed_package_outside_checkout(tmp_path):
+def test_wheel_sdist_and_installed_package_outside_checkout(tmp_path, monkeypatch):
     pytest.importorskip('build', reason='The declared test extra includes build')
+    temporary = tmp_path / 'temporary'
+    temporary.mkdir()
+    # Windows sandbox TEMP cannot atomically replace setuptools metadata.
+    monkeypatch.setenv('TEMP', str(temporary))
+    monkeypatch.setenv('TMP', str(temporary))
     source = tmp_path / 'source'
     source.mkdir()
     for name in ('fedcore', 'external', 'external_runtime', 'model_exporter'):
@@ -86,5 +106,40 @@ from fedcore.experiments.scenarios import build_tabular
 bundle = build_tabular(seed=42)
 assert bundle.task == 'classification'
 assert ExperimentProtocol().device == 'cpu'
+import torch
+from torch import nn
+from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
+from fedcore.tools.registry.checkpoint_manager import CheckpointManager
+from fedcore.tools.export import export_model
+torch.set_num_threads(2)
+model = nn.Linear(6, 4).double().eval()
+x = torch.randn(5, 6, dtype=torch.double)
+__import__('os').environ['FEDCORE_MODEL_REGISTRY_PATH'] = str(Path.cwd() / 'registry')
+facade = LowRankModel({'device': 'cpu'})
+result = facade.compress_weighted(model, x, rank=2)
+assert result.model is facade.model_after
+assert result.plan.request.statistics_refs
+manager = CheckpointManager(str(Path.cwd() / 'checkpoint'), auto_cleanup=False)
+path = str(Path.cwd() / 'checkpoint.pt')
+manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+restored = manager.load_from_file(path)
+torch.testing.assert_close(restored(x), result.model(x), rtol=1e-12, atol=1e-12)
+artifact = export_model(restored.eval(), 'torchscript', Path.cwd() / 'export.pt', x[:1])
+with artifact.open('rb') as stream:
+    reloaded = torch.jit.load(stream)
+torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]), rtol=1e-12, atol=1e-12)
+assert Path(fedcore.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+from fedcore.algorithm.low_rank.method_specs import ASVD, AFM, DRONE, SVDLLMV2
+from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
+assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
+for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
+    result = facade.compress_profile(model, x, spec, rank=2, target_paths=('',))
+    manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(x), result.model(x))
+    artifact = export_model(restored.eval(), 'torchscript', Path.cwd() / 'p2.pt', x[:1])
+    with artifact.open('rb') as stream:
+        reloaded = torch.jit.load(stream)
+    torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]))
 """
     run(['-c', code], outside, env)
