@@ -26,13 +26,15 @@ class LaiMSE(RegularizationLoss):
         factor: Balances between error-sensitive and constant regularization terms
             (default: ``0.5``).
     """
-    
+
     def __init__(self, factor: float = 0.5) -> None:
         super().__init__(factor=factor)
+        if not factor > 0:
+            raise ValueError("Lai factor must be positive")
 
     def forward(self, y_pred: Tensor, y_true: Tensor) -> Tensor:
         """Calculates adaptive MSE loss.
-        
+
         Args:
             y_pred: Model predictions tensor of shape ``(N, ...)``.
             y_true: Ground truth tensor of the same shape as predictions.
@@ -65,13 +67,15 @@ class LaiMAE(RegularizationLoss):
         factor: Balances between sign-sensitive and constant regularization terms
             (default: ``0.5``).
     """
-    
+
     def __init__(self, factor: float = 0.5) -> None:
         super().__init__(factor=factor)
+        if not factor > 0:
+            raise ValueError("Lai factor must be positive")
 
     def forward(self, y_pred: Tensor, y_true: Tensor) -> Tensor:
         """Calculates adaptive MAE loss.
-        
+
         Args:
             y_pred: Model predictions tensor of shape ``(N, ...)``.
             y_true: Ground truth tensor of the same shape as predictions.
@@ -117,7 +121,7 @@ class NormLoss(RegularizationLoss):
         """
         loss = 0.0
         for module in model.modules():
-            if hasattr(module, "weight") and module.weight is not None and module.weight.dim() >= 2:
+            if isinstance(getattr(module, "weight", None), Tensor) and module.weight.dim() >= 2:
                 weights = module.weight
                 # Calculate L2 norms along all dimensions except the first (output neurons)
                 dims = tuple(range(1, weights.dim()))
@@ -138,7 +142,7 @@ class AdaptiveRegularizationLoss(RegularizationLoss):
         factor: The hyperparameter by which the calculated loss function is multiplied
             (default: ``0.001``).
     """
-    
+
     def __init__(self, factor: float = 0.001) -> None:
         super().__init__(factor=factor)
 
@@ -149,19 +153,15 @@ class AdaptiveRegularizationLoss(RegularizationLoss):
             model: The neural network model to regularize.
             main_loss: The primary loss value based on which gradients are computed.
         """
-        # Compute gradients of main_loss with respect to model parameters
-        grads = torch.autograd.grad(
-            outputs=main_loss,
-            inputs=model.parameters(),
-            retain_graph=True,
-            create_graph=True,
-            allow_unused=True  # Handle parameters not used in the loss
-        )
-
-        reg_loss = 0.0
-        for param, grad in zip(model.parameters(), grads):
+        if self.factor == 0:
+            return main_loss * 0
+        parameters = tuple(p for p in model.parameters() if p.requires_grad)
+        if not parameters or not main_loss.requires_grad:
+            return main_loss * 0
+        grads = torch.autograd.grad(main_loss, parameters, retain_graph=True,
+                                    create_graph=True, allow_unused=True)
+        reg_loss = main_loss * 0
+        for param, grad in zip(parameters, grads):
             if grad is not None:
-                I = torch.exp(-torch.abs(grad))
-                reg_loss += torch.sum(I * (param ** 2))
-
+                reg_loss = reg_loss + (torch.exp(-grad.abs()) * param.square()).sum()
         return self.factor * reg_loss

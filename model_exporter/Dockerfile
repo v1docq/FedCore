@@ -1,29 +1,11 @@
-FROM python:3.9-slim
-
-# Установка зависимостей
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Создание директорий
+FROM python:3.10-slim
 WORKDIR /app
-
-# Копирование файлов зависимостей
-COPY model_exporter/requirements.txt .
-
-# Установка Python зависимостей
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Копирование исходного кода
-COPY model_exporter/ .
-
+COPY model_exporter/requirements.txt ./service-requirements.txt
+RUN pip install --no-cache-dir torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r service-requirements.txt
+COPY model_exporter/ ./model_exporter/
 COPY fedcore/ ./fedcore/
-
-# Создание необходимых директорий
-RUN mkdir -p device_architectures templates results/models results/exports results/analysis results/logs
-
-# Экспорт порта
 EXPOSE 5000
-
-# Запуск приложения
-CMD ["python", "api_server.py"]
+# The container is reached through the explicitly local host port mapping.
+# The entry point refuses to start without FEDCORE_API_TOKEN.
+CMD ["python", "-m", "model_exporter.api_server", "--host", "0.0.0.0", "--storage-root", "results/service"]

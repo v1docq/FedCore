@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "modes": [
+    {
+      "name": "low_rank.svd",
+      "support": "supported",
+      "contract": "Supported layer transforms preserve the full-rank operator; applicability is checked for each layer.",
+      "checks": [
+        "tests/refactoring/test_math_layers.py::test_conv2d_actual_backend_parity",
+        "tests/refactoring/test_math_layers.py::test_bias_cost_independence_and_atomic_rejection"
+      ]
+    },
+    {
+      "name": "low_rank.onetime",
+      "support": "supported",
+      "contract": "Threshold selection preserves the requested operator-energy fraction with explicit zero/rank-one behavior.",
+      "checks": [
+        "tests/refactoring/test_math_layers.py::test_rank_monotonic_and_boundaries",
+        "tests/refactoring/test_math_layers.py::test_rank_exact_first_reaching_independent_reference"
+      ]
+    },
+    {
+      "name": "low_rank.dynamic",
+      "aliases": [
+        "cuttlefish",
+        "DynamicRankPruner"
+      ],
+      "support": "experimental",
+      "contract": "Dynamic-rank history, trainer wiring and stopping rules are not certified; use onetime rank selection.",
+      "checks": [
+        "tests/refactoring/test_root_capabilities.py::test_real_experimental_constructors_reject_before_base_initialization",
+        "tests/refactoring/test_root_capabilities.py::test_enum_hook_configuration_is_guarded"
+      ]
+    },
+    {
+      "name": "pruning.magnitude",
+      "support": "supported",
+      "contract": "The pruning plan validates inputs and preserves an independent baseline.",
+      "checks": [
+        "tests/refactoring/test_math_training.py::test_actual_magnitude_pruning_preserves_baseline"
+      ]
+    },
+    {
+      "name": "pruning.activation_entropy",
+      "aliases": [
+        "activation_entropy",
+        "custom_depth"
+      ],
+      "support": "experimental",
+      "contract": "Activation accumulation and application of the returned pruned model require a separately validated implementation.",
+      "checks": [
+        "tests/refactoring/test_root_capabilities.py::test_real_experimental_constructors_reject_before_base_initialization"
+      ]
+    },
+    {
+      "name": "quantization.ptq",
+      "support": "supported",
+      "contract": "Supported models are calibrated and converted without changing the independent float baseline.",
+      "checks": [
+        "tests/refactoring/test_math_training.py::test_actual_quantization_stages_and_baseline",
+        "tests/refactoring/test_math_training.py::test_quantization_rejects_invalid_composition"
+      ]
+    },
+    {
+      "name": "quantization.qat",
+      "support": "supported",
+      "contract": "Preparation is followed by student training before conversion; unsupported combinations fail explicitly.",
+      "checks": [
+        "tests/refactoring/test_math_training.py::test_qat_observed_real_stages_before_convert",
+        "tests/refactoring/test_math_training.py::test_quantization_rejects_invalid_composition"
+      ]
+    },
+    {
+      "name": "flatllm.rank_selector",
+      "aliases": [
+        "ImportancePreservingRankSelector"
+      ],
+      "support": "experimental",
+      "contract": "Random prototype scores are not measured angular, gradient or activation importance.",
+      "checks": [
+        "tests/refactoring/test_root_capabilities.py::test_flatllm_prototypes_fail_before_model_access"
+      ]
+    },
+    {
+      "name": "manifold_losses",
+      "support": "experimental",
+      "contract": "The separate research branch is not an importable supported main implementation.",
+      "checks": [
+        "tests/refactoring/test_root_capabilities.py::test_experimental_modes_fail_with_structured_reason"
+      ]
+    },
+    {
+      "name": "flatllm.attention_cache",
+      "support": "experimental",
+      "contract": "Transformer cache patching requires architecture-specific cache and multi-step generation tests; local MLP kernels do not certify this path.",
+      "checks": [
+        "tests/refactoring/test_root_capabilities.py::test_flatllm_prototypes_fail_before_model_access"
+      ]
+    }
+  ]
+}

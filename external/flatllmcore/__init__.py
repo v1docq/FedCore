@@ -1,28 +1,15 @@
-"""
-FLAT-LLM Core Module
-
-Fine-grained Low-rank Activation Space Transformation for Large Language Model Compression.
-Minimal implementation for FedCore integration.
-
-Based on: "FLAT-LLM: Fine-grained Low-rank Activation Space Transformation 
-for Large Language Model Compression" (arXiv:2505.23966)
-"""
-
-from .core.prune import FlatLLMPruner
-from .core.rank_allocation import ImportancePreservingRankSelector
-from .layers.attention_layers import (
-    FlatLlamaAttention, 
-    FlatLlamaDecoderLayer,
-    FlatMistralAttention,
-    FlatMistralDecoderLayer
-)
+"""Calibration prototype exports; LLM dependencies load on demand."""
+from importlib import import_module
 
 __version__ = "0.1.0"
-__all__ = [
-    "FlatLLMPruner",
-    "ImportancePreservingRankSelector",
-    "FlatLlamaAttention",
-    "FlatLlamaDecoderLayer",
-    "FlatMistralAttention", 
-    "FlatMistralDecoderLayer"
-]
+_EXPORTS = {'FlatLLMPruner': '.core.prune', 'ImportancePreservingRankSelector': '.core.rank_allocation', 'FlatLlamaAttention': '.layers.attention_layers', 'FlatLlamaDecoderLayer': '.layers.attention_layers', 'FlatMistralAttention': '.layers.attention_layers', 'FlatMistralDecoderLayer': '.layers.attention_layers'}
+__all__ = list(_EXPORTS)
+
+
+def __getattr__(name):
+    module = _EXPORTS.get(name)
+    if module is None:
+        raise AttributeError(name)
+    value = getattr(import_module(module, __name__), name)
+    globals()[name] = value
+    return value

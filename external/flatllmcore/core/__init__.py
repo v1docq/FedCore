@@ -1,14 +1,15 @@
-"""
-Core FLAT-LLM algorithms and functionality.
-"""
+"""Calibration prototype exports; LLM dependencies load on demand."""
+from importlib import import_module
 
-from .prune import FlatLLMPruner
-from .rank_allocation import ImportancePreservingRankSelector
-from .absorption import AbsorptionCompressor, ActivationCollector
+__version__ = "0.1.0"
+_EXPORTS = {'FlatLLMPruner': '.prune', 'ImportancePreservingRankSelector': '.rank_allocation', 'AbsorptionCompressor': '.absorption', 'ActivationCollector': '.absorption'}
+__all__ = list(_EXPORTS)
 
-__all__ = [
-    "FlatLLMPruner",
-    "ImportancePreservingRankSelector",
-    "AbsorptionCompressor",
-    "ActivationCollector"
-]
+
+def __getattr__(name):
+    module = _EXPORTS.get(name)
+    if module is None:
+        raise AttributeError(name)
+    value = getattr(import_module(module, __name__), name)
+    globals()[name] = value
+    return value

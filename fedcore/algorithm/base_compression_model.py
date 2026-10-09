@@ -11,8 +11,6 @@ from fedot.core.data.data import InputData
 
 from fedcore.architecture.computational.devices import default_device, extract_device
 from fedcore.data.data import CompressionInputData
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel, BaseNeuralForecaster
-from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
 from torchinfo import summary
 from fedcore.tools.registry.model_registry import ModelRegistry
 
@@ -46,7 +44,8 @@ class BaseCompressionModel:
                 print(features)
     """
 
-    def __init__(self, params: dict = {}):
+    def __init__(self, params: Optional[dict] = None):
+        params = params.to_dict() if hasattr(params, 'to_dict') else dict(params or {})
         self.logger = logging.getLogger(__name__)
         self.logger.debug("BaseCompressionModel.__init__() called")
 
@@ -120,7 +119,8 @@ class BaseCompressionModel:
             return None
 
         loaded_model = self._registry.load_model_from_latest_checkpoint(
-            self._fedcore_id, self._model_id_before, DEVICE
+            self._fedcore_id, self._model_id_before, self.device,
+            model_factory=self.params.get('model_factory_before') or self.params.get('model_factory')
         )
 
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
@@ -136,18 +136,22 @@ class BaseCompressionModel:
         logger = logging.getLogger(__name__)
         logger.info(f"model_before setter called: value={'not None' if value else 'None'}, _model_id_before={self._model_id_before}")
 
-        self._model_before_cached = value
         if value is not None and self._model_id_before is None:
             logger.info("Registering model_before in ModelRegistry")
             self._model_id_before = self._registry.register_model(
                 fedcore_id=self._fedcore_id,
                 model=value,
                 stage="before",
-                mode=None
+                mode=None, delete_model_after_save=False
             )
             logger.info(f"model_before registered with id={self._model_id_before}")
+        elif value is not None:
+            self._registry.register_changes(
+                fedcore_id=self._fedcore_id, model_id=self._model_id_before,
+                model=value, stage="before", mode=None, delete_model_after_save=False)
         else:
             logger.debug(f"Skipping registration: value is None={value is None}, already registered={self._model_id_before is not None}")
+        self._model_before_cached = value
 
     @property
     def model_after(self):
@@ -159,7 +163,8 @@ class BaseCompressionModel:
             return None
 
         loaded_model = self._registry.load_model_from_latest_checkpoint(
-            self._fedcore_id, self._model_id_after, DEVICE
+            self._fedcore_id, self._model_id_after, self.device,
+            model_factory=self.params.get('model_factory_after') or self.params.get('model_factory')
         )
 
         if loaded_model is not None and isinstance(loaded_model, torch.nn.Module):
@@ -175,7 +180,6 @@ class BaseCompressionModel:
         logger = logging.getLogger(__name__)
         logger.info(f"model_after setter called: value={'not None' if value else 'None'}, _model_id_after={self._model_id_after}")
 
-        self._model_after_cached = value
         if value is not None:
             if self._model_id_after is None:
                 logger.info("Registering new model_after in ModelRegistry")
@@ -183,7 +187,7 @@ class BaseCompressionModel:
                     fedcore_id=self._fedcore_id,
                     model=value,
                     stage="after",
-                    mode=None
+                    mode=None, delete_model_after_save=False
                 )
                 logger.info(f"model_after registered with id={self._model_id_after}")
             else:
@@ -193,11 +197,12 @@ class BaseCompressionModel:
                     model_id=self._model_id_after,
                     model=value,
                     stage="after",
-                    mode=None
+                    mode=None, delete_model_after_save=False
                 )
                 logger.info("model_after changes registered")
         else:
             logger.debug("Skipping registration: value is None")
+        self._model_after_cached = value
 
     def _save_model_checkpoint(self, model, stage: str):
         """Save model checkpoint to registry.
@@ -221,55 +226,49 @@ class BaseCompressionModel:
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
             # logger.info(f"Loading model from path: {model}")
-            device = default_device()
-            loaded = torch.load(model, map_location=device)
-            if isinstance(loaded, dict) and "model" in loaded:
-                model = loaded["model"]
-            else:
-                model = loaded
+            model = self._registry.checkpoint_manager.load_from_file(
+                model, self.device, model_factory=self.params.get('model_factory'))
             # logger.info(f"Model loaded: type={type(model).__name__}")
 
         if not isinstance(model, torch.nn.Module):
             raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
 
         # logger.info("Calling model_before setter")
-        self.model_before = model
+        self.model_before = deepcopy(model)
         # logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
 
         # Create trainer using factory
+        from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
         self.trainer = create_trainer_from_input_data(input_data, self.params)
         self.trainer.register_additional_hooks(additional_hooks)
         self.trainer.model = model
 
         return model
-    
+
     def _get_model_or_load_from_path(self, input_data):
         model = input_data.model
         self.logger.info(f"Model type from input_data.model: {type(model).__name__}")
         # Support passing a filesystem path to a checkpoint/model at the node input
         if isinstance(model, str):
             self.logger.info(f"Loading model from path: {model}")
-            device = default_device()
-            loaded = torch.load(model, map_location=device)
-            if isinstance(loaded, dict) and "model" in loaded:
-                model = loaded["model"]
-            else:
-                model = loaded
+            model = self._registry.checkpoint_manager.load_from_file(
+                model, self.device, model_factory=self.params.get('model_factory'))
             self.logger.info(f"Model loaded: type={type(model).__name__}")
-        
+
         if not isinstance(model, torch.nn.Module):
             raise ValueError(f"Expected model to be either file path or torch.nn.Module, got {type(model)}")
         return model
-    
+
     def _init_model_before_model_after(self, input_data):
-        model = self._get_model_or_load_from_path(input_data) 
+        model = self._get_model_or_load_from_path(input_data)
         self.logger.info("Calling model_before setter")
-        self.model_before = model
+        self.model_before = deepcopy(model)
         self.logger.info(f"model_before setter completed, _model_id_before={self._model_id_before}")
 
         self.model_after = deepcopy(self.model_before)
 
     def _init_trainer_with_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
+        from fedcore.models.network_impl.utils.trainer_factory import create_trainer_from_input_data
         self.trainer = create_trainer_from_input_data(input_data, self.params, self.model_after, additional_hooks=additional_hooks)
 
     def _init_trainer_model_before_model_after(self, input_data, additional_hooks: Sequence[BaseHook]):
@@ -278,7 +277,7 @@ class BaseCompressionModel:
 
     # @abstractmethod
     def _init_trainer_model_before_model_after_and_incapsulate_hooks(self, input_data):
-        """This method in child class should initialize self.model_before, self.model_after, add it to self.trainer with additional 
+        """This method in child class should initialize self.model_before, self.model_after, add it to self.trainer with additional
         childclass-specific hooks.
 
         Models usually taken from input_data.target
@@ -347,11 +346,21 @@ class BaseCompressionModel:
     def predict(
             self, input_data: CompressionInputData, output_mode: str = "fedcore"
     ) -> torch.nn.Module:
-        if output_mode == 'fedcore':
-            self.trainer.model = self.model_after
-        else:
-            self.trainer.model = self.model_before
+        model = self.model_after if output_mode == 'fedcore' else self.model_before
+        if model is None:
+            raise ValueError(f'No model registered for output_mode={output_mode!r}')
+        if getattr(self, 'trainer', None) is None:
+            from fedcore.api.utils.evaluation import predict_module
+            return predict_module(model, input_data)
+        self.trainer.model = model
         return self.trainer.predict(input_data, output_mode)
+
+    def clear_model_cache(self):
+        """Evict live models while retaining their checkpoint identities."""
+        self._model_before_cached = self._model_after_cached = None
+        self.model = None
+        if getattr(self, 'trainer', None) is not None:
+            self.trainer.model = None
 
     def estimate_params(self, example_batch, model_before, model_after):
         # in future we don't want to store both models simult.
@@ -384,7 +393,7 @@ class BaseCompressionModel:
     def _estimate_params(self, model, example_batch):
         base_macs, base_nparams = tp.utils.count_ops_and_params(model, example_batch)
         return base_macs, base_nparams
-    
+
     # don't del its for New Year
     def _diagnose(self, model, example_batch, *previos_results, annotation=''):
         logging.info(annotation)

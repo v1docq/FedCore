@@ -1,0 +1,195 @@
+{
+  "comparisons": [
+    {
+      "task": "classification",
+      "dataset_identity": {
+        "data_sha256": "6b202a2072f9a0385f405a8f8605b1b06f6f36ae6d23d9cd6cbbc0974a416bc7",
+        "dataset": "sklearn.load_breast_cancer",
+        "dataset_revision": null,
+        "raw_source_sha256": null,
+        "scenario": "tabular_breast_cancer",
+        "source": "https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic",
+        "target_sha256": "87c312fd4d24bc09c1ae4226107ad639989de53817109dd83465b2af8125f92b"
+      },
+      "method": "evolution",
+      "reference": "random",
+      "paired_seeds": [
+        41,
+        42,
+        43
+      ],
+      "all_shared_seeds": [
+        41,
+        42,
+        43
+      ],
+      "hypervolume_differences": [
+        0.0,
+        0.007137029311236276,
+        -0.00010075288660393866
+      ],
+      "mean_difference": 0.002345425474877446,
+      "bootstrap_95_percentile_interval": [
+        -6.716859106929245e-05,
+        0.007137029311236276
+      ],
+      "feasible_solution_probability": 1.0,
+      "all_run_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "all_engine_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "inference": "pilot descriptive estimate; repeat count/power not established"
+    },
+    {
+      "task": "classification",
+      "dataset_identity": {
+        "data_sha256": "6b202a2072f9a0385f405a8f8605b1b06f6f36ae6d23d9cd6cbbc0974a416bc7",
+        "dataset": "sklearn.load_breast_cancer",
+        "dataset_revision": null,
+        "raw_source_sha256": null,
+        "scenario": "tabular_breast_cancer",
+        "source": "https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic",
+        "target_sha256": "87c312fd4d24bc09c1ae4226107ad639989de53817109dd83465b2af8125f92b"
+      },
+      "method": "bayesian",
+      "reference": "random",
+      "paired_seeds": [
+        41,
+        42,
+        43
+      ],
+      "all_shared_seeds": [
+        41,
+        42,
+        43
+      ],
+      "hypervolume_differences": [
+        0.0,
+        0.007137029311236276,
+        0.0
+      ],
+      "mean_difference": 0.002379009770412092,
+      "bootstrap_95_percentile_interval": [
+        0.0,
+        0.007137029311236276
+      ],
+      "feasible_solution_probability": 1.0,
+      "all_run_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "all_engine_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "inference": "pilot descriptive estimate; repeat count/power not established"
+    },
+    {
+      "task": "classification",
+      "dataset_identity": {
+        "data_sha256": "20def7f70a702f0af9732fbba4375e147a7d54fe70d8c45569b8e7c1c7010c10",
+        "dataset": "sklearn.load_digits",
+        "dataset_revision": null,
+        "raw_source_sha256": null,
+        "scenario": "cv_digits",
+        "source": "https://archive.ics.uci.edu/dataset/80/optical+recognition+of+handwritten+digits",
+        "target_sha256": "a3c91c262eddcf7ba8f0e37507c30284493c9b20412ffe4af30d536401f7ba21"
+      },
+      "method": "evolution",
+      "reference": "random",
+      "paired_seeds": [
+        41,
+        42,
+        43
+      ],
+      "all_shared_seeds": [
+        41,
+        42,
+        43
+      ],
+      "hypervolume_differences": [
+        0.0,
+        0.11548513107583469,
+        0.0
+      ],
+      "mean_difference": 0.0384950436919449,
+      "bootstrap_95_percentile_interval": [
+        0.0,
+        0.11548513107583469
+      ],
+      "feasible_solution_probability": 1.0,
+      "all_run_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "all_engine_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "inference": "pilot descriptive estimate; repeat count/power not established"
+    },
+    {
+      "task": "classification",
+      "dataset_identity": {
+        "data_sha256": "20def7f70a702f0af9732fbba4375e147a7d54fe70d8c45569b8e7c1c7010c10",
+        "dataset": "sklearn.load_digits",
+        "dataset_revision": null,
+        "raw_source_sha256": null,
+        "scenario": "cv_digits",
+        "source": "https://archive.ics.uci.edu/dataset/80/optical+recognition+of+handwritten+digits",
+        "target_sha256": "a3c91c262eddcf7ba8f0e37507c30284493c9b20412ffe4af30d536401f7ba21"
+      },
+      "method": "bayesian",
+      "reference": "random",
+      "paired_seeds": [
+        41,
+        42,
+        43
+      ],
+      "all_shared_seeds": [
+        41,
+        42,
+        43
+      ],
+      "hypervolume_differences": [
+        0.0,
+        0.11587451381754255,
+        0.0
+      ],
+      "mean_difference": 0.038624837939180846,
+      "bootstrap_95_percentile_interval": [
+        0.0,
+        0.11587451381754255
+      ],
+      "feasible_solution_probability": 1.0,
+      "all_run_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "all_engine_statuses": {
+        "41": "succeeded",
+        "42": "succeeded",
+        "43": "succeeded"
+      },
+      "inference": "pilot descriptive estimate; repeat count/power not established"
+    }
+  ],
+  "bootstrap_samples": 1000,
+  "bootstrap_seed": 0,
+  "claims": "H4 is unconfirmed; time/evaluation comparisons must be reported separately",
+  "failures": [],
+  "planned_runs": 18,
+  "completed_manifests": 18,
+  "claim": "H4 remains unconfirmed"
+}

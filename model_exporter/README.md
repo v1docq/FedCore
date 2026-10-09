@@ -1,134 +1,47 @@
-# Model Splitter and Exporter
+# Локальный сервис экспорта и сжатия
 
-Этота утилита предоставляет решение для анализа, разделения и экспорта нейронных сетей в различные форматы для разных устройств (CPU, NPU). Поддерживает экспорт в TorchScript, ONNX, TensorRT.
+Сервис принимает безопасные архивы тензоров `.fcb`, создаёт отдельный процесс для каждого задания и сохраняет результат между перезапусками. Для запуска установите дополнительные зависимости `service`; для ONNX также нужны `export`.
 
-## Возможности
-
-- **Анализ модели**: Определение поддерживаемых и неподдерживаемых операций
-- **Разделение модели**: Автоматическое разделение на части для CPU и NPU
-- **Экспорт в различные форматы**: TorchScript, ONNX, TensorRT.
-- **Графический интерфейс**: Удобное управление через GUI
-- **REST API**: Веб-интерфейс для удаленного управления
-- **Логирование**: Полное логирование всех операций
-
-## Структура проекта
-
-```
-model_exporter/
-├── model_exporter.py        # Основной класс экспортера
-├── model_logic.py           # Логика работы с моделями
-├── model_splitter.py        # Класс для разделения моделей
-├── model_splitter_gui.py    # Графический интерфейс
-├── model_analyzer.py        # Анализ модели
-├── log_analizer.py          # Анализ логов
-├── api_server.py            # REST API сервер
-├── main.py                  # Точка входа
-├── requirements.txt         # Зависимости
-├── docker-compose.yml       # Docker конфигурация
-└── templates/               # HTML шаблоны
+```powershell
+$env:FEDCORE_API_TOKEN = 'your-long-random-secret-token'
+python -m model_exporter.api_server --storage-root results/service
 ```
 
-### Установка зависимостей
+По умолчанию сервер слушает `127.0.0.1:5000`. Откройте эту страницу в браузере и введите токен. Интерфейс позволяет загрузить модель, пример входа и отдельную валидационную выборку, выбрать задачу и формат, запустить задание, проверить его состояние, отменить выполнение и скачать артефакт. Токен не сохраняется в браузере. Параметр `--host 0.0.0.0` разрешает внешнее соединение только при явно настроенном токене; стандартный запуск остаётся локальным.
 
-```bash
-pip install -r requirements.txt
+Подготовьте файлы в своём доверенном процессе:
+
+```python
+import torch
+from torch import nn
+from fedcore.external_runtime.models import save_model_bundle
+from fedcore.external_runtime.security import safe_save
+from fedcore.external_runtime.client import save_dataset
+
+model = nn.Linear(8, 2).eval()
+validation_x = torch.randn(12, 8)
+validation_y = model(validation_x).detach()
+save_model_bundle(model, "model.fcb")
+safe_save(validation_x[:1], "example.fcb")
+save_dataset("validation.fcb", validation_x, validation_y)
 ```
 
-### Docker запуск
+Набор разрешённых архитектур: точные типы `nn.Linear`, `nn.Conv1d`, `nn.Conv2d`, `nn.Sequential`, `nn.ReLU`, `nn.Flatten`, `nn.Identity`. Подклассы с пользовательским `forward` не принимаются. Вход — один тензор `float32` или `float64`; контейнеры и многовходовые модели явно отклоняются. Поддерживаются классификация и регрессия. SVD проверяет ошибку выхода на независимой валидационной выборке. Дообучение, подготовка окон и нормализация остаются ответственностью вызывающего приложения.
 
-Перед использованием для экспорта раскомментировать соответствующие библиотеки в model_exporter/requirements.txt. По умолчанию доступен только onnx.
+Все операции API, кроме страницы интерфейса, статических ресурсов и `/health`, требуют заголовок `Authorization: Bearer <token>`. Это граница одного уполномоченного оператора; разделение прав нескольких пользователей не реализовано.
 
-Без gpu
-```bash
-docker-compose up -d
-```
+| Операция | Назначение |
+|---|---|
+| `POST /upload` | Форма `kind=model/dataset/example/loader`, поле `file`; возвращает непрозрачный идентификатор `.fcb` |
+| `POST /jobs` | Версионированный `CompressionRequest`; файловые ссылки — только идентификаторы загрузок |
+| `GET /jobs/<id>` | Неизменяемый запрос, состояние и фактический результат |
+| `POST /jobs/<id>/cancel` | Остановка собственного процесса, удаление незавершённого артефакта |
+| `GET /jobs/<id>/artifact` | Только успешный артефакт выбранного задания |
+| `DELETE /jobs/<id>` | Удаление записи и файлов завершённого задания |
+| `POST /analyze_model` | `model_id`, `example_id`, `input_spec`, необязательный `profile` |
 
-C gpu
-```bash
-GPU_IDS=0 docker-compose up -d
-```
+Файловые пути из JSON, полные объекты `torch.save(model)`, pickle и неизвестные форматы запрещены. Маршруты `/export` и `/fedcore_op` принимают тот же контракт задания; произвольные имена `export_*` не обходят список операций. Разделение графа через HTTP не включено: локальный `ModelManager.export_parts` требует фактические промежуточные входы и проверенную последовательную цепочку.
 
-## Использование
+Запрос ограничен 64 КиБ JSON и суммарным объёмом входов 64 МиБ. По умолчанию задание ограничено 120 секундами и одним вычислительным потоком. `Resources.max_bytes` ограничивает архивы и размер результата, а не всю оперативную память процесса. Данные и успешные артефакты сохраняются до явного удаления. При перезапуске прежние `queued/running` переходят в `failed` с причиной `interrupted`; успешные задания остаются доступными. Остановка `JobRunner` отменяет принадлежащие ему активные и ожидающие задания.
 
-### Графический интерфейс
-
-```bash
-python main.py
-```
-
-### REST API
-
-Запуск сервера:
-```bash
-python api_server.py
-```
-
-API доступен по адресу: `http://localhost:5000`
-
-### Примеры запросов
-
-#### Загрузка файла
-```bash
-curl -X POST http://localhost:5000/upload \
-  -F "file=@model.pt"
-```
-
-#### Экспорт модели
-```bash
-curl -X POST http://localhost:5000/export \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model_path": "results/models/12345_model.pt",
-    "format": "onnx",
-    "export_dir": "results/exports",
-    "model_name": "exported_model"
-  }'
-```
-
-#### Анализ модели
-```bash
-curl -X POST http://localhost:5000/analyze_model \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model_path": "results/models/12345_model.pt"
-  }'
-```
-
-## Конфигурация устройств
-
-Файлы архитектур находятся в `device_architectures/`:
-
-```json
-{
-  "name": "RK3588S",
-  "cpu_framework": "onnx",
-  "npu_framework": "openvino",
-  "supported_ops": [
-    "Conv",
-    "Gemm",
-    "Relu",
-    "MaxPool",
-    "AvgPool",
-    "BatchNormalization",
-    "Add",
-    "Sub",
-    "Mul",
-    "Div"
-  ]
-}
-```
-
-## Логирование
-
-Все операции логируются в `results/logs/`. Логи содержат информацию о:
-- Успешных и неудачных экспортах
-- Ошибках при работе с моделями
-- Статистике по операциям
-
-## Поддерживаемые форматы
-
-| Формат | Описание |
-|--------|----------|
-| **TorchScript** | Стандартный формат PyTorch |
-| **ONNX** | Открытый формат обмена |
-| **TensorRT** | Формат NVIDIA TensorRT |
+Подробный контракт и проверки: [export_runtime.md](../docs/refactoring/export_runtime.md). Контейнерный запуск и аппаратные режимы отдельно не проверялись.

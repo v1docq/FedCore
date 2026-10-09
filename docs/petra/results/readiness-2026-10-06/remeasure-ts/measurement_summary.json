@@ -1,0 +1,22 @@
+{
+  "claim": "runtime replicates, not independent training repeats",
+  "memory": "not remeasured; original process snapshots are not model-exclusive peaks",
+  "sessions": [
+    {
+      "path": "..\\work\\experiment-readiness\\remeasure-ts\\session-0.json",
+      "session": 0,
+      "sha256": "5e2d0023ed84d2a86eae7247d2aeeda51e436a9eaaa34807a281937d4a885f6a"
+    },
+    {
+      "path": "..\\work\\experiment-readiness\\remeasure-ts\\session-1.json",
+      "session": 1,
+      "sha256": "789cfd8159c034b260552296923f0215645febe4b754c617101286b8f0f32a95"
+    },
+    {
+      "path": "..\\work\\experiment-readiness\\remeasure-ts\\session-2.json",
+      "session": 2,
+      "sha256": "127e9cab22ee44a3056ef8f0f28b7de6f644eb15c138069bc77dc214c32a9d55"
+    }
+  ],
+  "status": "completed"
+}

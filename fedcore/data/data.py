@@ -134,7 +134,7 @@ class CompressionOutputData:
     num_classes: int = None
     train_dataloader: torch.utils.data.DataLoader = None
     val_dataloader: torch.utils.data.DataLoader = None
-    task: Task = Task(TaskTypesEnum.classification)
+    task: Task = field(default_factory=lambda: Task(TaskTypesEnum.classification))
     data_type: DataTypesEnum = DataTypesEnum.image
     model: callable = None
     predict: callable = None

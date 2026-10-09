@@ -1,311 +1,95 @@
+"""Sequential partition support is validated against actual FX execution edges."""
+from __future__ import annotations
+import copy
+from dataclasses import asdict
+from typing import Any
 import torch
-import torch.nn as nn
-import json
-from typing import List, Dict, Any
-from collections import defaultdict
+from torch import nn
+from fedcore.external_runtime.contracts import ContractError, DeviceProfile
+
 
 class ModelAnalyzer:
-    def __init__(self, device_arch: Dict[str, Any]):
-        self.device_arch = device_arch
-        # PyTorch операции в формате ONNX
-        self.op_mapping = {
-            # Convolutional Layers
-            'Conv2d': 'Conv',
-            'ConvTranspose2d': 'ConvTranspose',
-            'Conv1d': 'Conv',
-            'Conv3d': 'Conv',
-            'ConvTranspose1d': 'ConvTranspose',
-            'ConvTranspose3d': 'ConvTranspose',
-            
-            # Activation Functions
-            'ReLU': 'Relu',
-            'LeakyReLU': 'LeakyRelu',
-            'Sigmoid': 'Sigmoid',
-            'Tanh': 'Tanh',
-            'Softmax': 'Softmax',
-            'LogSoftmax': 'LogSoftmax',
-            'ELU': 'Elu',
-            'SELU': 'Selu',
-            'CELU': 'Celu',
-            'GELU': 'Gelu',
-            'HardSigmoid': 'HardSigmoid',
-            'HardSwish': 'HardSwish',
-            
-            # Pooling Layers
-            'MaxPool2d': 'MaxPool',
-            'AvgPool2d': 'AvgPool',
-            'MaxPool1d': 'MaxPool',
-            'AvgPool1d': 'AvgPool',
-            'MaxPool3d': 'MaxPool',
-            'AvgPool3d': 'AvgPool',
-            
-            # Linear Layers
-            'Linear': 'Gemm',
-            'Bilinear': 'Gemm',
-            
-            # Normalization
-            'BatchNorm1d': 'BatchNormalization',
-            'BatchNorm2d': 'BatchNormalization',
-            'BatchNorm3d': 'BatchNormalization',
-            'GroupNorm': 'GroupNorm',
-            'LayerNorm': 'LayerNorm',
-            'InstanceNorm1d': 'InstanceNorm',
-            'InstanceNorm2d': 'InstanceNorm',
-            'InstanceNorm3d': 'InstanceNorm',
-            
-            # Element-wise Operations
-            'Add': 'Add',
-            'Sub': 'Sub',
-            'Mul': 'Mul',
-            'Div': 'Div',
-            'Pow': 'Pow',
-            'Mod': 'Mod',
-            'Abs': 'Abs',
-            'Neg': 'Neg',
-            'Ceil': 'Ceil',
-            'Floor': 'Floor',
-            'Round': 'Round',
-            'Sqrt': 'Sqrt',
-            'Rsqrt': 'Rsqrt',
-            'Exp': 'Exp',
-            'Log': 'Log',
-            'LogSoftmax': 'LogSoftmax',
-            'Softplus': 'Softplus',
-            'Softsign': 'Softsign',
-            'Elu': 'Elu',
-            'Selu': 'Selu',
-            'Celu': 'Celu',
-            'HardSigmoid': 'HardSigmoid',
-            'HardSwish': 'HardSwish',
-            
-            # Reduction Operations
-            'ReduceMean': 'ReduceMean',
-            'ReduceSum': 'ReduceSum',
-            'ReduceMax': 'ReduceMax',
-            'ReduceMin': 'ReduceMin',
-            'ReduceProd': 'ReduceProd',
-            'ReduceL1': 'ReduceL1',
-            'ReduceL2': 'ReduceL2',
-            'ReduceLogSum': 'ReduceLogSum',
-            'ReduceLogSumExp': 'ReduceLogSumExp',
-            'ReduceSumSquare': 'ReduceSumSquare',
-            'ReduceAny': 'ReduceAny',
-            'ReduceAll': 'ReduceAll',
-            'CumSum': 'CumSum',
-            'CumProd': 'CumProd',
-            
-            # Mathematical Operations
-            'Sum': 'Sum',
-            'Mean': 'Mean',
-            'Min': 'Min',
-            'Max': 'Max',
-            'Prod': 'Prod',
-            'All': 'All',
-            'Any': 'Any',
-            'BitwiseAnd': 'BitwiseAnd',
-            'BitwiseOr': 'BitwiseOr',
-            'BitwiseXor': 'BitwiseXor',
-            'BitwiseNot': 'BitwiseNot',
-            'BitShift': 'BitShift',
-            
-            # Neural Network Layers
-            'LSTM': 'LSTM',
-            'GRU': 'GRU',
-            'RNN': 'RNN',
-            'Embedding': 'Embedding',
-            'Dropout': 'Dropout',
-            'AlphaDropout': 'Dropout',
-            'FeatureAlphaDropout': 'Dropout',
-            
-            # Reshaping Operations
-            'Flatten': 'Flatten',
-            'Reshape': 'Reshape',
-            'Transpose': 'Transpose',
-            'Unsqueeze': 'Unsqueeze',
-            'Squeeze': 'Squeeze',
-            'Expand': 'Expand',
-            'Tile': 'Tile',
-            'Repeat': 'Tile',
-            
-            # Indexing Operations
-            'Gather': 'Gather',
-            'GatherND': 'GatherND',
-            'GatherElements': 'GatherElements',
-            'ScatterElements': 'ScatterElements',
-            'ScatterND': 'ScatterND',
-            'Slice': 'Slice',
-            'Pad': 'Pad',
-            'Where': 'Where',
-            'Range': 'Range',
-            'ArgMax': 'ArgMax',
-            'ArgMin': 'ArgMin',
-            'TopK': 'TopK',
-            
-            # Comparison Operations
-            'Equal': 'Equal',
-            'Less': 'Less',
-            'Greater': 'Greater',
-            'LessOrEqual': 'LessOrEqual',
-            'GreaterOrEqual': 'GreaterOrEqual',
-            'Not': 'Not',
-            'And': 'And',
-            'Or': 'Or',
-            'Xor': 'Xor',
-            
-            # Special Operations
-            'Upsample': 'Upsample',
-            'Resize': 'Resize',
-            'Split': 'Split',
-            'Concat': 'Concat',
-            'Cast': 'Cast',
-            'ConstantOfShape': 'ConstantOfShape',
-            'Shape': 'Shape',
-            'Unique': 'Unique',
-            'IsInf': 'IsInf',
-            'IsNaN': 'IsNaN',
-            'IsFinite': 'IsFinite',
-            'Erf': 'Erf',
-            'Dilations': 'Dilations',
-            'NonMaxSuppression': 'NonMaxSuppression',
-            'QuantizeLinear': 'QuantizeLinear',
-            'DequantizeLinear': 'DequantizeLinear',
-            'DynamicQuantizeLinear': 'DynamicQuantizeLinear',
-            'QLinearConv': 'QLinearConv',
-            'QLinearMatMul': 'QLinearMatMul',
-            'MatMulInteger': 'MatMulInteger',
-            'ConvInteger': 'ConvInteger',
-            'DeconvInteger': 'DeconvInteger',
-            'Clip': 'Clip',
-            'Softmax': 'Softmax',
-            'LogSoftmax': 'LogSoftmax',
-            'Softplus': 'Softplus',
-            'Softsign': 'Softsign',
-            'Elu': 'Elu',
-            'Selu': 'Selu',
-            'Celu': 'Celu',
-            'HardSigmoid': 'HardSigmoid',
-            'HardSwish': 'HardSwish',
-        }
-    
-    def get_layer_type(self, layer) -> str:
-        layer_name = type(layer).__name__
-        # Используем PyTorch названия как основные, но сопоставляем с ONNX форматом
-        return self.op_mapping.get(layer_name, layer_name)
-    
-    def analyze_model_structure(self, model: nn.Module) -> List[Dict]:
-        layers_info = []
-        
-        # Для torch script моделей нужно использовать специальную обработку
+    op_mapping = {"Linear": "Gemm", "Conv1d": "Conv", "Conv2d": "Conv", "Conv3d": "Conv",
+                  "ReLU": "Relu", "Identity": "Identity", "Flatten": "Flatten",
+                  "BatchNorm1d": "BatchNormalization", "BatchNorm2d": "BatchNormalization",
+                  "Sigmoid": "Sigmoid", "Tanh": "Tanh", "Dropout": "Dropout",
+                  "MaxPool1d": "MaxPool", "MaxPool2d": "MaxPool", "AvgPool1d": "AvgPool", "AvgPool2d": "AvgPool"}
+
+    def __init__(self, device_arch):
+        self.profile = device_arch if isinstance(device_arch, DeviceProfile) else DeviceProfile.parse(device_arch)
+        self.device_arch = asdict(self.profile)
+
+    def get_layer_type(self, layer):
+        return self.op_mapping.get(type(layer).__name__, type(layer).__name__)
+
+    def analyze_model_structure(self, model, example_input=None):
+        if not isinstance(model, nn.Module):
+            raise TypeError("model must be nn.Module")
+        local = copy.deepcopy(model).eval()
+        # Wrap a root torch leaf so FX records a call_module rather than its internals.
+        source = nn.Sequential(local) if not list(local.children()) and type(local).__module__.startswith("torch.nn") else local
         try:
-            # Попробуем получить модули через named_modules()
-            for name, module in model.named_modules():
-                # Пропускаем пустые модули и последовательности
-                if len(list(module.children())) == 0 and not isinstance(module, (nn.Sequential, nn.ModuleList, nn.ModuleDict)):
-                    layer_type = self.get_layer_type(module)
-                    # Теперь неподдерживаемыми считаются операции, которых нет в списке supported_ops
-                    is_supported = layer_type in self.device_arch.get('supported_ops', [])
-                    
-                    layers_info.append({
-                        'name': name,
-                        'type': layer_type,
-                        'module': module,
-                        'supported': is_supported,
-                        'module_object': module
-                    })
-        except Exception as e:
-            # Если возникла ошибка, попробуем альтернативный способ
-            print(f"Error analyzing model structure: {e}")
-            # Попробуем обойти проблему с torch script
-            for name, module in model.named_modules():
-                try:
-                    layer_type = self.get_layer_type(module)
-                    is_supported = layer_type in self.device_arch.get('supported_ops', [])
-                    layers_info.append({
-                        'name': name,
-                        'type': layer_type,
-                        'module': module,
-                        'supported': is_supported,
-                        'module_object': module
-                    })
-                except Exception:
-                    # Если не получилось определить тип, добавляем как есть
-                    layers_info.append({
-                        'name': name,
-                        'type': str(type(module).__name__),
-                        'module': module,
-                        'supported': False,
-                        'module_object': module
-                    })
-        
-        return layers_info
-    
-    def find_split_points(self, layers_info: List[Dict]) -> List[int]:
-        if not layers_info:
-            return []
-        
-        split_points = []
-        
-        for i in range(len(layers_info) - 1):
-            current_layer = layers_info[i]
-            next_layer = layers_info[i + 1]
-            
-            if current_layer['supported'] and not next_layer['supported']:
-                split_points.append(i + 1)
-            elif not current_layer['supported'] and next_layer['supported']:
-                split_points.append(i + 1)
-        
-        if layers_info and not layers_info[-1]['supported']:
-            split_points.append(len(layers_info))
-        
-        split_points = sorted(list(set(split_points)))
-        return split_points
-    
-    def get_model_parts_info(self, model: nn.Module) -> Dict[str, Any]:
-        layers_info = self.analyze_model_structure(model)
-        split_points = self.find_split_points(layers_info)
-        
-        parts_info = []
-        start_idx = 0
-        
-        for i, split_point in enumerate(split_points):
-            if split_point > start_idx:
-                part_layers = layers_info[start_idx:split_point]
-                supported_count = sum(1 for layer in part_layers if layer['supported'])
-                total_count = len(part_layers)
-                
-                parts_info.append({
-                    'part_index': i,
-                    'start_layer': start_idx,
-                    'end_layer': split_point,
-                    'layers_count': total_count,
-                    'supported_layers': supported_count,
-                    'unsupported_layers': total_count - supported_count,
-                    'layers': part_layers,
-                    'is_npu_part': i % 2 == 0
-                })
-            start_idx = split_point
-        
-        if start_idx < len(layers_info):
-            part_layers = layers_info[start_idx:]
-            supported_count = sum(1 for layer in part_layers if layer['supported'])
-            total_count = len(part_layers)
-            
-            parts_info.append({
-                'part_index': len(parts_info),
-                'start_layer': start_idx,
-                'end_layer': len(layers_info),
-                'layers_count': total_count,
-                'supported_layers': supported_count,
-                'unsupported_layers': total_count - supported_count,
-                'layers': part_layers,
-                'is_npu_part': len(parts_info) % 2 == 0
-            })
-        
-        return {
-            'model_layers': layers_info,
-            'split_points': split_points,
-            'parts_info': parts_info,
-            'total_layers': len(layers_info),
-            'supported_layers': sum(1 for layer in layers_info if layer['supported']),
-            'unsupported_layers': sum(1 for layer in layers_info if not layer['supported'])
-        }
+            graph = torch.fx.symbolic_trace(source)
+        except Exception as error:
+            raise ContractError("unsupported_graph", "Model cannot be proven to be a sequential FX chain") from error
+        nodes = list(graph.graph.nodes)
+        placeholders = [node for node in nodes if node.op == "placeholder"]
+        if len(placeholders) != 1:
+            raise ContractError("unsupported_graph", "Partitioning supports exactly one tensor input")
+        previous = placeholders[0]
+        layers = []
+        value = example_input.detach().clone() if isinstance(example_input, torch.Tensor) else example_input
+        if value is not None and not isinstance(value, torch.Tensor):
+            raise ContractError("unsupported_input", "Partitioning requires one tensor input")
+        for node in nodes:
+            if node.op == "placeholder":
+                continue
+            if node.op == "output":
+                if node.args != (previous,):
+                    raise ContractError("unsupported_graph", "Output must be the final sequential value")
+                continue
+            if node.op != "call_module" or node.args != (previous,) or node.kwargs:
+                raise ContractError("unsupported_graph", "Branching, functional links and multiple inputs cannot be partitioned as a chain")
+            module = graph.get_submodule(str(node.target))
+            operation = self.get_layer_type(module)
+            if operation not in set(self.op_mapping.values()) or not type(module).__module__.startswith("torch.nn"):
+                raise ContractError("unsupported_graph", "Only declared torch.nn leaf operations may be partitioned")
+            input_shape = list(value.shape) if isinstance(value, torch.Tensor) else None
+            if value is not None:
+                with torch.inference_mode():
+                    value = module(value)
+                if not isinstance(value, torch.Tensor):
+                    raise ContractError("unsupported_graph", "Intermediate values must be tensors")
+            layers.append({"name": str(node.target), "node": node.name, "input_node": previous.name,
+                           "type": operation, "module": module, "module_object": module,
+                           "supported": self.profile.supports(operation), "input_shape": input_shape,
+                           "output_shape": list(value.shape) if isinstance(value, torch.Tensor) else None})
+            previous = node
+        if not layers or len(previous.users) != 1:
+            raise ContractError("unsupported_graph", "Graph must be a nonempty chain")
+        if example_input is not None:
+            with torch.inference_mode():
+                torch.testing.assert_close(value, local(example_input.detach().clone()))
+        return layers
+
+    def find_split_points(self, layers_info):
+        return [i for i in range(1, len(layers_info)) if layers_info[i-1]["supported"] != layers_info[i]["supported"]]
+
+    def get_model_parts_info(self, model, example_input=None):
+        layers = self.analyze_model_structure(model, example_input)
+        points = self.find_split_points(layers)
+        parts = []
+        start = 0
+        for end in points + [len(layers)]:
+            selected = layers[start:end]
+            supported = all(layer["supported"] for layer in selected)
+            count = sum(layer["supported"] for layer in selected)
+            parts.append({"part_index": len(parts), "start_layer": start, "end_layer": end,
+                          "layers_count": len(selected), "supported_layers": count,
+                          "unsupported_layers": len(selected)-count, "layers": selected,
+                          "is_npu_part": supported, "input_shape": selected[0]["input_shape"],
+                          "output_shape": selected[-1]["output_shape"]})
+            start = end
+        return {"model_layers": layers, "split_points": points, "parts_info": parts,
+                "total_layers": len(layers), "supported_layers": sum(layer["supported"] for layer in layers),
+                "unsupported_layers": sum(not layer["supported"] for layer in layers), "profile": asdict(self.profile)}

@@ -35,17 +35,25 @@ def energy_filter_zeroing(conv: Conv2d, energy_threshold: float) -> None:
     Raises:
         Assertion Error: If ``energy_threshold`` is not in (0, 1].
     """
-    assert 0 < energy_threshold <= 1, "energy_threshold must be in the range (0, 1]"
-    filter_norms = vector_norm(conv.weight, dim=(1, 2, 3))
-    sorted_filter_norms, indices = filter_norms.sort()
-    sum = (filter_norms**2).sum()
-    threshold = energy_threshold * sum
-    for index, filter_norm in zip(indices, sorted_filter_norms):
-        with torch.no_grad():
+    if not 0 < energy_threshold <= 1:
+        raise ValueError("energy_threshold must be in (0, 1]")
+    weight = conv.weight.detach().to(torch.float64)
+    if not torch.isfinite(weight).all():
+        raise ValueError("Finite filters are required")
+    if energy_threshold == 1:
+        return  # No nonzero filter may be removed, even below summation precision.
+    scale = weight.abs().max()
+    weight = weight / scale if scale > 0 else weight
+    energies = weight.flatten(1).square().sum(1)
+    remaining = energies.sum()
+    target = energy_threshold * remaining
+    with torch.no_grad():
+        for index in torch.argsort(energies, stable=True):
+            candidate = remaining - energies[index]
+            if candidate < target:
+                break
             conv.weight[index] = 0
-        sum -= filter_norm**2
-        if sum < threshold:
-            break
+            remaining = candidate
 
 
 def _check_nonzero_filters(weight: Tensor) -> Tensor:

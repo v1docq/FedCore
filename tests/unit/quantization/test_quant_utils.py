@@ -4,14 +4,10 @@ import torch.nn as nn
 from copy import deepcopy
 from torch.utils.data import DataLoader, TensorDataset
 
-from fedcore.algorithm.quantization.hooks import (
-    DynamicQuantizationHook, StaticQuantizationHook, QATHook
-)
 from fedcore.algorithm.quantization.utils import (
     uninplace, get_flattened_qconfig_dict,
     QDQWrapper, QDQWrapping
 )
-from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
 
 
@@ -47,8 +43,11 @@ def test_parental_reassembler_embedding_and_basicblock():
     seq2 = nn.Sequential(block)
     model2 = ParentalReassembler.reassemble(deepcopy(seq2))
     wrapped = list(model2.children())[0]
-    from torch.nn.quantized import FloatFunctional
-    assert hasattr(wrapped, 'skip_add') and isinstance(wrapped.skip_add, FloatFunctional)
+    assert type(wrapped) is BasicBlock
+    seq2.eval(); model2.eval()
+    x = torch.randn(2, 3, 8, 8)
+    torch.testing.assert_close(model2(x), seq2(x))
+    assert wrapped.conv1.weight.data_ptr() != block.conv1.weight.data_ptr()
 
 def test_is_leaf_quantizable_linear():
     lin = nn.Linear(5, 3)
@@ -75,44 +74,24 @@ def test_add_quant_entry_exit_inserts_wrappers():
     assert output.dtype == torch.float32
     assert torch.isfinite(output).all()
 
-@pytest.fixture
-def simple_dl():
-    x = torch.randn(10, 3, 8, 8)
-    y = torch.randint(0,2,(10,))
-    return DataLoader(TensorDataset(x,y), batch_size=5)
-
-def test_dynamic_quant_hook_does_not_crash(simple_dl):
-    hook = DynamicQuantizationHook(1, torch.qint8, set(), -1, "fbgemm")
-    hook.model = nn.Linear(3*8*8,2)
-    assert hook.trigger(1, dict())
-    hook.action(1, {})
-
-def test_static_quant_hook_runs_validation(simple_dl):
-    dummy = type('ID', (), {})()
-    dummy.features = type('F', (), {})()
-    dummy.features.val_dataloader = simple_dl
-    hook = StaticQuantizationHook(1, torch.qint8, set(), -1, "fbgemm")
-    hookable_trainer = BaseNeuralModel(nn.Conv2d(3,3,3), {}, [])
-    hook.link_to_trainer(hookable_trainer)
-    assert hook.trigger(1, {})
-    hook.action(1, {"val_loader": simple_dl})
-
-
-def test_qat_hook_train_loop(simple_dl):
-    dummy = type('ID', (), {})()
-    dummy.features = type('F', (), {})()
-    dummy.features.train_dataloader = simple_dl
-    params = {
-        'input_data': dummy,
-        'epochs':1,
-        'optimizer': torch.optim.SGD,
-        'criterion': nn.CrossEntropyLoss(),
-        'lr': 0.01,
-        'device': torch.device('cpu')
-    }
-    hook = QATHook(-1, torch.qint8, set(), 1, "fbgemm")
-    hookable_trainer = BaseNeuralModel(nn.Sequential(nn.Flatten(), nn.Linear(3*8*8,2)), {"epoch": 20}, [hook])
-    hook.link_to_trainer(hookable_trainer)
-    #hookable_trainer.fit(dummy) TODO correct test with BaseQuantizer
-    assert hook.trigger(1, {})
-    hook.action(1, {})
+@pytest.mark.parametrize("mode", ["dynamic", "static", "qat"])
+def test_public_quantizer_completes_actual_conversion(tmp_path, monkeypatch, mode):
+    from types import SimpleNamespace
+    from fedcore.algorithm.quantization.quantizers import BaseQuantizer
+    from fedcore.tools.registry.model_registry import ModelRegistry
+    monkeypatch.setenv("FEDCORE_MODEL_REGISTRY_PATH", str(tmp_path / "registry"))
+    ModelRegistry._instance = None
+    ModelRegistry._initialized = False
+    model = nn.Sequential(nn.Flatten(), nn.Linear(12, 6), nn.ReLU(), nn.Linear(6, 2))
+    loader = DataLoader(TensorDataset(torch.randn(6, 3, 2, 2), torch.tensor([0, 1] * 3)), batch_size=3)
+    data = SimpleNamespace(model=model, target=model, train_dataloader=loader, calibration_dataloader=loader)
+    state = deepcopy(model.state_dict())
+    operation = BaseQuantizer({"quant_type": mode, "qat_params": {"epochs": 1}})
+    converted = operation.fit(data)
+    assert operation.quantization_result.status == "completed"
+    assert operation.quantization_result.training_steps == (2 if mode == "qat" else 0)
+    assert any(type(layer).__module__.startswith("torch.ao.nn.quantized") for layer in converted.modules())
+    output = converted(next(iter(loader))[0])
+    assert output.shape == (3, 2) and torch.isfinite(output).all()
+    for name, parameter in model.state_dict().items():
+        torch.testing.assert_close(parameter, state[name], rtol=0, atol=0)

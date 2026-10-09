@@ -8,11 +8,11 @@ from typing import Dict, Optional
 import torch
 import torch.nn as nn
 from fedcore.architecture.abstraction.accessor import Accessor
-from fedcore.architecture.comptutaional.devices import extract_device
+from fedcore.architecture.computational.devices import extract_device
 from fedcore.models.network_impl.decomposed_layers import (
-    IDecomposed, 
+    IDecomposed,
     DecomposedLinear,
-    DecomposedEmbedding, 
+    DecomposedEmbedding,
     DecomposedConv1d,
     DecomposedConv2d
 )
@@ -20,7 +20,7 @@ from fedcore.models.network_impl.decomposed_layers import (
 
 class RecreatedDecomposed(nn.Sequential):
     """Sequential container for recreated decomposed modules."""
-    
+
     def __init__(self, *modules, routing: Dict = None):
         super().__init__(*modules)
         self.routing = routing or {}
@@ -73,7 +73,7 @@ class Reassembler(Accessor):
     def _traverse_modules(cls, model: nn.Module, pre_hook=None, post_hook=None):
         """
         Unified method for traversing model modules with optional hooks.
-        
+
         Args:
             model: Model to traverse
             pre_hook: Function called before processing each module (name, module) -> bool
@@ -81,17 +81,17 @@ class Reassembler(Accessor):
             post_hook: Function called after processing each module (name, module, result) -> None
         """
         device = extract_device(model)
-        
+
         for name, module in model.named_modules():
             # Pre-processing hook
             if pre_hook and not pre_hook(name, module):
                 continue
-                
+
             # Main conversion logic - use base Reassembler convert method
-            new_module = Reassembler.convert(module)
+            new_module = cls.convert(module)
             if new_module:
                 cls.set_module(model, name, new_module.to(device))
-                
+
             # Post-processing hook
             if post_hook:
                 post_hook(name, module, new_module)
@@ -114,14 +114,14 @@ class Reassembler(Accessor):
 
 class ParentalReassembler(Reassembler):
     """Reassembler for standard neural network modules."""
-    
+
     def __init__(self):
         # Import here to avoid circular imports
         from .decomposed_recreation import (
             _recreate_embedding, _recreate_decomposed_linear,
             _recreate_decomposed_embedding, _recreate_decomposed_conv2d, _recreate_decomposed_conv1d
         )
-        
+
         self.supported_layers = {
             torch.nn.Embedding: _recreate_embedding,
         }
@@ -157,13 +157,19 @@ def get_reassembler(reassembler_type: str = 'parental'):
     if reassembler_type not in REASSEMBLERS:
         available = list(REASSEMBLERS.keys())
         raise KeyError(f"Unknown reassembler type '{reassembler_type}'. Available: {available}")
-    
+
     reassembler = REASSEMBLERS[reassembler_type]
-    
+
     # Handle lazy loading for special reassemblers
     if callable(reassembler) and reassembler_type in ['trans-mla', 'flat-llm']:
         return reassembler()  # Call the lazy loader function
-    
+
     return reassembler
 
 
+
+# Class methods use class-owned mappings, rather than instance-only registries.
+from .decomposed_recreation import RECREATION_FUNCTIONS
+ParentalReassembler.supported_decomposed_layers = {
+    kind: fn for kind, fn in RECREATION_FUNCTIONS.items() if issubclass(kind, IDecomposed)
+}

@@ -1,25 +1,9 @@
-# Core: server, upload, analyze, architectures (non-export)
-torch>=1.9.0
-torchvision>=0.10.0
-numpy>=1.19.0
-matplotlib>=3.3.0
-networkx>=2.5
-Pillow>=8.0.0
-onnx
-Flask==2.3.3
-Werkzeug==2.3.7
-
-# FedCore.export API (fedcore.api.main.FedCore)
-evaluate
-dask
-distributed
-bokeh
-pynvml
-
-# Optional export backends — install only what you need; not required for /upload, /files, /analyze_model.
-# tvm is not reliably available via pip (especially on Windows); build from Apache TVM docs if needed.
-# openvino
-# tensorrt
-# pycuda
-# onnx-tf
-# tensorflow
+# Standalone CPU job service; no FEDOT, Dask, vision, NLP, or GPU extras.
+torch>=2.2,<2.3
+numpy>=1.26,<2
+tdecomp==0.2.18
+Flask>=3.0,<4
+# ONNX export and loader validation. TorchScript requires neither package.
+onnx>=1.15,<2
+onnxruntime>=1.15,<2
+# Tkinter GUI additionally needs matplotlib, networkx and Pillow.

@@ -114,4 +114,5 @@ dist/
 build/ 
 *.egg-info/ 
 docs/_build/
+/work/
 *.pt

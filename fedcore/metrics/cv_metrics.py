@@ -5,7 +5,7 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from abc import ABC, abstractmethod
 from typing import List, Dict, Union
 
-from fedcore.metrics.metric_impl import QualityMetric
+from fedcore.metrics.quality import QualityMetric
 
 from fedot.core.composer.metrics import Metric
 from fedot.core.data.data import InputData
@@ -178,49 +178,39 @@ def dice_score(outputs: Tensor, masks: Tensor, threshold: float = 0.5, smooth: f
     return dice
 
 
-class ParetoMetrics:
-    def pareto_metric_list(self, costs: Union[list, torch.Tensor], maximise: bool = True) -> torch.Tensor:
-        """Return mask of Pareto-efficient points."""
-        costs = torch.tensor(costs)
-        is_efficient = torch.ones(costs.shape[0], dtype=torch.bool)
-        for i, c in enumerate(costs):
-            if is_efficient[i]:
-                if maximise:
-                    is_efficient[is_efficient] = torch.all(costs[is_efficient] >= c, dim=1)
-                else:
-                    is_efficient[is_efficient] = torch.all(costs[is_efficient] <= c, dim=1)
-        return is_efficient
-
-
-# ============================ Generic metrics =================================
+from fedcore.metrics.pareto import ParetoMetrics
 
 class MASE(QualityMetric):
-    """Mean Absolute Scaled Error (MASE)."""
-    
+    """MAE scaled by a fixed training-series seasonal difference along axis 0.
+
+    Pass training_target or a precomputed training_scale on every call. A zero
+    scale yields 0 for perfect predictions and +inf otherwise.
+    """
+    need_to_minimize = True
+    @staticmethod
+    def training_scale(training_target, seasonal_factor=1):
+        values = torch.as_tensor(training_target).double()
+        if seasonal_factor < 1 or len(values) <= seasonal_factor:
+            raise ValueError('Training series must exceed positive seasonal_factor')
+        return (values[seasonal_factor:] - values[:-seasonal_factor]).abs().mean()
+
     @classmethod
-    def metric(cls, target: torch.Tensor, predict: torch.Tensor, seasonal_factor: int = 1) -> float:
-        """
-        Compute Mean Absolute Scaled Error (MASE).
-
-        Args:
-            target (torch.Tensor): Ground truth values.
-            predict (torch.Tensor): Predicted values.
-            seasonal_factor (int): Seasonal factor (e.g., number of periods per year).
-
-        Returns:
-            float: The MASE value.
-        """
-        # Compute the scale based on the seasonal difference (for example, yearly data)
-        scale = torch.mean(torch.abs(target[seasonal_factor:] - target[:-seasonal_factor]))
-
-        # Calculate the MASE
-        mase_value = torch.mean(torch.abs(target - predict)) / scale
-        return mase_value.item()
+    def metric(cls, target, predict, seasonal_factor=1, training_target=None, training_scale=None):
+        if training_scale is None:
+            if training_target is None:
+                raise ValueError('MASE requires an explicit training_target or training_scale')
+            training_scale = cls.training_scale(training_target, seasonal_factor)
+        scale = float(training_scale)
+        if scale < 0 or not torch.isfinite(torch.tensor(scale)):
+            raise ValueError('Training scale must be finite and nonnegative')
+        error = float((target.double() - predict.double()).abs().mean())
+        return error / scale if scale > 0 else (0.0 if error == 0 else float('inf'))
 
 
 class SMAPE(QualityMetric):
+    need_to_minimize = True
     """Symmetric Mean Absolute Percentage Error (SMAPE)."""
-    
+
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
         """
@@ -239,24 +229,34 @@ class SMAPE(QualityMetric):
 
 
 class MSE(QualityMetric):
+    need_to_minimize = True
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
         return float(torch.mean((target - predict) ** 2))
 
 
 class MSLE(QualityMetric):
+    need_to_minimize = True
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
         return float(torch.mean((torch.log1p(target) - torch.log1p(predict)) ** 2))
 
 
 class MAPE(QualityMetric):
+    need_to_minimize = True
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
-        return float(torch.mean(torch.abs((target - predict) / target)))
+        error = (target.double() - predict.double()).abs()
+        if (target == 0).any():
+            if (error[target == 0] > 0).any():
+                return float('inf')
+            ratio = torch.where(target != 0, error / target.double().abs().clamp_min(torch.finfo(torch.double).tiny), 0)
+            return float(ratio.mean())
+        return float((error / target.double().abs()).mean())
 
 
 class MAE(QualityMetric):
+    need_to_minimize = True
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
         return float(torch.mean(torch.abs(target - predict)))
@@ -265,18 +265,23 @@ class MAE(QualityMetric):
 class R2(QualityMetric):
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
-        return float(1 - torch.sum((target - predict) ** 2) / torch.sum((target - target.mean()) ** 2))
+        target, predict = target.double(), predict.double()
+        denominator = (target - target.mean()).square().sum()
+        error = (target - predict).square().sum()
+        if denominator == 0:
+            return 1.0 if error == 0 else 0.0
+        return float(1 - error / denominator)
 
 
 # --------------------------- Classification -----------------------------------
 
 class Accuracy(QualityMetric):
-    """Accuracy on label predictions."""  
+    """Accuracy on label predictions."""
     output_mode = "labels"
 
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
-        return float(torch.mean(target == predict).item())
+        return float((target == predict).to(torch.float64).mean())
 
 
 class Precision(QualityMetric):
@@ -285,23 +290,25 @@ class Precision(QualityMetric):
 
     @classmethod
     def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
-        tp = torch.sum((target == 1) & (predict == 1))
-        fp = torch.sum((target == 0) & (predict == 1))
-        return float(tp / (tp + fp + 1e-8))
+        values = []
+        for label in torch.unique(torch.cat((target.reshape(-1), predict.reshape(-1)))):
+            tp = ((target == label) & (predict == label)).sum()
+            predicted = (predict == label).sum()
+            values.append(tp.double() / predicted if predicted else tp.double() * 0)
+        return float(torch.stack(values).mean())
 
 
 class F1(QualityMetric):
-    """F1; macro for multiclass, binary uses minority class as positive."""
+    """Macro F1 over the union of observed and predicted class labels."""
     output_mode = "labels"
-
     @classmethod
-    def metric(cls, target: torch.Tensor, predict: torch.Tensor) -> float:
-        tp = torch.sum((target == 1) & (predict == 1))
-        fp = torch.sum((target == 0) & (predict == 1))
-        fn = torch.sum((target == 1) & (predict == 0))
-        precision = tp / (tp + fp + 1e-8)
-        recall = tp / (tp + fn + 1e-8)
-        return 2 * (precision * recall) / (precision + recall + 1e-8)
+    def metric(cls, target, predict):
+        values = []
+        for label in torch.unique(torch.cat((target.reshape(-1), predict.reshape(-1)))):
+            tp = ((target == label) & (predict == label)).sum()
+            denominator = (target == label).sum() + (predict == label).sum()
+            values.append(2 * tp.double() / denominator if denominator else tp.double() * 0)
+        return float(torch.stack(values).mean())
 
 
 class Logloss(QualityMetric):

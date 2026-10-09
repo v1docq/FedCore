@@ -1,0 +1,127 @@
+{
+  "cache_hit": false,
+  "cache_key": "91a3260c4da9263d9c3dd61f7497fa172b7b73efecd3547f071140770b843197",
+  "candidate_id": "cc2b9661ea310ba236fc",
+  "completed_seconds": 14.872654300004797,
+  "configuration": {
+    "chain": [],
+    "method": "ptq",
+    "parameters": {}
+  },
+  "measurement": {
+    "artifact": {
+      "device": "cpu",
+      "format": "torchscript",
+      "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-tabular\\candidates\\005-cc2b9661ea310ba236fc\\model.pt",
+      "sha256": "de1858312b936f49c48e67ae781f2135b8facb477c0081a099499af64766fe9c",
+      "threads": 1
+    },
+    "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+    "metrics": {
+      "cpu_rss_after_bytes": 716197888,
+      "cpu_rss_before_bytes": 715235328,
+      "cuda_allocated_before_bytes": null,
+      "cuda_allocated_increment_bytes": null,
+      "cuda_peak_allocated_bytes": null,
+      "cuda_peak_reserved_bytes": null,
+      "cuda_reserved_before_bytes": null,
+      "cuda_reserved_increment_bytes": null,
+      "end_to_end_p50_ms": 0.06445000000000001,
+      "end_to_end_p95_ms": 0.067425,
+      "file_bytes": 26717,
+      "latency_p50_ms": 0.035250000000000004,
+      "latency_p95_ms": 0.04134999999999999,
+      "load_seconds": 0.0058915000008710194,
+      "tensor_state_bytes": 12984,
+      "throughput": 1762599.8347562656
+    },
+    "profile": {
+      "batch_size": 64,
+      "concurrency": 1,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "format": "torchscript",
+      "hardware": "CPU",
+      "idle_device_required": true,
+      "input_shape": [
+        64,
+        30
+      ],
+      "repeats": 10,
+      "runtime": "torch.jit",
+      "synchronization": "synchronous CPU",
+      "threads": 1,
+      "units": {
+        "cpu_rss_after_bytes": "bytes",
+        "cpu_rss_before_bytes": "bytes",
+        "cuda_peak_allocated_bytes": "bytes",
+        "cuda_peak_reserved_bytes": "bytes",
+        "file_bytes": "bytes",
+        "latency_p50_ms": "ms/batch",
+        "latency_p95_ms": "ms/batch",
+        "load_seconds": "s",
+        "tensor_state_bytes": "bytes",
+        "throughput": "samples/s"
+      },
+      "warmup": 3
+    },
+    "quality_parity_checked": true,
+    "raw_end_to_end_ms": [
+      0.0681,
+      0.0666,
+      0.0441,
+      0.0395,
+      0.0594,
+      0.064,
+      0.066,
+      0.0654,
+      0.0645,
+      0.0644
+    ],
+    "raw_inference_ms": [
+      0.0454,
+      0.0364,
+      0.0356,
+      0.0355,
+      0.0348,
+      0.0351,
+      0.035,
+      0.0349,
+      0.0354,
+      0.035
+    ],
+    "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+    "status": "succeeded"
+  },
+  "operation": {
+    "backend": "fbgemm",
+    "calibration_role": "calibration",
+    "implementation": "FedCore BaseQuantizer",
+    "mode": "static",
+    "training_role": "train",
+    "training_steps": 0
+  },
+  "result_model_sha256": "f4d2a477c7f37b9ed7ec7080755df4433167ed73fcf0497d0884d944dbaafa1b",
+  "source_model_sha256": "06b469683928f42a07b0c217c6ef11064f71732d00ff1499462932dd79b0397f",
+  "stages_seconds": {
+    "export_reload_measure": 0.08494909999717493,
+    "operation": 0.5147259000004851,
+    "validation": 0.016025799999624724
+  },
+  "started_seconds": 14.248529100004816,
+  "status": "succeeded",
+  "validation": {
+    "cross_entropy": 0.036000922322273254,
+    "direction": "maximize",
+    "loss": 0.0117647058823529,
+    "macro_f1": 0.9875457875457876,
+    "metric": "accuracy",
+    "samples": 85,
+    "value": 0.9882352941176471
+  },
+  "validation_predictions": {
+    "path": "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\petra-pilots\\final-tabular\\candidates\\005-cc2b9661ea310ba236fc\\validation_predictions.pt",
+    "sha256": "9c39be5747ca62488b36a867e6f85fd6fd419c3433c0d5654632bb70b58f9696"
+  },
+  "wall_seconds": 0.6241248000005726
+}

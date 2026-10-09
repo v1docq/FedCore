@@ -15,8 +15,9 @@ of the FedCore API as strongly typed configuration objects.
 """
 
 from enum import Enum
+from copy import deepcopy
 from inspect import signature, isclass
-from typing import get_args, get_origin, Iterable, Literal, Optional, Union
+from typing import Any, get_args, get_origin, Iterable, Literal, Optional, Union
 
 from .api_configs import (
     ConfigTemplate,
@@ -24,6 +25,7 @@ from .api_configs import (
     get_nested,
     LookUp,
     MisconfigurationError,
+    matches_annotation,
 )
 
 
@@ -90,18 +92,25 @@ class ConfigFactory:
               ``__setitem__``.
         """
         template_cls, content = template
+        defaults = deepcopy(content)
         if name is None:
             name = template_cls.get_default_name()
         cls.registered_configs[name] = template_cls
-        slots = list(content) + ["_parent"]
+        slots = list(signature(template_cls.__init__).parameters)[1:] + ["_parent"]
 
         def __init__(self, parent=None, **kwargs):
             object.__setattr__(self, "_parent", parent)
-            content.update(kwargs)
+            values = deepcopy(defaults)
+            values.update(deepcopy(kwargs))
+            unknown = set(values) - set(slots)
+            if unknown:
+                raise MisconfigurationError(f'Unknown fields: {sorted(unknown)}')
             misconf_errors = []
-            for key, value in content.items():
+            for key, value in values.items():
                 try:
-                    if key in cls._listed_instantiation and isinstance(value, (tuple, list)): # case for listings
+                    template_pair = (isinstance(value, tuple) and len(value) == 2 and
+                                     isclass(value[0]) and issubclass(value[0], ConfigTemplate))
+                    if key in cls._listed_instantiation and isinstance(value, (tuple, list)) and not template_pair:
                         enlisted_value = []
                         for item in value:
                             item, need_check = ConfigFactory._instantiate_default(self, name, key, item)
@@ -128,7 +137,7 @@ class ConfigFactory:
 
             # For non-extendable configs keep only slot-based storage.
             if not isinstance(self, ExtendableConfigTemplate):
-                delattr(self, "__dict__")
+                self.__dict__.clear()
             self._parent = None
 
         def __new__(cls, *args, **kwargs):
@@ -157,15 +166,10 @@ class ConfigFactory:
             ConfigTemplate.__setattr__(self, key, value)
 
         def __setitem__(self, key, value):
-            orig_type = type(getattr(self, key))
-            if not isinstance(value, orig_type):  # isinstance or is?
-                raise ValueError(
-                    f"Passing wrong argument of type {value.__class__.__name__}! "
-                    f"Required: {orig_type}"
-                )
             setattr(self, key, value)
 
         class_dict = {
+            "__template__": template_cls,
             "__slots__": slots,
             "__init__": __init__,
             "__new__": __new__,
@@ -214,8 +218,8 @@ class ConfigFactory:
             ``True`` if the annotation allows ``None``, ``False`` otherwise.
         """
         origin = get_origin(annotation)
-        return ((origin is Union or origin is Literal) and 
-           type(None) in get_args(annotation)) 
+        return ((origin is Union or origin is Literal) and
+           type(None) in get_args(annotation))
 
     @classmethod
     def _instantiate_default(cls, self: ConfigTemplate, config_name: str, k: str, v):
@@ -260,11 +264,13 @@ class ConfigFactory:
         """
         # check look-up
         if isinstance(v, LookUp):
-            if self._parent:
-                v = getattr(self._parent, k, None)
+            if self._parent is not None:
+                v = getattr(self._parent, k, v.value)
             else:
                 v = v.value
-        annotation = cls._get_annotation(config_name, k)
+        annotation = self.__class__.get_annotation(k)
+        if v is None and get_origin(annotation) is Union and type(None) in get_args(annotation):
+            return None, False
         is_union = get_origin(annotation) is Union
         if is_union:
             exceptions = []
@@ -274,17 +280,28 @@ class ConfigFactory:
                 except Exception as exception:
                     exceptions.append(exception)
                 else:
-                    return x 
+                    if matches_annotation(x[0], arg):
+                        return x
+                    exceptions.append(ValueError(f'{config_name}.{k}: {v!r} does not match {arg}'))
             raise MisconfigurationError(exceptions)
         else:
             return cls._instantiate_default_one(self, annotation, k, v, config_name)
-                
+
 
     @classmethod
     def _instantiate_default_one(cls, self: ConfigTemplate, annotation, k: str, v, config_name: str = None):
-        
-        is_config = isclass(annotation) and issubclass(annotation, ConfigTemplate) 
-        
+
+        is_config = isclass(annotation) and issubclass(annotation, ConfigTemplate)
+        if v is None and isclass(annotation) and issubclass(annotation, Enum):
+            return None, False
+        if is_config and isinstance(v, ConfigTemplate):
+            return deepcopy(v), True
+        if is_config and isinstance(v, dict):
+            v = annotation(**v)
+        if v is None and (annotation is Any or annotation is type(None) or
+                          get_origin(annotation) is Literal and None in get_args(annotation)):
+            return None, False
+
         if v is not None and not is_config:
             return v, True
         # check if explicitly optional

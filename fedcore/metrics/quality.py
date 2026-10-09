@@ -1,21 +1,19 @@
 import torch
-import evaluate
 import pandas as pd
 from functools import wraps
 
 from typing import Optional
 
 from fedot.core.composer.metrics import Metric
-from fedot.core.composer.metrics import (ComplexityMetric, ComputationTime, NodeNum, QualityMetric, 
+from fedot.core.composer.metrics import (ComplexityMetric, ComputationTime, NodeNum, QualityMetric,
                                          StructuralComplexity)
-                                         
+
 import torch
 from torch import Tensor
 from abc import ABC, abstractmethod
 from typing import List, Dict, Union
 import torchmetrics
 
-from fedcore.metrics.nlp_metrics import EvaluateMetric 
 
 # Import necessary libraries
 
@@ -32,18 +30,7 @@ from fedcore.api.utils.misc import cuda_transfer
 # ============================== Pareto =====================================
 
 
-class ParetoMetrics:
-    def pareto_metric_list(self, costs: Union[list, torch.Tensor], maximise: bool = True) -> torch.Tensor:
-        """Return mask of Pareto-efficient points."""
-        costs = torch.tensor(costs)
-        is_efficient = torch.ones(costs.shape[0], dtype=torch.bool)
-        for i, c in enumerate(costs):
-            if is_efficient[i]:
-                if maximise:
-                    is_efficient[is_efficient] = torch.all(costs[is_efficient] >= c, dim=1)
-                else:
-                    is_efficient[is_efficient] = torch.all(costs[is_efficient] <= c, dim=1)
-        return is_efficient
+from fedcore.metrics.pareto import ParetoMetrics
 
 class QualityMetric(Metric):
     """Base metric computed via pipeline.predict()."""
@@ -56,19 +43,19 @@ class QualityMetric(Metric):
     def get_value(cls, pipeline, reference_data, validation_blocks=None) -> float:
         """Compute metric on features.<split> using pipeline.predict(output_mode)."""
         results = pipeline.predict(reference_data, output_mode=cls.output_mode)
-        target_loader = getattr(reference_data, f"{cls.split}_dataloader")
-
         prediction = results.predict
-
+        target = getattr(results, 'target', None)
         if isinstance(prediction, CompressionOutputData):
+            paired_target = getattr(prediction, 'target', None)
+            if paired_target is not None:
+                target = paired_target
             prediction = prediction.predict
-
-        if isinstance(prediction, torch.Tensor):
-            prediction = prediction.cpu().detach()
-
-        target = torch.concat(
-            [b[1] for b in target_loader]
-        )
+        if target is None:
+            raise ValueError('Metric prediction must include targets from the same labeled pass')
+        prediction = torch.as_tensor(prediction).detach().cpu()
+        target = torch.as_tensor(target).detach().cpu()
+        if len(target) != len(prediction):
+            raise ValueError('Prediction and paired targets have different lengths')
 
         result = cls.metric(target=target, predict=prediction)
         assert result is not None, f"{cls.__name__}.metric() returned None"
@@ -87,8 +74,8 @@ PROBLEM_MAPPING = {
 }
 
 ATTRIBUTE_MAPPING = {
-    'higher_is_better': 'need_to_minimize', 
-    'is_differentiable': 'is_differentiable' 
+    'higher_is_better': 'need_to_minimize',
+    'is_differentiable': 'is_differentiable'
 }
 
 LOADED_METRICS = {}
@@ -102,7 +89,7 @@ _METRICS_TO_PROBLEM = {
 }
 
 
-def get_available_metrics(problem): 
+def get_available_metrics(problem):
     module = import_module(f'torchmetrics.{PROBLEM_MAPPING.get(problem, problem)}')
     return module.__all__
 
@@ -115,7 +102,7 @@ def _problem_based_output_convertor(problem):
                 if isinstance(predict, CompressionOutputData):
                     predict = predict.predict
                 assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor), f'Current types are: {type(target)} and {type(predict)}'
-            try: 
+            try:
                 return metric(cls, target, predict, **metric_kw)
             except (ValueError):
                 if problem == 'classification':
@@ -130,20 +117,23 @@ FEDOT_STRUCTURAL = {
     'computation_time': ComputationTime
 }
 
-_NEED_TO_MINIMIZE = {
-    'Latency': True,
-    'Throughput': False,
-    'ModelSize': True,
-    'PowerConsupmtion': True,
-    'bleu': False,
-    'rouge': False,
-    'meteor': False,
+# executor, unit, optimization direction. Legacy PowerConsumption means energy.
+COMPUTATIONAL_METRICS = {
+    'Latency': ('measure_latency', 'ms/batch', True),
+    'Throughput': ('measure_throughput', 'samples/s', False),
+    'ModelSize': ('measure_model_size', 'MiB (serialized state)', True),
+    'Power': ('measure_power', 'W', True),
+    'PowerConsumption': ('measure_energy', 'J/batch', True),
+    'Energy': ('measure_energy', 'J/batch', True),
+    'EnergyConsumption': ('measure_energy', 'J/batch', True),
 }
+_NEED_TO_MINIMIZE = {name: spec[2] for name, spec in COMPUTATIONAL_METRICS.items()}
+_NEED_TO_MINIMIZE.update({'bleu': False, 'rouge': False, 'meteor': False})
 
 _TEXT_GENERATION_METRICS = {'bleu', 'rouge', 'meteor'}
 
 class MetricFactory:
-    __approaches = ['get_fedot', 'get_torchmetrics', 'get_computational', 'get_evaluate']
+    __approaches = ['get_fedot', 'get_legacy', 'get_torchmetrics', 'get_computational', 'get_evaluate']
     __cpu_prefix = 'CPU'
 
     @classmethod
@@ -160,12 +150,23 @@ class MetricFactory:
     @classmethod
     def get_fedot(cls, metric_name, problem=None) -> QualityMetric:
         return FEDOT_STRUCTURAL[metric_name]
-    
+
+    @classmethod
+    def get_legacy(cls, metric_name, problem=None):
+        if not metric_name.startswith('Legacy'):
+            raise KeyError(metric_name)
+        from fedcore.metrics import cv_metrics
+        name = metric_name[len('Legacy'):]
+        allowed = ('Accuracy','Precision','F1','MASE','MAPE','R2','MSE','MAE','SMAPE','MSLE')
+        if name not in allowed:
+            raise KeyError(metric_name)
+        return getattr(cv_metrics, name)
+
     @classmethod
     def get_torchmetrics(cls, metric_name, problem=None) -> QualityMetric:
         if metric_name in LOADED_METRICS:
             return LOADED_METRICS[metric_name]
-        
+
         original_name = metric_name
         # get suffix of class number
         metric_name = metric_name.split('__')
@@ -186,16 +187,16 @@ class MetricFactory:
         attributes['problem'] = problem
 
         # special cases
-        attributes['need_to_minimize'] = not attributes['need_to_minimize'] 
+        attributes['need_to_minimize'] = not attributes['need_to_minimize']
 
         @classmethod
         @_problem_based_output_convertor(problem)
         def metric(cls: torchmetrics.Metric, target, predict, **metric_kw) -> torch.Tensor:
             """
             Compute metric value
-            Args: 
+            Args:
                 target: torch.Tensor
-                predict: torch.Tensor 
+                predict: torch.Tensor
                 **metric_kw - any to instantiate torchmetrics' metric
             """
             if suffix and problem == 'classification':
@@ -211,19 +212,17 @@ class MetricFactory:
         new_metric = type(
             original_name, (parent_cls, QualityMetric), attributes
         )
-        LOADED_METRICS[original_name] = new_metric 
+        LOADED_METRICS[original_name] = new_metric
         return new_metric
-    
+
     @classmethod
     def get_computational(cls, metric_name: str, model_regime: str = 'model_after') -> QualityMetric:
         if metric_name in LOADED_METRICS:
             return LOADED_METRICS[metric_name]
 
         is_cpu = metric_name.upper().startswith(cls.__cpu_prefix)
-        true_metric_name = metric_name.removeprefix(cls.__cpu_prefix)
-        need_minimize = _NEED_TO_MINIMIZE.get(true_metric_name, False)
-
-        method_name = f'measure_{camel_to_snake(true_metric_name)}'
+        true_metric_name = metric_name[len(cls.__cpu_prefix):] if is_cpu else metric_name
+        method_name, unit, need_minimize = COMPUTATIONAL_METRICS[true_metric_name]
         if not hasattr(PerformanceEvaluator, method_name):
             raise AttributeError(f"PerformanceEvaluator has no method '{method_name}'")
 
@@ -240,7 +239,7 @@ class MetricFactory:
             if isinstance(metric, tuple):
                 return float(metric[0])
             return float(metric)
-        
+
         @classmethod
         def metric(cls: torchmetrics.Metric, target, predict, **metric_kw) -> torch.Tensor:
             raise NotImplementedError(f'The call for `metric` method for {metric_name} is not supported. Use `get_value` instead')
@@ -250,12 +249,14 @@ class MetricFactory:
                 'get_value': get_value,
                 'need_to_minimize': need_minimize,
                 'default_value': float('inf') if need_minimize else 0.,
+                'unit': unit,
+                'executor': method_name,
                 'metric': metric
             }
         )
         LOADED_METRICS[metric_name] = new_metric
         return new_metric
-    
+
     @classmethod
     def get_evaluate(cls, metric_name, problem=None) -> QualityMetric:
         """
@@ -264,7 +265,10 @@ class MetricFactory:
         """
         if metric_name in LOADED_METRICS:
             return LOADED_METRICS[metric_name]
-        
+
+        from fedcore.metrics.nlp_metrics import EvaluateMetric
+        if metric_name.lower() not in _TEXT_GENERATION_METRICS:
+            raise KeyError(metric_name)
         original_name = metric_name
 
         if problem is None:
@@ -275,9 +279,9 @@ class MetricFactory:
             output_mode = "texts"
         else:
             output_mode = "labels"
-        
+
         need_minimize = _NEED_TO_MINIMIZE.get(metric_name, _NEED_TO_MINIMIZE.get(metric_name.upper(), False))
- 
+
         new_metric = type(
             original_name, (EvaluateMetric,), {
                 'metric_name': metric_name,
@@ -286,7 +290,7 @@ class MetricFactory:
                 'output_mode': output_mode,
             }
         )
-        LOADED_METRICS[original_name] = new_metric 
+        LOADED_METRICS[original_name] = new_metric
         return new_metric
 
 
@@ -296,7 +300,7 @@ def calculate_metrics(
     predict: torch.Tensor,
     rounding_order: int = 3,
     ):
-    values = {metric_name: MetricFactory.get_metric(metric_name).metric(target, predict).item() for metric_name in metric_names}
+    values = {metric_name: float(MetricFactory.get_metric(metric_name).metric(target, predict)) for metric_name in metric_names}
     return _to_df(values, rounding_order)
 
 # -------------------- Utility Function: Convert to DataFrame --------------------
@@ -304,11 +308,11 @@ def calculate_metrics(
 def _to_df(values: dict, rounding: int = 3) -> pd.DataFrame:
     """
     Convert a dictionary of metric values into a DataFrame with one row.
-    
+
     Args:
         values (dict): A dictionary of metric names and values.
         rounding (int): The number of decimal places to round the metric values.
-    
+
     Returns:
         pd.DataFrame: A DataFrame with one row of rounded metric values.
     """
@@ -389,7 +393,7 @@ def _to_df(values: dict, rounding: int = 3) -> pd.DataFrame:
 
 #     Returns:
 #         float: The computed computational metric (e.g., throughput or latency).
-#     """    
+#     """
 
 #     ###################### TODO Here should be called the fedcore.tools.ruler.PerformanceEvaluator
-#     pass 
+#     pass

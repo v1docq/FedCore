@@ -12,8 +12,8 @@ from typing import Callable, Dict, Literal, Optional, Union
 import torch
 from torch.ao.quantization.quantize import (
     has_no_children_ignoring_parametrizations,
-    quantize, 
-    quantize_dynamic, 
+    quantize,
+    quantize_dynamic,
     quantize_qat
 )
 from torch.ao.quantization.qconfig import QConfigAny
@@ -24,9 +24,9 @@ import torch.nn as nn
 import torchvision.models.resnet as resnet
 
 from fedcore.models.network_impl.decomposed_layers import (
-    IDecomposed, 
+    IDecomposed,
     DecomposedLinear,
-    DecomposedEmbedding, 
+    DecomposedEmbedding,
     DecomposedConv1d,
     DecomposedConv2d
 )
@@ -110,84 +110,13 @@ class RecreatedDecomposed(nn.Sequential):
             return getattr(super().__getattr__(module), name)
         else:
             return super().__getattr__(name)
-    
 
-def _recreate_decomposed_linear(
-        L: DecomposedLinear
-        ):
-    U, Vh = L.U.detach(), L.Vh.detach()
-    h = U.size(-1)
-    new = RecreatedDecomposed(
-        nn.Linear(L.in_features, h, bias=False),
-        nn.Linear(h, L.out_features, bias=True),
-        routing={'out_features': ('out_features', '1'), 
-                 'weight': ('weight', '1'),
-                 'bias': ('bias', '1')}
-    )
-    new[0].weight.data = Vh
-    new[-1].weight.data = U
-    if getattr(L.bias, 'data', None) is not None:
-        new[-1].bias.data = L.bias.data
-    return new
 
-def _recreate_decomposed_embedding(E: DecomposedEmbedding):
-    U, Vh = E.U.detach(), E.Vh.detach()
-    h = U.size(-1)
-    new = RecreatedDecomposed(
-        nn.Embedding(E.num_embeddings, h),
-        nn.Linear(h, E.embedding_dim, False),
-        routing={'embedding_dim': ('out_features', '1'),
-                 'weight': ('weight', '1'),
-                 'bias': ('bias', '1'),}
-    )
-    new[0].weight.data = U
-    new[-1].weight.data = Vh.T
-    new._is_recreated = True
-    return new
-
-def _recreate_decomposed_conv2d(C: DecomposedConv2d):
-    U, Vh = C.U.detach(), C.Vh.detach()
-    assert U.ndim == 4, 'Non composed layers are not supported'
-    out_1, in_1, k_11, k_12 = Vh.size()
-    out_2, in_2, k_21, k_22 = U.size()
-    new = RecreatedDecomposed(
-        nn.Conv2d(in_1, out_1, (k_11, k_12), groups=C.groups, **C.decomposing['Vh'], bias=False),
-        nn.Conv2d(in_2, out_2, (k_21, k_22), **C.decomposing['U'], bias=True),
-        routing={
-            'in_channels': ('in_channels', '0'),
-            'out_channels': ('out_channels', '1'),
-            'groups': ('groups', '0'),
-            'weight': ('weight', '1'),
-            'bias': ('bias', '1'),
-        }
-    )
-    new[0].weight.data = Vh
-    new[-1].weight.data = U
-    new[-1].bias = C.bias
-    new._is_recreated = True
-    return new
-
-def _recreate_decomposed_conv1d(C: DecomposedConv1d):
-    U, Vh = C.U.detach(), C.Vh.detach()
-    assert U.ndim == 3, 'Non composed layers are not supported'
-    out, r, k_2 = U.size()
-    r, in_, k_1 = Vh.size()
-    C1 = nn.Conv1d(in_, r, k_1, C.stride, C.padding, C.dilation, C.groups, bias=False)
-    C2 = nn.Conv1d(r, out, k_2, bias=True)
-    C1.weight.data = Vh
-    C2.weight.data = U 
-    C2.bias = C.bias
-    new = RecreatedDecomposed(
-        C1, 
-        C2,
-        routing={
-            'out_channels': ('out_channels', '1'),
-            'weight': ('weight', '1'),
-            'bias': ('bias', '1'),
-        }
-    )
-    new._is_recreated = True
-    return new
+# Compatibility imports share the same operator-preserving implementation.
+from fedcore.algorithm.low_rank.reassembly.decomposed_recreation import (
+    _recreate_decomposed_linear, _recreate_decomposed_embedding,
+    _recreate_decomposed_conv2d, _recreate_decomposed_conv1d,
+)
 
 
 class ResidualAddWrapper(nn.Module):
@@ -235,7 +164,7 @@ class QDQWrapper(Accessor):
     @classmethod
     def __is_conventional_module(cls, module: nn.Module):
         return type(module) in cls.__conventional_modules
-    
+
     @classmethod
     def __qconfig_requires_qdq(cls, module):
         qconfig = getattr(module, 'qconfig', None)
@@ -244,10 +173,10 @@ class QDQWrapper(Accessor):
         except Exception:
             act_type = None
         return act_type in {torch.quint8, torch.qint8}
-    
+
     @staticmethod
-    def is_leaf_quantizable(module: nn.Module, 
-                            example_inputs: tuple, 
+    def is_leaf_quantizable(module: nn.Module,
+                            example_inputs: tuple,
                             mode: Literal['qat', 'static', 'dynamic']):
         if example_inputs[0] is None:
             return False
@@ -264,7 +193,7 @@ class QDQWrapper(Accessor):
             'dynamic': quantize_dynamic,
         }[mode]
 
-        if (example_inputs and isinstance(example_inputs[0], torch.Tensor) and 
+        if (example_inputs and isinstance(example_inputs[0], torch.Tensor) and
                 example_inputs[0].dtype not in {torch.int16, torch.int32, torch.int64, torch.int8}):
             m = QDQWrapping(module, 'pre')
         else:

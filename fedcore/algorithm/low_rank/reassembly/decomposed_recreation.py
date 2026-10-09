@@ -1,115 +1,42 @@
-"""
-Functions for recreating decomposed layers.
-
-Contains utilities to recreate standard layers from their decomposed counterparts.
-"""
-
-import torch.nn as nn
-from fedcore.models.network_impl.decomposed_layers import (
-    DecomposedLinear, DecomposedEmbedding, DecomposedConv2d, DecomposedConv1d
-)
-from .core_reassemblers import RecreatedDecomposed
+"""Independent standard-layer reconstruction preserving the original operator."""
+from copy import deepcopy
+from torch import nn
+from fedcore.models.network_impl.decomposed_layers import IDecomposed, DecomposedLinear, DecomposedConv1d, DecomposedConv2d, DecomposedEmbedding
 
 
-def _recreate_embedding(E: nn.Embedding):
-    """Recreate embedding layer (placeholder for future implementation)."""
-    return E  # For now, return as-is
+def to_standard_module(layer):
+    if not isinstance(layer,IDecomposed):
+        return deepcopy(layer)
+    weight = layer._get_composed_weight().detach()
+    options = {'device':weight.device,'dtype':weight.dtype}
+    if isinstance(layer,DecomposedLinear):
+        result = nn.Linear(layer.in_features,layer.out_features,layer.bias is not None,**options)
+    elif isinstance(layer,(DecomposedConv1d,DecomposedConv2d)):
+        cls = nn.Conv1d if isinstance(layer,DecomposedConv1d) else nn.Conv2d
+        result = cls(layer.in_channels,layer.out_channels,layer.kernel_size,layer.stride,layer.padding,
+                     layer.dilation,layer.groups,layer.bias is not None,layer.padding_mode,**options)
+    elif isinstance(layer,DecomposedEmbedding):
+        result = nn.Embedding(layer.num_embeddings,layer.embedding_dim,layer.padding_idx,layer.max_norm,
+                              layer.norm_type,layer.scale_grad_by_freq,layer.sparse,**options)
+    else:
+        raise ValueError(f'Unsupported decomposed layer: {type(layer).__name__}')
+    result.weight.data.copy_(weight)
+    result.weight.requires_grad_(layer._weight_requires_grad)
+    if getattr(layer,'bias',None) is not None:
+        result.bias.data.copy_(layer.bias.detach())
+        result.bias.requires_grad_(layer.bias.requires_grad)
+    result.train(layer.training)
+    return result
 
 
-def _recreate_decomposed_linear(L: DecomposedLinear):
-    """Recreate linear layer from decomposed version."""
-    U, Vh = L.U.detach(), L.Vh.detach()
-    h = U.size(-1)
-    new = RecreatedDecomposed(
-        nn.Linear(L.in_features, h, bias=False),
-        nn.Linear(h, L.out_features, bias=True),
-        routing={
-            'out_features': ('out_features', '1'),
-            'weight': ('weight', '1'),
-            'bias': ('bias', '1')
-        }
-    )
-    new[0].weight.data = Vh
-    new[-1].weight.data = U
-    if getattr(L.bias, 'data', None) is not None:
-        new[-1].bias.data = L.bias.data
-    new._is_recreated = True
-    return new
+def _recreate_embedding(layer):
+    return deepcopy(layer)
 
 
-def _recreate_decomposed_embedding(E: DecomposedEmbedding):
-    """Recreate embedding layer from decomposed version."""
-    U, Vh = E.U.detach(), E.Vh.detach()
-    h = U.size(-1)
-    new = RecreatedDecomposed(
-        nn.Embedding(E.num_embeddings, h),
-        nn.Linear(h, E.embedding_dim, False),
-        routing={
-            'embedding_dim': ('out_features', '1'),
-            'weight': ('weight', '1'),
-            'bias': ('bias', '1'),
-        }
-    )
-    new[0].weight.data = U
-    new[-1].weight.data = Vh.T
-    new._is_recreated = True
-    return new
-
-
-def _recreate_decomposed_conv2d(C: DecomposedConv2d):
-    """Recreate 2D convolution layer from decomposed version."""
-    U, Vh = C.U.detach(), C.Vh.detach()
-    assert U.ndim == 4, 'Non composed layers are not supported'
-    out_1, in_1, k_11, k_12 = Vh.size()
-    out_2, in_2, k_21, k_22 = U.size()
-    new = RecreatedDecomposed(
-        nn.Conv2d(in_1, out_1, (k_11, k_12), **C.decomposing['Vh'], bias=False),
-        nn.Conv2d(in_2, out_2, (k_21, k_22), **C.decomposing['U'], bias=True),
-        routing={
-            'in_channels': ('in_channels', '0'),
-            'out_channels': ('out_channels', '1'),
-            'groups': ('groups', '0'),
-            'weight': ('weight', '1'),
-            'bias': ('bias', '1'),
-        }
-    )
-    new[0].weight.data = Vh
-    new[-1].weight.data = U
-    new[-1].bias = C.bias
-    new._is_recreated = True
-    return new
-
-
-def _recreate_decomposed_conv1d(C: DecomposedConv1d):
-    """Recreate 1D convolution layer from decomposed version."""
-    U, Vh = C.U.detach(), C.Vh.detach()
-    assert U.ndim == 3, 'Non composed layers are not supported'
-    out, r, k_2 = U.size()
-    r, in_, k_1 = Vh.size()
-    C1 = nn.Conv1d(in_, r, k_1, C.stride, C.padding, C.dilation, C.groups, bias=False)
-    C2 = nn.Conv1d(r, out, k_2, bias=True)
-    C1.weight.data = Vh
-    C2.weight.data = U
-    C2.bias = C.bias
-    new = RecreatedDecomposed(
-        C1,
-        C2,
-        routing={
-            'out_channels': ('out_channels', '1'),
-            'weight': ('weight', '1'),
-            'bias': ('bias', '1'),
-        }
-    )
-    new._is_recreated = True
-    return new
-
-
-# Registry of recreation functions
-RECREATION_FUNCTIONS = {
-    nn.Embedding: _recreate_embedding,
-    DecomposedLinear: _recreate_decomposed_linear,
-    DecomposedEmbedding: _recreate_decomposed_embedding,
-    DecomposedConv2d: _recreate_decomposed_conv2d,
-    DecomposedConv1d: _recreate_decomposed_conv1d,
-}
-
+_recreate_decomposed_linear = to_standard_module
+_recreate_decomposed_embedding = to_standard_module
+_recreate_decomposed_conv1d = to_standard_module
+_recreate_decomposed_conv2d = to_standard_module
+RECREATION_FUNCTIONS = {nn.Embedding:_recreate_embedding, DecomposedLinear:to_standard_module,
+                       DecomposedEmbedding:to_standard_module,DecomposedConv1d:to_standard_module,
+                       DecomposedConv2d:to_standard_module}

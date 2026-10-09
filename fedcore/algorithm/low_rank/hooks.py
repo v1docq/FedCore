@@ -1,4 +1,4 @@
-"""Hooks for rank pruning of low-rank–decomposed layers.
+"""Hooks for rank pruning of low-rankвЂ“decomposed layers.
 
 This module defines hook classes that perform one-shot or dynamic rank pruning
 for layers implementing :class:`IDecomposed`. The hooks are intended to be
@@ -65,7 +65,7 @@ class OnetimeRankPruner(BaseHook):
         The hook is enabled when the ``strategy`` key is present and differs
         from ``"cuttlefish"`` (which is reserved for dynamic pruning).
         """
-        strategy = params.get('strategy', '') 
+        strategy = params.get('strategy', '')
         if strategy and strategy != 'cuttlefish':
             return True
         return False
@@ -97,7 +97,7 @@ class OnetimeRankPruner(BaseHook):
             return not epoch % rank_prune_each
         else:
             return epoch == self.params.get('epochs', 1)
-    
+
     def action(self, epoch, kws):
         """Perform one-shot rank pruning of all decomposed layers.
 
@@ -119,12 +119,11 @@ class OnetimeRankPruner(BaseHook):
         non_adaptive_threshold = self.params.get('non_adaptive_threshold', .75)
         strategy = self.params.get('strategy', 'explained_variance')
         for name, module in self.model.named_modules():
-            if isinstance(module, IDecomposed): 
+            if isinstance(module, IDecomposed):
                 rank_threshold_pruning_in_place(decomposed_module=module,
                                        threshold=non_adaptive_threshold,
                                        strategy=strategy,
                                        module_name=name)
-                print('@@@@@', name, 'TRH', non_adaptive_threshold)
                 module.compose_weight_for_inference()
 
 
@@ -133,7 +132,7 @@ class DynamicRankPruner(BaseHook):
 
     This hook tracks effective ranks of :class:`IDecomposed` layers over
     training and performs pruning when the rank estimate enters a plateau
-    region. The rank is estimated via a stable-rank–like functional of the
+    region. The rank is estimated via a stable-rankвЂ“like functional of the
     singular-value tensor ``S`` and is adjusted according to an initial
     normalization factor.
 
@@ -148,6 +147,8 @@ class DynamicRankPruner(BaseHook):
     _hook_place = 50
 
     def __init__(self, params, model):
+        from fedcore.repository.capabilities import require_supported
+        require_supported("low_rank.dynamic")
         super().__init__(params, model)
         self.n_plateau : int= params.get('n_plateau', 5)
         self.pl_thr : float = params.get('pl_thr', 1e-2)
@@ -187,7 +188,7 @@ class DynamicRankPruner(BaseHook):
         """
         """Returns initial rank of weight matrices estimated via SVD"""
         return {name: [torch.sum((S > self.sv_thr))] for name, S in self._S_gen(self.model)}
-    
+
     def _get_ksis(self):
         """Compute normalization factors for stable-rank tracking.
 
@@ -198,9 +199,9 @@ class DynamicRankPruner(BaseHook):
             rank estimate and its stable-rank estimate.
         """
         return {name: self.traced_layers[name][0] / self._estimate_stable_rank(S) for name, S in self._S_gen(self.model)}
-    
+
     def _estimate_stable_rank(self, S: torch.Tensor):
-        """Estimate a stable-rank–like measure from singular values.
+        """Estimate a stable-rankвЂ“like measure from singular values.
 
         Parameters
         ----------
@@ -213,7 +214,7 @@ class DynamicRankPruner(BaseHook):
             Stable-rank estimate defined as ``sum(S**2) / max(S)**2``.
         """
         return (S ** 2).sum() / S.max() ** 2
-    
+
     def _update_stable_ranks(self):
         """Update rank histories for all tracked parameters.
 
@@ -259,7 +260,7 @@ class DynamicRankPruner(BaseHook):
                 to_prune[n] = ceil(history[-1])
         self.trigger_result = to_prune
         return to_prune
-    
+
     def action(self, epoch, kws):
         """Apply effective-rank updates to layers marked for pruning.
 
@@ -281,7 +282,7 @@ class DynamicRankPruner(BaseHook):
             layer_name = '.'.join(name.split('.')[:-1])
             layer = Accessor.get_module(self.model, layer_name)
             setattr(layer, self.rank_attr, rank)
-            self.traced_layers.pop(name, None)  
+            self.traced_layers.pop(name, None)
 
 class LRHooks(Enum):
     """Enumeration of available low-rank pruning hook types.
