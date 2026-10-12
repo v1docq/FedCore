@@ -289,7 +289,7 @@ class LowRankModel(BaseCompressionModel):
         return result
 
     def compress_profile(self, model, calibration, method_spec, **options):
-        """Execute a named, versioned P2 method with explicit data and resources."""
+        """Execute a named, versioned method with explicit data and resources."""
         from fedcore.algorithm.low_rank.method_execution import transform_method
         result = transform_method(model, calibration, method_spec, **options)
         self.model_before = model

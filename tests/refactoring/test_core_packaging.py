@@ -17,6 +17,16 @@ REQUIRED = {
     'fedcore/algorithm/low_rank/structured_profiles.py',
     'fedcore/algorithm/low_rank/structured_layers.py',
     'fedcore/algorithm/low_rank/factor_recovery.py',
+    'fedcore/algorithm/low_rank/method_errors.py',
+    'fedcore/algorithm/low_rank/projection_specs.py',
+    'fedcore/algorithm/low_rank/projection_profiles.py',
+    'fedcore/algorithm/low_rank/projection_layers.py',
+    'fedcore/algorithm/low_rank/projection_recovery.py',
+    'fedcore/algorithm/low_rank/projection_execution.py',
+    'fedcore/algorithm/low_rank/coupled_specs.py',
+    'fedcore/algorithm/low_rank/coupled_profiles.py',
+    'fedcore/algorithm/low_rank/coupled_layers.py',
+    'fedcore/algorithm/low_rank/coupled_execution.py',
     'fedcore/experiments/svd_rank_policies.py',
     'fedcore/experiments/svd_profile_measurement.py',
     'fedcore/algorithm/low_rank/execution.py',
@@ -141,5 +151,19 @@ for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
     with artifact.open('rb') as stream:
         reloaded = torch.jit.load(stream)
     torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]))
+from fedcore.algorithm.low_rank.method_specs import ESPACE, FlatValueOutput, MoDeMLPChannels
+from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
+cases = [(nn.Linear(6,4).double().eval(), torch.randn(7,6,dtype=torch.double), ESPACE()),
+         (ReferenceAttention(8,2,1,4,dtype=torch.double).eval(), torch.randn(7,3,8,dtype=torch.double), FlatValueOutput()),
+         (ReferenceMLP(8,12,dtype=torch.double).eval(), torch.randn(7,3,8,dtype=torch.double), MoDeMLPChannels())]
+for model, x, spec in cases:
+    result = facade.compress_profile(model,x,spec,rank=2,target_paths=('',))
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(x),result.model.eval()(x))
+    artifact = export_model(restored,'torchscript',Path.cwd()/'p3.pt',x[:1])
+    with artifact.open('rb') as stream:
+        deployed = torch.jit.load(stream)
+    torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))
 """
     run(['-c', code], outside, env)

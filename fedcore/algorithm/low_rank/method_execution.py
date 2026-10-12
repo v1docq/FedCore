@@ -91,6 +91,18 @@ def plan_method(model, spec, *, rank=None, rank_ratio=None, parameter_fraction=N
     """Read capabilities only; no copying, hooks, forward pass or job creation."""
     from fedcore.models.network_impl.decomposed_layers import DecomposedLinear
     method_name(spec)
+    from .projection_specs import ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM
+    from .coupled_specs import COUPLED_SPEC_TYPES
+    if type(spec) in (ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM):
+        from .projection_execution import plan_projection
+        return plan_projection(model, spec, rank=rank, rank_ratio=rank_ratio,
+            parameter_fraction=parameter_fraction, ranks=ranks, target_paths=target_paths,
+            max_peak_bytes=max_peak_bytes)
+    if type(spec) in COUPLED_SPEC_TYPES:
+        from .coupled_execution import plan_coupled_profile
+        return plan_coupled_profile(model, spec, rank=rank, rank_ratio=rank_ratio,
+            parameter_fraction=parameter_fraction, ranks=ranks, target_paths=target_paths,
+            max_peak_bytes=max_peak_bytes)
     if type(spec) in (BasisSharing, GroupReduce):
         return _plan_coupled(model, spec, rank, target_paths, max_peak_bytes,
                              rank_ratio, parameter_fraction, ranks)
@@ -324,7 +336,8 @@ def transform_method(model, calibration, spec, *, rank=None, rank_ratio=None,
         group_labels=None, base_model=None, recovery_executor: Callable | None=None,
         batch_size=16, max_workspace_bytes=256 * 1024**2,
         max_peak_bytes=12 * 1024**3, graph_version="p2-profile-v1",
-        parameter_budget=None, tensor_byte_budget=None, data_role="calibration"):
+        parameter_budget=None, tensor_byte_budget=None, data_role="calibration",
+        field_frequencies=None, calibration_kwargs=None):
     """Return a separate graph with exact unique-parameter costs and provenance."""
     started = time.perf_counter()
     if data_role != "calibration":
@@ -334,6 +347,31 @@ def transform_method(model, calibration, spec, *, rank=None, rank_ratio=None,
     for name,value in (('parameter_budget',parameter_budget),('tensor_byte_budget',tensor_byte_budget)):
         if value is not None:
             _positive(value,name)
+    from .projection_specs import ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM
+    from .coupled_specs import COUPLED_SPEC_TYPES
+    if type(spec) in (ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM):
+        if calibration_kwargs is not None:
+            raise MethodProfileError('Attention calibration kwargs require a coupled profile')
+        from .projection_execution import transform_projection
+        return transform_projection(model, calibration, spec, rank=rank,
+            rank_ratio=rank_ratio, parameter_fraction=parameter_fraction, ranks=ranks,
+            target_paths=target_paths, labels=labels, base_model=base_model,
+            recovery_executor=recovery_executor, batch_size=batch_size,
+            max_workspace_bytes=max_workspace_bytes, max_peak_bytes=max_peak_bytes,
+            graph_version=graph_version, parameter_budget=parameter_budget,
+            tensor_byte_budget=tensor_byte_budget, data_role=data_role,
+            field_frequencies=field_frequencies)
+    if type(spec) in COUPLED_SPEC_TYPES:
+        if any(value is not None for value in (labels,group_labels,base_model,recovery_executor,field_frequencies)):
+            raise MethodProfileError('Coupled profiles do not accept unrelated labels, bases or recovery')
+        return _transform_coupled_profile(model, calibration, spec, rank=rank,
+            rank_ratio=rank_ratio, parameter_fraction=parameter_fraction, ranks=ranks,
+            target_paths=target_paths, batch_size=batch_size,
+            max_workspace_bytes=max_workspace_bytes, max_peak_bytes=max_peak_bytes,
+            graph_version=graph_version, parameter_budget=parameter_budget,
+            tensor_byte_budget=tensor_byte_budget, calibration_kwargs=calibration_kwargs)
+    if field_frequencies is not None or calibration_kwargs is not None:
+        raise MethodProfileError('This method does not consume field frequencies or attention kwargs')
     plan = plan_method(model, spec, rank=rank, rank_ratio=rank_ratio,
         parameter_fraction=parameter_fraction, ranks=ranks, target_paths=target_paths,
         max_peak_bytes=max_peak_bytes)
@@ -445,6 +483,50 @@ def transform_method(model, calibration, spec, *, rank=None, rank_ratio=None,
     plan = replace(plan, request=replace(plan.request, statistics_refs=tuple(snapshots)))
     return _finish(model, work, spec, plan, records, checkpoint_id, data_id,
         graph_version, started, reserve, max_peak_bytes, max_workspace_bytes, parameter_budget,tensor_byte_budget)
+
+
+def _transform_coupled_profile(model, calibration, spec, *, rank, rank_ratio,
+        parameter_fraction, ranks, target_paths, batch_size, max_workspace_bytes,
+        max_peak_bytes, graph_version, parameter_budget, tensor_byte_budget, calibration_kwargs):
+    """Interpret a bounded graph plan on a private copy, then publish atomically."""
+    from .coupled_execution import plan_coupled_profile, prepare_coupled_replacements
+    started = time.perf_counter()
+    plan = plan_coupled_profile(model, spec, rank=rank, rank_ratio=rank_ratio,
+        parameter_fraction=parameter_fraction, ranks=ranks, target_paths=target_paths,
+        max_peak_bytes=max_peak_bytes)
+    topology = _check_data(model, calibration, batch_size, max_workspace_bytes, max_peak_bytes)
+    if not _finite_observations(calibration):
+        raise MethodProfileError('Nonfinite calibration data')
+    import psutil
+    reserve = (psutil.Process(os.getpid()).memory_info().rss + 64*1024**2
+               + 3*_tensor_state_bytes(model) + calibration.numel()*calibration.element_size())
+    if reserve + max_workspace_bytes > max_peak_bytes:
+        raise MethodProfileError('ResourceLimitExceeded: coupled copy and workspace reservation')
+    checkpoint_id, data_id = _fingerprint(model, calibration, graph_version)
+    kwargs = {} if calibration_kwargs is None else calibration_kwargs
+    if not isinstance(kwargs, dict) or any(not isinstance(key, str) for key in kwargs):
+        raise MethodProfileError('Calibration kwargs require explicit named tensor observations')
+    for key, value in sorted(kwargs.items()):
+        if not isinstance(value, torch.Tensor) or value.device.type != 'cpu':
+            raise MethodProfileError('Calibration kwargs support CPU tensors only')
+        if value.numel()*value.element_size() > max_workspace_bytes:
+            raise MethodProfileError('ResourceLimitExceeded: calibration kwargs')
+        data_id = hashlib.sha256((data_id+key+_tensor_id(value)).encode()).hexdigest()
+    work = deepcopy(model)
+    original_modes = {path: layer.training for path, layer in module_paths(work).items()}
+    work.eval()
+    replacements, records = prepare_coupled_replacements(work, calibration, spec, plan,
+        batch_size=batch_size, max_workspace_bytes=max_workspace_bytes,
+        calibration_kwargs=kwargs)
+    work = replace_modules_atomically(work, replacements)
+    for path, layer in module_paths(work).items():
+        if path in original_modes:
+            layer.training = original_modes[path]
+    result = _finish(model, work, spec, plan, records, checkpoint_id, data_id,
+        graph_version, started, reserve+max_workspace_bytes, max_peak_bytes,
+        max_workspace_bytes, parameter_budget, tensor_byte_budget)
+    result.evidence['collection_order'] = 'same_unmodified_graph_coupled_atomic_replacement'
+    return result
 
 
 def _finish(original, model, spec, plan, records, checkpoint_id, data_id,

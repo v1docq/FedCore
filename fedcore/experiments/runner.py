@@ -10,7 +10,7 @@ import random
 import shutil
 import subprocess
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 
 import torch
@@ -161,11 +161,23 @@ def quality_metrics(model, split, task, batch_size=16, device="cpu"):
 
 
 def train_model(model, split, task, *, epochs, batch_size, learning_rate, device="cpu", seed=0,
-                optimizer_validator=None, teacher=None, feature_path=None):
+                optimizer_validator=None, teacher=None, feature_path=None,
+                batch_objective=None, max_updates=None):
     """Fixed-budget Adam training; validation and test cannot stop it."""
     started = time.perf_counter()
     if type(epochs) is not int or epochs < 0:
         raise ProtocolError("Training epochs must be nonnegative")
+    if type(batch_size) is not int or batch_size <= 0:
+        raise ProtocolError("Training batch_size must be a positive integer")
+    if max_updates is not None and (type(max_updates) is not int or max_updates <= 0
+            or max_updates > epochs * math.ceil(len(split.x) / batch_size)):
+        raise ProtocolError("max_updates must fit the declared training epoch budget")
+    if batch_objective is not None and (not callable(batch_objective)
+            or not hasattr(batch_objective, '__enter__') or not hasattr(batch_objective, '__exit__')):
+        raise ProtocolError("A custom batch objective must own a context-managed recovery boundary")
+    if batch_objective is not None and (teacher is not None or feature_path is not None):
+        raise ProtocolError("Custom recovery and GFM objectives require separate training stages")
+    split.verify_integrity()
     model.to(device)
     loader = DataLoader(TensorDataset(split.x, split.y), batch_size=batch_size, shuffle=True,
                         generator=torch.Generator().manual_seed(seed))
@@ -183,45 +195,64 @@ def train_model(model, split, task, *, epochs, batch_size, learning_rate, device
         teacher = copy.deepcopy(teacher).to(device).eval().requires_grad_(False)
     history = []
     model.train()
-    for _ in range(epochs):
-        for x, y in loader:
-            optimizer.zero_grad()
-            if teacher is None:
-                loss = task_loss(model(x.to(device)), y.to(device), task)
-            else:
-                student_features, teacher_features = [], []
-                def student_hook(_layer, _args, output):
-                    student_features.append(output)
-                def teacher_hook(_layer, _args, output):
-                    teacher_features.append(output.detach())
-                handles = [model.get_submodule(feature_path).register_forward_hook(student_hook),
-                           teacher.get_submodule(feature_path).register_forward_hook(teacher_hook)]
-                try:
-                    model(x.to(device))
-                    with torch.no_grad():
-                        teacher(x.to(device))
-                    if (len(student_features)!=1 or len(teacher_features)!=1
-                            or not isinstance(student_features[0],torch.Tensor)
-                            or student_features[0].shape!=teacher_features[0].shape):
-                        raise ProtocolError('GFM requires one compatible tensor feature per model')
-                    loss = nn.functional.mse_loss(student_features[0],teacher_features[0])
-                finally:
-                    for handle in handles:
-                        handle.remove()
-            if not torch.isfinite(loss):
-                raise ProtocolError("Nonfinite training loss")
-            loss.backward()
-            optimizer.step()
-            history.append(float(loss.detach()))
+    with batch_objective if batch_objective is not None else nullcontext():
+        for _ in range(epochs):
+            for x, y in loader:
+                if max_updates is not None and len(history) >= max_updates:
+                    break
+                optimizer.zero_grad()
+                if batch_objective is not None:
+                    loss = batch_objective(model, x.to(device), y.to(device))
+                elif teacher is None:
+                    loss = task_loss(model(x.to(device)), y.to(device), task)
+                else:
+                    student_features, teacher_features = [], []
+                    def student_hook(_layer, _args, output):
+                        student_features.append(output)
+                    def teacher_hook(_layer, _args, output):
+                        teacher_features.append(output.detach())
+                    handles = [model.get_submodule(feature_path).register_forward_hook(student_hook),
+                               teacher.get_submodule(feature_path).register_forward_hook(teacher_hook)]
+                    try:
+                        model(x.to(device))
+                        with torch.no_grad():
+                            teacher(x.to(device))
+                        if (len(student_features)!=1 or len(teacher_features)!=1
+                                or not isinstance(student_features[0],torch.Tensor)
+                                or student_features[0].shape!=teacher_features[0].shape):
+                            raise ProtocolError('GFM requires one compatible tensor feature per model')
+                        loss = nn.functional.mse_loss(student_features[0],teacher_features[0])
+                    finally:
+                        for handle in handles:
+                            handle.remove()
+                if not isinstance(loss, torch.Tensor) or loss.ndim != 0 or not torch.isfinite(loss):
+                    raise ProtocolError("Training objective must return one finite scalar tensor")
+                loss.backward()
+                optimizer.step()
+                history.append(float(loss.detach()))
+            if max_updates is not None and len(history) >= max_updates:
+                break
     model.eval()
+    optimizer_storages = {}
+    if optimizer is not None:
+        for state in optimizer.state.values():
+            for value in state.values():
+                if isinstance(value,torch.Tensor):
+                    storage = value.untyped_storage()
+                    optimizer_storages[(str(value.device),storage.data_ptr(),storage.nbytes())] = storage.nbytes()
     evidence = {"training_steps": len(history), "epochs": epochs, "train_loss": history,
             "optimizer": "Adam", "learning_rate": learning_rate, "training_role": "train",
             "training_seconds": time.perf_counter()-started,
             "trainable_parameters": sum(parameter.numel() for parameter in trainable),
-            "model_tensor_bytes": tensor_state_bytes(model)}
+            "model_tensor_bytes": tensor_state_bytes(model),
+            "optimizer_state_bytes": sum(optimizer_storages.values()),
+            "gradient_tensor_bytes": sum(p.grad.numel()*p.grad.element_size() for p in trainable if p.grad is not None)}
     if teacher is not None:
         evidence.update(objective='GFM_late_feature_mse',teacher_checkpoint=model_state_hash(teacher),
                         teacher_feature_map={'teacher':feature_path,'student':feature_path})
+    if batch_objective is not None:
+        evidence['recovery_objective'] = json_value(batch_objective.evidence)
+        evidence['max_updates'] = max_updates
     return evidence
 
 
@@ -379,18 +410,22 @@ def apply_candidate(model, bundle, protocol, candidate):
         return model, {"implementation": "FedCore BasePruner dependency graph + Torch-Pruning step", "pruning_ratio": ratio,
                        "parameters_before": before, "parameters_after": after,
                        "representation": "structurally removed channels; decomposed inputs materialized first", **evidence}
-    p2_methods = ('asvd','fwsvd','afm','bolaco','flar_svd','drone','svdllm_v1',
-                  'svdllm_v2','svdllm_v5','mixed_rank','basis_sharing','groupreduce','eora')
-    if method in p2_methods:
-        from fedcore.algorithm.low_rank.method_specs import parse_method, SVDLLMV5, Bolaco, FWSVD
+    named_methods = ('asvd','fwsvd','afm','bolaco','flar_svd','drone','svdllm_v1',
+        'svdllm_v2','svdllm_v5','mixed_rank','basis_sharing','groupreduce','eora',
+        'espace','pela','laser','ctr_mlp_afm','flat_vo','modegpt_vo','flat_mlp','modegpt_mlp','flat_qk','modegpt_qk')
+    if method == 'ctr_afm':
+        raise UnsupportedOperation('CTR fields require the explicit CTRFieldGraph public API; TensorSplit PETRA is not a field-dictionary protocol')
+    if method in named_methods:
+        from fedcore.algorithm.low_rank.method_specs import (parse_method, SVDLLMV5,
+            Bolaco, FWSVD, ESPACE, PELA, LASER, CTRMLPAFM)
         from fedcore.algorithm.low_rank.method_execution import transform_method
         allowed = {'method_options','rank','rank_ratio','parameter_fraction','ranks',
             'target_paths','parameter_budget','tensor_byte_budget','max_workspace_bytes','max_peak_bytes',
             'finetune_epochs','gfm_feature_path','group_ids','base_candidate'}
         if set(parameters)-allowed:
-            raise ProtocolError('Unknown P2 method parameters')
+            raise ProtocolError('Unknown named-method parameters')
         if protocol.device!='cpu':
-            raise UnsupportedOperation('P2 method profiles require CPU')
+            raise UnsupportedOperation('Named-method profiles require CPU')
         spec = parse_method(method, parameters.get('method_options'))
         options = {key:value for key,value in parameters.items() if key not in
                    {'method_options','finetune_epochs','gfm_feature_path','group_ids','base_candidate'}}
@@ -403,7 +438,7 @@ def apply_candidate(model, bundle, protocol, candidate):
             options['base_model'],base_evidence=apply_candidate(model,bundle,protocol,base_candidate)
         elif 'base_candidate' in parameters:
             raise ProtocolError('base_candidate is only valid for EoRA')
-        if type(spec) is FWSVD:
+        if type(spec) in (FWSVD, ESPACE):
             options['labels']=bundle.calibration.y
         if type(spec) is Bolaco:
             # Explicit group IDs, never silently inferred from task labels.
@@ -420,13 +455,31 @@ def apply_candidate(model, bundle, protocol, candidate):
                     device=protocol.device,seed=protocol.seed,
                     optimizer_validator=stage.validate_optimizer)
             options['recovery_executor']=recover
+        fixed_recovery = type(spec) is PELA or (type(spec) in (ESPACE,CTRMLPAFM) and spec.updates > 0)
+        projection_stages = []
+        if fixed_recovery:
+            if parameters.get('finetune_epochs',0) != 0 or 'gfm_feature_path' in parameters:
+                raise ProtocolError('Fixed-update recovery and ordinary fine-tuning/GFM require separate candidates')
+            def recover_projection(current, stage, updates, objective):
+                epochs = math.ceil(updates / math.ceil(len(bundle.train.x) / protocol.batch_size))
+                evidence = train_model(current,bundle.train,bundle.task,epochs=epochs,
+                    batch_size=protocol.batch_size,learning_rate=protocol.learning_rate,
+                    device=protocol.device,seed=protocol.seed,batch_objective=objective,
+                    max_updates=updates)
+                evidence = dict(evidence, updates=evidence['training_steps'], stage=stage)
+                projection_stages.append(evidence)
+                return evidence
+            options['recovery_executor'] = recover_projection
         transformed = transform_method(model,bundle.calibration.x,spec,
                                        batch_size=protocol.batch_size,**options)
         result=transformed.model
         training={'training_steps':0,'training_role':'train'}
-        if type(spec) is not SVDLLMV5:
+        if fixed_recovery:
+            training.update(training_steps=sum(stage['training_steps'] for stage in projection_stages),
+                            recovery_stages=projection_stages)
+        if type(spec) is not SVDLLMV5 and not fixed_recovery:
             training=train_model(result,bundle.train,bundle.task,
-                epochs=parameters.get('finetune_epochs',protocol.finetune_epochs),
+                epochs=parameters.get('finetune_epochs',0 if type(spec) is LASER else protocol.finetune_epochs),
                 batch_size=protocol.batch_size,learning_rate=protocol.learning_rate,
                 device=protocol.device,seed=protocol.seed,
                 teacher=model if 'gfm_feature_path' in parameters else None,

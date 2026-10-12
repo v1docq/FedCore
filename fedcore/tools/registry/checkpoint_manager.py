@@ -126,11 +126,72 @@ def _validate_tied_buffers(model, state):
     return groups
 
 
+def _validate_p3_state(model, state):
+    """Validate fixed graph coordinates and projection invariants before assign."""
+    from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
+    from fedcore.algorithm.low_rank.projection_layers import (FixedProjectorLinear,
+        CenteredPCAEmbedding, CTRLinearSum, CTRFieldGraph, ReLUFactorizedLinear)
+    from fedcore.algorithm.low_rank.topology import module_paths
+    known = (ReferenceAttention,ReferenceMLP,FixedProjectorLinear,CenteredPCAEmbedding,
+             CTRLinearSum,CTRFieldGraph,ReLUFactorizedLinear)
+    for path, layer in module_paths(model).items():
+        if type(layer) not in known:
+            continue
+        prefix = path+'.' if path else ''
+        for name, expected in layer.named_parameters():
+            value = state[prefix+name]
+            if value.dtype != expected.dtype or not bool(torch.isfinite(value).all()):
+                raise CheckpointError('P3 parameters require finite values and the declared dtype')
+        if type(layer) is ReferenceAttention:
+            for name in ('head_map','group_coordinates'):
+                value, expected = state[prefix+name], getattr(layer,name)
+                if value.dtype != expected.dtype or not torch.equal(value.cpu(),expected.cpu()):
+                    raise CheckpointError('P3 attention state conflicts with declared immutable coordinates')
+        if type(layer) not in (FixedProjectorLinear,CenteredPCAEmbedding):
+            continue
+        name = 'projection' if type(layer) is FixedProjectorLinear else 'basis'
+        basis = state[prefix+name]
+        expected = getattr(layer,name)
+        if basis.dtype != expected.dtype or not bool(torch.isfinite(basis).all()):
+            raise CheckpointError('P3 fixed projection requires finite values and the declared dtype')
+        tolerance = 1e-5 if basis.dtype == torch.float32 else 1e-10
+        gram = basis.double().T @ basis.double()
+        if not torch.allclose(gram,torch.eye(gram.shape[0],dtype=gram.dtype,device=gram.device),
+                              rtol=tolerance,atol=tolerance):
+            raise CheckpointError('P3 fixed projection must remain orthonormal')
+        if type(layer) is CenteredPCAEmbedding:
+            mean, correction = state[prefix+'mean'], state[prefix+'affine_correction']
+            if any(value.dtype != basis.dtype or not bool(torch.isfinite(value).all())
+                   for value in (mean,correction)):
+                raise CheckpointError('CTR affine state requires finite values and the declared dtype')
+            expected_correction = mean-basis@(basis.T@mean)
+            if not torch.allclose(correction,expected_correction,rtol=tolerance,atol=tolerance):
+                raise CheckpointError('CTR affine correction conflicts with its basis and mean')
+
+
 def _describe_model(model, seen, path):
     """Only encode constructors from a fixed allowlist; never arbitrary Python."""
     if id(model) in seen:
         return {'type': 'ModuleAlias', 'target': seen[id(model)]}
     seen[id(model)] = path
+    from fedcore.algorithm.low_rank.projection_layers import (FixedProjectorLinear,
+        CenteredPCAEmbedding, CTRLinearSum, CTRFieldGraph, ReLUFactorizedLinear)
+    if type(model) in (FixedProjectorLinear, CenteredPCAEmbedding, CTRLinearSum,
+                       CTRFieldGraph, ReLUFactorizedLinear):
+        children = {name: _describe_model(child, seen, f'{path}.{name}' if path else name)
+                    for name, child in model._modules.items() if child is not None}
+        if not all(children.values()):
+            return None
+        return {'type': type(model).__name__, 'config': model.representation_config(),
+                'dtype': str(next(model.parameters()).dtype), 'children': children}
+    from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
+    if type(model) in (ReferenceAttention, ReferenceMLP):
+        children = {name: _describe_model(child, seen, f'{path}.{name}' if path else name)
+                    for name, child in model._modules.items() if child is not None}
+        if not all(children.values()):
+            return None
+        return {'type': type(model).__name__, 'config': model.representation_config(),
+                'dtype': str(next(model.parameters()).dtype), 'children': children}
     from fedcore.algorithm.low_rank.structured_layers import (FactorizedLinear,
         ResidualLinear, SharedBasisLinear, GroupedEmbedding, GroupedLMHead)
     structured = (FactorizedLinear, ResidualLinear, SharedBasisLinear, GroupedEmbedding, GroupedLMHead)
@@ -176,10 +237,10 @@ def _describe_model(model, seen, path):
                 'out_features': model.out_features, 'bias': model.bias is not None}}
     if type(model) in (nn.Conv1d, nn.Conv2d, nn.Embedding):
         return _dense_description(model, type(model))
-    if type(model) is nn.Sequential:
+    if type(model) in (nn.Sequential, nn.ModuleDict):
         children = {name: _describe_model(child, seen, f'{path}.{name}' if path else name)
                     for name, child in model._modules.items() if child is not None}
-        return {'type': 'Sequential', 'children': children} if all(children.values()) else None
+        return {'type': type(model).__name__, 'children': children} if all(children.values()) else None
     if type(model) in (nn.ReLU, nn.Identity, nn.Sigmoid, nn.Tanh, nn.Flatten, nn.Dropout):
         args = {}
         if type(model) is nn.ReLU:
@@ -216,10 +277,10 @@ def _build_model(description, seen, path):
         if set(description) != {'type', 'target'} or description.get('target') not in seen:
             raise CheckpointError('Invalid or forward module alias reference')
         return seen[description['target']]
-    if description.get('type') == 'Sequential':
+    if description.get('type') in ('Sequential', 'ModuleDict'):
         if not isinstance(description.get('children'), Mapping):
             raise CheckpointError('Sequential architecture requires named children')
-        model = nn.Sequential()
+        model = nn.Sequential() if description['type'] == 'Sequential' else nn.ModuleDict()
         seen[path] = model
         for name, child in description['children'].items():
             if not isinstance(name, str) or not name or '.' in name:
@@ -229,6 +290,100 @@ def _build_model(description, seen, path):
     from fedcore.models.network_impl.decomposed_layers import DecomposableLayers
     decomposed = {cls.__name__: cls for cls in DecomposableLayers.values()}
     kind = description.get('type')
+    if kind in ('FixedProjectorLinear','CenteredPCAEmbedding','CTRLinearSum',
+                'CTRFieldGraph','ReLUFactorizedLinear'):
+        from fedcore.algorithm.low_rank.projection_layers import (FixedProjectorLinear,
+            CenteredPCAEmbedding, CTRLinearSum, CTRFieldGraph, ReLUFactorizedLinear)
+        config, children = description.get('config'), description.get('children')
+        if (not isinstance(config, dict) or config.get('layer_type') != kind
+                or type(config.get('version')) is not int or config['version'] != 1
+                or description.get('dtype') not in ('torch.float32', 'torch.float64')
+                or not isinstance(children, dict)):
+            raise CheckpointError('Invalid P3 projection representation descriptor')
+        keysets = {
+            'FixedProjectorLinear': {'in_features','out_features','rank','bias'},
+            'CenteredPCAEmbedding': {'num_embeddings','embedding_dim','rank','coefficient_convention','decoder_offset'},
+            'CTRLinearSum': {'field_widths','out_features','bias'},
+            'CTRFieldGraph': {'interaction_pairs'},
+            'ReLUFactorizedLinear': {'in_features','out_features','rank','bias','nonlinear_variant'},
+        }
+        if set(config) != keysets[kind] | {'layer_type','version'}:
+            raise CheckpointError('Unknown or missing P3 projection options')
+        dtype = getattr(torch, description['dtype'][6:])
+        def p3_child(name):
+            return _build_model(children[name], seen, f'{path}.{name}' if path else name)
+        try:
+            if kind == 'CTRFieldGraph':
+                if set(children) != {'fields','linear'}:
+                    raise ValueError('CTR graph requires exactly its declared fields and consumers')
+                field_tables, linear = p3_child('fields'), p3_child('linear')
+                if type(field_tables) is not nn.ModuleDict or type(linear) is not CTRLinearSum:
+                    raise ValueError('Invalid CTR graph children')
+                model = CTRFieldGraph(field_tables, linear, config['interaction_pairs'])
+            else:
+                factory = {'FixedProjectorLinear':FixedProjectorLinear,
+                    'CenteredPCAEmbedding':CenteredPCAEmbedding,'CTRLinearSum':CTRLinearSum,
+                    'ReLUFactorizedLinear':ReLUFactorizedLinear}[kind]
+                options = {key:config[key] for key in keysets[kind]
+                           if key not in ('nonlinear_variant','coefficient_convention','decoder_offset')}
+                if kind == 'CenteredPCAEmbedding' and (config['coefficient_convention'] != 'centered_(E-mean)U'
+                        or config['decoder_offset'] != 'mean'):
+                    raise ValueError('Unknown CTR coefficient or affine decoding convention')
+                if kind == 'ReLUFactorizedLinear' and config['nonlinear_variant'] != 'relu_between_factors_v1':
+                    raise ValueError('Unknown nonlinear CTR architecture')
+                model = factory(**options,dtype=dtype)
+                seen[path] = model
+                expected_children = {name:child for name,child in model._modules.items() if child is not None}
+                if set(children) != set(expected_children):
+                    raise ValueError('Projection module children differ from the declared graph')
+                for name, expected in expected_children.items():
+                    restored = p3_child(name)
+                    if type(expected) is nn.Linear:
+                        if (type(restored) is not nn.Linear or restored.weight.shape != expected.weight.shape
+                                or (restored.bias is None) != (expected.bias is None)):
+                            raise ValueError('Projection factor geometry differs')
+                    elif type(expected) is nn.ModuleDict:
+                        if (type(restored) is not nn.ModuleDict or set(restored) != set(expected)
+                                or any(type(restored[key]) is not nn.Linear
+                                    or restored[key].weight.shape != expected[key].weight.shape
+                                    or restored[key].bias is not None for key in expected)):
+                            raise ValueError('CTR additive consumer geometry differs')
+                    model._modules[name] = restored.to(dtype=dtype)
+            seen[path] = model
+        except (TypeError, ValueError, KeyError) as error:
+            raise CheckpointError('Invalid P3 projection representation constructor') from error
+        return model
+    if kind in ('ReferenceAttention', 'ReferenceMLP'):
+        from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
+        config, children = description.get('config'), description.get('children')
+        if (not isinstance(config, dict) or config.get('layer_type') != kind
+                or type(config.get('version')) is not int or config['version'] != 1
+                or description.get('dtype') not in ('torch.float32', 'torch.float64')
+                or not isinstance(children, dict)):
+            raise CheckpointError('Invalid P3 reference representation descriptor')
+        expected_keys = ({'d_model','num_heads','num_kv_heads','head_dim','qk_dim','value_dim',
+            'head_map','group_coordinates','rope','rope_base','logits_scale','causal','bias'}
+            if kind == 'ReferenceAttention' else
+            {'d_model','intermediate_size','gated','activation','bias','channel_indices'})
+        if set(config) != expected_keys | {'layer_type','version'}:
+            raise CheckpointError('Unknown or missing reference representation options')
+        try:
+            factory = ReferenceAttention if kind == 'ReferenceAttention' else ReferenceMLP
+            model = factory(**{key: config[key] for key in expected_keys},
+                            dtype=getattr(torch, description['dtype'][6:]))
+            seen[path] = model
+            expected_children = {name: child for name,child in model._modules.items() if child is not None}
+            if set(children) != set(expected_children):
+                raise ValueError('Reference module children must match the explicit graph')
+            for name, expected in expected_children.items():
+                restored = _build_model(children[name], seen, f'{path}.{name}' if path else name)
+                if (type(restored) is not nn.Linear or restored.weight.shape != expected.weight.shape
+                        or (restored.bias is None) != (expected.bias is None)):
+                    raise ValueError('Reference graph projection dimensions do not match')
+                model._modules[name] = restored.to(dtype=getattr(torch, description['dtype'][6:]))
+        except (TypeError, ValueError, KeyError) as error:
+            raise CheckpointError('Invalid P3 reference representation constructor') from error
+        return model
     structured_names = ('FactorizedLinear', 'ResidualLinear', 'SharedBasisLinear',
                         'GroupedEmbedding', 'GroupedLMHead')
     if kind in structured_names:
@@ -484,6 +639,7 @@ class CheckpointManager:
         expected = candidate.state_dict()
         if not _same_state_shape(state, expected):
             raise CheckpointError('Checkpoint keys or tensor shapes do not match the architecture')
+        _validate_p3_state(candidate,state)
         # assign retains each tensor dtype; restoration never mutates supplied models.
         try:
             candidate.load_state_dict(state, strict=True, assign=True)

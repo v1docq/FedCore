@@ -1,4 +1,4 @@
-"""Immutable method descriptions for the explicit P2 CPU profiles.
+"""Immutable method descriptions for the explicit bounded CPU profiles.
 
 Descriptions contain metadata only. Tensor observations, teachers, hooks and
 optimizers belong to the interpreter. Paper heuristics and corrected formulas
@@ -8,10 +8,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, fields
 import math
-
-
-class MethodSpecError(ValueError):
-    """An unsupported or ambiguous method description."""
+from .method_errors import MethodSpecError
 
 
 def _nonnegative(value, name):
@@ -210,7 +207,14 @@ class SVDLLMV5:
             raise MethodSpecError("The first v5 public profile exports merged factor adapters")
 
 
-MethodSpec = ASVD | FWSVD | AFM | Bolaco | FLARSVD | DRONE | SVDLLMV1 | SVDLLMV2 | EoRA | MixedRank | BasisSharing | GroupReduce | SVDLLMV5
+from .projection_specs import ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM
+from .coupled_specs import (FlatValueOutput, MoDeValueOutput, FlatMLPChannels,
+    MoDeMLPChannels, FlatQueryKey, MoDeQueryKey)
+
+MethodSpec = (ASVD | FWSVD | AFM | Bolaco | FLARSVD | DRONE | SVDLLMV1 | SVDLLMV2
+    | EoRA | MixedRank | BasisSharing | GroupReduce | SVDLLMV5 | ESPACE | PELA | LASER
+    | CTRAFM | CTRMLPAFM | FlatValueOutput | MoDeValueOutput | FlatMLPChannels | MoDeMLPChannels
+    | FlatQueryKey | MoDeQueryKey)
 
 
 _METHOD_TYPES = {
@@ -218,6 +222,11 @@ _METHOD_TYPES = {
     "flar_svd": FLARSVD, "drone": DRONE, "svdllm_v1": SVDLLMV1,
     "svdllm_v2": SVDLLMV2, "eora": EoRA, "mixed_rank": MixedRank,
     "basis_sharing": BasisSharing, "groupreduce": GroupReduce, "svdllm_v5": SVDLLMV5,
+    "espace": ESPACE, "pela": PELA, "laser": LASER, "ctr_afm": CTRAFM,
+    "ctr_mlp_afm": CTRMLPAFM,
+    "flat_vo": FlatValueOutput, "modegpt_vo": MoDeValueOutput,
+    "flat_mlp": FlatMLPChannels, "modegpt_mlp": MoDeMLPChannels,
+    "flat_qk": FlatQueryKey, "modegpt_qk": MoDeQueryKey,
 }
 
 
@@ -225,7 +234,7 @@ def method_name(spec):
     for name, cls in _METHOD_TYPES.items():
         if type(spec) is cls:
             return name
-    raise MethodSpecError("A validated explicit P2 method description is required")
+    raise MethodSpecError("A validated explicit method description is required")
 
 
 def method_payload(spec):
@@ -241,6 +250,17 @@ def parse_method(method, options=None, *, version=1):
     if not isinstance(options, dict) or set(options) - {field.name for field in fields(cls)}:
         raise MethodSpecError("Unknown method option or invalid options object")
     options = dict(options)
+    for name in ('block_map', 'field_ranks', 'indices', 'coordinates'):
+        if name in options:
+            value = options[name]
+            if not isinstance(value, (tuple, list)):
+                raise MethodSpecError(f"{name} requires an immutable sequence")
+            if name in ('block_map', 'field_ranks'):
+                if any(not isinstance(item, (tuple, list)) for item in value):
+                    raise MethodSpecError(f"{name} requires a sequence of pairs")
+                options[name] = tuple(tuple(item) for item in value)
+            else:
+                options[name] = tuple(value)
     if cls is BasisSharing and "proportional_scales" in options:
         if not isinstance(options["proportional_scales"], (tuple, list)):
             raise MethodSpecError("Expected proportional scale sequence")
