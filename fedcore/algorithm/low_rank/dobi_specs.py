@@ -16,8 +16,10 @@ class DobiSVD:
     """Learn continuous activation cutoffs, then export fixed hard projectors.
 
     ``initial_fraction`` is a fraction of the maximum matrix rank.
-    ``target_fraction`` is the soft two-factor weight-element budget, excluding
-    unchanged biases. It is a penalty target, not an export-size guarantee.
+    ``target_fraction`` is the soft two-factor weight-element budget for
+    ``remapping='none'``; remapping uses actual code/tail/scale tensor bytes
+    divided by original selected weight bytes. Both exclude unchanged biases.
+    It is a penalty target, not an export-size guarantee.
     Near-spectrum clustering and uncentered direction IPCA are explicit
     FedCore reconstructions, not the paper's Taylor-backward/remapping code.
     """
@@ -37,6 +39,9 @@ class DobiSVD:
     max_calibration_batches: int = 64
     variant: str = "activation_tanh_ipca_v1"
     remapping: str = "none"
+    remap_tail_dtype: str = "float16"
+    remap_scale_dtype: str = "float32"
+    remap_compute_dtype: str = "float32"
 
     def __post_init__(self):
         for name in ("updates", "max_activation_rows", "max_calibration_batches"):
@@ -59,5 +64,11 @@ class DobiSVD:
             raise MethodSpecError("Declare floor, ceil or nearest export rounding")
         if self.variant != "activation_tanh_ipca_v1":
             raise MethodSpecError("Unsupported Dobi-SVD variant")
-        if self.remapping != "none":
-            raise MethodSpecError("Mixed-precision remapping is a separate deferred representation")
+        if self.remapping not in ("none", "symmetric_int8_v1"):
+            raise MethodSpecError("Declare none or the portable symmetric_int8_v1 remapping")
+        if self.remap_tail_dtype not in ("float16", "bfloat16", "float32", "float64"):
+            raise MethodSpecError("Unsupported remapping tail storage dtype")
+        if self.remap_scale_dtype not in ("float32", "float64"):
+            raise MethodSpecError("Remapping scales require float32 or float64")
+        if self.remap_compute_dtype not in ("float32", "float64"):
+            raise MethodSpecError("Remapping numerical core requires float32 or float64")

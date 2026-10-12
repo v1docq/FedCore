@@ -42,6 +42,8 @@ REQUIRED = {
     'fedcore/algorithm/low_rank/ars_profiles.py',
     'fedcore/algorithm/low_rank/dobi_specs.py',
     'fedcore/algorithm/low_rank/dobi_profiles.py',
+    'fedcore/algorithm/low_rank/dobi_remapping.py',
+    'fedcore/algorithm/low_rank/dobi_remapping_export.py',
     'fedcore/algorithm/low_rank/rankdyna_specs.py',
     'fedcore/algorithm/low_rank/rankdyna_profiles.py',
     'fedcore/algorithm/low_rank/learned_execution.py',
@@ -191,7 +193,11 @@ from fedcore.algorithm.low_rank.method_specs import ARS,DobiSVD,RankDyna
 from fedcore.experiments.protocol import TensorSplit
 from fedcore.experiments.runner import train_model
 for spec in (ARS(input_size=4,hidden_size=4,mask_bias=0),
-             DobiSVD(max_activation_rows=32,max_calibration_batches=8),RankDyna()):
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8,
+                     remapping='symmetric_int8_v1'),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8,
+                     remapping='symmetric_int8_v1',remap_tail_dtype='bfloat16'),RankDyna()):
     source = nn.Linear(6,4).double().eval()
     x = torch.randn(8,6,dtype=torch.double)
     split = TensorSplit(x,source(x).detach()+.1,tuple(str(i) for i in range(8)))

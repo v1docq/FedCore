@@ -53,7 +53,7 @@ def _decode_state_value(value):
         kind = value.get('__fedcore_state__')
         if kind == 'dtype':
             dtypes = {str(dtype): dtype for dtype in (torch.qint8, torch.quint8, torch.qint32,
-                torch.float16, torch.float32, torch.float64, torch.int8, torch.uint8, torch.int32, torch.int64)}
+                torch.float16, torch.bfloat16, torch.float32, torch.float64, torch.int8, torch.uint8, torch.int32, torch.int64)}
             if value.get('name') not in dtypes:
                 raise CheckpointError('Unsupported encoded dtype')
             return dtypes[value['name']]
@@ -88,7 +88,47 @@ def _same_state_shape(actual, expected):
 
 
 def describe_model(model):
+    _validate_remapped_state(model,model.state_dict())
     return _describe_model(model, {}, '')
+
+
+def _validate_remapped_state(model,state):
+    """Private packed parts cannot share any nonempty model-state storage.
+
+    Validate both the live constructor after topology restoration and incoming
+    tensors before assign=True. Generic ties not touching this format remain
+    governed by the existing topology contract.
+    """
+    from fedcore.algorithm.low_rank.dobi_remapping import RemappedLinear
+    from fedcore.algorithm.low_rank.topology import module_paths
+    packed_keys = set()
+    for path,layer in module_paths(model).items():
+        if type(layer) is not RemappedLinear:
+            continue
+        prefix = path+'.' if path else ''
+        if any(name in layer.__dict__ for name in ('forward','decoded_factors',
+                'representation_config','validate_state','state_dict','_save_to_state_dict',
+                '_load_from_state_dict')):
+            raise CheckpointError('RemappedLinear checkpoint requires unmodified representation methods')
+        try:
+            RemappedLinear.validate_state(layer,state,prefix)
+        except (ValueError,TypeError,KeyError,RuntimeError) as error:
+            raise CheckpointError('Invalid RemappedLinear state') from error
+        names = ('left_codes','right_codes','left_scale','right_scale','tail')
+        packed_keys.update(prefix+name for name in names)
+        if layer.bias is not None:
+            packed_keys.add(prefix+'bias')
+    if not packed_keys:
+        return
+    groups = {}
+    for name,value in state.items():
+        if not isinstance(value,torch.Tensor):
+            continue
+        storage = value.untyped_storage()
+        if storage.nbytes():
+            groups.setdefault((str(value.device),storage._cdata),[]).append(name)
+    if any(len(names)>1 and packed_keys.intersection(names) for names in groups.values()):
+        raise CheckpointError('RemappedLinear components cannot alias any other model state')
 
 
 def _buffer_paths(model):
@@ -185,6 +225,19 @@ def _describe_model(model, seen, path):
     if description is not None:
         return description
     from fedcore.algorithm.low_rank.learned_layers import ZeroLinear
+    from fedcore.algorithm.low_rank.dobi_remapping import RemappedLinear
+    if type(model) is RemappedLinear:
+        if (model._modules or set(model._buffers) != {'left_codes','right_codes','left_scale','right_scale','tail'}
+                or set(model._parameters) != ({'bias'} if model.bias is not None else set())
+                or any(name in model.__dict__ for name in ('forward','decoded_factors',
+                    'representation_config','validate_state','state_dict','_save_to_state_dict','_load_from_state_dict'))
+                or model._forward_hooks or model._forward_pre_hooks
+                or model._backward_hooks or getattr(model,'_backward_pre_hooks',{})):
+            raise CheckpointError('RemappedLinear checkpoint requires its unmodified declared operator')
+        try:
+            return {'type': 'RemappedLinear', 'config': model.representation_config()}
+        except (ValueError,TypeError,KeyError) as error:
+            raise CheckpointError('Invalid RemappedLinear state') from error
     if type(model) is ZeroLinear:
         return {'type': 'ZeroLinear', 'config': model.representation_config(),
                 'dtype': str(model._anchor.dtype)}
@@ -310,6 +363,23 @@ def _build_model(description, seen, path):
             model = build_p5(description)
         except (ValueError, TypeError, KeyError) as error:
             raise CheckpointError('Invalid P5 architecture descriptor') from error
+        seen[path] = model
+        return model
+    if kind == 'RemappedLinear':
+        from fedcore.algorithm.low_rank.dobi_remapping import RemappedLinear
+        config = description.get('config')
+        if (set(description) != {'type','config'} or not isinstance(config,dict)
+                or set(config) != {'layer_type','version','in_features','out_features','rank','bias',
+                    'remapping','left_dtype','right_dtype','tail_dtype','scale_dtype','compute_dtype','bias_dtype'}
+                or config['layer_type'] != kind or type(config['version']) is not int or config['version'] != 1
+                or config['remapping'] != 'symmetric_int8_v1'
+                or config['left_dtype'] != 'int8' or config['right_dtype'] != 'int8'):
+            raise CheckpointError('Invalid RemappedLinear descriptor')
+        try:
+            model = RemappedLinear(**{key:config[key] for key in ('in_features','out_features',
+                'rank','bias','tail_dtype','scale_dtype','compute_dtype','bias_dtype')})
+        except (ValueError,TypeError) as error:
+            raise CheckpointError('Invalid RemappedLinear constructor') from error
         seen[path] = model
         return model
     if kind == 'ZeroLinear':
@@ -668,6 +738,8 @@ class CheckpointManager:
                 if any(buffers[path].shape!=source.shape or buffers[path].dtype!=source.dtype for path in group):
                     raise CheckpointError('Incompatible checkpoint buffer aliases')
             _retie_buffers(candidate,groups)
+        _validate_remapped_state(candidate,candidate.state_dict())
+        _validate_remapped_state(candidate,state)
         buffer_ties = _validate_tied_buffers(candidate,state)
         try:
             topology = validate_tied_state(candidate, state)

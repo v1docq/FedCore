@@ -194,7 +194,11 @@ def transform_learned(model,calibration,spec,*,rank=None,rank_ratio=None,
     if any(key not in current or not torch.equal(value,current[key].detach()) for key,value in frozen.items()):
         raise LearnedProfileError('Structure training modified frozen parameters')
     try:
-        final = objective.finalize(work,calibration,batch_size)
+        from .dobi_specs import DobiSVD
+        if type(spec) is DobiSVD and spec.remapping != 'none':
+            final = objective.finalize(work,calibration,batch_size,tensor_byte_budget=tensor_byte_budget)
+        else:
+            final = objective.finalize(work,calibration,batch_size)
     except UnsupportedLearnedAccessError as error:
         raise LearnedProfileError(str(error)) from error
     work = getattr(objective,'model',work)

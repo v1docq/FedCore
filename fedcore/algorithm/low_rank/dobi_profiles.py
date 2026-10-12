@@ -235,7 +235,7 @@ def estimate_dobi_bytes(model, paths, spec):
     selected = _selected(model, paths, spec)
     r = spec.max_activation_rows
     dims = [(layer.in_features, layer.out_features, layer.weight.element_size()) for _, layer in selected]
-    return {
+    costs = {
         "cutoff_parameter_bytes": sum(size for _, _, size in dims),
         "cutoff_gradient_bytes": sum(size for _, _, size in dims),
         "adam_scalar_state_lower_bound_bytes": sum(2 * size + 4 for _, _, size in dims),
@@ -246,6 +246,15 @@ def estimate_dobi_bytes(model, paths, spec):
         "ipca_svd_lower_bound_bytes": sum(8 * (2 * min(i, o) * o + 3 * min(i, o)**2) for i, o, _ in dims),
         "export_factor_lower_bound_bytes": sum(size * min(i, o) * (i + o) for i, o, size in dims),
     }
+    if spec.remapping != "none":
+        from .dobi_remapping import remapped_tensor_bytes
+        costs.update(
+            remap_resvd_and_reconstruction_lower_bound_bytes=sum(8*(3*i*o + min(i,o)*(i+o+1)) for i,o,_ in dims),
+            remap_encoding_and_decode_lower_bound_bytes=sum(8*(3*min(i,o)**2+min(i,o)*(i+o)+2*min(i,o)) for i,o,_ in dims),
+            remap_calibration_error_lower_bound_bytes=sum(8*r*(i+4*o) for i,o,_ in dims),
+            remap_storage_lower_bound_bytes=sum(remapped_tensor_bytes(i,o,min(i,o),
+                tail_dtype=spec.remap_tail_dtype,scale_dtype=spec.remap_scale_dtype,bias=False) for i,o,_ in dims))
+    return costs
 
 
 class _DobiLinear(nn.Module):
@@ -319,6 +328,16 @@ class DobiObjective:
             "costs": costs, "cost_bound": "tensor_lower_bounds; backend_workspace_and_other_activations_unknown",
             "remapping": "deferred; ordinary_same_dtype_factors_only", "bias_policy": "unchanged_outside_projection",
         }
+        if spec.remapping != "none":
+            self.evidence.update(remapping=spec.remapping,
+                budget_variant="fedcore_actual_remapped_weight_tensor_bytes_v1",
+                budget_denominator="selected_original_weight_tensor_bytes; bias_excluded",
+                remapping_source=DOBI_REPOSITORY.replace("/tree/","/blob/")+"/modules/remapping.py",
+                remapping_source_blob_sha="796b6dfb2513b2ae58064d13093909856244f73a",
+                paper_bnb_remapping_reproduced=False,
+                remap_precision={"left_codes":"int8","right_codes":"int8",
+                    "tail":spec.remap_tail_dtype,"scales":spec.remap_scale_dtype,
+                    "compute":spec.remap_compute_dtype,"bias":"source"})
 
     def __enter__(self):
         if self.active or self.finalized:
@@ -341,6 +360,13 @@ class DobiObjective:
             raise NumericalDomainViolation("Every Dobi-SVD target must execute exactly once per objective call")
         numerator = sum(layer.k * (layer.in_features + layer.out_features) for layer in self.layers.values())
         denominator = sum(layer.in_features * layer.out_features for layer in self.layers.values())
+        if self.spec.remapping != "none":
+            from .dobi_remapping import remapped_tensor_bytes
+            numerator = sum(layer.k * remapped_tensor_bytes(layer.in_features,layer.out_features,1,
+                tail_dtype=self.spec.remap_tail_dtype,scale_dtype=self.spec.remap_scale_dtype,bias=False)
+                for layer in self.layers.values())
+            denominator = sum(layer.base.weight.numel()*layer.base.weight.element_size()
+                              for layer in self.layers.values())
         ratio = numerator / denominator
         value = task + self.spec.budget_weight * (ratio - self.spec.target_fraction).abs()
         if value.ndim != 0 or not bool(torch.isfinite(value)):
@@ -359,7 +385,7 @@ class DobiObjective:
                 layer.k.clamp_(0, layer.maximum_rank)
         self.steps += 1
 
-    def finalize(self, model, calibration, batch_size):
+    def finalize(self, model, calibration, batch_size, *, tensor_byte_budget=None):
         """Fix learned integer ranks, collect bases sequentially, replace atomically.
 
         Calibration is one CPU input tensor split into deterministic contiguous
@@ -375,6 +401,9 @@ class DobiObjective:
         batches = math.ceil(len(calibration) / batch_size)
         if batches > self.spec.max_calibration_batches:
             raise NumericalDomainViolation("ResourceLimitExceeded: Dobi-SVD calibration batches")
+        if self.spec.remapping != "none":
+            from .dobi_remapping_export import finalize_remapped
+            return finalize_remapped(self,model,calibration,batch_size,tensor_byte_budget=tensor_byte_budget)
         rounders = {"floor": math.floor, "ceil": math.ceil, "nearest": lambda value: math.floor(value + 0.5)}
         ranks = {path: max(0, min(layer.maximum_rank, rounders[self.spec.export_rounding](float(layer.k.detach()))))
                  for path, layer in self.layers.items()}
