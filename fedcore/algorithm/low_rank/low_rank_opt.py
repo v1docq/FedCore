@@ -301,6 +301,19 @@ class LowRankModel(BaseCompressionModel):
             trainer._fedcore_requires_optimizer_rebuild = True
         return result
 
+    def build_architecture(self, architecture_spec, *, source=None, calibration=None, **options):
+        """Construct/transfer a declared P5 graph; LRT needs no pretrained model."""
+        from fedcore.algorithm.low_rank.architecture_profiles import build_architecture
+        result = build_architecture(architecture_spec, source=source, calibration=calibration, **options)
+        self.model_before = source
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if source is not None and trainer is not None and getattr(trainer, 'model', None) is source:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def load_model(self, model, state_dict_path: str) -> None:
         """Load a decomposed (SVD-based) checkpoint into a model.
 

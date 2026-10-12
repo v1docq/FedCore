@@ -10,6 +10,17 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/architecture_profiles.py',
+    'fedcore/algorithm/low_rank/architecture_checkpoint.py',
+    'fedcore/algorithm/low_rank/slicegpt_specs.py',
+    'fedcore/algorithm/low_rank/slicegpt_layers.py',
+    'fedcore/algorithm/low_rank/slicegpt_profiles.py',
+    'fedcore/algorithm/low_rank/lightformer_specs.py',
+    'fedcore/algorithm/low_rank/lightformer_layers.py',
+    'fedcore/algorithm/low_rank/lightformer_profiles.py',
+    'fedcore/algorithm/low_rank/lrt_specs.py',
+    'fedcore/algorithm/low_rank/lrt_layers.py',
+    'fedcore/algorithm/low_rank/lrt_profiles.py',
     'fedcore/algorithm/low_rank/method_specs.py',
     'fedcore/algorithm/low_rank/method_execution.py',
     'fedcore/algorithm/low_rank/statistical_profiles.py',
@@ -196,5 +207,28 @@ for spec in (ARS(input_size=4,hidden_size=4,mask_bias=0),
     with artifact.open('rb') as stream:
         deployed = torch.jit.load(stream)
     torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))
+"""
+    code += """
+from fedcore.algorithm.low_rank.slicegpt_specs import SliceGPT
+from fedcore.algorithm.low_rank.slicegpt_layers import SliceGPTModel
+from fedcore.algorithm.low_rank.lightformer_specs import LightFormer
+from fedcore.algorithm.low_rank.lightformer_layers import LightFormerTransformer
+from fedcore.algorithm.low_rank.lrt_specs import LRT
+tokens = torch.randint(0,13,(3,5))
+cases = [
+    (SliceGPT((6,6,4)), {'source':SliceGPTModel(13,8,1,2,1,4,12,dtype=torch.double).eval(),
+                              'calibration':tokens}, (tokens,)),
+    (LightFormer(2,(0,0),(0,0),(0,),(1,)),
+     {'source':LightFormerTransformer(13,13,8,2,12,(0,1),(0,1),max_positions=8,dtype=torch.double).eval()},
+     (tokens,tokens)),
+    (LRT(vocab_size=13,d_model=8,num_heads=2,d_k=4,d_v=4,d_ff=12,max_seq_len=8),
+     {'dtype':torch.double}, (tokens,)),
+]
+for spec,options,inputs in cases:
+    result = facade.build_architecture(spec,**options)
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(*inputs),result.model.eval()(*inputs),rtol=0,atol=0)
+    assert sum(p.numel() for p in restored.parameters()) == result.evidence['parameters_after']
 """
     run(['-c', code], outside, env)

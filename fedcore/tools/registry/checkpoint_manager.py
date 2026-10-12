@@ -177,6 +177,13 @@ def _describe_model(model, seen, path):
     if id(model) in seen:
         return {'type': 'ModuleAlias', 'target': seen[id(model)]}
     seen[id(model)] = path
+    from fedcore.algorithm.low_rank.architecture_checkpoint import describe_p5
+    try:
+        description = describe_p5(model)
+    except (TypeError, ValueError) as error:
+        raise CheckpointError('Invalid declared P5 architecture') from error
+    if description is not None:
+        return description
     from fedcore.algorithm.low_rank.learned_layers import ZeroLinear
     if type(model) is ZeroLinear:
         return {'type': 'ZeroLinear', 'config': model.representation_config(),
@@ -297,6 +304,14 @@ def _build_model(description, seen, path):
     from fedcore.models.network_impl.decomposed_layers import DecomposableLayers
     decomposed = {cls.__name__: cls for cls in DecomposableLayers.values()}
     kind = description.get('type')
+    if kind == 'P5Architecture':
+        from fedcore.algorithm.low_rank.architecture_checkpoint import build_p5
+        try:
+            model = build_p5(description)
+        except (ValueError, TypeError, KeyError) as error:
+            raise CheckpointError('Invalid P5 architecture descriptor') from error
+        seen[path] = model
+        return model
     if kind == 'ZeroLinear':
         from fedcore.algorithm.low_rank.learned_layers import ZeroLinear
         config = description.get('config')
@@ -662,6 +677,12 @@ class CheckpointManager:
         if not _same_state_shape(state, expected):
             raise CheckpointError('Checkpoint keys or tensor shapes do not match the architecture')
         _validate_p3_state(candidate,state)
+        from fedcore.algorithm.low_rank.architecture_checkpoint import validate_p5_state
+        for path, layer in module_paths(candidate).items():
+            try:
+                validate_p5_state(layer, state, path + '.' if path else '')
+            except (TypeError, ValueError, KeyError) as error:
+                raise CheckpointError('Invalid P5 architecture state') from error
         # assign retains each tensor dtype; restoration never mutates supplied models.
         try:
             candidate.load_state_dict(state, strict=True, assign=True)
