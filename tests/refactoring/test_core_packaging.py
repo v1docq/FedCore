@@ -27,6 +27,14 @@ REQUIRED = {
     'fedcore/algorithm/low_rank/coupled_profiles.py',
     'fedcore/algorithm/low_rank/coupled_layers.py',
     'fedcore/algorithm/low_rank/coupled_execution.py',
+    'fedcore/algorithm/low_rank/ars_specs.py',
+    'fedcore/algorithm/low_rank/ars_profiles.py',
+    'fedcore/algorithm/low_rank/dobi_specs.py',
+    'fedcore/algorithm/low_rank/dobi_profiles.py',
+    'fedcore/algorithm/low_rank/rankdyna_specs.py',
+    'fedcore/algorithm/low_rank/rankdyna_profiles.py',
+    'fedcore/algorithm/low_rank/learned_execution.py',
+    'fedcore/algorithm/low_rank/learned_layers.py',
     'fedcore/experiments/svd_rank_policies.py',
     'fedcore/experiments/svd_profile_measurement.py',
     'fedcore/algorithm/low_rank/execution.py',
@@ -162,6 +170,29 @@ for model, x, spec in cases:
     restored = manager.load_from_file(path).eval()
     torch.testing.assert_close(restored(x),result.model.eval()(x))
     artifact = export_model(restored,'torchscript',Path.cwd()/'p3.pt',x[:1])
+    with artifact.open('rb') as stream:
+        deployed = torch.jit.load(stream)
+    torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))
+"""
+    code += """
+import math
+from fedcore.algorithm.low_rank.method_specs import ARS,DobiSVD,RankDyna
+from fedcore.experiments.protocol import TensorSplit
+from fedcore.experiments.runner import train_model
+for spec in (ARS(input_size=4,hidden_size=4,mask_bias=0),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8),RankDyna()):
+    source = nn.Linear(6,4).double().eval()
+    x = torch.randn(8,6,dtype=torch.double)
+    split = TensorSplit(x,source(x).detach()+.1,tuple(str(i) for i in range(8)))
+    def recover(current,stage,updates,objective):
+        result = train_model(current,split,'regression',epochs=math.ceil(updates/2),
+            batch_size=4,learning_rate=.001,seed=31,batch_objective=objective,max_updates=updates)
+        return dict(result,updates=result['training_steps'])
+    result = facade.compress_profile(source,x,spec,target_paths=('',),batch_size=4,recovery_executor=recover)
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(x),result.model.eval()(x))
+    artifact = export_model(restored,'torchscript',Path.cwd()/'p4.pt',x[:1])
     with artifact.open('rb') as stream:
         deployed = torch.jit.load(stream)
     torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))

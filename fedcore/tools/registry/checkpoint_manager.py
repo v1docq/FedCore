@@ -132,12 +132,15 @@ def _validate_p3_state(model, state):
     from fedcore.algorithm.low_rank.projection_layers import (FixedProjectorLinear,
         CenteredPCAEmbedding, CTRLinearSum, CTRFieldGraph, ReLUFactorizedLinear)
     from fedcore.algorithm.low_rank.topology import module_paths
+    from fedcore.algorithm.low_rank.learned_layers import ZeroLinear
     known = (ReferenceAttention,ReferenceMLP,FixedProjectorLinear,CenteredPCAEmbedding,
-             CTRLinearSum,CTRFieldGraph,ReLUFactorizedLinear)
+             CTRLinearSum,CTRFieldGraph,ReLUFactorizedLinear,ZeroLinear)
     for path, layer in module_paths(model).items():
         if type(layer) not in known:
             continue
         prefix = path+'.' if path else ''
+        if type(layer) is ZeroLinear and state[prefix+'_anchor'].dtype != layer._anchor.dtype:
+            raise CheckpointError('ZeroLinear state conflicts with its declared dtype')
         for name, expected in layer.named_parameters():
             value = state[prefix+name]
             if value.dtype != expected.dtype or not bool(torch.isfinite(value).all()):
@@ -174,6 +177,10 @@ def _describe_model(model, seen, path):
     if id(model) in seen:
         return {'type': 'ModuleAlias', 'target': seen[id(model)]}
     seen[id(model)] = path
+    from fedcore.algorithm.low_rank.learned_layers import ZeroLinear
+    if type(model) is ZeroLinear:
+        return {'type': 'ZeroLinear', 'config': model.representation_config(),
+                'dtype': str(model._anchor.dtype)}
     from fedcore.algorithm.low_rank.projection_layers import (FixedProjectorLinear,
         CenteredPCAEmbedding, CTRLinearSum, CTRFieldGraph, ReLUFactorizedLinear)
     if type(model) in (FixedProjectorLinear, CenteredPCAEmbedding, CTRLinearSum,
@@ -290,6 +297,21 @@ def _build_model(description, seen, path):
     from fedcore.models.network_impl.decomposed_layers import DecomposableLayers
     decomposed = {cls.__name__: cls for cls in DecomposableLayers.values()}
     kind = description.get('type')
+    if kind == 'ZeroLinear':
+        from fedcore.algorithm.low_rank.learned_layers import ZeroLinear
+        config = description.get('config')
+        if (set(description) != {'type','config','dtype'} or not isinstance(config,dict)
+                or set(config) != {'layer_type','version','in_features','out_features','bias'}
+                or config['layer_type'] != kind or type(config['version']) is not int or config['version'] != 1
+                or description['dtype'] not in ('torch.float32','torch.float64')):
+            raise CheckpointError('Invalid ZeroLinear descriptor')
+        try:
+            model = ZeroLinear(config['in_features'],config['out_features'],config['bias'],
+                               dtype=getattr(torch,description['dtype'][6:]))
+        except (ValueError,TypeError) as error:
+            raise CheckpointError('Invalid ZeroLinear constructor') from error
+        seen[path] = model
+        return model
     if kind in ('FixedProjectorLinear','CenteredPCAEmbedding','CTRLinearSum',
                 'CTRFieldGraph','ReLUFactorizedLinear'):
         from fedcore.algorithm.low_rank.projection_layers import (FixedProjectorLinear,

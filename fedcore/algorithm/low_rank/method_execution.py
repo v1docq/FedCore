@@ -91,6 +91,14 @@ def plan_method(model, spec, *, rank=None, rank_ratio=None, parameter_fraction=N
     """Read capabilities only; no copying, hooks, forward pass or job creation."""
     from fedcore.models.network_impl.decomposed_layers import DecomposedLinear
     method_name(spec)
+    from .ars_specs import ARS
+    from .dobi_specs import DobiSVD
+    from .rankdyna_specs import RankDyna
+    if type(spec) in (ARS,DobiSVD,RankDyna):
+        from .learned_execution import plan_learned
+        return plan_learned(model,spec,rank=rank,rank_ratio=rank_ratio,
+            parameter_fraction=parameter_fraction,ranks=ranks,target_paths=target_paths,
+            max_peak_bytes=max_peak_bytes)
     from .projection_specs import ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM
     from .coupled_specs import COUPLED_SPEC_TYPES
     if type(spec) in (ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM):
@@ -347,6 +355,19 @@ def transform_method(model, calibration, spec, *, rank=None, rank_ratio=None,
     for name,value in (('parameter_budget',parameter_budget),('tensor_byte_budget',tensor_byte_budget)):
         if value is not None:
             _positive(value,name)
+    from .ars_specs import ARS
+    from .dobi_specs import DobiSVD
+    from .rankdyna_specs import RankDyna
+    if type(spec) in (ARS,DobiSVD,RankDyna):
+        if any(value is not None for value in (labels,group_labels,base_model,field_frequencies,calibration_kwargs)):
+            raise MethodProfileError('Learned profiles receive training labels through their explicit executor')
+        from .learned_execution import transform_learned
+        return transform_learned(model,calibration,spec,rank=rank,rank_ratio=rank_ratio,
+            parameter_fraction=parameter_fraction,ranks=ranks,target_paths=target_paths,
+            recovery_executor=recovery_executor,batch_size=batch_size,
+            max_workspace_bytes=max_workspace_bytes,max_peak_bytes=max_peak_bytes,
+            graph_version=graph_version,parameter_budget=parameter_budget,
+            tensor_byte_budget=tensor_byte_budget,data_role=data_role)
     from .projection_specs import ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM
     from .coupled_specs import COUPLED_SPEC_TYPES
     if type(spec) in (ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM):

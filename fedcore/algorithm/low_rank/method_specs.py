@@ -210,11 +210,14 @@ class SVDLLMV5:
 from .projection_specs import ESPACE, PELA, LASER, CTRAFM, CTRMLPAFM
 from .coupled_specs import (FlatValueOutput, MoDeValueOutput, FlatMLPChannels,
     MoDeMLPChannels, FlatQueryKey, MoDeQueryKey)
+from .ars_specs import ARS
+from .dobi_specs import DobiSVD
+from .rankdyna_specs import RankDyna
 
 MethodSpec = (ASVD | FWSVD | AFM | Bolaco | FLARSVD | DRONE | SVDLLMV1 | SVDLLMV2
     | EoRA | MixedRank | BasisSharing | GroupReduce | SVDLLMV5 | ESPACE | PELA | LASER
     | CTRAFM | CTRMLPAFM | FlatValueOutput | MoDeValueOutput | FlatMLPChannels | MoDeMLPChannels
-    | FlatQueryKey | MoDeQueryKey)
+    | FlatQueryKey | MoDeQueryKey | ARS | DobiSVD | RankDyna)
 
 
 _METHOD_TYPES = {
@@ -227,6 +230,7 @@ _METHOD_TYPES = {
     "flat_vo": FlatValueOutput, "modegpt_vo": MoDeValueOutput,
     "flat_mlp": FlatMLPChannels, "modegpt_mlp": MoDeMLPChannels,
     "flat_qk": FlatQueryKey, "modegpt_qk": MoDeQueryKey,
+    "ars": ARS, "dobi_svd": DobiSVD, "rankdyna": RankDyna,
 }
 
 
