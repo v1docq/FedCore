@@ -492,7 +492,10 @@ def _terminate_owned_tree(root_process):
             process.terminate()
         except psutil.NoSuchProcess:
             pass
-    psutil.wait_procs(targets, timeout=10)
+    # Popen.wait owns reaping the direct worker and its raw OS return code.
+    # psutil.wait_procs on that same PID can reap it first on POSIX, after which
+    # Popen may see ECHILD and synthesize a zero return code.
+    psutil.wait_procs(children, timeout=10)
     for process in targets:
         try:
             if process.is_running():
@@ -647,6 +650,11 @@ def _retain_worker_failure(directory, job, config, resources):
     write_atomic_json(path, run)
 
 
+def _worker_succeeded(resources):
+    """A resource violation is failure even when the OS process exits zero."""
+    return resources["returncode"] == 0 and not resources["violation"]
+
+
 def run_series(output, *, timing_only=False, prior_runs=()):
     output = Path(output).resolve()
     protocol_path = output / "protocol.json"
@@ -680,7 +688,7 @@ def run_series(output, *, timing_only=False, prior_runs=()):
                 evidence = monitored_process([sys.executable, "-m", MODULE, "--architecture-job", str(path)], directory, deadline)
                 computational.append(dict(job, resources=evidence))
                 write_atomic_json(output / "execution.json", {"architecture_workers": computational})
-                if evidence["returncode"] != 0:
+                if not _worker_succeeded(evidence):
                     _retain_worker_failure(directory, job, plan["architectures"][architecture], evidence)
                 if evidence["violation"]:
                     consolidate_results(output)
@@ -689,7 +697,7 @@ def run_series(output, *, timing_only=False, prior_runs=()):
     # --timing-only is separately invoked after training/compression completes.
     if not timing_only:
         consolidate_results(output)
-        return 0 if all(item["resources"]["returncode"] == 0 for item in computational) else 1
+        return 0 if all(_worker_succeeded(item["resources"]) for item in computational) else 1
     for path in sorted(output.glob("*-seed-*/*/timing-job.json")):
         job = json.loads(path.read_text(encoding="utf-8"))
         timing_output = Path(job["output"])
@@ -707,7 +715,7 @@ def run_series(output, *, timing_only=False, prior_runs=()):
         if evidence["violation"]:
             return 1
     consolidate_results(output)
-    return 0 if all(item["resources"]["returncode"] == 0 for item in timings) else 1
+    return 0 if all(_worker_succeeded(item["resources"]) for item in timings) else 1
 
 
 def main():

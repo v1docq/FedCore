@@ -178,6 +178,7 @@ def test_checkpoint_export_reloaded_validation_and_test_artifact_and_metadata(tm
 
 
 def test_actual_recursive_python_child_memory_cap_terminates_interpreter_tree(tmp_path, monkeypatch):
+    import psutil
     from fedcore.experiments import svd_comparison as study
     monkeypatch.setattr(study, "RSS_LIMIT", 80 * 1024**2)
     monkeypatch.setattr(study, "OS_RESERVE", 0)
@@ -185,10 +186,63 @@ def test_actual_recursive_python_child_memory_cap_terminates_interpreter_tree(tm
     parent = "import subprocess,sys; p=subprocess.Popen([sys.executable,'-c',%r]); p.wait()" % allocation
     result = study.monitored_process([sys.executable, "-c", parent], tmp_path, time.monotonic() + 30)
     assert result["violation"] and "RSS cap" in result["violation"]
-    assert result["returncode"] != 0
+    # A parent waiting for the terminated child can legitimately exit zero.
+    # Verify resource cessation of the observed process identities instead.
+    identities = {(process["pid"], process["created"]) for sample in result["samples"]
+                  for process in sample["owned_processes"]}
+    active = []
+    for pid, created in identities:
+        try:
+            process = psutil.Process(pid)
+            if (process.create_time() == created and process.is_running()
+                    and process.status() != psutil.STATUS_ZOMBIE):
+                active.append(pid)
+        except psutil.NoSuchProcess:
+            pass
+    assert not active, f"Resource-limited worker processes remain active: {active}"
     assert result["sampled_maximum_tree_sum_rss_bytes"] > 80 * 1024**2
     assert any(len(sample["owned_processes"]) >= 2 for sample in result["samples"])
     assert result["sampled_maximum_tree_sum_rss_bytes"] >= result["sampled_maximum_individual_rss_bytes"]
+
+
+def test_numeric_violation_with_zero_os_exit_retains_failed_worker_and_stops(tmp_path, monkeypatch):
+    import json
+    from fedcore.experiments import svd_comparison as study
+    case = {"case_id": "pending", "method": "svd"}
+    plan = {"source": {}, "architectures": {"mlp": {"cases": [case]}}}
+    evidence = {"returncode": 0, "violation": "owned process RSS cap exceeded", "elapsed_seconds": 1.}
+    monkeypatch.setattr(study, "predeclare_plan", lambda *args, **kwargs: plan)
+    monkeypatch.setattr(study, "source_identity", lambda: {})
+    monkeypatch.setattr(study, "monitored_process", lambda *args, **kwargs: evidence)
+    monkeypatch.setattr(study, "consolidate_results", lambda output: {})
+    assert study.run_series(tmp_path) == 1
+    recorded = json.loads((tmp_path / "mlp-seed-41/run.json").read_text(encoding="utf-8"))
+    assert recorded["worker_failure"]["returncode"] == 0
+    assert recorded["worker_failure"]["violation"] == evidence["violation"]
+    assert recorded["records"][0]["status"] == "not_completed_worker_failure"
+    assert not (tmp_path / "mlp-seed-42").exists()
+
+
+@pytest.mark.parametrize("prior_history", [False, True])
+def test_timing_violation_with_zero_os_exit_is_unsuccessful(tmp_path, monkeypatch, prior_history):
+    import json
+    from fedcore.experiments import svd_comparison as study
+    (tmp_path / "protocol.json").write_text(json.dumps({"source": {}}), encoding="utf-8")
+    evidence = {"returncode": 0, "violation": "owned process-tree RSS cap exceeded", "elapsed_seconds": 1.}
+    job_path = tmp_path / "mlp-seed-41/baseline/timing-job.json"
+    if prior_history:
+        (tmp_path / "timing-execution.json").write_text(json.dumps({"workers": [
+            {"job": str(job_path), "resources": evidence}]}), encoding="utf-8")
+    else:
+        job_path.parent.mkdir(parents=True)
+        job_path.write_text(json.dumps({"output": str(job_path.parent / "timing.json")}), encoding="utf-8")
+    monkeypatch.setattr(study, "source_identity", lambda: {})
+    monkeypatch.setattr(study, "monitored_process", lambda *args, **kwargs: evidence)
+    monkeypatch.setattr(study, "consolidate_results", lambda output: {})
+    assert study.run_series(tmp_path, timing_only=True) == 1
+    recorded = json.loads((tmp_path / "timing-execution.json").read_text(encoding="utf-8"))
+    assert recorded["workers"][0]["resources"]["returncode"] == 0
+    assert recorded["workers"][0]["resources"]["violation"] == evidence["violation"]
 
 
 def test_prior_instrumentation_attempt_wall_is_charged_in_frozen_new_protocol(tmp_path, monkeypatch):
