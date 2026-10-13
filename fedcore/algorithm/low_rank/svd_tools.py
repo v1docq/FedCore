@@ -14,9 +14,16 @@ def _map_decomposed_cls(inst):
     return None if isinstance(inst, IDecomposed) else DecomposableLayers.get(type(inst))
 
 
-def decompose_module(model, decomposing_mode=True, decomposer='svd', compose_mode=None, decomposer_params=None):
+def decompose_module(model, decomposing_mode=True, decomposer='svd', compose_mode=None, decomposer_params=None,
+                     target_paths=None):
     paths = module_paths(model)
     selected = {path: module for path, module in paths.items() if _map_decomposed_cls(module) is not None}
+    if target_paths is not None:
+        if (not isinstance(target_paths, (list, tuple)) or not target_paths
+                or any(not isinstance(path, str) or path not in selected for path in target_paths)
+                or len(set(target_paths)) != len(target_paths)):
+            raise ValueError('target_paths must select distinct supported undecomposed module paths')
+        selected = {path: selected[path] for path in target_paths}
     topology = validate_parameter_topology(model, selected)
     from fedcore.algorithm.low_rank.plans import OperatorDescriptor, legacy_request, plan_transform, ValidationFailure
     solver_name = decomposer if isinstance(decomposer, str) else type(decomposer).__module__ + '.' + type(decomposer).__qualname__

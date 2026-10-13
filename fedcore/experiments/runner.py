@@ -546,9 +546,9 @@ def apply_candidate(model, bundle, protocol, candidate):
         return model, {"implementation": "FedCore shared weighted transform interpreter",
                        "weighted_transform": result.evidence, **training}
     if method == "svd":
-        if set(parameters) - {"threshold", "strategy", "decomposer", "finetune_epochs", "rank", "rank_ratio"}:
+        if set(parameters) - {"threshold", "strategy", "decomposer", "finetune_epochs", "rank", "rank_ratio", "ranks", "target_paths"}:
             raise ProtocolError("Unknown SVD parameters")
-        if sum(key in parameters for key in ("rank", "rank_ratio", "threshold")) > 1:
+        if sum(key in parameters for key in ("rank", "rank_ratio", "threshold", "ranks")) > 1:
             raise ProtocolError("Choose exactly one explicit rank, rank_ratio or threshold policy")
         if "rank" in parameters and (type(parameters["rank"]) is not int or parameters["rank"] < 1):
             raise ProtocolError("Explicit SVD rank must be positive integer")
@@ -557,24 +557,47 @@ def apply_candidate(model, bundle, protocol, candidate):
         from fedcore.algorithm.low_rank.svd_tools import decompose_module
         from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning_in_place
         from fedcore.models.network_impl.decomposed_layers import IDecomposed
-        model = decompose_module(model, decomposer=parameters.get("decomposer", "svd"), compose_mode="two_layers")
-        layers = [layer for layer in model.modules() if isinstance(layer, IDecomposed)]
+        from fedcore.algorithm.low_rank.topology import module_paths
+        selected = parameters.get("target_paths")
+        explicit_ranks = parameters.get("ranks")
+        if explicit_ranks is not None and (not isinstance(explicit_ranks, dict) or selected is None
+                or set(explicit_ranks) != set(selected)
+                or any(type(value) is not int or value < 1 for value in explicit_ranks.values())):
+            raise ProtocolError("ranks must map every explicit target path to a positive integer")
+        if explicit_ranks is not None:
+            original_paths, alias_ranks = module_paths(model), {}
+            for path, rank in explicit_ranks.items():
+                if path in original_paths:
+                    identity = id(original_paths[path])
+                    if identity in alias_ranks and alias_ranks[identity] != rank:
+                        raise ProtocolError("Aliased module paths require the same explicit rank")
+                    alias_ranks[identity] = rank
+        model = decompose_module(model, decomposer=parameters.get("decomposer", "svd"),
+                                 compose_mode="two_layers", target_paths=selected)
+        targets, seen_targets = [], set()
+        for path, layer in module_paths(model).items():
+            if (isinstance(layer, IDecomposed) and (selected is None or path in selected)
+                    and id(layer) not in seen_targets):
+                targets.append((path, layer))
+                seen_targets.add(id(layer))
+        layers = [layer for _, layer in targets]
         if not layers:
             raise UnsupportedOperation("No supported layer was decomposed")
         ranks = []
-        for layer in layers:
-            if "rank" in parameters or "rank_ratio" in parameters:
+        for path, layer in targets:
+            if "rank" in parameters or "rank_ratio" in parameters or explicit_ranks is not None:
                 u, s, vh = layer.canonicalize()
-                rank = parameters.get("rank", max(1, int(s.shape[-1] * parameters.get("rank_ratio", 1))))
+                rank = (explicit_ranks[path] if explicit_ranks is not None else
+                        parameters.get("rank", max(1, int(s.shape[-1] * parameters.get("rank_ratio", 1)))))
                 if rank > s.shape[-1]:
                     raise ProtocolError("Explicit rank exceeds a layer's actual matrix rank bound")
                 layer.set_U_S_Vh(u[..., :rank], s[..., :rank], vh[..., :rank, :])
-                layer.rank_pruning_info = {"method": "operator_svd", "strategy": "explicit_rank" if "rank" in parameters else "rank_ratio",
+                layer.rank_pruning_info = {"method": "operator_svd", "strategy": "explicit_rank" if "rank" in parameters or explicit_ranks is not None else "rank_ratio",
                                            "rank": rank, "rank_bound": s.shape[-1]}
             else:
                 rank_threshold_pruning_in_place(layer, threshold=parameters.get("threshold", 0.8),
                                                  strategy=parameters.get("strategy", "explained_variance"), round_to_times=1)
-            ranks.append(dict(layer.rank_pruning_info))
+            ranks.append(dict(layer.rank_pruning_info, path=path))
         evidence = train_model(model, bundle.train, bundle.task,
                                epochs=parameters.get("finetune_epochs", protocol.finetune_epochs),
                                batch_size=protocol.batch_size, learning_rate=protocol.learning_rate,

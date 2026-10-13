@@ -1,0 +1,16 @@
+{
+  "scope": "Independent read-only publication review after experiment completion",
+  "reviewer": "svd_local_review; gpt-6.1-sol / xhigh",
+  "status": "passed",
+  "path_projected_json_files": 107,
+  "changed_path_strings": 968,
+  "all_other_values_types_keys_identical": true,
+  "original_and_published_hashes_verified": true,
+  "raw_timing_rows": 19200,
+  "raw_timing_sessions": 96,
+  "raw_sample_order_pid_profile_matches": true,
+  "failed_worker_analysis_fix_reviewed": true,
+  "report_claims_verified": true,
+  "runtime_reproduction_requires_local_binaries": true,
+  "subsequent_lf_normalization": "Publication hashes recalculated for canonical LF; staged Git blobs checked by root before commit."
+}
