@@ -217,6 +217,27 @@ def _describe_model(model, seen, path):
     if id(model) in seen:
         return {'type': 'ModuleAlias', 'target': seen[id(model)]}
     seen[id(model)] = path
+    from fedcore.algorithm.pruning.sparse.checkpoint import describe_sparse
+    try:
+        sparse_description = describe_sparse(model)
+    except (TypeError, ValueError, KeyError) as error:
+        raise CheckpointError('Invalid declared sparse representation') from error
+    if sparse_description is not None:
+        return sparse_description
+    from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE
+    if type(model) is ReferenceMoE:
+        from fedcore.algorithm.pruning.sparse.checkpoint import _guard, _bound
+        try:
+            _guard(model)
+            model.validate_state()
+            config = model.representation_config()
+            _bound(config)
+        except (ValueError, TypeError, KeyError) as error:
+            raise CheckpointError('Invalid MoE representation') from error
+        children = {name: _describe_model(child, seen, f'{path}.{name}' if path else name)
+                    for name, child in model._modules.items() if child is not None}
+        return {'type': 'SparseMoE', 'version': 1, 'config': config,
+                'dtype': str(model.router.weight.dtype), 'children': children}
     from fedcore.algorithm.low_rank.architecture_checkpoint import describe_p5
     try:
         description = describe_p5(model)
@@ -257,6 +278,14 @@ def _describe_model(model, seen, path):
                     for name, child in model._modules.items() if child is not None}
         if not all(children.values()):
             return None
+        from fedcore.algorithm.low_rank.structured_layers import FactorizedLinear
+        if type(model) is ReferenceMLP and any(type(child) is FactorizedLinear for child in model.children()):
+            up_bias = model.up_proj.left.bias if type(model.up_proj) is FactorizedLinear else model.up_proj.bias
+            config = {'layer_type': 'ReferenceMLP', 'version': 1, 'd_model': model.d_model,
+                      'intermediate_size': model.intermediate_size, 'gated': model.gated,
+                      'activation': model.activation, 'bias': up_bias is not None, 'channel_indices': list(model.channel_indices)}
+            return {'type': 'SparseExpertMLP', 'config': config,
+                    'dtype': str(next(model.parameters()).dtype), 'children': children}
         return {'type': type(model).__name__, 'config': model.representation_config(),
                 'dtype': str(next(model.parameters()).dtype), 'children': children}
     from fedcore.algorithm.low_rank.structured_layers import (FactorizedLinear,
@@ -304,7 +333,7 @@ def _describe_model(model, seen, path):
                 'out_features': model.out_features, 'bias': model.bias is not None}}
     if type(model) in (nn.Conv1d, nn.Conv2d, nn.Embedding):
         return _dense_description(model, type(model))
-    if type(model) in (nn.Sequential, nn.ModuleDict):
+    if type(model) in (nn.Sequential, nn.ModuleDict, nn.ModuleList):
         children = {name: _describe_model(child, seen, f'{path}.{name}' if path else name)
                     for name, child in model._modules.items() if child is not None}
         return {'type': type(model).__name__, 'children': children} if all(children.values()) else None
@@ -344,10 +373,11 @@ def _build_model(description, seen, path):
         if set(description) != {'type', 'target'} or description.get('target') not in seen:
             raise CheckpointError('Invalid or forward module alias reference')
         return seen[description['target']]
-    if description.get('type') in ('Sequential', 'ModuleDict'):
+    if description.get('type') in ('Sequential', 'ModuleDict', 'ModuleList'):
         if not isinstance(description.get('children'), Mapping):
             raise CheckpointError('Sequential architecture requires named children')
-        model = nn.Sequential() if description['type'] == 'Sequential' else nn.ModuleDict()
+        model = {'Sequential': nn.Sequential, 'ModuleDict': nn.ModuleDict,
+                 'ModuleList': nn.ModuleList}[description['type']]()
         seen[path] = model
         for name, child in description['children'].items():
             if not isinstance(name, str) or not name or '.' in name:
@@ -357,6 +387,37 @@ def _build_model(description, seen, path):
     from fedcore.models.network_impl.decomposed_layers import DecomposableLayers
     decomposed = {cls.__name__: cls for cls in DecomposableLayers.values()}
     kind = description.get('type')
+    if kind == 'SparseMoE':
+        from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE
+        from fedcore.algorithm.pruning.sparse.checkpoint import _bound
+        if (set(description) != {'type', 'version', 'config', 'dtype', 'children'}
+                or type(description['version']) is not int or description['version'] != 1
+                or description['dtype'] not in ('torch.float32', 'torch.float64')
+                or not isinstance(description['children'], dict)):
+            raise CheckpointError('Invalid sparse MoE descriptor')
+        config, children = description['config'], description['children']
+        try:
+            _bound(config)
+            if set(children) != ({'router', 'experts', 'shared'} if config['shared'] else {'router', 'experts'}):
+                raise ValueError('Invalid MoE children')
+            with torch.random.fork_rng(devices=[]):
+                model = ReferenceMoE.from_config(config, device='cpu', dtype=getattr(torch, description['dtype'][6:]))
+            seen[path] = model
+            for name, child in children.items():
+                model._modules[name] = _build_model(child, seen, f'{path}.{name}' if path else name)
+            if type(model.router) is not nn.Linear or type(model.experts) is not nn.ModuleList or len(model.experts) != model.num_experts:
+                raise ValueError('Invalid MoE graph')
+        except (ValueError, TypeError, KeyError) as error:
+            raise CheckpointError('Invalid sparse MoE architecture') from error
+        return model
+    if kind == 'SparseRepresentation':
+        from fedcore.algorithm.pruning.sparse.checkpoint import build_sparse
+        try:
+            model = build_sparse(description)
+        except (ValueError, TypeError, KeyError, RuntimeError) as error:
+            raise CheckpointError('Invalid sparse representation descriptor') from error
+        seen[path] = model
+        return model
     if kind == 'P5Architecture':
         from fedcore.algorithm.low_rank.architecture_checkpoint import build_p5
         try:
@@ -460,10 +521,13 @@ def _build_model(description, seen, path):
         except (TypeError, ValueError, KeyError) as error:
             raise CheckpointError('Invalid P3 projection representation constructor') from error
         return model
-    if kind in ('ReferenceAttention', 'ReferenceMLP'):
+    if kind in ('ReferenceAttention', 'ReferenceMLP', 'SparseExpertMLP'):
         from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
+        from fedcore.algorithm.low_rank.structured_layers import FactorizedLinear
+        sparse_expert = kind == 'SparseExpertMLP'
+        reference_kind = 'ReferenceMLP' if sparse_expert else kind
         config, children = description.get('config'), description.get('children')
-        if (not isinstance(config, dict) or config.get('layer_type') != kind
+        if (not isinstance(config, dict) or config.get('layer_type') != reference_kind
                 or type(config.get('version')) is not int or config['version'] != 1
                 or description.get('dtype') not in ('torch.float32', 'torch.float64')
                 or not isinstance(children, dict)):
@@ -484,8 +548,12 @@ def _build_model(description, seen, path):
                 raise ValueError('Reference module children must match the explicit graph')
             for name, expected in expected_children.items():
                 restored = _build_model(children[name], seen, f'{path}.{name}' if path else name)
-                if (type(restored) is not nn.Linear or restored.weight.shape != expected.weight.shape
-                        or (restored.bias is None) != (expected.bias is None)):
+                if sparse_expert and type(restored) is FactorizedLinear:
+                    if (restored.in_features != expected.in_features or restored.out_features != expected.out_features
+                            or (restored.left.bias is None) != (expected.bias is None)):
+                        raise ValueError('Sparse expert factor dimensions do not match')
+                elif (type(restored) is not nn.Linear or restored.weight.shape != expected.weight.shape
+                      or (restored.bias is None) != (expected.bias is None)):
                     raise ValueError('Reference graph projection dimensions do not match')
                 model._modules[name] = restored.to(dtype=getattr(torch, description['dtype'][6:]))
         except (TypeError, ValueError, KeyError) as error:
@@ -750,9 +818,14 @@ class CheckpointManager:
             raise CheckpointError('Checkpoint keys or tensor shapes do not match the architecture')
         _validate_p3_state(candidate,state)
         from fedcore.algorithm.low_rank.architecture_checkpoint import validate_p5_state
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_state
         for path, layer in module_paths(candidate).items():
             try:
                 validate_p5_state(layer, state, path + '.' if path else '')
+                validate_sparse_state(layer, state, path + '.' if path else '')
+                from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE
+                if type(layer) is ReferenceMoE:
+                    layer.validate_state(state, path + '.' if path else '')
             except (TypeError, ValueError, KeyError) as error:
                 raise CheckpointError('Invalid P5 architecture state') from error
         # assign retains each tensor dtype; restoration never mutates supplied models.
