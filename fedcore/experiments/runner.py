@@ -162,15 +162,20 @@ def quality_metrics(model, split, task, batch_size=16, device="cpu"):
 
 def train_model(model, split, task, *, epochs, batch_size, learning_rate, device="cpu", seed=0,
                 optimizer_validator=None, teacher=None, feature_path=None,
-                batch_objective=None, max_updates=None):
+                batch_objective=None, max_updates=None, drop_last=False):
     """Fixed-budget Adam training; validation and test cannot stop it."""
     started = time.perf_counter()
     if type(epochs) is not int or epochs < 0:
         raise ProtocolError("Training epochs must be nonnegative")
     if type(batch_size) is not int or batch_size <= 0:
         raise ProtocolError("Training batch_size must be a positive integer")
+    if type(drop_last) is not bool:
+        raise ProtocolError("drop_last must be boolean")
+    epoch_batches = len(split.x) // batch_size if drop_last else math.ceil(len(split.x) / batch_size)
+    if epochs and epoch_batches == 0:
+        raise ProtocolError("Training requires at least one batch per epoch")
     if max_updates is not None and (type(max_updates) is not int or max_updates <= 0
-            or max_updates > epochs * math.ceil(len(split.x) / batch_size)):
+            or max_updates > epochs * epoch_batches):
         raise ProtocolError("max_updates must fit the declared training epoch budget")
     if batch_objective is not None and (not callable(batch_objective)
             or not hasattr(batch_objective, '__enter__') or not hasattr(batch_objective, '__exit__')):
@@ -183,7 +188,7 @@ def train_model(model, split, task, *, epochs, batch_size, learning_rate, device
     split.verify_integrity()
     model.to(device)
     loader = DataLoader(TensorDataset(split.x, split.y), batch_size=batch_size, shuffle=True,
-                        generator=torch.Generator().manual_seed(seed))
+                        generator=torch.Generator().manual_seed(seed), drop_last=drop_last)
     trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
     initial_trainable = sum(parameter.numel() for parameter in trainable)
     if epochs and not trainable:
@@ -281,6 +286,7 @@ def train_model(model, split, task, *, epochs, batch_size, learning_rate, device
         evidence['max_updates'] = max_updates
         evidence['seed'] = seed
         evidence['batch_size'] = batch_size
+        evidence['drop_last'] = drop_last
         evidence['training_data'] = split.manifest()
         evidence['step_resource_history'] = resource_history
         evidence['optimizer_state_bytes_peak'] = max((row['optimizer_state_bytes'] for row in resource_history),default=0)

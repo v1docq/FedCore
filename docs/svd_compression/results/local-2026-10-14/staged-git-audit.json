@@ -1,0 +1,13 @@
+{
+  "analysis_script_git_lf_sha256": "b54fc3a4760a4f5fff020d5ec0f9bc9024770c71a9f97d13d4f1239ec2ff01c7",
+  "old_materials_unchanged": true,
+  "publication_manifest_sha256": "33762094f269734989b4f422cfff1a480219c2c38b366d320f653792d99eb161",
+  "published_manifest_files": 158,
+  "report_git_lf_sha256": "8c13e2eb6c3b0a349b3118e9670d981f97cab79a50bfc32ec18c608892dbe8ae",
+  "schema": 1,
+  "scientific_source_files": 258,
+  "scientific_source_sha256": "0943a8c184d9b55ec4a2720b2a731f3571f937f03b20846dcef48486af0b9b8a",
+  "scope": "staged Git blob audit; excludes this certificate itself.",
+  "source_normalization": "CRLF to LF, including historical Git objects; published bytes checked exactly.",
+  "status": "passed"
+}
