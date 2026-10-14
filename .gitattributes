@@ -6,3 +6,7 @@ examples/petra/* text eol=lf
 docs/petra/examples.md text eol=lf
 # Preserve the recorded evidence bytes and hashes across Windows/Linux checkouts.
 docs/petra/results/readiness-2026-10-06/** -text whitespace=cr-at-eol
+
+# Preserve the second SVD packet's portable evidence bytes on every checkout.
+docs/svd_compression/results/second-local-2026-10-14/** -text whitespace=cr-at-eol
+docs/svd_compression/second-local-package-infographic.html text eol=lf

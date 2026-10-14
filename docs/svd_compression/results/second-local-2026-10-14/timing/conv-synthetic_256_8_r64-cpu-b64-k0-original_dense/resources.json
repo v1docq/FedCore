@@ -1,0 +1,978 @@
+{
+  "admission": {
+    "before_worker_spawn": true,
+    "elapsed_seconds": 2.797000000005937,
+    "extra_wait_seconds": 0.0,
+    "mandatory_observation_seconds": 2.797000000005937,
+    "protocol_sha256": "ebb27bb08ca15228c06f59e0502acbc9f8b78c30d13f1adf42932905ad7f6b1c",
+    "samples": [
+      {
+        "elapsed_seconds": 0.26600000000325963,
+        "quiet_streak": 1,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14438797312,
+          "cpu_percent": 1.2,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791988496.185927
+        }
+      },
+      {
+        "elapsed_seconds": 1.5470000000059372,
+        "quiet_streak": 2,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14440570880,
+          "cpu_percent": 0.4,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14691.0,
+            "physical_used_mib": 1360.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791988497.4669378
+        }
+      },
+      {
+        "elapsed_seconds": 2.797000000005937,
+        "quiet_streak": 3,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14441222144,
+          "cpu_percent": 0.4,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791988498.7270641
+        }
+      }
+    ],
+    "session_id": "conv-synthetic_256_8_r64-cpu-b64-k0-original_dense",
+    "status": "admitted"
+  },
+  "command": [
+    "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+    "-m",
+    "fedcore.experiments.svd_second_package",
+    "--output",
+    "local-svd-second-package",
+    "--worker",
+    "timing",
+    "--job",
+    "local-svd-second-package\\timing\\conv-synthetic_256_8_r64-cpu-b64-k0-original_dense\\job.json"
+  ],
+  "elapsed_seconds": 20.137782900004822,
+  "maximum_recursive_rss_bytes": 424517632,
+  "post_exit_observation": {
+    "drain_seconds": 2.2,
+    "elapsed_seconds": 2.7969999999986612,
+    "extra_wait_seconds": 0.0,
+    "mandatory_observation_seconds": 2.7969999999986612,
+    "samples": [
+      {
+        "elapsed_seconds": 0.26600000000325963,
+        "quiet_streak": 1,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14154309632,
+          "cpu_percent": 6.2,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791988521.343013
+        }
+      },
+      {
+        "elapsed_seconds": 1.5310000000026776,
+        "quiet_streak": 2,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13900587008,
+          "cpu_percent": 5.0,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791988522.6133108
+        }
+      },
+      {
+        "elapsed_seconds": 2.7969999999986612,
+        "quiet_streak": 3,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13840187392,
+          "cpu_percent": 6.1,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791988523.8768022
+        }
+      }
+    ],
+    "status": "admitted",
+    "worker_exited": true,
+    "worker_returncode": 0
+  },
+  "returncode": 0,
+  "samples": [
+    {
+      "available_ram_bytes": 14437257216,
+      "elapsed_seconds": 0.046979900005680975,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 15343616
+    },
+    {
+      "available_ram_bytes": 14361440256,
+      "elapsed_seconds": 0.2808034000045154,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 213368832
+    },
+    {
+      "available_ram_bytes": 14297362432,
+      "elapsed_seconds": 0.5201184000034118,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 282800128
+    },
+    {
+      "available_ram_bytes": 14261325824,
+      "elapsed_seconds": 0.7532064000042737,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 311545856
+    },
+    {
+      "available_ram_bytes": 14229241856,
+      "elapsed_seconds": 0.9890554000012344,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 321875968
+    },
+    {
+      "available_ram_bytes": 14201753600,
+      "elapsed_seconds": 1.2243760000055772,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 330207232
+    },
+    {
+      "available_ram_bytes": 14195847168,
+      "elapsed_seconds": 1.461930500001472,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 339288064
+    },
+    {
+      "available_ram_bytes": 14199300096,
+      "elapsed_seconds": 1.7090214999989257,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 343830528
+    },
+    {
+      "available_ram_bytes": 14192177152,
+      "elapsed_seconds": 1.9421537000016542,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 349339648
+    },
+    {
+      "available_ram_bytes": 14149001216,
+      "elapsed_seconds": 2.185749600001145,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "setup",
+      "tree_sum_rss_bytes": 403234816
+    },
+    {
+      "available_ram_bytes": 14135296000,
+      "elapsed_seconds": 2.435788100003265,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14136279040,
+      "elapsed_seconds": 2.6779938000036054,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14135128064,
+      "elapsed_seconds": 2.9114111000017147,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14122770432,
+      "elapsed_seconds": 3.149224500004493,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14137053184,
+      "elapsed_seconds": 3.385747500004072,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14157115392,
+      "elapsed_seconds": 3.633220900002925,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14156263424,
+      "elapsed_seconds": 3.8675927000003867,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14155116544,
+      "elapsed_seconds": 4.122521900004358,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14165110784,
+      "elapsed_seconds": 4.370229400003154,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "warmup",
+      "tree_sum_rss_bytes": 424513536
+    },
+    {
+      "available_ram_bytes": 14173487104,
+      "elapsed_seconds": 4.623647400003392,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 424517632
+    },
+    {
+      "available_ram_bytes": 14173462528,
+      "elapsed_seconds": 4.858286800001224,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 424517632
+    },
+    {
+      "available_ram_bytes": 14176739328,
+      "elapsed_seconds": 5.105170100003306,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 424517632
+    },
+    {
+      "available_ram_bytes": 14182023168,
+      "elapsed_seconds": 5.348880600002303,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14180560896,
+      "elapsed_seconds": 5.581954100001894,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14184022016,
+      "elapsed_seconds": 5.81569020000461,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14182625280,
+      "elapsed_seconds": 6.051748600002611,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14180261888,
+      "elapsed_seconds": 6.295946600002935,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14181806080,
+      "elapsed_seconds": 6.543257199999061,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14185426944,
+      "elapsed_seconds": 6.798586500000965,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14183886848,
+      "elapsed_seconds": 7.044549300000654,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14184968192,
+      "elapsed_seconds": 7.28167950000352,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14184632320,
+      "elapsed_seconds": 7.517897800003993,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14184894464,
+      "elapsed_seconds": 7.7529388000039035,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14199242752,
+      "elapsed_seconds": 7.999129900003027,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14199148544,
+      "elapsed_seconds": 8.252450100000715,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14200180736,
+      "elapsed_seconds": 8.49655150000035,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14201470976,
+      "elapsed_seconds": 8.743130499999097,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14203084800,
+      "elapsed_seconds": 8.982311800005846,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14206676992,
+      "elapsed_seconds": 9.237016200000653,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14199799808,
+      "elapsed_seconds": 9.47169560000475,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14189801472,
+      "elapsed_seconds": 9.735483399999794,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14163542016,
+      "elapsed_seconds": 9.990865700005088,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14161821696,
+      "elapsed_seconds": 10.234384499999578,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14156771328,
+      "elapsed_seconds": 10.482174800003122,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416317440
+    },
+    {
+      "available_ram_bytes": 14158290944,
+      "elapsed_seconds": 10.728761500002292,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14160007168,
+      "elapsed_seconds": 10.978235599999607,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14144618496,
+      "elapsed_seconds": 11.236475700003211,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14132625408,
+      "elapsed_seconds": 11.491482800003723,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14140977152,
+      "elapsed_seconds": 11.741514900000766,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14153216000,
+      "elapsed_seconds": 11.99020990000281,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14138740736,
+      "elapsed_seconds": 12.2383134000047,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14145277952,
+      "elapsed_seconds": 12.475208200005,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14157279232,
+      "elapsed_seconds": 12.72210030000133,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14173192192,
+      "elapsed_seconds": 12.970987700005935,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14170189824,
+      "elapsed_seconds": 13.206897200005187,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14179446784,
+      "elapsed_seconds": 13.441995300003327,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14183444480,
+      "elapsed_seconds": 13.690244800003711,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14184964096,
+      "elapsed_seconds": 13.94210810000368,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14184546304,
+      "elapsed_seconds": 14.18816230000084,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14183899136,
+      "elapsed_seconds": 14.435411400001612,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14183219200,
+      "elapsed_seconds": 14.680362500002957,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14185259008,
+      "elapsed_seconds": 14.935684500000207,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14182199296,
+      "elapsed_seconds": 15.184167100000195,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14186647552,
+      "elapsed_seconds": 15.421525300000212,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14182219776,
+      "elapsed_seconds": 15.656449100002646,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14185017344,
+      "elapsed_seconds": 15.907914600000367,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14188609536,
+      "elapsed_seconds": 16.16831110000203,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14167777280,
+      "elapsed_seconds": 16.41786950000096,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14161055744,
+      "elapsed_seconds": 16.668882199999643,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14168293376,
+      "elapsed_seconds": 16.904516100003093,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14154133504,
+      "elapsed_seconds": 17.14680059999955,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14150189056,
+      "elapsed_seconds": 17.396635800003423,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14139056128,
+      "elapsed_seconds": 17.654840400005924,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14122037248,
+      "elapsed_seconds": 17.91916350000247,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14131122176,
+      "elapsed_seconds": 18.165170799999032,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14114811904,
+      "elapsed_seconds": 18.426796300002025,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14101569536,
+      "elapsed_seconds": 18.675787799998943,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14093213696,
+      "elapsed_seconds": 18.930265100003453,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14076964864,
+      "elapsed_seconds": 19.17560560000129,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14103302144,
+      "elapsed_seconds": 19.441625200001,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14117117952,
+      "elapsed_seconds": 19.690532300002815,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 416321536
+    },
+    {
+      "available_ram_bytes": 14124765184,
+      "elapsed_seconds": 19.932360400001926,
+      "owned_pids": [
+        73840,
+        71384
+      ],
+      "stage": "done",
+      "tree_sum_rss_bytes": 394063872
+    }
+  ],
+  "schema": 2,
+  "session_id": "conv-synthetic_256_8_r64-cpu-b64-k0-original_dense",
+  "violation": null,
+  "worker_pid": 73840
+}

@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "python-runtime\lib\runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "python-runtime\lib\runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "FedCore\fedcore\experiments\svd_second_package.py", line 818, in <module>
+    main()
+  File "FedCore\fedcore\experiments\svd_second_package.py", line 802, in main
+    timing_worker(read_json(args.job))
+  File "FedCore\fedcore\experiments\svd_second_timing.py", line 91, in timing_worker
+    reference = torch.jit.load(str(source), map_location="cpu").eval()
+  File "python-runtime\lib\site-packages\torch\jit\_serialization.py", line 159, in load
+    cpp_module = torch._C.import_ir_module(cu, str(f), map_location, _extra_files, _restore_shapes)  # type: ignore[call-arg]
+RuntimeError: open file failed because of errno 2 on fopen: No such file or directory, file path: historical-run-v2\cnn-seed-42\baseline\model.pt
