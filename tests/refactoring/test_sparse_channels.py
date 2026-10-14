@@ -85,6 +85,7 @@ def test_bad_selection_rejects_before_source_or_rng_changes(invalid):
 
 
 def test_real_llama_adapter_uses_actual_class_and_exact_gated_function():
+    pytest.importorskip('transformers',reason='Real Llama adapter requires the llm extra')
     from transformers import LlamaConfig
     from transformers.models.llama.modeling_llama import LlamaMLP
     config = LlamaConfig(hidden_size=4, intermediate_size=7, num_attention_heads=1, mlp_bias=True)

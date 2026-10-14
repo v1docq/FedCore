@@ -167,3 +167,33 @@ def test_external_workflow_executes_and_measures_artifact(tmp_path):
     assert result['artifact_measurement']['status'] == 'succeeded'
     assert result['artifact_measurement']['metrics']['tensor_state_bytes'] == result['metrics']['compressed']['tensor_bytes']
     assert (tmp_path / result['artifact']).is_file()
+
+
+@pytest.mark.parametrize('kind',['packed','indexed'])
+def test_reference_ffn_checkpoint_preserves_nested_compact_projections(tmp_path,kind):
+    from fedcore.algorithm.low_rank.coupled_layers import ReferenceMLP
+    torch.manual_seed(741)
+    mlp = ReferenceMLP(8,12,gated=False,activation='gelu',bias=True).eval()
+    if kind == 'packed':
+        compact = PackedNMLinear(8,12,n=1,m=4,rank=1,bias=True)
+        with torch.no_grad():
+            compact.values.normal_()
+            compact.factors.left.weight.normal_()
+            compact.factors.right.weight.normal_()
+            compact.bias.fill_(.3)
+    else:
+        compact = IndexedResidualLinear.from_tensors(
+            torch.randn(12,2),torch.randn(2,8),torch.randn(3,8),
+            torch.tensor([0,4,9]),bias=torch.randn(12))
+    mlp.up_proj = compact
+    x = torch.randn(7,8)
+    manager = CheckpointManager(str(tmp_path),auto_cleanup=False)
+    payload = manager.serialize_to_bytes(mlp)
+    restored = manager.deserialize_from_bytes(payload)
+    assert type(restored.up_proj) is type(compact)
+    torch.testing.assert_close(restored(x),mlp(x),rtol=0,atol=0)
+    assert all(torch.equal(value,restored.state_dict()[key]) for key,value in mlp.state_dict().items())
+    corrupted = torch.load(io.BytesIO(payload),weights_only=True)
+    corrupted['architecture']['children']['up_proj']['config']['out_features'] = 3
+    with pytest.raises(CheckpointError):
+        manager.restore(corrupted)

@@ -279,7 +279,9 @@ def _describe_model(model, seen, path):
         if not all(children.values()):
             return None
         from fedcore.algorithm.low_rank.structured_layers import FactorizedLinear
-        if type(model) is ReferenceMLP and any(type(child) is FactorizedLinear for child in model.children()):
+        from fedcore.algorithm.pruning.sparse.layers import PackedNMLinear, IndexedResidualLinear
+        compact_projections = (FactorizedLinear, PackedNMLinear, IndexedResidualLinear)
+        if type(model) is ReferenceMLP and any(type(child) in compact_projections for child in model.children()):
             up_bias = model.up_proj.left.bias if type(model.up_proj) is FactorizedLinear else model.up_proj.bias
             config = {'layer_type': 'ReferenceMLP', 'version': 1, 'd_model': model.d_model,
                       'intermediate_size': model.intermediate_size, 'gated': model.gated,
@@ -524,6 +526,7 @@ def _build_model(description, seen, path):
     if kind in ('ReferenceAttention', 'ReferenceMLP', 'SparseExpertMLP'):
         from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
         from fedcore.algorithm.low_rank.structured_layers import FactorizedLinear
+        from fedcore.algorithm.pruning.sparse.layers import PackedNMLinear, IndexedResidualLinear
         sparse_expert = kind == 'SparseExpertMLP'
         reference_kind = 'ReferenceMLP' if sparse_expert else kind
         config, children = description.get('config'), description.get('children')
@@ -548,9 +551,10 @@ def _build_model(description, seen, path):
                 raise ValueError('Reference module children must match the explicit graph')
             for name, expected in expected_children.items():
                 restored = _build_model(children[name], seen, f'{path}.{name}' if path else name)
-                if sparse_expert and type(restored) is FactorizedLinear:
+                if sparse_expert and type(restored) in (FactorizedLinear, PackedNMLinear, IndexedResidualLinear):
+                    bias = restored.left.bias if type(restored) is FactorizedLinear else restored.bias
                     if (restored.in_features != expected.in_features or restored.out_features != expected.out_features
-                            or (restored.left.bias is None) != (expected.bias is None)):
+                            or (bias is None) != (expected.bias is None)):
                         raise ValueError('Sparse expert factor dimensions do not match')
                 elif (type(restored) is not nn.Linear or restored.weight.shape != expected.weight.shape
                       or (restored.bias is None) != (expected.bias is None)):

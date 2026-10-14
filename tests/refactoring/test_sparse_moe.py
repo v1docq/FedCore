@@ -128,6 +128,7 @@ def test_unobserved_expert_refused_before_commit():
 
 
 def test_real_mixtral_adapter_matches_tuple_output():
+    pytest.importorskip('transformers',reason='Real Mixtral adapter requires the llm extra')
     from transformers import MixtralConfig
     from transformers.models.mixtral.modeling_mixtral import MixtralSparseMoeBlock
     config = MixtralConfig(hidden_size=8,intermediate_size=12,num_local_experts=4,
