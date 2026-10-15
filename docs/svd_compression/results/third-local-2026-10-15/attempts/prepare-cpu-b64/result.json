@@ -1,0 +1,874 @@
+{
+  "job": {
+    "admission_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\prepare-cpu-b64\\admission.json",
+    "batch": 64,
+    "device": "cpu",
+    "directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\prepare-cpu-b64",
+    "first": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14",
+    "output": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15",
+    "protocol_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\protocol.json",
+    "protocol_sha256": "260c19d5ddc0aa91a5fbce1fc47e736ce683b7737af91f2f2d775b9a600de3f1",
+    "session_id": "prepare-cpu-b64",
+    "stage": "prepare"
+  },
+  "prepared": {
+    "graphs": {
+      "dense": {
+        "bytes": 290275,
+        "known_quality": {
+          "test": {
+            "accuracy": 0.9592592716217041,
+            "correct": 259,
+            "cross_entropy": 0.17169423401355743,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "451cb8854e95beeb858f265d7169a5b7c48dfae916fe9886dc7be455aacf3bc9",
+            "labels_sha256": "0fa7aa1a28d7f29af379dfe2fe8e220d5521a385a36f6006dd7ba754dd41aea5",
+            "n": 270
+          },
+          "validation": {
+            "accuracy": 0.9702602028846741,
+            "correct": 261,
+            "cross_entropy": 0.11471297591924667,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "a19e11d9614c97faf426fe13a45d4430acc0f3726516cadaebe7d547fee9fd6e",
+            "labels_sha256": "a61f4f7a1fd7862dfd17239086db7e22ada493988479041e082940b2583947bf",
+            "n": 269
+          }
+        },
+        "model_state_sha256": "7622825d844dfdd618e80a2d8d9ba1bd6192df3d77b3f0220ea4777c6412c655",
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\sources\\dense.pt",
+        "sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+        "tensor_bytes": 274920
+      },
+      "svd_factor": {
+        "bytes": 98486,
+        "known_quality": {
+          "test": {
+            "accuracy": 0.9592592716217041,
+            "correct": 259,
+            "cross_entropy": 0.1748802363872528,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "451cb8854e95beeb858f265d7169a5b7c48dfae916fe9886dc7be455aacf3bc9",
+            "labels_sha256": "0fa7aa1a28d7f29af379dfe2fe8e220d5521a385a36f6006dd7ba754dd41aea5",
+            "n": 270
+          },
+          "validation": {
+            "accuracy": 0.9702602028846741,
+            "correct": 261,
+            "cross_entropy": 0.11889209598302841,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "a19e11d9614c97faf426fe13a45d4430acc0f3726516cadaebe7d547fee9fd6e",
+            "labels_sha256": "a61f4f7a1fd7862dfd17239086db7e22ada493988479041e082940b2583947bf",
+            "n": 269
+          }
+        },
+        "model_state_sha256": "89ff1b6dee15e0b2eee40791ad75b37c3637da6acefbf4fe1c40ad24cb7af29f",
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\sources\\svd_factor.pt",
+        "sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+        "tensor_bytes": 78312
+      },
+      "svd_materialized": {
+        "bytes": 101403,
+        "known_quality": {
+          "test": {
+            "accuracy": 0.9592592716217041,
+            "correct": 259,
+            "cross_entropy": 0.1748802363872528,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "451cb8854e95beeb858f265d7169a5b7c48dfae916fe9886dc7be455aacf3bc9",
+            "labels_sha256": "0fa7aa1a28d7f29af379dfe2fe8e220d5521a385a36f6006dd7ba754dd41aea5",
+            "n": 270
+          },
+          "validation": {
+            "accuracy": 0.9702602028846741,
+            "correct": 261,
+            "cross_entropy": 0.11889207363128662,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "a19e11d9614c97faf426fe13a45d4430acc0f3726516cadaebe7d547fee9fd6e",
+            "labels_sha256": "a61f4f7a1fd7862dfd17239086db7e22ada493988479041e082940b2583947bf",
+            "n": 269
+          }
+        },
+        "model_state_sha256": "dad29960f099e7f5dcbeac9241b05783a2efcbe2ac809c09964e31e92f7f4b08",
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\sources\\svd_materialized.pt",
+        "sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+        "tensor_bytes": 82408
+      },
+      "weighted_factor": {
+        "bytes": 98568,
+        "known_quality": {
+          "test": {
+            "accuracy": 0.9592592716217041,
+            "correct": 259,
+            "cross_entropy": 0.17579588294029236,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "451cb8854e95beeb858f265d7169a5b7c48dfae916fe9886dc7be455aacf3bc9",
+            "labels_sha256": "0fa7aa1a28d7f29af379dfe2fe8e220d5521a385a36f6006dd7ba754dd41aea5",
+            "n": 270
+          },
+          "validation": {
+            "accuracy": 0.9702602028846741,
+            "correct": 261,
+            "cross_entropy": 0.11938542127609253,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "a19e11d9614c97faf426fe13a45d4430acc0f3726516cadaebe7d547fee9fd6e",
+            "labels_sha256": "a61f4f7a1fd7862dfd17239086db7e22ada493988479041e082940b2583947bf",
+            "n": 269
+          }
+        },
+        "model_state_sha256": "3219273ac420d9b14f8f0171d9f6f47850f2469fe858bb8ac2aff9e60b40bd53",
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\sources\\weighted_factor.pt",
+        "sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+        "tensor_bytes": 78312
+      },
+      "weighted_materialized": {
+        "bytes": 101467,
+        "known_quality": {
+          "test": {
+            "accuracy": 0.9592592716217041,
+            "correct": 259,
+            "cross_entropy": 0.17579582333564758,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "451cb8854e95beeb858f265d7169a5b7c48dfae916fe9886dc7be455aacf3bc9",
+            "labels_sha256": "0fa7aa1a28d7f29af379dfe2fe8e220d5521a385a36f6006dd7ba754dd41aea5",
+            "n": 270
+          },
+          "validation": {
+            "accuracy": 0.9702602028846741,
+            "correct": 261,
+            "cross_entropy": 0.11938542127609253,
+            "eager_restored_max_abs": 0.0,
+            "input_sha256": "a19e11d9614c97faf426fe13a45d4430acc0f3726516cadaebe7d547fee9fd6e",
+            "labels_sha256": "a61f4f7a1fd7862dfd17239086db7e22ada493988479041e082940b2583947bf",
+            "n": 269
+          }
+        },
+        "model_state_sha256": "3e1a39de1272bd840375752dc1b751fea3081c241cd42df72e0299736b9b8aea",
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\sources\\weighted_materialized.pt",
+        "sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+        "tensor_bytes": 82408
+      }
+    },
+    "input": {
+      "bytes": 17490,
+      "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\sources\\input.pt",
+      "sha256": "05492a9f2ad5ed303d477782fbb34aee00c958133c5250d22536a56970827db3",
+      "tensor_sha256_by_batch": {
+        "1": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+        "64": "6b8dedbe1d14c1ef5dcf92e1f58a503c78009dba35ccec4f0a72f4cc4d2932c7"
+      }
+    },
+    "lineage": {
+      "data": {
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\data.pt",
+        "sha256": "1185cea3f225ca0e5a33076aacc984890f2f09113a9e15af89767f8b637d0cda"
+      },
+      "first_protocol": {
+        "bytes": 567905,
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\protocol.json",
+        "sha256": "7395eb78794090fb75e513cacc47a762ae352945545ec93d637eed60e2f23d61"
+      },
+      "recovery": {
+        "bytes": 1733124,
+        "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery.json",
+        "sha256": "ee2f2337f871d5b6e2c8e7d54f54bcdc4ca1c5458d9c0d904ce539145ab8969b"
+      }
+    },
+    "new_training_updates": 0,
+    "parity": {
+      "svd": {
+        "composed_weight_sha256": "98cea4a47612b852ea3727e6fc1c986ad08d909bab43d2a58f06dcd191fcb6be",
+        "materialized_weight_sha256": "98cea4a47612b852ea3727e6fc1c986ad08d909bab43d2a58f06dcd191fcb6be",
+        "source_model_sha256": "89ff1b6dee15e0b2eee40791ad75b37c3637da6acefbf4fe1c40ad24cb7af29f",
+        "splits": {
+          "test": {
+            "max_abs": 7.62939453125e-06,
+            "same_decisions": true
+          },
+          "validation": {
+            "max_abs": 7.62939453125e-06,
+            "same_decisions": true
+          }
+        }
+      },
+      "weighted": {
+        "composed_weight_sha256": "fd63e16bce52c7c2287f62be1e3ce88e3e764eb038dc2274b52d950947038be1",
+        "materialized_weight_sha256": "fd63e16bce52c7c2287f62be1e3ce88e3e764eb038dc2274b52d950947038be1",
+        "source_model_sha256": "3219273ac420d9b14f8f0171d9f6f47850f2469fe858bb8ac2aff9e60b40bd53",
+        "splits": {
+          "test": {
+            "max_abs": 9.5367431640625e-06,
+            "same_decisions": true
+          },
+          "validation": {
+            "max_abs": 1.1444091796875e-05,
+            "same_decisions": true
+          }
+        }
+      }
+    },
+    "recovered": {
+      "conv2_svd_linear16": {
+        "architecture": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_svd_linear16-ce\\update-400\\architecture.pt",
+          "scope": "trusted own-package architecture with weights; restore without recomputing transforms",
+          "sha256": "fa00a6d364595ba3e8595d036aa5b35e6cab958f3bbb049982e2e3b61ac0a401"
+        },
+        "artifact": {
+          "device": "cpu",
+          "format": "torchscript",
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_svd_linear16-ce\\update-400\\model.pt",
+          "sha256": "87e1b7c7f4d3b7bef712b22242b2e2745ba947a43b77012f287d1a9401c7798c",
+          "threads": 1
+        },
+        "artifact_file_bytes": 99336,
+        "checkpoint": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_svd_linear16-ce\\update-400\\state_dict.pt",
+          "sha256": "8d2ff7ab2d08d7b25276e504911a228efe8e255946d368738c95112455990a75"
+        },
+        "deployed_ranks": {
+          "classifier.0": {
+            "numerical_rank": 16,
+            "rank_atol": 0,
+            "rank_rtol": 1e-10,
+            "requested_rank": 16,
+            "stored_rank": 16
+          },
+          "features.2": {
+            "numerical_rank": 8,
+            "rank_atol": 0,
+            "rank_rtol": 1e-10,
+            "requested_rank": 8,
+            "stored_rank": 8
+          }
+        },
+        "export_reload_parity": {
+          "test": {
+            "elements": 2700,
+            "max_abs_error": 0.0,
+            "mse": 0.0,
+            "reference_power": 100.84751107730551,
+            "relative_mse": 0.0
+          },
+          "validation": {
+            "elements": 2690,
+            "max_abs_error": 0.0,
+            "mse": 0.0,
+            "reference_power": 105.50197680762217,
+            "relative_mse": 0.0
+          }
+        },
+        "export_smoke_seconds": 0.15785820000019157,
+        "factors": {
+          "classifier.0": {
+            "bias": true,
+            "compose_mode": "two_layers",
+            "decomposer_params": {},
+            "decomposing_mode": true,
+            "groups": 1,
+            "inference_mode": true,
+            "layer_type": "DecomposedLinear",
+            "representation": "two_layers",
+            "shapes": {
+              "U": [
+                64,
+                16
+              ],
+              "Vh": [
+                16,
+                1024
+              ],
+              "bias": [
+                64
+              ]
+            },
+            "solver": "svd",
+            "version": 1
+          },
+          "features.2": {
+            "bias": true,
+            "compose_mode": "two_layers",
+            "decomposer_params": {},
+            "decomposing_mode": "channel",
+            "groups": 1,
+            "inference_mode": true,
+            "layer_type": "DecomposedConv2d",
+            "representation": "two_layers",
+            "shapes": {
+              "U": [
+                16,
+                8
+              ],
+              "Vh": [
+                8,
+                144
+              ],
+              "bias": [
+                16
+              ]
+            },
+            "solver": "svd",
+            "version": 1
+          }
+        },
+        "latency_measurement": false,
+        "macs": {
+          "operators": {
+            "classifier.0": 17408,
+            "classifier.2": 640,
+            "features.0": 9216,
+            "features.2": 81920
+          },
+          "per_sample": 109184,
+          "scope": "8x8 Digits; analytic MACs, not measured runtime"
+        },
+        "model_hash": "89ff1b6dee15e0b2eee40791ad75b37c3637da6acefbf4fe1c40ad24cb7af29f",
+        "quality": {
+          "test": {
+            "cross_entropy": 0.174880251288414,
+            "direction": "maximize",
+            "logit_error": {
+              "elements": 2700,
+              "max_abs_error": 5.571805953979492,
+              "mse": 2.694910606477896,
+              "reference_power": 73.20792380645369,
+              "relative_mse": 0.03681173384458589
+            },
+            "loss": 0.040740740740740744,
+            "macro_f1": 0.9589495303803967,
+            "metric": "accuracy",
+            "samples": 270,
+            "value": 0.9592592592592593
+          },
+          "validation": {
+            "cross_entropy": 0.11889210343360901,
+            "direction": "maximize",
+            "logit_error": {
+              "elements": 2690,
+              "max_abs_error": 5.5095367431640625,
+              "mse": 2.8114454612135065,
+              "reference_power": 76.4677053378893,
+              "relative_mse": 0.03676644210507585
+            },
+            "loss": 0.029739776951672847,
+            "macro_f1": 0.9702652759355839,
+            "metric": "accuracy",
+            "samples": 269,
+            "value": 0.9702602230483272
+          }
+        },
+        "storage": {
+          "buffer_bytes": 0,
+          "parameter_bytes": 78312,
+          "scope": "complete unique parameter and buffer tensor storage; metadata/file/RSS separate",
+          "stored_elements": 19578,
+          "tensor_bytes": 78312,
+          "unique_storages": [
+            {
+              "bytes": 576,
+              "elements": 144,
+              "kind": "parameter",
+              "names": [
+                "features.0.weight"
+              ]
+            },
+            {
+              "bytes": 64,
+              "elements": 16,
+              "kind": "parameter",
+              "names": [
+                "features.0.bias"
+              ]
+            },
+            {
+              "bytes": 64,
+              "elements": 16,
+              "kind": "parameter",
+              "names": [
+                "features.2.bias"
+              ]
+            },
+            {
+              "bytes": 512,
+              "elements": 128,
+              "kind": "parameter",
+              "names": [
+                "features.2.U"
+              ]
+            },
+            {
+              "bytes": 4608,
+              "elements": 1152,
+              "kind": "parameter",
+              "names": [
+                "features.2.Vh"
+              ]
+            },
+            {
+              "bytes": 256,
+              "elements": 64,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.bias"
+              ]
+            },
+            {
+              "bytes": 4096,
+              "elements": 1024,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.U"
+              ]
+            },
+            {
+              "bytes": 65536,
+              "elements": 16384,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.Vh"
+              ]
+            },
+            {
+              "bytes": 2560,
+              "elements": 640,
+              "kind": "parameter",
+              "names": [
+                "classifier.2.weight"
+              ]
+            },
+            {
+              "bytes": 40,
+              "elements": 10,
+              "kind": "parameter",
+              "names": [
+                "classifier.2.bias"
+              ]
+            }
+          ]
+        },
+        "test_role_label": "seen historical development test",
+        "training_state": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_svd_linear16-ce\\update-400\\training-state.pt",
+          "sha256": "e5854c2c0399aee9b8634168b8797182c6b76a24d151f9d4ab36326cbe25dceb"
+        },
+        "update": 400
+      },
+      "conv2_weighted_linear16": {
+        "architecture": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_weighted_linear16-ce\\update-400\\architecture.pt",
+          "scope": "trusted own-package architecture with weights; restore without recomputing transforms",
+          "sha256": "3d90ea841049e631888de37c0d10e37f8f4e1577f58673e4a9319230265cc73a"
+        },
+        "artifact": {
+          "device": "cpu",
+          "format": "torchscript",
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_weighted_linear16-ce\\update-400\\model.pt",
+          "sha256": "93502d5cb36b4fe41bc1df6e020c2dac6f16cc8b8aa48e0abc2348c9632d5e7f",
+          "threads": 1
+        },
+        "artifact_file_bytes": 99336,
+        "checkpoint": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_weighted_linear16-ce\\update-400\\state_dict.pt",
+          "sha256": "c0b127dc9be93608b13d3906a4dc2b181a72b9184c708ca1364946a469acbe67"
+        },
+        "deployed_ranks": {
+          "classifier.0": {
+            "numerical_rank": 16,
+            "rank_atol": 0,
+            "rank_rtol": 1e-10,
+            "requested_rank": 16,
+            "stored_rank": 16
+          },
+          "features.2": {
+            "numerical_rank": 8,
+            "rank_atol": 0,
+            "rank_rtol": 1e-10,
+            "requested_rank": 8,
+            "stored_rank": 8
+          }
+        },
+        "export_reload_parity": {
+          "test": {
+            "elements": 2700,
+            "max_abs_error": 0.0,
+            "mse": 0.0,
+            "reference_power": 102.3283871879993,
+            "relative_mse": 0.0
+          },
+          "validation": {
+            "elements": 2690,
+            "max_abs_error": 0.0,
+            "mse": 0.0,
+            "reference_power": 107.10146040523922,
+            "relative_mse": 0.0
+          }
+        },
+        "export_smoke_seconds": 0.16055629999755183,
+        "factors": {
+          "classifier.0": {
+            "bias": true,
+            "compose_mode": "two_layers",
+            "decomposer_params": {},
+            "decomposing_mode": true,
+            "groups": 1,
+            "inference_mode": true,
+            "layer_type": "DecomposedLinear",
+            "representation": "two_layers",
+            "shapes": {
+              "U": [
+                64,
+                16
+              ],
+              "Vh": [
+                16,
+                1024
+              ],
+              "bias": [
+                64
+              ]
+            },
+            "solver": "svd",
+            "version": 1
+          },
+          "features.2": {
+            "bias": true,
+            "compose_mode": "two_layers",
+            "decomposer_params": {},
+            "decomposing_mode": "channel",
+            "groups": 1,
+            "inference_mode": true,
+            "layer_type": "DecomposedConv2d",
+            "representation": "two_layers",
+            "shapes": {
+              "U": [
+                16,
+                8
+              ],
+              "Vh": [
+                8,
+                144
+              ],
+              "bias": [
+                16
+              ]
+            },
+            "solver": "svd",
+            "version": 1
+          }
+        },
+        "latency_measurement": false,
+        "macs": {
+          "operators": {
+            "classifier.0": 17408,
+            "classifier.2": 640,
+            "features.0": 9216,
+            "features.2": 81920
+          },
+          "per_sample": 109184,
+          "scope": "8x8 Digits; analytic MACs, not measured runtime"
+        },
+        "model_hash": "3219273ac420d9b14f8f0171d9f6f47850f2469fe858bb8ac2aff9e60b40bd53",
+        "quality": {
+          "test": {
+            "cross_entropy": 0.17579588294029236,
+            "direction": "maximize",
+            "logit_error": {
+              "elements": 2700,
+              "max_abs_error": 5.749605178833008,
+              "mse": 2.8756388691184562,
+              "reference_power": 73.20792380645369,
+              "relative_mse": 0.039280431947790774
+            },
+            "loss": 0.040740740740740744,
+            "macro_f1": 0.9589495303803967,
+            "metric": "accuracy",
+            "samples": 270,
+            "value": 0.9592592592592593
+          },
+          "validation": {
+            "cross_entropy": 0.11938542127609253,
+            "direction": "maximize",
+            "logit_error": {
+              "elements": 2690,
+              "max_abs_error": 5.662899017333984,
+              "mse": 3.003428097569765,
+              "reference_power": 76.4677053378893,
+              "relative_mse": 0.03927707892238247
+            },
+            "loss": 0.029739776951672847,
+            "macro_f1": 0.9702652759355839,
+            "metric": "accuracy",
+            "samples": 269,
+            "value": 0.9702602230483272
+          }
+        },
+        "storage": {
+          "buffer_bytes": 0,
+          "parameter_bytes": 78312,
+          "scope": "complete unique parameter and buffer tensor storage; metadata/file/RSS separate",
+          "stored_elements": 19578,
+          "tensor_bytes": 78312,
+          "unique_storages": [
+            {
+              "bytes": 576,
+              "elements": 144,
+              "kind": "parameter",
+              "names": [
+                "features.0.weight"
+              ]
+            },
+            {
+              "bytes": 64,
+              "elements": 16,
+              "kind": "parameter",
+              "names": [
+                "features.0.bias"
+              ]
+            },
+            {
+              "bytes": 64,
+              "elements": 16,
+              "kind": "parameter",
+              "names": [
+                "features.2.bias"
+              ]
+            },
+            {
+              "bytes": 512,
+              "elements": 128,
+              "kind": "parameter",
+              "names": [
+                "features.2.U"
+              ]
+            },
+            {
+              "bytes": 4608,
+              "elements": 1152,
+              "kind": "parameter",
+              "names": [
+                "features.2.Vh"
+              ]
+            },
+            {
+              "bytes": 256,
+              "elements": 64,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.bias"
+              ]
+            },
+            {
+              "bytes": 4096,
+              "elements": 1024,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.U"
+              ]
+            },
+            {
+              "bytes": 65536,
+              "elements": 16384,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.Vh"
+              ]
+            },
+            {
+              "bytes": 2560,
+              "elements": 640,
+              "kind": "parameter",
+              "names": [
+                "classifier.2.weight"
+              ]
+            },
+            {
+              "bytes": 40,
+              "elements": 10,
+              "kind": "parameter",
+              "names": [
+                "classifier.2.bias"
+              ]
+            }
+          ]
+        },
+        "test_role_label": "seen historical development test",
+        "training_state": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\conv2_weighted_linear16-ce\\update-400\\training-state.pt",
+          "sha256": "2b0b76c775f0643b3813cc6112f42871fa19da8dffdb035ea74d506513c37e41"
+        },
+        "update": 400
+      },
+      "dense": {
+        "architecture": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\dense-ce\\update-400\\architecture.pt",
+          "scope": "trusted own-package architecture with weights; restore without recomputing transforms",
+          "sha256": "564edb6d784a4605d8eadbdd4a380ceba3bd581a924826fde1c3bdfff6446586"
+        },
+        "artifact": {
+          "device": "cpu",
+          "format": "torchscript",
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\dense-ce\\update-400\\model.pt",
+          "sha256": "b7a9cdf0a2462e81bd3e8d468d09d399bd70d0021b68dac950b39c58de831a5b",
+          "threads": 1
+        },
+        "artifact_file_bytes": 290065,
+        "checkpoint": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\dense-ce\\update-400\\state_dict.pt",
+          "sha256": "20befa8bf033034a750657615f3ff3cf2a9e73e9674c9818c20845f837d8ee6e"
+        },
+        "deployed_ranks": {},
+        "export_reload_parity": {
+          "test": {
+            "elements": 2700,
+            "max_abs_error": 0.0,
+            "mse": 0.0,
+            "reference_power": 102.80897529204229,
+            "relative_mse": 0.0
+          },
+          "validation": {
+            "elements": 2690,
+            "max_abs_error": 0.0,
+            "mse": 0.0,
+            "reference_power": 107.5329130913609,
+            "relative_mse": 0.0
+          }
+        },
+        "export_smoke_seconds": 0.10941850000017439,
+        "factors": {},
+        "latency_measurement": false,
+        "macs": {
+          "operators": {
+            "classifier.0": 65536,
+            "classifier.2": 640,
+            "features.0": 9216,
+            "features.2": 147456
+          },
+          "per_sample": 222848,
+          "scope": "8x8 Digits; analytic MACs, not measured runtime"
+        },
+        "model_hash": "7622825d844dfdd618e80a2d8d9ba1bd6192df3d77b3f0220ea4777c6412c655",
+        "quality": {
+          "test": {
+            "cross_entropy": 0.17169423401355743,
+            "direction": "maximize",
+            "logit_error": {
+              "elements": 2700,
+              "max_abs_error": 6.048486709594727,
+              "mse": 2.917468493507767,
+              "reference_power": 73.20792380645369,
+              "relative_mse": 0.0398518130526545
+            },
+            "loss": 0.040740740740740744,
+            "macro_f1": 0.9589495303803967,
+            "metric": "accuracy",
+            "samples": 270,
+            "value": 0.9592592592592593
+          },
+          "validation": {
+            "cross_entropy": 0.11471297591924667,
+            "direction": "maximize",
+            "logit_error": {
+              "elements": 2690,
+              "max_abs_error": 6.057819366455078,
+              "mse": 3.036883623738469,
+              "reference_power": 76.4677053378893,
+              "relative_mse": 0.03971459075853439
+            },
+            "loss": 0.029739776951672847,
+            "macro_f1": 0.9702652759355839,
+            "metric": "accuracy",
+            "samples": 269,
+            "value": 0.9702602230483272
+          }
+        },
+        "storage": {
+          "buffer_bytes": 0,
+          "parameter_bytes": 274920,
+          "scope": "complete unique parameter and buffer tensor storage; metadata/file/RSS separate",
+          "stored_elements": 68730,
+          "tensor_bytes": 274920,
+          "unique_storages": [
+            {
+              "bytes": 576,
+              "elements": 144,
+              "kind": "parameter",
+              "names": [
+                "features.0.weight"
+              ]
+            },
+            {
+              "bytes": 64,
+              "elements": 16,
+              "kind": "parameter",
+              "names": [
+                "features.0.bias"
+              ]
+            },
+            {
+              "bytes": 9216,
+              "elements": 2304,
+              "kind": "parameter",
+              "names": [
+                "features.2.weight"
+              ]
+            },
+            {
+              "bytes": 64,
+              "elements": 16,
+              "kind": "parameter",
+              "names": [
+                "features.2.bias"
+              ]
+            },
+            {
+              "bytes": 262144,
+              "elements": 65536,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.weight"
+              ]
+            },
+            {
+              "bytes": 256,
+              "elements": 64,
+              "kind": "parameter",
+              "names": [
+                "classifier.0.bias"
+              ]
+            },
+            {
+              "bytes": 2560,
+              "elements": 640,
+              "kind": "parameter",
+              "names": [
+                "classifier.2.weight"
+              ]
+            },
+            {
+              "bytes": 40,
+              "elements": 10,
+              "kind": "parameter",
+              "names": [
+                "classifier.2.bias"
+              ]
+            }
+          ]
+        },
+        "test_role_label": "seen historical development test",
+        "training_state": {
+          "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14\\recovery\\dense-ce\\update-400\\training-state.pt",
+          "sha256": "e46ed9771fbc7b1cd7ff866c17d04f8651445497146db3f213287f74a5cbae00"
+        },
+        "update": 400
+      }
+    },
+    "scope": "known validation/devtest only; numerical parity, no new quality proof"
+  },
+  "resources": {
+    "bytes": 9688,
+    "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\prepare-cpu-b64\\resources.json",
+    "sha256": "8c9e30038bf369b6406a91d308b2f1ba11e0fff8d615484b5ae6c206f13f8c04"
+  },
+  "schema": 3,
+  "status": "succeeded"
+}

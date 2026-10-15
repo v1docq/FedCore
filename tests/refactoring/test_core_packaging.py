@@ -10,6 +10,52 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/architecture_profiles.py',
+    'fedcore/algorithm/low_rank/architecture_checkpoint.py',
+    'fedcore/algorithm/low_rank/slicegpt_specs.py',
+    'fedcore/algorithm/low_rank/slicegpt_layers.py',
+    'fedcore/algorithm/low_rank/slicegpt_profiles.py',
+    'fedcore/algorithm/low_rank/lightformer_specs.py',
+    'fedcore/algorithm/low_rank/lightformer_layers.py',
+    'fedcore/algorithm/low_rank/lightformer_profiles.py',
+    'fedcore/algorithm/low_rank/lrt_specs.py',
+    'fedcore/algorithm/low_rank/lrt_layers.py',
+    'fedcore/algorithm/low_rank/lrt_profiles.py',
+    'fedcore/algorithm/low_rank/method_specs.py',
+    'fedcore/algorithm/low_rank/method_execution.py',
+    'fedcore/algorithm/low_rank/statistical_profiles.py',
+    'fedcore/algorithm/low_rank/statistical_collectors.py',
+    'fedcore/algorithm/low_rank/structured_profiles.py',
+    'fedcore/algorithm/low_rank/structured_layers.py',
+    'fedcore/algorithm/low_rank/factor_recovery.py',
+    'fedcore/algorithm/low_rank/method_errors.py',
+    'fedcore/algorithm/low_rank/projection_specs.py',
+    'fedcore/algorithm/low_rank/projection_profiles.py',
+    'fedcore/algorithm/low_rank/projection_layers.py',
+    'fedcore/algorithm/low_rank/projection_recovery.py',
+    'fedcore/algorithm/low_rank/projection_execution.py',
+    'fedcore/algorithm/low_rank/coupled_specs.py',
+    'fedcore/algorithm/low_rank/coupled_profiles.py',
+    'fedcore/algorithm/low_rank/coupled_layers.py',
+    'fedcore/algorithm/low_rank/coupled_execution.py',
+    'fedcore/algorithm/low_rank/ars_specs.py',
+    'fedcore/algorithm/low_rank/ars_profiles.py',
+    'fedcore/algorithm/low_rank/dobi_specs.py',
+    'fedcore/algorithm/low_rank/dobi_profiles.py',
+    'fedcore/algorithm/low_rank/dobi_remapping.py',
+    'fedcore/algorithm/low_rank/dobi_remapping_export.py',
+    'fedcore/algorithm/low_rank/rankdyna_specs.py',
+    'fedcore/algorithm/low_rank/rankdyna_profiles.py',
+    'fedcore/algorithm/low_rank/learned_execution.py',
+    'fedcore/algorithm/low_rank/learned_layers.py',
+    'fedcore/experiments/svd_rank_policies.py',
+    'fedcore/experiments/svd_profile_measurement.py',
+    'fedcore/algorithm/low_rank/execution.py',
+    'fedcore/algorithm/low_rank/plans.py',
+    'fedcore/algorithm/low_rank/statistics.py',
+    'fedcore/algorithm/low_rank/approximation.py',
+    'fedcore/algorithm/low_rank/allocation.py',
+    'fedcore/algorithm/low_rank/topology.py',
     'fedcore/experiments/protocol.py',
     'fedcore/experiments/runner.py',
     'fedcore/experiments/scenarios.py',
@@ -33,8 +79,13 @@ def run(args, cwd, env=None):
     return result
 
 
-def test_wheel_sdist_and_installed_package_outside_checkout(tmp_path):
+def test_wheel_sdist_and_installed_package_outside_checkout(tmp_path, monkeypatch):
     pytest.importorskip('build', reason='The declared test extra includes build')
+    temporary = tmp_path / 'temporary'
+    temporary.mkdir()
+    # Windows sandbox TEMP cannot atomically replace setuptools metadata.
+    monkeypatch.setenv('TEMP', str(temporary))
+    monkeypatch.setenv('TMP', str(temporary))
     source = tmp_path / 'source'
     source.mkdir()
     for name in ('fedcore', 'external', 'external_runtime', 'model_exporter'):
@@ -86,5 +137,104 @@ from fedcore.experiments.scenarios import build_tabular
 bundle = build_tabular(seed=42)
 assert bundle.task == 'classification'
 assert ExperimentProtocol().device == 'cpu'
+import torch
+from torch import nn
+from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
+from fedcore.tools.registry.checkpoint_manager import CheckpointManager
+from fedcore.tools.export import export_model
+torch.set_num_threads(2)
+model = nn.Linear(6, 4).double().eval()
+x = torch.randn(5, 6, dtype=torch.double)
+__import__('os').environ['FEDCORE_MODEL_REGISTRY_PATH'] = str(Path.cwd() / 'registry')
+facade = LowRankModel({'device': 'cpu'})
+result = facade.compress_weighted(model, x, rank=2)
+assert result.model is facade.model_after
+assert result.plan.request.statistics_refs
+manager = CheckpointManager(str(Path.cwd() / 'checkpoint'), auto_cleanup=False)
+path = str(Path.cwd() / 'checkpoint.pt')
+manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+restored = manager.load_from_file(path)
+torch.testing.assert_close(restored(x), result.model(x), rtol=1e-12, atol=1e-12)
+artifact = export_model(restored.eval(), 'torchscript', Path.cwd() / 'export.pt', x[:1])
+with artifact.open('rb') as stream:
+    reloaded = torch.jit.load(stream)
+torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]), rtol=1e-12, atol=1e-12)
+assert Path(fedcore.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+from fedcore.algorithm.low_rank.method_specs import ASVD, AFM, DRONE, SVDLLMV2
+from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
+assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
+for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
+    result = facade.compress_profile(model, x, spec, rank=2, target_paths=('',))
+    manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(x), result.model(x))
+    artifact = export_model(restored.eval(), 'torchscript', Path.cwd() / 'p2.pt', x[:1])
+    with artifact.open('rb') as stream:
+        reloaded = torch.jit.load(stream)
+    torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]))
+from fedcore.algorithm.low_rank.method_specs import ESPACE, FlatValueOutput, MoDeMLPChannels
+from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
+cases = [(nn.Linear(6,4).double().eval(), torch.randn(7,6,dtype=torch.double), ESPACE()),
+         (ReferenceAttention(8,2,1,4,dtype=torch.double).eval(), torch.randn(7,3,8,dtype=torch.double), FlatValueOutput()),
+         (ReferenceMLP(8,12,dtype=torch.double).eval(), torch.randn(7,3,8,dtype=torch.double), MoDeMLPChannels())]
+for model, x, spec in cases:
+    result = facade.compress_profile(model,x,spec,rank=2,target_paths=('',))
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(x),result.model.eval()(x))
+    artifact = export_model(restored,'torchscript',Path.cwd()/'p3.pt',x[:1])
+    with artifact.open('rb') as stream:
+        deployed = torch.jit.load(stream)
+    torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))
+"""
+    code += """
+import math
+from fedcore.algorithm.low_rank.method_specs import ARS,DobiSVD,RankDyna
+from fedcore.experiments.protocol import TensorSplit
+from fedcore.experiments.runner import train_model
+for spec in (ARS(input_size=4,hidden_size=4,mask_bias=0),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8,
+                     remapping='symmetric_int8_v1'),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8,
+                     remapping='symmetric_int8_v1',remap_tail_dtype='bfloat16'),RankDyna()):
+    source = nn.Linear(6,4).double().eval()
+    x = torch.randn(8,6,dtype=torch.double)
+    split = TensorSplit(x,source(x).detach()+.1,tuple(str(i) for i in range(8)))
+    def recover(current,stage,updates,objective):
+        result = train_model(current,split,'regression',epochs=math.ceil(updates/2),
+            batch_size=4,learning_rate=.001,seed=31,batch_objective=objective,max_updates=updates)
+        return dict(result,updates=result['training_steps'])
+    result = facade.compress_profile(source,x,spec,target_paths=('',),batch_size=4,recovery_executor=recover)
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(x),result.model.eval()(x))
+    artifact = export_model(restored,'torchscript',Path.cwd()/'p4.pt',x[:1])
+    with artifact.open('rb') as stream:
+        deployed = torch.jit.load(stream)
+    torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))
+"""
+    code += """
+from fedcore.algorithm.low_rank.slicegpt_specs import SliceGPT
+from fedcore.algorithm.low_rank.slicegpt_layers import SliceGPTModel
+from fedcore.algorithm.low_rank.lightformer_specs import LightFormer
+from fedcore.algorithm.low_rank.lightformer_layers import LightFormerTransformer
+from fedcore.algorithm.low_rank.lrt_specs import LRT
+tokens = torch.randint(0,13,(3,5))
+cases = [
+    (SliceGPT((6,6,4)), {'source':SliceGPTModel(13,8,1,2,1,4,12,dtype=torch.double).eval(),
+                              'calibration':tokens}, (tokens,)),
+    (LightFormer(2,(0,0),(0,0),(0,),(1,)),
+     {'source':LightFormerTransformer(13,13,8,2,12,(0,1),(0,1),max_positions=8,dtype=torch.double).eval()},
+     (tokens,tokens)),
+    (LRT(vocab_size=13,d_model=8,num_heads=2,d_k=4,d_v=4,d_ff=12,max_seq_len=8),
+     {'dtype':torch.double}, (tokens,)),
+]
+for spec,options,inputs in cases:
+    result = facade.build_architecture(spec,**options)
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(*inputs),result.model.eval()(*inputs),rtol=0,atol=0)
+    assert sum(p.numel() for p in restored.parameters()) == result.evidence['parameters_after']
 """
     run(['-c', code], outside, env)

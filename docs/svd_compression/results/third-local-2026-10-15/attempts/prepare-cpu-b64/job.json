@@ -1,0 +1,12 @@
+{
+  "admission_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\prepare-cpu-b64\\admission.json",
+  "batch": 64,
+  "device": "cpu",
+  "directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\prepare-cpu-b64",
+  "first": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Local-Package-2026-10-14",
+  "output": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15",
+  "protocol_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\protocol.json",
+  "protocol_sha256": "260c19d5ddc0aa91a5fbce1fc47e736ce683b7737af91f2f2d775b9a600de3f1",
+  "session_id": "prepare-cpu-b64",
+  "stage": "prepare"
+}

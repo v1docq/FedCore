@@ -1,0 +1,26 @@
+{
+  "full": {
+    "tests": 1525,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 3,
+    "passed": 1522
+  },
+  "packaging": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 1
+  },
+  "source_hashes": {
+    "fedcore/algorithm/low_rank/svd_tools.py": "c09ceb6145b8f952a1a44b6ee3fa3fdf1a687a7a55017a16c237cd0a1790177b",
+    "fedcore/experiments/runner.py": "e62055ef431bfd529b6449c0a1d2660cf40df73b5e592859b6f54ca40438b8b3",
+    "fedcore/experiments/svd_comparison.py": "b78d8313c41963934ff813e51b25074c7504c9c6d05d1ac5e50671fc233eb342",
+    "scripts/analyze_svd_comparison.py": "ee8465309420c2b2d4185d945d66ba6fb7ee3f3f0e0679b60c7922b6d551f797",
+    "tests/refactoring/test_svd_comparison.py": "786b58db5fba6919b4520d20998ed691a1e0d6e18030630cfd028f7f1d9ac414",
+    "tests/refactoring/test_svd_comparison_independent.py": "e226b53b1dfb9f9bdb800c33e05f735e643160073cd4fdf088b16a76bf65a60f",
+    "tests/refactoring/test_svd_comparison_analysis.py": "f8f05dbabfc8301a4b1b5eca921d8a2c0c40091488872d39e88dbd0222eacb42"
+  },
+  "independent_evidence_checks": 12
+}

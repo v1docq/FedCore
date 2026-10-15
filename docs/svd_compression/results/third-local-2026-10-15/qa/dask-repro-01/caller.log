@@ -1,0 +1,90 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________ test_real_caller_owned_dask_client_survives_training _____________
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-SVD-Third-QA-2026-10-15/dask-repro-01/caller-temp/test_real_caller_owned_dask_cl0')
+
+    def test_real_caller_owned_dask_client_survives_training(tmp_path):
+        model = identity_model()
+>       cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False,
+                               protocol='inproc', dashboard_address=None, memory_limit=0)
+
+tests\refactoring\test_root_dask.py:9: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\deploy\local.py:253: in __init__
+    super().__init__(
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\deploy\spec.py:283: in __init__
+    self._loop_runner.start()
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py:551: in start
+    self._start_unlocked()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <distributed.utils.LoopRunner object at 0x000001C2E643A620>
+
+    def _start_unlocked(self) -> None:
+        assert not self._started
+    
+        if self._loop is not None:
+            try:
+                count, real_runner = self._all_loops[self._loop]
+            except KeyError:
+                assert self._loop.asyncio_loop.is_running()  # type: ignore[attr-defined]
+                self._started = True
+                return
+    
+            self._all_loops[self._loop] = count + 1, real_runner
+            self._started = True
+            return
+    
+        assert self._loop_thread is None
+    
+        start_evt = threading.Event()
+        start_exc = None
+        loop = None
+    
+        async def amain() -> None:
+            nonlocal loop
+            loop = IOLoop.current()
+            start_evt.set()
+            await self._stop_event.wait()
+    
+        def run_loop() -> None:
+            nonlocal start_exc
+            try:
+                asyncio_run(amain(), loop_factory=get_loop_factory())
+            except BaseException as e:
+                if start_evt.is_set():
+                    raise
+                start_exc = e
+                start_evt.set()
+    
+        self._loop_thread = _CollectErrorThread(
+            target=run_loop, daemon=True, name="IO loop"
+        )
+        start_evt.wait(timeout=10)
+        if start_exc is not None:
+            raise start_exc
+>       assert loop is not None
+E       AssertionError
+
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py:596: AssertionError
+============================== warnings summary ===============================
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\hyperopt\atpe.py:19: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\pkg_resources\__init__.py:3147
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\pkg_resources\__init__.py:3147
+  D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\pkg_resources\__init__.py:3147: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\user\Documents\Codex\FedCore-SVD-Third-QA-2026-10-15\dask-repro-01\caller-junit.xml -
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_root_dask.py::test_real_caller_owned_dask_client_survives_training
+1 failed, 3 warnings in 27.59s
+Exception ignored in: <function Console.__del__ at 0x000001C2AE890430>
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\pyreadline3\console\console.py", line 249, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

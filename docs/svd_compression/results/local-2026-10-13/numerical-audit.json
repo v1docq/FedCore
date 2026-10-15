@@ -1,0 +1,28 @@
+{
+  "counts": {
+    "baselines": 6,
+    "candidates": 90,
+    "succeeded_candidates": 90,
+    "timing_sessions": 0
+  },
+  "all_gates_passed": true,
+  "paired_numerical_comparisons": 96,
+  "strict_v1_v2_mismatches": [],
+  "all_source_baselines_unchanged": true,
+  "all_checkpoint_reload_correct": true,
+  "all_export_validation_test_parity": true,
+  "v2_worker_wall_seconds": 88.42827949999992,
+  "charged_v1_worker_wall_seconds": 101.96534939999947,
+  "maximum_individual_rss_bytes": 750841856,
+  "maximum_tree_sum_rss_bytes": 755200000,
+  "maximum_tree_cpu_core_percent": 630.733944957202,
+  "minimum_available_ram_bytes": 14013722624,
+  "all_workers_observed_recursive_interpreter": true,
+  "resource_violations": [],
+  "changed_source_paths_vs_v1": [
+    "fedcore/experiments/svd_comparison.py",
+    "tests/refactoring/test_svd_comparison.py"
+  ],
+  "source_sha256": "2e2e3e098d999929eced0e86b9cacf9453a0418bd60fc5a035116121bc8cd044",
+  "status": "complete primary numerical series; separate latency pending"
+}

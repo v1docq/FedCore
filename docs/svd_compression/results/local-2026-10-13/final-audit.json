@@ -1,0 +1,47 @@
+{
+  "status": "complete",
+  "counts": {
+    "baselines": 6,
+    "candidates": 90,
+    "succeeded_candidates": 90,
+    "timing_sessions": 96
+  },
+  "all_six_baseline_gates_passed": true,
+  "every_timing_session_raw_samples": {
+    "minimum": 200,
+    "maximum": 200,
+    "total": 19200
+  },
+  "all_raw_samples_finite_positive": true,
+  "all_timing_profiles_match_protocol": true,
+  "unique_timing_process_ids": 96,
+  "all_timing_workers_exit_zero": true,
+  "source_changes_since_release": [],
+  "git_lf_source_sha256": "2e2e3e098d999929eced0e86b9cacf9453a0418bd60fc5a035116121bc8cd044",
+  "artifact_integrity_errors": [],
+  "all_exact_whole_model_budgets_realized": true,
+  "all_source_baselines_unchanged": true,
+  "all_checkpoint_export_parity_passed": true,
+  "resources": {
+    "prior_v1_charged_worker_wall_seconds": 101.96534939999947,
+    "v2_architecture_worker_wall_seconds": 88.42827949999992,
+    "v2_timing_worker_wall_seconds": 403.3389550999982,
+    "cumulative_worker_wall_seconds": 593.7325839999976,
+    "global_cap_seconds": 28800,
+    "remaining_seconds": 28206.267416000002,
+    "resource_violations": [],
+    "maximum_sampled_individual_rss_bytes": 750841856,
+    "maximum_sampled_tree_sum_rss_bytes": 755200000,
+    "minimum_available_ram_bytes": 12190498816,
+    "maximum_sampled_tree_cpu_core_percent": 630.733944957202
+  },
+  "background_cpu_percent_before_after": {
+    "minimum": 1.9,
+    "median": 11.7,
+    "maximum": 40.1,
+    "scope": "descriptive system snapshots; not exclusive-core or continuous-idleness proof"
+  },
+  "latency_scope": "row.timing.metrics is primary fresh-process latency; row.export.metrics latency is one-call export smoke only; raw200/session not200 independent training repeats",
+  "v1_v2_strict_numerical_parity": true,
+  "construction_scope": "fixed method order within architecture worker; first import/cache overhead charged to actual first consumer; no isolated per-method cold-cost ranking"
+}

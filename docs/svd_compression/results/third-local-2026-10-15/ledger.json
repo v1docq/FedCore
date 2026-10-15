@@ -1,0 +1,105 @@
+{
+  "admission_wait_seconds": 41.46900000000005,
+  "attempts": [
+    {
+      "command": [
+        "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_third_package",
+        "--worker-job",
+        "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\prepare-cpu-b64\\job.json"
+      ],
+      "session_id": "prepare-cpu-b64",
+      "stage": "prepare",
+      "status": "succeeded",
+      "worker_pid": 18000
+    },
+    {
+      "command": [
+        "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_third_package",
+        "--worker-job",
+        "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cpu-b1\\job.json"
+      ],
+      "session_id": "pilot-cpu-b1",
+      "stage": "pilot",
+      "status": "succeeded",
+      "worker_pid": 22140
+    },
+    {
+      "command": [
+        "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_third_package",
+        "--worker-job",
+        "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cpu-b64\\job.json"
+      ],
+      "session_id": "pilot-cpu-b64",
+      "stage": "pilot",
+      "status": "succeeded",
+      "worker_pid": 31216
+    },
+    {
+      "command": [
+        "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_third_package",
+        "--worker-job",
+        "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\main-cpu-b64\\job.json"
+      ],
+      "session_id": "main-cpu-b64",
+      "stage": "main",
+      "status": "succeeded",
+      "worker_pid": 30416
+    },
+    {
+      "command": [
+        "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_third_package",
+        "--worker-job",
+        "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cuda0-b1\\job.json"
+      ],
+      "session_id": "pilot-cuda0-b1",
+      "stage": "pilot",
+      "status": "succeeded",
+      "worker_pid": 13460
+    },
+    {
+      "command": [
+        "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_third_package",
+        "--worker-job",
+        "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cuda0-b64\\job.json"
+      ],
+      "session_id": "pilot-cuda0-b64",
+      "stage": "pilot",
+      "status": "succeeded",
+      "worker_pid": 28276
+    },
+    {
+      "command": [
+        "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_third_package",
+        "--worker-job",
+        "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\main-cuda0-b64\\job.json"
+      ],
+      "session_id": "main-cuda0-b64",
+      "stage": "main",
+      "status": "succeeded",
+      "worker_pid": 2244
+    }
+  ],
+  "charged_seconds": 410.18136320000076,
+  "compute_by_stage_seconds": {
+    "main": 66.80261340000015,
+    "pilot": 38.06665100000055,
+    "preflight": 300.0,
+    "prepare": 5.312098800000058
+  },
+  "extra_noise_wait_seconds": 2.530999999999949,
+  "mandatory_drain_seconds": 15.399999999999999
+}

@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "scientific_snapshot_commit": "988aa1100aa1e6f0101003872e06ef39d458a133",
+  "initial_ci_run": "https://github.com/v1docq/FedCore/actions/runs/38409974605",
+  "initial_ci_results": {
+    "windows_py310": "passed",
+    "windows_py311": "passed",
+    "linux_py310": "failed: zero OS returncode assertion after tree termination",
+    "linux_py311": "failed: same assertion",
+    "optional_export_service": "failed: same assertion"
+  },
+  "fix_scope": [
+    "Leave direct-child root reaping to Popen.wait",
+    "Keep raw OS returncode; resource violation independently means failure",
+    "Retain unfinished numerical records and reject unsuccessful prior timing history",
+    "Assert cessation of observed PID/create-time identities across operating systems"
+  ],
+  "targeted_tests": {
+    "tests": 42,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "source_git_lf_sha256": {
+    "fedcore/experiments/svd_comparison.py": "79365073393b49dbe6814da8fd0064349caa8e8d9a7184313c988c01ba7ca2cd",
+    "tests/refactoring/test_svd_comparison.py": "527efa4d8ce0705a452397d45bd5b1c79397a749fbc8435854c6a10ecd2e82c6"
+  },
+  "junit_sha256": "bb22bcb385ed654b6dc875f3aabf52c1a338012bccf1f858d8d453fc5c88e9b1",
+  "independent_code_review": "released; 24 existing functions unchanged, only process/failure control changed",
+  "numerical_ast_unchanged": true,
+  "historical_artifacts_unchanged": true,
+  "scientific_rerun_required": false,
+  "reason": "All historical v2 runs had no resource violations; numerical definitions, data and settings unchanged."
+}

@@ -1,0 +1,9 @@
+Initial focused QA (default sandbox temporary directory), observed 2026-10-15:
+python -m pytest tests/refactoring/test_svd_third_package.py -q
+8 passed, 2 failed in 16.12s; exit code1.
+Both failed at fedcore/tools/atomic_json.py:24 Path.replace(temp, job.json): PermissionError [WinError 5] under sandbox package AC/Temp/pytest-of-user/pytest-0. Failed before controller admission logic.
+Failed tests:
+- test_admission_failure_retained_and_never_spawns_cuda_owner
+- test_exhausted_compute_budget_preserves_attempt_without_observation
+No CUDA calls or scientific runs. Exact original output remains in chat tool transcript; this file is a retained diagnostic summary, not a verbatim log.
+Follow-up rerun of both tests used explicit writable workspace --basetemp; exact log/status preserved separately.

@@ -1,0 +1,137 @@
+.............................................................s.......... [  4%]
+........................................................................ [  8%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 20%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 49%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 65%]
+........................................................................ [ 69%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+.....ss................................................................. [ 94%]
+........................................................................ [ 98%]
+...............................                                          [100%]
+============================== warnings summary ===============================
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\hyperopt\atpe.py:19: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\pkg_resources\__init__.py:3147
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\pkg_resources\__init__.py:3147
+  D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\pkg_resources\__init__.py:3147: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+tests/refactoring/test_core_contracts.py::test_nested_adaptation_restores_exact_originals_after_exception
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\statsmodels\genmod\families\links.py:1423: FutureWarning: The log link alias is deprecated. Use Log instead. The log link alias will be removed after the 0.15.0 release.
+    _link_deprecation_warning("log", "Log")
+
+tests/refactoring/test_core_contracts.py::test_nested_adaptation_restores_exact_originals_after_exception
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\statsmodels\genmod\families\links.py:1405: FutureWarning: The identity link alias is deprecated. Use Identity instead. The identity link alias will be removed after the 0.15.0 release.
+    _link_deprecation_warning("identity", "Identity")
+
+tests/refactoring/test_core_contracts.py::test_nested_adaptation_restores_exact_originals_after_exception
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\statsmodels\genmod\families\links.py:1363: FutureWarning: The inverse_power link alias is deprecated. Use InversePower instead. The inverse_power link alias will be removed after the 0.15.0 release.
+    _link_deprecation_warning("inverse_power", "InversePower")
+
+tests/refactoring/test_core_contracts.py::test_nested_adaptation_restores_exact_originals_after_exception
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\statsmodels\genmod\families\links.py:1391: FutureWarning: The inverse_squared link alias is deprecated. Use InverseSquared instead. The inverse_squared link alias will be removed after the 0.15.0 release.
+    _link_deprecation_warning("inverse_squared", "InverseSquared")
+
+tests/refactoring/test_math_training.py::test_actual_quantization_stages_and_baseline[static]
+tests/refactoring/test_math_training.py::test_actual_quantization_stages_and_baseline[qat]
+tests/refactoring/test_math_training.py::test_quantization_rejects_invalid_composition
+tests/refactoring/test_math_training.py::test_qat_observed_real_stages_before_convert
+tests/petra/test_ablation_math.py::test_training_cost_controls_real_teacher_lora_merge_and_qat
+tests/petra/test_protocol_runner.py::test_real_ptq_qat_and_structural_pruning_leave_source_unchanged
+tests/petra/test_protocol_runner.py::test_real_ptq_qat_and_structural_pruning_leave_source_unchanged
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\ao\quantization\observer.py:220: UserWarning: Please use quant_min and quant_max to specify the range for observers.                     reduce_range will be deprecated in a future release of PyTorch.
+    warnings.warn(
+
+tests/refactoring/test_math_training.py::test_quantization_rejects_invalid_composition
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\_utils.py:383: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+    device=storage.device,
+
+tests/refactoring/test_svd_p2_execution.py::test_fullrank_public_checkpoint_reload_and_torchscript_export[group]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\algorithm\low_rank\structured_layers.py:257: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    if hidden.shape[-1]!=self.embedding_dim:
+
+tests/refactoring/test_svd_p2_execution.py::test_fullrank_public_checkpoint_reload_and_torchscript_export[group]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\algorithm\low_rank\structured_layers.py:262: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+    offsets=torch.tensor((0,)+tuple(self.group_sizes[:-1]),device=hidden.device,dtype=torch.int64).cumsum(0)
+
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec0]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec1]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec4]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec5]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\algorithm\low_rank\coupled_layers.py:122: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    if (not isinstance(x, torch.Tensor) or x.ndim != 3 or x.shape[-1] != self.d_model
+
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec0]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec1]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec4]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec5]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\algorithm\low_rank\coupled_layers.py:124: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    or x.device != self.q_proj.weight.device or not bool(torch.isfinite(x).all())):
+
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec0]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec1]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec4]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec5]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\algorithm\low_rank\coupled_layers.py:110: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    if (not isinstance(positions, torch.Tensor) or positions.shape != (b, t)
+
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec0]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec1]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec4]
+tests/refactoring/test_svd_p3_integration.py::test_public_coupled_profiles_roundtrip_and_export_physical_compact_graph[spec5]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\algorithm\low_rank\coupled_layers.py:112: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    or bool((positions < 0).any())):
+
+tests/petra/test_ablation_math.py::test_training_cost_controls_real_teacher_lora_merge_and_qat
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\jit\_check.py:177: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+    warnings.warn(
+
+tests/petra/test_optimizer_population.py::test_public_fit_survives_all_unsuccessful_mutations
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\fromnumeric.py:3504: RuntimeWarning: Mean of empty slice.
+    return _methods._mean(a, axis=axis, dtype=dtype,
+
+tests/petra/test_optimizer_population.py::test_public_fit_survives_all_unsuccessful_mutations
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\_methods.py:129: RuntimeWarning: invalid value encountered in scalar divide
+    ret = ret.dtype.type(ret / rcount)
+
+tests/petra/test_optimizer_population.py::test_public_fit_survives_all_unsuccessful_mutations
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\_methods.py:206: RuntimeWarning: Degrees of freedom <= 0 for slice
+    ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+tests/petra/test_optimizer_population.py::test_public_fit_survives_all_unsuccessful_mutations
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\_methods.py:163: RuntimeWarning: invalid value encountered in divide
+    arrmean = um.true_divide(arrmean, div, out=arrmean,
+
+tests/petra/test_optimizer_population.py::test_public_fit_survives_all_unsuccessful_mutations
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\_methods.py:198: RuntimeWarning: invalid value encountered in scalar divide
+    ret = ret.dtype.type(ret / rcount)
+
+tests/unit/low_rank/test_statistical_profiles.py::test_ledoit_wolf_matches_independent_sklearn_centered_ml_reference[rows0]
+  D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\sklearn\covariance\_shrunk_covariance.py:351: UserWarning: Only one sample available. You may want to reshape your data array
+    warnings.warn(
+
+tests/unit/low_rank/test_statistical_profiles.py::test_ledoit_wolf_matches_independent_sklearn_centered_ml_reference[rows0]
+  D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\sklearn\covariance\_empirical_covariance.py:102: UserWarning: Only one sample available. You may want to reshape your data array
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\user\Documents\Codex\FedCore-SVD-Third-Package-2026-10-15\validation-process-02\pytest.xml -
+1756 passed, 3 skipped, 41 warnings in 255.70s (0:04:15)

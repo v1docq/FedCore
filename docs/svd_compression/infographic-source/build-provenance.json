@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "surface": "report",
+  "artifact_id": "report:c76177c4-72a0-46ae-aa9d-3397f8389bb5",
+  "data_plugin_version": "1.0.11",
+  "runtime_sha256": "9e3ede84b28aded3c7379b6e6a5611f0d95b9977eb0f781e279ceefabfcbd27e",
+  "compiler_sha256": "ec65601079c80bef7210f2c9760ff7f2db6adef28516ffff280d4c86f91d4078",
+  "built_at": "2026-10-13T13:55:04.607Z",
+  "files_sha256": {
+    "../local-comparison-infographic.html": "6fcc96a7a27bfc20bf309583c536f1c1eee546c54e85d438472a4e66fa2d0caa",
+    "data.json": "3420fe42df2e69d55ad5f8638997b633ef8318e0cbf8dd76cc0abdcdf8f44de9",
+    "report-adapter.mjs": "46ec2f2c2211bc78ad0b0032484c09ba0de798d2d4bc0820cf9f7a640a3bd691",
+    "src/content/report/ReportContent.jsx": "4ac539b6ee6257f438538be5996109deec7575245d32768756aa404e7a1e6c54",
+    "src/content/report/report-copy.js": "bbd6c1598875ba55e858f908b1079689752c2013db0a12768bc854c99eae71ef",
+    "src/content/report/report.css": "67147ac01ae35ba6df549b7ab8a5755b4fd2153d96139428ad420af8d3332c4d"
+  },
+  "analysis_sha256": "0ff96aebc67a6b764748ff7ee8469ffc3b12c6a9a3eedd6ffafffd98c988e7c4",
+  "checks": {
+    "html_bytes": 3480926,
+    "snapshot_chunks": 10,
+    "build_status": "complete",
+    "query_counts": {
+      "protocol": 2,
+      "candidates": 90,
+      "baselines": 6,
+      "paired": 30,
+      "layers": 252,
+      "timing": 96,
+      "outcomes": 1,
+      "audit": 1
+    },
+    "local_task_meta": false,
+    "absolute_local_paths": false,
+    "external_script_tags": false,
+    "external_stylesheet_tags": false,
+    "candidate_missing_values": 0,
+    "numeric_rows_unchanged_after_metadata_refresh": true
+  },
+  "browser_checks": "All checks passed in the parent task: final editorial reload with correct Russian declensions and complete status; MLP switch changes plots; joint rank ordering; mobile layout at 390px; desktop scatter; methodology disclosure; source inspector Overview/caveats/repository links and Data preview with 36 CNN Linear rows.",
+  "browser_verified_at": "2026-10-13T13:56:13.850Z"
+}
