@@ -1,0 +1,45 @@
+{
+  "attempt": "02",
+  "command": [
+    "D:\\data_old\\WORK\\obsidian\\Papers_2025\\Проекты для разработки\\Исследовательские проекты\\Fedcore\\work\\refactoring\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/refactoring",
+    "tests/petra",
+    "tests/unit/algorithm/low_rank",
+    "tests/unit/low_rank/test_statistical_profiles.py",
+    "tests/unit/low_rank/test_statistical_collectors.py",
+    "--basetemp=C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\validation-temp-02\\pytest",
+    "--junitxml=C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\validation-process-02\\pytest.xml"
+  ],
+  "counts": {
+    "errors": 0,
+    "failures": 0,
+    "passed": 1756,
+    "skipped": 3,
+    "tests": 1759
+  },
+  "guard_rss_bytes": 12884901888,
+  "guard_seconds": 600.0,
+  "minimum_ram_bytes": 6442450944,
+  "new_scientific_training_updates": 0,
+  "observed": {
+    "elapsed_seconds": 258.9655201999999,
+    "returncode": 0,
+    "sample_interval_seconds": 0.1,
+    "sampled_maximum_individual_rss_bytes": 1289367552,
+    "sampled_maximum_rss_bytes": 1289367552,
+    "sampled_maximum_tree_cpu_core_percent": 1137.5,
+    "sampled_maximum_tree_sum_rss_bytes": 1697447936,
+    "scope": "maximum sampled individual RSS includes actual recursive interpreters; separate tree sum may double-count shared pages; neither is exact allocator peak",
+    "violation": null
+  },
+  "process_directory": "validation-process-02",
+  "protocol_sha256": "1741475248cb1ff5dd408a0d2944a23e4a580f4e82e2eab71fdd88b5648fce1d",
+  "schema": 3,
+  "scientific_source_sha256": "402b86b7c22ae7244b6b182768c68e08337dca6386a749d63a9516f3fd7d1d9b",
+  "scope": "Postmeasurement CPU regressions; ephemeral test fixtures are not scientific training",
+  "script_sha256": "8629677d4b935660aac6229938c258bcb02f2224332e132ac3e8ff74cea78255",
+  "status": "passed"
+}

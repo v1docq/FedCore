@@ -1,0 +1,12 @@
+{
+  "admission_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cpu-b1\\admission.json",
+  "batch": 1,
+  "device": "cpu",
+  "directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cpu-b1",
+  "expected_gpu_name": "NVIDIA GeForce RTX 4080",
+  "output": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15",
+  "protocol_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\protocol.json",
+  "protocol_sha256": "1741475248cb1ff5dd408a0d2944a23e4a580f4e82e2eab71fdd88b5648fce1d",
+  "session_id": "pilot-cpu-b1",
+  "stage": "pilot"
+}

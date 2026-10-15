@@ -1,0 +1,1419 @@
+{
+  "files": {
+    "analysis/analysis.json": {
+      "bytes": 168155,
+      "sha256": "53804b976dc306e01d291db759812d20ebf39cb80ebeeed8ca7cfe4ccbba021b"
+    },
+    "analysis/blocks.csv": {
+      "bytes": 71339,
+      "sha256": "bada52cf0dea15e0f5696fb0bb18d6934dffcfe125840efbba18ad28348365bb"
+    },
+    "analysis/comparisons.csv": {
+      "bytes": 13576,
+      "sha256": "b2cb79af356c59be163c12dfdd3f4048e53f8bcd504188485a2a433cacc22ced"
+    },
+    "analysis/implementation-summary.json": {
+      "bytes": 70718,
+      "sha256": "62c1cd487e4f9d14f68fb64c1b09f785f3df2f5df93292f317be50abbf5eefa5"
+    },
+    "analysis/source-verification.json": {
+      "bytes": 226,
+      "sha256": "c2b6c87c3b8aac7514d3b6c5b480d90cc645bebc18149ee6ab82678ec2ce9ad3"
+    },
+    "attempts/main-cpu-b64/admission.json": {
+      "bytes": 2016,
+      "sha256": "a896070e2ed1767073560639c0339ed0e17d2ca34ada2304bfc9d27771095931"
+    },
+    "attempts/main-cpu-b64/calls.jsonl": {
+      "bytes": 373827,
+      "sha256": "b300edb88fed08aee6a8803ed1af841a2c9f0daa3bce4e142ec463bebc925f8b"
+    },
+    "attempts/main-cpu-b64/job.json": {
+      "bytes": 682,
+      "sha256": "57c71bbe707a20d09709ecb55905dd574dd543d71b78901223d2f891d22967f1"
+    },
+    "attempts/main-cpu-b64/progress.json": {
+      "bytes": 2779,
+      "sha256": "0e0b82ca506ac652c3405c7f04f44d780ea3634e964ffb1f79318ef9f07a67b4"
+    },
+    "attempts/main-cpu-b64/resources.json": {
+      "bytes": 40844,
+      "sha256": "b223d5861dec214ddf716232d66610ebb5d53931e008c1b3a75f39564b57d479"
+    },
+    "attempts/main-cpu-b64/result.json": {
+      "bytes": 666522,
+      "sha256": "7f4d637766fa8d8cda22ddd58c79aa2d626bfb98f672b26272fcd9a0be58dfc1"
+    },
+    "attempts/main-cpu-b64/stage.json": {
+      "bytes": 75,
+      "sha256": "1346295568d0af557fa6be81879d24763435f8fba64c2226526de16bf041c2eb"
+    },
+    "attempts/main-cpu-b64/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/main-cpu-b64/stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/main-cpu-b64/worker-result.json": {
+      "bytes": 666267,
+      "sha256": "8cfb5950070139a05ca1755b21e8d3fb8b559459be7d5d7adc346ca0ae7762fc"
+    },
+    "attempts/main-cuda0-b64/admission.json": {
+      "bytes": 2028,
+      "sha256": "2e33db276a943af77f221b00b96337dd9f824430c4ce5cac8cda005689429523"
+    },
+    "attempts/main-cuda0-b64/calls.jsonl": {
+      "bytes": 551864,
+      "sha256": "e423eaf0a69909b2d2d3d719efd271ad414ad94ace887ac9479a180f1b996c93"
+    },
+    "attempts/main-cuda0-b64/job.json": {
+      "bytes": 691,
+      "sha256": "96baefa39e2833f9e7c17dc3379dcde400721f570a3a6750f345626c6614d085"
+    },
+    "attempts/main-cuda0-b64/progress.json": {
+      "bytes": 4036,
+      "sha256": "b5bf96e27e23b16245d45773d8484f83c6803fde5289e1512e9e85f37936bac3"
+    },
+    "attempts/main-cuda0-b64/resources.json": {
+      "bytes": 30849,
+      "sha256": "4ea3369532a1fff8adaf18dec0eba20403ee5b4ec5508f3b61ab78d699a2fd1c"
+    },
+    "attempts/main-cuda0-b64/result.json": {
+      "bytes": 964714,
+      "sha256": "5449ed483f4b2b5223b4ba109851d7452045849242c9b57a5d4a0bdb281421eb"
+    },
+    "attempts/main-cuda0-b64/stage.json": {
+      "bytes": 76,
+      "sha256": "e9f290367a4cf7fb3dc68fd455323a50f6a7fce74b342640278b77c834e64dea"
+    },
+    "attempts/main-cuda0-b64/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/main-cuda0-b64/stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/main-cuda0-b64/worker-result.json": {
+      "bytes": 964457,
+      "sha256": "c494fe1ff162cb257a0251dbe5b1f84d59b1f38c69a956f709709cc3c339bb70"
+    },
+    "attempts/pilot-cpu-b1/admission.json": {
+      "bytes": 2029,
+      "sha256": "4930764c762e64cb76746b363b0b2017ae08f2e74a694501fc99160554aea468"
+    },
+    "attempts/pilot-cpu-b1/calls.jsonl": {
+      "bytes": 54325,
+      "sha256": "f4cf7ff638323f858e89df059fff3eee68d5a11bb17439fb38c66468170713cd"
+    },
+    "attempts/pilot-cpu-b1/job.json": {
+      "bytes": 682,
+      "sha256": "7ca853366f9992c2d30a75f23c969ecaf24eeb62c2ba113503d6a547b8995703"
+    },
+    "attempts/pilot-cpu-b1/progress.json": {
+      "bytes": 2035,
+      "sha256": "c44300a56d0094657db9b82d78eb333c0a7a3c24ddaebb1a0954eabeb10cfcd1"
+    },
+    "attempts/pilot-cpu-b1/resources.json": {
+      "bytes": 11083,
+      "sha256": "bcdc009a726f4b25e34c1a18b15119896c6ca78348d4cd33a923480086b41c60"
+    },
+    "attempts/pilot-cpu-b1/result.json": {
+      "bytes": 91610,
+      "sha256": "f9c3dbe1ce3d2e40efcf727376c810dc398cd5701e1cb0201df3cc570aa23296"
+    },
+    "attempts/pilot-cpu-b1/stage.json": {
+      "bytes": 76,
+      "sha256": "7375e2f1678d40f9abe0e6bd575e72f7cdf3bb33142696cfbb4846eea58bf103"
+    },
+    "attempts/pilot-cpu-b1/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cpu-b1/stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cpu-b1/worker-result.json": {
+      "bytes": 91355,
+      "sha256": "831164ff807088e51ba2ec286bb36637d315f4cfc7faa54deb5d2927f880ca34"
+    },
+    "attempts/pilot-cpu-b64/admission.json": {
+      "bytes": 2027,
+      "sha256": "87a417aae1ade57e31ce94b518aedbfdc8148ff0a9e2aac0436fd7dfe382f3d7"
+    },
+    "attempts/pilot-cpu-b64/calls.jsonl": {
+      "bytes": 54229,
+      "sha256": "a31b8bcd4a83963585fcb88fa8008221940647918f24c48fdaf288c9b8defe28"
+    },
+    "attempts/pilot-cpu-b64/job.json": {
+      "bytes": 686,
+      "sha256": "b244d58879cdf4d2cdce4f55aafb3048e879023d9379d942b1490a5d3450d050"
+    },
+    "attempts/pilot-cpu-b64/progress.json": {
+      "bytes": 2035,
+      "sha256": "1ab637ff6145e9186684ca0a2887fca1bfe19063a63b11237cec2521c2f79c2a"
+    },
+    "attempts/pilot-cpu-b64/resources.json": {
+      "bytes": 14521,
+      "sha256": "bb9c2190f472acb6aae08f70999629ec4a529b14d8fdb07243614880691b3b1d"
+    },
+    "attempts/pilot-cpu-b64/result.json": {
+      "bytes": 91501,
+      "sha256": "1e92275d88bf2f052f187af4416fe5fd30ce5f78a3ee10a1b5cafa3492a7417c"
+    },
+    "attempts/pilot-cpu-b64/stage.json": {
+      "bytes": 76,
+      "sha256": "7e97642327214b5084309970b02034f5274e0dc8873202ac4e043d222c1c3b4e"
+    },
+    "attempts/pilot-cpu-b64/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cpu-b64/stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cpu-b64/worker-result.json": {
+      "bytes": 91245,
+      "sha256": "2ecb1c0e1329893257c2a6ad77eb159291324389fcc77e2a5eaddb49797c7dbc"
+    },
+    "attempts/pilot-cuda0-b1/admission.json": {
+      "bytes": 2028,
+      "sha256": "cd843a56bbc3aefb6fc6f50ba5d07d083df4b67299531d97ffac0e247ffed572"
+    },
+    "attempts/pilot-cuda0-b1/calls.jsonl": {
+      "bytes": 70242,
+      "sha256": "8c11cfb13e69eca2724b8c1b78ab62f598d89dd85db19e0718902e1fc23c8ed9"
+    },
+    "attempts/pilot-cuda0-b1/job.json": {
+      "bytes": 691,
+      "sha256": "b1707e2829669b825fe0b491e1874fa5154653e80dd11940dc41894f9ae3b5a3"
+    },
+    "attempts/pilot-cuda0-b1/progress.json": {
+      "bytes": 2684,
+      "sha256": "3cb83a9831d8ff3ddd49bdcda6199546e402e84729e71d71510677c66499d004"
+    },
+    "attempts/pilot-cuda0-b1/resources.json": {
+      "bytes": 15492,
+      "sha256": "c80814aa086423ce9fe73a5b9fbeffbe27230730d34aaed883ad08d3ad59fa89"
+    },
+    "attempts/pilot-cuda0-b1/result.json": {
+      "bytes": 118971,
+      "sha256": "5a195cf258b195904c2d36ebfb146239cf9fb8d680ca38996bf8f35ea486b21d"
+    },
+    "attempts/pilot-cuda0-b1/stage.json": {
+      "bytes": 76,
+      "sha256": "3674e4b2ba32a2acf2cac84664ece35bd4bfba74eeb2ecdbc10c1aaccbd2edce"
+    },
+    "attempts/pilot-cuda0-b1/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cuda0-b1/stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cuda0-b1/worker-result.json": {
+      "bytes": 118714,
+      "sha256": "5bb43630a97fcb4ebb1646b0a7d1c5a6f560506ba8a87e8a84120dc55cefc738"
+    },
+    "attempts/pilot-cuda0-b64/admission.json": {
+      "bytes": 2015,
+      "sha256": "96d17cb391acd095e38709f8839aaf5fd534f5c5bc327bc193fab950e54d06da"
+    },
+    "attempts/pilot-cuda0-b64/calls.jsonl": {
+      "bytes": 70389,
+      "sha256": "f2efdce91bccd21e011fc5070a8d6b02c7114e424e05d6ab76fdd5311c07461a"
+    },
+    "attempts/pilot-cuda0-b64/job.json": {
+      "bytes": 695,
+      "sha256": "46058f182d8ace312eb7cffdd3290e8856979931d59f732506f1639c16829657"
+    },
+    "attempts/pilot-cuda0-b64/progress.json": {
+      "bytes": 2674,
+      "sha256": "5da196207b1b7cfc733d814a4b66bc8c4cffeb2e8acec44b8b700d525e9b54ef"
+    },
+    "attempts/pilot-cuda0-b64/resources.json": {
+      "bytes": 13216,
+      "sha256": "22c575cae110f945d7ccb863945d964ded3806c7c3ea3506c25d7c22c0358529"
+    },
+    "attempts/pilot-cuda0-b64/result.json": {
+      "bytes": 119106,
+      "sha256": "8182e64a96584cc3228bbbc8836ff8b9e8e3c55b367693a273ac398dcded9204"
+    },
+    "attempts/pilot-cuda0-b64/stage.json": {
+      "bytes": 76,
+      "sha256": "e96562cd29768bd774b3a52ad070a317a3dcfcc431a4b2185e731c93faa869eb"
+    },
+    "attempts/pilot-cuda0-b64/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cuda0-b64/stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/pilot-cuda0-b64/worker-result.json": {
+      "bytes": 118848,
+      "sha256": "056a780754734b1cc1ad055f35811c1fce3c8e644e080724c9b67074141eb8be"
+    },
+    "attempts/prepare-cpu-b64/admission.json": {
+      "bytes": 2030,
+      "sha256": "40203181cc887d8d648fbe553dba30daabe9fe3414849ad8f6d09000fde7e971"
+    },
+    "attempts/prepare-cpu-b64/job.json": {
+      "bytes": 730,
+      "sha256": "021ab4f33fa85894e8929ce131cb02c08b0c3f1ffb3a33bbb858634ab6318f2d"
+    },
+    "attempts/prepare-cpu-b64/resources.json": {
+      "bytes": 9688,
+      "sha256": "8c9e30038bf369b6406a91d308b2f1ba11e0fff8d615484b5ae6c206f13f8c04"
+    },
+    "attempts/prepare-cpu-b64/result.json": {
+      "bytes": 31550,
+      "sha256": "ce6885503f81d8613a27b42d4a13e027fea1c0495c22b3030f64160c8624f453"
+    },
+    "attempts/prepare-cpu-b64/stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/prepare-cpu-b64/stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attempts/prepare-cpu-b64/worker-result.json": {
+      "bytes": 31293,
+      "sha256": "ad24fb2c897b01e342e597afbc612afd39238aa7b2bcb333de7c1b2b6a0d908a"
+    },
+    "frozen-source/fedcore/__init__.py": {
+      "bytes": 673,
+      "sha256": "c10dd264f3fa0e3248cd9978d601c3eef8402ee356ca17c4417ca1a465fd61dd"
+    },
+    "frozen-source/fedcore/algorithm/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/algorithm/base_compression_model.py": {
+      "bytes": 17530,
+      "sha256": "7ad5ffc52c65321c39d5b451bde2b39cba0595908c412d68884b137595f2a9fd"
+    },
+    "frozen-source/fedcore/algorithm/distillation/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/algorithm/distillation/distilator.py": {
+      "bytes": 8754,
+      "sha256": "55affc72483d80280910f7055ddb6279cf998a26224e83e5753dd812a2ec0c9a"
+    },
+    "frozen-source/fedcore/algorithm/distillation/hooks.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/allocation.py": {
+      "bytes": 11504,
+      "sha256": "d144ded9d6c6d98fb67f86023432e5e93e863284c2974268bf9b81ed22128fe5"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/approximation.py": {
+      "bytes": 8936,
+      "sha256": "5505e10d14f45b502a3db7bac2d1b2248fe52f879c68b8d9c79621016cd410b4"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/architecture_checkpoint.py": {
+      "bytes": 4007,
+      "sha256": "ab1caf75102dde7c4ffd794ce9780262cd2b570e90ca64c9b7beb82372743de7"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/architecture_profiles.py": {
+      "bytes": 7945,
+      "sha256": "3e6dbee0d452541634ff89c0aca4ec4c64c77107c1627a6a517dcc87fe48c6aa"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/ars_profiles.py": {
+      "bytes": 25115,
+      "sha256": "073abe8dfe52643b1713628130913e0b93fc332b31e2ed5f2efab97ad6d167d5"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/ars_specs.py": {
+      "bytes": 3295,
+      "sha256": "50d49fbf6c3548e013032a75dd4fd1222f35dbc2b5a79e19d0e4f00829c0cd51"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/coupled_execution.py": {
+      "bytes": 28750,
+      "sha256": "fda9fafd22c54fb9954da3ae91b0628b651c2f548c7eeb362acb27b9877dd895"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/coupled_layers.py": {
+      "bytes": 12788,
+      "sha256": "6d9d79617a1f2a4e48f7182d83d4c076ae39ee980e3a94a7a2942869eaa14a5f"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/coupled_profiles.py": {
+      "bytes": 11879,
+      "sha256": "3f431019f9453473114e47292548e2a023e225f8d7a6873b657c2d4e4c4639bb"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/coupled_specs.py": {
+      "bytes": 3741,
+      "sha256": "751e731b737270ccb8e449880b5eef97793a6ea8ad94a53412eb3bee8699475d"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/decomposer.py": {
+      "bytes": 3411,
+      "sha256": "3e4627d2a9b66a4668969bc7e9f00aad28efdad837a758e471e01937e97305ff"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/dobi_profiles.py": {
+      "bytes": 28427,
+      "sha256": "5f4e1fd33731820ca54145dc7fdfc3c18796d6fdc742ca228899ea20d3e972c7"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/dobi_remapping.py": {
+      "bytes": 13794,
+      "sha256": "86a4c8d3640982a51770b3209a669cb0d95348052c463b6f1db9cd1839a41cc3"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/dobi_remapping_export.py": {
+      "bytes": 13451,
+      "sha256": "fccd1d14791f3b46bc9fc1e0ebd4f9f497e880da811297e36a1015af61301ccd"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/dobi_specs.py": {
+      "bytes": 3722,
+      "sha256": "cef974e6935305170f85d6b2921484219877472144b8747e5c0dba10eeddcab2"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/execution.py": {
+      "bytes": 23181,
+      "sha256": "db42adb537d35dac602308fdf1faf0744a16b1a3b0d1883f9dd3e60006813a1f"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/factor_recovery.py": {
+      "bytes": 7081,
+      "sha256": "ce4542ae585237137b754c773e1008cc5714b95d1a09ff06a7f539bc5ef2afec"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/hooks.py": {
+      "bytes": 11050,
+      "sha256": "a42856c770ce4e173c116aee489d49d9040ba13eba8044ee3bf325388861092e"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/learned_execution.py": {
+      "bytes": 13782,
+      "sha256": "41cd4e67bf1c17c4d5a3b63d2cbd3885a472339960cea4ecab44ba15b7e7fa35"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/learned_layers.py": {
+      "bytes": 1809,
+      "sha256": "7d643b8a1a595e00c35a127bc86d5b07b2254c5b3de4d0465d58b56fc67ba21c"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/lightformer_layers.py": {
+      "bytes": 28709,
+      "sha256": "6394fe234b81b76f25a9ae84c31c9fe142f4162de40257940a9fbe1232c70f16"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/lightformer_profiles.py": {
+      "bytes": 18962,
+      "sha256": "09aef71d82249821258901335e171f997399cdd856dd719a1fcd86cfb3dc0a66"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/lightformer_specs.py": {
+      "bytes": 2966,
+      "sha256": "a70b78b0a274809ccbd92614a4958cedc2f360c5956eb37e514241653221cb71"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/lora_operation.py": {
+      "bytes": 4046,
+      "sha256": "3733e2c241c4c5c030b478de7f982e4d1ba50531c3f4c10180132ffd90b5095f"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/low_rank_opt.py": {
+      "bytes": 15535,
+      "sha256": "216dfd8ad06e0d354b8d49ce2f91db431e058e4c6414bdf7019a916ab38c116f"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/lrt_layers.py": {
+      "bytes": 23574,
+      "sha256": "3004aa762fa281d42e302f39dee1ecdacc18ae0443239c2b38ae24288e000a8d"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/lrt_profiles.py": {
+      "bytes": 6834,
+      "sha256": "e7e623395acfcef385e54569d29face2116e35d1635f05b88ac9ddf03ccba1af"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/lrt_specs.py": {
+      "bytes": 5781,
+      "sha256": "c58ef37625a60c722e2b949e16f9dca35919c7b9858a4fc7e0447fecb3095de0"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/method_errors.py": {
+      "bytes": 168,
+      "sha256": "70e352e623ea3fbbe7fb780eb453d520e451ba43f0f25f7fd8308c2b707344fc"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/method_execution.py": {
+      "bytes": 49835,
+      "sha256": "fcf4b49fbbde60e32c8903b269236d3b079ed54e3af0c6e1582e2638b8581f69"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/method_specs.py": {
+      "bytes": 11406,
+      "sha256": "2da75d317c22cbe09f3295c1a60b38a5fb56524dabf85707d15a954411e3014e"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/plans.py": {
+      "bytes": 16834,
+      "sha256": "dbb7f588024d6dc14d43997e71381879dc94c44468d18bea61d466adeac0c3b8"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/projection_execution.py": {
+      "bytes": 39838,
+      "sha256": "b52e0ad3ed6a44b6ba986147dde3e087d05363ab313e74ffbebb375c5c710321"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/projection_layers.py": {
+      "bytes": 10575,
+      "sha256": "97e45ce745d0a07ec9b79a342a97f247a5a9d176be60c8a87ce6d248237dda5f"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/projection_profiles.py": {
+      "bytes": 11517,
+      "sha256": "1ac71f094d38e655eac7babb3dddc1e3d6ae053583df72e9e247ca039a586e97"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/projection_recovery.py": {
+      "bytes": 8706,
+      "sha256": "bfcbd06024ae05530ccdb5da054329c9e37a89a5c93b9c6b18b9be80b2c5721f"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/projection_specs.py": {
+      "bytes": 6003,
+      "sha256": "dbe9279984cef90ad09fd1df0d26858a1e049caedb13f512f171f7cb7c92439b"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/rank_distortion.py": {
+      "bytes": 7968,
+      "sha256": "5700cb67ed24e2d1222a9e87cf204182fc4b4749c67155c1c53821c22954c54b"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/rank_pruning.py": {
+      "bytes": 4215,
+      "sha256": "9358ba6609e309b3edadd77a8e47a20d7fc21bd08fd3cfbe29111e51b5e70202"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/rankdyna_profiles.py": {
+      "bytes": 25571,
+      "sha256": "7b8a81d2965fab7ad4b466cb7aa62e84c213035b52f85bce5e9b62cdd1e8054e"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/rankdyna_specs.py": {
+      "bytes": 9651,
+      "sha256": "dba71b6cfd6b45a43ddb2e6cba66e27e5ed1fb10f58478a7a1b3ce2258a77650"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/reassembly/__init__.py": {
+      "bytes": 984,
+      "sha256": "8d759342ad78a86c94083730dfddc18ed090cfc94cebdc94b41d44d0ff8515a7"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/reassembly/config_mixins.py": {
+      "bytes": 6392,
+      "sha256": "510339c5f47f56c634e8a9fcbba9445a54a5e03104f60c104b323919db34dbee"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/reassembly/core_reassemblers.py": {
+      "bytes": 6262,
+      "sha256": "4839e3b72e1a90368f987bac9a21134713e86e6627a1967c434f276256aabc61"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/reassembly/decomposed_recreation.py": {
+      "bytes": 2145,
+      "sha256": "d6af123f5deef24911f169b56225a9b1cb859f005578b72756631e573af2913d"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/reassembly/flatllm_reassembler.py": {
+      "bytes": 23831,
+      "sha256": "34385cf9618b7738a579847fb131617a36b14a2234ad1bffc96c2afec63c4b9a"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/reassembly/transmla_reassembler.py": {
+      "bytes": 21602,
+      "sha256": "c0a2c3e161fcfb0e89d4fbb5e46ed94771d5106329fcb88f75edaefd35b6900b"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/slicegpt_layers.py": {
+      "bytes": 26519,
+      "sha256": "b30dd3e7f03c093e3a96071c797513c3cf72518241abeaec419854f2df01781d"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/slicegpt_profiles.py": {
+      "bytes": 29216,
+      "sha256": "40aa1edd91ee811e11579bc2c8758f5b927eb41db6db17557a7334e935808559"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/slicegpt_specs.py": {
+      "bytes": 2672,
+      "sha256": "a75586e4ac25b2b2bec979d44afb6ec403c8f7058b0062f52687affebcba2864"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/statistical_collectors.py": {
+      "bytes": 8245,
+      "sha256": "cc8165081c5553239bb25e4eed201bbd6c89660f694485ddd7ed22e7067fc5cc"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/statistical_profiles.py": {
+      "bytes": 29217,
+      "sha256": "dd0f986960e031b5d4958b2d98a7d847e4c69a6e6ddef3885f2a2e83b259db88"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/statistics.py": {
+      "bytes": 16464,
+      "sha256": "566381b386b1da15fcce9cefab20696fd666c325055f012f551017f8b395fa8d"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/structured_layers.py": {
+      "bytes": 15580,
+      "sha256": "c2c42f6811047f805bf6a3793c41bc6201b32dceb8d216970f41770692b91e3e"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/structured_profiles.py": {
+      "bytes": 34267,
+      "sha256": "dc9f153f276ee7d5d5530949311da950f034ec27eea1c244e4355291d4826242"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/svd_tools.py": {
+      "bytes": 15500,
+      "sha256": "c09ceb6145b8f952a1a44b6ee3fa3fdf1a687a7a55017a16c237cd0a1790177b"
+    },
+    "frozen-source/fedcore/algorithm/low_rank/topology.py": {
+      "bytes": 6228,
+      "sha256": "c1512cb55c583bbeaf7dae855f4e8d021e651ef5edcf506ade9d2f2a3c7553ef"
+    },
+    "frozen-source/fedcore/algorithm/pruning/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/algorithm/pruning/hooks.py": {
+      "bytes": 22026,
+      "sha256": "026f914a8369b52d22e5b29321a9261f740f3b9ec30ae98b2b2212ffb68a0922"
+    },
+    "frozen-source/fedcore/algorithm/pruning/pruners.py": {
+      "bytes": 10812,
+      "sha256": "647eb5a65bc5d38f076a4cdd35c8b0f09504b31c420cad96a24adc12a3a1111b"
+    },
+    "frozen-source/fedcore/algorithm/pruning/pruning_validation.py": {
+      "bytes": 10789,
+      "sha256": "f8a37c447f321588b3bfee1f7dfffae9d0ee828e7cd198141d578fd5a21d40fa"
+    },
+    "frozen-source/fedcore/algorithm/pruning/sfp_tools.py": {
+      "bytes": 10029,
+      "sha256": "46186c230f5248fa599ba281bce06ce08bfefa109e8a2d92c9f28ed7e647bc42"
+    },
+    "frozen-source/fedcore/algorithm/quantization/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/algorithm/quantization/hooks.py": {
+      "bytes": 5296,
+      "sha256": "e5a96084b3f3600d0e87eb1650e240aeefbab84180e03f3f67f65e04291a58e6"
+    },
+    "frozen-source/fedcore/algorithm/quantization/quantizers.py": {
+      "bytes": 7447,
+      "sha256": "0300ddce365ed012b4ba685db1c31c5cf0f4f3c41faff88138abfd068b20faaa"
+    },
+    "frozen-source/fedcore/algorithm/quantization/utils.py": {
+      "bytes": 10376,
+      "sha256": "475628565a0059d53f274aeaa061b43672eee626dbd90cbcfa35d7c9c423ed06"
+    },
+    "frozen-source/fedcore/api/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/api/api_configs.py": {
+      "bytes": 30135,
+      "sha256": "632ec8280b25cd04ff3421beeb85428c785cb1fa34140d7c0ec628ff8cb81ae1"
+    },
+    "frozen-source/fedcore/api/config_factory.py": {
+      "bytes": 12804,
+      "sha256": "8300dcf5a8fecbb6c73d64e998a54fe472ff14c7868c4ecba1fcc1ef9900321d"
+    },
+    "frozen-source/fedcore/api/llm_config.py": {
+      "bytes": 360,
+      "sha256": "456ee8238b7c7ba84c7ca0d254937e997742d62442e207f4208944deaf365725"
+    },
+    "frozen-source/fedcore/api/main.py": {
+      "bytes": 18229,
+      "sha256": "6b01470fb4089434f025d2aab2817a682cf26f7daf7f448c6988d97ceb4e6059"
+    },
+    "frozen-source/fedcore/api/nlp_configs.py": {
+      "bytes": 351,
+      "sha256": "f8ed50a4921031f8a5f2d3fbb0d4a88b27eb0d6e99c7ffea47fc0d2ae0049e16"
+    },
+    "frozen-source/fedcore/api/utils/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/api/utils/api_init.py": {
+      "bytes": 6641,
+      "sha256": "6396b5d841a12ce5be04c05502a72101abdb099ddd2c565042751adc473d8761"
+    },
+    "frozen-source/fedcore/api/utils/checkers_collection.py": {
+      "bytes": 9652,
+      "sha256": "5f4dd344bf5e3e5c5fb8d11d41fde60037327c8517b56861d2ed9aeaa737bafb"
+    },
+    "frozen-source/fedcore/api/utils/data.py": {
+      "bytes": 6910,
+      "sha256": "c89b783ef059678c73acdeea0c2957d0ccf909e278dbe4a8e84e3dadc7612126"
+    },
+    "frozen-source/fedcore/api/utils/evaluation.py": {
+      "bytes": 5270,
+      "sha256": "b1999dd523f5a0ec6024038286321cc4a3f3c1df14fa92df002e9f1477b62b5b"
+    },
+    "frozen-source/fedcore/api/utils/misc.py": {
+      "bytes": 5135,
+      "sha256": "e2acdce274ac892556e271cd361c4a24f5bd7069166355f96456826d29a34673"
+    },
+    "frozen-source/fedcore/api/utils/plugins/nlp_plugin.py": {
+      "bytes": 4618,
+      "sha256": "849afa2df9e93fd000e9ba643f109a904263ffa40f00446d7974a70e590f2fdb"
+    },
+    "frozen-source/fedcore/architecture/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/abstraction/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/abstraction/accessor.py": {
+      "bytes": 2468,
+      "sha256": "04acdcddfe5a4f3f8aab6b581246fa0b1b1deb28f860beef37e33633fae98f15"
+    },
+    "frozen-source/fedcore/architecture/abstraction/decorators.py": {
+      "bytes": 9351,
+      "sha256": "d6808cfba90fa5c12966c5b4a18b3953f764eb273f91e7c067e98f5bf65b25dd"
+    },
+    "frozen-source/fedcore/architecture/abstraction/delegator.py": {
+      "bytes": 1163,
+      "sha256": "13b750b4e8e75930d116db53d7f063ff244b057e8118dbd7377b38d1c693587a"
+    },
+    "frozen-source/fedcore/architecture/abstraction/placeholders.py": {
+      "bytes": 1170,
+      "sha256": "0cfa1a48b0019ec798d9d56cdfb55c85f6e10eb093bf4e2b578c103a402a94f3"
+    },
+    "frozen-source/fedcore/architecture/comptutaional/__init__.py": {
+      "bytes": 54,
+      "sha256": "28e2f10d26882935939f42770e7969955c3c88fabdcf2affd2ddc1b20a8b4a23"
+    },
+    "frozen-source/fedcore/architecture/comptutaional/devices.py": {
+      "bytes": 3371,
+      "sha256": "2454e341be634b86ad8b649776bc8f159ea019579647274addba27135a038b6b"
+    },
+    "frozen-source/fedcore/architecture/computational/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/computational/devices.py": {
+      "bytes": 3371,
+      "sha256": "2454e341be634b86ad8b649776bc8f159ea019579647274addba27135a038b6b"
+    },
+    "frozen-source/fedcore/architecture/dataset/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/dataset/api_loader.py": {
+      "bytes": 5169,
+      "sha256": "348302aa8aca7c6941ed2a3bd4ee549278e179896018115ec4ab11b539ef566c"
+    },
+    "frozen-source/fedcore/architecture/dataset/custom_loader.py": {
+      "bytes": 10364,
+      "sha256": "c831c95c0f459f6e01597303b0d1674fb8c050e16e060635708215908bbf208a"
+    },
+    "frozen-source/fedcore/architecture/dataset/datasets_from_source.py": {
+      "bytes": 11946,
+      "sha256": "d50739603b2a6bece57795ac30ef9a662aab4dcbe4cc6d7d25b41eb84fe8f6ab"
+    },
+    "frozen-source/fedcore/architecture/dataset/splitters.py": {
+      "bytes": 5998,
+      "sha256": "b2a45342a214957734f66d079cb8490f12c7c279ed6e43443327e2c84e819ea2"
+    },
+    "frozen-source/fedcore/architecture/dataset/task_specified/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/dataset/task_specified/classification_datasets.py": {
+      "bytes": 3427,
+      "sha256": "45d12c7ccb6db0e6f5513f47ee36edeb13fddb2360fe97e2f78ea280b9a691fc"
+    },
+    "frozen-source/fedcore/architecture/dataset/task_specified/dummy_clf.py": {
+      "bytes": 502,
+      "sha256": "54604fca614e914be0b0e74c45cb1fbc4b1a365480dc38661580b753160b4baf"
+    },
+    "frozen-source/fedcore/architecture/dataset/task_specified/object_detection_datasets.py": {
+      "bytes": 11103,
+      "sha256": "96d65e162f0b05341b38c52a0fe8c8b6a8bcc10220a8cead23cb4428bea30678"
+    },
+    "frozen-source/fedcore/architecture/dataset/task_specified/segmentation_dataset.py": {
+      "bytes": 3988,
+      "sha256": "fe0842885e3a8bb87bb7d183086b255601c4b2972614c1bfc72b8c738f827ffa"
+    },
+    "frozen-source/fedcore/architecture/dataset/task_specified/ts_dataset.py": {
+      "bytes": 2141,
+      "sha256": "74ec6f7361695f4ea1fb61d7e0c43c074700c9081404be323d8626fba466afc4"
+    },
+    "frozen-source/fedcore/architecture/dataset/utils.py": {
+      "bytes": 36350,
+      "sha256": "3d6204413763504a2b9c508698339713ab6648431447f69a4394466af27513d2"
+    },
+    "frozen-source/fedcore/architecture/preprocessing/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/preprocessing/data_convertor.py": {
+      "bytes": 41463,
+      "sha256": "c41560b6bae1ab12e3e3a3c46ecc85492612e40827946274d392a6c84c4738ef"
+    },
+    "frozen-source/fedcore/architecture/settings/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/settings/computational.py": {
+      "bytes": 1648,
+      "sha256": "9e9abe76fe7cd999a7eb2500ec2bcb3787d0237104eb11d4cead0136501ec70a"
+    },
+    "frozen-source/fedcore/architecture/utils/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/utils/loader.py": {
+      "bytes": 1001,
+      "sha256": "fef594040e1a5ea6e71e367809314bc0c29d565de6430396992ebbe67a9610d1"
+    },
+    "frozen-source/fedcore/architecture/utils/misc.py": {
+      "bytes": 2077,
+      "sha256": "864c847601153a83bc84278b38863fca0c3f56e692d5915362d38b95ac2c18ea"
+    },
+    "frozen-source/fedcore/architecture/utils/paths.py": {
+      "bytes": 898,
+      "sha256": "61b6fa1aee1196a9c55d50c52d607bbd7fb95a998a050deb460e78457f0a9294"
+    },
+    "frozen-source/fedcore/architecture/visualisation/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/architecture/visualisation/visualization.py": {
+      "bytes": 6549,
+      "sha256": "38dcb1e86551beb9da32f0a6a7b4166f4e94d475ef407c3a92f2572d39f39224"
+    },
+    "frozen-source/fedcore/data/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/data/data.py": {
+      "bytes": 7239,
+      "sha256": "2deda08be5caee3e7a2750acb307a4f846e2f02df34daa6afc04c74abd0f5586"
+    },
+    "frozen-source/fedcore/data/dataloader.py": {
+      "bytes": 1679,
+      "sha256": "e1d8ab54470b8d256fecc7e0d59e99b355e1d721314fc962609ad90fc7115d43"
+    },
+    "frozen-source/fedcore/experiments/__init__.py": {
+      "bytes": 856,
+      "sha256": "a7c46fa6087d25fdb136c4efb48452d2adac539de6f89c3db983db3d765bb0dc"
+    },
+    "frozen-source/fedcore/experiments/ablations.py": {
+      "bytes": 30833,
+      "sha256": "3061680298fc4ef680e8d985134b7fdd950e8cb026222a1342fa351d836b94d7"
+    },
+    "frozen-source/fedcore/experiments/baseline.py": {
+      "bytes": 7977,
+      "sha256": "554422a40bd31f1eed9a93399793ca66e6c1b8e75f109cc64cf747d8357da943"
+    },
+    "frozen-source/fedcore/experiments/external_benchmark.py": {
+      "bytes": 14023,
+      "sha256": "5976e942e75f6423c89341bfb596185f6c0be6cccf3cd007998ad48ddb0750fc"
+    },
+    "frozen-source/fedcore/experiments/local_study.py": {
+      "bytes": 11033,
+      "sha256": "c72f30af8ddee8d3f52047b22a37c3473d02ba70d272d793506717adb0e49b9a"
+    },
+    "frozen-source/fedcore/experiments/math_checks.py": {
+      "bytes": 13951,
+      "sha256": "f10e2034464ecd0b4084d28dba867b73f261ad6d6011f487198f591f2464e1de"
+    },
+    "frozen-source/fedcore/experiments/measurement.py": {
+      "bytes": 9646,
+      "sha256": "aaa497dabc1a7274751c09a45287385b32e4105dc8a8ec0eef7a263cabafc8b2"
+    },
+    "frozen-source/fedcore/experiments/pilot.py": {
+      "bytes": 9778,
+      "sha256": "0a5d3d3af0c83931069159b3557dc56c76497b74950e5946152ac55e5748f377"
+    },
+    "frozen-source/fedcore/experiments/protocol.py": {
+      "bytes": 17266,
+      "sha256": "2934b60fa84ed0b1f57b00988aaea7315f7937a0007dfa235e11b10e8efc292d"
+    },
+    "frozen-source/fedcore/experiments/remeasure.py": {
+      "bytes": 8663,
+      "sha256": "e55a501834f14b4050ec4e01e26880fb95227bb25fdff34b8931a3542962c62f"
+    },
+    "frozen-source/fedcore/experiments/reporting.py": {
+      "bytes": 9293,
+      "sha256": "7ec0787995dc82108f47dcca644b0ab58227bd79b1d146f144a5bacbc111275c"
+    },
+    "frozen-source/fedcore/experiments/runner.py": {
+      "bytes": 58897,
+      "sha256": "b3912df4b4ade53f7cfbb756796d59f0683ef2bd782956f544a96a2a0fc9dc16"
+    },
+    "frozen-source/fedcore/experiments/scenarios.py": {
+      "bytes": 37779,
+      "sha256": "a7f026d65f6d52f35a283ad3a8eaa5c07b31e75255ae4affa189b4226ad179bb"
+    },
+    "frozen-source/fedcore/experiments/search.py": {
+      "bytes": 22103,
+      "sha256": "c93d47218b24922b5680c289fdb4b364720b385caae5489430890aa4330c5b9c"
+    },
+    "frozen-source/fedcore/experiments/streaming.py": {
+      "bytes": 7123,
+      "sha256": "db933d506f6d779b8d8b1bd030963363366872f96fff17bce64ddf413602ae47"
+    },
+    "frozen-source/fedcore/experiments/svd_comparison.py": {
+      "bytes": 43676,
+      "sha256": "79365073393b49dbe6814da8fd0064349caa8e8d9a7184313c988c01ba7ca2cd"
+    },
+    "frozen-source/fedcore/experiments/svd_local_package.py": {
+      "bytes": 47848,
+      "sha256": "116208894f9729459ff6126cbd96449c61553a43a726cc2a6650791bd7d6b098"
+    },
+    "frozen-source/fedcore/experiments/svd_local_timing.py": {
+      "bytes": 10416,
+      "sha256": "5ddd81adc79db18d4c6d248b87725f66bbfd9f32b620e8a8358b5cae1dc2d1ee"
+    },
+    "frozen-source/fedcore/experiments/svd_profile_measurement.py": {
+      "bytes": 25607,
+      "sha256": "094ce4445a5ddc9422e6eb2c4e63e06b5d5a4f060b104bd33fce1f0a21ac750e"
+    },
+    "frozen-source/fedcore/experiments/svd_rank_policies.py": {
+      "bytes": 20051,
+      "sha256": "0773991d037f6f7ae85e0dd95dcf5ef50330814cea9723cea300120109fcf1dc"
+    },
+    "frozen-source/fedcore/experiments/svd_second_package.py": {
+      "bytes": 47068,
+      "sha256": "42d67e60dffbc2f482a5c26831b12dd183f34d8e33f0e4f03cbb58571b319653"
+    },
+    "frozen-source/fedcore/experiments/svd_second_timing.py": {
+      "bytes": 12167,
+      "sha256": "4f5f27337f52c01e2d500aa252c4ce0b3c7e953b06cc0f3b9067a7d3b8a80d1d"
+    },
+    "frozen-source/fedcore/experiments/svd_third_package.py": {
+      "bytes": 25266,
+      "sha256": "9277a337e5da947d07aa7f3020942068349663bc3d3fd52663d5ef02ae54a960"
+    },
+    "frozen-source/fedcore/experiments/svd_third_timing.py": {
+      "bytes": 8095,
+      "sha256": "5219897aca3500be60f6fa09204807cc16a16c2f03000dd619cadec940030473"
+    },
+    "frozen-source/fedcore/external_runtime/__init__.py": {
+      "bytes": 450,
+      "sha256": "b910670a03e846ac8861546dffad5b3e07eb5ff3138437cd9eed713d3a822d75"
+    },
+    "frozen-source/fedcore/external_runtime/adapters.py": {
+      "bytes": 8665,
+      "sha256": "6dd455b5121d3d39d2218d4d6e8acc7eefd8149764a183d7a4dda0b7097aaf37"
+    },
+    "frozen-source/fedcore/external_runtime/client.py": {
+      "bytes": 5447,
+      "sha256": "cf17e987a992637eeb4ab52e72322c877bdfa676879b9568cbeb825cc1700335"
+    },
+    "frozen-source/fedcore/external_runtime/contracts.py": {
+      "bytes": 16822,
+      "sha256": "e7cc60591f65df10bbbca612b4d5e2ab9b00441eef26b42c4097f63344e84f13"
+    },
+    "frozen-source/fedcore/external_runtime/execution.py": {
+      "bytes": 13242,
+      "sha256": "d6cfab4c5aa58888ff92c9306554e01e75c7428c2bbd8c74bb0a518a4a46a23b"
+    },
+    "frozen-source/fedcore/external_runtime/industrial_manifest.py": {
+      "bytes": 207,
+      "sha256": "3132e4f91b0eb87b16cc386ee82a81720c3e5ea7b3f295464067d6ef3ab2cc37"
+    },
+    "frozen-source/fedcore/external_runtime/jobs.py": {
+      "bytes": 11356,
+      "sha256": "130f7317a212a40527a321f079480db66c68e2c2e6f6248b50983f118926e906"
+    },
+    "frozen-source/fedcore/external_runtime/models.py": {
+      "bytes": 8745,
+      "sha256": "70abf1c771677167d07b383a69a8587b776b870035a25ae7c42c212cb3f52e6a"
+    },
+    "frozen-source/fedcore/external_runtime/security.py": {
+      "bytes": 8550,
+      "sha256": "a076f79d26dd0e44dbd363387f14d934dc764efba46e96dc5771ad08727648dc"
+    },
+    "frozen-source/fedcore/external_runtime/worker.py": {
+      "bytes": 1390,
+      "sha256": "c1d726f7aea8d0b040554ca35c4f4f67907eb309818953eb551269f981117c94"
+    },
+    "frozen-source/fedcore/inference/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/inference/onnx.py": {
+      "bytes": 729,
+      "sha256": "b463fab5a95a43a846d1fd97f5de739004bd27a8f30df5b480c55def6fab2cdc"
+    },
+    "frozen-source/fedcore/interfaces/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/interfaces/fedcore_dispatcher.py": {
+      "bytes": 15514,
+      "sha256": "a46c857ec89d7ee8c367478d15932b0a734f0e36fe8d665d5a3911e22399a5dc"
+    },
+    "frozen-source/fedcore/interfaces/fedcore_optimizer.py": {
+      "bytes": 17878,
+      "sha256": "8d87915ddc572eca9b4030cd0f80bde3bc021d2f9c457124c18f8e4a883d045a"
+    },
+    "frozen-source/fedcore/interfaces/fedcore_strategy.py": {
+      "bytes": 7101,
+      "sha256": "34e241694019234e8dab899bbc257a467974b7e0974900ff94efcb252fe5b86a"
+    },
+    "frozen-source/fedcore/interfaces/search_space.py": {
+      "bytes": 6632,
+      "sha256": "673ac7660b4fa62474e08ee15b67d0828067afa1752308b58a82863838730354"
+    },
+    "frozen-source/fedcore/interfaces/search_trace.py": {
+      "bytes": 2380,
+      "sha256": "11aa64faca15a4e1880227a0f52b11fa47fd197233d321cc646e462b1d5198eb"
+    },
+    "frozen-source/fedcore/losses/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/losses/distilation_loss.py": {
+      "bytes": 12460,
+      "sha256": "ebc8864027c1aff11f4457b6479788c97acf3fa5a9725dfec3d128d4fe69333a"
+    },
+    "frozen-source/fedcore/losses/losses_impl.py": {
+      "bytes": 2213,
+      "sha256": "338e2864bca7e71e4f7c8306835bdd6c8c8dea7bfe0f9513adf6a66b967f3d3f"
+    },
+    "frozen-source/fedcore/losses/low_rank_loss.py": {
+      "bytes": 1414,
+      "sha256": "648f625f36c06006531ce348c0c4f6763955621a6d20f72e93fbab368be84f18"
+    },
+    "frozen-source/fedcore/losses/regularization_losses.py": {
+      "bytes": 5670,
+      "sha256": "e6e75e7e03f66f99efe45f28b9fbf5e06f774db717d875ee33b27d81eabad910"
+    },
+    "frozen-source/fedcore/losses/utils.py": {
+      "bytes": 455,
+      "sha256": "887f996014a14685558b0036a214ba5a488e91d72ac983a4a0df2cc29952f87c"
+    },
+    "frozen-source/fedcore/metrics/__init__.py": {
+      "bytes": 71,
+      "sha256": "7089e437691ab3b57160d96b1c1b7571b9c34c840b767ac6516954eebd99e395"
+    },
+    "frozen-source/fedcore/metrics/api_metric.py": {
+      "bytes": 3938,
+      "sha256": "ec93b9c38dd1176cbcf993529d2ae473246162466d78544db0073a98a1bde5a6"
+    },
+    "frozen-source/fedcore/metrics/cv_metrics.py": {
+      "bytes": 12372,
+      "sha256": "b655fdbbf7e1bfd524b84931f5c0ca2f835d932d6c55baa62618d52408624ab9"
+    },
+    "frozen-source/fedcore/metrics/metric_impl.py": {
+      "bytes": 6055,
+      "sha256": "dd005e024d95f8ab0cfa4f32d018cf442e943826c0ad136a6806e83f28c60d37"
+    },
+    "frozen-source/fedcore/metrics/multiobjective/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/metrics/multiobjective/hypervolume.py": {
+      "bytes": 6906,
+      "sha256": "552086a149ff15040816a536f2e168dec52b7ec52e386116622453c665a5e587"
+    },
+    "frozen-source/fedcore/metrics/multiobjective/multi_objective.py": {
+      "bytes": 7914,
+      "sha256": "c1f91dff74d23c8c7abe4da5e3630cebba9666634ab94d623f6791cc156367f7"
+    },
+    "frozen-source/fedcore/metrics/nlp_metrics.py": {
+      "bytes": 5463,
+      "sha256": "4fdee24b7ed0977633010e1159918da5f162264efae50642216e15fa5ff8bf20"
+    },
+    "frozen-source/fedcore/metrics/pareto.py": {
+      "bytes": 1157,
+      "sha256": "dceebe24265a50aff22c8c467dd5cbbcbbafd11ec99ac8d9e0bbd0f2df32b232"
+    },
+    "frozen-source/fedcore/metrics/quality.py": {
+      "bytes": 15122,
+      "sha256": "f71e710450a4ea8d726bfb1a0fe91ba19ccbc6319310d0dde8e3686c8c36e029"
+    },
+    "frozen-source/fedcore/models/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/backbone/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/backbone/backbone_loader.py": {
+      "bytes": 447,
+      "sha256": "be602cb7eaa8b4ab4195ac4e25f92d08edc96f1bba8a6aabf3bffe6b9cfc66e7"
+    },
+    "frozen-source/fedcore/models/backbone/convolutional/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/backbone/convolutional/densenet.py": {
+      "bytes": 1028,
+      "sha256": "4bc56720e2d645de10e744eb238cfda7eb9a269a206ccf262b5591f9c3b4a898"
+    },
+    "frozen-source/fedcore/models/backbone/convolutional/efficientnet.py": {
+      "bytes": 1946,
+      "sha256": "3791335e587b50817820b299effced55e4dc75b533ef9f95ccfe46ff43075f7c"
+    },
+    "frozen-source/fedcore/models/backbone/convolutional/inception.py": {
+      "bytes": 2600,
+      "sha256": "332b7e3ed62439bb719d18852e1b454e2d28e1ec70126282b663197f7a1dae8a"
+    },
+    "frozen-source/fedcore/models/backbone/convolutional/mobilenet.py": {
+      "bytes": 8845,
+      "sha256": "b642e03596f6d393844b5116692016b792d585130e59ac85e055211a9abe944c"
+    },
+    "frozen-source/fedcore/models/backbone/convolutional/resnet.py": {
+      "bytes": 3828,
+      "sha256": "524c307f4f204e03dd5cb75d6e5fc67895c11b29c700b3569f83d9b51c329db2"
+    },
+    "frozen-source/fedcore/models/backbone/custom/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/backbone/custom/custom.py": {
+      "bytes": 2559,
+      "sha256": "b2f41399cfd79ed7c891d4ad6ae1535048768390bb740130dd564b354d7ffada"
+    },
+    "frozen-source/fedcore/models/backbone/custom/custom_object_detection.py": {
+      "bytes": 1703,
+      "sha256": "8076f518609464a0f800b8a1f9af58efc2246c0f6d6307db4c0455243a611185"
+    },
+    "frozen-source/fedcore/models/backbone/encoder_decoder/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/backbone/encoder_decoder/unet.py": {
+      "bytes": 3870,
+      "sha256": "3b1c40c42ae8149fd6d9d1489ca8a89f1657e03a81452255808120fb57c3bbfc"
+    },
+    "frozen-source/fedcore/models/backbone/pretrain_model/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/backbone/pretrain_model/chronos.py": {
+      "bytes": 239,
+      "sha256": "bec1bb3f2ff3a1c80612bed14f94d9bfc1799256aaf50ceb74cc9186514d8f0e"
+    },
+    "frozen-source/fedcore/models/backbone/pretrain_model/segformer.py": {
+      "bytes": 474,
+      "sha256": "a03d34369758126cd8d501682bbb091361028e4525b55ad8aae06b7676d39859"
+    },
+    "frozen-source/fedcore/models/backbone/transformers/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/backbone/transformers/linformer.py": {
+      "bytes": 5259,
+      "sha256": "552834b13d6d61dbede32a85ac50fb0eabfef75eb5223348e76a704a709fec10"
+    },
+    "frozen-source/fedcore/models/backbone/transformers/tst.py": {
+      "bytes": 11254,
+      "sha256": "ff52fc4a5f59d906a3c9f2fd4e64092c47564d7b7eb199bef2046eba150d8048"
+    },
+    "frozen-source/fedcore/models/network_impl/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/network_impl/base_nn_model.py": {
+      "bytes": 17721,
+      "sha256": "c756882bc659312bb3b75fe354aaed30337d8a8c15251ce7f85bfaadf031945e"
+    },
+    "frozen-source/fedcore/models/network_impl/decomposed_layers.py": {
+      "bytes": 16863,
+      "sha256": "be8d43505dc40081e326b9ce2351aa02fbb34d73b6c3b3a5a10d77c494b14b77"
+    },
+    "frozen-source/fedcore/models/network_impl/interfaces.py": {
+      "bytes": 141,
+      "sha256": "120bdecaad1cf0675f79b82caf4436e3a0bb5e6bfd43f9fe322094d5069ada80"
+    },
+    "frozen-source/fedcore/models/network_impl/layers.py": {
+      "bytes": 9102,
+      "sha256": "acb690288612fdcbb822b127d6fe5981e39ee97ada5b69924fb350bf6aeb37ff"
+    },
+    "frozen-source/fedcore/models/network_impl/llm_trainer.py": {
+      "bytes": 27053,
+      "sha256": "7b8e594ee33ca534e7f24a3638d6f56fb6e046881c9941b3599b28313b9823b9"
+    },
+    "frozen-source/fedcore/models/network_impl/trainer_factory.py": {
+      "bytes": 317,
+      "sha256": "ab0fd68807f207001b44a52551a815c39b5c2620aaaa8b7b2e98a5c25ddefadb"
+    },
+    "frozen-source/fedcore/models/network_impl/utils/_base.py": {
+      "bytes": 9257,
+      "sha256": "4c0b1a249b57b8b92fd0d7c22421e63b829c7ae044acb67448a765b186f2d298"
+    },
+    "frozen-source/fedcore/models/network_impl/utils/hooks.py": {
+      "bytes": 13251,
+      "sha256": "4aba26f34562b2773b4fd888431ebb2f6da1b4e968123fa2a2f2f383744311d5"
+    },
+    "frozen-source/fedcore/models/network_impl/utils/hooks_collection.py": {
+      "bytes": 2383,
+      "sha256": "db35004dfc52a6b67742a7961878e7571f8b1fddf4ea06a6657b1dd802362169"
+    },
+    "frozen-source/fedcore/models/network_impl/utils/interfaces.py": {
+      "bytes": 1180,
+      "sha256": "055cda9218a99a63c532e01f7ff656ddba473ea615f163eb6e5706409409890a"
+    },
+    "frozen-source/fedcore/models/network_impl/utils/trainer_factory.py": {
+      "bytes": 6543,
+      "sha256": "e4ad27fbbe86d8b0b9b1212832ff0b305a889399258a978f39d6588e7730ed6e"
+    },
+    "frozen-source/fedcore/models/network_modules/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/network_modules/activation.py": {
+      "bytes": 1538,
+      "sha256": "d26708b199e38142642dd7b66a8619a843f7a13f220f86912fb703fa0b7c110f"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/attention_layers.py": {
+      "bytes": 10481,
+      "sha256": "a2818c755890c9bfc152975251900cb130899bfc3f9141b9d8bc51932a8e28ca"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/backbone.py": {
+      "bytes": 2851,
+      "sha256": "cf18d85009760c983bbd64eabbeb0ca04b98010664a8e5a1a78e1809dbbb1add"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/conv_layers.py": {
+      "bytes": 9534,
+      "sha256": "649082f0522224c1519f406f6cff28bec2392bd8b3dd7889cef7b1a46cd390c8"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/head_layers.py": {
+      "bytes": 12824,
+      "sha256": "4c4fae6e3a5c57d53ed877a3ee75c508a24d9bf2a006719460f8d0d3a62f8613"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/linear_layers.py": {
+      "bytes": 8830,
+      "sha256": "571b6a88fe1acaaaef6eedc7df3f4c17434edd238fb7e1db804a108b6957372e"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/lora.py": {
+      "bytes": 10859,
+      "sha256": "ea4c28a70d9983fb6a0d141221b4cc38b467d315118f953b68a6737669a7972f"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/padding_layers.py": {
+      "bytes": 1883,
+      "sha256": "9f9329256473f3160304922c2d6fe48284e2e7c8c99cd9e09fb1e332eb9edaa2"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/pooling_layers.py": {
+      "bytes": 7361,
+      "sha256": "b0488a0da59a6fd8f3559a371657ff6cfb3b7233d01efec35a236cdc673f4b28"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/sequential_layers.py": {
+      "bytes": 1852,
+      "sha256": "bf77ce6efc54368f3cd2b11b7fbe7600fcebdf654a83b045b4302b68302d37a4"
+    },
+    "frozen-source/fedcore/models/network_modules/layers/special.py": {
+      "bytes": 19837,
+      "sha256": "e2d4f1527cdd2b16bcf04a6fdf854dd00f6255df2afab6a2cc765d6a8162c7ab"
+    },
+    "frozen-source/fedcore/models/network_modules/losses.py": {
+      "bytes": 20593,
+      "sha256": "3ca67400f040bb380ea344e0e4dceecbd06834108910b2d2070831a2eab59cc7"
+    },
+    "frozen-source/fedcore/models/network_modules/other.py": {
+      "bytes": 24069,
+      "sha256": "d422461c46ee7b5b28ab8bcd512cb4beb48c4d516c9783917b58c33d080d2c22"
+    },
+    "frozen-source/fedcore/models/network_modules/reversible.py": {
+      "bytes": 7408,
+      "sha256": "224ef06765beccd9f1d33949635b05513b6bf325724e0a80303ed5d03cba9924"
+    },
+    "frozen-source/fedcore/repository/IndustrialOperationParameters.py": {
+      "bytes": 1861,
+      "sha256": "e249238909b925d47b4ef29f7dd9dfc64e37d08639e77920980774dffb746e06"
+    },
+    "frozen-source/fedcore/repository/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/repository/capabilities.py": {
+      "bytes": 4996,
+      "sha256": "ce57241f94681a5855561c16e8d37960a01a4c3a0097235fc17a75c3b052cb92"
+    },
+    "frozen-source/fedcore/repository/config_repository.py": {
+      "bytes": 6334,
+      "sha256": "d1a3d1fc45dc1aca7ee620c17b80f2ef0d2a3083446ff540d2bb35163b601fa1"
+    },
+    "frozen-source/fedcore/repository/constanst_repository.py": {
+      "bytes": 67,
+      "sha256": "d5a357d4e6e3d2bd7de954e877a19df4ddf3cd0d650c7649880a7e97314d692e"
+    },
+    "frozen-source/fedcore/repository/constant_repository.py": {
+      "bytes": 17804,
+      "sha256": "4b1f2ccac0329a0f2be18348deca53d7ba09aa10f3bef8c173ee2ce2b78fe6dd"
+    },
+    "frozen-source/fedcore/repository/data/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/repository/fedcore_impl/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/repository/fedcore_impl/abstract.py": {
+      "bytes": 10982,
+      "sha256": "7da2d3ed56ab6947fb67b60ddb562299ddd34ce84f7739f4efb692f48ac32f50"
+    },
+    "frozen-source/fedcore/repository/fedcore_impl/data.py": {
+      "bytes": 1515,
+      "sha256": "0591d121c80e6041ffb659704be02161a357521225b589b538c9f9636b4d596e"
+    },
+    "frozen-source/fedcore/repository/fedcore_impl/metrics.py": {
+      "bytes": 4213,
+      "sha256": "2aa1a6e83a80e17c1a49731248ba0507ac33e38b3a12bec1247846b5d9c991b6"
+    },
+    "frozen-source/fedcore/repository/fedcore_impl/optimisation.py": {
+      "bytes": 3666,
+      "sha256": "e6f5c90a325430a6213758660de3bf22196b52edf0c18961fb3d069e70557929"
+    },
+    "frozen-source/fedcore/repository/initializer_industrial_models.py": {
+      "bytes": 7942,
+      "sha256": "02b594cdbb320c10568368b58f3d5990335a5c1740b5301eb58325a2c80a33c3"
+    },
+    "frozen-source/fedcore/repository/lazy_registry.py": {
+      "bytes": 1610,
+      "sha256": "fd5df8dc903925ab83ee14cb53d135c44631cedb211034fc195d20e30abd9b68"
+    },
+    "frozen-source/fedcore/repository/model_repository.py": {
+      "bytes": 5932,
+      "sha256": "4a32e04e9980c6bd69e9fe227f580deef7b0364f9253f5f8ff3d8ed55e0f6f16"
+    },
+    "frozen-source/fedcore/repository/setups.py": {
+      "bytes": 909,
+      "sha256": "4d96f7643f538af46b6c1f3185af2e6e58e33abc1e63887c4a01f7433b8cd531"
+    },
+    "frozen-source/fedcore/tools/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frozen-source/fedcore/tools/atomic_json.py": {
+      "bytes": 1111,
+      "sha256": "87f0d9237e523b752147fbdd27b7cdd903f610f29c58780a42b313e0aadbb020"
+    },
+    "frozen-source/fedcore/tools/benchmark.py": {
+      "bytes": 7891,
+      "sha256": "94a5916d57530ae9a752c888a95135bad191f8dbd8486830a078b442f533982c"
+    },
+    "frozen-source/fedcore/tools/edge_device.py": {
+      "bytes": 5114,
+      "sha256": "ec7278e92b92390be9f94aec1b7d432f7479d91779d700194d0ceee58ab0e364"
+    },
+    "frozen-source/fedcore/tools/example_utils.py": {
+      "bytes": 4803,
+      "sha256": "93242f4ab42e2e776be2fec36cb65d0e45a661c606c717623065c148682f9171"
+    },
+    "frozen-source/fedcore/tools/export.py": {
+      "bytes": 11121,
+      "sha256": "b0381705442c4a62ab80dc66cad52c4bc5f17b8c6770c6c653bc5c9e7a2f7c37"
+    },
+    "frozen-source/fedcore/tools/index_resolver.py": {
+      "bytes": 4515,
+      "sha256": "bcc2b865c75b2ecfc57943465f8dc321a1e8d18eca9cb8e32e4b6023bd5eb920"
+    },
+    "frozen-source/fedcore/tools/registry/__init__.py": {
+      "bytes": 335,
+      "sha256": "62161f0f48c63e96ff980921f88dafdf533bdee8b9a9dfce9cf7964e893afd66"
+    },
+    "frozen-source/fedcore/tools/registry/checkpoint_manager.py": {
+      "bytes": 47654,
+      "sha256": "4f481c636aadb4b1e552d6496efb46495324868e4e3276b5170d034c54ee220c"
+    },
+    "frozen-source/fedcore/tools/registry/metrics_tracker.py": {
+      "bytes": 9083,
+      "sha256": "9f8f2967b94b5a5145cc646478bb92da30773e7fb37ede1f1d87efe10092f627"
+    },
+    "frozen-source/fedcore/tools/registry/model_registry.py": {
+      "bytes": 15888,
+      "sha256": "bb9dd7ff712d94f38397ae05de7affcef3aaf7af158ff00ec2511b4542b636d3"
+    },
+    "frozen-source/fedcore/tools/registry/registry_storage.py": {
+      "bytes": 3264,
+      "sha256": "c79aef815d6d6cde49273a2cab8f36e617bcfe88fc6d72171c25a24f118fd1dc"
+    },
+    "frozen-source/fedcore/tools/ruler.py": {
+      "bytes": 8849,
+      "sha256": "487ae2309179be2ef9dfc4331f363377f1676e543176518dd2da289d31b018d9"
+    },
+    "frozen-source/fedcore/tools/scheduler.py": {
+      "bytes": 14152,
+      "sha256": "253a9cc73d5f948421a2a33b50188f948b5a3a9c3b58dbc2c0b8dd18a101daab"
+    },
+    "frozen-source/fedcore/tools/svd_third_analysis.py": {
+      "bytes": 15226,
+      "sha256": "62e1262b1b2a36ef04ebe66b50dd806c2621e3c3ef1c1993d132264112fad810"
+    },
+    "frozen-source/fedcore/tools/visualisation/optimisation_history_vis.py": {
+      "bytes": 8459,
+      "sha256": "36f1c95f205b8342350a2eb9cc5ad05519664863343b55139a1e2bbefcf2fb5f"
+    },
+    "frozen-source/fedcore/tools/visualisation/vis_utils.py": {
+      "bytes": 6442,
+      "sha256": "605870fbe11c2f632c1205fb0c065ed6c539c09563d2f4048de69d2a74ef669d"
+    },
+    "frozen-source/fedcore/tools/viz.py": {
+      "bytes": 3533,
+      "sha256": "164364eaf6b90f81f480e2cc5fe99939d560de0111b14a438ef97d2de0beaedd"
+    },
+    "frozen-source/scripts/analyze_svd_third_package.py": {
+      "bytes": 554,
+      "sha256": "4dde26eb67ffb94400b813d9243bca02cd2fcc3bbf47bdffd7ad587fb06d0d12"
+    },
+    "frozen-source/tests/refactoring/test_svd_third_package.py": {
+      "bytes": 5676,
+      "sha256": "a2943d559277ac061e0622df831733dbe36a0a5b07d7c3029e9d61c5d1596b36"
+    },
+    "frozen-source/tests/refactoring/test_svd_third_package_independent.py": {
+      "bytes": 31642,
+      "sha256": "afff48b01e247a943e47d8f3fca7f67a82a591713bf942b8c60687cf623b098f"
+    },
+    "ledger.json": {
+      "bytes": 4431,
+      "sha256": "6bc9c4cadf89933d229a0d4b48e5db8090372d2b778ab9ce508f6fb628c265bb"
+    },
+    "prospective.json": {
+      "bytes": 125261,
+      "sha256": "82ed17e42c409599ec752b4c90e6c8c489a7bfb794896d3c30a6d81358cfb761"
+    },
+    "protocol.json": {
+      "bytes": 155835,
+      "sha256": "86c3c083c6c47bd5ed4a7e86fdc44a9910941e83e927458285da5f9cecd89a26"
+    },
+    "run-progress.json": {
+      "bytes": 112794,
+      "sha256": "c4e79953d37e64583175e908cbdaacb112e74b4a1907b13434c5f0f51d0838b3"
+    },
+    "run.json": {
+      "bytes": 113354,
+      "sha256": "5e31c144193255d9c1f29d0294aafc5fe7b36899b6e3567d6a9f24ebde313f52"
+    },
+    "source-freeze.json": {
+      "bytes": 31347,
+      "sha256": "dee6b3a80b0e657446309f6d9469cb598d6b71ed37142b744aac87f9a14ce3dd"
+    },
+    "sources/dense.pt": {
+      "bytes": 290275,
+      "sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233"
+    },
+    "sources/dense.pt.json": {
+      "bytes": 354,
+      "sha256": "666a88ad33fef0b4101eb86967cbedb0ed00ec5ae072eb88b4362a6678d91427"
+    },
+    "sources/input.pt": {
+      "bytes": 17490,
+      "sha256": "05492a9f2ad5ed303d477782fbb34aee00c958133c5250d22536a56970827db3"
+    },
+    "sources/svd_factor.pt": {
+      "bytes": 98486,
+      "sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a"
+    },
+    "sources/svd_factor.pt.json": {
+      "bytes": 354,
+      "sha256": "666a88ad33fef0b4101eb86967cbedb0ed00ec5ae072eb88b4362a6678d91427"
+    },
+    "sources/svd_materialized.pt": {
+      "bytes": 101403,
+      "sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904"
+    },
+    "sources/svd_materialized.pt.json": {
+      "bytes": 354,
+      "sha256": "666a88ad33fef0b4101eb86967cbedb0ed00ec5ae072eb88b4362a6678d91427"
+    },
+    "sources/weighted_factor.pt": {
+      "bytes": 98568,
+      "sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9"
+    },
+    "sources/weighted_factor.pt.json": {
+      "bytes": 354,
+      "sha256": "666a88ad33fef0b4101eb86967cbedb0ed00ec5ae072eb88b4362a6678d91427"
+    },
+    "sources/weighted_materialized.pt": {
+      "bytes": 101467,
+      "sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9"
+    },
+    "sources/weighted_materialized.pt.json": {
+      "bytes": 354,
+      "sha256": "666a88ad33fef0b4101eb86967cbedb0ed00ec5ae072eb88b4362a6678d91427"
+    }
+  },
+  "schema": 3,
+  "scope": "Immutable scientific files; excludes final QA and publication",
+  "source_sha256": "402b86b7c22ae7244b6b182768c68e08337dca6386a749d63a9516f3fd7d1d9b"
+}

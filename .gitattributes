@@ -10,3 +10,10 @@ docs/petra/results/readiness-2026-10-06/** -text whitespace=cr-at-eol
 # Preserve the second SVD packet's portable evidence bytes on every checkout.
 docs/svd_compression/results/second-local-2026-10-14/** -text whitespace=cr-at-eol
 docs/svd_compression/second-local-package-infographic.html text eol=lf
+
+# Preserve the third SVD packet's original evidence bytes and frozen source ZIP.
+docs/svd_compression/results/third-local-2026-10-15/** -text whitespace=cr-at-eol
+# Preserve diagnostic exception output verbatim, including its trailing spaces.
+docs/svd_compression/results/third-local-2026-10-15/**/*.log -whitespace
+docs/svd_compression/results/third-local-2026-10-15/**/*.xml -whitespace
+docs/svd_compression/third-local-package-infographic.html text eol=lf

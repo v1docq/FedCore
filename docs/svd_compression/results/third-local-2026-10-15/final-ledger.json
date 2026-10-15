@@ -1,0 +1,26 @@
+{
+  "charged_total_seconds": 1371.5533345000008,
+  "fixed_limit_seconds": 7200.0,
+  "new_scientific_training_updates": 0,
+  "original_ledger_sha256": "6bc9c4cadf89933d229a0d4b48e5db8090372d2b778ab9ce508f6fb628c265bb",
+  "original_science_ledger_unchanged": true,
+  "postprocessing_diagnostic_publication_reserve_seconds": 300.0,
+  "reserve_scope": "Conservative 300s for stdlib analysis, independent raw audit, portable tests/replay, Dask diagnostic, rendering and publication; excludes separately charged full validation processes",
+  "schema": 3,
+  "science_charged_seconds": 410.18136320000076,
+  "science_preflight_reserve_seconds": 300.0,
+  "validation_attempts": [
+    {
+      "directory": "validation-process",
+      "elapsed_seconds": 402.40645110000014,
+      "returncode": 1,
+      "violation": null
+    },
+    {
+      "directory": "validation-process-02",
+      "elapsed_seconds": 258.9655201999999,
+      "returncode": 0,
+      "violation": null
+    }
+  ]
+}

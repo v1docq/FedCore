@@ -1,0 +1,26 @@
+{
+  "attempt": "01",
+  "counts": {
+    "errors": 0,
+    "failures": 2,
+    "passed": 1754,
+    "skipped": 3,
+    "tests": 1759
+  },
+  "observed": {
+    "elapsed_seconds": 402.40645110000014,
+    "returncode": 1,
+    "sample_interval_seconds": 0.1,
+    "sampled_maximum_individual_rss_bytes": 1276694528,
+    "sampled_maximum_rss_bytes": 1276694528,
+    "sampled_maximum_tree_cpu_core_percent": 1275.8027522944722,
+    "sampled_maximum_tree_sum_rss_bytes": 1696546816,
+    "scope": "maximum sampled individual RSS includes actual recursive interpreters; separate tree sum may double-count shared pages; neither is exact allocator peak",
+    "violation": null
+  },
+  "preserved": true,
+  "process_directory": "validation-process",
+  "schema": 3,
+  "scientific_source_changed": false,
+  "status": "failed"
+}

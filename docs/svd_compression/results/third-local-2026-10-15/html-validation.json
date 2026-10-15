@@ -1,0 +1,12 @@
+{
+  "element_ids": 15,
+  "embedded_comparisons": 42,
+  "embedded_data": "exact equality with original analysis, protocol and verified counts",
+  "embedded_profiles": 4,
+  "external_scripts": [],
+  "html_sha256": "66287492071c8892547c6d24188f18607bf05a572737b130f3686663a70eca04",
+  "javascript_syntax": "node --check passed; browser code not executed",
+  "schema": 3,
+  "status": "passed",
+  "visual_inspection": "not performed: browser policy rejected file://; no workaround attempted"
+}

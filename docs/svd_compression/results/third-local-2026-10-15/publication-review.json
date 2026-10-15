@@ -1,0 +1,73 @@
+{
+  "artifact_sha256": {
+    "html": "66287492071c8892547c6d24188f18607bf05a572737b130f3686663a70eca04",
+    "independent_review": "84130587f7cb7e25ed0aabdd63264d78dcaa488354a8ff88337fd0653e7a16e1",
+    "readme": "bf3c9fe0916a29ca840d6112910b297e46b05fe5fa104cef306eb5b8aa400d86",
+    "report": "2f043c0883272786732626ac906d3f1f23714442ca75aa0f66aedb34e7d2eddd"
+  },
+  "auxiliary_record_not_in_passport": "publication-review.json intentionally excluded from the133-file passport to avoid a hash cycle",
+  "claims_scope": "Only CPU1thread batch64 eligible. GPU64 comparisons retained diagnostic, CPU1/GPU1 main skipped; no GPU speedup, generalization, iid confidence interval or pure-kernel causal claim",
+  "current_normalized_scientific_source_files_verified": 264,
+  "elapsed_seconds": 0.38371420000021317,
+  "every_manifest_file_matches_published_and_original_bytes": true,
+  "existing_tracked_file_changes": [
+    ".gitattributes",
+    "docs/svd_compression/README.md"
+  ],
+  "final_charged_seconds": 1371.5533345000008,
+  "fixed_limit_seconds": 7200,
+  "frozen_source_zip_files_verified": 264,
+  "html_external_scripts": [],
+  "html_inline_data_matches_protocol_analysis_and_raw_counts": true,
+  "old_scientific_tracked_files_unchanged": true,
+  "protocol_sha256": "1741475248cb1ff5dd408a0d2944a23e4a580f4e82e2eab71fdd88b5648fce1d",
+  "publication_bytes": 13503007,
+  "publication_file_count": 133,
+  "publication_manifest_sha256": "91895773d4d47612dd9c97f9646db49b0e50de3cf2a3aea45407aa4501afa32b",
+  "published_portable_replay": {
+    "all_three_outputs_byte_identical": true,
+    "isolated_python_flags": [
+      "-I",
+      "-S"
+    ],
+    "normalized_index_references": 6,
+    "output_directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\published-replay",
+    "process_exit_code": 0,
+    "source_artifact_paths_dereferenced": false
+  },
+  "report_all_18_eligible_metric_cells_match_rounded_independent_raw_summaries": true,
+  "reported_p50_ms": {
+    "svd_factor_vs_materialized": [
+      0.6963999999999999,
+      0.64015
+    ],
+    "weighted_factor_vs_materialized": [
+      0.698025,
+      0.6414249999999999
+    ]
+  },
+  "schema": 3,
+  "scientific_raw_manifest_files_verified": 353,
+  "scope": "Independent final publication, arithmetic, provenance and qualified-claims review; stdlib only",
+  "source_sha256": "402b86b7c22ae7244b6b182768c68e08337dca6386a749d63a9516f3fd7d1d9b",
+  "status": "passed",
+  "supersedes_independent_review_publication_pending": true,
+  "validation": {
+    "both_full_junit_and_stdout_stderr_preserved": true,
+    "dask_paired_diagnostic": "Identical Dask-only local socketpair startup failed in sandbox and passed under approved escalation; no scientific source/system/dependency change",
+    "final_failed": 0,
+    "final_passed": 1756,
+    "final_skipped": 3,
+    "first_failed_attempt_preserved": {
+      "failed": 2,
+      "passed": 1754,
+      "skipped": 3
+    },
+    "new_passed": 104
+  },
+  "visual_inspection": {
+    "completed_checks": "HTML/data/static JavaScript syntax only; browser interactions and rendered layout not verified",
+    "performed": false,
+    "reason": "Browser policy refused file://; no workaround attempted"
+  }
+}
