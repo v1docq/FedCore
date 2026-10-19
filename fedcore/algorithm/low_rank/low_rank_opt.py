@@ -269,6 +269,33 @@ class LowRankModel(BaseCompressionModel):
         #     flat_llm = FlatLLM()
         #     model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
 
+    def plan_compression_graph(self, model, calibration, **options):
+        """Prepare a metadata-only fixed weighted-SVD or ASVD workflow.
+
+        This explicit G1 API reads capabilities and fingerprints only. It does
+        not copy the model, install hooks, collect activations or solve SVD.
+        """
+        from fedcore.algorithm.low_rank.graph_execution import prepare_fixed_graph
+        return prepare_fixed_graph(model, calibration, **options)
+
+    def compress_graph(self, model, calibration, graph):
+        """Execute a prepared fixed graph and return ``FixedGraphResult``.
+
+        The result owns the independent model, validated metadata graph and
+        original numerical result/evidence. The whole existing recipe executes
+        after source/version checks; graph stages are not independent kernels.
+        """
+        from fedcore.algorithm.low_rank.graph_execution import execute_fixed_graph
+        result = execute_fixed_graph(model, calibration, graph)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def compress_weighted(self, model, calibration, **options):
         """Execute the explicit CPU weighted profile without implicit training.
 
