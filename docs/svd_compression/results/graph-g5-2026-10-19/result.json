@@ -1,0 +1,1231 @@
+{
+  "status": "succeeded",
+  "scope": "untrained CPU functional witnesses; no training, calibration, utility or speedup claim",
+  "environment": {
+    "python": "3.10.0",
+    "torch": "2.2.0+cu121",
+    "numpy": "1.26.4"
+  },
+  "seeds": {
+    "models": 164,
+    "test_inputs": 165
+  },
+  "test_input_shape": [
+    64,
+    8
+  ],
+  "source_tensor_bytes": 576,
+  "prune_svd_order": {
+    "prune_then_svd": {
+      "fingerprint": "90fea5aee6fa78dba7f916008f7ef69be80114d0469d8b369404afdde9ef3067",
+      "tensor_bytes": 32,
+      "reloaded_tensor_bytes": 32,
+      "checkpoint_bytes": 3032,
+      "checkpoint_sha256": "fea459aca06b039b9f76443c7fb4c66d613ab74583cf6e0f03bca9279bc06bb3",
+      "history": [
+        {
+          "recipe_index": 0,
+          "step_index": 0,
+          "path": "0",
+          "operation": "PruneMask",
+          "input_representation": "dense",
+          "output_representation": "dense_masked",
+          "input_storage_bytes": 32,
+          "output_storage_bytes": 32,
+          "semantics": "explicit_mask_materialized_as_dense_zeros; no_sparse_storage_or_persistent_zero_pattern_promise"
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 1,
+          "path": "0",
+          "operation": "LowRank",
+          "input_representation": "dense_masked",
+          "output_representation": "real_factors",
+          "input_storage_bytes": 32,
+          "output_storage_bytes": 32,
+          "semantics": "rank_bounded_real_factors; prior_zero_pattern_is_not_preserved"
+        }
+      ],
+      "checked_plan": {
+        "request": {
+          "recipes": [
+            {
+              "path": "0",
+              "steps": [
+                {
+                  "zero_indices": [
+                    0
+                  ]
+                },
+                {
+                  "rank": 1
+                }
+              ]
+            }
+          ],
+          "max_storage_bytes": null,
+          "max_peak_bytes": 12884901888,
+          "export_format": "checkpoint"
+        },
+        "source_fingerprint": "cbde81cb111f0b9c1bc709cc9ea217fd8bd3a4d7a38097589d1e83f73e60efa2",
+        "source_inventory": [
+          {
+            "storage_id": "model:20247d6bcf0e72fce8cefdb9529236f0491abb2abccd5c1c2f6f9bf53cf2a529",
+            "nbytes": 32,
+            "elements": 4,
+            "views": [
+              {
+                "path": "0.weight",
+                "category": "parameter",
+                "dtype": "torch.float64",
+                "shape": [
+                  2,
+                  2
+                ],
+                "stride": [
+                  2,
+                  1
+                ],
+                "offset": 0,
+                "persistent": true,
+                "requires_grad": true,
+                "tensor_alias": "0.weight"
+              }
+            ],
+            "content_digest": "d37b4cf26ae86fe1068df46a74d9480ea520b9a18c3f5e0db6b0682bef9bf0c3",
+            "parameter_numel": 4
+          }
+        ],
+        "transitions": [
+          {
+            "recipe_index": 0,
+            "step_index": 0,
+            "path": "0",
+            "operation": {
+              "zero_indices": [
+                0
+              ]
+            },
+            "input_state": {
+              "representation": "dense",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": null,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "dense_masked",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": null,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            }
+          },
+          {
+            "recipe_index": 0,
+            "step_index": 1,
+            "path": "0",
+            "operation": {
+              "rank": 1
+            },
+            "input_state": {
+              "representation": "dense_masked",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": null,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "real_factors",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": 1,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            }
+          }
+        ],
+        "expected_storage_bytes": 32,
+        "fingerprint": "90fea5aee6fa78dba7f916008f7ef69be80114d0469d8b369404afdde9ef3067",
+        "schema_version": 1
+      },
+      "reload_execution_verified": true
+    },
+    "svd_then_prune": {
+      "fingerprint": "660fa10bd415f2149084ed4c1852221674f65c6ff38bed4d8e83d50895f94cda",
+      "tensor_bytes": 32,
+      "reloaded_tensor_bytes": 32,
+      "checkpoint_bytes": 2652,
+      "checkpoint_sha256": "73ab6c584917feebca97a93f419ea9ee67dd18d2c8f2ea706d53b46767318729",
+      "history": [
+        {
+          "recipe_index": 0,
+          "step_index": 0,
+          "path": "0",
+          "operation": "LowRank",
+          "input_representation": "dense",
+          "output_representation": "real_factors",
+          "input_storage_bytes": 32,
+          "output_storage_bytes": 32,
+          "semantics": "rank_bounded_real_factors; prior_zero_pattern_is_not_preserved"
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 1,
+          "path": "0",
+          "operation": "MaterializeDense",
+          "input_representation": "real_factors",
+          "output_representation": "dense",
+          "input_storage_bytes": 32,
+          "output_storage_bytes": 32,
+          "semantics": "full_dense_decode_or_residual_merge; factor_rank_and_packed_savings_promises_dropped"
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 2,
+          "path": "0",
+          "operation": "PruneMask",
+          "input_representation": "dense",
+          "output_representation": "dense_masked",
+          "input_storage_bytes": 32,
+          "output_storage_bytes": 32,
+          "semantics": "explicit_mask_materialized_as_dense_zeros; no_sparse_storage_or_persistent_zero_pattern_promise"
+        }
+      ],
+      "checked_plan": {
+        "request": {
+          "recipes": [
+            {
+              "path": "0",
+              "steps": [
+                {
+                  "rank": 1
+                },
+                {},
+                {
+                  "zero_indices": [
+                    0
+                  ]
+                }
+              ]
+            }
+          ],
+          "max_storage_bytes": null,
+          "max_peak_bytes": 12884901888,
+          "export_format": "checkpoint"
+        },
+        "source_fingerprint": "cbde81cb111f0b9c1bc709cc9ea217fd8bd3a4d7a38097589d1e83f73e60efa2",
+        "source_inventory": [
+          {
+            "storage_id": "model:20247d6bcf0e72fce8cefdb9529236f0491abb2abccd5c1c2f6f9bf53cf2a529",
+            "nbytes": 32,
+            "elements": 4,
+            "views": [
+              {
+                "path": "0.weight",
+                "category": "parameter",
+                "dtype": "torch.float64",
+                "shape": [
+                  2,
+                  2
+                ],
+                "stride": [
+                  2,
+                  1
+                ],
+                "offset": 0,
+                "persistent": true,
+                "requires_grad": true,
+                "tensor_alias": "0.weight"
+              }
+            ],
+            "content_digest": "d37b4cf26ae86fe1068df46a74d9480ea520b9a18c3f5e0db6b0682bef9bf0c3",
+            "parameter_numel": 4
+          }
+        ],
+        "transitions": [
+          {
+            "recipe_index": 0,
+            "step_index": 0,
+            "path": "0",
+            "operation": {
+              "rank": 1
+            },
+            "input_state": {
+              "representation": "dense",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": null,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "real_factors",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": 1,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            }
+          },
+          {
+            "recipe_index": 0,
+            "step_index": 1,
+            "path": "0",
+            "operation": {},
+            "input_state": {
+              "representation": "real_factors",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": 1,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "dense",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": null,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            }
+          },
+          {
+            "recipe_index": 0,
+            "step_index": 2,
+            "path": "0",
+            "operation": {
+              "zero_indices": [
+                0
+              ]
+            },
+            "input_state": {
+              "representation": "dense",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": null,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "dense_masked",
+              "in_features": 2,
+              "out_features": 2,
+              "dtype": "float64",
+              "bias": false,
+              "rank": null,
+              "storage_bytes": 32,
+              "runtime": "cpu_float"
+            }
+          }
+        ],
+        "expected_storage_bytes": 32,
+        "fingerprint": "660fa10bd415f2149084ed4c1852221674f65c6ff38bed4d8e83d50895f94cda",
+        "schema_version": 1
+      },
+      "reload_execution_verified": true
+    },
+    "expected_effective_weights": [
+      [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    ]
+  },
+  "quantization_svd_order": {
+    "quantization": "Dobi portable SVD-factor remapping, not dense-weight TorchAO",
+    "svd_then_pack": {
+      "fingerprint": "9ef169de6e4659f9608fc9b54e91d827bcc66ad3e5150a5146ef3b41264ce4ca",
+      "tensor_bytes": 128,
+      "reloaded_tensor_bytes": 128,
+      "checkpoint_bytes": 3976,
+      "checkpoint_sha256": "c961bd791e5108eba9b1fba9d91ec8b34e44442c41646b556a8cb718e277cbd3",
+      "history": [
+        {
+          "recipe_index": 0,
+          "step_index": 0,
+          "path": "0",
+          "operation": "LowRank",
+          "input_representation": "dense",
+          "output_representation": "real_factors",
+          "input_storage_bytes": 576,
+          "output_storage_bytes": 320,
+          "semantics": "rank_bounded_real_factors; prior_zero_pattern_is_not_preserved"
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 1,
+          "path": "0",
+          "operation": "QuantizeRemapped",
+          "input_representation": "real_factors",
+          "output_representation": "packed_factors",
+          "input_storage_bytes": 320,
+          "output_storage_bytes": 128,
+          "semantics": "reconstruct_then_SVD_then_existing_DoBi_factor_remapping; packed_codes_scales_and_tail; float_decode_runtime"
+        }
+      ],
+      "checked_plan": {
+        "request": {
+          "recipes": [
+            {
+              "path": "0",
+              "steps": [
+                {
+                  "rank": 2
+                },
+                {
+                  "tail_dtype": "float64",
+                  "scale_dtype": "float64",
+                  "compute_dtype": "float64"
+                }
+              ]
+            }
+          ],
+          "max_storage_bytes": null,
+          "max_peak_bytes": 12884901888,
+          "export_format": "checkpoint"
+        },
+        "source_fingerprint": "781c02e00813ad8a1216cd44e7917b68c4a5e98c7ebeccf287b08c5921bcc909",
+        "source_inventory": [
+          {
+            "storage_id": "model:8e7d44d061d6a11d487b9bdb2c8f7ef4e9d11cf996e6fed9e8f133bdc547f781",
+            "nbytes": 64,
+            "elements": 8,
+            "views": [
+              {
+                "path": "0.bias",
+                "category": "parameter",
+                "dtype": "torch.float64",
+                "shape": [
+                  8
+                ],
+                "stride": [
+                  1
+                ],
+                "offset": 0,
+                "persistent": true,
+                "requires_grad": true,
+                "tensor_alias": "0.bias"
+              }
+            ],
+            "content_digest": "2f21d92bab45b40bd71b7e3d7d997bd8a9dad8f067ea4f94d02c3603a1121259",
+            "parameter_numel": 8
+          },
+          {
+            "storage_id": "model:9b9566b5fcaf9b64a4acc223d532ee0ee143d9d23e52ea36c2a2853f48ef4cb3",
+            "nbytes": 512,
+            "elements": 64,
+            "views": [
+              {
+                "path": "0.weight",
+                "category": "parameter",
+                "dtype": "torch.float64",
+                "shape": [
+                  8,
+                  8
+                ],
+                "stride": [
+                  8,
+                  1
+                ],
+                "offset": 0,
+                "persistent": true,
+                "requires_grad": true,
+                "tensor_alias": "0.weight"
+              }
+            ],
+            "content_digest": "a9364cf9a1766f80a3bfd053009d992864bcbff4dca6b42e1914bf9b8ac30d2a",
+            "parameter_numel": 64
+          }
+        ],
+        "transitions": [
+          {
+            "recipe_index": 0,
+            "step_index": 0,
+            "path": "0",
+            "operation": {
+              "rank": 2
+            },
+            "input_state": {
+              "representation": "dense",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": null,
+              "storage_bytes": 576,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "real_factors",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": 2,
+              "storage_bytes": 320,
+              "runtime": "cpu_float"
+            }
+          },
+          {
+            "recipe_index": 0,
+            "step_index": 1,
+            "path": "0",
+            "operation": {
+              "tail_dtype": "float64",
+              "scale_dtype": "float64",
+              "compute_dtype": "float64"
+            },
+            "input_state": {
+              "representation": "real_factors",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": 2,
+              "storage_bytes": 320,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "packed_factors",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": 2,
+              "storage_bytes": 128,
+              "runtime": "cpu_factor_decode"
+            }
+          }
+        ],
+        "expected_storage_bytes": 128,
+        "fingerprint": "9ef169de6e4659f9608fc9b54e91d827bcc66ad3e5150a5146ef3b41264ce4ca",
+        "schema_version": 1
+      },
+      "reload_execution_verified": true
+    },
+    "pack_then_dense_then_svd": {
+      "fingerprint": "d6de4b1ef54db1a37d676a5e0624a1b9ed41e43576d369dd2cb02a342299f4cf",
+      "tensor_bytes": 320,
+      "reloaded_tensor_bytes": 320,
+      "checkpoint_bytes": 3732,
+      "checkpoint_sha256": "47ed85e9af7a4be3b96f32efc1df1ed960a23d148a14389dfcb3ef60e0980824",
+      "history": [
+        {
+          "recipe_index": 0,
+          "step_index": 0,
+          "path": "0",
+          "operation": "QuantizeRemapped",
+          "input_representation": "dense",
+          "output_representation": "packed_factors",
+          "input_storage_bytes": 576,
+          "output_storage_bytes": 320,
+          "semantics": "reconstruct_then_SVD_then_existing_DoBi_factor_remapping; packed_codes_scales_and_tail; float_decode_runtime"
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 1,
+          "path": "0",
+          "operation": "MaterializeDense",
+          "input_representation": "packed_factors",
+          "output_representation": "dense",
+          "input_storage_bytes": 320,
+          "output_storage_bytes": 576,
+          "semantics": "full_dense_decode_or_residual_merge; factor_rank_and_packed_savings_promises_dropped"
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 2,
+          "path": "0",
+          "operation": "LowRank",
+          "input_representation": "dense",
+          "output_representation": "real_factors",
+          "input_storage_bytes": 576,
+          "output_storage_bytes": 320,
+          "semantics": "rank_bounded_real_factors; prior_zero_pattern_is_not_preserved"
+        }
+      ],
+      "checked_plan": {
+        "request": {
+          "recipes": [
+            {
+              "path": "0",
+              "steps": [
+                {
+                  "tail_dtype": "float64",
+                  "scale_dtype": "float64",
+                  "compute_dtype": "float64"
+                },
+                {},
+                {
+                  "rank": 2
+                }
+              ]
+            }
+          ],
+          "max_storage_bytes": null,
+          "max_peak_bytes": 12884901888,
+          "export_format": "checkpoint"
+        },
+        "source_fingerprint": "781c02e00813ad8a1216cd44e7917b68c4a5e98c7ebeccf287b08c5921bcc909",
+        "source_inventory": [
+          {
+            "storage_id": "model:8e7d44d061d6a11d487b9bdb2c8f7ef4e9d11cf996e6fed9e8f133bdc547f781",
+            "nbytes": 64,
+            "elements": 8,
+            "views": [
+              {
+                "path": "0.bias",
+                "category": "parameter",
+                "dtype": "torch.float64",
+                "shape": [
+                  8
+                ],
+                "stride": [
+                  1
+                ],
+                "offset": 0,
+                "persistent": true,
+                "requires_grad": true,
+                "tensor_alias": "0.bias"
+              }
+            ],
+            "content_digest": "2f21d92bab45b40bd71b7e3d7d997bd8a9dad8f067ea4f94d02c3603a1121259",
+            "parameter_numel": 8
+          },
+          {
+            "storage_id": "model:9b9566b5fcaf9b64a4acc223d532ee0ee143d9d23e52ea36c2a2853f48ef4cb3",
+            "nbytes": 512,
+            "elements": 64,
+            "views": [
+              {
+                "path": "0.weight",
+                "category": "parameter",
+                "dtype": "torch.float64",
+                "shape": [
+                  8,
+                  8
+                ],
+                "stride": [
+                  8,
+                  1
+                ],
+                "offset": 0,
+                "persistent": true,
+                "requires_grad": true,
+                "tensor_alias": "0.weight"
+              }
+            ],
+            "content_digest": "a9364cf9a1766f80a3bfd053009d992864bcbff4dca6b42e1914bf9b8ac30d2a",
+            "parameter_numel": 64
+          }
+        ],
+        "transitions": [
+          {
+            "recipe_index": 0,
+            "step_index": 0,
+            "path": "0",
+            "operation": {
+              "tail_dtype": "float64",
+              "scale_dtype": "float64",
+              "compute_dtype": "float64"
+            },
+            "input_state": {
+              "representation": "dense",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": null,
+              "storage_bytes": 576,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "packed_factors",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": 8,
+              "storage_bytes": 320,
+              "runtime": "cpu_factor_decode"
+            }
+          },
+          {
+            "recipe_index": 0,
+            "step_index": 1,
+            "path": "0",
+            "operation": {},
+            "input_state": {
+              "representation": "packed_factors",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": 8,
+              "storage_bytes": 320,
+              "runtime": "cpu_factor_decode"
+            },
+            "output_state": {
+              "representation": "dense",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": null,
+              "storage_bytes": 576,
+              "runtime": "cpu_float"
+            }
+          },
+          {
+            "recipe_index": 0,
+            "step_index": 2,
+            "path": "0",
+            "operation": {
+              "rank": 2
+            },
+            "input_state": {
+              "representation": "dense",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": null,
+              "storage_bytes": 576,
+              "runtime": "cpu_float"
+            },
+            "output_state": {
+              "representation": "real_factors",
+              "in_features": 8,
+              "out_features": 8,
+              "dtype": "float64",
+              "bias": true,
+              "rank": 2,
+              "storage_bytes": 320,
+              "runtime": "cpu_float"
+            }
+          }
+        ],
+        "expected_storage_bytes": 320,
+        "fingerprint": "d6de4b1ef54db1a37d676a5e0624a1b9ed41e43576d369dd2cb02a342299f4cf",
+        "schema_version": 1
+      },
+      "reload_execution_verified": true
+    },
+    "test_output_difference_mse": 1.3762963780097269e-05
+  },
+  "packed_residual": {
+    "fingerprint": "de43a33d9a835aeae0614a62a70d824d6920a315067b195228ead78933409678",
+    "tensor_bytes": 256,
+    "reloaded_tensor_bytes": 256,
+    "checkpoint_bytes": 5440,
+    "checkpoint_sha256": "2f9586a017b99444ff63cf57bdb61f494457b383fe6a632e19767ecd9deeda1a",
+    "history": [
+      {
+        "recipe_index": 0,
+        "step_index": 0,
+        "path": "0",
+        "operation": "LowRank",
+        "input_representation": "dense",
+        "output_representation": "real_factors",
+        "input_storage_bytes": 576,
+        "output_storage_bytes": 320,
+        "semantics": "rank_bounded_real_factors; prior_zero_pattern_is_not_preserved"
+      },
+      {
+        "recipe_index": 0,
+        "step_index": 1,
+        "path": "0",
+        "operation": "QuantizeRemapped",
+        "input_representation": "real_factors",
+        "output_representation": "packed_factors",
+        "input_storage_bytes": 320,
+        "output_storage_bytes": 128,
+        "semantics": "reconstruct_then_SVD_then_existing_DoBi_factor_remapping; packed_codes_scales_and_tail; float_decode_runtime"
+      },
+      {
+        "recipe_index": 0,
+        "step_index": 2,
+        "path": "0",
+        "operation": "AddResidual",
+        "input_representation": "packed_factors",
+        "output_representation": "residual_branch",
+        "input_storage_bytes": 128,
+        "output_storage_bytes": 256,
+        "semantics": "real_factor_weight_error_correction_toward_initial_scope; base_and_bias_retained; no_training_or_exactness_promise"
+      }
+    ],
+    "checked_plan": {
+      "request": {
+        "recipes": [
+          {
+            "path": "0",
+            "steps": [
+              {
+                "rank": 2
+              },
+              {
+                "tail_dtype": "float64",
+                "scale_dtype": "float64",
+                "compute_dtype": "float64"
+              },
+              {
+                "rank": 1
+              }
+            ]
+          }
+        ],
+        "max_storage_bytes": null,
+        "max_peak_bytes": 12884901888,
+        "export_format": "checkpoint"
+      },
+      "source_fingerprint": "781c02e00813ad8a1216cd44e7917b68c4a5e98c7ebeccf287b08c5921bcc909",
+      "source_inventory": [
+        {
+          "storage_id": "model:8e7d44d061d6a11d487b9bdb2c8f7ef4e9d11cf996e6fed9e8f133bdc547f781",
+          "nbytes": 64,
+          "elements": 8,
+          "views": [
+            {
+              "path": "0.bias",
+              "category": "parameter",
+              "dtype": "torch.float64",
+              "shape": [
+                8
+              ],
+              "stride": [
+                1
+              ],
+              "offset": 0,
+              "persistent": true,
+              "requires_grad": true,
+              "tensor_alias": "0.bias"
+            }
+          ],
+          "content_digest": "2f21d92bab45b40bd71b7e3d7d997bd8a9dad8f067ea4f94d02c3603a1121259",
+          "parameter_numel": 8
+        },
+        {
+          "storage_id": "model:9b9566b5fcaf9b64a4acc223d532ee0ee143d9d23e52ea36c2a2853f48ef4cb3",
+          "nbytes": 512,
+          "elements": 64,
+          "views": [
+            {
+              "path": "0.weight",
+              "category": "parameter",
+              "dtype": "torch.float64",
+              "shape": [
+                8,
+                8
+              ],
+              "stride": [
+                8,
+                1
+              ],
+              "offset": 0,
+              "persistent": true,
+              "requires_grad": true,
+              "tensor_alias": "0.weight"
+            }
+          ],
+          "content_digest": "a9364cf9a1766f80a3bfd053009d992864bcbff4dca6b42e1914bf9b8ac30d2a",
+          "parameter_numel": 64
+        }
+      ],
+      "transitions": [
+        {
+          "recipe_index": 0,
+          "step_index": 0,
+          "path": "0",
+          "operation": {
+            "rank": 2
+          },
+          "input_state": {
+            "representation": "dense",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": null,
+            "storage_bytes": 576,
+            "runtime": "cpu_float"
+          },
+          "output_state": {
+            "representation": "real_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 320,
+            "runtime": "cpu_float"
+          }
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 1,
+          "path": "0",
+          "operation": {
+            "tail_dtype": "float64",
+            "scale_dtype": "float64",
+            "compute_dtype": "float64"
+          },
+          "input_state": {
+            "representation": "real_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 320,
+            "runtime": "cpu_float"
+          },
+          "output_state": {
+            "representation": "packed_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 128,
+            "runtime": "cpu_factor_decode"
+          }
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 2,
+          "path": "0",
+          "operation": {
+            "rank": 1
+          },
+          "input_state": {
+            "representation": "packed_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 128,
+            "runtime": "cpu_factor_decode"
+          },
+          "output_state": {
+            "representation": "residual_branch",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": null,
+            "storage_bytes": 256,
+            "runtime": "cpu_float"
+          }
+        }
+      ],
+      "expected_storage_bytes": 256,
+      "fingerprint": "de43a33d9a835aeae0614a62a70d824d6920a315067b195228ead78933409678",
+      "schema_version": 1
+    },
+    "reload_execution_verified": true
+  },
+  "dense_merge": {
+    "fingerprint": "06ae0417ba27ce0c418b1308d96c8e82e3e602068cb7454a3afbe0429f976fb5",
+    "tensor_bytes": 576,
+    "reloaded_tensor_bytes": 576,
+    "checkpoint_bytes": 3736,
+    "checkpoint_sha256": "51a9e07899cd204a5619d1c95a4f496554c20f0a0d1d8bf0fe1b40fe3350472b",
+    "history": [
+      {
+        "recipe_index": 0,
+        "step_index": 0,
+        "path": "0",
+        "operation": "LowRank",
+        "input_representation": "dense",
+        "output_representation": "real_factors",
+        "input_storage_bytes": 576,
+        "output_storage_bytes": 320,
+        "semantics": "rank_bounded_real_factors; prior_zero_pattern_is_not_preserved"
+      },
+      {
+        "recipe_index": 0,
+        "step_index": 1,
+        "path": "0",
+        "operation": "QuantizeRemapped",
+        "input_representation": "real_factors",
+        "output_representation": "packed_factors",
+        "input_storage_bytes": 320,
+        "output_storage_bytes": 128,
+        "semantics": "reconstruct_then_SVD_then_existing_DoBi_factor_remapping; packed_codes_scales_and_tail; float_decode_runtime"
+      },
+      {
+        "recipe_index": 0,
+        "step_index": 2,
+        "path": "0",
+        "operation": "AddResidual",
+        "input_representation": "packed_factors",
+        "output_representation": "residual_branch",
+        "input_storage_bytes": 128,
+        "output_storage_bytes": 256,
+        "semantics": "real_factor_weight_error_correction_toward_initial_scope; base_and_bias_retained; no_training_or_exactness_promise"
+      },
+      {
+        "recipe_index": 0,
+        "step_index": 3,
+        "path": "0",
+        "operation": "MaterializeDense",
+        "input_representation": "residual_branch",
+        "output_representation": "dense",
+        "input_storage_bytes": 256,
+        "output_storage_bytes": 576,
+        "semantics": "full_dense_decode_or_residual_merge; factor_rank_and_packed_savings_promises_dropped"
+      }
+    ],
+    "checked_plan": {
+      "request": {
+        "recipes": [
+          {
+            "path": "0",
+            "steps": [
+              {
+                "rank": 2
+              },
+              {
+                "tail_dtype": "float64",
+                "scale_dtype": "float64",
+                "compute_dtype": "float64"
+              },
+              {
+                "rank": 1
+              },
+              {}
+            ]
+          }
+        ],
+        "max_storage_bytes": null,
+        "max_peak_bytes": 12884901888,
+        "export_format": "checkpoint"
+      },
+      "source_fingerprint": "781c02e00813ad8a1216cd44e7917b68c4a5e98c7ebeccf287b08c5921bcc909",
+      "source_inventory": [
+        {
+          "storage_id": "model:8e7d44d061d6a11d487b9bdb2c8f7ef4e9d11cf996e6fed9e8f133bdc547f781",
+          "nbytes": 64,
+          "elements": 8,
+          "views": [
+            {
+              "path": "0.bias",
+              "category": "parameter",
+              "dtype": "torch.float64",
+              "shape": [
+                8
+              ],
+              "stride": [
+                1
+              ],
+              "offset": 0,
+              "persistent": true,
+              "requires_grad": true,
+              "tensor_alias": "0.bias"
+            }
+          ],
+          "content_digest": "2f21d92bab45b40bd71b7e3d7d997bd8a9dad8f067ea4f94d02c3603a1121259",
+          "parameter_numel": 8
+        },
+        {
+          "storage_id": "model:9b9566b5fcaf9b64a4acc223d532ee0ee143d9d23e52ea36c2a2853f48ef4cb3",
+          "nbytes": 512,
+          "elements": 64,
+          "views": [
+            {
+              "path": "0.weight",
+              "category": "parameter",
+              "dtype": "torch.float64",
+              "shape": [
+                8,
+                8
+              ],
+              "stride": [
+                8,
+                1
+              ],
+              "offset": 0,
+              "persistent": true,
+              "requires_grad": true,
+              "tensor_alias": "0.weight"
+            }
+          ],
+          "content_digest": "a9364cf9a1766f80a3bfd053009d992864bcbff4dca6b42e1914bf9b8ac30d2a",
+          "parameter_numel": 64
+        }
+      ],
+      "transitions": [
+        {
+          "recipe_index": 0,
+          "step_index": 0,
+          "path": "0",
+          "operation": {
+            "rank": 2
+          },
+          "input_state": {
+            "representation": "dense",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": null,
+            "storage_bytes": 576,
+            "runtime": "cpu_float"
+          },
+          "output_state": {
+            "representation": "real_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 320,
+            "runtime": "cpu_float"
+          }
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 1,
+          "path": "0",
+          "operation": {
+            "tail_dtype": "float64",
+            "scale_dtype": "float64",
+            "compute_dtype": "float64"
+          },
+          "input_state": {
+            "representation": "real_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 320,
+            "runtime": "cpu_float"
+          },
+          "output_state": {
+            "representation": "packed_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 128,
+            "runtime": "cpu_factor_decode"
+          }
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 2,
+          "path": "0",
+          "operation": {
+            "rank": 1
+          },
+          "input_state": {
+            "representation": "packed_factors",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": 2,
+            "storage_bytes": 128,
+            "runtime": "cpu_factor_decode"
+          },
+          "output_state": {
+            "representation": "residual_branch",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": null,
+            "storage_bytes": 256,
+            "runtime": "cpu_float"
+          }
+        },
+        {
+          "recipe_index": 0,
+          "step_index": 3,
+          "path": "0",
+          "operation": {},
+          "input_state": {
+            "representation": "residual_branch",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": null,
+            "storage_bytes": 256,
+            "runtime": "cpu_float"
+          },
+          "output_state": {
+            "representation": "dense",
+            "in_features": 8,
+            "out_features": 8,
+            "dtype": "float64",
+            "bias": true,
+            "rank": null,
+            "storage_bytes": 576,
+            "runtime": "cpu_float"
+          }
+        }
+      ],
+      "expected_storage_bytes": 576,
+      "fingerprint": "06ae0417ba27ce0c418b1308d96c8e82e3e602068cb7454a3afbe0429f976fb5",
+      "schema_version": 1
+    },
+    "reload_execution_verified": true
+  },
+  "dense_merge_budget_refusal": [
+    {
+      "code": "BudgetExceeded",
+      "path": "request.max_storage_bytes",
+      "message": "Final physical tensor storage needs 576 bytes including packed codes, scales, tails, bias, maps, indices, residuals and unchanged shared storage"
+    }
+  ],
+  "unsupported_onnx_refusal": [
+    {
+      "code": "UnsupportedExport",
+      "path": "request.export_format",
+      "message": "Only a verified weights-only checkpoint is supported"
+    }
+  ],
+  "source_preserved": true
+}

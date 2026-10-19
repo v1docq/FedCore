@@ -350,6 +350,24 @@ class LowRankModel(BaseCompressionModel):
                 trainer._fedcore_requires_optimizer_rebuild = True
         return result
 
+    def prepare_compression_composition(self, model, request):
+        """Check bounded ordered representation transitions and final storage."""
+        from .compression_composition import prepare_composition
+        return prepare_composition(model, request)
+
+    def compress_composition(self, model, workflow):
+        """Publish only an owned model with a verified reloadable checkpoint."""
+        from .compression_composition import CompositionSuccess, execute_composition
+        result = execute_composition(model, workflow)
+        if type(result) is CompositionSuccess:
+            self.model_before, self.model_after = model, result.model
+            self.transform_result = result
+            trainer = getattr(self, 'trainer', None)
+            if trainer is not None and getattr(trainer, 'model', None) is model:
+                trainer.model = result.model
+                trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def compress_weighted(self, model, calibration, **options):
         """Execute the explicit CPU weighted profile without implicit training.
 

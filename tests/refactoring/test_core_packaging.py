@@ -10,6 +10,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/compression_composition.py',
     'fedcore/algorithm/low_rank/grouped_workflow.py',
     'fedcore/algorithm/low_rank/grouped_execution.py',
     'fedcore/algorithm/low_rank/compression_grammar.py',
@@ -177,6 +178,7 @@ from fedcore.algorithm.low_rank import artifacts as graph_artifacts, staged_exec
 from fedcore.algorithm.low_rank import candidate_graph, candidate_storage
 from fedcore.algorithm.low_rank import compression_grammar, grammar_execution, grammar_search
 from fedcore.algorithm.low_rank import grouped_workflow, grouped_execution
+from fedcore.algorithm.low_rank import compression_composition
 assert Path(compression_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_artifacts.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
@@ -188,6 +190,7 @@ assert Path(grammar_execution.__file__).is_relative_to(Path(__import__('os').env
 assert Path(grammar_search.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(grouped_workflow.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(grouped_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(compression_composition.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 for recipe in ('weighted_svd', 'asvd'):
     graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2)
     assert graph.recipe.value == recipe
@@ -296,6 +299,26 @@ for method in (DRONE(), SVDLLMV1()):
         torch.testing.assert_close(restored(group_data), outcome.model(group_data))
     finally:
         store.close()
+composition_source = nn.Sequential(nn.Linear(4, 4)).double().eval()
+packed_step = compression_composition.QuantizeRemapped(
+    tail_dtype='float64', scale_dtype='float64', compute_dtype='float64')
+for steps in ((compression_composition.PruneMask((0, 5)), compression_composition.LowRank(1)),
+              (compression_composition.LowRank(1), packed_step, compression_composition.AddResidual(1)),
+              (compression_composition.LowRank(1), packed_step, compression_composition.AddResidual(1),
+               compression_composition.MaterializeDense())):
+    request = compression_composition.CompositionRequest((
+        compression_composition.CompositionRecipe('0', steps),))
+    workflow = facade.prepare_compression_composition(composition_source, request)
+    assert type(workflow) is compression_composition.CheckedComposition, workflow
+    outcome = facade.compress_composition(composition_source, workflow)
+    assert type(outcome) is compression_composition.CompositionSuccess, outcome
+    assert facade.model_after is outcome.model
+    manager.save_to_file(outcome.checkpoint_bytes, path)
+    restored = manager.load_from_file(path)
+    composition_inputs = torch.arange(12, dtype=torch.float64).reshape(3, 4) / 10
+    torch.testing.assert_close(restored(composition_inputs), outcome.model(composition_inputs), rtol=1e-13, atol=1e-13)
+    assert candidate_storage.inventory_cost(candidate_storage.capture_inventory(restored), 'bytes') == outcome.storage_bytes
+    assert restored._fedcore_method_evidence['fingerprint'] == workflow.fingerprint
 from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
 assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
 for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
