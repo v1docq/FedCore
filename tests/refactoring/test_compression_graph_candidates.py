@@ -17,8 +17,9 @@ from fedcore.algorithm.low_rank.candidate_graph import (
     prepare_candidate_catalog, verify_candidate_export, _digest,
 )
 from fedcore.algorithm.low_rank.candidate_storage import (
-    capture_inventory, inventory_cost, project_storages,
+    capture_inventory, inventory_cost, inventory_fingerprint, project_storages,
 )
+from fedcore.algorithm.low_rank.execution import _fingerprint
 from fedcore.algorithm.low_rank.method_specs import ASVD
 from fedcore.algorithm.low_rank.plans import _metadata_only
 from fedcore.algorithm.low_rank.topology import module_paths
@@ -219,3 +220,47 @@ def test_candidate_boundary_preserves_source_calibration_rng_and_facade_ownershi
     torch.testing.assert_close(data, calibration, rtol=0, atol=0)
     for key, value in model.state_dict().items():
         torch.testing.assert_close(value, before[key], rtol=0, atol=0)
+
+
+class TensorObjectAliases(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer = nn.Linear(3, 2).double()
+        with torch.no_grad():
+            self.layer.weight.fill_(.25)
+        shared = torch.ones(1, dtype=torch.float64)
+        self.register_buffer("buf_a", shared)
+        self.register_buffer("buf_b", shared)
+    def forward(self, value):
+        scale = 1 if self.buf_a is self.buf_b else 2
+        return self.layer(value * scale)
+
+
+def test_tensor_object_alias_split_is_stale_before_replay_despite_equal_storage(monkeypatch):
+    from fedcore.algorithm.low_rank import candidate_graph
+    model, data = TensorObjectAliases(), _rows()
+    original = capture_inventory(model, prefix="source")
+    aliases = {view.path: view.tensor_alias for record in original for view in record.views}
+    assert model.buf_a is model.buf_b and aliases["buf_a"] == aliases["buf_b"] == "buf_a"
+    catalog, store = _catalog(model, data, {"layer": _specs(1)})
+    plan = allocate_candidate_catalog(catalog, 10000)
+    result = apply_candidate_allocation(model, data, plan, store=store)
+    exported = verify_candidate_export(result)
+    assert result.model.buf_a is result.model.buf_b
+    assert exported.model.buf_a is exported.model.buf_b
+    assert capture_inventory(result.model) == capture_inventory(exported.model)
+    legacy = _fingerprint(model, data, catalog.context.source.graph_version)
+    before = model(data)
+    model.buf_b = model.buf_a.view_as(model.buf_a)
+    changed = capture_inventory(model, prefix="source")
+    assert model.buf_a is not model.buf_b and not torch.equal(before, model(data))
+    assert legacy == _fingerprint(model, data, catalog.context.source.graph_version)
+    assert inventory_cost(original, "bytes") == inventory_cost(changed, "bytes")
+    assert inventory_fingerprint(original) != inventory_fingerprint(changed)
+    aliases = {view.path: view.tensor_alias for record in changed for view in record.views}
+    assert aliases["buf_a"] == "buf_a" and aliases["buf_b"] == "buf_b"
+    def forbidden(*args, **kwargs):
+        pytest.fail("Tensor object alias changes must be rejected before candidate replay")
+    monkeypatch.setattr(candidate_graph, "execute_fixed_graph", forbidden)
+    with pytest.raises(CandidateGraphError, match="StaleSource"):
+        apply_candidate_allocation(model, data, plan, store=store)

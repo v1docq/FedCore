@@ -7,7 +7,7 @@ dtype views have no unambiguous element unit and are refused for that budget.
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
 import os
@@ -38,6 +38,7 @@ class TensorView:
     offset: int
     persistent: bool
     requires_grad: bool
+    tensor_alias: str
 
 
 @dataclass(frozen=True)
@@ -74,7 +75,7 @@ def _slots(model):
                     yield module, name, tensor, TensorView(path, category, str(tensor.dtype),
                         tuple(tensor.shape), tuple(tensor.stride()), tensor.storage_offset(),
                         category == "parameter" or name not in module._non_persistent_buffers_set,
-                        tensor.requires_grad)
+                        tensor.requires_grad, path)
 
 
 def _raw(storage):
@@ -85,20 +86,26 @@ def capture_inventory(model, *, prefix="model"):
     """Immutable full-storage metadata, including nonpersistent buffer data."""
     if not isinstance(model, nn.Module):
         raise CandidateStorageError("UnsupportedStorage", "model", "A torch Module with registered tensor state is required")
-    groups = {}
+    groups, object_paths = {}, {}
     for _module, _name, tensor, view in _slots(model):
         if tensor.device.type != "cpu" or tensor.layout != torch.strided or tensor.is_conj() or tensor.is_neg():
             raise CandidateStorageError("UnsupportedStorage", view.path, "Only dense strided CPU tensor storage is supported")
         storage = tensor.untyped_storage()
+        object_paths.setdefault(id(tensor), []).append(view.path)
         identity = storage._cdata
         if identity not in groups:
             groups[identity] = (storage, [], {})
         groups[identity][1].append(view)
         if view.category == "parameter":
             groups[identity][2][id(tensor)] = tensor.numel()
+    # Runtime object identities are used only locally. Metadata pins the
+    # lexically first registered path of each identical Tensor object group,
+    # distinguishing shared objects from distinct equal views of one storage.
+    aliases = {path: min(paths) for paths in object_paths.values() for path in paths}
     records = []
     for storage, views, parameters in sorted(groups.values(), key=lambda group: min(view.path for view in group[1])):
-        views = tuple(sorted(views, key=lambda view: (view.path, view.category)))
+        views = tuple(sorted((replace(view, tensor_alias=aliases[view.path]) for view in views),
+                             key=lambda view: (view.path, view.category)))
         dtype_names = {view.dtype for view in views}
         # dtype width can be recovered without allocating the tensor data.
         widths = {torch.empty((), dtype=getattr(torch, name.removeprefix("torch."))).element_size() for name in dtype_names}
@@ -131,16 +138,18 @@ def validate_inventory(inventory):
                 or any(character not in "0123456789abcdef" for character in record.content_digest)):
             raise CandidateStorageError("InvalidStorage", "inventory", "Typed consistent physical storage metadata required")
         identities.add(record.storage_id)
-        dtypes, widths = set(), set()
+        dtypes, widths, aliases = set(), set(), {}
         for view in record.views:
             if (type(view) is not TensorView or type(view.path) is not str or view.path in paths
                     or view.category not in ("parameter", "buffer") or type(view.dtype) is not str
                     or type(view.shape) is not tuple or type(view.stride) is not tuple
                     or len(view.shape) != len(view.stride) or any(type(x) is not int or x < 0 for x in (*view.shape, *view.stride))
                     or type(view.offset) is not int or view.offset < 0
-                    or type(view.persistent) is not bool or type(view.requires_grad) is not bool):
+                    or type(view.persistent) is not bool or type(view.requires_grad) is not bool
+                    or type(view.tensor_alias) is not str):
                 raise CandidateStorageError("InvalidStorage", "inventory.views", "Typed tensor-view metadata required")
             paths.add(view.path)
+            aliases.setdefault(view.tensor_alias, []).append(view)
             try:
                 width = torch.empty(0, dtype=getattr(torch, view.dtype.removeprefix("torch."))).element_size()
             except (AttributeError, TypeError, RuntimeError) as error:
@@ -149,6 +158,11 @@ def validate_inventory(inventory):
                 raise CandidateStorageError("InvalidStorage", view.path, "View exceeds its backing storage")
             dtypes.add(view.dtype)
             widths.add(width)
+        for canonical, members in aliases.items():
+            signatures = {(view.dtype, view.shape, view.stride, view.offset, view.requires_grad) for view in members}
+            if canonical != min(view.path for view in members) or len(signatures) != 1:
+                raise CandidateStorageError("InvalidStorage", record.storage_id,
+                    "Tensor object aliases must have a canonical registered path and identical view metadata")
         width = next(iter(widths))
         expected = record.nbytes // width if len(dtypes) == 1 and record.nbytes % width == 0 else None
         if record.elements != expected:
