@@ -1,6 +1,6 @@
 # Предложение: типизированный граф процесса сжатия FedCore
 
-Дата: 19.10.2026. Архитектура утверждена для [PR #140](https://github.com/v1docq/FedCore/pull/140). Этот документ описывает целевое устройство и этапы; фактические возможности и ограничения приведены в отчётах [G0–G1](IMPLEMENTATION_GRAPH_G1.md), [G2a](IMPLEMENTATION_GRAPH_G2A.md), [G2b](IMPLEMENTATION_GRAPH_G2B.md) и [G3](IMPLEMENTATION_GRAPH_G3.md), задачи — в [плане внедрения](COMPRESSION_GRAPH_ISSUES.md).
+Дата: 19.10.2026. Архитектура утверждена для [PR #140](https://github.com/v1docq/FedCore/pull/140). Этот документ описывает целевое устройство и этапы; фактические возможности и ограничения приведены в отчётах [G0–G1](IMPLEMENTATION_GRAPH_G1.md), [G2a](IMPLEMENTATION_GRAPH_G2A.md), [G2b](IMPLEMENTATION_GRAPH_G2B.md), [G3](IMPLEMENTATION_GRAPH_G3.md) и [G4](IMPLEMENTATION_GRAPH_G4.md), задачи — в [плане внедрения](COMPRESSION_GRAPH_ISSUES.md).
 
 Проверенная версия PR: `424947e74c760a52e8a290ade451027d9c970aff`, ветка `svd_compression`, основание `fedcore_refactoring`. Внешняя проверка GitHub и локальная версия совпали.
 

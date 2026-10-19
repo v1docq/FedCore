@@ -186,7 +186,8 @@ def _check_data(model, calibration, batch_size, workspace, peak):
     return topology
 
 
-def _collect_rows(model, layer, calibration, *, batch_size, workspace, peak, reserve):
+def _collect_rows(model, layer, calibration, *, batch_size, workspace, peak, reserve,
+                  single_call_per_batch=False):
     chunks, used = [], 0
     def capture(_layer, args):
         nonlocal used
@@ -209,7 +210,10 @@ def _collect_rows(model, layer, calibration, *, batch_size, workspace, peak, res
     try:
         with torch.no_grad():
             for batch in calibration.split(batch_size):
+                count_before = len(chunks)
                 model(batch)
+                if single_call_per_batch and len(chunks) != count_before + 1:
+                    raise MethodProfileError("Sequential observation requires the target exactly once in every calibration batch")
     finally:
         handle.remove()
     if not chunks:
@@ -712,7 +716,9 @@ def _plan_coupled(model, spec, rank, target_paths, peak, rank_ratio, parameter_f
             raise MethodProfileError('Basis Sharing requires at least two standard Linear consumers')
         if len({id(paths[path]) for path in target_paths}) != len(target_paths):
             raise MethodProfileError('A common module is already shared, not a group of distinct bases')
-        if topology.parameter_aliases:
+        if any(any(name == root or name.startswith(root + '.')
+                   for root in target_paths for name in aliases)
+               for aliases in topology.parameter_aliases):
             raise MethodProfileError('First Basis Sharing profile starts from independent parameters')
         width = paths[target_paths[0]].in_features
         if any(paths[path].in_features != width for path in target_paths):
@@ -745,6 +751,25 @@ def _plan_coupled(model, spec, rank, target_paths, peak, rank_ratio, parameter_f
     return None
 
 
+def _basis_metric(spec, moments):
+    """Choose the existing declared common-metric objective without effects."""
+    scales = None
+    if spec.metric_mode == 'equal_moments':
+        if any(not torch.allclose(c, moments[0], rtol=1e-9, atol=1e-12) for c in moments[1:]):
+            raise MethodProfileError('Individual moments differ: equal-moment objective is invalid')
+        metric = moments[0]
+    elif spec.metric_mode == 'proportional_moments':
+        scales = spec.proportional_scales
+        if len(scales) != len(moments):
+            raise MethodProfileError('One metric scale is required per selected consumer')
+        metric = moments[0] / scales[0]
+        if any(not torch.allclose(c, metric*s, rtol=1e-9, atol=1e-12) for c, s in zip(moments, scales)):
+            raise MethodProfileError('Individual moments are not proportional to the declared common metric')
+    else:
+        metric = sum(moments, torch.zeros_like(moments[0])) / len(moments)
+    return metric, scales
+
+
 def _transform_basis(original, work, calibration, spec, plan, batch_size,
         workspace, peak, reserve, graph_version, checkpoint_id, data_id,
         original_modes, started, parameter_budget,tensor_byte_budget=None):
@@ -763,21 +788,7 @@ def _transform_basis(original, work, calibration, spec, plan, batch_size,
         passports.append(passport)
         weights.append(_matrix(layer))
         biases.append(layer.bias)
-    pooled = sum(moments, torch.zeros_like(moments[0])) / len(moments)
-    scales = None
-    if spec.metric_mode == 'equal_moments':
-        if any(not torch.allclose(c, moments[0], rtol=1e-9, atol=1e-12) for c in moments[1:]):
-            raise MethodProfileError('Individual moments differ: equal-moment objective is invalid')
-        metric = moments[0]
-    elif spec.metric_mode == 'proportional_moments':
-        scales = spec.proportional_scales
-        if len(scales) != len(moments):
-            raise MethodProfileError('One metric scale is required per selected consumer')
-        metric = moments[0] / scales[0]
-        if any(not torch.allclose(c, metric*s, rtol=1e-9, atol=1e-12) for c, s in zip(moments, scales)):
-            raise MethodProfileError('Individual moments are not proportional to the declared common metric')
-    else:
-        metric = pooled
+    metric, scales = _basis_metric(spec, moments)
     factors = basis_sharing_factors(weights, metric, plan.steps[0].rank, metric_scales=scales)
     consumers = create_shared_basis_consumers(factors, biases)
     snapshot = hashlib.sha256((_tensor_id(metric)+json.dumps(method_payload(spec),sort_keys=True)).encode()).hexdigest()

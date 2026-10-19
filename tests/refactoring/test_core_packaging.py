@@ -10,6 +10,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/grouped_workflow.py',
+    'fedcore/algorithm/low_rank/grouped_execution.py',
     'fedcore/algorithm/low_rank/compression_grammar.py',
     'fedcore/algorithm/low_rank/grammar_execution.py',
     'fedcore/algorithm/low_rank/grammar_search.py',
@@ -174,6 +176,7 @@ from fedcore.algorithm.low_rank import compression_graph, graph_execution
 from fedcore.algorithm.low_rank import artifacts as graph_artifacts, staged_execution
 from fedcore.algorithm.low_rank import candidate_graph, candidate_storage
 from fedcore.algorithm.low_rank import compression_grammar, grammar_execution, grammar_search
+from fedcore.algorithm.low_rank import grouped_workflow, grouped_execution
 assert Path(compression_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_artifacts.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
@@ -183,6 +186,8 @@ assert Path(candidate_storage.__file__).is_relative_to(Path(__import__('os').env
 assert Path(compression_grammar.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(grammar_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(grammar_search.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grouped_workflow.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grouped_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 for recipe in ('weighted_svd', 'asvd'):
     graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2)
     assert graph.recipe.value == recipe
@@ -251,6 +256,46 @@ for choice in choices:
         assert outcome.model[0].bias is not None
         torch.testing.assert_close(outcome.model[0](grammar_data).mean(0),
                                    grammar_source[0](grammar_data).mean(0))
+from fedcore.algorithm.low_rank.method_specs import BasisSharing, SVDLLMV1
+from fedcore.algorithm.low_rank.compression_graph import SourceMode
+group_source = nn.Sequential(nn.Linear(4, 4), nn.Tanh(), nn.Linear(4, 3)).double().eval()
+group_data = torch.randn(8, 4, dtype=torch.double)
+shared_axis = grouped_workflow.CoordinateAxis('declared_input', tuple(range(4)))
+bindings = tuple(grouped_workflow.ConsumerCoordinates(target, shared_axis,
+    grouped_workflow.CoordinateAxis(target + ':out', tuple(range(group_source[int(target)].out_features))))
+    for target in ('0', '2'))
+region = grouped_workflow.CompressionRegion('basis_region', ('0', '2'), bindings)
+request = grouped_workflow.GroupRequest('basis', region, ('0', '2'), BasisSharing(), 2)
+workflow = facade.prepare_compression_groups(group_source, group_data, (request,),
+    source_mode=SourceMode.FROZEN_SNAPSHOT, graph_version='installed-g4-basis')
+store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+try:
+    outcome = facade.compress_groups(group_source, group_data, workflow, store=store)
+    assert type(outcome) is grouped_execution.GroupedResult and outcome.model is facade.model_after
+    assert outcome.model[0].right is outcome.model[2].right
+    restored = manager.deserialize_from_bytes(manager.serialize_to_bytes(outcome.model))
+    assert restored[0].right is restored[2].right
+    torch.testing.assert_close(restored(group_data), outcome.model(group_data))
+finally:
+    store.close()
+for method in (DRONE(), SVDLLMV1()):
+    requests = tuple(grouped_workflow.GroupRequest('seq:' + target,
+        grouped_workflow.CompressionRegion('region:' + target, (target,), (
+            grouped_workflow.ConsumerCoordinates(target,
+                grouped_workflow.CoordinateAxis(target + ':in', tuple(range(group_source[int(target)].in_features))),
+                grouped_workflow.CoordinateAxis(target + ':out', tuple(range(group_source[int(target)].out_features)))),)),
+        (target,), method, 2) for target in ('0', '2'))
+    workflow = facade.prepare_compression_groups(group_source, group_data, requests,
+        source_mode=SourceMode.CURRENT_STUDENT, graph_version='installed-g4-sequence')
+    store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+    try:
+        outcome = facade.compress_groups(group_source, group_data, workflow, store=store)
+        assert outcome.evidence['accepted_versions'] == 2
+        assert [event['stage'] for event in outcome.evidence['trace']] == ['observe', 'solve', 'apply', 'advance'] * 2
+        restored = manager.deserialize_from_bytes(manager.serialize_to_bytes(outcome.model))
+        torch.testing.assert_close(restored(group_data), outcome.model(group_data))
+    finally:
+        store.close()
 from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
 assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
 for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):

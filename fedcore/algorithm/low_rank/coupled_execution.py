@@ -127,7 +127,10 @@ def plan_coupled_profile(model, spec, *, rank=None, rank_ratio=None, parameter_f
     if any(a != b and (a == "" or b.startswith(a + ".")) for a in target_paths for b in target_paths):
         raise CoupledProfileError("Coupled replacement paths may not contain one another")
     topology = validate_parameter_topology(model, target_paths)
-    if topology.storage_aliases or topology.parameter_aliases:
+    def affected(name):
+        return any(root == '' or name == root or name.startswith(root + '.') for root in target_paths)
+    if (any(any(affected(name) for name in aliases.parameter_paths) for aliases in topology.storage_aliases)
+            or any(any(affected(name) for name in aliases) for aliases in topology.parameter_aliases)):
         raise TopologyError("Reference coupled profiles reject tied Parameters and shared storage views")
     adapter = ArchitectureAdapter(); steps = []
     for path in target_paths:

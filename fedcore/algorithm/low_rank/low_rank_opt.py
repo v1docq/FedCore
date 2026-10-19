@@ -315,6 +315,23 @@ class LowRankModel(BaseCompressionModel):
             trainer._fedcore_requires_optimizer_rebuild = True
         return result
 
+    def prepare_compression_groups(self, model, calibration, requests, **options):
+        """Read and check complete regions and a finite grouped schedule."""
+        from .grouped_execution import prepare_grouped_workflow
+        return prepare_grouped_workflow(model, calibration, requests, **options)
+
+    def compress_groups(self, model, calibration, workflow, *, store):
+        """Execute closed groups and publish their independent model on success."""
+        from .grouped_execution import execute_grouped_workflow
+        result = execute_grouped_workflow(model, calibration, workflow, store=store)
+        self.model_before, self.model_after = model, result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def prepare_compression_grammar(self, model, calibration, **options):
         """Read and validate a finite recipe domain without running the model."""
         from .grammar_execution import prepare_grammar_space
