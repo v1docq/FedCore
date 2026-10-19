@@ -269,6 +269,24 @@ class LowRankModel(BaseCompressionModel):
         #     flat_llm = FlatLLM()
         #     model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
 
+    def prepare_candidate_catalog(self, model, calibration, **options):
+        """Prepare bounded finite alternatives on a common frozen score context."""
+        from fedcore.algorithm.low_rank.candidate_graph import prepare_candidate_catalog
+        return prepare_candidate_catalog(model, calibration, **options)
+
+    def compress_candidates(self, model, calibration, plan, *, store):
+        """Replay a validated budget allocation and publish its independent model."""
+        from fedcore.algorithm.low_rank.candidate_graph import apply_candidate_allocation
+        result = apply_candidate_allocation(model, calibration, plan, store=store)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def plan_compression_graph(self, model, calibration, **options):
         """Prepare a metadata-only fixed weighted-SVD or ASVD workflow.
 

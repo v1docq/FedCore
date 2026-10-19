@@ -74,15 +74,18 @@ def _observation_identity(model, calibration, graph_version):
 
 
 def _pure_observe(model, calibration, graph_version, operation):
+    from .candidate_storage import capture_inventory, inventory_fingerprint
     before = _observation_identity(model, calibration, graph_version)
+    before_storage = inventory_fingerprint(capture_inventory(model))
     try:
         result = operation()
     finally:
         try:
             after = _observation_identity(model, calibration, graph_version)
+            after_storage = inventory_fingerprint(capture_inventory(model))
         except Exception:
             _fail("UnsupportedObservationEffect", "observe", "Forward changed observable model/data state")
-        if before != after:
+        if before != after or before_storage != after_storage:
             _fail("UnsupportedObservationEffect", "observe", "Staged observation must preserve model, calibration, modes and CPU RNG states")
     return result
 

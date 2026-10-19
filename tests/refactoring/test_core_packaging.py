@@ -10,6 +10,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/candidate_graph.py',
+    'fedcore/algorithm/low_rank/candidate_storage.py',
     'fedcore/algorithm/low_rank/artifacts.py',
     'fedcore/algorithm/low_rank/staged_execution.py',
     'fedcore/algorithm/low_rank/compression_graph.py',
@@ -167,10 +169,13 @@ assert Path(fedcore.__file__).is_relative_to(Path(__import__('os').environ['PYTH
 from fedcore.algorithm.low_rank.method_specs import ASVD, AFM, DRONE, SVDLLMV2
 from fedcore.algorithm.low_rank import compression_graph, graph_execution
 from fedcore.algorithm.low_rank import artifacts as graph_artifacts, staged_execution
+from fedcore.algorithm.low_rank import candidate_graph, candidate_storage
 assert Path(compression_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_artifacts.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(staged_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(candidate_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(candidate_storage.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 for recipe in ('weighted_svd', 'asvd'):
     graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2)
     assert graph.recipe.value == recipe
@@ -196,6 +201,28 @@ for recipe in ('weighted_svd', 'asvd'):
         torch.testing.assert_close(restored(x), warm.model(x), rtol=1e-12, atol=1e-12)
     finally:
         store.close()
+source = nn.Sequential(nn.Linear(6, 4), nn.Tanh(), nn.Linear(4, 3)).double().eval()
+calibration = torch.randn(8, 6, dtype=torch.double)
+recipes = tuple(candidate_graph.CandidateRecipe(method, rank)
+                for method in ('weighted_svd', 'asvd') for rank in (1, 2))
+store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+try:
+    catalog = facade.prepare_candidate_catalog(source, calibration,
+        alternatives={'0': recipes, '2': recipes}, store=store,
+        graph_version='installed-g2b-v1')
+    plan = candidate_graph.allocate_candidate_catalog(catalog, 256, unit='bytes')
+    selected = facade.compress_candidates(source, calibration, plan, store=store)
+    assert selected.model is facade.model_after
+    exported = candidate_graph.verify_candidate_export(selected, format='torch_save_module')
+    assert exported.evidence['actual_cost'] <= 256
+    assert exported.evidence['actual_cost'] == plan.allocation.total_cost
+    assert exported.evidence['serialized_stream_bytes'] > exported.evidence['tensor_bytes']
+    torch.testing.assert_close(exported.model(calibration), selected.model(calibration))
+    manager.save_to_file(manager.serialize_to_bytes(exported.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(calibration), selected.model(calibration))
+finally:
+    store.close()
 from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
 assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
 for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
