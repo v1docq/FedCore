@@ -10,6 +10,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/compression_grammar.py',
+    'fedcore/algorithm/low_rank/grammar_execution.py',
+    'fedcore/algorithm/low_rank/grammar_search.py',
     'fedcore/algorithm/low_rank/candidate_graph.py',
     'fedcore/algorithm/low_rank/candidate_storage.py',
     'fedcore/algorithm/low_rank/artifacts.py',
@@ -170,12 +173,16 @@ from fedcore.algorithm.low_rank.method_specs import ASVD, AFM, DRONE, SVDLLMV2
 from fedcore.algorithm.low_rank import compression_graph, graph_execution
 from fedcore.algorithm.low_rank import artifacts as graph_artifacts, staged_execution
 from fedcore.algorithm.low_rank import candidate_graph, candidate_storage
+from fedcore.algorithm.low_rank import compression_grammar, grammar_execution, grammar_search
 assert Path(compression_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_artifacts.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(staged_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(candidate_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(candidate_storage.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(compression_grammar.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grammar_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grammar_search.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 for recipe in ('weighted_svd', 'asvd'):
     graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2)
     assert graph.recipe.value == recipe
@@ -223,6 +230,27 @@ try:
     torch.testing.assert_close(restored(calibration), selected.model(calibration))
 finally:
     store.close()
+grammar_source = nn.Sequential(nn.Linear(4, 4, bias=False), nn.Tanh(), nn.Linear(4, 2)).double().eval()
+grammar_data = torch.randn(8, 4, dtype=torch.double) + 2
+choices = (compression_grammar.WeightedChoice(1), compression_grammar.ASVDChoice(1),
+           compression_grammar.AffinePCAChoice(1))
+space = facade.prepare_compression_grammar(grammar_source, grammar_data,
+    alternatives={'0': choices}, graph_version='installed-g3-v1')
+for choice in choices:
+    genotype = compression_grammar.CompressionGenotype((compression_grammar.ScopeGene(('0',), choice),))
+    workflow = compression_grammar.compile_genotype(genotype, space)
+    assert compression_grammar.validate_workflow(workflow) is None
+    outcome = facade.compress_workflow(grammar_source, grammar_data, workflow)
+    assert type(outcome) is grammar_execution.WorkflowSuccess, outcome
+    assert outcome.model is facade.model_after
+    assert grammar_search.graph_genotype(grammar_search.grammar_graph(genotype), space) == genotype
+    manager.save_to_file(manager.serialize_to_bytes(outcome.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(grammar_data), outcome.model(grammar_data))
+    if type(choice) is compression_grammar.AffinePCAChoice:
+        assert outcome.model[0].bias is not None
+        torch.testing.assert_close(outcome.model[0](grammar_data).mean(0),
+                                   grammar_source[0](grammar_data).mean(0))
 from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
 assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
 for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):

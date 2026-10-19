@@ -315,6 +315,24 @@ class LowRankModel(BaseCompressionModel):
             trainer._fedcore_requires_optimizer_rebuild = True
         return result
 
+    def prepare_compression_grammar(self, model, calibration, **options):
+        """Read and validate a finite recipe domain without running the model."""
+        from .grammar_execution import prepare_grammar_space
+        return prepare_grammar_space(model, calibration, **options)
+
+    def compress_workflow(self, model, calibration, workflow):
+        """Execute a checked grammar workflow and publish only successful work."""
+        from .grammar_execution import WorkflowSuccess, execute_workflow
+        result = execute_workflow(model, calibration, workflow)
+        if type(result) is WorkflowSuccess:
+            self.model_before, self.model_after = model, result.model
+            self.transform_result = result
+            trainer = getattr(self, 'trainer', None)
+            if trainer is not None and getattr(trainer, 'model', None) is model:
+                trainer.model = result.model
+                trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def compress_weighted(self, model, calibration, **options):
         """Execute the explicit CPU weighted profile without implicit training.
 

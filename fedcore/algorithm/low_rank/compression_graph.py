@@ -37,10 +37,12 @@ class ArtifactKind(str, Enum):
     # These are deliberately different semantic types, not alternate spellings
     # of the statistics accepted by the two G1 recipes.
     INPUT_MEAN = "input_mean"
+    OUTPUT_MEAN = "output_mean"
     CENTERED_INPUT_COVARIANCE = "centered_input_covariance"
     CENTERED_OUTPUT_COVARIANCE = "centered_output_covariance"
     DIAGONAL_METRIC = "diagonal_input_metric"
     FULL_METRIC = "full_input_metric"
+    OUTPUT_PROJECTOR = "centered_output_projector"
     APPROXIMATION = "low_rank_approximation"
     REPLACEMENT = "operator_replacement"
 
