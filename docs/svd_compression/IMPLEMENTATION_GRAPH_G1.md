@@ -2,6 +2,8 @@
 
 Дата: 19.10.2026. Объём: [#158](https://github.com/v1docq/FedCore/issues/158) и [#159](https://github.com/v1docq/FedCore/issues/159), [PR #140](https://github.com/v1docq/FedCore/pull/140). [Архитектура](COMPRESSION_GRAPH_PROPOSAL.md) · [план последующих этапов](COMPRESSION_GRAPH_ISSUES.md).
 
+Продолжение: [G2a — исполнение отдельных стадий и хранилище статистик](IMPLEMENTATION_GRAPH_G2A.md). Ниже зафиксированы поведение и результаты исходного режима G1; он остаётся режимом по умолчанию.
+
 ## Реализованное поведение
 
 `compression_graph.py` задаёт неизменяемые `ModelVersion`, `CalibrationRef`, `OperatorScope`, `ArtifactRef`, `Port`, `CompressionNode`, `RuntimeOptions` и `FixedCompressionGraph`. План содержит ссылки и метаданные; модели, тензоры, обработчики hooks и оптимизаторы принадлежат исполнителю.

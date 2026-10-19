@@ -1,9 +1,9 @@
 """Runtime boundary for the two exact fixed compression-graph recipes.
 
 Preparation reads capabilities and hashes source/data without copying or running
-the model. Execution validates the complete plan and its source before calling
-the existing whole-recipe interpreter. Graph stages document inline work in
-that interpreter; no separately addressable statistics/metric cache is implied.
+the model. The default interpreter calls the existing whole recipe. The explicit
+staged interpreter executes canonical nodes with an external owned statistics
+store. Plans own no tensors; results own models and metadata artifact references.
 """
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ from .method_specs import ASVD
 from .plans import (FixedRank, MetricPolicy, ParameterFraction, RankFraction,
                     ValidationFailure, Violation)
 from .topology import inspect_topology
+from .artifacts import StatisticRef
 
 
 class CompressionGraphError(WeightedProfileError):
@@ -38,6 +39,7 @@ class FixedGraphResult:
     graph: FixedCompressionGraph
     legacy_result: WeightedTransformResult | MethodTransformResult
     evidence: dict
+    statistic_refs: tuple[StatisticRef, ...] = ()
 
 
 def _raise_failure(failure):
@@ -67,13 +69,17 @@ def prepare_fixed_graph(model, calibration, *, recipe=Recipe.WEIGHTED_SVD,
         ranks=None, target_paths=None, policy=MetricPolicy(), representation="two_layers",
         batch_size=16, max_workspace_bytes=256 * 1024**2,
         max_peak_bytes=12 * 1024**3, graph_version=None,
-        parameter_budget=None, tensor_byte_budget=None):
+        parameter_budget=None, tensor_byte_budget=None, executor="checked_whole_recipe_v1"):
     """Read runtime metadata and compile a bounded, replayable workflow.
 
     Weighted supports its existing CPU float32/64 Linear/channel Conv1d/2d
     capabilities and shared rank policy. ASVD supports the current explicit
     Linear profile, including per-path ranks and its sequential current-model
     observations. Method-only labels, teachers and recovery are outside G1.
+
+    ``executor='staged_fixed_recipe_v1'`` opts into real stage execution. It
+    requires an explicit bounded store at execution and an observationally pure
+    eval forward: model/data/modes and Python/NumPy/Torch CPU RNG must not change.
 
     ``graph_version`` also identifies custom forward/hidden Python state that
     cannot be inferred from a state_dict and public data-valued module settings.
@@ -110,7 +116,7 @@ def prepare_fixed_graph(model, calibration, *, recipe=Recipe.WEIGHTED_SVD,
     return _raise_failure(compile_fixed_graph(recipe, transform,
         ModelVersion(graph_version, checkpoint),
         CalibrationRef(data, tuple(calibration.shape), str(calibration.dtype).removeprefix("torch.")),
-        options, method_spec=method_spec, module_aliases=inspect_topology(model).module_aliases))
+        options, method_spec=method_spec, module_aliases=inspect_topology(model).module_aliases, executor=executor))
 
 
 def _weighted_structure(structure):
@@ -162,13 +168,14 @@ def _copy_calibration(calibration, options):
 
 
 @_rng_isolated
-def execute_fixed_graph(model, calibration, graph):
-    """Validate exact recipe/source/capabilities, then execute its whole backend.
+def execute_fixed_graph(model, calibration, graph, *, store=None):
+    """Validate exact recipe/source/capabilities, then execute its interpreter.
 
     Nothing supplied separately at execution can override graph parameters.
     A forged node list remains invalid even if its content digest is recomputed.
-    The returned evidence distinguishes a declared stage trace from independently
-    executed node outputs; numeric evidence remains the legacy result's evidence.
+    Default evidence labels its declared inline trace. Opt-in staged evidence
+    records executed outputs and metadata references to owned statistics. Only
+    committed statistic references remain publicly readable through the store.
     A preflighted private calibration copy protects caller data from in-place
     operations in user forward code, on successful and failed execution.
     """
@@ -210,6 +217,14 @@ def execute_fixed_graph(model, calibration, graph):
         _fail("CapabilityMismatch", "transform.steps", "Current capabilities/ranks do not match the planned invocation")
     if checked.request != graph.transform.request:
         _fail("CapabilityMismatch", "transform.request", "The executed invocation differs from its plan")
+    if graph.executor == "staged_fixed_recipe_v1":
+        from .artifacts import StatisticsStore
+        if type(store) is not StatisticsStore:
+            _fail("InvalidArtifactStore", "store", "Staged execution requires an explicit bounded StatisticsStore")
+        from .staged_execution import execute_stages
+        return execute_stages(model, calibration, graph, store)
+    if store is not None:
+        _fail("UnsupportedOptions", "store", "The whole-recipe interpreter does not consume an artifact store")
     working_calibration, copy_evidence = _copy_calibration(calibration, options)
     try:
         if graph.recipe is Recipe.WEIGHTED_SVD:

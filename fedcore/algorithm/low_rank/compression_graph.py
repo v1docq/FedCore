@@ -1,8 +1,9 @@
 """Metadata-only contracts for two bounded compression recipes.
 
 This is a workflow graph, not a neural-network graph or a search genotype.
-G1 executes a *whole* checked recipe. Nodes expose its mathematical stages;
-they are not independently executable or cached kernel results.
+G1 defaults to a whole checked recipe. The explicit G2a staged interpreter
+executes these same canonical nodes and owns its statistics store outside the
+metadata plan. Neither mode permits an arbitrary user-composed DAG.
 """
 from __future__ import annotations
 
@@ -311,15 +312,17 @@ def _template(recipe, transform, source, calibration, options, aliases, method_s
 
 
 def compile_fixed_graph(recipe, transform, source, calibration, options=RuntimeOptions(),
-                        *, method_spec=None, module_aliases=()):
+                        *, method_spec=None, module_aliases=(), executor="checked_whole_recipe_v1"):
     """Pure compilation from checked metadata; never copy, observe or solve."""
     failure = _check_inputs(recipe, transform, source, calibration, options, method_spec, module_aliases)
     if failure is not None:
         return failure
+    if type(executor) is not str or executor not in ("checked_whole_recipe_v1", "staged_fixed_recipe_v1"):
+        return _failure("UnsupportedExecutor", "executor", "A declared fixed recipe interpreter is required")
     scopes, external, nodes = _template(recipe, transform, source, calibration, options, module_aliases, method_spec)
     graph = FixedCompressionGraph(recipe,
         SourceMode.FROZEN_SNAPSHOT if recipe is Recipe.WEIGHTED_SVD else SourceMode.CURRENT_STUDENT,
-        source, calibration, transform, options, method_spec, module_aliases, scopes, external, nodes, "")
+        source, calibration, transform, options, method_spec, module_aliases, scopes, external, nodes, "", executor=executor)
     return replace(graph, fingerprint=graph_fingerprint(graph))
 
 
@@ -337,8 +340,8 @@ def validate_fixed_graph(graph):
                             graph.options, graph.method_spec, graph.module_aliases)
     if failure is not None:
         return failure
-    if type(graph.schema_version) is not int or graph.schema_version != 1 or graph.executor != "checked_whole_recipe_v1":
-        return _failure("UnsupportedSchema", "graph", "Only the schema-1 whole-recipe interpreter is executable")
+    if type(graph.schema_version) is not int or graph.schema_version != 1 or graph.executor not in ("checked_whole_recipe_v1", "staged_fixed_recipe_v1"):
+        return _failure("UnsupportedSchema", "graph", "Only schema-1 fixed recipe interpreters are executable")
     available = {}
     if type(graph.external_artifacts) is not tuple or type(graph.nodes) is not tuple:
         return _failure("InvalidGraph", "graph.nodes", "Immutable node and artifact tuples required")
@@ -372,7 +375,7 @@ def validate_fixed_graph(graph):
                 return _failure("DuplicateArtifact", artifact.key, "Artifact producers must be unique")
             available[artifact.key] = artifact
     expected = compile_fixed_graph(graph.recipe, graph.transform, graph.source, graph.calibration,
-        graph.options, method_spec=graph.method_spec, module_aliases=graph.module_aliases)
+        graph.options, method_spec=graph.method_spec, module_aliases=graph.module_aliases, executor=graph.executor)
     if (graph.source_mode is not expected.source_mode or graph.scopes != expected.scopes
             or graph.external_artifacts != expected.external_artifacts or graph.nodes != expected.nodes):
         return _failure("UnsupportedRecipeGraph", "graph.nodes", "Required stages, scopes, versions and ports must match the fixed recipe")

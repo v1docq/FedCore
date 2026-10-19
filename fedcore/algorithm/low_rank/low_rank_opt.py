@@ -278,15 +278,16 @@ class LowRankModel(BaseCompressionModel):
         from fedcore.algorithm.low_rank.graph_execution import prepare_fixed_graph
         return prepare_fixed_graph(model, calibration, **options)
 
-    def compress_graph(self, model, calibration, graph):
+    def compress_graph(self, model, calibration, graph, *, store=None):
         """Execute a prepared fixed graph and return ``FixedGraphResult``.
 
         The result owns the independent model, validated metadata graph and
-        original numerical result/evidence. The whole existing recipe executes
-        after source/version checks; graph stages are not independent kernels.
+        numerical evidence. The default executes the whole existing recipe;
+        staged_fixed_recipe_v1 executes canonical stages using the explicit
+        bounded store. Runtime tensors and the store remain outside the plan.
         """
         from fedcore.algorithm.low_rank.graph_execution import execute_fixed_graph
-        result = execute_fixed_graph(model, calibration, graph)
+        result = execute_fixed_graph(model, calibration, graph, store=store)
         self.model_before = model
         self.model_after = result.model
         self.transform_result = result

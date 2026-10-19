@@ -83,31 +83,25 @@ def _rank(value):
         raise NumericalDomainViolation("operator rank could not be determined within the numerical domain") from error
 
 
-def solve_weighted(matrix, moment, rank, policy=MetricPolicy()):
-    """Minimize ||(W-A) F||²_F for C=F Fᵀ and rank(A)<=rank.
+@dataclass(frozen=True)
+class PreparedWeightedMetric:
+    root: torch.Tensor
+    inverse_root: torch.Tensor
+    eigenvalues: torch.Tensor
+    vectors: torch.Tensor
+    support: torch.Tensor
+    cutoff: float
+    policy: MetricPolicy
 
-    ``ridge`` changes C to C+ridge*I. ``rcond`` explicitly removes eigenvalues
-    at or below rcond*max(eigenvalue); the reported objective uses this effective
-    support. No hidden regularization is applied. Preserve-nullspace adds the
-    action W(I-P) and rejects a rank overflow. At full admissible rank, W itself
-    is preserved under every policy, including its unobserved action.
 
-    All solves use float64; factors and the returned operator use W's original
-    dtype/device. Inputs are detached and never mutated. The output factors are
-    re-canonicalized after undoing the metric; they are not factors of W F.
-    Finite inputs can still exceed the representable range of intermediate
-    products or diagnostics; these fail explicitly with NumericalDomainViolation.
-    """
-    _matrix(matrix, "matrix")
-    # Accept only the explicitly named second-moment result, not centered data.
+def prepare_weighted_metric(moment, policy=MetricPolicy(), *, device=None):
+    """Build the exact existing metric once, independently from rank selection."""
     from .statistics import InputSecondMoment
     if isinstance(moment, InputSecondMoment):
         moment = moment.matrix
     _matrix(moment, "moment")
-    if moment.shape != (matrix.shape[1], matrix.shape[1]):
-        raise NumericalDomainViolation("moment must match the input dimension")
-    if type(rank) is not int or not 1 <= rank <= min(matrix.shape):
-        raise NumericalDomainViolation("rank must fit both operator axes")
+    if moment.shape[0] != moment.shape[1]:
+        raise NumericalDomainViolation("moment must be square")
     if not isinstance(policy, MetricPolicy) or not _nonnegative(policy.ridge):
         raise NumericalDomainViolation("ridge must be finite and nonnegative")
     if policy.rcond is not None and not _nonnegative(policy.rcond):
@@ -115,8 +109,7 @@ def solve_weighted(matrix, moment, rank, policy=MetricPolicy()):
     if policy.nullspace_policy not in ("support_only", "preserve_nullspace"):
         raise NumericalDomainViolation("explicit null-space policy required")
     with torch.no_grad():
-        w = matrix.detach().to(torch.float64)
-        c = moment.detach().to(device=w.device, dtype=torch.float64)
+        c = moment.detach().to(device=device, dtype=torch.float64)
         tolerance = torch.finfo(c.dtype).eps * len(c) * max(1., float(c.abs().max())) * 16
         if not torch.allclose(c, c.T, atol=tolerance, rtol=0):
             raise NumericalDomainViolation("moment must be symmetric")
@@ -149,6 +142,20 @@ def solve_weighted(matrix, moment, rank, policy=MetricPolicy()):
         inverse_values[support] = eigenvalues[support].rsqrt()
         inverse_root = (vectors * inverse_values) @ vectors.T
         _finite(inverse_root, "metric inverse root")
+        return PreparedWeightedMetric(root, inverse_root, eigenvalues, vectors, support, cutoff, policy)
+
+
+def solve_weighted_prepared(matrix, metric, rank):
+    """Solve using an actually prepared metric; no eigensolve is repeated."""
+    _matrix(matrix, "matrix")
+    if not isinstance(metric, PreparedWeightedMetric) or metric.root.shape != (matrix.shape[1], matrix.shape[1]):
+        raise NumericalDomainViolation("Prepared metric must match the input dimension")
+    if type(rank) is not int or not 1 <= rank <= min(matrix.shape):
+        raise NumericalDomainViolation("rank must fit both operator axes")
+    with torch.no_grad():
+        w = matrix.detach().to(torch.float64)
+        root, inverse_root = metric.root, metric.inverse_root
+        eigenvalues, vectors, support, cutoff = metric.eigenvalues, metric.vectors, metric.support, metric.cutoff
         if rank == min(w.shape):
             approximation = w.clone()
             effective_nullspace_policy = "preserve_operator_at_full_rank"
@@ -156,8 +163,8 @@ def solve_weighted(matrix, moment, rank, policy=MetricPolicy()):
             u, s, vh = _svd(w @ root, "weighted operator")
             approximation = (u[:, :rank] * s[:rank]) @ vh[:rank] @ inverse_root
             _finite(approximation, "inverse-metric operator")
-            effective_nullspace_policy = policy.nullspace_policy
-            if policy.nullspace_policy == "preserve_nullspace":
+            effective_nullspace_policy = metric.policy.nullspace_policy
+            if metric.policy.nullspace_policy == "preserve_nullspace":
                 null_vectors = vectors[:, ~support]
                 approximation = approximation + (w @ null_vectors) @ null_vectors.T
                 if _rank(approximation) > rank:
@@ -181,6 +188,23 @@ def solve_weighted(matrix, moment, rank, policy=MetricPolicy()):
             raise NumericalDomainViolation("weighted objective/metric diagnostics exceed the finite float64 numerical domain")
         return ApproximationResult(
             u, s, vh, installed, rank, actual_rank, int(support.sum()), error,
-            float(policy.ridge), policy.rcond, effective_nullspace_policy,
+            float(metric.policy.ridge), metric.policy.rcond, effective_nullspace_policy,
             condition_number, cutoff, discarded_mass,
-            "input_second_moment_ridge" if policy.ridge else "input_second_moment")
+            "input_second_moment_ridge" if metric.policy.ridge else "input_second_moment")
+
+
+def solve_weighted(matrix, moment, rank, policy=MetricPolicy()):
+    """Checked weighted SVD using the shared preparation and solve kernels.
+
+    The objective, support/nullspace policy and output canonicalization retain
+    their historical semantics. Preparation is also an explicit G2a stage.
+    """
+    _matrix(matrix, "matrix")
+    from .statistics import InputSecondMoment
+    value = moment.matrix if isinstance(moment, InputSecondMoment) else moment
+    _matrix(value, "moment")
+    if value.shape != (matrix.shape[1], matrix.shape[1]):
+        raise NumericalDomainViolation("moment must match the input dimension")
+    if type(rank) is not int or not 1 <= rank <= min(matrix.shape):
+        raise NumericalDomainViolation("rank must fit both operator axes")
+    return solve_weighted_prepared(matrix, prepare_weighted_metric(value, policy, device=matrix.device), rank)

@@ -10,6 +10,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/artifacts.py',
+    'fedcore/algorithm/low_rank/staged_execution.py',
     'fedcore/algorithm/low_rank/compression_graph.py',
     'fedcore/algorithm/low_rank/graph_execution.py',
     'fedcore/algorithm/low_rank/architecture_profiles.py',
@@ -164,8 +166,11 @@ torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]), rtol=1e-12, atol=1e
 assert Path(fedcore.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 from fedcore.algorithm.low_rank.method_specs import ASVD, AFM, DRONE, SVDLLMV2
 from fedcore.algorithm.low_rank import compression_graph, graph_execution
+from fedcore.algorithm.low_rank import artifacts as graph_artifacts, staged_execution
 assert Path(compression_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 assert Path(graph_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(graph_artifacts.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(staged_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
 for recipe in ('weighted_svd', 'asvd'):
     graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2)
     assert graph.recipe.value == recipe
@@ -177,6 +182,20 @@ for recipe in ('weighted_svd', 'asvd'):
     manager.save_to_file(manager.serialize_to_bytes(result.model), path)
     restored = manager.load_from_file(path)
     torch.testing.assert_close(restored(x), result.model(x), rtol=1e-12, atol=1e-12)
+for recipe in ('weighted_svd', 'asvd'):
+    graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2,
+                                         executor='staged_fixed_recipe_v1')
+    store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+    try:
+        cold = facade.compress_graph(model, x, graph, store=store)
+        warm = facade.compress_graph(model, x, graph, store=store)
+        assert warm.evidence['executor'] == 'staged_fixed_recipe_v1'
+        torch.testing.assert_close(warm.model(x), cold.model(x), rtol=1e-12, atol=1e-12)
+        manager.save_to_file(manager.serialize_to_bytes(warm.model), path)
+        restored = manager.load_from_file(path)
+        torch.testing.assert_close(restored(x), warm.model(x), rtol=1e-12, atol=1e-12)
+    finally:
+        store.close()
 from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
 assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
 for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
