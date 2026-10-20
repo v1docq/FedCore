@@ -143,16 +143,39 @@ def package_jobs():
     return jobs
 
 
-def run_package(output, historical_root):
+def run_package(output, historical_root, *, resume_from=None):
     import psutil
     started = MODULE_STARTED_AT
+    lineage = None
+    if resume_from is not None:
+        prior = Path(resume_from).resolve()
+        previous_protocol, previous_ledger = read_json(prior / "protocol.json"), read_json(prior / "resource-ledger.json")
+        # This narrowly permits fixing admission instrumentation before any
+        # scientific series ran. It cannot replay selected experiments freely.
+        if (previous_ledger.get("status") != "stopped" or not previous_ledger.get("jobs")
+                or any(item.get("kind") != "admission" for item in previous_ledger["jobs"])):
+            raise RuntimeError("Only a preserved admission-only stop may resume with a corrected loader")
+        plan_digest = hashlib.sha256((REPO / "docs/svd_compression/PLAN_ISSUE_99_LOCAL_1.md").read_bytes()).hexdigest()
+        if previous_protocol.get("plan_sha256") != plan_digest or previous_protocol.get("historical_root") != str(Path(historical_root).resolve()):
+            raise RuntimeError("Resume must preserve the approved plan and exact historical source")
+        started = previous_ledger["started_at"]
+        if type(started) not in (int, float) or not 0 <= started <= MODULE_STARTED_AT:
+            raise RuntimeError("Prior monotonic budget origin is not valid in this boot")
+        lineage = {"directory": str(prior), "protocol_sha256": previous_protocol["protocol_sha256"],
+            "ledger_sha256": hashlib.sha256((prior / "resource-ledger.json").read_bytes()).hexdigest(),
+            "source_build": previous_protocol.get("git_revision"), "original_budget_origin": started,
+            "reason": "Restore archived int64 label preprocessing; no source/split/rank/criterion change",
+            "prior_attempts": count_attempts(prior), "new_free_budget": False}
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     (output / "tmp").mkdir()
+    if lineage is not None:
+        (output / "mlp-attempts.jsonl").write_bytes((Path(lineage["directory"]) / "mlp-attempts.jsonl").read_bytes())
     sources = source_hashes()
     protocol = {"schema": 1, "study": "issue99-local1", "created_at": datetime.now(timezone.utc).isoformat(),
         "git_revision": subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, check=True,
             capture_output=True, text=True).stdout.strip(),
+        "resumed_admission": lineage,
         "plan_sha256": hashlib.sha256((REPO / "docs/svd_compression/PLAN_ISSUE_99_LOCAL_1.md").read_bytes()).hexdigest(),
         "historical_root": str(Path(historical_root).resolve()), "source_files": sources,
         "source_sha256": hashlib.sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest(),
@@ -558,12 +581,13 @@ def main():
     parser.add_argument("--output", type=Path)
     parser.add_argument("--historical-root", type=Path)
     parser.add_argument("--worker", type=Path)
+    parser.add_argument("--resume-from", type=Path)
     args = parser.parse_args()
     if args.worker:
         return worker(args.worker)
     if not args.output or not args.historical_root:
         parser.error("--output and --historical-root are required")
-    ledger = run_package(args.output, args.historical_root)
+    ledger = run_package(args.output, args.historical_root, resume_from=args.resume_from)
     print(json.dumps({key: ledger.get(key) for key in ("status", "stop_reason", "elapsed_seconds", "mlp_attempts")}), flush=True)
     return 0 if ledger["status"] == "succeeded" else 1
 

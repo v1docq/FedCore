@@ -285,19 +285,21 @@ def test_validation_metrics_match_independent_sklearn_and_numpy_counts(values, t
     assert actual["samples"] == len(truth)
 
 
-def _historical_fixture(tmp_path):
+def _historical_fixture(tmp_path, *, target_dtype=np.int64):
     """Synthetic provenance fixture; no historical weights or dataset needed."""
     from fedcore.experiments.protocol import TensorSplit
     from fedcore.experiments.scenarios import TrainPreprocessor
 
     raw = np.arange(569*3, dtype=np.float64).reshape(569, 3)/1707
-    labels = (np.arange(569) % 2).astype(np.int64)
+    labels = (np.arange(569) % 2).astype(target_dtype)
     partitions = {"train": np.arange(0, 341), "validation": np.arange(341, 426),
                   "calibration": np.arange(426, 483), "test": np.arange(483, 569)}
     ids = {role: tuple(f"tabular:{index}" for index in indices) for role, indices in partitions.items()}
     preprocessor = TrainPreprocessor.fit(raw[partitions["train"]])
     normalized = preprocessor.transform(raw)
-    roles = {role: TensorSplit(torch.from_numpy(normalized[indices]), torch.from_numpy(labels[indices]), ids[role]).manifest()
+    # The historical builder hashes raw labels in their source dtype, then
+    # explicitly normalizes each role to int64 before constructing TensorSplit.
+    roles = {role: TensorSplit(torch.from_numpy(normalized[indices]), torch.from_numpy(labels[indices].astype(np.int64)), ids[role]).manifest()
              for role, indices in partitions.items()}
     digest = lambda array: hashlib.sha256(np.ascontiguousarray(array).tobytes()).hexdigest()
     archive = {"data": {"roles": roles, "metadata": {"data_sha256": digest(raw),
@@ -307,6 +309,29 @@ def _historical_fixture(tmp_path):
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps(archive), encoding="utf-8")
     return SimpleNamespace(data=raw, target=labels), archive, path
+
+
+@pytest.mark.parametrize("target_dtype", (np.int32, np.int64))
+def test_historical_loader_preserves_raw_label_hash_and_restores_archived_int64_roles(tmp_path, monkeypatch, target_dtype):
+    import sklearn.datasets
+    import fedcore.experiments.compression_search_evaluation as evaluation
+
+    raw, archive, _ = _historical_fixture(tmp_path, target_dtype=target_dtype)
+    before = raw.target.copy()
+    raw_hash = hashlib.sha256(np.ascontiguousarray(raw.target).tobytes()).hexdigest()
+    assert archive["data"]["metadata"]["target_sha256"] == raw_hash
+    if target_dtype == np.int32:
+        canonical_hash = hashlib.sha256(raw.target.astype(np.int64).tobytes()).hexdigest()
+        assert canonical_hash != raw_hash
+    monkeypatch.setattr(sklearn.datasets, "load_breast_cancer", lambda: raw)
+    splits, restored_archive = evaluation.historical_splits(41, tmp_path, include_test=True)
+    assert raw.target.dtype == target_dtype and np.array_equal(raw.target, before)
+    assert restored_archive["data"]["metadata"]["target_sha256"] == raw_hash
+    for role, split in splits.items():
+        indices = [int(identifier.split(":")[1]) for identifier in split.ids]
+        assert split.y.dtype == torch.int64
+        np.testing.assert_array_equal(split.y.numpy(), before[indices].astype(np.int64))
+        assert split.manifest() == archive["data"]["roles"][role]
 
 
 def test_historical_roles_do_not_construct_test_tensors_until_explicit_finalization(tmp_path, monkeypatch):

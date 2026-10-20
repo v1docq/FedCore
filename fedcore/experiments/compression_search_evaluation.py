@@ -125,7 +125,7 @@ def historical_splits(seed, repo, *, include_test=False):
     old = metadata["preprocessing"]
     preprocessor = TrainPreprocessor(*(np.array(old[name]) for name in ("median", "mean", "scale")))
     x = preprocessor.transform(data.data)
-    splits = {role: TensorSplit(torch.from_numpy(x[rows]), torch.from_numpy(data.target[rows]), ids[role])
+    splits = {role: TensorSplit(torch.from_numpy(x[rows]), torch.from_numpy(data.target[rows].astype(np.int64)), ids[role])
         for role, rows in index.items() if role != "test" or include_test}
     if {role: split.manifest() for role, split in splits.items()} != {role: roles[role] for role in splits}:
         raise PackageFatal("Archived role content or shape hashes differ")
