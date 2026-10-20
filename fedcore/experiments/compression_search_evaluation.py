@@ -215,11 +215,27 @@ class AttemptLedger:
         return self.used
 
 
+@dataclass(frozen=True)
+class EvaluationProfile:
+    """Explicit experiment normalization; historical defaults remain frozen."""
+    dense_tensor_bytes: int = DENSE_TENSOR_BYTES
+    tensor_byte_budget: int = G3_TENSOR_BYTE_BUDGET
+    class_count: int = 2
+
+    def __post_init__(self):
+        if (type(self.dense_tensor_bytes) is not int or self.dense_tensor_bytes <= 0
+                or type(self.tensor_byte_budget) is not int or self.tensor_byte_budget <= 0
+                or type(self.class_count) is not int or self.class_count < 2):
+            raise ValueError("Positive integer byte counts and at least two classes are required")
+
+
 class FullEvaluator:
-    def __init__(self, source, space, ledger, events_path, *, context_sha256, job_id, artifact_dir=None):
+    def __init__(self, source, space, ledger, events_path, *, context_sha256, job_id, artifact_dir=None,
+                 profile=EvaluationProfile()):
         self.source, self.space, self.ledger = source, space, ledger
         self.events_path, self.context_sha256, self.job_id = Path(events_path), context_sha256, job_id
         self.artifact_dir = Path(artifact_dir) if artifact_dir else None
+        self.profile = profile
         self.rows = []
         self.last_model = None
 
@@ -249,19 +265,19 @@ class FullEvaluator:
                 phase = time.perf_counter()
                 restored, payload, storage_bytes = roundtrip(outcome.model, source.validation.x)
                 stage["checkpoint_seconds"] = time.perf_counter() - phase
-                expected = DENSE_TENSOR_BYTES
+                expected = self.profile.dense_tensor_bytes
                 for gene in workflow.genotype.genes:
                     layer = source.model.get_submodule(gene.aliases[0])
                     expected += 4 * (gene.choice.rank * (layer.in_features + layer.out_features) - layer.in_features * layer.out_features)
-                if storage_bytes != expected or storage_bytes > G3_TENSOR_BYTE_BUDGET:
+                if storage_bytes != expected or storage_bytes > self.profile.tensor_byte_budget:
                     raise PackageFatal(f"Full inventory disagrees with independent byte formula: {storage_bytes}/{expected}")
                 phase = time.perf_counter()
                 logits = predict(restored, source.validation.x)
                 quality = metrics(logits, source.validation.y)
                 accepted = quality["cross_entropy"] <= source.baseline_metrics["cross_entropy"] + .05 and quality["accuracy"] >= source.baseline_metrics["accuracy"] - .02
                 stage["validation_seconds"] = time.perf_counter() - phase
-                row.update(status="finite", metrics=quality, quality=quality["cross_entropy"] / math.log(2),
-                    cost=storage_bytes / DENSE_TENSOR_BYTES, tensor_bytes=storage_bytes,
+                row.update(status="finite", metrics=quality, quality=quality["cross_entropy"] / math.log(self.profile.class_count),
+                    cost=storage_bytes / self.profile.dense_tensor_bytes, tensor_bytes=storage_bytes,
                     expected_tensor_bytes=expected, quality_accepted=accepted, checkpoint_bytes=len(payload),
                     checkpoint_sha256=hashlib.sha256(payload).hexdigest(),
                     logit_mse=float((logits.double() - source.baseline_logits.double()).square().mean()),
