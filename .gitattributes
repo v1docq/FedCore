@@ -17,3 +17,9 @@ docs/svd_compression/results/third-local-2026-10-15/** -text whitespace=cr-at-eo
 docs/svd_compression/results/third-local-2026-10-15/**/*.log -whitespace
 docs/svd_compression/results/third-local-2026-10-15/**/*.xml -whitespace
 docs/svd_compression/third-local-package-infographic.html text eol=lf
+
+# Preserve issue-99 recorded evidence and authored report hashes on all hosts.
+docs/svd_compression/results/issue-99-local-1-2026-10-20/** -text whitespace=cr-at-eol
+docs/svd_compression/results/issue-99-local-1-2026-10-20/**/*.log -whitespace
+docs/svd_compression/issue99-report-source/** -text whitespace=cr-at-eol
+docs/svd_compression/issue-99-local-1-report.html -text -whitespace

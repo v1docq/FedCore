@@ -100,10 +100,11 @@ def test_reuse_preserves_original_job_bytes_and_provenance_without_new_attempts(
     package.write_json(source / "result.json", {"status": "succeeded", "rows": [{"case": i} for i in range(163)]})
     package.write_json(source / "job.json", {"protocol_sha256": "old", "worker_started_at": 12.})
     files = {path.name: path.read_bytes() for path in source.iterdir()}
-    source_map = {"numerical.py": "unchanged", "fedcore/interfaces/fedcore_dispatcher.py": "old"}
+    original = Path(package.__file__).read_text(encoding="utf-8")
+    source_map = {"numerical.py": "unchanged", "fedcore/interfaces/fedcore_dispatcher.py": "old",
+                  "fedcore/experiments/compression_search_package.py": hashlib.sha256(original.encode("utf-8")).hexdigest()}
     before = {"source_files": source_map, "git_revision": "old-build", "protocol_sha256": "old"}
     after = {"source_files": dict(source_map, **{"fedcore/interfaces/fedcore_dispatcher.py": "fixed"})}
-    original = Path(package.__file__).read_text(encoding="utf-8")
     monkeypatch.setattr(package.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(stdout=original))
     reused = package._reuse_unaffected(old, target, before, after,
         {"jobs": [{"job": "admissibility", "kind": "admissibility", "status": "succeeded"}]})
@@ -113,6 +114,12 @@ def test_reuse_preserves_original_job_bytes_and_provenance_without_new_attempts(
     assert {path.name: path.read_bytes() for path in (target / "jobs/admissibility").iterdir()} == files
     assert {path.name: path.read_bytes() for path in source.iterdir()} == files
     assert not (target / "mlp-attempts.jsonl").exists()
+    with pytest.raises(RuntimeError, match="name/kind"):
+        package._reuse_unaffected(old, target, before, after,
+            {"jobs": [{"job": "forged", "kind": "admissibility", "status": "succeeded"}]})
+    monkeypatch.setattr(package.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(stdout=original + "\n# unrecorded\n"))
+    with pytest.raises(RuntimeError, match="declared Git build"):
+        package._reuse_unaffected(old, target, before, after, {"jobs": []})
     after["source_files"]["numerical.py"] = "changed"
     with pytest.raises(RuntimeError, match="numerical/source changes"):
         package._reuse_unaffected(old, target, before, after, {"jobs": []})

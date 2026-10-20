@@ -177,15 +177,21 @@ def _reuse_unaffected(directory, output, old_protocol, new_protocol, old_ledger)
         raise RuntimeError(f"Cannot reuse witnesses after numerical/source changes: {sorted(changed)}")
     old_code = subprocess.run(["git", "show", old_protocol["git_revision"] + ":fedcore/experiments/compression_search_package.py"],
         cwd=REPO, check=True, capture_output=True, text=True, encoding="utf-8").stdout
+    if hashlib.sha256(old_code.replace("\r\n", "\n").encode("utf-8")).hexdigest() != before.get("fedcore/experiments/compression_search_package.py"):
+        raise RuntimeError("Recorded execution source differs from its declared Git build")
     path_proof = unchanged_reuse_paths(old_code, Path(__file__).read_text(encoding="utf-8"))
     for key in ("environment", "resources", "selection", "sampling", "historical_root", "plan_sha256", "inference"):
         if old_protocol.get(key) != new_protocol.get(key):
             raise RuntimeError(f"Scientific protocol changed during dispatcher correction: {key}")
     reusable = {}
+    expected = {item["job"]: item["kind"] for item in package_jobs()
+                if item["kind"] in ("admissibility", "early_late", "oracle")}
     for record in old_ledger["jobs"]:
         if record.get("kind") not in ("admissibility", "early_late", "oracle") or record["status"] != "succeeded":
             continue
         name = record["job"]
+        if expected.get(name) != record["kind"]:
+            raise RuntimeError("Witness name/kind is outside the frozen schedule")
         source = (directory / "jobs" / name).resolve()
         target = (output / "jobs" / name).resolve()
         if (directory / "jobs").resolve() not in source.parents or (output / "jobs").resolve() not in target.parents:
