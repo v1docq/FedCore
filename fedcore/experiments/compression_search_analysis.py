@@ -259,7 +259,8 @@ def _run_analysis(item, oracle, attempts):
     completed_successfully = result.get("status") == "succeeded"
     is_oracle = item["kind"] == "oracle"
     oracle_complete = bool(oracle and oracle["complete"])
-    full_attempts = [row for row in attempts if row.get("job") == item["name"] and row.get("purpose") == "full_validation"]
+    full_attempts = [row for row in attempts if row.get("job") == item["name"] and row.get("purpose") == "full_validation"
+        and (not row.get("protocol_sha256") or not job.get("protocol_sha256") or row["protocol_sha256"] == job["protocol_sha256"])]
     if info.get("mode") == "E":
         observed_proposals, observed_basis = len(cache_events), "grammar_cache_observation_events"
     elif full_attempts:
@@ -496,6 +497,28 @@ def _order_pairs(jobs):
     return pairs
 
 
+def resource_lineage(output, reader):
+    """Each original execution contributes resources once, despite copied data."""
+    seen, revisions, owned_jobs = set(), [], {}
+    directory = Path(output).resolve()
+    while directory not in seen:
+        seen.add(directory)
+        protocol = reader.json(directory / "protocol.json") or {}
+        ledger = reader.json(directory / "resource-ledger.json") or {}
+        revisions.append({"directory": str(directory), "protocol_sha256": protocol.get("protocol_sha256"),
+            "source_build": protocol.get("git_revision"), "status": ledger.get("status"),
+            "cumulative_elapsed_seconds": ledger.get("elapsed_seconds"), "mlp_attempts": ledger.get("mlp_attempts"),
+            "operator_stop": ledger.get("operator_stop")})
+        for item in ledger.get("jobs", []):
+            origin = str(Path(item.get("origin_execution", directory)).resolve())
+            owned_jobs.setdefault((origin, item.get("job")), {"origin_execution": origin, **item})
+        prior = protocol.get("resumed_admission")
+        if not prior:
+            break
+        directory = Path(prior["directory"]).resolve()
+    return revisions, list(owned_jobs.values())
+
+
 def build_analysis(output):
     """Read recorded artifacts and return an inspectable, JSON-safe analysis."""
     output, reader = Path(output), _Reader()
@@ -540,6 +563,7 @@ def build_analysis(output):
         if pair["complete"] and not pair["equal_dense_bytes"]:
             reader.issue("order_storage_mismatch", pair["pair"], model_seed=pair["model_seed"])
     resources = [item["resource"] for item in jobs if item["resource"]]
+    revisions, all_resources = resource_lineage(output, reader)
     missing = [item["name"] for item in jobs if not item["result"]]
     failures = [item["name"] for item in jobs if item["result"].get("status") == "failed"]
     status = "inconsistent" if reader.issues else ("complete" if ledger.get("status") == "succeeded" and not missing else "partial")
@@ -554,8 +578,9 @@ def build_analysis(output):
         "early_late_ratio_summary": _describe(pair["early_over_late"] for pair in early_late if pair["valid"] is True),
         "cache_pairs": cache, "cache_ratio_summary": _describe(pair["enabled_over_disabled"] for pair in cache if pair["valid"] is True),
         "order_pairs": order, "resources": {"ledger": ledger, "jobs": resources,
+            "execution_lineage": revisions, "all_original_jobs": all_resources,
             "recorded_mlp_attempts": len(attempts),
             "attempts_by_purpose": dict(Counter(row.get("purpose", "unknown") for row in attempts)),
-            "maximum_worker_tree_rss_bytes": max((row.get("resources", {}).get("peak_tree_rss_bytes", 0) for row in resources), default=0)},
+            "maximum_worker_tree_rss_bytes": max((row.get("resources", {}).get("peak_tree_rss_bytes", 0) for row in all_resources), default=0)},
         "final_test": [{"job": item["name"], **item["result"]} for item in jobs if item["kind"] == "finalize"],
         "missing_jobs": missing, "failed_jobs": failures, "issues": reader.issues}

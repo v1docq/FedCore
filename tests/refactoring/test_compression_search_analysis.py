@@ -255,3 +255,38 @@ def test_order_pairs_keep_matched_dense_storage_and_metric_sign(tmp_path):
     pair, = build_analysis(tmp_path)["order_pairs"]
     assert pair["equal_dense_bytes"] is True
     assert pair["metrics_second_minus_first"]["cross_entropy"] == pytest.approx(.1)
+
+
+def test_replayed_job_counts_only_attempts_from_its_frozen_protocol(tmp_path):
+    job = {"job": "repeated-name", "kind": "search", "model_seed": 41,
+           "search_seed": 11, "mode": "E", "budget": "attempts",
+           "worker_started_at": 100, "protocol_sha256": "corrected"}
+    write_json(tmp_path / "protocol.json", {"jobs": [job]})
+    store_job(tmp_path, job)
+    rows = [{"job": "repeated-name", "purpose": "full_validation",
+             "protocol_sha256": protocol, "started_at": 110}
+            for protocol in ("superseded", "superseded", "corrected")]
+    (tmp_path / "mlp-attempts.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    analysis = build_analysis(tmp_path)
+    assert analysis["search_runs"][0]["full_evaluations_started"] == 1
+    assert analysis["resources"]["recorded_mlp_attempts"] == 3
+
+
+def test_resource_lineage_counts_copied_witness_once_and_keeps_superseded_cost(tmp_path):
+    old, new = tmp_path / "old", tmp_path / "new"
+    write_json(old / "protocol.json", {"git_revision": "before", "protocol_sha256": "old"})
+    write_json(old / "resource-ledger.json", {"status": "stopped", "mlp_attempts": 5,
+        "jobs": [{"job": "witness", "resources": {"peak_tree_rss_bytes": 100}},
+                 {"job": "superseded-search", "resources": {"peak_tree_rss_bytes": 300}}]})
+    write_json(new / "protocol.json", {"git_revision": "after", "protocol_sha256": "new",
+        "resumed_admission": {"directory": str(old)}})
+    write_json(new / "resource-ledger.json", {"status": "stopped", "mlp_attempts": 8,
+        "jobs": [{"job": "witness", "origin_execution": str(old),
+                  "resources": {"peak_tree_rss_bytes": 100}},
+                 {"job": "new-search", "resources": {"peak_tree_rss_bytes": 200}}]})
+    resources = build_analysis(new)["resources"]
+    assert len(resources["all_original_jobs"]) == 3
+    assert resources["maximum_worker_tree_rss_bytes"] == 300
+    assert [row["source_build"] for row in resources["execution_lineage"]] == ["after", "before"]
+    assert [row["mlp_attempts"] for row in resources["execution_lineage"]] == [8, 5]

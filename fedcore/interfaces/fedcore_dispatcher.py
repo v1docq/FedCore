@@ -19,7 +19,6 @@ from golem.utilities.memory import MemoryAnalytics
 from golem.utilities.utilities import determine_n_jobs
 from joblib import wrap_non_picklable_objects
 from pymonad.maybe import Maybe
-from pymonad.either import Either
 from fedcore.repository.initializer_industrial_models import FedcoreModels
 from golem.core.optimisers.fitness import null_fitness
 
@@ -252,10 +251,11 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
         successful_evals = individuals_evaluated + individuals_to_skip
         self.population_evaluation_info(evaluated_pop_size=len(successful_evals), pop_size=len(individuals))
 
-        successful_evals = Either(successful_evals,
-                                  monoid=[individuals_evaluated, not successful_evals]).either(
-            left_function=lambda x: x,
-            right_function=lambda y: self._eval_at_least_one(y))
+        # Already-valid individuals remain part of the population even when
+        # no new evaluation is needed. Retry the original candidates only if
+        # neither partition supplied a successful individual.
+        if not successful_evals:
+            successful_evals = self._eval_at_least_one(individuals)
 
         MemoryAnalytics.log(self.logger, additional_info='parallel evaluation of population',
                             logging_level=logging.INFO)
