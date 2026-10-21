@@ -188,6 +188,99 @@ class TestMatrixClaimGatesWithoutML(unittest.TestCase):
         self.assertFalse(a["observed_win"])
 
 
+class TestJsonPublicationWithoutWorkers(unittest.TestCase):
+    def clock(self):
+        state = SimpleNamespace(now=0., sleeps=[])
+        def sleep(seconds):
+            state.sleeps.append(seconds)
+            state.now += seconds
+        return SimpleNamespace(monotonic=lambda: state.now, sleep=sleep), state
+
+    def writer(self, replace, clock, dumps=json.dumps):
+        values = _load_pure("fedcore/experiments/compression_search_local2.py",
+            ("write_json",), dict(Path=Path, json=SimpleNamespace(dumps=dumps),
+                                  os=SimpleNamespace(replace=replace), time=clock))
+        return values["write_json"]
+
+    def test_transient_permission_failure_publishes_identical_bytes_without_rewriting(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+            target = Path(temporary)/"active-request.json"
+            target.write_text('{"active": false}\n', encoding="utf-8")
+            pending = target.with_name(target.name+".pending")
+            payload = dict(active=True, global_attempt=18, job="matrix-8", word="LD")
+            attempts, serializations, writes = [], [], []
+            clock, state = self.clock()
+            def dumps(value, **kwargs):
+                serialized = json.dumps(value, **kwargs)
+                serializations.append(serialized)
+                return serialized
+            def replace(source, destination):
+                self.assertEqual((Path(source), Path(destination)), (pending, target))
+                attempts.append(pending.read_bytes())
+                self.assertEqual(json.loads(attempts[-1]), payload)
+                self.assertEqual(attempts[-1], attempts[0])
+                self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"active": False})
+                if len(attempts) < 3:
+                    raise PermissionError("simulated Windows sharing denial")
+                os.replace(source, destination)
+            original_write = Path.write_text
+            def write_text(path, *args, **kwargs):
+                writes.append(path)
+                return original_write(path, *args, **kwargs)
+            with patch.object(Path, "write_text", write_text):
+                self.writer(replace, clock, dumps)(target, payload)
+            self.assertEqual(len(attempts), 3)
+            self.assertEqual(len(serializations), 1)
+            self.assertEqual(writes, [pending])
+            self.assertEqual(state.sleeps, [.01, .01])
+            self.assertEqual(target.read_bytes(), attempts[0])
+            self.assertFalse(pending.exists())
+
+    def test_persistent_permission_failure_is_bounded_and_preserves_original_exception(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+            target = Path(temporary)/"active-request.json"
+            target.write_text('{"active": false}\n', encoding="utf-8")
+            first = PermissionError("original sharing denial")
+            clock, state = self.clock()
+            attempts = []
+            def replace(source, destination):
+                attempts.append(state.now)
+                if len(attempts) == 1:
+                    raise first
+                raise PermissionError("later sharing denial")
+            with self.assertRaises(PermissionError) as caught:
+                self.writer(replace, clock)(target, {"active": True})
+            self.assertIs(caught.exception, first)
+            self.assertGreater(len(attempts), 1)
+            self.assertLessEqual(len(attempts), 51)
+            self.assertTrue(all(at < .5 for at in attempts))
+            self.assertTrue(all(0 < delay <= .01 for delay in state.sleeps))
+            self.assertAlmostEqual(state.now, .5)
+            self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"active": False})
+            self.assertEqual(json.loads(target.with_name(target.name+".pending").read_text(encoding="utf-8")),
+                             {"active": True})
+
+    def test_other_os_errors_propagate_without_retry_or_sleep(self):
+        errors = (OSError("I/O failure"), FileNotFoundError("pending missing"),
+                  IsADirectoryError("target is a directory"))
+        for error in errors:
+            with self.subTest(error=type(error).__name__), tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+                target = Path(temporary)/"active-request.json"
+                target.write_text('{"active": false}\n', encoding="utf-8")
+                attempts = []
+                def replace(source, destination):
+                    attempts.append((source, destination))
+                    raise error
+                clock = SimpleNamespace(
+                    monotonic=lambda: self.fail("Non-permission failure must not enter the retry clock"),
+                    sleep=lambda seconds: self.fail("Non-permission failure must not sleep"))
+                with self.assertRaises(type(error)) as caught:
+                    self.writer(replace, clock)(target, {"active": True})
+                self.assertIs(caught.exception, error)
+                self.assertEqual(len(attempts), 1)
+                self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"active": False})
+
+
 class TestParentWatchdogWithoutWorkers(unittest.TestCase):
     def test_killed_native_call_keeps_the_charge_and_its_started_telemetry(self):
         with tempfile.TemporaryDirectory(dir=ROOT) as temporary:

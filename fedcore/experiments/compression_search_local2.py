@@ -28,12 +28,30 @@ STAGE_SECONDS = dict(prepare=300, train=900, admission=300, search=2400,
 
 
 def write_json(path, value):
+    """Publish one serialized snapshot, with bounded replacement-only retries."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name+".pending")
     temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True,
                                    indent=2, allow_nan=False)+"\n", encoding="utf-8")
-    os.replace(temporary, path)
+    try:
+        os.replace(temporary, path)
+    except PermissionError:
+        # Windows readers can briefly prevent replacement. Reuse the exact
+        # pending bytes; never repeat serialization or the work they record.
+        deadline = time.monotonic()+.5
+        while True:
+            remaining = deadline-time.monotonic()
+            if remaining <= 0:
+                raise
+            time.sleep(min(.01, remaining))
+            if time.monotonic() >= deadline:
+                raise
+            try:
+                os.replace(temporary, path)
+            except PermissionError:
+                continue
+            return
 
 
 def read_json(path):
