@@ -239,6 +239,7 @@ class LoSparseTrainingLinear(nn.Module):
     With reentry, a shadow residual retains inactive values and a straight-through
     mask provides inactive gradients; Adam state is retained. Without reentry,
     removed rows/gradients/moments are zeroed and support can only shrink.
+    The dense training residual is float64; packing returns the source precision.
     """
 
     def __init__(self, layer, spec):
@@ -256,10 +257,15 @@ class LoSparseTrainingLinear(nn.Module):
             with torch.no_grad():
                 self.factors.left.weight.copy_(pair.left)
                 self.factors.right.weight.copy_(pair.right)
-            approximation = pair.matrix()
+            # Use the installed (possibly rounded) factors.  A double residual
+            # reconstructs the original float32 weight without retaining W.
+            approximation = (self.factors.left.weight.detach().double()
+                             @ self.factors.right.weight.detach().double())
         else:
-            approximation = torch.zeros_like(layer.weight)
-        self.residual = nn.Parameter((layer.weight.detach() - approximation.detach()) / spec.initial_scale)
+            approximation = torch.zeros_like(layer.weight, dtype=torch.float64)
+        self.residual = nn.Parameter((layer.weight.detach().double() - approximation) / spec.initial_scale)
+        # Rank zero has no factor from which to recover the final precision.
+        self.output_dtype = layer.weight.dtype
         self.bias = nn.Parameter(layer.bias.detach().clone()) if layer.bias is not None else None
         self.register_buffer("support", torch.ones(self.out_features, dtype=torch.bool, device=layer.weight.device))
         self.register_buffer("importance_ema", torch.zeros_like(layer.weight))
@@ -267,12 +273,31 @@ class LoSparseTrainingLinear(nn.Module):
         self.train(layer.training)
 
     def forward(self, x):
-        mask = self.support[:, None].to(self.residual.dtype)
-        residual = self.residual * mask
+        if bool(self.support.all()) and int(self.completed_steps) < self.spec.total_steps:
+            effective = self.residual * self.spec.initial_scale
+            if self.factors is not None:
+                effective = effective + (self.factors.left.weight.double()
+                                         @ self.factors.right.weight.double())
+            return F.linear(x, effective.to(x.dtype), self.bias)
+        # This order, including the cast AFTER scaling, is shared with packing.
+        result = (x.new_zeros((*x.shape[:-1], self.out_features))
+                  if self.factors is None else self.factors(x))
+        indices = torch.nonzero(self.support, as_tuple=False).flatten()
+        if indices.numel():
+            rows = (self.residual.index_select(0, indices) * self.spec.initial_scale).to(x.dtype)
+            result = result.index_add(-1, indices, F.linear(x, rows))
+        else:
+            # Keep a real zero gradient after the last row is removed; the
+            # schedule callback still observes an actual differentiable loss.
+            result = result + (self.residual.sum() * 0).to(x.dtype)
         if self.spec.allow_reentry:
-            residual = residual + (self.residual - self.residual.detach()) * (1 - mask)
-        result = F.linear(x, residual * self.spec.initial_scale, self.bias)
-        return result if self.factors is None else result + self.factors(x)
+            # Exactly zero forward contribution; inactive rows keep the full
+            # straight-through gradient so their shadow values may re-enter.
+            inactive = (~self.support)[:, None]
+            shadow = ((self.residual - self.residual.detach()) * inactive
+                      * self.spec.initial_scale).to(x.dtype)
+            result = result + F.linear(x, shadow)
+        return result if self.bias is None else result + self.bias
 
 
 def prepare_losparse(layer, spec: LoSparseSpec):
@@ -382,12 +407,12 @@ def finalize_losparse(module, *, require_complete=True):
         raise SparseDomainError("incomplete_training", "Complete the declared LoSparse schedule before finalization")
     indices = torch.nonzero(module.support, as_tuple=False).flatten()
     if module.factors is None:
-        left = module.residual.new_empty((module.out_features, 0))
-        right = module.residual.new_empty((0, module.in_features))
+        left = module.residual.new_empty((module.out_features, 0), dtype=module.output_dtype)
+        right = module.residual.new_empty((0, module.in_features), dtype=module.output_dtype)
     else:
         left, right = module.factors.left.weight.detach(), module.factors.right.weight.detach()
     result = IndexedResidualLinear.from_tensors(left, right,
-            module.residual.detach().index_select(0, indices) * module.spec.initial_scale,
+            (module.residual.detach().index_select(0, indices) * module.spec.initial_scale).to(right.dtype),
             indices, bias=module.bias)
     result.train(module.training)
     return result
