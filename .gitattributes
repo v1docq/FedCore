@@ -23,3 +23,9 @@ docs/svd_compression/results/issue-99-local-1-2026-10-20/** -text whitespace=cr-
 docs/svd_compression/results/issue-99-local-1-2026-10-20/**/*.log -whitespace
 docs/svd_compression/issue99-report-source/** -text whitespace=cr-at-eol
 docs/svd_compression/issue-99-local-1-report.html -text -whitespace
+
+# Preserve the second issue-99 packet's original evidence and portable report.
+docs/svd_compression/results/issue-99-local-2-2026-10-21/** -text whitespace=cr-at-eol
+docs/svd_compression/results/issue-99-local-2-2026-10-21/**/*.log -whitespace
+docs/svd_compression/issue99-local2-report-source/** -text whitespace=cr-at-eol
+docs/svd_compression/issue-99-local-2-report.html -text -whitespace

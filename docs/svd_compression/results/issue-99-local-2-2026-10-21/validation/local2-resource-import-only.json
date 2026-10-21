@@ -1,0 +1,6 @@
+{
+  "verification": "imports and RSS metadata only; no model construction or SVD",
+  "rss_bytes": 351662080,
+  "projected_1024_admission_floor": 603369472,
+  "request_cap": 536870912
+}

@@ -1,0 +1,762 @@
+........................................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  8%]
+........................................................................ [ 11%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+..............................................................F..F...... [ 20%]
+........................................................................ [ 22%]
+........................................................................ [ 25%]
+........................................................................ [ 28%]
+........................................................................ [ 31%]
+..................................................ss.................... [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................FF..F........................... [ 43%]
+....F................................................................... [ 45%]
+........................................................................ [ 48%]
+.............................................s.......................... [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 63%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 74%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 89%]
+........................................................................ [ 91%]
+............................................F.........................ss [ 94%]
+.....................sF.F............................................... [ 97%]
+..........................................................               [100%]
+================================== FAILURES ===================================
+____ test_reached_transition_has_exact_svd_law_and_preserves_source[LD-A] _____
+
+arm = 'A', word = 'LD'
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-broad-temp-1/test_reached_transition_has_ex0')
+
+    @pytest.mark.parametrize("arm", ["A", "B", "C"])
+    @pytest.mark.parametrize("word", ["LD", "LL"])
+    def test_reached_transition_has_exact_svd_law_and_preserves_source(arm, word, tmp_path):
+        import torch
+        from fedcore.experiments.compression_search_evaluation import model_identity
+        source = matrix_source(8)
+        identity = model_identity(source)
+        rng = torch.get_rng_state().clone()
+        with SVDTelemetry(tmp_path) as telemetry:
+            actual, row = invoke_arm(source, matrix_request(8, word), arm)
+>           assert row["accepted"] == (word == "LD")
+E           AssertionError: assert False == ('LD' == 'LD'
+E             
+E               LD)
+
+tests\refactoring\test_compression_search_matrix.py:43: AssertionError
+____ test_reached_transition_has_exact_svd_law_and_preserves_source[LL-A] _____
+
+arm = 'A', word = 'LL'
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-broad-temp-1/test_reached_transition_has_ex3')
+
+    @pytest.mark.parametrize("arm", ["A", "B", "C"])
+    @pytest.mark.parametrize("word", ["LD", "LL"])
+    def test_reached_transition_has_exact_svd_law_and_preserves_source(arm, word, tmp_path):
+        import torch
+        from fedcore.experiments.compression_search_evaluation import model_identity
+        source = matrix_source(8)
+        identity = model_identity(source)
+        rng = torch.get_rng_state().clone()
+        with SVDTelemetry(tmp_path) as telemetry:
+            actual, row = invoke_arm(source, matrix_request(8, word), arm)
+            assert row["accepted"] == (word == "LD")
+            assert telemetry.started == int(word == "LD" or arm == "B")
+            assert telemetry.completed == telemetry.started
+            assert model_identity(source) == identity
+            assert torch.equal(torch.get_rng_state(), rng)
+            if word == "LD":
+                assert actual.storage_bytes == 576
+                assert torch.equal(actual.model[0].bias, source[0].bias)
+            else:
+                errors = row.get("early_rejection") or [row["rejection"]]
+>               assert all(error["code"] == "UnsupportedTransition" for error in errors)
+E               assert False
+E                +  where False = all(<generator object test_reached_transition_has_exact_svd_law_and_preserves_source.<locals>.<genexpr> at 0x0000023AFF419AF0>)
+
+tests\refactoring\test_compression_search_matrix.py:53: AssertionError
+____________ test_actual_quantization_stages_and_baseline[static] _____________
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A84014E20>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A84014F70>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A84014F70>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+>           with torch.no_grad():candidate(self.data_batch_for_calib)
+
+fedcore\algorithm\quantization\quantizers.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:738: in call_wrapped
+    return self._wrapped_call(self, *args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:317: in __call__
+    raise e
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:304: in __call__
+    return super(self.cls, obj).__call__(*args, **kwargs)  # type: ignore[misc]
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\ao\nn\intrinsic\quantized\modules\linear_relu.py:36: in forward
+    return torch.ops.quantized.linear_relu(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <OpOverloadPacket(op='quantized.linear_relu')>
+args = (tensor([[-1.4082, -0.8801, -0.2640,  0.6454],
+        [-0.1760, -0.5574,  1.0561, -0.6454],
+        [-0.8214,  1.3202...=0.029337245970964432,
+       zero_point=75), <torch.ScriptObject object at 0000023A8521EAE0>, 0.010075466707348824, 0)
+kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        # overloading __call__ to ensure torch.ops.foo.bar()
+        # is still callable from JIT
+        # We save the function ptr as the `op` attribute on
+        # OpOverloadPacket to access it here.
+>       return self._op(*args, **(kwargs or {}))
+E       RuntimeError: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\_ops.py:755: RuntimeError
+
+The above exception was the direct cause of the following exception:
+
+training_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A84014F70>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A84014F70>)
+mode = 'static'
+
+    @pytest.mark.parametrize('mode',['dynamic','static','qat'])
+    def test_actual_quantization_stages_and_baseline(training_data,mode):
+        source=training_data.model;source.train()
+        x=next(iter(training_data.train_dataloader))[0]
+        weights=deepcopy(source.state_dict());before=source(x).detach().clone()
+        op=BaseQuantizer({'quant_type':mode,'qat_params':{'epochs':1,'lr':.01}})
+>       after=op.fit(training_data)
+
+tests\refactoring\test_math_training.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A84014E20>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A84014F70>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A84014F70>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+            with torch.no_grad():candidate(self.data_batch_for_calib)
+            self.quant_model=candidate
+            self.model_after=candidate
+            self.quantization_result=QuantizationResult('completed',self.quant_type,candidate,training_steps=steps)
+            return candidate
+        except Exception as exc:
+            self.quantization_result=QuantizationResult('error',self.quant_type,reason=str(exc),training_steps=steps)
+>           raise QuantizationError(self.quantization_result) from exc
+E           fedcore.algorithm.quantization.quantizers.QuantizationError: error: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+fedcore\algorithm\quantization\quantizers.py:132: QuantizationError
+______________ test_actual_quantization_stages_and_baseline[qat] ______________
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A85FB6950>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A85FB6560>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A85FB6560>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+>           with torch.no_grad():candidate(self.data_batch_for_calib)
+
+fedcore\algorithm\quantization\quantizers.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:738: in call_wrapped
+    return self._wrapped_call(self, *args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:317: in __call__
+    raise e
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:304: in __call__
+    return super(self.cls, obj).__call__(*args, **kwargs)  # type: ignore[misc]
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\ao\nn\intrinsic\quantized\modules\linear_relu.py:36: in forward
+    return torch.ops.quantized.linear_relu(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <OpOverloadPacket(op='quantized.linear_relu')>
+args = (tensor([[-1.4193, -0.8609, -0.2559,  0.6282],
+        [-0.1861, -0.5584,  1.0470, -0.6282],
+        [-0.8143,  1.3262...e=0.02326682023704052,
+       zero_point=61), <torch.ScriptObject object at 0000023A8521E9C0>, 0.009766899049282074, 0)
+kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        # overloading __call__ to ensure torch.ops.foo.bar()
+        # is still callable from JIT
+        # We save the function ptr as the `op` attribute on
+        # OpOverloadPacket to access it here.
+>       return self._op(*args, **(kwargs or {}))
+E       RuntimeError: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\_ops.py:755: RuntimeError
+
+The above exception was the direct cause of the following exception:
+
+training_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A85FB6560>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A85FB6560>)
+mode = 'qat'
+
+    @pytest.mark.parametrize('mode',['dynamic','static','qat'])
+    def test_actual_quantization_stages_and_baseline(training_data,mode):
+        source=training_data.model;source.train()
+        x=next(iter(training_data.train_dataloader))[0]
+        weights=deepcopy(source.state_dict());before=source(x).detach().clone()
+        op=BaseQuantizer({'quant_type':mode,'qat_params':{'epochs':1,'lr':.01}})
+>       after=op.fit(training_data)
+
+tests\refactoring\test_math_training.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A85FB6950>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A85FB6560>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A85FB6560>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+            with torch.no_grad():candidate(self.data_batch_for_calib)
+            self.quant_model=candidate
+            self.model_after=candidate
+            self.quantization_result=QuantizationResult('completed',self.quant_type,candidate,training_steps=steps)
+            return candidate
+        except Exception as exc:
+            self.quantization_result=QuantizationResult('error',self.quant_type,reason=str(exc),training_steps=steps)
+>           raise QuantizationError(self.quantization_result) from exc
+E           fedcore.algorithm.quantization.quantizers.QuantizationError: error: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+fedcore\algorithm\quantization\quantizers.py:132: QuantizationError
+________________ test_qat_observed_real_stages_before_convert _________________
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A860F1EA0>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A860F1BD0>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A860F1BD0>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+>           with torch.no_grad():candidate(self.data_batch_for_calib)
+
+fedcore\algorithm\quantization\quantizers.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:738: in call_wrapped
+    return self._wrapped_call(self, *args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:317: in __call__
+    raise e
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:304: in __call__
+    return super(self.cls, obj).__call__(*args, **kwargs)  # type: ignore[misc]
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\ao\nn\intrinsic\quantized\modules\linear_relu.py:36: in forward
+    return torch.ops.quantized.linear_relu(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <OpOverloadPacket(op='quantized.linear_relu')>
+args = (tensor([[-1.4193, -0.8609, -0.2559,  0.6282],
+        [-0.1861, -0.5584,  1.0470, -0.6282],
+        [-0.8143,  1.3262...e=0.02326682023704052,
+       zero_point=61), <torch.ScriptObject object at 0000023A8521EB20>, 0.009766742587089539, 0)
+kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        # overloading __call__ to ensure torch.ops.foo.bar()
+        # is still callable from JIT
+        # We save the function ptr as the `op` attribute on
+        # OpOverloadPacket to access it here.
+>       return self._op(*args, **(kwargs or {}))
+E       RuntimeError: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\_ops.py:755: RuntimeError
+
+The above exception was the direct cause of the following exception:
+
+training_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A860F1BD0>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A860F1BD0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000023A860F3AC0>
+
+    def test_qat_observed_real_stages_before_convert(training_data,monkeypatch):
+        from fedcore.algorithm.quantization import quantizers
+        events=[]
+        originals={name:getattr(quantizers,name) for name in ("prepare_qat_fx","convert_fx")}
+        step=torch.optim.SGD.step
+        backward=torch.Tensor.backward
+        handles=[]
+        def prepare(*args,**kwargs):
+            model=originals["prepare_qat_fx"](*args,**kwargs)
+            events.append("prepare")
+            assert any("fake_quant" in name for name,_ in model.named_modules())
+            handles.append(model.register_forward_hook(lambda *a:events.append("forward")))
+            return model
+        def observed_backward(tensor,*args,**kwargs):
+            assert tensor.ndim==0 and torch.isfinite(tensor)
+            events.append("backward")
+            return backward(tensor,*args,**kwargs)
+        def observed_step(optimizer,*args,**kwargs):
+            gradients=[p.grad for group in optimizer.param_groups for p in group["params"] if p.grad is not None]
+            assert gradients and all(torch.isfinite(g).all() for g in gradients)
+            assert any(torch.count_nonzero(g)>0 for g in gradients)
+            events.append("step")
+            return step(optimizer,*args,**kwargs)
+        def convert(*args,**kwargs):
+            events.append("convert")
+            assert events[:7]==["prepare","forward","backward","step","forward","backward","step"]
+            for handle in handles:handle.remove()
+            return originals["convert_fx"](*args,**kwargs)
+        monkeypatch.setattr(quantizers,"prepare_qat_fx",prepare)
+        monkeypatch.setattr(quantizers,"convert_fx",convert)
+        monkeypatch.setattr(torch.Tensor,"backward",observed_backward)
+        monkeypatch.setattr(torch.optim.SGD,"step",observed_step)
+>       BaseQuantizer({"quant_type":"qat","qat_params":{"epochs":1,"optimizer":"sgd","lr":.01}}).fit(training_data)
+
+tests\refactoring\test_math_training.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A860F1EA0>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023A860F1BD0>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A860F1BD0>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+            with torch.no_grad():candidate(self.data_batch_for_calib)
+            self.quant_model=candidate
+            self.model_after=candidate
+            self.quantization_result=QuantizationResult('completed',self.quant_type,candidate,training_steps=steps)
+            return candidate
+        except Exception as exc:
+            self.quantization_result=QuantizationResult('error',self.quant_type,reason=str(exc),training_steps=steps)
+>           raise QuantizationError(self.quantization_result) from exc
+E           fedcore.algorithm.quantization.quantizers.QuantizationError: error: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+fedcore\algorithm\quantization\quantizers.py:132: QuantizationError
+____________ test_real_caller_owned_dask_client_survives_training _____________
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-broad-temp-1/test_real_caller_owned_dask_cl0')
+
+    def test_real_caller_owned_dask_client_survives_training(tmp_path):
+        model = identity_model()
+>       cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False,
+                               protocol='inproc', dashboard_address=None, memory_limit=0)
+
+tests\refactoring\test_root_dask.py:9: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\deploy\local.py:253: in __init__
+    super().__init__(
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\deploy\spec.py:283: in __init__
+    self._loop_runner.start()
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\utils.py:551: in start
+    self._start_unlocked()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <distributed.utils.LoopRunner object at 0x0000023A860F0BB0>
+
+    def _start_unlocked(self) -> None:
+        assert not self._started
+    
+        if self._loop is not None:
+            try:
+                count, real_runner = self._all_loops[self._loop]
+            except KeyError:
+                assert self._loop.asyncio_loop.is_running()  # type: ignore[attr-defined]
+                self._started = True
+                return
+    
+            self._all_loops[self._loop] = count + 1, real_runner
+            self._started = True
+            return
+    
+        assert self._loop_thread is None
+    
+        start_evt = threading.Event()
+        start_exc = None
+        loop = None
+    
+        async def amain() -> None:
+            nonlocal loop
+            loop = IOLoop.current()
+            start_evt.set()
+            await self._stop_event.wait()
+    
+        def run_loop() -> None:
+            nonlocal start_exc
+            try:
+                asyncio_run(amain(), loop_factory=get_loop_factory())
+            except BaseException as e:
+                if start_evt.is_set():
+                    raise
+                start_exc = e
+                start_evt.set()
+    
+        self._loop_thread = _CollectErrorThread(
+            target=run_loop, daemon=True, name="IO loop"
+        )
+        start_evt.wait(timeout=10)
+        if start_exc is not None:
+            raise start_exc
+>       assert loop is not None
+E       AssertionError
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\utils.py:596: AssertionError
+_________ test_training_cost_controls_real_teacher_lora_merge_and_qat _________
+
+self = <fedcore.experiments.ablations.run_training_cost_controls.<locals>.MeasuredQAT object at 0x0000023A868286D0>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023AFF400B50>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A8621BAC0>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+>           with torch.no_grad():candidate(self.data_batch_for_calib)
+
+fedcore\algorithm\quantization\quantizers.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:738: in call_wrapped
+    return self._wrapped_call(self, *args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:317: in __call__
+    raise e
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:304: in __call__
+    return super(self.cls, obj).__call__(*args, **kwargs)  # type: ignore[misc]
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\ao\nn\intrinsic\quantized\modules\linear_relu.py:36: in forward
+    return torch.ops.quantized.linear_relu(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <OpOverloadPacket(op='quantized.linear_relu')>
+args = (tensor([[-0.4894, -0.4329, -0.3576,  0.5459],
+        [-0.3012, -0.6964,  1.0353, -0.9976],
+        [-0.0188, -0.1506...=0.018822792917490005,
+       zero_point=53), <torch.ScriptObject object at 0000023A8D28AA70>, 0.005869755055755377, 0)
+kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        # overloading __call__ to ensure torch.ops.foo.bar()
+        # is still callable from JIT
+        # We save the function ptr as the `op` attribute on
+        # OpOverloadPacket to access it here.
+>       return self._op(*args, **(kwargs or {}))
+E       RuntimeError: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\_ops.py:755: RuntimeError
+
+The above exception was the direct cause of the following exception:
+
+bundle = ExperimentBundle(train=TensorSplit(x=tensor([[-0.9950, -0.9881, -0.1613,  0.1007],
+        [ 0.9505, -0.5437,  0.0716,...tures=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_features=8, out_features=3, bias=True)
+), metadata=mappingproxy({}))
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-broad-temp-1/test_training_cost_controls_re0')
+
+    def test_training_cost_controls_real_teacher_lora_merge_and_qat(bundle, tmp_path):
+        protocol = ExperimentProtocol(baseline_epochs=0, finetune_epochs=1, batch_size=4, measurement_repeats=2, warmup=0)
+>       result = run_training_cost_controls(bundle, protocol, tmp_path / "training")
+
+tests\petra\test_ablation_math.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\ablations.py:472: in run_training_cost_controls
+    model = operation.fit(data)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <fedcore.experiments.ablations.run_training_cost_controls.<locals>.MeasuredQAT object at 0x0000023A868286D0>
+input_data = namespace(model=Sequential(
+  (0): Linear(in_features=4, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_fea...t at 0x0000023AFF400B50>, calibration_dataloader=<torch.utils.data.dataloader.DataLoader object at 0x0000023A8621BAC0>)
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+            with torch.no_grad():candidate(self.data_batch_for_calib)
+            self.quant_model=candidate
+            self.model_after=candidate
+            self.quantization_result=QuantizationResult('completed',self.quant_type,candidate,training_steps=steps)
+            return candidate
+        except Exception as exc:
+            self.quantization_result=QuantizationResult('error',self.quant_type,reason=str(exc),training_steps=steps)
+>           raise QuantizationError(self.quantization_result) from exc
+E           fedcore.algorithm.quantization.quantizers.QuantizationError: error: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+fedcore\algorithm\quantization\quantizers.py:132: QuantizationError
+_______ test_real_ptq_qat_and_structural_pruning_leave_source_unchanged _______
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A90D597E0>
+input_data = CompressionInputData(idx=array([0]), task=Task(task_type=<TaskTypesEnum.classification: 'classification'>, task_params...near(in_features=2, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_features=8, out_features=2, bias=True)
+))
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+>           with torch.no_grad():candidate(self.data_batch_for_calib)
+
+fedcore\algorithm\quantization\quantizers.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:738: in call_wrapped
+    return self._wrapped_call(self, *args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:317: in __call__
+    raise e
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\fx\graph_module.py:304: in __call__
+    return super(self.cls, obj).__call__(*args, **kwargs)  # type: ignore[misc]
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1511: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\nn\modules\module.py:1520: in _call_impl
+    return forward_call(*args, **kwargs)
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\ao\nn\intrinsic\quantized\modules\linear_relu.py:36: in forward
+    return torch.ops.quantized.linear_relu(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <OpOverloadPacket(op='quantized.linear_relu')>
+args = (tensor([[0.9995, 0.0000],
+        [0.0000, 0.9995],
+        [0.9995, 0.0000],
+        [0.0000, 0.9995],
+        [0.99...le=0.007870171219110489,
+       zero_point=0), <torch.ScriptObject object at 0000023A8D28A670>, 0.00902850367128849, 0)
+kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+        # overloading __call__ to ensure torch.ops.foo.bar()
+        # is still callable from JIT
+        # We save the function ptr as the `op` attribute on
+        # OpOverloadPacket to access it here.
+>       return self._op(*args, **(kwargs or {}))
+E       RuntimeError: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\_ops.py:755: RuntimeError
+
+The above exception was the direct cause of the following exception:
+
+    def test_real_ptq_qat_and_structural_pruning_leave_source_unchanged():
+        source = bundle()
+        configuration = protocol()
+        before = model_state_hash(source.original_model)
+        for candidate in (CandidateSpec("ptq", {"mode": "static"}), CandidateSpec("qat", {"epochs": 1}),
+                          CandidateSpec("structural_pruning", {"pruning_ratio": .4, "finetune_epochs": 0})):
+>           model, evidence = apply_candidate(source.original_model, source, configuration, candidate)
+
+tests\petra\test_protocol_runner.py:176: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\runner.py:629: in apply_candidate
+    operation.fit(_compression_input(model, bundle, protocol))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <fedcore.algorithm.quantization.quantizers.BaseQuantizer object at 0x0000023A90D597E0>
+input_data = CompressionInputData(idx=array([0]), task=Task(task_type=<TaskTypesEnum.classification: 'classification'>, task_params...near(in_features=2, out_features=8, bias=True)
+  (1): ReLU()
+  (2): Linear(in_features=8, out_features=2, bias=True)
+))
+
+    def fit(self,input_data):
+        self._init_model(input_data)
+        engine=torch.backends.quantized.engine
+        steps=0
+        try:
+            torch.backends.quantized.engine=self.backend
+            self._prepare_model(input_data)
+            if self.quant_type=='qat':steps=self._train_qat(input_data)
+            if self.quant_type=='dynamic':
+                candidate=quantize_dynamic(nn.Sequential(self.quant_model),{nn.Linear,nn.LSTM,nn.GRU,nn.RNN},dtype=self.dtype,inplace=False)
+            else:
+                candidate=convert_fx(self.quant_model.eval())
+            if not any(type(m).__module__.startswith(('torch.ao.nn.quantized','torch.nn.quantized')) for m in candidate.modules()):
+                raise ValueError('Conversion produced no quantized operations')
+            with torch.no_grad():candidate(self.data_batch_for_calib)
+            self.quant_model=candidate
+            self.model_after=candidate
+            self.quantization_result=QuantizationResult('completed',self.quant_type,candidate,training_steps=steps)
+            return candidate
+        except Exception as exc:
+            self.quantization_result=QuantizationResult('error',self.quant_type,reason=str(exc),training_steps=steps)
+>           raise QuantizationError(self.quantization_result) from exc
+E           fedcore.algorithm.quantization.quantizers.QuantizationError: error: quantized_resize_cpu_ does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True)'. You can turn off determinism just for this operation, or you can use the 'warn_only=True' option, if that's acceptable for your application. You can also file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation.
+
+fedcore\algorithm\quantization\quantizers.py:132: QuantizationError
+____________________ test_real_runner_fedcore_public_path _____________________
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-broad-temp-1/test_real_runner_fedcore_publi0')
+
+    def test_real_runner_fedcore_public_path(tmp_path):
+        candidate = CandidateSpec("fedcore", {"operation": "training", "operation_parameters": {"epochs": 1}})
+        result = ExperimentRunner(bundle(), protocol(), tmp_path / "fedcore").run((candidate,))
+        record = result["candidates"][-1]
+>       assert record["status"] == "succeeded", record
+E       AssertionError: {'cache_hit': False, 'cache_key': 'ce53b0bdc4771c94ce67d766a8197c2fecea8002f80c6c8d5dcb25dd154c62c7', 'candidate_id': '6d468ed43844123d5d01', 'completed_seconds': 10.314556999997876, ...}
+E       assert 'failed' == 'succeeded'
+E         
+E         - succeeded
+E         + failed
+
+tests\petra\test_protocol_runner.py:198: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_compression_search_matrix.py::test_reached_transition_has_exact_svd_law_and_preserves_source[LD-A]
+FAILED tests/refactoring/test_compression_search_matrix.py::test_reached_transition_has_exact_svd_law_and_preserves_source[LL-A]
+FAILED tests/refactoring/test_math_training.py::test_actual_quantization_stages_and_baseline[static]
+FAILED tests/refactoring/test_math_training.py::test_actual_quantization_stages_and_baseline[qat]
+FAILED tests/refactoring/test_math_training.py::test_qat_observed_real_stages_before_convert
+FAILED tests/refactoring/test_root_dask.py::test_real_caller_owned_dask_client_survives_training
+FAILED tests/petra/test_ablation_math.py::test_training_cost_controls_real_teacher_lora_merge_and_qat
+FAILED tests/petra/test_protocol_runner.py::test_real_ptq_qat_and_structural_pruning_leave_source_unchanged
+FAILED tests/petra/test_protocol_runner.py::test_real_runner_fedcore_public_path
+9 failed, 2491 passed, 7 skipped, 36 warnings in 400.86s (0:06:40)

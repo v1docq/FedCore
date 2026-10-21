@@ -80,16 +80,63 @@ def audit(output, repo=None):
             findings.append(dict(code=code, **details))
     payload = {key: value for key, value in protocol.items() if key != "protocol_sha256"}
     check(hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest() == protocol["protocol_sha256"], "protocol_digest")
+    frozen_source_digests = {}
     if repo is not None:
         repo = Path(repo).resolve()
         for relative, expected in protocol["source_files"].items():
             path = repo / relative
             actual = hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest() if path.exists() else None
+            frozen_source_digests[relative] = actual
             check(actual == expected, "executed_source_digest", path=relative)
         source_digest = hashlib.sha256(json.dumps(protocol["source_files"], sort_keys=True).encode()).hexdigest()
         check(source_digest == protocol["source_sha256"], "source_manifest_digest")
         plan = repo / "docs/svd_compression/PLAN_ISSUE_99_LOCAL_2.md"
         check(plan.exists() and sha(plan) == protocol["approved_plan_sha256"], "approved_plan_digest")
+    known_protocols = {protocol["protocol_sha256"]: protocol}
+    parent_source = "fedcore/experiments/compression_search_local2.py"
+    immutable_fields = ("limits", "stage_seconds", "search_jobs", "matrix_schedule",
+                        "package_started_at", "approved_plan_sha256", "environment")
+    first_continuation = None
+    for name, snapshot in (("matrix-continuation-protocol.json", "continued-parent-source.py"),
+                           ("remaining-matrices-protocol.json", "continued-parent-source-2.py")):
+        path = output/name
+        if not path.exists():
+            continue
+        continuation = read(path)
+        payload = {key: value for key, value in continuation.items() if key != "protocol_sha256"}
+        digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+        check(digest == continuation.get("protocol_sha256"), "continuation_protocol_digest", protocol=name)
+        source_files = continuation.get("source_files", {})
+        source_digest = hashlib.sha256(json.dumps(source_files, sort_keys=True).encode()).hexdigest()
+        check(source_digest == continuation.get("source_sha256"), "continuation_source_manifest_digest", protocol=name)
+        check(continuation.get("original_protocol_sha256") == protocol["protocol_sha256"],
+              "continuation_original_protocol", protocol=name)
+        for field in immutable_fields:
+            check(field in continuation and continuation[field] == protocol[field],
+                  "continuation_changed_frozen_field", protocol=name, field=field)
+        changed = sorted(relative for relative in set(protocol["source_files"]) | set(source_files)
+                         if protocol["source_files"].get(relative) != source_files.get(relative))
+        check(changed == [parent_source], "continuation_source_change_scope", protocol=name, paths=changed)
+        saved_parent = output/snapshot
+        check(saved_parent.exists(), "continuation_parent_snapshot_missing", protocol=name, path=snapshot)
+        if saved_parent.exists():
+            actual = hashlib.sha256(saved_parent.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            check(actual == source_files.get(parent_source), "continuation_parent_source_digest", protocol=name, path=snapshot)
+        if repo is not None:
+            for relative, expected in source_files.items():
+                if relative != parent_source:
+                    check(frozen_source_digests.get(relative) == expected,
+                          "continuation_executed_source_digest", protocol=name, path=relative)
+        if name == "matrix-continuation-protocol.json":
+            first_continuation = continuation
+        else:
+            check(first_continuation is not None, "continuation_previous_protocol_missing",
+                  protocol=name, path="matrix-continuation-protocol.json")
+            check(first_continuation is not None and continuation.get("previous_protocol_sha256") == first_continuation.get("protocol_sha256"),
+                  "continuation_previous_protocol", protocol=name)
+        declared = continuation.get("protocol_sha256")
+        check(declared not in known_protocols, "duplicate_protocol_digest", protocol=name)
+        known_protocols[declared] = continuation
     check(ledger["started_at"] == protocol["package_started_at"], "package_clock_origin")
     check(ledger.get("elapsed_seconds", 0) <= 7205, "package_clock_limit", elapsed=ledger.get("elapsed_seconds"))
     mlp, matrix, updates = (lines(output/name) for name in
@@ -114,6 +161,11 @@ def audit(output, repo=None):
             continue
         job = read(directory/"job.json")
         jobs[job["job"]] = job
+        job_protocol = known_protocols.get(job.get("protocol_sha256"))
+        check(job_protocol is not None, "unknown_job_protocol", job=job["job"], protocol_sha256=job.get("protocol_sha256"))
+        if job_protocol is not None:
+            check(job.get("source_sha256") == job_protocol.get("source_sha256"),
+                  "job_source_protocol_disagreement", job=job["job"])
         result = read(directory/"result.json") if (directory/"result.json").exists() else None
         resource = read(directory/"resources.json") if (directory/"resources.json").exists() else {}
         events = [row for row in lines(directory/"events.jsonl") if row.get("event") == "evaluation"]
@@ -164,7 +216,11 @@ def audit(output, repo=None):
                     and len(events) == len(finite) == 440
                     and len({row["solution_id"] for row in finite}) == 440),
                 independent_selections=picks))
-        streams.extend(lines(directory/"matrix-streams.jsonl"))
+        monitored = (resource.get("status") in ("succeeded", "partial")
+            and resource.get("resources", {}).get("peak_tree_rss_bytes") is not None
+            and resource.get("stop") in (None, "hard_deadline", "request_hard_deadline"))
+        streams.extend(dict(row, job=job["job"], resource_status=resource.get("status", "missing"),
+                            resource_eligible=monitored) for row in lines(directory/"matrix-streams.jsonl"))
         matrix_events = lines(directory/"matrix-events.jsonl")
         for row in matrix_events:
             expected = int(row["word"] == "LD" or row["arm"] in ("B", "production"))
@@ -231,6 +287,13 @@ def audit(output, repo=None):
                     check(job.get("selections_sha256", job.get("selected_sha256")) == sha(output/"selected.json"), "selection_digest_before_test", job=job["job"])
                     check(job["worker_started_at"] >= selection["frozen_at"], "test_before_selection_freeze", job=job["job"])
     claims = matrix_claims(streams)
+    for claim in claims:
+        observed = [stream for stream in streams if stream["n"] == claim["n"]]
+        monitored = bool(observed) and all(stream["resource_eligible"] for stream in observed)
+        claim["resource_eligible"] = monitored
+        claim["timing_controls_eligible"] = claim["eligible"]
+        claim["eligible"] = claim["eligible"] and monitored
+        claim["observed_win"] = claim["observed_win"] and monitored
     analysis = read(output/"analysis.json") if (output/"analysis.json").exists() else None
     analysis_checked = analysis is not None
     if analysis is not None:
@@ -257,11 +320,20 @@ def audit(output, repo=None):
         matrix_index = {(row["n"], row["invalid_count"], row["arm"]): row for row in claims}
         for actual in analysis["matrix_summary"]:
             expected = matrix_index[actual["n"], actual["invalid_count"], actual["arm"]]
-            for field in ("eligible", "observed_win", "bb_pass"):
-                check(actual[field] == expected[field], "analysis_matrix_gate", n=actual["n"], invalid_count=actual["invalid_count"], arm=actual["arm"], field=field)
+            for field in ("eligible", "observed_win", "bb_pass", "resource_eligible", "timing_controls_eligible"):
+                check(actual.get(field) == expected[field], "analysis_matrix_gate", n=actual["n"], invalid_count=actual["invalid_count"], arm=actual["arm"], field=field)
             for field in ("median_ratio", "order_ratio", "median_b_seconds"):
                 check(close(actual[field], expected[field]), "analysis_matrix_statistic", n=actual["n"], invalid_count=actual["invalid_count"], arm=actual["arm"], field=field)
             check(actual["pairs"] == len(expected["complete_blocks"]), "analysis_matrix_pairs", n=actual["n"], arm=actual["arm"])
+        stream_index = {(row["job"], row["stream_id"]): row for row in streams}
+        check(len(analysis["matrix_streams"]) == len(streams), "analysis_matrix_stream_count")
+        for actual in analysis["matrix_streams"]:
+            expected = stream_index.get((actual.get("job"), actual["stream_id"]))
+            check(expected is not None, "analysis_unknown_matrix_stream", job=actual.get("job"), stream=actual["stream_id"])
+            if expected is not None:
+                for field in ("resource_status", "resource_eligible"):
+                    check(actual.get(field) == expected[field], "analysis_matrix_stream_resource",
+                          job=actual.get("job"), stream=actual["stream_id"], field=field)
         search_index = {(row["model_seed"], row["budget"], row["search_seed"], row["mode"]): row for row in summaries if row["kind"] == "search"}
         for actual in analysis["paired"]:
             first, second = actual["comparison"].split("→")

@@ -1,0 +1,747 @@
+...............FF.........F............................................. [ 23%]
+...........FFFFF.F...................................................... [ 46%]
+........................................................................ [ 70%]
+........................................................................ [ 93%]
+......FF......FFFFFF                                                     [100%]
+================================== FAILURES ===================================
+_ test_random_worker_attempt_budget_includes_common_prefix_and_uses_owned_stream _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_random_worker_attempt_bud0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002418CDE7B80>
+
+    def test_random_worker_attempt_budget_includes_common_prefix_and_uses_owned_stream(tmp_path, monkeypatch):
+        source_dir = tmp_path / "sources" / "19901"
+        source_dir.mkdir(parents=True)
+        (source_dir / "manifest.json").write_text('{}')
+        seen = []
+        class Evaluator:
+            rows = []
+            context_sha256 = "c"
+            def __call__(self, genotype):
+                seen.append(canonical_solution_id(genotype))
+                self.rows.append({"status": "finite", "solution_id": seen[-1], "completed_at": time.perf_counter()})
+        evaluator = Evaluator()
+        source = SimpleNamespace(seed=19901, manifest={})
+        monkeypatch.setattr(evaluation, "source_evaluator", lambda *args: (source, None, evaluator))
+        import fedcore.experiments.compression_search_evaluation as shared
+        monkeypatch.setattr(shared, "compile_checked", lambda genotype, space: genotype)
+>       result = worker._evaluate_job(_job(tmp_path))
+
+tests\refactoring\test_compression_search_digits_worker.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_digits_worker.py:225: in _evaluate_job
+    write_json(Path(job["directory"]) / "source-manifest.json", source.manifest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_random_worker_attempt_bud0/source-manifest.json')
+value = {}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_random_worker_attempt_bud0\\source-manifest.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_random_worker_attempt_bud0\\source-manifest.json'
+
+fedcore\experiments\compression_search_digits_worker.py:25: PermissionError
+________ test_tampered_selection_is_rejected_before_opening_test_role _________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_tampered_selection_is_rej0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A3480E80>
+
+    def test_tampered_selection_is_rejected_before_opening_test_role(tmp_path, monkeypatch):
+        path = tmp_path / "selected.json"
+>       worker.write_json(path, {"frozen_at": 0, "selected": []})
+
+tests\refactoring\test_compression_search_digits_worker.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_tampered_selection_is_rej0/selected.json')
+value = {'frozen_at': 0, 'selected': []}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_tampered_selection_is_rej0\\selected.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_tampered_selection_is_rej0\\selected.json'
+
+fedcore\experiments\compression_search_digits_worker.py:25: PermissionError
+___________ test_validation_selection_is_frozen_on_time_before_test ___________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_validation_selection_is_f0')
+
+    def test_validation_selection_is_frozen_on_time_before_test(tmp_path):
+        job = dict(kind="search", split_seed=19901, job="search-x", admission_deadline=10.)
+        directory = tmp_path/"jobs"/"search-x"
+>       write_json(directory/"job.json", job)
+
+tests\refactoring\test_compression_search_matrix.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_validation_selection_is_f0/jobs/search-x/job.json')
+value = {'admission_deadline': 10.0, 'job': 'search-x', 'kind': 'search', 'split_seed': 19901}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name+".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                       indent=2, allow_nan=False)+"\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_validation_selection_is_f0\\jobs\\search-x\\job.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_validation_selection_is_f0\\jobs\\search-x\\job.json'
+
+fedcore\experiments\compression_search_local2.py:36: PermissionError
+__ test_corrected_admission_keeps_original_time_counter_and_attempt_evidence __
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_corrected_admission_keeps0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A2FE8E20>
+
+    def test_corrected_admission_keeps_original_time_counter_and_attempt_evidence(tmp_path, monkeypatch):
+>       prior, source = prior_run(tmp_path)
+
+tests\refactoring\test_compression_search_resume.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_compression_search_resume.py:17: in prior_run
+    package.write_json(prior / "protocol.json", {"plan_sha256": digest, "historical_root": str(source.resolve()),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_corrected_admission_keeps0/prior/protocol.json')
+value = {'git_revision': 'prior-build', 'historical_root': 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-...'plan_sha256': 'd71d59a92b63241a9e48ba974a3f0c0a7f725f38c7a4b1c92a1b25020dd22cd8', 'protocol_sha256': 'prior-protocol'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_corrected_admission_keeps0\\prior\\protocol.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_corrected_admission_keeps0\\prior\\protocol.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[scientific_run] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A84D5D80>
+change = 'scientific_run'
+
+    @pytest.mark.parametrize("change", ("scientific_run", "plan", "source", "future_clock"))
+    def test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock(tmp_path, monkeypatch, change):
+>       prior, source = prior_run(tmp_path)
+
+tests\refactoring\test_compression_search_resume.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_compression_search_resume.py:17: in prior_run
+    package.write_json(prior / "protocol.json", {"plan_sha256": digest, "historical_root": str(source.resolve()),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_0/prior/protocol.json')
+value = {'git_revision': 'prior-build', 'historical_root': 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-...'plan_sha256': 'd71d59a92b63241a9e48ba974a3f0c0a7f725f38c7a4b1c92a1b25020dd22cd8', 'protocol_sha256': 'prior-protocol'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_0\\prior\\protocol.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_0\\prior\\protocol.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[plan] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A84D4430>
+change = 'plan'
+
+    @pytest.mark.parametrize("change", ("scientific_run", "plan", "source", "future_clock"))
+    def test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock(tmp_path, monkeypatch, change):
+>       prior, source = prior_run(tmp_path)
+
+tests\refactoring\test_compression_search_resume.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_compression_search_resume.py:17: in prior_run
+    package.write_json(prior / "protocol.json", {"plan_sha256": digest, "historical_root": str(source.resolve()),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_1/prior/protocol.json')
+value = {'git_revision': 'prior-build', 'historical_root': 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-...'plan_sha256': 'd71d59a92b63241a9e48ba974a3f0c0a7f725f38c7a4b1c92a1b25020dd22cd8', 'protocol_sha256': 'prior-protocol'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_1\\prior\\protocol.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_1\\prior\\protocol.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[source] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A85167A0>
+change = 'source'
+
+    @pytest.mark.parametrize("change", ("scientific_run", "plan", "source", "future_clock"))
+    def test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock(tmp_path, monkeypatch, change):
+>       prior, source = prior_run(tmp_path)
+
+tests\refactoring\test_compression_search_resume.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_compression_search_resume.py:17: in prior_run
+    package.write_json(prior / "protocol.json", {"plan_sha256": digest, "historical_root": str(source.resolve()),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_2/prior/protocol.json')
+value = {'git_revision': 'prior-build', 'historical_root': 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-...'plan_sha256': 'd71d59a92b63241a9e48ba974a3f0c0a7f725f38c7a4b1c92a1b25020dd22cd8', 'protocol_sha256': 'prior-protocol'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_2\\prior\\protocol.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_2\\prior\\protocol.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[future_clock] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A8593880>
+change = 'future_clock'
+
+    @pytest.mark.parametrize("change", ("scientific_run", "plan", "source", "future_clock"))
+    def test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock(tmp_path, monkeypatch, change):
+>       prior, source = prior_run(tmp_path)
+
+tests\refactoring\test_compression_search_resume.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_compression_search_resume.py:17: in prior_run
+    package.write_json(prior / "protocol.json", {"plan_sha256": digest, "historical_root": str(source.resolve()),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_resume_refuses_replaying_3/prior/protocol.json')
+value = {'git_revision': 'prior-build', 'historical_root': 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-...'plan_sha256': 'd71d59a92b63241a9e48ba974a3f0c0a7f725f38c7a4b1c92a1b25020dd22cd8', 'protocol_sha256': 'prior-protocol'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_3\\prior\\protocol.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_resume_refuses_replaying_3\\prior\\protocol.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_reuse_preserves_original_job_bytes_and_provenance_without_new_attempts _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_reuse_preserves_original_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A84D5E40>
+
+    def test_reuse_preserves_original_job_bytes_and_provenance_without_new_attempts(tmp_path, monkeypatch):
+        from pathlib import Path
+        old, target = tmp_path / "old", tmp_path / "new"
+        source = old / "jobs/admissibility"
+        source.mkdir(parents=True)
+        target.mkdir()
+>       package.write_json(source / "result.json", {"status": "succeeded", "rows": [{"case": i} for i in range(163)]})
+
+tests\refactoring\test_compression_search_resume.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_reuse_preserves_original_0/old/jobs/admissibility/result.json')
+value = {'rows': [{'case': 0}, {'case': 1}, {'case': 2}, {'case': 3}, {'case': 4}, {'case': 5}, ...], 'status': 'succeeded'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_reuse_preserves_original_0\\old\\jobs\\admissibility\\result.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_reuse_preserves_original_0\\old\\jobs\\admissibility\\result.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_orchestrator_watchdog_kills_the_whole_owned_tree_at_absolute_deadlines[7200.0-10000.0-package_time_limit] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_orchestrator_watchdog_kil0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A85FE860>
+now = 7200.0, hard_seconds = 10000.0, expected_stop = 'package_time_limit'
+
+    @pytest.mark.parametrize("now,hard_seconds,expected_stop", (
+        (7200., 10000., "package_time_limit"),
+        (46., 45., "worker_hard_deadline"),
+    ))
+    def test_orchestrator_watchdog_kills_the_whole_owned_tree_at_absolute_deadlines(
+            tmp_path, monkeypatch, now, hard_seconds, expected_stop):
+        """Exercise the parent loop with a fake clock/process, never launch ML."""
+        import psutil
+        import fedcore.experiments.compression_search_package as package
+    
+        killed, waits = [], []
+    
+        class Process:
+            pid = 10
+            returncode = None
+    
+            def poll(self):
+                return self.returncode
+    
+            def wait(self, timeout):
+                waits.append(timeout)
+                return self.returncode
+    
+        process = Process()
+    
+        class Observed:
+            def __init__(self, pid):
+                self.pid = pid
+    
+            def children(self, recursive):
+                assert recursive
+                return [Observed(11)]
+    
+            def memory_info(self):
+                return SimpleNamespace(rss=1024)
+    
+            def is_running(self):
+                return True
+    
+            def kill(self):
+                killed.append(self.pid)
+                if self.pid == 10:
+                    process.returncode = -9
+    
+        calls = []
+    
+        def fake_popen(*args, **kwargs):
+            calls.append((args, kwargs))
+            return process
+    
+        clock_values = iter((0., 1., now))
+        monkeypatch.setattr(package.time, "perf_counter", lambda: next(clock_values, now))
+        monkeypatch.setattr(package, "source_hashes", lambda: {})
+        monkeypatch.setattr(package.subprocess, "Popen", fake_popen)
+        monkeypatch.setattr(psutil, "Process", Observed)
+        monkeypatch.setattr(psutil, "virtual_memory", lambda: SimpleNamespace(available=16*1024**3))
+        protocol = {"source_files": {}, "historical_root": "unused", "protocol_sha256": "protocol", "source_sha256": "sources"}
+>       result = package._run_job(tmp_path, {"job": "fake", "kind": "search", "hard_seconds": hard_seconds}, protocol, 0.)
+
+tests\refactoring\test_compression_search_package_independent.py:492: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:70: in _run_job
+    write_json(directory / "job.json", job)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_orchestrator_watchdog_kil0/jobs/fake/job.json')
+value = {'compute_admission_deadline': 6900.0, 'directory': 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50...ser\\pytest-0\\test_orchestrator_watchdog_kil0\\jobs\\fake', 'hard_seconds': 10000.0, 'historical_root': 'unused', ...}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_orchestrator_watchdog_kil0\\jobs\\fake\\job.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_orchestrator_watchdog_kil0\\jobs\\fake\\job.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_orchestrator_watchdog_kills_the_whole_owned_tree_at_absolute_deadlines[46.0-45.0-worker_hard_deadline] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_orchestrator_watchdog_kil1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A856BDF0>
+now = 46.0, hard_seconds = 45.0, expected_stop = 'worker_hard_deadline'
+
+    @pytest.mark.parametrize("now,hard_seconds,expected_stop", (
+        (7200., 10000., "package_time_limit"),
+        (46., 45., "worker_hard_deadline"),
+    ))
+    def test_orchestrator_watchdog_kills_the_whole_owned_tree_at_absolute_deadlines(
+            tmp_path, monkeypatch, now, hard_seconds, expected_stop):
+        """Exercise the parent loop with a fake clock/process, never launch ML."""
+        import psutil
+        import fedcore.experiments.compression_search_package as package
+    
+        killed, waits = [], []
+    
+        class Process:
+            pid = 10
+            returncode = None
+    
+            def poll(self):
+                return self.returncode
+    
+            def wait(self, timeout):
+                waits.append(timeout)
+                return self.returncode
+    
+        process = Process()
+    
+        class Observed:
+            def __init__(self, pid):
+                self.pid = pid
+    
+            def children(self, recursive):
+                assert recursive
+                return [Observed(11)]
+    
+            def memory_info(self):
+                return SimpleNamespace(rss=1024)
+    
+            def is_running(self):
+                return True
+    
+            def kill(self):
+                killed.append(self.pid)
+                if self.pid == 10:
+                    process.returncode = -9
+    
+        calls = []
+    
+        def fake_popen(*args, **kwargs):
+            calls.append((args, kwargs))
+            return process
+    
+        clock_values = iter((0., 1., now))
+        monkeypatch.setattr(package.time, "perf_counter", lambda: next(clock_values, now))
+        monkeypatch.setattr(package, "source_hashes", lambda: {})
+        monkeypatch.setattr(package.subprocess, "Popen", fake_popen)
+        monkeypatch.setattr(psutil, "Process", Observed)
+        monkeypatch.setattr(psutil, "virtual_memory", lambda: SimpleNamespace(available=16*1024**3))
+        protocol = {"source_files": {}, "historical_root": "unused", "protocol_sha256": "protocol", "source_sha256": "sources"}
+>       result = package._run_job(tmp_path, {"job": "fake", "kind": "search", "hard_seconds": hard_seconds}, protocol, 0.)
+
+tests\refactoring\test_compression_search_package_independent.py:492: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:70: in _run_job
+    write_json(directory / "job.json", job)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_orchestrator_watchdog_kil1/jobs/fake/job.json')
+value = {'compute_admission_deadline': 6900.0, 'directory': 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50...f-user\\pytest-0\\test_orchestrator_watchdog_kil1\\jobs\\fake', 'hard_seconds': 45.0, 'historical_root': 'unused', ...}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_orchestrator_watchdog_kil1\\jobs\\fake\\job.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_orchestrator_watchdog_kil1\\jobs\\fake\\job.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_actual_evaluation_context_covers_source_data_roles_code_and_environment[source] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A976D480>
+change = 'source'
+
+    @pytest.mark.parametrize("change", ("source", "calibration_values", "validation_labels", "data_role", "code", "environment"))
+    def test_actual_evaluation_context_covers_source_data_roles_code_and_environment(tmp_path, monkeypatch, change):
+        import fedcore.experiments.compression_search_evaluation as evaluation
+        import fedcore.experiments.compression_search_package as package
+        from fedcore.experiments.compression_search_protocol import TUNED_CATALOG
+    
+        class Split:
+            def __init__(self, prefix):
+                self.value = {"ids": [prefix+":0"], "x_sha256": prefix+"-features", "y_sha256": prefix+"-labels"}
+    
+            def manifest(self):
+                return dict(self.value)
+    
+        source = SimpleNamespace(manifest={"normalized_identity": "source-A"},
+            calibration=Split("cal"), validation=Split("val"))
+        monkeypatch.setattr(evaluation, "AttemptLedger", lambda *args, **kwargs: SimpleNamespace(charge=lambda *args: None))
+        monkeypatch.setattr(evaluation, "load_source", lambda *args: source)
+        monkeypatch.setattr(evaluation, "prepare_space", lambda *args: None)
+        monkeypatch.setattr(evaluation, "FullEvaluator", lambda *args, **kwargs: SimpleNamespace(context_sha256=kwargs["context_sha256"]))
+        protocol_path = tmp_path / "protocol.json"
+        protocol_path.write_text(json.dumps({"environment": {"torch": "pinned-A"}}), encoding="utf-8")
+        job = {"output": str(tmp_path), "directory": str(tmp_path / "jobs/context"), "job": "context",
+            "protocol_sha256": "protocol", "compute_admission_deadline": float("inf"), "model_seed": 41,
+            "historical_root": "unused", "repo": "unused", "source_sha256": "code-A"}
+>       original = package._source_evaluator(job, TUNED_CATALOG)[2].context_sha256
+
+tests\refactoring\test_compression_search_package_independent.py:631: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:409: in _source_evaluator
+    write_json(Path(job["directory"]) / "source-manifest.json", source.manifest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context0/jobs/context/source-manifest.json')
+value = {'normalized_identity': 'source-A'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context0\\jobs\\context\\source-manifest.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context0\\jobs\\context\\source-manifest.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_actual_evaluation_context_covers_source_data_roles_code_and_environment[calibration_values] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A8576380>
+change = 'calibration_values'
+
+    @pytest.mark.parametrize("change", ("source", "calibration_values", "validation_labels", "data_role", "code", "environment"))
+    def test_actual_evaluation_context_covers_source_data_roles_code_and_environment(tmp_path, monkeypatch, change):
+        import fedcore.experiments.compression_search_evaluation as evaluation
+        import fedcore.experiments.compression_search_package as package
+        from fedcore.experiments.compression_search_protocol import TUNED_CATALOG
+    
+        class Split:
+            def __init__(self, prefix):
+                self.value = {"ids": [prefix+":0"], "x_sha256": prefix+"-features", "y_sha256": prefix+"-labels"}
+    
+            def manifest(self):
+                return dict(self.value)
+    
+        source = SimpleNamespace(manifest={"normalized_identity": "source-A"},
+            calibration=Split("cal"), validation=Split("val"))
+        monkeypatch.setattr(evaluation, "AttemptLedger", lambda *args, **kwargs: SimpleNamespace(charge=lambda *args: None))
+        monkeypatch.setattr(evaluation, "load_source", lambda *args: source)
+        monkeypatch.setattr(evaluation, "prepare_space", lambda *args: None)
+        monkeypatch.setattr(evaluation, "FullEvaluator", lambda *args, **kwargs: SimpleNamespace(context_sha256=kwargs["context_sha256"]))
+        protocol_path = tmp_path / "protocol.json"
+        protocol_path.write_text(json.dumps({"environment": {"torch": "pinned-A"}}), encoding="utf-8")
+        job = {"output": str(tmp_path), "directory": str(tmp_path / "jobs/context"), "job": "context",
+            "protocol_sha256": "protocol", "compute_admission_deadline": float("inf"), "model_seed": 41,
+            "historical_root": "unused", "repo": "unused", "source_sha256": "code-A"}
+>       original = package._source_evaluator(job, TUNED_CATALOG)[2].context_sha256
+
+tests\refactoring\test_compression_search_package_independent.py:631: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:409: in _source_evaluator
+    write_json(Path(job["directory"]) / "source-manifest.json", source.manifest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context1/jobs/context/source-manifest.json')
+value = {'normalized_identity': 'source-A'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context1\\jobs\\context\\source-manifest.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context1\\jobs\\context\\source-manifest.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_actual_evaluation_context_covers_source_data_roles_code_and_environment[validation_labels] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A37154E0>
+change = 'validation_labels'
+
+    @pytest.mark.parametrize("change", ("source", "calibration_values", "validation_labels", "data_role", "code", "environment"))
+    def test_actual_evaluation_context_covers_source_data_roles_code_and_environment(tmp_path, monkeypatch, change):
+        import fedcore.experiments.compression_search_evaluation as evaluation
+        import fedcore.experiments.compression_search_package as package
+        from fedcore.experiments.compression_search_protocol import TUNED_CATALOG
+    
+        class Split:
+            def __init__(self, prefix):
+                self.value = {"ids": [prefix+":0"], "x_sha256": prefix+"-features", "y_sha256": prefix+"-labels"}
+    
+            def manifest(self):
+                return dict(self.value)
+    
+        source = SimpleNamespace(manifest={"normalized_identity": "source-A"},
+            calibration=Split("cal"), validation=Split("val"))
+        monkeypatch.setattr(evaluation, "AttemptLedger", lambda *args, **kwargs: SimpleNamespace(charge=lambda *args: None))
+        monkeypatch.setattr(evaluation, "load_source", lambda *args: source)
+        monkeypatch.setattr(evaluation, "prepare_space", lambda *args: None)
+        monkeypatch.setattr(evaluation, "FullEvaluator", lambda *args, **kwargs: SimpleNamespace(context_sha256=kwargs["context_sha256"]))
+        protocol_path = tmp_path / "protocol.json"
+        protocol_path.write_text(json.dumps({"environment": {"torch": "pinned-A"}}), encoding="utf-8")
+        job = {"output": str(tmp_path), "directory": str(tmp_path / "jobs/context"), "job": "context",
+            "protocol_sha256": "protocol", "compute_admission_deadline": float("inf"), "model_seed": 41,
+            "historical_root": "unused", "repo": "unused", "source_sha256": "code-A"}
+>       original = package._source_evaluator(job, TUNED_CATALOG)[2].context_sha256
+
+tests\refactoring\test_compression_search_package_independent.py:631: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:409: in _source_evaluator
+    write_json(Path(job["directory"]) / "source-manifest.json", source.manifest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context2/jobs/context/source-manifest.json')
+value = {'normalized_identity': 'source-A'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context2\\jobs\\context\\source-manifest.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context2\\jobs\\context\\source-manifest.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_actual_evaluation_context_covers_source_data_roles_code_and_environment[data_role] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A84D5660>
+change = 'data_role'
+
+    @pytest.mark.parametrize("change", ("source", "calibration_values", "validation_labels", "data_role", "code", "environment"))
+    def test_actual_evaluation_context_covers_source_data_roles_code_and_environment(tmp_path, monkeypatch, change):
+        import fedcore.experiments.compression_search_evaluation as evaluation
+        import fedcore.experiments.compression_search_package as package
+        from fedcore.experiments.compression_search_protocol import TUNED_CATALOG
+    
+        class Split:
+            def __init__(self, prefix):
+                self.value = {"ids": [prefix+":0"], "x_sha256": prefix+"-features", "y_sha256": prefix+"-labels"}
+    
+            def manifest(self):
+                return dict(self.value)
+    
+        source = SimpleNamespace(manifest={"normalized_identity": "source-A"},
+            calibration=Split("cal"), validation=Split("val"))
+        monkeypatch.setattr(evaluation, "AttemptLedger", lambda *args, **kwargs: SimpleNamespace(charge=lambda *args: None))
+        monkeypatch.setattr(evaluation, "load_source", lambda *args: source)
+        monkeypatch.setattr(evaluation, "prepare_space", lambda *args: None)
+        monkeypatch.setattr(evaluation, "FullEvaluator", lambda *args, **kwargs: SimpleNamespace(context_sha256=kwargs["context_sha256"]))
+        protocol_path = tmp_path / "protocol.json"
+        protocol_path.write_text(json.dumps({"environment": {"torch": "pinned-A"}}), encoding="utf-8")
+        job = {"output": str(tmp_path), "directory": str(tmp_path / "jobs/context"), "job": "context",
+            "protocol_sha256": "protocol", "compute_admission_deadline": float("inf"), "model_seed": 41,
+            "historical_root": "unused", "repo": "unused", "source_sha256": "code-A"}
+>       original = package._source_evaluator(job, TUNED_CATALOG)[2].context_sha256
+
+tests\refactoring\test_compression_search_package_independent.py:631: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:409: in _source_evaluator
+    write_json(Path(job["directory"]) / "source-manifest.json", source.manifest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context3/jobs/context/source-manifest.json')
+value = {'normalized_identity': 'source-A'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context3\\jobs\\context\\source-manifest.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context3\\jobs\\context\\source-manifest.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_actual_evaluation_context_covers_source_data_roles_code_and_environment[code] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A97D57E0>
+change = 'code'
+
+    @pytest.mark.parametrize("change", ("source", "calibration_values", "validation_labels", "data_role", "code", "environment"))
+    def test_actual_evaluation_context_covers_source_data_roles_code_and_environment(tmp_path, monkeypatch, change):
+        import fedcore.experiments.compression_search_evaluation as evaluation
+        import fedcore.experiments.compression_search_package as package
+        from fedcore.experiments.compression_search_protocol import TUNED_CATALOG
+    
+        class Split:
+            def __init__(self, prefix):
+                self.value = {"ids": [prefix+":0"], "x_sha256": prefix+"-features", "y_sha256": prefix+"-labels"}
+    
+            def manifest(self):
+                return dict(self.value)
+    
+        source = SimpleNamespace(manifest={"normalized_identity": "source-A"},
+            calibration=Split("cal"), validation=Split("val"))
+        monkeypatch.setattr(evaluation, "AttemptLedger", lambda *args, **kwargs: SimpleNamespace(charge=lambda *args: None))
+        monkeypatch.setattr(evaluation, "load_source", lambda *args: source)
+        monkeypatch.setattr(evaluation, "prepare_space", lambda *args: None)
+        monkeypatch.setattr(evaluation, "FullEvaluator", lambda *args, **kwargs: SimpleNamespace(context_sha256=kwargs["context_sha256"]))
+        protocol_path = tmp_path / "protocol.json"
+        protocol_path.write_text(json.dumps({"environment": {"torch": "pinned-A"}}), encoding="utf-8")
+        job = {"output": str(tmp_path), "directory": str(tmp_path / "jobs/context"), "job": "context",
+            "protocol_sha256": "protocol", "compute_admission_deadline": float("inf"), "model_seed": 41,
+            "historical_root": "unused", "repo": "unused", "source_sha256": "code-A"}
+>       original = package._source_evaluator(job, TUNED_CATALOG)[2].context_sha256
+
+tests\refactoring\test_compression_search_package_independent.py:631: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:409: in _source_evaluator
+    write_json(Path(job["directory"]) / "source-manifest.json", source.manifest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context4/jobs/context/source-manifest.json')
+value = {'normalized_identity': 'source-A'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context4\\jobs\\context\\source-manifest.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context4\\jobs\\context\\source-manifest.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+_ test_actual_evaluation_context_covers_source_data_roles_code_and_environment[environment] _
+
+tmp_path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000241A3520670>
+change = 'environment'
+
+    @pytest.mark.parametrize("change", ("source", "calibration_values", "validation_labels", "data_role", "code", "environment"))
+    def test_actual_evaluation_context_covers_source_data_roles_code_and_environment(tmp_path, monkeypatch, change):
+        import fedcore.experiments.compression_search_evaluation as evaluation
+        import fedcore.experiments.compression_search_package as package
+        from fedcore.experiments.compression_search_protocol import TUNED_CATALOG
+    
+        class Split:
+            def __init__(self, prefix):
+                self.value = {"ids": [prefix+":0"], "x_sha256": prefix+"-features", "y_sha256": prefix+"-labels"}
+    
+            def manifest(self):
+                return dict(self.value)
+    
+        source = SimpleNamespace(manifest={"normalized_identity": "source-A"},
+            calibration=Split("cal"), validation=Split("val"))
+        monkeypatch.setattr(evaluation, "AttemptLedger", lambda *args, **kwargs: SimpleNamespace(charge=lambda *args: None))
+        monkeypatch.setattr(evaluation, "load_source", lambda *args: source)
+        monkeypatch.setattr(evaluation, "prepare_space", lambda *args: None)
+        monkeypatch.setattr(evaluation, "FullEvaluator", lambda *args, **kwargs: SimpleNamespace(context_sha256=kwargs["context_sha256"]))
+        protocol_path = tmp_path / "protocol.json"
+        protocol_path.write_text(json.dumps({"environment": {"torch": "pinned-A"}}), encoding="utf-8")
+        job = {"output": str(tmp_path), "directory": str(tmp_path / "jobs/context"), "job": "context",
+            "protocol_sha256": "protocol", "compute_admission_deadline": float("inf"), "model_seed": 41,
+            "historical_root": "unused", "repo": "unused", "source_sha256": "code-A"}
+>       original = package._source_evaluator(job, TUNED_CATALOG)[2].context_sha256
+
+tests\refactoring\test_compression_search_package_independent.py:631: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\compression_search_package.py:409: in _source_evaluator
+    write_json(Path(job["directory"]) / "source-manifest.json", source.manifest)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = Path('C:/Users/user/AppData/Local/Packages/sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}/AC/Temp/pytest-of-user/pytest-0/test_actual_evaluation_context5/jobs/context/source-manifest.json')
+value = {'normalized_identity': 'source-A'}
+
+    def write_json(path, value):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(path.name + ".pending")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+>       os.replace(temporary, path)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context5\\jobs\\context\\source-manifest.json.pending' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{62f7f8d0-af50-4031-948e-add3a8129199}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_actual_evaluation_context5\\jobs\\context\\source-manifest.json'
+
+fedcore\experiments\compression_search_package.py:39: PermissionError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_compression_search_digits_worker.py::test_random_worker_attempt_budget_includes_common_prefix_and_uses_owned_stream
+FAILED tests/refactoring/test_compression_search_digits_worker.py::test_tampered_selection_is_rejected_before_opening_test_role
+FAILED tests/refactoring/test_compression_search_matrix.py::test_validation_selection_is_frozen_on_time_before_test
+FAILED tests/refactoring/test_compression_search_resume.py::test_corrected_admission_keeps_original_time_counter_and_attempt_evidence
+FAILED tests/refactoring/test_compression_search_resume.py::test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[scientific_run]
+FAILED tests/refactoring/test_compression_search_resume.py::test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[plan]
+FAILED tests/refactoring/test_compression_search_resume.py::test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[source]
+FAILED tests/refactoring/test_compression_search_resume.py::test_resume_refuses_replaying_experiments_or_changing_plan_source_or_clock[future_clock]
+FAILED tests/refactoring/test_compression_search_resume.py::test_reuse_preserves_original_job_bytes_and_provenance_without_new_attempts
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_orchestrator_watchdog_kills_the_whole_owned_tree_at_absolute_deadlines[7200.0-10000.0-package_time_limit]
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_orchestrator_watchdog_kills_the_whole_owned_tree_at_absolute_deadlines[46.0-45.0-worker_hard_deadline]
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_actual_evaluation_context_covers_source_data_roles_code_and_environment[source]
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_actual_evaluation_context_covers_source_data_roles_code_and_environment[calibration_values]
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_actual_evaluation_context_covers_source_data_roles_code_and_environment[validation_labels]
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_actual_evaluation_context_covers_source_data_roles_code_and_environment[data_role]
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_actual_evaluation_context_covers_source_data_roles_code_and_environment[code]
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_actual_evaluation_context_covers_source_data_roles_code_and_environment[environment]
+17 failed, 291 passed, 3 warnings in 32.66s

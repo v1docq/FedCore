@@ -15,7 +15,7 @@ import zipfile
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
-from fedcore.experiments.compression_search_analysis import normalized_hypervolume, pareto_points
+from fedcore.experiments.compression_search_analysis import normalized_hypervolume, pareto_points, virtual_stop_diagnostic
 from fedcore.experiments.compression_search_matrix import summarize_matrix
 
 
@@ -57,7 +57,11 @@ def build_analysis(run):
             peak_rss_bytes=resource.get("resources",{}).get("peak_tree_rss_bytes"),
             stop=resource.get("stop"),error=resource.get("error")))
         if job["kind"] == "matrix":
-            matrix_streams.extend(lines(path.parent/"matrix-streams.jsonl"))
+            monitored = (resource.get("status") in ("succeeded", "partial")
+                and resource.get("resources", {}).get("peak_tree_rss_bytes") is not None
+                and resource.get("stop") in (None, "hard_deadline", "request_hard_deadline"))
+            matrix_streams.extend(dict(row, job=job["job"], resource_status=resource.get("status", "missing"),
+                resource_eligible=monitored) for row in lines(path.parent/"matrix-streams.jsonl"))
         if job["kind"] == "finalize":
             finalized.append(dict(result, model_seed=job["split_seed"]))
         if job["kind"] not in ("search", "oracle"):
@@ -111,6 +115,8 @@ def build_analysis(run):
             created_proposals=created,cache_hits=cache_hits,
             trace_events=len(trace),parent_seconds=resource.get("resources",{}).get("elapsed_seconds"),
             peak_rss_bytes=resource.get("resources",{}).get("peak_tree_rss_bytes"))
+        record["virtual_stop"] = virtual_stop_diagnostic(rows, applicable=job["mode"] != "R",
+            reason="Ready catalog has only 15 solutions", parent_started_at=job["worker_started_at"])
         search.append(record)
         prefix = []
         for index, row in enumerate(rows,1):
@@ -173,16 +179,28 @@ def build_analysis(run):
                 test_macro_F1=row["test"]["macro_f1"],storage_fraction=row["tensor_bytes"]/68904))
     updates=lines(run/"training-updates.jsonl")
     matrix_events=[row for path in (run/"jobs").glob("*/matrix-events.jsonl") for row in lines(path)]
+    matrix_summary = summarize_matrix(matrix_streams)
+    for row in matrix_summary:
+        observed = [stream for stream in matrix_streams if stream["n"] == row["n"]]
+        monitored = bool(observed) and all(stream["resource_eligible"] for stream in observed)
+        row["resource_eligible"] = monitored
+        row["timing_controls_eligible"] = row["eligible"]
+        row["eligible"] = row["eligible"] and monitored
+        row["observed_win"] = row["observed_win"] and monitored
+    measured_peaks = [row.get("resources", {}).get("peak_tree_rss_bytes") for row in ledger["jobs"]]
+    measured_peaks = [value for value in measured_peaks if value is not None]
     return dict(schema="issue99-local2-analysis-v1",code_revision=protocol["git_revision"],utc=protocol["utc"],
         resources=dict(ledger,training_updates_started=sum(row["event"] == "update_started" for row in updates),
             training_updates_completed=sum(row["event"] == "update_completed" for row in updates),
             mlp_ledger_count=len(lines(run/"mlp-attempts.jsonl")),matrix_ledger_count=len(lines(run/"matrix-attempts.jsonl")),
             observed_svd_starts=sum((row.get("svd_telemetry") or {}).get("started",0) for row in ledger["jobs"]),
             observed_svd_completions=sum((row.get("svd_telemetry") or {}).get("completed",0) for row in ledger["jobs"]),
-            max_tree_rss_bytes=max((row.get("resources",{}).get("peak_tree_rss_bytes",0) for row in ledger["jobs"]),default=0)),
+            max_tree_rss_bytes=max(measured_peaks, default=None),
+            resource_monitoring_incomplete_jobs=[row["job"] for row in ledger["jobs"]
+                if row.get("monitoring_complete") is False]),
         baselines=baselines,search_runs=search,search_summary=summaries,curves=curves,oracles=oracles,
         paired=pairs,common_bytes=common_bytes,frontiers=frontiers,test_selected=selected,
-        matrix_summary=summarize_matrix(matrix_streams),matrix_streams=matrix_streams,
+        matrix_summary=matrix_summary,matrix_streams=matrix_streams,
         matrix_events_count=len(matrix_events),jobs=jobs,
         data_scope="1797 previously exposed Digits images; three overlapping new partitions; common initialization101")
 
@@ -205,7 +223,7 @@ def main():
                 continue
             relative=path.relative_to(args.run).as_posix()
             digest=hashlib.sha256(path.read_bytes()).hexdigest()
-            archived=path.suffix in (".json",".jsonl",".log",".bin") and relative != "analysis.json"
+            archived=path.suffix in (".json",".jsonl",".log",".bin",".py",".patch") and relative != "analysis.json"
             files.append(dict(path=relative,bytes=path.stat().st_size,sha256=digest,archived=archived))
             if archived:
                 archive.write(path,relative)
