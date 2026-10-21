@@ -29,7 +29,7 @@ def test_frozen_schedule_counts_and_balanced_orders():
     for arm in "ABC":
         assert [sum(order[i] == arm for order in ARM_ORDERS) for i in range(3)] == [2, 2, 2]
     assert len(search_jobs()) == 54
-    assert matrix_request(8, "LD").max_peak_bytes == 512*1024**2
+    assert matrix_request(8, "LD").max_peak_bytes == 1024**3
 
 
 @pytest.mark.parametrize("arm", ["A", "B", "C"])
@@ -43,7 +43,7 @@ def test_reached_transition_has_exact_svd_law_and_preserves_source(arm, word, tm
     with SVDTelemetry(tmp_path) as telemetry:
         # The unit test shares a process with thousands of unrelated imported
         # models. Test transition laws independently of that accumulated RSS;
-        # real fresh experiment workers retain the frozen 512 MiB request cap.
+        # real fresh experiment workers retain the approved 1 GiB request cap.
         request = replace(matrix_request(8, word), max_peak_bytes=8*1024**3)
         actual, row = invoke_arm(source, request, arm)
         assert row["accepted"] == (word == "LD"), str(row.get("early_rejection") or row.get("rejection"))

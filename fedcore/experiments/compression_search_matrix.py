@@ -20,6 +20,7 @@ INVALID_COUNTS = (0, 2, 4, 6)
 ARM_ORDERS = ("ABC", "BCA", "CAB", "ACB", "CBA", "BAC")
 SIZE_SECONDS = dict(zip(SIZES, (60, 60, 120, 360, 900)))
 MATRIX_ATTEMPT_LIMIT = 4350
+MAX_PEAK_BYTES = 1024**3
 
 
 def request_tape(invalid_count, seed):
@@ -165,7 +166,7 @@ def matrix_request(n, word):
         raise ValueError("Only the frozen common-prefix chains are allowed")
     last = MaterializeDense() if word == "LD" else LowRank(n//4)
     return CompositionRequest((CompositionRecipe("0", (LowRank(n//4), last)),),
-                              max_peak_bytes=512*1024**2)
+                              max_peak_bytes=MAX_PEAK_BYTES)
 
 
 def invoke_arm(model, request, arm):
