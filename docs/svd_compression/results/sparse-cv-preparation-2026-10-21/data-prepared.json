@@ -1,0 +1,5 @@
+{
+  "prepared_train_rows": 50000,
+  "test_evaluated": false,
+  "cuda_visible_devices": ""
+}

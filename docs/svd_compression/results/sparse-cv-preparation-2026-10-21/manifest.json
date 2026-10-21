@@ -7,6 +7,10 @@
     "bytes": 100417,
     "sha256": "97d1c36ba618e616d45e34f95f8ff753d1c26f38a40b9a5f30bfc12ab688ae69"
   },
+  "ci-source-commit.json": {
+    "bytes": 775,
+    "sha256": "affa5465e970c7ffb591a20b493151a32c815832417636a1d9053def7ce43515"
+  },
   "cv-core-tests-final.log": {
     "bytes": 732,
     "sha256": "de5238cf24ecb4a495405ae18783eeb556dc96134d3c44becb9b08acb7bacd04"
@@ -15,9 +19,29 @@
     "bytes": 3643,
     "sha256": "b49650059f8afa9dbdd45e85bbcb9eb4cad69116c98a3ed5352d3f48faad2e98"
   },
+  "data-prepared.json": {
+    "bytes": 92,
+    "sha256": "2548bb11a305497f1b3653cb2e8b4cac72951284703352dc44a5a7758e2b820e"
+  },
   "example-secrets.log": {
     "bytes": 0,
     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "final-install-check.json": {
+    "bytes": 371,
+    "sha256": "2ed2f30b4160f7bd68c572b6df420c83b93a387073a93d35c8331881d4e97cc8"
+  },
+  "launch-packet.json": {
+    "bytes": 1388,
+    "sha256": "2c4034abefd3a4301bda6191af8086018e71440b2d588546383f655bda6e98da"
+  },
+  "linux-final-pip-check.log": {
+    "bytes": 30,
+    "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+  },
+  "linux-installed-cpu-tests.log": {
+    "bytes": 1266,
+    "sha256": "9bacca4a12a874284f6b6127c5756c0234b8007da5c14ac85543aac01672d687"
   },
   "linux-supervision-tests.log": {
     "bytes": 98,
@@ -31,9 +55,17 @@
     "bytes": 101,
     "sha256": "462514e300db9944977333755450e7213d8c20bc9e6e9317a99a64bc64142f59"
   },
+  "pilot-wheel-build.log": {
+    "bytes": 106970,
+    "sha256": "cc827771bf81b5c35c688757f143713755e949adb35f4e11e4d4db4c5e5d62c4"
+  },
   "pip-check.log": {
     "bytes": 31,
     "sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+  },
+  "prepared-admission.json": {
+    "bytes": 595,
+    "sha256": "3b287940584c89124656e900afa56829194266726e2fc5add0016d714091635f"
   },
   "remote-environment-freeze.txt": {
     "bytes": 3967,
@@ -42,6 +74,10 @@
   "shared-regression.log": {
     "bytes": 18767,
     "sha256": "04637c6c6176da1017ec27c41e7f940b3fed914baf0bf64ffe72c6d1611f6cbb"
+  },
+  "source-manifest.json": {
+    "bytes": 37581,
+    "sha256": "5732c95bb51c0afa1fdbdf18bc307ff327b8ffe38e37eb065b5b3b73e9af61e6"
   },
   "source-preservation.json": {
     "bytes": 371,
