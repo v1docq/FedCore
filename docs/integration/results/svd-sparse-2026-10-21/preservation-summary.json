@@ -1,0 +1,28 @@
+{
+  "preserved": true,
+  "roots": 3,
+  "files": 130,
+  "before_manifest_sha256": "2695253175e71700c9d8906e1e103e2ed24efd2ac89b6c3b64c5e0dcb259fd8a",
+  "after_manifest_sha256": "2695253175e71700c9d8906e1e103e2ed24efd2ac89b6c3b64c5e0dcb259fd8a",
+  "scope": "HEAD, git status, byte counts and SHA256 of modified and non-ignored untracked files; originals were not stashed or reset",
+  "working_copies": [
+    {
+      "label": "legacy-working-copy",
+      "head": "844114fc968c436e030b93e4ccac6f954ae76ff0",
+      "status_sha256": "63c39eec18678e62e8144eb4b365feac5568837e19dd7837c0c696eec0c35ebb",
+      "files": 130
+    },
+    {
+      "label": "svd-source",
+      "head": "cd29823122f9454772ebde0aede3eabaa2977cd4",
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0
+    },
+    {
+      "label": "sparse-source",
+      "head": "59028b228983a8a46bff8272e59c7aacfeee7916",
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0
+    }
+  ]
+}

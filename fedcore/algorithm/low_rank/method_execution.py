@@ -170,6 +170,11 @@ def plan_method(model, spec, *, rank=None, rank_ratio=None, parameter_fraction=N
 def _check_data(model, calibration, batch_size, workspace, peak):
     if not isinstance(model, nn.Module) or any(t.device.type != "cpu" for t in (*model.parameters(), *model.buffers())):
         raise MethodProfileError("P2 runtime requires a CPU torch Module")
+    from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+    try:
+        validate_sparse_storage(model)
+    except ValueError as error:
+        raise MethodProfileError(str(error)) from error
     if (not isinstance(calibration, torch.Tensor) or calibration.device.type != "cpu"
             or calibration.dtype not in (torch.float32, torch.float64)
             or calibration.ndim < 2 or calibration.shape[0] == 0 or calibration.numel() == 0):

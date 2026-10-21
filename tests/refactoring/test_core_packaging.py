@@ -22,6 +22,16 @@ REQUIRED = {
     'fedcore/algorithm/low_rank/staged_execution.py',
     'fedcore/algorithm/low_rank/compression_graph.py',
     'fedcore/algorithm/low_rank/graph_execution.py',
+    'fedcore/algorithm/pruning/sparse/__init__.py',
+    'fedcore/algorithm/pruning/sparse/specs.py',
+    'fedcore/algorithm/pruning/sparse/layers.py',
+    'fedcore/algorithm/pruning/sparse/linear.py',
+    'fedcore/algorithm/pruning/sparse/channels.py',
+    'fedcore/algorithm/pruning/sparse/architectures.py',
+    'fedcore/algorithm/pruning/sparse/policies.py',
+    'fedcore/algorithm/pruning/sparse/moe.py',
+    'fedcore/algorithm/pruning/sparse/execution.py',
+    'fedcore/algorithm/pruning/sparse/checkpoint.py',
     'fedcore/algorithm/low_rank/architecture_profiles.py',
     'fedcore/algorithm/low_rank/architecture_checkpoint.py',
     'fedcore/algorithm/low_rank/slicegpt_specs.py',
@@ -320,7 +330,22 @@ for steps in ((compression_composition.PruneMask((0, 5)), compression_compositio
     assert candidate_storage.inventory_cost(candidate_storage.capture_inventory(restored), 'bytes') == outcome.storage_bytes
     assert restored._fedcore_method_evidence['fingerprint'] == workflow.fingerprint
 from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
-assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3)
+assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3, 4)
+from fedcore.algorithm.pruning.sparse.execution import transform_sparse
+from fedcore.algorithm.pruning.sparse.specs import HASSLEFreeSpec, NMStructure
+from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE, MoECompressionSpec
+for source,inputs,method,spec in (
+    (nn.Linear(8,4).eval(),torch.randn(9,8),'hassle_free',
+     HASSLEFreeSpec(structure=NMStructure(rank=1),outer_steps=1,inner_steps=2)),
+    (ReferenceMoE(4,6,3,1).eval(),torch.randn(9,4),'moe_i2',
+     MoECompressionSpec((0,2),(1,1))),
+):
+    sparse = transform_sparse(source,method,spec,calibration=inputs).model.eval()
+    manager.save_to_file(manager.serialize_to_bytes(sparse),path)
+    loaded = manager.load_from_file(path).eval()
+    torch.testing.assert_close(loaded(inputs),sparse(inputs))
+    artifact = export_model(loaded,'torchscript',Path.cwd()/'sparse.ts',inputs)
+    torch.testing.assert_close(torch.jit.load(str(artifact))(inputs),loaded(inputs))
 for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
     result = facade.compress_profile(model, x, spec, rank=2, target_paths=('',))
     manager.save_to_file(manager.serialize_to_bytes(result.model), path)

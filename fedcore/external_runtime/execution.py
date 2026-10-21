@@ -11,7 +11,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
-from .contracts import ContractError, ExecutionPlan, P2_EXTERNAL_METHODS
+from .contracts import ContractError, ExecutionPlan, P2_EXTERNAL_METHODS, SPARSE_EXTERNAL_METHODS
 from .models import load_model_bundle
 from .security import confined_path, safe_load
 
@@ -128,7 +128,19 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
     stage_started = time.perf_counter()
     weighted_evidence = None
     method_evidence = None
-    if request.method in P2_EXTERNAL_METHODS:
+    if request.method in SPARSE_EXTERNAL_METHODS:
+        from fedcore.algorithm.pruning.sparse.execution import transform_sparse
+        from fedcore.algorithm.pruning.sparse.specs import SparseDomainError
+        options = request.sparse_profile
+        try:
+            transformed = transform_sparse(model, request.method, options.spec,
+                calibration=calibration, target_paths=options.target_paths)
+        except SparseDomainError as error:
+            raise ContractError(error.code, str(error)) from error
+        compressed = transformed.model.eval()
+        method_evidence = transformed.evidence
+        decisions = method_evidence['layers']
+    elif request.method in P2_EXTERNAL_METHODS:
         from fedcore.algorithm.low_rank.method_execution import transform_method
         options = request.method_profile
         transformed = transform_method(model, calibration, options.spec, rank=request.rank,
@@ -170,7 +182,17 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
         raise ContractError("error_budget_exceeded", f"Validation output relative error {relative:g} exceeds {request.max_relative_error:g}")
     from fedcore.tools.export import export_model
     stage_started = time.perf_counter()
-    artifact = export_model(compressed, request.artifact_format, confined_path(root, plan.artifact_name, must_exist=False), example)
+    artifact_measurement = None
+    if request.method in SPARSE_EXTERNAL_METHODS:
+        from fedcore.experiments.measurement import measure_artifact
+        artifact_measurement = measure_artifact(compressed, example,
+            confined_path(root, plan.artifact_name, must_exist=False), repeats=request.resources.repetitions,
+            warmup=1, threads=request.resources.threads)
+        if artifact_measurement['status'] != 'succeeded':
+            raise ContractError('unsupported_export', 'Sparse artifact measurement failed: '+artifact_measurement.get('reason', 'unknown'))
+        artifact = Path(artifact_measurement['artifact']['path'])
+    else:
+        artifact = export_model(compressed, request.artifact_format, confined_path(root, plan.artifact_name, must_exist=False), example)
     timings["export_seconds"] = time.perf_counter() - stage_started
     parameters_before = sum(p.numel() for p in model.parameters())
     parameters_after = sum(p.numel() for p in compressed.parameters())
@@ -216,6 +238,11 @@ def execute_plan(plan: ExecutionPlan, job_dir) -> dict:
         result['method_transform'] = method_evidence
         result['provenance']['calibration_sha256'] = hashlib.sha256(
             confined_path(root, request.data.calibration).read_bytes()).hexdigest()
+    if request.method in SPARSE_EXTERNAL_METHODS:
+        from fedcore.experiments.measurement import tensor_state_bytes
+        result['artifact_measurement'] = artifact_measurement
+        result['metrics']['baseline']['tensor_bytes'] = tensor_state_bytes(model)
+        result['metrics']['compressed']['tensor_bytes'] = tensor_state_bytes(compressed)
     timings["provenance_and_result_seconds"] = time.perf_counter() - stage_started
     timings["execute_plan_seconds"] = time.perf_counter() - worker_started
     return result

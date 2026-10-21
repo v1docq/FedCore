@@ -211,6 +211,45 @@ class MethodOptions:
 
 P2_EXTERNAL_METHODS = ('asvd', 'fwsvd', 'afm', 'bolaco', 'flar_svd', 'drone', 'svdllm_v1', 'svdllm_v2')
 
+SPARSE_EXTERNAL_METHODS = ('hassle_free',)
+
+
+@dataclass(frozen=True)
+class SparseOptions:
+    """Contract v4: bounded portable CPU N:M plus low-rank correction."""
+    spec: object
+    target_paths: tuple[str, ...] | None = None
+    method_version: int = 1
+
+    def __post_init__(self):
+        from fedcore.algorithm.pruning.sparse.specs import HASSLEFreeSpec
+        if type(self.spec) is not HASSLEFreeSpec or type(self.method_version) is not int or self.method_version != 1:
+            raise ContractError('unsupported_profile', 'Sparse v4 admits HASSLEFreeSpec method version 1 only')
+        if self.spec.max_input_features > 512 or self.spec.outer_steps > 20 or self.spec.inner_steps > 1000:
+            raise ContractError('resource_limit', 'Sparse v4 bounds full-Gram width to 512, outer steps to 20 and inner steps to 1000')
+        if self.target_paths is not None and (not isinstance(self.target_paths, tuple) or not self.target_paths
+                or any(not isinstance(p, str) for p in self.target_paths)
+                or len(set(self.target_paths)) != len(self.target_paths)):
+            raise ContractError('invalid_targets', 'Sparse target paths must be a distinct immutable tuple')
+
+    @classmethod
+    def parse(cls, method, payload):
+        from fedcore.algorithm.pruning.sparse.execution import parse_sparse_spec
+        from fedcore.algorithm.pruning.sparse.specs import SparseDomainError
+        values = _object(payload, tuple(cls.__dataclass_fields__), ('spec',))
+        if method not in SPARSE_EXTERNAL_METHODS:
+            raise ContractError('unsupported_profile', 'Sparse method is outside the external allowlist')
+        try:
+            spec = parse_sparse_spec(method, values['spec'])
+        except SparseDomainError as error:
+            raise ContractError(error.code, str(error)) from error
+        paths = values.get('target_paths')
+        if paths is not None:
+            if not isinstance(paths, (list, tuple)):
+                raise ContractError('invalid_targets', 'Sparse paths must be a sequence')
+            paths = tuple(paths)
+        return cls(spec, paths, values.get('method_version', 1))
+
 
 @dataclass(frozen=True)
 class CompressionRequest:
@@ -229,15 +268,26 @@ class CompressionRequest:
     version: int = 1
     weighted: WeightedOptions | None = None
     method_profile: MethodOptions | None = None
+    sparse_profile: SparseOptions | None = None
 
     def __post_init__(self):
         relative_name(self.model)
         relative_name(self.example)
-        if type(self.version) is not int or self.version not in (1, 2, 3):
-            raise ContractError("unsupported_version", "Only contract versions 1, 2 and 3 are supported")
-        if self.task not in ("classification", "regression") or self.method not in ("svd", "weighted_svd", "export", *P2_EXTERNAL_METHODS):
+        if self.method == 'tedepr':
+            raise ContractError('insufficient_specification', 'TEDEPR requires its missing full primary specification')
+        if type(self.version) is not int or self.version not in (1, 2, 3, 4):
+            raise ContractError("unsupported_version", "Only contract versions 1–4 are supported")
+        if self.task not in ("classification", "regression") or self.method not in ("svd", "weighted_svd", "export", *P2_EXTERNAL_METHODS, *SPARSE_EXTERNAL_METHODS):
             raise ContractError("unsupported_method", "Only declared tensor classification/regression profiles are supported")
-        if self.method in P2_EXTERNAL_METHODS:
+        if self.method in SPARSE_EXTERNAL_METHODS:
+            if (self.version != 4 or not isinstance(self.sparse_profile, SparseOptions)
+                    or self.weighted is not None or self.method_profile is not None or self.rank is not None
+                    or self.retained_energy != 1 or self.artifact_format != 'torchscript'
+                    or not isinstance(self.data, DataRoles) or self.data.calibration is None):
+                raise ContractError('unsupported_profile', 'Sparse v4 requires explicit options, calibration and TorchScript CPU export')
+        elif self.sparse_profile is not None:
+            raise ContractError('unsupported_profile', 'Sparse options require contract v4 and an allowlisted sparse method')
+        elif self.method in P2_EXTERNAL_METHODS:
             from fedcore.algorithm.low_rank.method_specs import method_name
             if (self.version != 3 or not isinstance(self.method_profile, MethodOptions)
                     or method_name(self.method_profile.spec) != self.method or self.weighted is not None):
@@ -274,6 +324,8 @@ class CompressionRequest:
             result.pop("weighted")
         if self.method_profile is None:
             result.pop('method_profile')
+        if self.sparse_profile is None:
+            result.pop('sparse_profile')
         return result
 
     @classmethod
@@ -284,9 +336,10 @@ class CompressionRequest:
         resources = _object(p.get("resources", {}), tuple(Resources.__dataclass_fields__))
         weighted = WeightedOptions.parse(p["weighted"]) if p.get("weighted") is not None else None
         method_profile = MethodOptions.parse(p.get('method'), p['method_profile']) if p.get('method_profile') is not None else None
-        return cls(**{k: v for k, v in p.items() if k not in ("input_spec", "data", "profile", "resources", "weighted", "method_profile")},
+        sparse_profile = SparseOptions.parse(p.get('method'), p['sparse_profile']) if p.get('sparse_profile') is not None else None
+        return cls(**{k: v for k, v in p.items() if k not in ("input_spec", "data", "profile", "resources", "weighted", "method_profile", "sparse_profile")},
                    input_spec=InputSpec.parse(p["input_spec"]), data=DataRoles(**roles),
-                   profile=DeviceProfile.parse(p.get("profile", {})), resources=Resources(**resources), weighted=weighted, method_profile=method_profile)
+                   profile=DeviceProfile.parse(p.get("profile", {})), resources=Resources(**resources), weighted=weighted, method_profile=method_profile, sparse_profile=sparse_profile)
 
 
 @dataclass(frozen=True)
@@ -300,6 +353,6 @@ def plan_request(request: CompressionRequest) -> ExecutionPlan:
     if not isinstance(request, CompressionRequest):
         raise ContractError("invalid_schema", "Planner consumes a validated CompressionRequest")
     steps = ("load_safe_model", "validate_inputs", "evaluate", "export", "record_provenance")
-    if request.method in ("svd", "weighted_svd", *P2_EXTERNAL_METHODS):
+    if request.method in ("svd", "weighted_svd", *P2_EXTERNAL_METHODS, *SPARSE_EXTERNAL_METHODS):
         steps = steps[:2] + (request.method,) + steps[2:]
     return ExecutionPlan(request, steps=steps, artifact_name="compressed.pt" if request.artifact_format == "torchscript" else "compressed.onnx")

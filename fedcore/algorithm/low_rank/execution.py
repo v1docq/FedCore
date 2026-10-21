@@ -167,6 +167,11 @@ def plan_weighted(model, *, rank=None, rank_ratio=None, parameter_fraction=None,
         raise WeightedProfileError('A torch Module is required')
     if any(t.device.type != 'cpu' for t in (*model.parameters(), *model.buffers())):
         raise WeightedProfileError('This weighted runtime profile requires a CPU model')
+    from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+    try:
+        validate_sparse_storage(model)
+    except ValueError as error:
+        raise WeightedProfileError(str(error)) from error
     choices = [rank is not None, rank_ratio is not None, parameter_fraction is not None]
     if sum(choices) > 1:
         raise WeightedProfileError('Rank, rank fraction and parameter fraction are alternative policies')
