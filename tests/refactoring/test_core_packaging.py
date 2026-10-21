@@ -10,6 +10,15 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/cv_grammar.py',
+    'fedcore/algorithm/low_rank/cv_execution.py',
+    'fedcore/algorithm/pruning/sparse/cv_channels.py',
+    'fedcore/algorithm/pruning/sparse/cv_checkpoint.py',
+    'fedcore/experiments/cv_sparse_protocol.py',
+    'fedcore/experiments/cv_sparse_data.py',
+    'fedcore/experiments/cv_sparse_runtime.py',
+    'fedcore/experiments/cv_sparse_pilot.py',
+    'fedcore/experiments/cv_sparse_supervision.py',
     'fedcore/algorithm/low_rank/compression_composition.py',
     'fedcore/algorithm/low_rank/grouped_workflow.py',
     'fedcore/algorithm/low_rank/grouped_execution.py',
@@ -419,5 +428,26 @@ for spec,options,inputs in cases:
     restored = manager.load_from_file(path).eval()
     torch.testing.assert_close(restored(*inputs),result.model.eval()(*inputs),rtol=0,atol=0)
     assert sum(p.numel() for p in restored.parameters()) == result.evidence['parameters_after']
+"""
+    code += """
+from fedcore.algorithm.pruning.sparse.cv_channels import make_cifar_resnet18
+from fedcore.algorithm.low_rank.cv_grammar import ChannelPrune, CVScopeGene, CVGenotype, compile_cv_genotype
+from fedcore.algorithm.low_rank.cv_execution import CVWorkflowSuccess
+from fedcore.algorithm.low_rank.grammar_search import run_cv_grammar_search
+from fedcore.experiments import cv_sparse_protocol, cv_sparse_data, cv_sparse_runtime, cv_sparse_pilot, cv_sparse_supervision
+assert cv_sparse_protocol.PilotProtocol().max_slot_seconds == 14400
+assert Path(cv_sparse_pilot.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+cv_source = make_cifar_resnet18().eval()
+cv_inputs = torch.linspace(-1, 1, 3*32*32).reshape(1,3,32,32)
+choice = ChannelPrune(32)
+cv_space = facade.prepare_cv_grammar(cv_source,cv_inputs,alternatives={'layer1.0':(choice,)})
+cv_workflow = compile_cv_genotype(CVGenotype((CVScopeGene('layer1.0',choice),)),cv_space)
+cv_result = facade.compress_cv_workflow(cv_source,cv_inputs,cv_workflow)
+assert type(cv_result) is CVWorkflowSuccess, cv_result
+assert cv_result.model.layer1[0].conv1.out_channels == 32
+cv_restored = manager.deserialize_from_bytes(cv_result.checkpoint_bytes).eval()
+torch.testing.assert_close(cv_restored(cv_inputs),cv_result.model(cv_inputs),rtol=0,atol=0)
+assert cv_restored.representation_config() == cv_result.model.representation_config()
+assert candidate_storage.inventory_cost(candidate_storage.capture_inventory(cv_restored),'bytes') == cv_workflow.expected_storage_bytes
 """
     run(['-c', code], outside, env)

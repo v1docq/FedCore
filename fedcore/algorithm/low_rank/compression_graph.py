@@ -44,6 +44,7 @@ class ArtifactKind(str, Enum):
     FULL_METRIC = "full_input_metric"
     OUTPUT_PROJECTOR = "centered_output_projector"
     APPROXIMATION = "low_rank_approximation"
+    CHANNEL_SELECTION = "selected_structural_channels"
     REPLACEMENT = "operator_replacement"
 
 

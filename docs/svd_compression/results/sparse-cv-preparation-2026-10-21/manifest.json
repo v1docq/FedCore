@@ -1,0 +1,50 @@
+{
+  "broad-tests-final.log": {
+    "bytes": 14834,
+    "sha256": "4a27a5bfc9657fae23f1ff92cfc14291e598ce4b04613fc4f8daac65a0055435"
+  },
+  "broad-tests.log": {
+    "bytes": 100417,
+    "sha256": "97d1c36ba618e616d45e34f95f8ff753d1c26f38a40b9a5f30bfc12ab688ae69"
+  },
+  "cv-core-tests-final.log": {
+    "bytes": 732,
+    "sha256": "de5238cf24ecb4a495405ae18783eeb556dc96134d3c44becb9b08acb7bacd04"
+  },
+  "cv-core-tests.log": {
+    "bytes": 3643,
+    "sha256": "b49650059f8afa9dbdd45e85bbcb9eb4cad69116c98a3ed5352d3f48faad2e98"
+  },
+  "example-secrets.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "linux-supervision-tests.log": {
+    "bytes": 98,
+    "sha256": "2fdd72bfa913a7c69a1c45fa3eefccc74ed782774d051dbf08294d44b2058e0f"
+  },
+  "local-environment-packages.json": {
+    "bytes": 12410,
+    "sha256": "29d4f78c75dd2066954ea271ad26882a9e29b31086619ee4548746c467766135"
+  },
+  "pilot-stop-policy-tests.log": {
+    "bytes": 101,
+    "sha256": "462514e300db9944977333755450e7213d8c20bc9e6e9317a99a64bc64142f59"
+  },
+  "pip-check.log": {
+    "bytes": 31,
+    "sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+  },
+  "remote-environment-freeze.txt": {
+    "bytes": 3967,
+    "sha256": "a0376418d92f60650aeb55a9f8c1011e112e7c4859bb68fd54fc7f3c57aa0aca"
+  },
+  "shared-regression.log": {
+    "bytes": 18767,
+    "sha256": "04637c6c6176da1017ec27c41e7f940b3fed914baf0bf64ffe72c6d1611f6cbb"
+  },
+  "source-preservation.json": {
+    "bytes": 371,
+    "sha256": "a3b68105f1a43e3fe30b520f2c4530974fcddd0643aeacfae705d9c2dad07862"
+  }
+}

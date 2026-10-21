@@ -113,6 +113,31 @@ def test_crossover_reserves_both_children_before_operator_execution(scripted_sea
     assert not any(event.get("operator") == "grammar_crossover" for event in result["trace"])
 
 
+@pytest.mark.parametrize("strict", [False, True])
+def test_late_evaluation_is_charged_but_strict_mode_cannot_improve_archive(scripted_search, strict):
+    fixture = scripted_search
+    calls = []
+    def evaluate(workflow):
+        calls.append(workflow)
+        if len(calls) == 2:
+            fixture.clock.now = 200.0
+            return search.GrammarFitness(0.01, 0.01)
+        return search.GrammarFitness(1.0, 2.0)
+    def script(optimizer, objective):
+        objective.read(optimizer.graphs[0])
+        try:
+            objective.read(optimizer.graphs[1])
+        except ValueError:
+            assert strict
+    fixture.script.run = script
+    result = fixture.run(evaluate, absolute_deadline=110.0, strict_deadline=strict)
+    assert result["charged_evaluations"] == 2
+    assert len(result["finite_archive"]) == 1
+    assert result["finite_archive"][0]["quality"] == (1.0 if strict else 0.01)
+    assert result["late_evaluation_count"] == int(strict)
+    assert len([event for event in result["trace"] if event["event"] == "deadline_excluded"]) == int(strict)
+
+
 def test_cached_children_are_two_proposals_but_cost_reads_are_technical(scripted_search):
     fixture = scripted_search
 

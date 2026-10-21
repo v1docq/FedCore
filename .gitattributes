@@ -38,3 +38,6 @@ docs/sparse_compression/results_v2_metrics.csv -text whitespace=cr-at-eol
 
 # Preserve the bytes hashed in the integration evidence manifest.
 docs/integration/results/svd-sparse-2026-10-21/** -text -whitespace
+
+# Preserve CPU validation records for the bounded Sparse/CV pilot preparation.
+docs/svd_compression/results/sparse-cv-preparation-2026-10-21/** -text -whitespace

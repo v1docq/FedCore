@@ -355,6 +355,24 @@ class LowRankModel(BaseCompressionModel):
         from .compression_composition import prepare_composition
         return prepare_composition(model, request)
 
+    def prepare_cv_grammar(self, model, calibration, **options):
+        """Read the complete frozen CIFAR ResNet18 structural/SVD domain."""
+        from .cv_execution import prepare_cv_grammar_space
+        return prepare_cv_grammar_space(model, calibration, **options)
+
+    def compress_cv_workflow(self, model, calibration, workflow):
+        """Publish only an independent CV model with an exact checkpoint."""
+        from .cv_execution import CVWorkflowSuccess, execute_cv_workflow
+        result = execute_cv_workflow(model, calibration, workflow)
+        if type(result) is CVWorkflowSuccess:
+            self.model_before, self.model_after = model, result.model
+            self.transform_result = result
+            trainer = getattr(self, 'trainer', None)
+            if trainer is not None and getattr(trainer, 'model', None) is model:
+                trainer.model = result.model
+                trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def compress_composition(self, model, workflow):
         """Publish only an owned model with a verified reloadable checkpoint."""
         from .compression_composition import CompositionSuccess, execute_composition

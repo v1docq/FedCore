@@ -1,5 +1,7 @@
 # Архитектура низкоранговых методов FedCore
 
+21.10.2026 PR [#165](https://github.com/v1docq/FedCore/pull/165) слит в `svd_compression`. [План включения Sparse и CV-пилота на A100](SPARSE_CV_A100_PLAN.md) описывает общий поисковый адаптер, согласованное сокращение каналов ResNet18, SVD и первый пакет CIFAR-10 с пределом 4 GPU-часа. Запуск GPU ожидает подтверждения свободного ресурса; результаты этого пилота пока отсутствуют.
+
 Статус: **основа P0–P1 и ограниченные профили P2–P5 реализованы**, 12.10.2026, [PR #140](https://github.com/v1docq/FedCore/pull/140). Основание — PR [#86](https://github.com/v1docq/FedCore/pull/86), коммит `8c0e748d6400fdb28fe17c54e2b3cfbb1a0eda08`, и сопоставление 24 обзоров в [METHODS.md](METHODS.md). Архитектурное предложение ниже сохранено как полный план. Фактические возможности описаны в [IMPLEMENTATION.md](IMPLEMENTATION.md), [IMPLEMENTATION_P2.md](IMPLEMENTATION_P2.md), [IMPLEMENTATION_P3.md](IMPLEMENTATION_P3.md), [IMPLEMENTATION_P4.md](IMPLEMENTATION_P4.md) и [IMPLEMENTATION_P5.md](IMPLEMENTATION_P5.md); проверки — в соответствующих документах VALIDATION. Отдельный подэтап #135 добавляет [смешанную точность Dobi-SVD и remapping](IMPLEMENTATION_DOBI_REMAPPING.md). ASR-подэтап LRT, адаптеры больших архитектур, качество и производственное ускорение ещё требуют работы.
 
 Сводная задача: [#108](https://github.com/v1docq/FedCore/issues/108). Номера всех 31 подзадачи, зависимости и покрытие методов приведены в [ISSUES.md](ISSUES.md).

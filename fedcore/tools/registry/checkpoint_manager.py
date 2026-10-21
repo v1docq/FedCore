@@ -88,6 +88,7 @@ def _same_state_shape(actual, expected):
 
 
 def describe_model(model):
+    _precheck_cv_checkpoint(model)
     from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
     try:
         validate_sparse_storage(model)
@@ -95,6 +96,43 @@ def describe_model(model):
         raise CheckpointError(str(error)) from error
     _validate_remapped_state(model,model.state_dict())
     return _describe_model(model, {}, '')
+
+
+def _precheck_cv_checkpoint(model):
+    """CV is a root-only profile; inspect raw registries before tensor effects.
+
+    In particular, do not let generic topology/state_dict/deepcopy traversal
+    reach Tensor overrides or a CV model hidden in an ordinary module container.
+    Other checkpoint profiles retain their existing architecture constructors.
+    """
+    from fedcore.algorithm.pruning.sparse.cv_channels import CifarResNet18, validate_cv_model
+    pending, seen = [(model, '')], set()
+    while pending:
+        layer, path = pending.pop()
+        if not isinstance(layer, nn.Module):
+            raise CheckpointError('Checkpoint child registry contains a non-module object')
+        if id(layer) in seen:
+            continue
+        seen.add(id(layer))
+        if issubclass(type(layer), CifarResNet18):
+            if type(layer) is not CifarResNet18 or path:
+                raise CheckpointError('The exact CIFAR CV architecture is supported only as the checkpoint root')
+            try:
+                validate_cv_model(layer)
+            except (ValueError, TypeError, KeyError, AttributeError) as error:
+                raise CheckpointError('Invalid declared CV architecture before checkpoint effects') from error
+            return
+        values = object.__getattribute__(layer, '__dict__')
+        if type(values) is not dict:
+            raise CheckpointError('Checkpoint modules require an ordinary instance dictionary')
+        children = values.get('_modules')
+        if type(children) not in (dict, OrderedDict):
+            raise CheckpointError('Checkpoint child registries require an exact builtin mapping')
+        for name, child in children.items():
+            if type(name) is not str:
+                raise CheckpointError('Checkpoint module names must be strings')
+            if child is not None:
+                pending.append((child, path + '.' + name if path else name))
 
 
 def _validate_remapped_state(model,state):
@@ -222,6 +260,13 @@ def _describe_model(model, seen, path):
     if id(model) in seen:
         return {'type': 'ModuleAlias', 'target': seen[id(model)]}
     seen[id(model)] = path
+    from fedcore.algorithm.pruning.sparse.cv_checkpoint import describe_cv
+    try:
+        cv_description = describe_cv(model)
+    except (ValueError, TypeError, KeyError) as error:
+        raise CheckpointError('Invalid declared CV architecture') from error
+    if cv_description is not None:
+        return cv_description
     from fedcore.algorithm.pruning.sparse.checkpoint import describe_sparse
     try:
         sparse_description = describe_sparse(model)
@@ -394,6 +439,16 @@ def _build_model(description, seen, path):
     from fedcore.models.network_impl.decomposed_layers import DecomposableLayers
     decomposed = {cls.__name__: cls for cls in DecomposableLayers.values()}
     kind = description.get('type')
+    if kind == 'CVArchitecture':
+        if path:
+            raise CheckpointError('The CIFAR CV checkpoint profile requires an architecture root')
+        from fedcore.algorithm.pruning.sparse.cv_checkpoint import build_cv
+        try:
+            model = build_cv(description)
+        except (ValueError, TypeError, KeyError, RuntimeError) as error:
+            raise CheckpointError('Invalid CV architecture descriptor') from error
+        seen[path] = model
+        return model
     if kind == 'SparseMoE':
         from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE
         from fedcore.algorithm.pruning.sparse.checkpoint import _bound
@@ -690,6 +745,7 @@ class CheckpointManager:
             payload = torch.load(model_path, map_location='cpu', weights_only=True)
             self._validate_payload(payload)
         elif isinstance(model, nn.Module):
+            _precheck_cv_checkpoint(model)
             from fedcore.algorithm.low_rank.topology import inspect_topology
             topology = inspect_topology(model)
             if topology.storage_aliases:
@@ -762,6 +818,7 @@ class CheckpointManager:
         if model is not None:
             if not isinstance(model, nn.Module):
                 raise CheckpointError('The supplied model must be torch.nn.Module')
+            _precheck_cv_checkpoint(model)
             from fedcore.algorithm.low_rank.topology import inspect_topology
             if inspect_topology(model).storage_aliases:
                 raise CheckpointError('Checkpoint restoration does not support shared storage views anywhere in the model')
@@ -774,6 +831,7 @@ class CheckpointManager:
             model_factory() if model_factory is not None else build_model(payload.get('architecture')))
         if not isinstance(candidate, nn.Module):
             raise CheckpointError('The architecture factory must return torch.nn.Module')
+        _precheck_cv_checkpoint(candidate)
         from fedcore.algorithm.low_rank.topology import module_paths, parameter_paths, TopologyError
         from fedcore.algorithm.low_rank.svd_tools import retie_parameters, validate_tied_state
         graph = payload.get('topology')
@@ -839,10 +897,12 @@ class CheckpointManager:
         _validate_p3_state(candidate,state)
         from fedcore.algorithm.low_rank.architecture_checkpoint import validate_p5_state
         from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_state
+        from fedcore.algorithm.pruning.sparse.cv_channels import validate_cv_state
         for path, layer in module_paths(candidate).items():
             try:
                 validate_p5_state(layer, state, path + '.' if path else '')
                 validate_sparse_state(layer, state, path + '.' if path else '')
+                validate_cv_state(layer, state, path + '.' if path else '')
                 from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE
                 if type(layer) is ReferenceMoE:
                     layer.validate_state(state, path + '.' if path else '')
