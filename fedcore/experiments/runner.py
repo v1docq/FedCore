@@ -371,10 +371,40 @@ def _materialize_decomposed(model):
 def apply_candidate(model, bundle, protocol, candidate):
     """Execute a declared operation on an independent copy, never a no-op stub."""
     from fedcore.algorithm.low_rank.topology import inspect_topology
+    from fedcore.algorithm.pruning.sparse.specs import reject_method
+    reject_method(candidate.method)
     if inspect_topology(model).storage_aliases:
         raise UnsupportedOperation("Candidate copying does not support shared storage views")
+    from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+    try:
+        validate_sparse_storage(model)
+    except ValueError as error:
+        raise UnsupportedOperation(str(error)) from error
     model = copy.deepcopy(model)
     method, parameters = candidate.method, json_value(candidate.parameters)
+    if method in ('hassle_free', 'losparse', 'sola', 'flexigpt', 'prunenet', 'moe_i2'):
+        from fedcore.algorithm.pruning.sparse.execution import parse_sparse_spec, transform_sparse
+        if set(parameters) - {'spec', 'target_paths'} or 'spec' not in parameters:
+            raise ProtocolError('Sparse candidates require explicit spec and optional target_paths')
+        spec = parse_sparse_spec(method, parameters['spec'])
+        options = {}
+        if method == 'losparse':
+            from fedcore.algorithm.pruning.sparse.linear import LoSparseTrainingCallback
+            def training_executor(graph, modules, specification):
+                samples = len(bundle.train.x)
+                steps_per_epoch = (samples + protocol.batch_size - 1) // protocol.batch_size
+                if specification.total_steps % steps_per_epoch:
+                    raise ProtocolError('LoSparse total_steps must equal an integer number of training epochs')
+                callback = LoSparseTrainingCallback(modules,
+                    lambda m, x, y: task_loss(m(x), y, bundle.task))
+                train_model(graph, bundle.train, bundle.task,
+                    epochs=specification.total_steps // steps_per_epoch,
+                    batch_size=protocol.batch_size, learning_rate=protocol.learning_rate,
+                    device=protocol.device, seed=protocol.seed, batch_objective=callback)
+            options['train'] = training_executor
+        result = transform_sparse(model, method, spec, calibration=bundle.calibration.x,
+            target_paths=parameters.get('target_paths'), **options)
+        return result.model, {'implementation': 'FedCore sparse profile interpreter', **result.evidence}
     if method == "chain":
         steps = []
         for step in candidate.chain:

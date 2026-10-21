@@ -4,7 +4,8 @@ import tempfile
 from pathlib import Path
 import torch
 from .contracts import (CompressionRequest, DataRoles, DeviceProfile, InputSpec,
-                        Resources, WeightedOptions, MethodOptions, P2_EXTERNAL_METHODS)
+                        Resources, WeightedOptions, MethodOptions, P2_EXTERNAL_METHODS,
+                        SparseOptions, SPARSE_EXTERNAL_METHODS)
 from .jobs import JobRunner, JobStore
 from .models import save_model_bundle
 from .security import safe_save
@@ -18,7 +19,10 @@ def save_dataset(path, features, targets):
 def compress(model, example, validation, *, jobs_root, task="regression", rank=None,
              retained_energy=1.0, max_relative_error=1e-4, artifact_format="torchscript",
              profile=None, resources=None, train=None, calibration=None, python_executable=None,
-             method="svd", weighted_options=None, method_options=None):
+             method="svd", weighted_options=None, method_options=None, sparse_options=None):
+    if method == 'tedepr':
+        from .contracts import ContractError
+        raise ContractError('insufficient_specification', 'TEDEPR requires its missing full primary specification')
     if not isinstance(example, torch.Tensor):
         from .contracts import ContractError
         raise ContractError("unsupported_input", "External v1 requires one tensor input; multi-input is unsupported")
@@ -32,8 +36,19 @@ def compress(model, example, validation, *, jobs_root, task="regression", rank=N
     request = CompressionRequest("model.fcb", "example.fcb", spec, roles, task=task, rank=rank, method=method,
                                  retained_energy=retained_energy, max_relative_error=max_relative_error,
                                  artifact_format=artifact_format, profile=profile or DeviceProfile(), resources=resources or Resources(),
-                                 version=3 if method in P2_EXTERNAL_METHODS else (2 if method == "weighted_svd" else 1),
-                                 weighted=weighted, method_profile=method_options)
+                                 version=4 if method in SPARSE_EXTERNAL_METHODS else (3 if method in P2_EXTERNAL_METHODS else (2 if method == "weighted_svd" else 1)),
+                                 weighted=weighted, method_profile=method_options, sparse_profile=sparse_options)
+    if method in SPARSE_EXTERNAL_METHODS:
+        from fedcore.algorithm.pruning.sparse.execution import plan_sparse
+        from fedcore.algorithm.pruning.sparse.specs import SparseDomainError
+        from .contracts import ContractError
+        try:
+            plan_sparse(model, method, sparse_options.spec, target_paths=sparse_options.target_paths)
+        except SparseDomainError as error:
+            raise ContractError(error.code, str(error)) from error
+        if (not isinstance(calibration, (tuple, list)) or len(calibration) != 2
+                or not all(isinstance(value, torch.Tensor) for value in calibration)):
+            raise ContractError('invalid_calibration', 'Separate calibration features and targets required')
     if method == "weighted_svd":
         from fedcore.algorithm.low_rank.execution import plan_weighted
         from fedcore.algorithm.low_rank.plans import MetricPolicy

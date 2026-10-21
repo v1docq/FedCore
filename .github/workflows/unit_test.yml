@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, fedcore_refactoring, fedcore_petra_experiments]
   pull_request:
-    branches: [main, fedcore_refactoring]
+    branches: [main, fedcore_refactoring, svd_compression]
   workflow_dispatch:
 
 jobs:
@@ -69,3 +69,25 @@ jobs:
           python -m pip check
       - name: Run CPU regressions with actual export and service integrations
         run: python -m pytest -q tests/refactoring tests/petra tests/unit/algorithm/low_rank tests/unit/low_rank/test_statistical_profiles.py tests/unit/low_rank/test_statistical_collectors.py
+
+  optional-llm:
+    runs-on: ubuntu-latest
+    env:
+      CUDA_VISIBLE_DEVICES: ''
+      HF_HUB_OFFLINE: '1'
+      TRANSFORMERS_OFFLINE: '1'
+      HF_DATASETS_OFFLINE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
+      - name: Install CPU runtime and declared LLM dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.2.0 torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[test,experiments,llm]"
+          python -m pip check
+      - name: Run offline Sparse and LLM integration contracts
+        run: python -m pytest -q tests/refactoring/test_sparse_architectures.py tests/refactoring/test_sparse_channels.py tests/refactoring/test_sparse_moe.py tests/refactoring/test_sparse_pretrained.py tests/refactoring/test_sparse_pretrained_independent.py tests/refactoring/test_sparse_pretrained_v2.py tests/refactoring/test_sparse_v2_data_independent.py

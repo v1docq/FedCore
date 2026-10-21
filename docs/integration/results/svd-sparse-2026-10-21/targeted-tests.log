@@ -1,0 +1,613 @@
+FF....................F................................................. [ 35%]
+........................................................................ [ 70%]
+.............................................................            [100%]
+================================== FAILURES ===================================
+_ test_mixed_checkpoint_preserves_runtime_storage_and_cross_branch_aliases[packed] _
+
+cls = <class 'fedcore.tools.registry.checkpoint_manager.CheckpointManager'>
+payload = {'architecture': {'children': {'0': {'children': {'left': {'args': {...}, 'type': 'Linear'}, 'right': {'args': {...}, ...  [-0.2499],
+        [-0.2446],
+        [-0.2264],
+        [-0.1963],
+        [-0.1559]], dtype=torch.float64))]), ...}
+device = None, model = None, model_factory = None
+
+    @classmethod
+    def restore(cls, payload, device=None, model=None, model_factory=None):
+        state = cls._validate_payload(payload)
+        if model is not None and model_factory is not None:
+            raise CheckpointError('Supply either model or model_factory, not both')
+        if model is not None:
+            if not isinstance(model, nn.Module):
+                raise CheckpointError('The supplied model must be torch.nn.Module')
+            from fedcore.algorithm.low_rank.topology import inspect_topology
+            if inspect_topology(model).storage_aliases:
+                raise CheckpointError('Checkpoint restoration does not support shared storage views anywhere in the model')
+            from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+            try:
+                validate_sparse_storage(model)
+            except ValueError as error:
+                raise CheckpointError(str(error)) from error
+        candidate = deepcopy(model) if model is not None else (
+            model_factory() if model_factory is not None else build_model(payload.get('architecture')))
+        if not isinstance(candidate, nn.Module):
+            raise CheckpointError('The architecture factory must return torch.nn.Module')
+        from fedcore.algorithm.low_rank.topology import module_paths, parameter_paths, TopologyError
+        from fedcore.algorithm.low_rank.svd_tools import retie_parameters, validate_tied_state
+        graph = payload.get('topology')
+        if graph is not None:
+            if not isinstance(graph, Mapping) or type(graph.get('version')) is not int or graph['version'] != 1:
+                raise CheckpointError('Unknown checkpoint topology version')
+            paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for field, available in (('module_aliases', paths), ('parameter_aliases', params)):
+                groups = graph.get(field)
+                if not isinstance(groups, (list, tuple)) or any(
+                    not isinstance(group, (list, tuple)) or len(group) < 2 or
+                    any(not isinstance(path, str) or path not in available for path in group) or
+                    len(set(group)) != len(group) for group in groups):
+                    raise CheckpointError(f'Invalid checkpoint {field}')
+                flattened = [path for group in groups for path in group]
+                if len(flattened) != len(set(flattened)):
+                    raise CheckpointError(f'Overlapping checkpoint {field}')
+            for group in graph['module_aliases']:
+                if '' in group or any(type(paths[path]) is not type(paths[group[0]]) for path in group):
+                    raise CheckpointError('Incompatible checkpoint module aliases')
+                source = paths[group[0]]
+                for path in group[1:]:
+                    owner, _, name = path.rpartition('.')
+                    paths[owner]._modules[name] = source
+                paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for group in graph['parameter_aliases']:
+                if any(params[path].shape != params[group[0]].shape for path in group):
+                    raise CheckpointError('Incompatible checkpoint parameter aliases')
+            retie_parameters(candidate, graph['parameter_aliases'])
+            groups = graph.get('buffer_aliases', _buffer_aliases(candidate))
+            buffers = _buffer_paths(candidate)
+            if (not isinstance(groups,(tuple,list)) or any(
+                    not isinstance(group,(tuple,list)) or len(group)<2
+                    or len(set(group))!=len(group) or any(path not in buffers for path in group)
+                    for group in groups)):
+                raise CheckpointError('Invalid checkpoint buffer aliases')
+            flattened = [path for group in groups for path in group]
+            if len(flattened)!=len(set(flattened)):
+                raise CheckpointError('Overlapping checkpoint buffer aliases')
+            for group in groups:
+                source = buffers[group[0]]
+                if any(buffers[path].shape!=source.shape or buffers[path].dtype!=source.dtype for path in group):
+                    raise CheckpointError('Incompatible checkpoint buffer aliases')
+            _retie_buffers(candidate,groups)
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+        try:
+            validate_sparse_storage(candidate)
+            validate_sparse_storage(candidate, state)
+        except ValueError as error:
+            raise CheckpointError(str(error)) from error
+        _validate_remapped_state(candidate,candidate.state_dict())
+        _validate_remapped_state(candidate,state)
+        buffer_ties = _validate_tied_buffers(candidate,state)
+        try:
+            topology = validate_tied_state(candidate, state)
+        except TopologyError as error:
+            raise CheckpointError(str(error)) from error
+        expected = candidate.state_dict()
+        if not _same_state_shape(state, expected):
+            raise CheckpointError('Checkpoint keys or tensor shapes do not match the architecture')
+        _validate_p3_state(candidate,state)
+        from fedcore.algorithm.low_rank.architecture_checkpoint import validate_p5_state
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_state
+        for path, layer in module_paths(candidate).items():
+            try:
+                validate_p5_state(layer, state, path + '.' if path else '')
+>               validate_sparse_state(layer, state, path + '.' if path else '')
+
+fedcore\tools\registry\checkpoint_manager.py:845: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+model = PackedNMLinear(
+  (factors): FactorizedLinear(
+    (right): Linear(in_features=8, out_features=1, bias=False)
+    (left): Linear(in_features=1, out_features=8, bias=False)
+  )
+)
+state = OrderedDict([('0.right.weight', tensor([[0.0000, 0.0570, 0.1110, 0.1591, 0.1989, 0.2282, 0.2455, 0.2498]],
+       dtyp...        [-0.2499],
+        [-0.2446],
+        [-0.2264],
+        [-0.1963],
+        [-0.1559]], dtype=torch.float64))])
+prefix = '2.'
+
+    def validate_sparse_state(model, state, prefix=""):
+        if not _known(model):
+            return
+        _guard(model)
+        expected = model.state_dict()
+        local = {name: state[prefix+name] for name in expected if prefix+name in state}
+        if local.keys() != expected.keys() or any(
+                not isinstance(value, torch.Tensor) or value.shape != expected[name].shape
+                or value.dtype != expected[name].dtype
+                or (value.is_floating_point() and not bool(torch.isfinite(value).all()))
+                for name, value in local.items()):
+>           raise ValueError("Sparse state has invalid shapes, dtypes or nonfinite values")
+E           ValueError: Sparse state has invalid shapes, dtypes or nonfinite values
+
+fedcore\algorithm\pruning\sparse\checkpoint.py:161: ValueError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/user/Documents/Codex/FedCore-SVD-Sparse-Integration-2026-10-21/pytest-targeted/test_mixed_checkpoint_preserve0')
+kind = 'packed'
+
+    @pytest.mark.parametrize('kind', ['packed', 'indexed'])
+    def test_mixed_checkpoint_preserves_runtime_storage_and_cross_branch_aliases(tmp_path, kind):
+        model, inputs = _mixed(kind), _inputs()
+        inventory = capture_inventory(model)
+        state_bytes = sum(value.numel() * value.element_size() for value in model.state_dict().values())
+        assert inventory_cost(inventory, 'bytes') < state_bytes
+        assert any(view.category == 'buffer' and view.dtype == 'torch.int64'
+                   for record in inventory for view in record.views)
+        manager = CheckpointManager(str(tmp_path), auto_cleanup=False)
+        checkpoint = manager.serialize_to_bytes(model)
+        path = str(tmp_path / 'mixed.pt')
+        manager.save_to_file(checkpoint, path)
+>       for restored in (manager.deserialize_from_bytes(checkpoint), manager.load_from_file(path)):
+
+tests\refactoring\test_svd_sparse_coexistence.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\tools\registry\checkpoint_manager.py:880: in deserialize_from_bytes
+    return self.restore(torch.load(io.BytesIO(checkpoint_bytes), map_location=device or 'cpu', weights_only=True),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'fedcore.tools.registry.checkpoint_manager.CheckpointManager'>
+payload = {'architecture': {'children': {'0': {'children': {'left': {'args': {...}, 'type': 'Linear'}, 'right': {'args': {...}, ...  [-0.2499],
+        [-0.2446],
+        [-0.2264],
+        [-0.1963],
+        [-0.1559]], dtype=torch.float64))]), ...}
+device = None, model = None, model_factory = None
+
+    @classmethod
+    def restore(cls, payload, device=None, model=None, model_factory=None):
+        state = cls._validate_payload(payload)
+        if model is not None and model_factory is not None:
+            raise CheckpointError('Supply either model or model_factory, not both')
+        if model is not None:
+            if not isinstance(model, nn.Module):
+                raise CheckpointError('The supplied model must be torch.nn.Module')
+            from fedcore.algorithm.low_rank.topology import inspect_topology
+            if inspect_topology(model).storage_aliases:
+                raise CheckpointError('Checkpoint restoration does not support shared storage views anywhere in the model')
+            from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+            try:
+                validate_sparse_storage(model)
+            except ValueError as error:
+                raise CheckpointError(str(error)) from error
+        candidate = deepcopy(model) if model is not None else (
+            model_factory() if model_factory is not None else build_model(payload.get('architecture')))
+        if not isinstance(candidate, nn.Module):
+            raise CheckpointError('The architecture factory must return torch.nn.Module')
+        from fedcore.algorithm.low_rank.topology import module_paths, parameter_paths, TopologyError
+        from fedcore.algorithm.low_rank.svd_tools import retie_parameters, validate_tied_state
+        graph = payload.get('topology')
+        if graph is not None:
+            if not isinstance(graph, Mapping) or type(graph.get('version')) is not int or graph['version'] != 1:
+                raise CheckpointError('Unknown checkpoint topology version')
+            paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for field, available in (('module_aliases', paths), ('parameter_aliases', params)):
+                groups = graph.get(field)
+                if not isinstance(groups, (list, tuple)) or any(
+                    not isinstance(group, (list, tuple)) or len(group) < 2 or
+                    any(not isinstance(path, str) or path not in available for path in group) or
+                    len(set(group)) != len(group) for group in groups):
+                    raise CheckpointError(f'Invalid checkpoint {field}')
+                flattened = [path for group in groups for path in group]
+                if len(flattened) != len(set(flattened)):
+                    raise CheckpointError(f'Overlapping checkpoint {field}')
+            for group in graph['module_aliases']:
+                if '' in group or any(type(paths[path]) is not type(paths[group[0]]) for path in group):
+                    raise CheckpointError('Incompatible checkpoint module aliases')
+                source = paths[group[0]]
+                for path in group[1:]:
+                    owner, _, name = path.rpartition('.')
+                    paths[owner]._modules[name] = source
+                paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for group in graph['parameter_aliases']:
+                if any(params[path].shape != params[group[0]].shape for path in group):
+                    raise CheckpointError('Incompatible checkpoint parameter aliases')
+            retie_parameters(candidate, graph['parameter_aliases'])
+            groups = graph.get('buffer_aliases', _buffer_aliases(candidate))
+            buffers = _buffer_paths(candidate)
+            if (not isinstance(groups,(tuple,list)) or any(
+                    not isinstance(group,(tuple,list)) or len(group)<2
+                    or len(set(group))!=len(group) or any(path not in buffers for path in group)
+                    for group in groups)):
+                raise CheckpointError('Invalid checkpoint buffer aliases')
+            flattened = [path for group in groups for path in group]
+            if len(flattened)!=len(set(flattened)):
+                raise CheckpointError('Overlapping checkpoint buffer aliases')
+            for group in groups:
+                source = buffers[group[0]]
+                if any(buffers[path].shape!=source.shape or buffers[path].dtype!=source.dtype for path in group):
+                    raise CheckpointError('Incompatible checkpoint buffer aliases')
+            _retie_buffers(candidate,groups)
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+        try:
+            validate_sparse_storage(candidate)
+            validate_sparse_storage(candidate, state)
+        except ValueError as error:
+            raise CheckpointError(str(error)) from error
+        _validate_remapped_state(candidate,candidate.state_dict())
+        _validate_remapped_state(candidate,state)
+        buffer_ties = _validate_tied_buffers(candidate,state)
+        try:
+            topology = validate_tied_state(candidate, state)
+        except TopologyError as error:
+            raise CheckpointError(str(error)) from error
+        expected = candidate.state_dict()
+        if not _same_state_shape(state, expected):
+            raise CheckpointError('Checkpoint keys or tensor shapes do not match the architecture')
+        _validate_p3_state(candidate,state)
+        from fedcore.algorithm.low_rank.architecture_checkpoint import validate_p5_state
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_state
+        for path, layer in module_paths(candidate).items():
+            try:
+                validate_p5_state(layer, state, path + '.' if path else '')
+                validate_sparse_state(layer, state, path + '.' if path else '')
+                from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE
+                if type(layer) is ReferenceMoE:
+                    layer.validate_state(state, path + '.' if path else '')
+            except (TypeError, ValueError, KeyError) as error:
+>               raise CheckpointError('Invalid P5 architecture state') from error
+E               fedcore.tools.registry.checkpoint_manager.CheckpointError: Invalid P5 architecture state
+
+fedcore\tools\registry\checkpoint_manager.py:850: CheckpointError
+_ test_mixed_checkpoint_preserves_runtime_storage_and_cross_branch_aliases[indexed] _
+
+cls = <class 'fedcore.tools.registry.checkpoint_manager.CheckpointManager'>
+payload = {'architecture': {'children': {'0': {'children': {'left': {'args': {...}, 'type': 'Linear'}, 'right': {'args': {...}, ...  [-0.1398],
+        [-0.0888],
+        [-0.0332],
+        [ 0.0242],
+        [ 0.0803]], dtype=torch.float64))]), ...}
+device = None, model = None, model_factory = None
+
+    @classmethod
+    def restore(cls, payload, device=None, model=None, model_factory=None):
+        state = cls._validate_payload(payload)
+        if model is not None and model_factory is not None:
+            raise CheckpointError('Supply either model or model_factory, not both')
+        if model is not None:
+            if not isinstance(model, nn.Module):
+                raise CheckpointError('The supplied model must be torch.nn.Module')
+            from fedcore.algorithm.low_rank.topology import inspect_topology
+            if inspect_topology(model).storage_aliases:
+                raise CheckpointError('Checkpoint restoration does not support shared storage views anywhere in the model')
+            from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+            try:
+                validate_sparse_storage(model)
+            except ValueError as error:
+                raise CheckpointError(str(error)) from error
+        candidate = deepcopy(model) if model is not None else (
+            model_factory() if model_factory is not None else build_model(payload.get('architecture')))
+        if not isinstance(candidate, nn.Module):
+            raise CheckpointError('The architecture factory must return torch.nn.Module')
+        from fedcore.algorithm.low_rank.topology import module_paths, parameter_paths, TopologyError
+        from fedcore.algorithm.low_rank.svd_tools import retie_parameters, validate_tied_state
+        graph = payload.get('topology')
+        if graph is not None:
+            if not isinstance(graph, Mapping) or type(graph.get('version')) is not int or graph['version'] != 1:
+                raise CheckpointError('Unknown checkpoint topology version')
+            paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for field, available in (('module_aliases', paths), ('parameter_aliases', params)):
+                groups = graph.get(field)
+                if not isinstance(groups, (list, tuple)) or any(
+                    not isinstance(group, (list, tuple)) or len(group) < 2 or
+                    any(not isinstance(path, str) or path not in available for path in group) or
+                    len(set(group)) != len(group) for group in groups):
+                    raise CheckpointError(f'Invalid checkpoint {field}')
+                flattened = [path for group in groups for path in group]
+                if len(flattened) != len(set(flattened)):
+                    raise CheckpointError(f'Overlapping checkpoint {field}')
+            for group in graph['module_aliases']:
+                if '' in group or any(type(paths[path]) is not type(paths[group[0]]) for path in group):
+                    raise CheckpointError('Incompatible checkpoint module aliases')
+                source = paths[group[0]]
+                for path in group[1:]:
+                    owner, _, name = path.rpartition('.')
+                    paths[owner]._modules[name] = source
+                paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for group in graph['parameter_aliases']:
+                if any(params[path].shape != params[group[0]].shape for path in group):
+                    raise CheckpointError('Incompatible checkpoint parameter aliases')
+            retie_parameters(candidate, graph['parameter_aliases'])
+            groups = graph.get('buffer_aliases', _buffer_aliases(candidate))
+            buffers = _buffer_paths(candidate)
+            if (not isinstance(groups,(tuple,list)) or any(
+                    not isinstance(group,(tuple,list)) or len(group)<2
+                    or len(set(group))!=len(group) or any(path not in buffers for path in group)
+                    for group in groups)):
+                raise CheckpointError('Invalid checkpoint buffer aliases')
+            flattened = [path for group in groups for path in group]
+            if len(flattened)!=len(set(flattened)):
+                raise CheckpointError('Overlapping checkpoint buffer aliases')
+            for group in groups:
+                source = buffers[group[0]]
+                if any(buffers[path].shape!=source.shape or buffers[path].dtype!=source.dtype for path in group):
+                    raise CheckpointError('Incompatible checkpoint buffer aliases')
+            _retie_buffers(candidate,groups)
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+        try:
+            validate_sparse_storage(candidate)
+            validate_sparse_storage(candidate, state)
+        except ValueError as error:
+            raise CheckpointError(str(error)) from error
+        _validate_remapped_state(candidate,candidate.state_dict())
+        _validate_remapped_state(candidate,state)
+        buffer_ties = _validate_tied_buffers(candidate,state)
+        try:
+            topology = validate_tied_state(candidate, state)
+        except TopologyError as error:
+            raise CheckpointError(str(error)) from error
+        expected = candidate.state_dict()
+        if not _same_state_shape(state, expected):
+            raise CheckpointError('Checkpoint keys or tensor shapes do not match the architecture')
+        _validate_p3_state(candidate,state)
+        from fedcore.algorithm.low_rank.architecture_checkpoint import validate_p5_state
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_state
+        for path, layer in module_paths(candidate).items():
+            try:
+                validate_p5_state(layer, state, path + '.' if path else '')
+>               validate_sparse_state(layer, state, path + '.' if path else '')
+
+fedcore\tools\registry\checkpoint_manager.py:845: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+model = IndexedResidualLinear(
+  (factors): FactorizedLinear(
+    (right): Linear(in_features=8, out_features=1, bias=False)
+    (left): Linear(in_features=1, out_features=8, bias=False)
+  )
+)
+state = OrderedDict([('0.right.weight', tensor([[0.0000, 0.0570, 0.1110, 0.1591, 0.1989, 0.2282, 0.2455, 0.2498]],
+       dtyp...        [-0.1398],
+        [-0.0888],
+        [-0.0332],
+        [ 0.0242],
+        [ 0.0803]], dtype=torch.float64))])
+prefix = '2.'
+
+    def validate_sparse_state(model, state, prefix=""):
+        if not _known(model):
+            return
+        _guard(model)
+        expected = model.state_dict()
+        local = {name: state[prefix+name] for name in expected if prefix+name in state}
+        if local.keys() != expected.keys() or any(
+                not isinstance(value, torch.Tensor) or value.shape != expected[name].shape
+                or value.dtype != expected[name].dtype
+                or (value.is_floating_point() and not bool(torch.isfinite(value).all()))
+                for name, value in local.items()):
+>           raise ValueError("Sparse state has invalid shapes, dtypes or nonfinite values")
+E           ValueError: Sparse state has invalid shapes, dtypes or nonfinite values
+
+fedcore\algorithm\pruning\sparse\checkpoint.py:161: ValueError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/Users/user/Documents/Codex/FedCore-SVD-Sparse-Integration-2026-10-21/pytest-targeted/test_mixed_checkpoint_preserve1')
+kind = 'indexed'
+
+    @pytest.mark.parametrize('kind', ['packed', 'indexed'])
+    def test_mixed_checkpoint_preserves_runtime_storage_and_cross_branch_aliases(tmp_path, kind):
+        model, inputs = _mixed(kind), _inputs()
+        inventory = capture_inventory(model)
+        state_bytes = sum(value.numel() * value.element_size() for value in model.state_dict().values())
+        assert inventory_cost(inventory, 'bytes') < state_bytes
+        assert any(view.category == 'buffer' and view.dtype == 'torch.int64'
+                   for record in inventory for view in record.views)
+        manager = CheckpointManager(str(tmp_path), auto_cleanup=False)
+        checkpoint = manager.serialize_to_bytes(model)
+        path = str(tmp_path / 'mixed.pt')
+        manager.save_to_file(checkpoint, path)
+>       for restored in (manager.deserialize_from_bytes(checkpoint), manager.load_from_file(path)):
+
+tests\refactoring\test_svd_sparse_coexistence.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\tools\registry\checkpoint_manager.py:880: in deserialize_from_bytes
+    return self.restore(torch.load(io.BytesIO(checkpoint_bytes), map_location=device or 'cpu', weights_only=True),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'fedcore.tools.registry.checkpoint_manager.CheckpointManager'>
+payload = {'architecture': {'children': {'0': {'children': {'left': {'args': {...}, 'type': 'Linear'}, 'right': {'args': {...}, ...  [-0.1398],
+        [-0.0888],
+        [-0.0332],
+        [ 0.0242],
+        [ 0.0803]], dtype=torch.float64))]), ...}
+device = None, model = None, model_factory = None
+
+    @classmethod
+    def restore(cls, payload, device=None, model=None, model_factory=None):
+        state = cls._validate_payload(payload)
+        if model is not None and model_factory is not None:
+            raise CheckpointError('Supply either model or model_factory, not both')
+        if model is not None:
+            if not isinstance(model, nn.Module):
+                raise CheckpointError('The supplied model must be torch.nn.Module')
+            from fedcore.algorithm.low_rank.topology import inspect_topology
+            if inspect_topology(model).storage_aliases:
+                raise CheckpointError('Checkpoint restoration does not support shared storage views anywhere in the model')
+            from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+            try:
+                validate_sparse_storage(model)
+            except ValueError as error:
+                raise CheckpointError(str(error)) from error
+        candidate = deepcopy(model) if model is not None else (
+            model_factory() if model_factory is not None else build_model(payload.get('architecture')))
+        if not isinstance(candidate, nn.Module):
+            raise CheckpointError('The architecture factory must return torch.nn.Module')
+        from fedcore.algorithm.low_rank.topology import module_paths, parameter_paths, TopologyError
+        from fedcore.algorithm.low_rank.svd_tools import retie_parameters, validate_tied_state
+        graph = payload.get('topology')
+        if graph is not None:
+            if not isinstance(graph, Mapping) or type(graph.get('version')) is not int or graph['version'] != 1:
+                raise CheckpointError('Unknown checkpoint topology version')
+            paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for field, available in (('module_aliases', paths), ('parameter_aliases', params)):
+                groups = graph.get(field)
+                if not isinstance(groups, (list, tuple)) or any(
+                    not isinstance(group, (list, tuple)) or len(group) < 2 or
+                    any(not isinstance(path, str) or path not in available for path in group) or
+                    len(set(group)) != len(group) for group in groups):
+                    raise CheckpointError(f'Invalid checkpoint {field}')
+                flattened = [path for group in groups for path in group]
+                if len(flattened) != len(set(flattened)):
+                    raise CheckpointError(f'Overlapping checkpoint {field}')
+            for group in graph['module_aliases']:
+                if '' in group or any(type(paths[path]) is not type(paths[group[0]]) for path in group):
+                    raise CheckpointError('Incompatible checkpoint module aliases')
+                source = paths[group[0]]
+                for path in group[1:]:
+                    owner, _, name = path.rpartition('.')
+                    paths[owner]._modules[name] = source
+                paths = module_paths(candidate)
+            params = parameter_paths(candidate)
+            for group in graph['parameter_aliases']:
+                if any(params[path].shape != params[group[0]].shape for path in group):
+                    raise CheckpointError('Incompatible checkpoint parameter aliases')
+            retie_parameters(candidate, graph['parameter_aliases'])
+            groups = graph.get('buffer_aliases', _buffer_aliases(candidate))
+            buffers = _buffer_paths(candidate)
+            if (not isinstance(groups,(tuple,list)) or any(
+                    not isinstance(group,(tuple,list)) or len(group)<2
+                    or len(set(group))!=len(group) or any(path not in buffers for path in group)
+                    for group in groups)):
+                raise CheckpointError('Invalid checkpoint buffer aliases')
+            flattened = [path for group in groups for path in group]
+            if len(flattened)!=len(set(flattened)):
+                raise CheckpointError('Overlapping checkpoint buffer aliases')
+            for group in groups:
+                source = buffers[group[0]]
+                if any(buffers[path].shape!=source.shape or buffers[path].dtype!=source.dtype for path in group):
+                    raise CheckpointError('Incompatible checkpoint buffer aliases')
+            _retie_buffers(candidate,groups)
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+        try:
+            validate_sparse_storage(candidate)
+            validate_sparse_storage(candidate, state)
+        except ValueError as error:
+            raise CheckpointError(str(error)) from error
+        _validate_remapped_state(candidate,candidate.state_dict())
+        _validate_remapped_state(candidate,state)
+        buffer_ties = _validate_tied_buffers(candidate,state)
+        try:
+            topology = validate_tied_state(candidate, state)
+        except TopologyError as error:
+            raise CheckpointError(str(error)) from error
+        expected = candidate.state_dict()
+        if not _same_state_shape(state, expected):
+            raise CheckpointError('Checkpoint keys or tensor shapes do not match the architecture')
+        _validate_p3_state(candidate,state)
+        from fedcore.algorithm.low_rank.architecture_checkpoint import validate_p5_state
+        from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_state
+        for path, layer in module_paths(candidate).items():
+            try:
+                validate_p5_state(layer, state, path + '.' if path else '')
+                validate_sparse_state(layer, state, path + '.' if path else '')
+                from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE
+                if type(layer) is ReferenceMoE:
+                    layer.validate_state(state, path + '.' if path else '')
+            except (TypeError, ValueError, KeyError) as error:
+>               raise CheckpointError('Invalid P5 architecture state') from error
+E               fedcore.tools.registry.checkpoint_manager.CheckpointError: Invalid P5 architecture state
+
+fedcore\tools\registry\checkpoint_manager.py:850: CheckpointError
+_ test_low_rank_boundaries_refuse_mixed_parameter_buffer_storage_before_copy[runner] _
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-SVD-Sparse-Integration-2026-10-21/pytest-targeted/test_low_rank_boundaries_refus2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E0FC09E2C0>
+boundary = 'runner'
+
+    @pytest.mark.parametrize('boundary', ['weighted_facade', 'profile_facade', 'runner'])
+    def test_low_rank_boundaries_refuse_mixed_parameter_buffer_storage_before_copy(tmp_path, monkeypatch, boundary):
+        from fedcore.algorithm.low_rank import execution, method_execution
+        from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
+        from fedcore.algorithm.low_rank.method_specs import ASVD
+        from fedcore.experiments import runner
+        from fedcore.experiments.protocol import CandidateSpec
+        monkeypatch.setenv('FEDCORE_MODEL_REGISTRY_PATH', str(tmp_path / 'registry'))
+        packed = PackedNMLinear(8, 4, n=2, m=4, dtype=torch.float64)
+        model = nn.Sequential(packed, nn.Linear(4, 4, dtype=torch.float64))
+        model[1].weight = nn.Parameter(packed.values.reshape(4, 4))
+        inventory = capture_inventory(model)
+        facade = LowRankModel({'device': 'cpu'})
+        inputs, rng = _inputs(), torch.random.get_rng_state().clone()
+    
+        def forbidden(*args, **kwargs):
+            pytest.fail('Unsupported mixed storage topology reached model copying')
+    
+        monkeypatch.setattr(execution, 'deepcopy', forbidden)
+        monkeypatch.setattr(method_execution, 'deepcopy', forbidden)
+        if boundary == 'runner':
+            monkeypatch.setattr(runner.copy, 'deepcopy', forbidden)
+        with pytest.raises((ValueError, runner.UnsupportedOperation), match='Sparse checkpoint storage sharing'):
+            if boundary == 'weighted_facade':
+                facade.compress_weighted(model, inputs, rank=1, target_paths=('1',))
+            elif boundary == 'profile_facade':
+                facade.compress_profile(model, inputs, ASVD(), rank=1, target_paths=('1',))
+            else:
+                runner.apply_candidate(model, object(), object(), CandidateSpec('baseline'))
+>       assert capture_inventory(model) == inventory
+
+tests\refactoring\test_svd_sparse_coexistence.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\algorithm\low_rank\candidate_storage.py:116: in capture_inventory
+    label = hashlib.sha256(json.dumps([asdict(view) for view in views], sort_keys=True).encode()).hexdigest()
+fedcore\algorithm\low_rank\candidate_storage.py:116: in <listcomp>
+    label = hashlib.sha256(json.dumps([asdict(view) for view in views], sort_keys=True).encode()).hexdigest()
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\dataclasses.py:1232: in asdict
+    return _asdict_inner(obj, dict_factory)
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\dataclasses.py:1239: in _asdict_inner
+    value = _asdict_inner(getattr(obj, f.name), dict_factory)
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\dataclasses.py:1273: in _asdict_inner
+    return copy.deepcopy(obj)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = ('0.bias',), kwargs = {}
+
+    def forbidden(*args, **kwargs):
+>       pytest.fail('Unsupported mixed storage topology reached model copying')
+E       Failed: Unsupported mixed storage topology reached model copying
+
+tests\refactoring\test_svd_sparse_coexistence.py:218: Failed
+---------------------------- Captured stdout call -----------------------------
+2026-10-21 15:43:56,902 - Device <cpu> is selected
+2026-10-21 15:43:56,902 - Device <cpu> is selected
+------------------------------ Captured log call ------------------------------
+INFO     root:devices.py:85 Device <cpu> is selected
+INFO     root:devices.py:85 Device <cpu> is selected
+============================== warnings summary ===============================
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\Lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\Lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+tests/refactoring/test_svd_p2_execution.py::test_fullrank_public_checkpoint_reload_and_torchscript_export[group]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Sparse-Integration-2026-10-21\checkout\fedcore\algorithm\low_rank\structured_layers.py:257: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    if hidden.shape[-1]!=self.embedding_dim:
+
+tests/refactoring/test_svd_p2_execution.py::test_fullrank_public_checkpoint_reload_and_torchscript_export[group]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Sparse-Integration-2026-10-21\checkout\fedcore\algorithm\low_rank\structured_layers.py:262: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+    offsets=torch.tensor((0,)+tuple(self.group_sizes[:-1]),device=hidden.device,dtype=torch.int64).cumsum(0)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_svd_sparse_coexistence.py::test_mixed_checkpoint_preserves_runtime_storage_and_cross_branch_aliases[packed]
+FAILED tests/refactoring/test_svd_sparse_coexistence.py::test_mixed_checkpoint_preserves_runtime_storage_and_cross_branch_aliases[indexed]
+FAILED tests/refactoring/test_svd_sparse_coexistence.py::test_low_rank_boundaries_refuse_mixed_parameter_buffer_storage_before_copy[runner]
+3 failed, 202 passed, 3 warnings in 27.41s

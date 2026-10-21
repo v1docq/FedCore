@@ -29,3 +29,12 @@ docs/svd_compression/results/issue-99-local-2-2026-10-21/** -text whitespace=cr-
 docs/svd_compression/results/issue-99-local-2-2026-10-21/**/*.log -whitespace
 docs/svd_compression/issue99-local2-report-source/** -text whitespace=cr-at-eol
 docs/svd_compression/issue-99-local-2-report.html -text -whitespace
+
+# Keep imported Sparse protocols and recorded evidence byte-identical.
+docs/sparse_compression/*.md text eol=lf
+docs/sparse_compression/LOCAL_EXPERIMENT_METRICS.json -text whitespace=cr-at-eol
+docs/sparse_compression/results_v2_metrics.json -text whitespace=cr-at-eol
+docs/sparse_compression/results_v2_metrics.csv -text whitespace=cr-at-eol
+
+# Preserve the bytes hashed in the integration evidence manifest.
+docs/integration/results/svd-sparse-2026-10-21/** -text -whitespace

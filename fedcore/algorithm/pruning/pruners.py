@@ -62,6 +62,17 @@ class BasePruner(BaseCompressionModel):
 
     DEFAULT_HOOKS: list[type['ZeroShotPruner']] = [PrunerWithGrad, PrunerWithReg, ZeroShotPruner, PrunerInDepth]
 
+    @staticmethod
+    def compress_profile(model, method, spec, *, calibration=None, target_paths=None, **options):
+        """Execute an explicit sparse method without the generic pruning path.
+
+        Returns an independent transformed model and finite method evidence.
+        Training-dependent profiles require their declared training inputs.
+        """
+        from fedcore.algorithm.pruning.sparse.execution import transform_sparse
+        return transform_sparse(model, method, spec, calibration=calibration,
+                                target_paths=target_paths, **options)
+
     def __init__(self, params=None):
         params = params.to_dict() if hasattr(params, "to_dict") else dict(params or {})
         from fedcore.repository.capabilities import require_supported
