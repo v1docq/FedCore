@@ -168,7 +168,7 @@ def _copy_calibration(calibration, options):
 
 
 @_rng_isolated
-def execute_fixed_graph(model, calibration, graph, *, store=None):
+def execute_fixed_graph(model, calibration, graph, *, store=None, phase_callback=None):
     """Validate exact recipe/source/capabilities, then execute its interpreter.
 
     Nothing supplied separately at execution can override graph parameters.
@@ -222,7 +222,7 @@ def execute_fixed_graph(model, calibration, graph, *, store=None):
         if type(store) is not StatisticsStore:
             _fail("InvalidArtifactStore", "store", "Staged execution requires an explicit bounded StatisticsStore")
         from .staged_execution import execute_stages
-        return execute_stages(model, calibration, graph, store)
+        return execute_stages(model, calibration, graph, store, phase_callback=phase_callback)
     if store is not None:
         _fail("UnsupportedOptions", "store", "The whole-recipe interpreter does not consume an artifact store")
     working_calibration, copy_evidence = _copy_calibration(calibration, options)

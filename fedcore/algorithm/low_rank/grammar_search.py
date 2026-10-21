@@ -6,6 +6,7 @@ encodes choices, compiles proposals, charges attempts and calls heldout fitness.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from contextlib import contextmanager
 from datetime import timedelta
 import hashlib
 import json
@@ -135,7 +136,7 @@ def graph_genotype(graph, space):
 
 
 def run_grammar_search(space, config, evaluate, *, fitness_context, initial_genotypes=None,
-                       absolute_deadline=None, trace_callback=None):
+                       absolute_deadline=None, trace_callback=None, phase_callback=None):
     """Run actual FedcoreEvoOptimizer with grammar mutation and crossover.
 
     ``evaluate(CheckedWorkflow)`` returns GrammarFitness or an explicit failure.
@@ -159,6 +160,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         raise ValueError("absolute_deadline must be a finite perf_counter timestamp")
     if trace_callback is not None and not callable(trace_callback):
         raise ValueError("trace_callback must be callable or None")
+    if phase_callback is not None and not callable(phase_callback):
+        raise ValueError("phase_callback must be callable or None")
     from golem.core.adapter import IdentityAdapter
     from golem.core.optimisers.genetic.gp_params import GPAlgorithmParameters
     from golem.core.optimisers.genetic.operators.crossover import CrossoverTypesEnum
@@ -176,6 +179,16 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     cache_hits, component_reads, repeated_failures = 0, 0, 0
     stop_reason, optimizer, trace_failure = "optimizer_stopped", None, None
     callback_working = True
+
+    @contextmanager
+    def phase(name, **metadata):
+        first = time.perf_counter() if phase_callback is not None else None
+        try:
+            yield
+        finally:
+            if phase_callback is not None:
+                phase_callback({"phase": name, "started_at": first,
+                    "completed_at": time.perf_counter(), **metadata})
 
     def emit(event, **values):
         nonlocal callback_working
@@ -207,7 +220,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
             "started_at": operator_started, "ended_at": time.perf_counter()}
         proposal_metadata[number] = metadata
         latest_proposals[identity] = number
-        graph = grammar_graph(genotype)
+        with phase("proposal_graph_creation", proposal_id=number):
+            graph = grammar_graph(genotype)
         # GOLEM copies graph objects during variation; this metadata follows
         # those copies without changing the checked one-node genotype payload.
         graph._compression_proposal_id = number
@@ -240,10 +254,11 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         return tuple(proposal(child, "grammar_crossover", [_solution_id(left), _solution_id(right)],
                      number, operator_started=operator_started) for child, number in zip(children, numbers))
 
-    def observed(graph, component):
+    def _observed(graph, component):
         nonlocal cache_hits, component_reads, repeated_failures
         genotype = decode(graph)
-        workflow = compile_genotype(genotype, space)
+        with phase("candidate_compilation", component=component):
+            workflow = compile_genotype(genotype, space)
         if isinstance(workflow, ValidationFailure):
             raise ValueError("Structurally invalid compilation")
         identity = workflow.fingerprint
@@ -305,6 +320,10 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
             raise ValueError(f"Execution has no fitness: {type(observation).__name__}")
         return observation
 
+    def observed(graph, component):
+        with phase("objective_component", component=component):
+            return _observed(graph, component)
+
     initial = tuple(generate_genotype(space, seed=config.seed + i) for i in range(config.population_size)) if initial_genotypes is None else tuple(initial_genotypes)
     if not initial or any(isinstance(normalize_genotype(item, space), ValidationFailure) for item in initial):
         return {"status": "structurally_invalid", "charged_evaluations": 0, "trace": []}
@@ -350,7 +369,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         optimizer.set_iteration_callback(lambda population, *args: emit("population",
             size=len(population), generation=optimizer.current_generation_num,
             selection="SPEA2", engine="FedcoreEvoOptimizer"))
-        best = [decode(graph) for graph in optimizer.optimise(objective)]
+        with phase("optimizer_call"):
+            best = [decode(graph) for graph in optimizer.optimise(objective)]
     except _BudgetStop:
         pass
     except _TraceCallbackStop as error:

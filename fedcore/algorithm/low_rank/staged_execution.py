@@ -196,7 +196,7 @@ def _tensor_bytes(value):
 
 
 @torch.no_grad()
-def execute_stages(model, calibration, graph, store):
+def execute_stages(model, calibration, graph, store, *, phase_callback=None):
     """Interpret all canonical nodes, publishing statistics transactionally."""
     from .graph_execution import FixedGraphResult, CompressionGraphError, _copy_calibration, _allocation_failure
     options = graph.options
@@ -231,6 +231,11 @@ def execute_stages(model, calibration, graph, store):
                     consumers[port.artifact] = consumers.get(port.artifact, 0) + 1
             step_by_scope = {scope.aliases: (step, scope) for step, scope in zip(graph.transform.steps, graph.scopes)}
             for node in graph.nodes:
+                phase_started = time.perf_counter() if phase_callback is not None else None
+                if phase_callback is not None:
+                    phase_callback({"phase": node.stage.value, "scope": list(node.scope), "node": node.key,
+                        "graph_fingerprint": graph.fingerprint, "started_at": phase_started,
+                        "completed_at": None, "state": "started"})
                 supplied = {port.name: values[port.artifact] for port in node.inputs}
                 hit, forwards, stat_ref = False, 0, None
                 if node.stage is Stage.APPLY:
@@ -333,6 +338,13 @@ def execute_stages(model, calibration, graph, store):
                     "cache_hit": hit, "result_ref": artifact.key, "semantic_kind": artifact.kind.value,
                     "tensor_bytes": _tensor_bytes(output), "observe_forward_calls": forwards,
                     "statistic_ref": asdict(stat_ref) if stat_ref is not None else None})
+                if phase_callback is not None:
+                    phase_callback({"phase": node.stage.value, "scope": list(node.scope), "node": node.key,
+                        "graph_fingerprint": graph.fingerprint, "started_at": phase_started,
+                        "completed_at": time.perf_counter(), "cache_hit": hit, "state": "completed",
+                        "tensor_bytes": trace[-1]["tensor_bytes"],
+                        "observe_forward_calls": forwards,
+                        "statistic_ref": asdict(stat_ref) if stat_ref is not None else None})
                 for port in node.inputs:
                     consumers[port.artifact] -= 1
                     if consumers[port.artifact] == 0:

@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import math
 import os
+import time
 
 import torch
 from torch import nn
@@ -123,8 +124,14 @@ def _structural(code, path, message):
 
 @_rng_isolated
 @torch.no_grad()
-def execute_workflow(model, calibration, workflow):
+def execute_workflow(model, calibration, workflow, *, store=None, phase_callback=None):
     """Execute complete profiles on M0, then publish one independent model.
+
+    Without ``store``, each fixed profile owns a temporary statistics store.
+    An explicit bounded ``StatisticsStore`` belongs to the caller and is never
+    closed here. Each fixed graph commits independently: a later scope failure
+    does not roll back statistics committed by an earlier scope. AFM never uses
+    this store. ``phase_callback`` observes real nested execution intervals.
 
     Profile observations and numerical evidence are runtime-owned. AFM uses the
     existing affine output-PCA solver and adds its mean correction even when the
@@ -133,6 +140,10 @@ def execute_workflow(model, calibration, workflow):
     failure = validate_workflow(workflow)
     if isinstance(failure, ValidationFailure):
         return StructuralInvalid(failure.violations)
+    if store is not None and type(store) is not StatisticsStore:
+        return _structural("InvalidArtifactStore", "store", "An explicit bounded StatisticsStore is required")
+    if phase_callback is not None and not callable(phase_callback):
+        return _structural("InvalidObserver", "phase_callback", "A callable phase observer is required")
     space, options = workflow.space, workflow.space.options
     if not isinstance(model, nn.Module):
         return _structural("InvalidSource", "model", "A CPU torch Module is required")
@@ -162,6 +173,11 @@ def execute_workflow(model, calibration, workflow):
         replacements, records = {}, []
         for compiled in workflow.scopes:
             path = compiled.gene.aliases[0]
+            profile_started = time.perf_counter() if phase_callback is not None else None
+            profile_phase = "afm_whole_profile" if type(compiled.plan) is AffineWholeProfilePlan else "fixed_profile"
+            if phase_callback is not None:
+                phase_callback({"phase": profile_phase, "scope": path,
+                    "started_at": profile_started, "completed_at": None, "state": "started"})
             if type(compiled.plan) is AffineWholeProfilePlan:
                 import psutil
                 afm_work = _explicit_encoder_graph(clone_preserving_storages(model,
@@ -191,14 +207,19 @@ def execute_workflow(model, calibration, workflow):
                     "numerical_evidence": _numerics(answer)}
                 del rows, answer, afm_work, layer
             else:
-                store = StatisticsStore(options.max_workspace_bytes)
+                profile_store = StatisticsStore(options.max_workspace_bytes) if store is None else store
                 try:
-                    result = execute_fixed_graph(model, owned_data, compiled.plan, store=store)
+                    result = execute_fixed_graph(model, owned_data, compiled.plan, store=profile_store,
+                        phase_callback=phase_callback)
                     evidence = result.evidence
                     replacement = module_paths(result.model)[path]
                 finally:
-                    store.close()
+                    if store is None:
+                        profile_store.close()
                 del result
+            if phase_callback is not None:
+                phase_callback({"phase": profile_phase, "scope": path, "state": "completed",
+                    "started_at": profile_started, "completed_at": time.perf_counter()})
             replacements[path] = replacement
             records.append({"aliases": list(compiled.gene.aliases), "source": space.source.fingerprint,
                 "profile_evidence": evidence})
@@ -207,6 +228,10 @@ def execute_workflow(model, calibration, workflow):
                            for replacement in replacements.values())
             storage_guard(retained, options.max_peak_bytes)
             del replacement
+        assembly_started = time.perf_counter() if phase_callback is not None else None
+        if phase_callback is not None:
+            phase_callback({"phase": "assembly_apply", "started_at": assembly_started,
+                "completed_at": None, "state": "started"})
         work = clone_preserving_storages(model, max_peak_bytes=options.max_peak_bytes)
         work = replace_modules_atomically(work, replacements)
         inventory = capture_inventory(work)
@@ -217,6 +242,9 @@ def execute_workflow(model, calibration, workflow):
         if ((options.parameter_budget is not None and actual_elements > options.parameter_budget)
                 or (options.tensor_byte_budget is not None and actual_bytes > options.tensor_byte_budget)):
             return ResourceFailure("BudgetInfeasible", "The actual complete backing-storage inventory exceeds the declared budget")
+        if phase_callback is not None:
+            phase_callback({"phase": "assembly_apply", "started_at": assembly_started,
+                "completed_at": time.perf_counter(), "state": "completed"})
         return WorkflowSuccess(work, workflow, {"workflow_fingerprint": workflow.fingerprint,
             "source_semantics": workflow.source_semantics, "scope_profiles": records,
             "calibration_copy": copy_evidence, "actual_backing_storage_bytes": actual_bytes,
