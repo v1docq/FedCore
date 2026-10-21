@@ -281,7 +281,149 @@ class TestJsonPublicationWithoutWorkers(unittest.TestCase):
                 self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"active": False})
 
 
+class TestJsonReadingWithoutWorkers(unittest.TestCase):
+    def clock(self):
+        state = SimpleNamespace(now=0., sleeps=[])
+        def sleep(seconds):
+            state.sleeps.append(seconds)
+            state.now += seconds
+        return SimpleNamespace(monotonic=lambda: state.now, sleep=sleep), state
+
+    def reader(self, read_text, clock):
+        values = _load_pure("fedcore/experiments/compression_search_local2.py",
+            ("read_json",), dict(Path=lambda path: SimpleNamespace(read_text=read_text),
+                                json=json, time=clock))
+        return values["read_json"]
+
+    def test_transient_permission_failure_returns_complete_json(self):
+        attempts = []
+        clock, state = self.clock()
+        payload = {"active": True, "hard_deadline": 123., "details": {"word": "LD"}}
+        def read_text(**kwargs):
+            attempts.append(kwargs)
+            if len(attempts) < 3:
+                raise PermissionError("simulated Windows read denial")
+            return json.dumps(payload)
+        self.assertEqual(self.reader(read_text, clock)("active-request.json"), payload)
+        self.assertEqual(len(attempts), 3)
+        self.assertEqual(state.sleeps, [.01, .01])
+
+    def test_persistent_permission_failure_is_bounded_and_preserves_original_exception(self):
+        attempts = []
+        clock, state = self.clock()
+        first = PermissionError("original read denial")
+        def read_text(**kwargs):
+            attempts.append(state.now)
+            if len(attempts) == 1:
+                raise first
+            raise PermissionError("later read denial")
+        with self.assertRaises(PermissionError) as caught:
+            self.reader(read_text, clock)("active-request.json")
+        self.assertIs(caught.exception, first)
+        self.assertGreater(len(attempts), 1)
+        self.assertLessEqual(len(attempts), 51)
+        self.assertTrue(all(at < .5 for at in attempts))
+        self.assertTrue(all(0 < delay <= .01 for delay in state.sleeps))
+        self.assertAlmostEqual(state.now, .5)
+
+    def test_corrupt_json_is_not_retried(self):
+        attempts = []
+        def read_text(**kwargs):
+            attempts.append(kwargs)
+            return '{"active":'
+        clock = SimpleNamespace(
+            monotonic=lambda: self.fail("Corrupt JSON must not enter the retry clock"),
+            sleep=lambda seconds: self.fail("Corrupt JSON must not sleep"))
+        with self.assertRaises(json.JSONDecodeError):
+            self.reader(read_text, clock)("active-request.json")
+        self.assertEqual(len(attempts), 1)
+
+    def test_other_read_os_errors_propagate_without_retry(self):
+        for error in (OSError("I/O failure"), FileNotFoundError("missing JSON")):
+            with self.subTest(error=type(error).__name__):
+                attempts = []
+                def read_text(**kwargs):
+                    attempts.append(kwargs)
+                    raise error
+                clock = SimpleNamespace(
+                    monotonic=lambda: self.fail("Other read errors must not enter the retry clock"),
+                    sleep=lambda seconds: self.fail("Other read errors must not sleep"))
+                with self.assertRaises(type(error)) as caught:
+                    self.reader(read_text, clock)("result.json")
+                self.assertIs(caught.exception, error)
+                self.assertEqual(len(attempts), 1)
+
+
 class TestParentWatchdogWithoutWorkers(unittest.TestCase):
+    def test_status_monitor_failure_kills_owned_processes_and_saves_resources(self):
+        for failure in ("permission", "decode", "other-os"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+                output = Path(temporary)
+                (output/"jobs").mkdir()
+                state = SimpleNamespace(now=0., sleeps=[])
+                def sleep(seconds):
+                    state.sleeps.append(seconds)
+                    state.now += seconds
+                clock = SimpleNamespace(perf_counter=lambda: 100.+state.now,
+                                        monotonic=lambda: state.now, sleep=sleep)
+                process = SimpleNamespace(pid=123, returncode=None, poll=lambda: process.returncode,
+                                          wait=lambda timeout: process.returncode)
+                killed = []
+                def kill_worker():
+                    killed.append("worker")
+                    process.returncode = -9
+                child = SimpleNamespace(is_running=lambda: True,
+                    memory_info=lambda: SimpleNamespace(rss=64), kill=lambda: killed.append("child"))
+                owned = SimpleNamespace(children=lambda recursive: [child], is_running=lambda: True,
+                    memory_info=lambda: SimpleNamespace(rss=128), kill=kill_worker)
+                fake_psutil = SimpleNamespace(Process=lambda pid: owned,
+                    virtual_memory=lambda: SimpleNamespace(available=8*1024**3),
+                    NoSuchProcess=type("NoSuchProcess", (Exception,), {}),
+                    AccessDenied=type("AccessDenied", (Exception,), {}))
+                def spawn(arguments, **kwargs):
+                    directory = Path(arguments[-1]).parent
+                    (output/"matrix-attempts.jsonl").write_text('{"global_attempt":1}\n', encoding="utf-8")
+                    telemetry = bytearray(64)
+                    struct.pack_into("<QQdd", telemetry, 0, 1, 0, 100., 0.)
+                    (directory/"svd-telemetry.bin").write_bytes(telemetry)
+                    text = '{"active":' if failure == "decode" else '{"active":true,"hard_deadline":120}'
+                    (directory/"active-request.json").write_text(text, encoding="utf-8")
+                    return process
+                values = _load_pure("fedcore/experiments/compression_search_local2.py",
+                    ("write_json", "read_json", "count_lines", "_telemetry", "run_job"),
+                    dict(Path=Path, json=json, os=os, struct=struct, time=clock,
+                        source_hashes=lambda: {}, REPO=output, MODULE="mock.worker", sys=sys,
+                        subprocess=SimpleNamespace(Popen=spawn, CREATE_NO_WINDOW=0)))
+                original_read = Path.read_text
+                status_reads = []
+                def read_text(path, *args, **kwargs):
+                    if path.name == "active-request.json":
+                        status_reads.append(state.now)
+                        if failure == "permission":
+                            raise PermissionError("status sharing denial")
+                        if failure == "other-os":
+                            raise OSError("status I/O failure")
+                    return original_read(path, *args, **kwargs)
+                protocol = dict(source_files={}, protocol_sha256="p", source_sha256="s")
+                with patch.dict(sys.modules, {"psutil": fake_psutil}), patch.object(Path, "read_text", read_text):
+                    result = values["run_job"](output, dict(job="matrix-8", kind="matrix", n=8,
+                        hard_seconds=20), protocol, 0., 999.)
+                self.assertEqual((result["status"], result["stop"], result["returncode"]),
+                                 ("failed", "status_monitor_io_failed", -9))
+                self.assertEqual(killed, ["child", "worker"])
+                self.assertIn({"permission": "PermissionError", "decode": "JSONDecodeError",
+                               "other-os": "OSError"}[failure], result["error"])
+                self.assertEqual((result["svd_telemetry"]["started"], result["svd_telemetry"]["completed"]), (1, 0))
+                self.assertEqual(len((output/"matrix-attempts.jsonl").read_text().splitlines()), 1)
+                saved = json.loads((output/"jobs"/"matrix-8"/"resources.json").read_text(encoding="utf-8"))
+                self.assertEqual(saved, result)
+                if failure == "permission":
+                    self.assertGreater(len(status_reads), 1)
+                    self.assertAlmostEqual(state.now, .5)
+                else:
+                    self.assertEqual(len(status_reads), 1)
+                    self.assertEqual(state.sleeps, [])
+
     def test_killed_native_call_keeps_the_charge_and_its_started_telemetry(self):
         with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
             output = Path(temporary)

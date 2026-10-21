@@ -55,7 +55,25 @@ def write_json(path, value):
 
 
 def read_json(path):
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    """Retry a transient read denial, never a JSON decoding failure."""
+    path = Path(path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except PermissionError:
+        deadline = time.monotonic()+.5
+        while True:
+            remaining = deadline-time.monotonic()
+            if remaining <= 0:
+                raise
+            time.sleep(min(.01, remaining))
+            if time.monotonic() >= deadline:
+                raise
+            try:
+                text = path.read_text(encoding="utf-8")
+            except PermissionError:
+                continue
+            break
+    return json.loads(text)
 
 
 def append_event(path, value):
@@ -129,6 +147,7 @@ def run_job(output, job, protocol, package_start, stage_deadline):
         TRANSFORMERS_OFFLINE="1", HF_DATASETS_OFFLINE="1", PYTHONUTF8="1", PYTHONHASHSEED="0",
         TEMP=str(Path(output).resolve()/"tmp"), TMP=str(Path(output).resolve()/"tmp"))
     peak, minimum_ram, samples, stop = 0, None, 0, None
+    status_monitor_error = None
     with (directory/"stdout.log").open("w", encoding="utf-8") as stdout, (directory/"stderr.log").open("w", encoding="utf-8") as stderr:
         process = subprocess.Popen([sys.executable, "-m", MODULE, "--worker", str(directory/"job.json")],
             cwd=REPO, env=env, stdout=stdout, stderr=stderr,
@@ -154,10 +173,15 @@ def run_job(output, job, protocol, package_start, stage_deadline):
             elif now >= hard_deadline:
                 stop = "hard_deadline"
             active_path = directory/"active-request.json"
-            if job["kind"].startswith("matrix") and active_path.exists():
-                active = read_json(active_path)
-                if active.get("active") and now >= active["hard_deadline"]:
-                    stop = "request_hard_deadline"
+            if job["kind"].startswith("matrix"):
+                try:
+                    active = read_json(active_path) if active_path.exists() else None
+                except (OSError, json.JSONDecodeError) as error:
+                    stop = "status_monitor_io_failed"
+                    status_monitor_error = f"{type(error).__name__}: {error}"
+                else:
+                    if active and active.get("active") and time.perf_counter() >= active["hard_deadline"]:
+                        stop = "request_hard_deadline"
             if stop:
                 for child in reversed(owned):
                     try:
@@ -169,7 +193,9 @@ def run_job(output, job, protocol, package_start, stage_deadline):
             time.sleep(.1)
     result_path = directory/"result.json"
     result = read_json(result_path) if result_path.exists() else None
-    if process.returncode == 0 and result and result.get("status") == "succeeded":
+    if status_monitor_error is not None:
+        status = "failed"
+    elif process.returncode == 0 and result and result.get("status") == "succeeded":
         status = "partial" if result.get("partial") else "succeeded"
     elif stop in ("hard_deadline", "request_hard_deadline") or (result and result.get("status") == "partial"):
         status = "partial"
@@ -180,7 +206,8 @@ def run_job(output, job, protocol, package_start, stage_deadline):
         stop=stop, result_path=str(result_path), svd_telemetry=_telemetry(directory),
         resources=dict(started_at=started, completed_at=completed, elapsed_seconds=completed-started,
                        peak_tree_rss_bytes=peak, minimum_available_ram_bytes=minimum_ram, samples=samples),
-        error=None if status == "succeeded" else (result or {}).get("error", "Worker stopped or incomplete"))
+        error=status_monitor_error if status_monitor_error is not None else (
+            None if status == "succeeded" else (result or {}).get("error", "Worker stopped or incomplete")))
     write_json(directory/"resources.json", record)
     return record
 
