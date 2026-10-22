@@ -44,6 +44,18 @@ def solution_id(genotype):
     return digest(cv_genotype_payload(genotype))
 
 
+def _cv_search_report(result):
+    """Project typed search winners at the reporting boundary, without mutation."""
+    from fedcore.algorithm.low_rank.cv_grammar import cv_genotype_payload
+    winners = []
+    for genotype in result["best_genotypes"]:
+        payload = cv_genotype_payload(genotype)
+        if type(payload) is not dict:
+            raise ValueError("A search report requires valid metadata-only CV genotypes")
+        winners.append(payload)
+    return {**result, "best_genotypes": winners}
+
+
 class Pilot:
     def __init__(self, runtime, data):
         os.environ["FEDCORE_MODEL_REGISTRY_PATH"] = str(runtime.output.root / "registry")
@@ -194,7 +206,6 @@ class Pilot:
             fitness_context="fixed image-only BN calibration; 5000 heldout CE and physical bytes/M0; 0 SGD updates",
             initial_genotypes=self.prefix, absolute_deadline=deadline,
             trace_callback=lambda event: self.output.append({"event": "evolution_trace", "trace": event}))
-        from fedcore.algorithm.low_rank.compression_graph import _canonical
         # Common-search completion includes the callback journal overhead. It
         # is the authoritative eligibility bound for the evolution archive.
         by_solution = {record["solution_id"]: record for record in self.records[run]}
@@ -206,10 +217,10 @@ class Pilot:
                 if not record["completed_within_deadline"] and record["status"] == "succeeded":
                     record["status"] = "late"
         self.output.json("search/evolution_attempts.json", self.records[run])
-        self.output.json("search/evolution.json", _canonical(result))
+        self.output.json("search/evolution.json", _cv_search_report(result))
         if result["status"] == "failed":
             raise PilotFatal(f"Evolution stopped on an unknown optimizer/callback failure: {result.get('reason')}")
-        return _canonical(result)
+        return result
 
 
 def run_pilot(data_root, output_root, source_manifest, *, started=None, protocol=PilotProtocol()):
@@ -275,7 +286,7 @@ def run_pilot(data_root, output_root, source_manifest, *, started=None, protocol
             report["random"] = pilot.random_search(random_deadline)
             runtime.check(deadline)
             evolution_deadline = min(deadline, time.perf_counter() + protocol.search_seconds)
-            report["evolution"] = pilot.evolution(evolution_deadline)
+            report["evolution"] = _cv_search_report(pilot.evolution(evolution_deadline))
             output.json("imported_sources.json", verify_loaded_sources(prepared["source"]))
         finalists = {}
         for run in ("random", "evolution"):

@@ -1,0 +1,16 @@
+{
+  "status": "prepared",
+  "execute": false,
+  "gpu_pilot_started": false,
+  "output_created": false,
+  "packaged_files_verified": 313,
+  "source_commit": "3bc0825a9ef1bcd0ac8eb0181b6d5314b57ebb8d",
+  "wheel_sha256": "26fcf56c64c8b68dd6aa00879b16dc926193ed7f4159a01fc3b8e42e069fb913",
+  "protocol_sha256": "81e30bb6853080e2b6fedf966fc19f44cf717a8192988df5c3db552a3dd12010",
+  "data_preparation": {
+    "prepared_train_rows": 50000,
+    "test_evaluated": false,
+    "cuda_visible_devices": ""
+  },
+  "pending_gate": "explicit user notification that A100 is free, followed by readonly recheck"
+}

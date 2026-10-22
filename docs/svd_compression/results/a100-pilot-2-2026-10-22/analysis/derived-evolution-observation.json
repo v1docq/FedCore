@@ -1,0 +1,19 @@
+{
+  "evidence_source": "ledger.jsonl evolution_trace; not a replacement for missing search/evolution.json",
+  "original_search_report_present": false,
+  "recorded_evaluations": 12,
+  "terminal_trace": {
+    "cache_entries": 12,
+    "cache_hits": 0,
+    "charged_evaluations": 12,
+    "component_reads": 24,
+    "created_proposals": 20,
+    "elapsed_seconds": 41.649244640022516,
+    "event": "stopped",
+    "failure_details": null,
+    "repeated_failures": 0,
+    "status": "succeeded",
+    "stop_reason": "evaluation_budget",
+    "timestamp": 20236994.421569742
+  }
+}

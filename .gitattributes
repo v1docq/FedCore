@@ -46,3 +46,8 @@ docs/svd_compression/results/sparse-cv-preparation-2026-10-21/** -text -whitespa
 docs/svd_compression/results/a100-pilot-1-2026-10-22/** -text -whitespace
 docs/svd_compression/a100-pilot-1-report.html -text -whitespace
 docs/svd_compression/A100_PILOT_1.md -text -whitespace
+
+# Preserve the stopped repeat, derived analysis and offline report byte-for-byte.
+docs/svd_compression/results/a100-pilot-2-2026-10-22/** -text -whitespace
+docs/svd_compression/a100-pilot-2-report.html -text -whitespace
+docs/svd_compression/A100_PILOT_2.md -text -whitespace

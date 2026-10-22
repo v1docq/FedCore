@@ -1,0 +1,1128 @@
+{
+  "blocks": [
+    {
+      "final_tensor_bytes": 295944,
+      "gene": {
+        "choice": {},
+        "path": "layer1.0",
+        "recovery": {}
+      },
+      "internal_width": 64,
+      "original_tensor_bytes": 295944,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 221960,
+      "gene": {
+        "choice": {
+          "keep_channels": 48
+        },
+        "path": "layer1.1",
+        "recovery": {}
+      },
+      "internal_width": 48,
+      "original_tensor_bytes": 295944,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 624648,
+      "gene": {
+        "choice": {
+          "rank": 64
+        },
+        "path": "layer2.0",
+        "recovery": {}
+      },
+      "internal_width": 128,
+      "original_tensor_bytes": 886792,
+      "rank": 64,
+      "solver_workspace_bytes": 10485760
+    },
+    {
+      "final_tensor_bytes": 1181704,
+      "gene": {
+        "choice": {},
+        "path": "layer2.1",
+        "recovery": {}
+      },
+      "internal_width": 128,
+      "original_tensor_bytes": 1181704,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 1395720,
+      "gene": {
+        "choice": {
+          "keep_channels": 192,
+          "rank": 64
+        },
+        "path": "layer3.0",
+        "recovery": {}
+      },
+      "internal_width": 192,
+      "original_tensor_bytes": 3543048,
+      "rank": 64,
+      "solver_workspace_bytes": 32505856
+    },
+    {
+      "final_tensor_bytes": 2361352,
+      "gene": {
+        "choice": {
+          "keep_channels": 128
+        },
+        "path": "layer3.1",
+        "recovery": {}
+      },
+      "internal_width": 128,
+      "original_tensor_bytes": 4722696,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 9969672,
+      "gene": {
+        "choice": {
+          "rank": 256
+        },
+        "path": "layer4.0",
+        "recovery": {}
+      },
+      "internal_width": 512,
+      "original_tensor_bytes": 14163976,
+      "rank": 256,
+      "solver_workspace_bytes": 167772160
+    },
+    {
+      "final_tensor_bytes": 12066824,
+      "gene": {
+        "choice": {
+          "rank": 128
+        },
+        "path": "layer4.1",
+        "recovery": {}
+      },
+      "internal_width": 512,
+      "original_tensor_bytes": 18882568,
+      "rank": 128,
+      "solver_workspace_bytes": 167772160
+    }
+  ],
+  "expected_storage_bytes": 28879560,
+  "external_artifacts": [
+    {
+      "coordinates": "cifar_resnet18_original_channels",
+      "key": "model:M0",
+      "kind": "model_version",
+      "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+      "scope": []
+    },
+    {
+      "coordinates": "NCHW_CIFAR32",
+      "key": "data:calibration",
+      "kind": "calibration_observations",
+      "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+      "scope": []
+    }
+  ],
+  "fingerprint": "f6b807a841d659ebc0a4f16199fe5f5afcdf85fad0d36afefcbeccf2e5a2e2c6",
+  "genotype": {
+    "genes": [
+      {
+        "choice": {},
+        "path": "layer1.0",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "keep_channels": 48
+        },
+        "path": "layer1.1",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "rank": 64
+        },
+        "path": "layer2.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer2.1",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "keep_channels": 192,
+          "rank": 64
+        },
+        "path": "layer3.0",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "keep_channels": 128
+        },
+        "path": "layer3.1",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "rank": 256
+        },
+        "path": "layer4.0",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "rank": 128
+        },
+        "path": "layer4.1",
+        "recovery": {}
+      }
+    ],
+    "schema_version": 1
+  },
+  "nodes": [
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:1:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:1:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+          "scope": [
+            "layer1.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer1.1"
+      ],
+      "scope": [
+        "layer1.1"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:1:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:1:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:1:compact",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer1.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer1.1"
+      ],
+      "scope": [
+        "layer1.1"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:2:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:2:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:2:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:2:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:2:compact",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:2:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        }
+      ],
+      "key": "cv:2:solve",
+      "outputs": [
+        {
+          "coordinates": "conv2_out_by_reduced_input_kernel",
+          "key": "cv:2:svd",
+          "kind": "low_rank_approximation",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:2:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        },
+        {
+          "artifact": "cv:2:svd",
+          "kind": "low_rank_approximation",
+          "name": "svd"
+        }
+      ],
+      "key": "cv:2:factors",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:2:factors",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:factors",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:4:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:4:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+          "scope": [
+            "layer3.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer3.0"
+      ],
+      "scope": [
+        "layer3.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:4:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:4:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:4:compact",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer3.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer3.0"
+      ],
+      "scope": [
+        "layer3.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:4:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        }
+      ],
+      "key": "cv:4:solve",
+      "outputs": [
+        {
+          "coordinates": "conv2_out_by_reduced_input_kernel",
+          "key": "cv:4:svd",
+          "kind": "low_rank_approximation",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer3.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer3.0"
+      ],
+      "scope": [
+        "layer3.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:4:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        },
+        {
+          "artifact": "cv:4:svd",
+          "kind": "low_rank_approximation",
+          "name": "svd"
+        }
+      ],
+      "key": "cv:4:factors",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:4:factors",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:factors",
+          "scope": [
+            "layer3.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer3.0"
+      ],
+      "scope": [
+        "layer3.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:5:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:5:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+          "scope": [
+            "layer3.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer3.1"
+      ],
+      "scope": [
+        "layer3.1"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:5:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:5:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:5:compact",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer3.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer3.1"
+      ],
+      "scope": [
+        "layer3.1"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:6:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:6:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+          "scope": [
+            "layer4.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.0"
+      ],
+      "scope": [
+        "layer4.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:6:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:6:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:6:compact",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer4.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.0"
+      ],
+      "scope": [
+        "layer4.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:6:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        }
+      ],
+      "key": "cv:6:solve",
+      "outputs": [
+        {
+          "coordinates": "conv2_out_by_reduced_input_kernel",
+          "key": "cv:6:svd",
+          "kind": "low_rank_approximation",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer4.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.0"
+      ],
+      "scope": [
+        "layer4.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:6:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        },
+        {
+          "artifact": "cv:6:svd",
+          "kind": "low_rank_approximation",
+          "name": "svd"
+        }
+      ],
+      "key": "cv:6:factors",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:6:factors",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:factors",
+          "scope": [
+            "layer4.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.0"
+      ],
+      "scope": [
+        "layer4.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:7:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:7:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5",
+          "scope": [
+            "layer4.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.1"
+      ],
+      "scope": [
+        "layer4.1"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:7:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:7:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:7:compact",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer4.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.1"
+      ],
+      "scope": [
+        "layer4.1"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:7:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        }
+      ],
+      "key": "cv:7:solve",
+      "outputs": [
+        {
+          "coordinates": "conv2_out_by_reduced_input_kernel",
+          "key": "cv:7:svd",
+          "kind": "low_rank_approximation",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compact",
+          "scope": [
+            "layer4.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.1"
+      ],
+      "scope": [
+        "layer4.1"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:7:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        },
+        {
+          "artifact": "cv:7:svd",
+          "kind": "low_rank_approximation",
+          "name": "svd"
+        }
+      ],
+      "key": "cv:7:factors",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:7:factors",
+          "kind": "operator_replacement",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:factors",
+          "scope": [
+            "layer4.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer4.1"
+      ],
+      "scope": [
+        "layer4.1"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:1:compact",
+          "kind": "operator_replacement",
+          "name": "0"
+        },
+        {
+          "artifact": "cv:2:factors",
+          "kind": "operator_replacement",
+          "name": "1"
+        },
+        {
+          "artifact": "cv:4:factors",
+          "kind": "operator_replacement",
+          "name": "2"
+        },
+        {
+          "artifact": "cv:5:compact",
+          "kind": "operator_replacement",
+          "name": "3"
+        },
+        {
+          "artifact": "cv:6:factors",
+          "kind": "operator_replacement",
+          "name": "4"
+        },
+        {
+          "artifact": "cv:7:factors",
+          "kind": "operator_replacement",
+          "name": "5"
+        }
+      ],
+      "key": "cv:apply_batch",
+      "outputs": [
+        {
+          "coordinates": "cifar_resnet18_graph",
+          "key": "model:compressed",
+          "kind": "model_version",
+          "model_version": "1e5a1ee98b6a5654b7bb646774d22e9b7b3433cbe1e74a8b252b618ad8284ca5:compressed",
+          "scope": []
+        }
+      ],
+      "reads": [],
+      "scope": [
+        "layer1.1",
+        "layer2.0",
+        "layer3.0",
+        "layer3.1",
+        "layer4.0",
+        "layer4.1"
+      ],
+      "stage": "apply_replacements",
+      "writes": [
+        "layer1.1",
+        "layer2.0",
+        "layer3.0",
+        "layer3.1",
+        "layer4.0",
+        "layer4.1"
+      ]
+    }
+  ],
+  "source_semantics": "independent_frozen_M0_coupled_blocks_then_atomic_apply",
+  "space": {
+    "calibration": {
+      "dtype": "float32",
+      "fingerprint": "84b29f87f5440c4259adc35028da3ae1fbd55d35a898e790be071721fecf48b3",
+      "role": "calibration",
+      "shape": [
+        1000,
+        3,
+        32,
+        32
+      ]
+    },
+    "domains": [
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 48
+          },
+          {
+            "keep_channels": 32
+          },
+          {
+            "rank": 32
+          },
+          {
+            "rank": 16
+          },
+          {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          {
+            "keep_channels": 48,
+            "rank": 16
+          }
+        ],
+        "path": "layer1.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 48
+          },
+          {
+            "keep_channels": 32
+          },
+          {
+            "rank": 32
+          },
+          {
+            "rank": 16
+          },
+          {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          {
+            "keep_channels": 48,
+            "rank": 16
+          }
+        ],
+        "path": "layer1.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 96
+          },
+          {
+            "keep_channels": 64
+          },
+          {
+            "rank": 64
+          },
+          {
+            "rank": 32
+          },
+          {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          {
+            "keep_channels": 96,
+            "rank": 32
+          }
+        ],
+        "path": "layer2.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 96
+          },
+          {
+            "keep_channels": 64
+          },
+          {
+            "rank": 64
+          },
+          {
+            "rank": 32
+          },
+          {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          {
+            "keep_channels": 96,
+            "rank": 32
+          }
+        ],
+        "path": "layer2.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 192
+          },
+          {
+            "keep_channels": 128
+          },
+          {
+            "rank": 128
+          },
+          {
+            "rank": 64
+          },
+          {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          {
+            "keep_channels": 192,
+            "rank": 64
+          }
+        ],
+        "path": "layer3.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 192
+          },
+          {
+            "keep_channels": 128
+          },
+          {
+            "rank": 128
+          },
+          {
+            "rank": 64
+          },
+          {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          {
+            "keep_channels": 192,
+            "rank": 64
+          }
+        ],
+        "path": "layer3.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 384
+          },
+          {
+            "keep_channels": 256
+          },
+          {
+            "rank": 256
+          },
+          {
+            "rank": 128
+          },
+          {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          {
+            "keep_channels": 384,
+            "rank": 128
+          }
+        ],
+        "path": "layer4.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 384
+          },
+          {
+            "keep_channels": 256
+          },
+          {
+            "rank": 256
+          },
+          {
+            "rank": 128
+          },
+          {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          {
+            "keep_channels": 384,
+            "rank": 128
+          }
+        ],
+        "path": "layer4.1"
+      }
+    ],
+    "dtype": "float32",
+    "num_classes": 10,
+    "options": {
+      "batch_size": 16,
+      "max_peak_bytes": 12884901888,
+      "max_workspace_bytes": 268435456,
+      "parameter_budget": null,
+      "tensor_byte_budget": null
+    },
+    "profile": "cifar_resnet18_internal_channel_l1_svd_v1",
+    "source": {
+      "fingerprint": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4",
+      "graph_version": "cv-compression-v1"
+    },
+    "source_storage_bytes": 44734408,
+    "source_storage_fingerprint": "1e9f7af154c7e6af99316a9e850bf01d1c67f301b95a9c9d4a6ba56dd374c3d0"
+  }
+}
