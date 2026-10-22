@@ -1,0 +1,15 @@
+{
+  "independent_evidence_checks": 36,
+  "independent_review": "no scientific blocker; three wording/link observations addressed",
+  "analysis_byte_identical_on_replay": true,
+  "md_html_byte_identical_on_replay": true,
+  "relative_html_links_resolve_in_repo": true,
+  "python_tools_ast_valid": true,
+  "embedded_html_data_checked": true,
+  "synthetic_dom_execution_passed": true,
+  "visual_review": "browser screenshot of draft layout; final edits statically and synthetically checked",
+  "source_worktrees_unchanged": 3,
+  "unfinished_files_preserved": 130,
+  "new_model_execution_during_postprocessing": false,
+  "automatic_retry": false
+}

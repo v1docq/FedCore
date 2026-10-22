@@ -1,0 +1,182 @@
+[
+  {
+    "check": "interruption_is_external",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "no_later_stages",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "protocol_digest",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "source_commit",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "wheel_identity",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "supervision_terminal",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "free_gpu_admission",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "slot_limit",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "saved_pytorch_counters_within_limit",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "rss_limit",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "no_remaining_owned_processes",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "data_partition_sizes",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "training_partition_complete",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "split_seed",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "partial_weight_snapshots",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "partial_storage_payload:partial/baseline_epoch_020.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "partial_storage_payload:partial/baseline_epoch_040.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "completed_epoch_integrity",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:data-prepared.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:data_roles.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:environment.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:environment_freeze.txt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:heartbeats.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:imported_sources.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:interruption-observation-2026-10-22.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:launch-packet.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:launch-receipt-2026-10-22.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:ledger.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:pilot-1-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:pilot-1-launch-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:pilot-1-supervision.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:pilot-1-supervision.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:prepared-admission.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:protocol.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:source-manifest.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:source_manifest.json",
+    "details": null,
+    "passed": true
+  }
+]

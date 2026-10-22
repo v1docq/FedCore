@@ -41,3 +41,8 @@ docs/integration/results/svd-sparse-2026-10-21/** -text -whitespace
 
 # Preserve CPU validation records for the bounded Sparse/CV pilot preparation.
 docs/svd_compression/results/sparse-cv-preparation-2026-10-21/** -text -whitespace
+
+# Preserve hashes of interrupted A100 pilot evidence and its offline report.
+docs/svd_compression/results/a100-pilot-1-2026-10-22/** -text -whitespace
+docs/svd_compression/a100-pilot-1-report.html -text -whitespace
+docs/svd_compression/A100_PILOT_1.md -text -whitespace
