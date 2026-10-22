@@ -1,0 +1,62 @@
+........................................................................ [ 14%]
+........................................................................ [ 28%]
+........................................................................ [ 42%]
+....................................F................................... [ 56%]
+........................................................................ [ 70%]
+........................................................................ [ 84%]
+........................................................................ [ 99%]
+.....                                                                    [100%]
+================================== FAILURES ===================================
+___ test_build_analysis_reconstructs_deadline_archive_and_exact_byte_pairs ____
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/qa/acceptance/test_build_analysis_reconstruc0')
+
+    def test_build_analysis_reconstructs_deadline_archive_and_exact_byte_pairs(tmp_path):
+        jobs = [{"job": "oracle-41", "kind": "oracle", "model_seed": 41, "worker_started_at": 1},
+            *({"job": f"search-41-time-11-{mode}", "kind": "search", "model_seed": 41,
+                "search_seed": 11, "mode": mode, "budget": "time", "worker_started_at": 100} for mode in "RTE")]
+        write_json(tmp_path / "protocol.json", {"protocol_sha256": "frozen", "jobs": jobs})
+        write_json(tmp_path / "resource-ledger.json", {"status": "stopped", "jobs": [], "elapsed_seconds": 150})
+        oracle = [evaluation(f"oracle-{index}", .2, 12_488, 2 + index, attempt=index) for index in range(80)]
+        store_job(tmp_path, jobs[0], {"model_seed": 41, "evaluations": oracle}, evaluations=oracle)
+        r = [evaluation("r", 1., 39_112, 120), evaluation("late", .01, 12_488, 131, attempt=2)]
+        t = [evaluation("t", .8, 39_112, 125)]
+        for job, rows in ((jobs[1], r), (jobs[2], t)):
+            store_job(tmp_path, job, {"model_seed": 41, "mode": job["mode"], "search_seed": 11,
+                "budget": "time", "deadline": 130, "evaluations": rows,
+                "search": {"created_proposals": len(rows), "charged_evaluations": len(rows), "stop_reason": "time_budget"}},
+                evaluations=rows, trace=[{"event": "proposal", "proposal_id": index,
+                    "canonical_solution_id": row["solution_id"]} for index, row in enumerate(rows, 1)])
+        analysis = build_analysis(tmp_path)
+        assert analysis["status"] == "partial" and analysis["protocol_sha256"] == "frozen"
+        by_mode = {row["mode"]: row for row in analysis["search_runs"]}
+>       assert by_mode["E"]["status"] == "unexecuted"
+E       AssertionError: assert 'partial' == 'unexecuted'
+E         
+E         - unexecuted
+E         + partial
+
+tests\refactoring\test_compression_search_analysis.py:133: AssertionError
+============================== warnings summary ===============================
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+tests/unit/low_rank/test_statistical_profiles.py::test_ledoit_wolf_matches_independent_sklearn_centered_ml_reference[rows0]
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\sklearn\covariance\_shrunk_covariance.py:351: UserWarning: Only one sample available. You may want to reshape your data array
+    warnings.warn(
+
+tests/unit/low_rank/test_statistical_profiles.py::test_ledoit_wolf_matches_independent_sklearn_centered_ml_reference[rows0]
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\sklearn\covariance\_empirical_covariance.py:102: UserWarning: Only one sample available. You may want to reshape your data array
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_compression_search_analysis.py::test_build_analysis_reconstructs_deadline_archive_and_exact_byte_pairs
+1 failed, 508 passed, 5 warnings in 31.25s

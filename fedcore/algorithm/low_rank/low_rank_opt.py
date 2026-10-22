@@ -269,6 +269,168 @@ class LowRankModel(BaseCompressionModel):
         #     flat_llm = FlatLLM()
         #     model = flat_llm.reassemble(model, architecture=model_type, tokenizer=tokenizer)
 
+    def prepare_candidate_catalog(self, model, calibration, **options):
+        """Prepare bounded finite alternatives on a common frozen score context."""
+        from fedcore.algorithm.low_rank.candidate_graph import prepare_candidate_catalog
+        return prepare_candidate_catalog(model, calibration, **options)
+
+    def compress_candidates(self, model, calibration, plan, *, store):
+        """Replay a validated budget allocation and publish its independent model."""
+        from fedcore.algorithm.low_rank.candidate_graph import apply_candidate_allocation
+        result = apply_candidate_allocation(model, calibration, plan, store=store)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def plan_compression_graph(self, model, calibration, **options):
+        """Prepare a metadata-only fixed weighted-SVD or ASVD workflow.
+
+        This explicit G1 API reads capabilities and fingerprints only. It does
+        not copy the model, install hooks, collect activations or solve SVD.
+        """
+        from fedcore.algorithm.low_rank.graph_execution import prepare_fixed_graph
+        return prepare_fixed_graph(model, calibration, **options)
+
+    def compress_graph(self, model, calibration, graph, *, store=None):
+        """Execute a prepared fixed graph and return ``FixedGraphResult``.
+
+        The result owns the independent model, validated metadata graph and
+        numerical evidence. The default executes the whole existing recipe;
+        staged_fixed_recipe_v1 executes canonical stages using the explicit
+        bounded store. Runtime tensors and the store remain outside the plan.
+        """
+        from fedcore.algorithm.low_rank.graph_execution import execute_fixed_graph
+        result = execute_fixed_graph(model, calibration, graph, store=store)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def prepare_compression_groups(self, model, calibration, requests, **options):
+        """Read and check complete regions and a finite grouped schedule."""
+        from .grouped_execution import prepare_grouped_workflow
+        return prepare_grouped_workflow(model, calibration, requests, **options)
+
+    def compress_groups(self, model, calibration, workflow, *, store):
+        """Execute closed groups and publish their independent model on success."""
+        from .grouped_execution import execute_grouped_workflow
+        result = execute_grouped_workflow(model, calibration, workflow, store=store)
+        self.model_before, self.model_after = model, result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def prepare_compression_grammar(self, model, calibration, **options):
+        """Read and validate a finite recipe domain without running the model."""
+        from .grammar_execution import prepare_grammar_space
+        return prepare_grammar_space(model, calibration, **options)
+
+    def compress_workflow(self, model, calibration, workflow):
+        """Execute a checked grammar workflow and publish only successful work."""
+        from .grammar_execution import WorkflowSuccess, execute_workflow
+        result = execute_workflow(model, calibration, workflow)
+        if type(result) is WorkflowSuccess:
+            self.model_before, self.model_after = model, result.model
+            self.transform_result = result
+            trainer = getattr(self, 'trainer', None)
+            if trainer is not None and getattr(trainer, 'model', None) is model:
+                trainer.model = result.model
+                trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def prepare_compression_composition(self, model, request):
+        """Check bounded ordered representation transitions and final storage."""
+        from .compression_composition import prepare_composition
+        return prepare_composition(model, request)
+
+    def prepare_cv_grammar(self, model, calibration, **options):
+        """Read the complete frozen CIFAR ResNet18 structural/SVD domain."""
+        from .cv_execution import prepare_cv_grammar_space
+        return prepare_cv_grammar_space(model, calibration, **options)
+
+    def compress_cv_workflow(self, model, calibration, workflow):
+        """Publish only an independent CV model with an exact checkpoint."""
+        from .cv_execution import CVWorkflowSuccess, execute_cv_workflow
+        result = execute_cv_workflow(model, calibration, workflow)
+        if type(result) is CVWorkflowSuccess:
+            self.model_before, self.model_after = model, result.model
+            self.transform_result = result
+            trainer = getattr(self, 'trainer', None)
+            if trainer is not None and getattr(trainer, 'model', None) is model:
+                trainer.model = result.model
+                trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def compress_composition(self, model, workflow):
+        """Publish only an owned model with a verified reloadable checkpoint."""
+        from .compression_composition import CompositionSuccess, execute_composition
+        result = execute_composition(model, workflow)
+        if type(result) is CompositionSuccess:
+            self.model_before, self.model_after = model, result.model
+            self.transform_result = result
+            trainer = getattr(self, 'trainer', None)
+            if trainer is not None and getattr(trainer, 'model', None) is model:
+                trainer.model = result.model
+                trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def compress_weighted(self, model, calibration, **options):
+        """Execute the explicit CPU weighted profile without implicit training.
+
+        Existing fit and load_model signatures keep their historical behavior.
+        The returned result contains an independent model, immutable plan and
+        numerical evidence. Any trainer owning the input graph must rebuild
+        its optimizer before further training.
+        """
+        from fedcore.algorithm.low_rank.execution import transform_weighted
+        result = transform_weighted(model, calibration, **options)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def compress_profile(self, model, calibration, method_spec, **options):
+        """Execute a named, versioned method with explicit data and resources."""
+        from fedcore.algorithm.low_rank.method_execution import transform_method
+        result = transform_method(model, calibration, method_spec, **options)
+        self.model_before = model
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
+    def build_architecture(self, architecture_spec, *, source=None, calibration=None, **options):
+        """Construct/transfer a declared P5 graph; LRT needs no pretrained model."""
+        from fedcore.algorithm.low_rank.architecture_profiles import build_architecture
+        result = build_architecture(architecture_spec, source=source, calibration=calibration, **options)
+        self.model_before = source
+        self.model_after = result.model
+        self.transform_result = result
+        trainer = getattr(self, 'trainer', None)
+        if source is not None and trainer is not None and getattr(trainer, 'model', None) is source:
+            trainer.model = result.model
+            trainer._fedcore_requires_optimizer_rebuild = True
+        return result
+
     def load_model(self, model, state_dict_path: str) -> None:
         """Load a decomposed (SVD-based) checkpoint into a model.
 
@@ -284,14 +446,21 @@ class LowRankModel(BaseCompressionModel):
             Path to the serialized state dict file containing decomposed
             parameters.
         """
-        load_svd_state_dict(
+        restored = load_svd_state_dict(
             model=model,
             state_dict_path=state_dict_path,
             decomposing_mode=self.decomposing_mode,
             compose_mode=self.compose_mode,
             decomposer_params=self.decomposer_params,
         )
-        model.to(self.device)
+        restored.to(self.device)
+        self.model_after = restored
+        trainer = getattr(self, 'trainer', None)
+        if trainer is not None and getattr(trainer, 'model', None) is model:
+            trainer.model = restored
+            # A pre-existing optimizer owns the old Parameters. The trainer must
+            # rebuild it before continuing training with this restored graph.
+            trainer._fedcore_requires_optimizer_rebuild = True
 
     # def predict_for_fit(self, input_data, output_mode: str = 'fedcore'):
     #     """Return model after training."""

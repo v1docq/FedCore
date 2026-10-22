@@ -1,0 +1,1084 @@
+{
+  "all_hashes_and_source_fingerprints_preserved": true,
+  "artifact_comparison_oracles": [
+    {
+      "batch": 1,
+      "device": "cpu",
+      "subject": "conv2_svd",
+      "throughput_ratio": {
+        "max": 0.8808862087047719,
+        "median": 0.8330596824642083,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8100194414149556,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8678894274859164
+        },
+        "min": 0.7899377334993772,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 0.8948655256723717,
+        "median": 0.8415426186873596,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8294663573085846,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8662306777645661
+        },
+        "min": 0.8257309941520466,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cpu",
+      "subject": "conv2_svd",
+      "throughput_ratio": {
+        "max": 1.3803240273896298,
+        "median": 0.9193904691471788,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8973727983767269,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.9863539724264798
+        },
+        "min": 0.8538024334838548,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 0.972379081757918,
+        "median": 0.9295341826894008,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.9131155303030303,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.9418421879911977
+        },
+        "min": 0.8646774287545894,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cuda:0",
+      "subject": "conv2_svd",
+      "throughput_ratio": {
+        "max": 1.6622754226526353,
+        "median": 0.8200974032579393,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.7429676912094846,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.6390945060498343
+        },
+        "min": 0.7192321446155281,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.660133444537114,
+        "median": 0.8084426175920416,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.7580604534005038,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.5913594926674595
+        },
+        "min": 0.7222775978071269,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cuda:0",
+      "subject": "conv2_svd",
+      "throughput_ratio": {
+        "max": 1.5822314096010606,
+        "median": 0.7753662950801973,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.7370651527493891,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.5777152522885067
+        },
+        "min": 0.7290618018179802,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.5761221058077868,
+        "median": 0.7562322161696237,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.7038360733857517,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.4952319587628864
+        },
+        "min": 0.42747364841890517,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cpu",
+      "subject": "conv2_svd_linear16",
+      "throughput_ratio": {
+        "max": 0.8776876798325922,
+        "median": 0.8320402470303567,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8037474861431304,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8757319113341697
+        },
+        "min": 0.7824284111420069,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 0.8866995073891626,
+        "median": 0.8549497285704855,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8273045507584598,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8733003708281828
+        },
+        "min": 0.8219497956800934,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cpu",
+      "subject": "conv2_svd_linear16",
+      "throughput_ratio": {
+        "max": 1.13509337651896,
+        "median": 1.0970794249241513,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.0869049212510598,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.1240597252969602
+        },
+        "min": 0.9922565565562864,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.129739776951673,
+        "median": 1.0971907926327815,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.0759297156163996,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.1237543289278396
+        },
+        "min": 1.0576784426820476,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cuda:0",
+      "subject": "conv2_svd_linear16",
+      "throughput_ratio": {
+        "max": 1.1299018341000266,
+        "median": 0.7877311356083048,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.6964068100815313,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8460945400099446
+        },
+        "min": 0.5732710894438202,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.5265866209262435,
+        "median": 0.819475704516295,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.5857068876229933,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8968485169491526
+        },
+        "min": 0.5824315722469765,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cuda:0",
+      "subject": "conv2_svd_linear16",
+      "throughput_ratio": {
+        "max": 1.615918869778315,
+        "median": 1.3775949777045633,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.6345667643008497,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.5872862977355537
+        },
+        "min": 0.6302902042593176,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.5810988433228181,
+        "median": 0.878242886426502,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.6404276985743381,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.5771551146266254
+        },
+        "min": 0.5556865590422637,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cpu",
+      "subject": "conv2_weighted",
+      "throughput_ratio": {
+        "max": 0.8769673603042146,
+        "median": 0.8398369034784183,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8226301244834318,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8564253909081495
+        },
+        "min": 0.7875058574000543,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 0.8916408668730651,
+        "median": 0.839444550486734,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8206650831353919,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.861474435196195
+        },
+        "min": 0.8149466192170818,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cpu",
+      "subject": "conv2_weighted",
+      "throughput_ratio": {
+        "max": 0.9432831312506785,
+        "median": 0.9154529350725896,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8884837008380735,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.9362777089852425
+        },
+        "min": 0.8870274554121901,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 0.9614897390423106,
+        "median": 0.9261963337117932,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.9121060382916053,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.9367661958400382
+        },
+        "min": 0.8976951071572988,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cuda:0",
+      "subject": "conv2_weighted",
+      "throughput_ratio": {
+        "max": 1.554440013329177,
+        "median": 0.7603964997477355,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.7360064272651352,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8182519907599225
+        },
+        "min": 0.4048626269431014,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.565519957983193,
+        "median": 0.7816354816354816,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.42511919534974857,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.804363905325444
+        },
+        "min": 0.3542072056135385,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cuda:0",
+      "subject": "conv2_weighted",
+      "throughput_ratio": {
+        "max": 1.1026925866660762,
+        "median": 0.7678995656166222,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.41843563416257956,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.9407908811155055
+        },
+        "min": 0.38955161615681555,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.5804232804232805,
+        "median": 0.7973223001857263,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.4056671215961526,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.9217800206445695
+        },
+        "min": 0.39228007181328545,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cpu",
+      "subject": "conv2_weighted_linear16",
+      "throughput_ratio": {
+        "max": 0.977039148513298,
+        "median": 0.8414383012473312,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8266012167419515,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.877063160933113
+        },
+        "min": 0.8009183750282287,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 0.8596491228070176,
+        "median": 0.8475075695508141,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8339201877934272,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.857142857142857
+        },
+        "min": 0.8026932084309133,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cpu",
+      "subject": "conv2_weighted_linear16",
+      "throughput_ratio": {
+        "max": 1.151461122002135,
+        "median": 1.0914056424850014,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.0658986989029966,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.1497891431135037
+        },
+        "min": 1.0351065016170402,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.1538289962825279,
+        "median": 1.0841610307154914,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.0371030793498388,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.1531016278046635
+        },
+        "min": 1.0079319388473102,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cuda:0",
+      "subject": "conv2_weighted_linear16",
+      "throughput_ratio": {
+        "max": 1.705763339253588,
+        "median": 0.811206891841862,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.5796410692281728,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.5892880634662794
+        },
+        "min": 0.5625509207239141,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.632762312633833,
+        "median": 0.8085289573683319,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.5788783821739537,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.6083379045529347
+        },
+        "min": 0.5674188735546438,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cuda:0",
+      "subject": "conv2_weighted_linear16",
+      "throughput_ratio": {
+        "max": 1.1039990735736895,
+        "median": 0.7807251387282819,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.734862814590634,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.008824521236001
+        },
+        "min": 0.517511445685022,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 0.8946893335339251,
+        "median": 0.778690630713575,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.5691655921900903,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 0.8204691390381339
+        },
+        "min": 0.5256572982774252,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cpu",
+      "subject": "historical_afm_linear8",
+      "throughput_ratio": {
+        "max": 1.054973310766827,
+        "median": 1.0137052959289923,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.0069645783436278,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.0530305374214906
+        },
+        "min": 0.9888850729026819,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.0720461095100864,
+        "median": 1.0352189464556687,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.000699790062981,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.0619596541786742
+        },
+        "min": 0.9566433566433568,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cpu",
+      "subject": "historical_afm_linear8",
+      "throughput_ratio": {
+        "max": 1.3413579779135694,
+        "median": 1.284662199298543,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.2694888031205371,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.3011555020569237
+        },
+        "min": 1.2585575507400617,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.33879082459282,
+        "median": 1.2869210835030533,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 1.2644960980112443,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.3269968763944666
+        },
+        "min": 1.2146187146187146,
+        "n": 10
+      }
+    },
+    {
+      "batch": 1,
+      "device": "cuda:0",
+      "subject": "historical_afm_linear8",
+      "throughput_ratio": {
+        "max": 1.5453934477927531,
+        "median": 1.0382178471639834,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8217307281777018,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.3938301438203997
+        },
+        "min": 0.7442675109726965,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 2.1385152838427945,
+        "median": 1.0494548780628201,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.7459294834250908,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.3864801864801863
+        },
+        "min": 0.7147984208637396,
+        "n": 10
+      }
+    },
+    {
+      "batch": 64,
+      "device": "cuda:0",
+      "subject": "historical_afm_linear8",
+      "throughput_ratio": {
+        "max": 1.975113027461487,
+        "median": 1.0137502725493326,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.8356137564986622,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.2160122235033637
+        },
+        "min": 0.72876200614981,
+        "n": 10
+      },
+      "valid_blocks": 10,
+      "wall_ratio": {
+        "max": 1.9963521804012603,
+        "median": 0.8902876258111083,
+        "median_interval": {
+          "assumptions": "independent stationary paired blocks, common median",
+          "binomial_coverage": 0.978515625,
+          "lower": 0.7010556099684405,
+          "minimum_coverage": 0.95,
+          "order_from_each_tail": 2,
+          "scope": "timing on this machine; not across trained seeds",
+          "upper": 1.016215339711367
+        },
+        "min": 0.5348579230309753,
+        "n": 10
+      }
+    }
+  ],
+  "counts": {
+    "admitted_quiet_assessments_checked": 1263,
+    "analysis_comparison_rows": 364,
+    "invalid_comparison_rows": 3,
+    "planned_blocks": 268,
+    "profile_sessions": 48,
+    "profile_statuses": {
+      "succeeded": 48
+    },
+    "raw_calls_including_invalid": {
+      "raw_cuda_event_ms": 29200,
+      "raw_full_path_ms": 58400,
+      "raw_synchronized_wall_ms": 58400,
+      "throughput_blocks": 1752,
+      "throughput_calls": 87600
+    },
+    "timing_sessions": 584,
+    "timing_statuses": {
+      "invalid_noise": 1,
+      "succeeded": 583
+    },
+    "timing_summary_groups": 72,
+    "valid_blocks": 267
+  },
+  "dense_identity_controls": [
+    {
+      "batch": 1,
+      "comparison": "baseline/candidate",
+      "device": "cpu",
+      "full_path_p50_ms_ratio": {
+        "max": 1.0035087719298244,
+        "median": 1.0,
+        "median_interval": null,
+        "min": 0.9557046979865772,
+        "n": 5
+      },
+      "full_path_p95_ms_ratio": {
+        "max": 1.0031119090365053,
+        "median": 0.9860587792012058,
+        "median_interval": null,
+        "min": 0.9557448329263208,
+        "n": 5
+      },
+      "invalid_blocks": 0,
+      "kind": "control",
+      "planned_blocks": 5,
+      "statistical_scope": "paired timing blocks on one machine; independent stationary block assumption; pointwise intervals, no simultaneous coverage; environment-filtered complete pairs",
+      "subject": "dense_dense",
+      "throughput_candidate_over_reference": {
+        "max": 1.0169822001383735,
+        "median": 0.9940905509424813,
+        "median_interval": null,
+        "min": 0.9800712372317565,
+        "n": 5
+      },
+      "valid_blocks": 5,
+      "wall_p50_ms_ratio": {
+        "max": 1.0557184750733137,
+        "median": 1.0,
+        "median_interval": null,
+        "min": 0.9717514124293785,
+        "n": 5
+      },
+      "wall_p95_ms_ratio": {
+        "max": 1.2825115013283226,
+        "median": 0.9991631298941954,
+        "median_interval": null,
+        "min": 0.7946816400042377,
+        "n": 5
+      }
+    },
+    {
+      "batch": 64,
+      "comparison": "baseline/candidate",
+      "device": "cpu",
+      "full_path_p50_ms_ratio": {
+        "max": 1.0384510684633184,
+        "median": 1.0018533904262799,
+        "median_interval": null,
+        "min": 0.9899895315362471,
+        "n": 5
+      },
+      "full_path_p95_ms_ratio": {
+        "max": 1.017512600225527,
+        "median": 1.0048028614943219,
+        "median_interval": null,
+        "min": 0.9496057756245845,
+        "n": 5
+      },
+      "invalid_blocks": 0,
+      "kind": "control",
+      "planned_blocks": 5,
+      "statistical_scope": "paired timing blocks on one machine; independent stationary block assumption; pointwise intervals, no simultaneous coverage; environment-filtered complete pairs",
+      "subject": "dense_dense",
+      "throughput_candidate_over_reference": {
+        "max": 1.0385058604325694,
+        "median": 0.991755679091561,
+        "median_interval": null,
+        "min": 0.9808324390023144,
+        "n": 5
+      },
+      "valid_blocks": 5,
+      "wall_p50_ms_ratio": {
+        "max": 1.0129983836206897,
+        "median": 0.9922539682539683,
+        "median_interval": null,
+        "min": 0.5858988977575066,
+        "n": 5
+      },
+      "wall_p95_ms_ratio": {
+        "max": 1.0142819843342037,
+        "median": 0.9605703718721393,
+        "median_interval": null,
+        "min": 0.6003785894922711,
+        "n": 5
+      }
+    },
+    {
+      "batch": 1,
+      "comparison": "baseline/candidate",
+      "device": "cuda:0",
+      "device_p50_ms_ratio": {
+        "max": 1.7999905773812084,
+        "median": 0.9570551566674329,
+        "median_interval": null,
+        "min": 0.8464779194705312,
+        "n": 5
+      },
+      "device_p95_ms_ratio": {
+        "max": 1.060604804718464,
+        "median": 0.9520340370258915,
+        "median_interval": null,
+        "min": 0.8221722009853952,
+        "n": 5
+      },
+      "full_path_p50_ms_ratio": {
+        "max": 1.8153328153328152,
+        "median": 0.9876657824933688,
+        "median_interval": null,
+        "min": 0.8673143138219381,
+        "n": 5
+      },
+      "full_path_p95_ms_ratio": {
+        "max": 1.8054001285744898,
+        "median": 1.0100615452965542,
+        "median_interval": null,
+        "min": 0.7889032206457287,
+        "n": 5
+      },
+      "invalid_blocks": 0,
+      "kind": "control",
+      "planned_blocks": 5,
+      "statistical_scope": "paired timing blocks on one machine; independent stationary block assumption; pointwise intervals, no simultaneous coverage; environment-filtered complete pairs",
+      "subject": "dense_dense",
+      "throughput_candidate_over_reference": {
+        "max": 0.9906835898869891,
+        "median": 0.9603997476272577,
+        "median_interval": null,
+        "min": 0.5103075971815483,
+        "n": 5
+      },
+      "valid_blocks": 5,
+      "wall_p50_ms_ratio": {
+        "max": 1.8716526699413722,
+        "median": 0.9739226145118958,
+        "median_interval": null,
+        "min": 0.4782321899736148,
+        "n": 5
+      },
+      "wall_p95_ms_ratio": {
+        "max": 1.9823415869952048,
+        "median": 0.9827131912819654,
+        "median_interval": null,
+        "min": 0.5119033778099974,
+        "n": 5
+      }
+    },
+    {
+      "batch": 64,
+      "comparison": "baseline/candidate",
+      "device": "cuda:0",
+      "device_p50_ms_ratio": {
+        "max": 1.016841712291852,
+        "median": 0.979585959698852,
+        "median_interval": null,
+        "min": 0.5066318362766413,
+        "n": 5
+      },
+      "device_p95_ms_ratio": {
+        "max": 1.0320181683164442,
+        "median": 1.0002145603079586,
+        "median_interval": null,
+        "min": 0.5193506820896354,
+        "n": 5
+      },
+      "full_path_p50_ms_ratio": {
+        "max": 1.0267447604262225,
+        "median": 0.9825733752620546,
+        "median_interval": null,
+        "min": 0.5224433768016473,
+        "n": 5
+      },
+      "full_path_p95_ms_ratio": {
+        "max": 1.0567786165978625,
+        "median": 0.9677461123124135,
+        "median_interval": null,
+        "min": 0.5363892843614896,
+        "n": 5
+      },
+      "invalid_blocks": 0,
+      "kind": "control",
+      "planned_blocks": 5,
+      "statistical_scope": "paired timing blocks on one machine; independent stationary block assumption; pointwise intervals, no simultaneous coverage; environment-filtered complete pairs",
+      "subject": "dense_dense",
+      "throughput_candidate_over_reference": {
+        "max": 1.0384142944402308,
+        "median": 1.0151638100748663,
+        "median_interval": null,
+        "min": 0.612944989190378,
+        "n": 5
+      },
+      "valid_blocks": 5,
+      "wall_p50_ms_ratio": {
+        "max": 1.0211871259906193,
+        "median": 0.959415719146817,
+        "median_interval": null,
+        "min": 0.5103037325167591,
+        "n": 5
+      },
+      "wall_p95_ms_ratio": {
+        "max": 1.0329792931096036,
+        "median": 0.9428947753548954,
+        "median_interval": null,
+        "min": 0.5016262752739477,
+        "n": 5
+      }
+    }
+  ],
+  "elapsed_seconds": 5.551326699998754,
+  "first_packet_statuses_unchanged": {
+    "invalid_noise": 33,
+    "succeeded": 99
+  },
+  "frozen_analyzer_matches_independent_oracles": true,
+  "frozen_source_files_verified": 261,
+  "inputs_sha256": {
+    "ledger-scientific.json": "dfd659d1824bae619c579931837b1ae5399d2372f86b97569c63762b44a0d52e",
+    "prepared.json": "8843969641a0a11da7b6cce69f9cedcc489d3c36cad4239b703d432162796036",
+    "profiling.json": "6f54694e65c91a018e1b565bccdbf3d2f3c3e3f7447089e28e15d6178ffbc526",
+    "protocol.json": "428ba6ea0615deaf61b1fdc3b866d369b52b8343442b576cbb50270fabf35c19",
+    "scientific-raw-manifest.json": "3a797c72af6e71d9c0f4ee1b815281080a8279fe4080c9d05e84a85d19546572",
+    "timing.json": "846738c206f60980482153f0450d90f68b98f4b845261f04ab314964cf54ffd9"
+  },
+  "invalid_sessions": [
+    {
+      "block_id": "conv-synthetic_64_32_r16-cuda0-b1-k2",
+      "post_samples": 12,
+      "reason": [
+        "bounded quiet-window deadline expired"
+      ],
+      "session_id": "conv-synthetic_64_32_r16-cuda0-b1-k2-materialized",
+      "status": "invalid_noise",
+      "timed_raw_retained": true
+    }
+  ],
+  "new_measurement_sessions_created_by_reviewer": 0,
+  "new_training_updates": 0,
+  "original_archives_verified": 43,
+  "profiling_review": {
+    "comparison_operator": "aten::_convolution",
+    "dense_convolution_calls": 3,
+    "factor_convolution_calls": 6,
+    "frontend_name_caveat": "factor graphs have no aten::conv2d frontend events; this does not mean zero convolution work",
+    "gpu_traces_without_kernel_events": [
+      "profile-digits_conv2-cuda0-b1-original_dense",
+      "profile-digits_conv2-cuda0-b1-factor",
+      "profile-digits_conv2-cuda0-b1-materialized",
+      "profile-synthetic_64_32_r16-cuda0-b1-original_dense",
+      "profile-synthetic_64_32_r16-cuda0-b1-factor",
+      "profile-synthetic_64_32_r16-cuda0-b1-materialized",
+      "profile-synthetic_128_16_r32-cuda0-b1-original_dense",
+      "profile-synthetic_128_16_r32-cuda0-b1-factor",
+      "profile-synthetic_128_16_r32-cuda0-b1-materialized",
+      "profile-synthetic_256_8_r64-cuda0-b1-original_dense",
+      "profile-synthetic_256_8_r64-cuda0-b1-factor",
+      "profile-synthetic_256_8_r64-cuda0-b1-materialized",
+      "profile-digits_conv2-cuda0-b64-original_dense",
+      "profile-digits_conv2-cuda0-b64-factor",
+      "profile-digits_conv2-cuda0-b64-materialized",
+      "profile-synthetic_64_32_r16-cuda0-b64-original_dense",
+      "profile-synthetic_64_32_r16-cuda0-b64-factor",
+      "profile-synthetic_64_32_r16-cuda0-b64-materialized",
+      "profile-synthetic_128_16_r32-cuda0-b64-original_dense",
+      "profile-synthetic_128_16_r32-cuda0-b64-factor",
+      "profile-synthetic_128_16_r32-cuda0-b64-materialized",
+      "profile-synthetic_256_8_r64-cuda0-b64-original_dense",
+      "profile-synthetic_256_8_r64-cuda0-b64-factor",
+      "profile-synthetic_256_8_r64-cuda0-b64-materialized"
+    ],
+    "negative_self_cpu_operator_rows": [
+      {
+        "operator": "aten::_convolution",
+        "self_cpu_time_us": -11,
+        "session_id": "profile-digits_conv2-cpu-b1-original_dense"
+      },
+      {
+        "operator": "aten::convolution",
+        "self_cpu_time_us": -28,
+        "session_id": "profile-digits_conv2-cpu-b1-materialized"
+      },
+      {
+        "operator": "aten::conv2d",
+        "self_cpu_time_us": -661,
+        "session_id": "profile-synthetic_64_32_r16-cpu-b1-materialized"
+      },
+      {
+        "operator": "aten::conv2d",
+        "self_cpu_time_us": -915,
+        "session_id": "profile-synthetic_128_16_r32-cpu-b1-original_dense"
+      }
+    ],
+    "scope": "three profiled calls; operator totals may overlap; negative self-CPU timings and missing GPU kernel events limit attribution; no profiled latency or pure kernel attribution",
+    "separate_after_timing": true
+  },
+  "protocol_sha256": "ebb27bb08ca15228c06f59e0502acbc9f8b78c30d13f1adf42932905ad7f6b1c",
+  "publication_review": "pending root report/HTML/bundle notification",
+  "raw_files_verified": 6368,
+  "resources": {
+    "maximum_recursive_rss_bytes": 765239296,
+    "maximum_torch_allocated_bytes": 71355904,
+    "maximum_torch_reserved_bytes": 73400320,
+    "minimum_available_ram_bytes": 11832594432,
+    "minimum_physical_gpu_free_mib": 14190.0,
+    "postmeasurement_reserve_seen_seconds": 600.0,
+    "profile_trace_bytes": 1057814,
+    "scientific_charged_seconds": 3257.531507999978,
+    "scientific_mandatory_drain_seconds": 1390.4000000000162,
+    "v1_charged_carry_seconds": 456.11941349994595,
+    "v2_pilot_mandatory_drain_seconds_separate": 17.599999999999998
+  },
+  "review_script_sha256": "3634b065e830b2b1941d685b8ae1c45a1bfd7073ead8f74e780aee0716185797",
+  "schema": 2,
+  "scientific_source_sha256": "7a46d683d05d03bef3639f021606ba778c535c8083afcc3f4a38a31912da3616",
+  "stage": "raw_data_and_frozen_analysis_review",
+  "statistical_review": {
+    "artifact_blocks": 10,
+    "controls": "five blocks; descriptive only",
+    "conv": "three planned blocks, two valid in one profile; descriptive only",
+    "coverage": "pointwise, no simultaneous guarantee; no training/quality inference",
+    "median_interval": "second/ninth ratios with0.978515625 binomial coverage conditional on iid stationary blocks",
+    "unit": "paired timing block; no call pseudoreplication"
+  },
+  "status": "passed",
+  "v1_preserved_timing_files_verified": 423,
+  "v1_statuses": {
+    "admission_pending": 1,
+    "succeeded": 39,
+    "technical_failure": 4
+  }
+}

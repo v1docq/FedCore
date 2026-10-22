@@ -1,0 +1,48 @@
+{
+  "counts": {
+    "collected": 1655,
+    "errors": 0,
+    "failed": 0,
+    "passed": 1652,
+    "skipped": 3
+  },
+  "guard_limits": {
+    "deadline_seconds": 600.0,
+    "minimum_available_ram_bytes": 6442450944,
+    "recursive_rss_bytes": 12884901888,
+    "worker_thread_environment": 8
+  },
+  "guarded_process_seconds": 320.1418293999959,
+  "minimum_available_ram_bytes": 10860503040,
+  "new_scientific_training_updates": 0,
+  "new_test_cases": {
+    "test_svd_second_package": 12,
+    "test_svd_second_package_independent": 88
+  },
+  "observed": {
+    "elapsed_seconds": 320.1418293999959,
+    "returncode": 0,
+    "sample_interval_seconds": 0.1,
+    "sampled_maximum_individual_rss_bytes": 1290231808,
+    "sampled_maximum_rss_bytes": 1290231808,
+    "sampled_maximum_tree_cpu_core_percent": 881.4102564225345,
+    "sampled_maximum_tree_sum_rss_bytes": 1683206144,
+    "scope": "maximum sampled individual RSS includes actual recursive interpreters; separate tree sum may double-count shared pages; neither is exact allocator peak",
+    "violation": null
+  },
+  "pytest_seconds": 315.32,
+  "schema": 2,
+  "scientific_source_sha256_after_tests": "7a46d683d05d03bef3639f021606ba778c535c8083afcc3f4a38a31912da3616",
+  "scope": "postmeasurement validation; ephemeral optimizer steps in unit tests are not new experiment training",
+  "sources": {
+    "guarded-validation.py": "e8b00fd0d0ec3f4a348e8660ad2f3079fd2b9e9f61922400fe161f25ef827ee4",
+    "validation-process/pytest.xml": "7a293f19ffe383846fb98a49cc46340be7a8d7a93e48902ec9727e4b163a5441",
+    "validation-process/resources.json": "02cffd418a9be06eb7f1e19d18226ee3a106aac02b46bcbd6a0f1bc71d8d3938",
+    "validation-process/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "validation-process/stdout.log": "fce15bc1cbc54deb6b3cf93c61d6bd901ad7898833c0c9774d2dd406ce98bc9f"
+  },
+  "status": "passed",
+  "suite": "tests/refactoring tests/petra tests/unit/algorithm/low_rank tests/unit/low_rank/test_statistical_profiles.py tests/unit/low_rank/test_statistical_collectors.py",
+  "utc": "2026-10-14T16:28:49.962471+00:00",
+  "warnings": 41
+}

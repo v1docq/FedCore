@@ -1,0 +1,13 @@
+{
+  "scientific_source_files_unchanged": 264,
+  "postmeasurement_files_excluded_from_freeze": [
+    "scripts/replay_svd_third_package_portable.py",
+    "tests/refactoring/test_portable_svd_third_replay.py"
+  ],
+  "new_file_sha256": {
+    "scripts/replay_svd_third_package_portable.py": "3690495b965af6f89ee637bfa6e46852326d65b79a3053d6c4485864b518e650",
+    "tests/refactoring/test_portable_svd_third_replay.py": "ab130d6cca5756439ac1c3074de507dce7cb9b2092a4e40ef8cc3bdb788fd49f"
+  },
+  "raw_run_unchanged": true,
+  "portable_output_bytes_identical": true
+}

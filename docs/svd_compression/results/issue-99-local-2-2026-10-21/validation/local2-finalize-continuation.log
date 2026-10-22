@@ -1,0 +1,4 @@
+{"job": "finalize-19901", "status": "succeeded", "mlp": 5065}
+{"job": "finalize-19911", "status": "succeeded", "mlp": 5085}
+{"job": "finalize-19921", "status": "succeeded", "mlp": 5106}
+{"status": "partial", "elapsed": 1478.5117642999999, "mlp": 5106, "matrix": 18}

@@ -1,0 +1,37 @@
+{
+  "attempt_status_counts": {
+    "admission_pending": 1,
+    "succeeded": 39,
+    "technical_failure": 4
+  },
+  "charged_seconds": 456.11941349994595,
+  "completed_attempts": 43,
+  "controller_command": [
+    "python-runtime\\python.exe",
+    "-m",
+    "fedcore.experiments.svd_second_package",
+    "--output",
+    "aborted-svd-second-package-v1",
+    "--stage",
+    "timing"
+  ],
+  "controller_pid": 67904,
+  "controller_wait_exitcode": 15,
+  "owned_worker_pids_at_suspend": [],
+  "pending_session_ids": [
+    "conv-synthetic_256_8_r64-cpu-b1-k1-materialized"
+  ],
+  "planned_sessions": 584,
+  "reason": "Controlled stop between workers for historical TorchScript source path containing Cyrillic; C++ path loader fopen failure; frozen source unmodified.",
+  "schema": 2,
+  "source_sha256": "86e912be9c10cb4d9eb06be981c165784fa8350f5066d28ba9f1199f504846eb",
+  "source_snapshot": "aborted-svd-second-package-v1\\source-frozen",
+  "source_snapshot_file_count": 261,
+  "source_snapshot_manifest_sha256": "504ef835c9c74b78f13b2602544726f5cbbbe15cd28291e3bae48fc99877e957",
+  "source_unchanged": true,
+  "started_worker_attempts": 43,
+  "stop_wait_seconds": 7.735000000000582,
+  "stopped_during_admission": true,
+  "technical_failures": 4,
+  "unified_exec_shell_exitcode": 1
+}

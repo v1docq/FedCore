@@ -1,0 +1,4897 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 14830694400,
+        "cpu_percent": 13.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13987,
+          "physical_used_mib": 2064,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 42140,
+        "utc_epoch": 1791978402.6129658
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "transforms"
+      ],
+      "directory": "local-package\\processes\\transforms\\attempt-1",
+      "elapsed_seconds": 12.728362999998353,
+      "job_id": "transforms",
+      "maximum_recursive_rss_bytes": 702652416,
+      "pid": 11560,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15822643200,
+        "cpu_percent": 2.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13992,
+          "physical_used_mib": 2059,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978488.3023524
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 3.576768599999923,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 384491520,
+      "pid": 58944,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15771582464,
+        "cpu_percent": 12.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13984,
+          "physical_used_mib": 2067,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 7
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978492.302392
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 3.5036696000024676,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 384954368,
+      "pid": 12904,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15932522496,
+        "cpu_percent": 11.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13978,
+          "physical_used_mib": 2073,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978496.1820824
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 3.600851600000169,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 385425408,
+      "pid": 69588,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15710572544,
+        "cpu_percent": 9.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 7
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978500.1627066
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 3.453166399998736,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 383479808,
+      "pid": 46116,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15759810560,
+        "cpu_percent": 1.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978504.0007102
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 3.4735930999995617,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 383094784,
+      "pid": 73912,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15715160064,
+        "cpu_percent": 10.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978507.8666823
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 3.5073102000023937,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 386764800,
+      "pid": 36616,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15759044608,
+        "cpu_percent": 3.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978511.7448242
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 3.5322506000011344,
+      "job_id": "artifact-5567f927693d1a20-cpu-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 384638976,
+      "pid": 27784,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15772270592,
+        "cpu_percent": 1.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978515.6616192
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 3.4801477000000887,
+      "job_id": "artifact-5567f927693d1a20-cpu-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 386187264,
+      "pid": 12336,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15746265088,
+        "cpu_percent": 4.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978519.5231035
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 3.4757915000009234,
+      "job_id": "artifact-5567f927693d1a20-cpu-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 385884160,
+      "pid": 40720,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15780900864,
+        "cpu_percent": 1.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978523.3833523
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 3.399603500001831,
+      "job_id": "artifact-5567f927693d1a20-cpu-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 385581056,
+      "pid": 84440,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15774072832,
+        "cpu_percent": 10.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13983,
+          "physical_used_mib": 2068,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978527.163363
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 3.511771299999964,
+      "job_id": "artifact-5567f927693d1a20-cpu-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 388079616,
+      "pid": 59208,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15703236608,
+        "cpu_percent": 3.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978531.875044
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 6.6530277999991085,
+      "job_id": "artifact-5567f927693d1a20-cpu-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 385626112,
+      "pid": 82552,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15530287104,
+        "cpu_percent": 15.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978538.9316914
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 3.5285097999985737,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 386949120,
+      "pid": 46448,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15570149376,
+        "cpu_percent": 4.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978542.8498082
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 3.4092158999992535,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 385716224,
+      "pid": 22368,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15570604032,
+        "cpu_percent": 7.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978546.6698413
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 3.457145500000479,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 386203648,
+      "pid": 52088,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15525015552,
+        "cpu_percent": 6.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978550.5110703
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 3.4956177000021853,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 412798976,
+      "pid": 75680,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15536533504,
+        "cpu_percent": 9.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978554.3815525
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 3.626843699999881,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 386367488,
+      "pid": 78284,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15389782016,
+        "cpu_percent": 11.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13974,
+          "physical_used_mib": 2076,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978558.3891702
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 3.5679689000025974,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 386117632,
+      "pid": 64668,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15484624896,
+        "cpu_percent": 3.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978562.336623
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 3.4827675000015006,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 386650112,
+      "pid": 29692,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15474839552,
+        "cpu_percent": 3.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978566.2006612
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 3.569004799999675,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 385486848,
+      "pid": 48488,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15373230080,
+        "cpu_percent": 19.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978570.172041
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 3.6113102000017534,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 386269184,
+      "pid": 59260,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15379804160,
+        "cpu_percent": 4.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978574.1654747
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 3.5064859999984037,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 386174976,
+      "pid": 53344,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15416270848,
+        "cpu_percent": 7.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978578.054526
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 3.7610258999993675,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 385531904,
+      "pid": 59304,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15365197824,
+        "cpu_percent": 7.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978582.2278423
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 3.5452812000003178,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 386961408,
+      "pid": 82964,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15361449984,
+        "cpu_percent": 9.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978586.1565478
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cpu-b1-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cpu-b1-k0\\attempt-1",
+      "elapsed_seconds": 3.5504929000017,
+      "job_id": "conv2-factor_r8-cpu-b1-k0",
+      "maximum_recursive_rss_bytes": 385036288,
+      "pid": 64176,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15448215552,
+        "cpu_percent": 8.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978590.1010354
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cpu-b1-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cpu-b1-k0\\attempt-1",
+      "elapsed_seconds": 3.5374875999987125,
+      "job_id": "conv2-original_dense-cpu-b1-k0",
+      "maximum_recursive_rss_bytes": 382255104,
+      "pid": 10788,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15451561984,
+        "cpu_percent": 3.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978594.027811
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cpu-b1-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cpu-b1-k0\\attempt-1",
+      "elapsed_seconds": 3.651330400000006,
+      "job_id": "conv2-materialized_r8-cpu-b1-k0",
+      "maximum_recursive_rss_bytes": 382947328,
+      "pid": 52312,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15167520768,
+        "cpu_percent": 23.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978598.0838523
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cpu-b1-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cpu-b1-k1\\attempt-1",
+      "elapsed_seconds": 3.7583149000020057,
+      "job_id": "conv2-original_dense-cpu-b1-k1",
+      "maximum_recursive_rss_bytes": 383709184,
+      "pid": 23492,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15191834624,
+        "cpu_percent": 10.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978602.2766225
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cpu-b1-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cpu-b1-k1\\attempt-1",
+      "elapsed_seconds": 3.483337000001484,
+      "job_id": "conv2-materialized_r8-cpu-b1-k1",
+      "maximum_recursive_rss_bytes": 382451712,
+      "pid": 60936,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15216889856,
+        "cpu_percent": 8.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978606.143748
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cpu-b1-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cpu-b1-k1\\attempt-1",
+      "elapsed_seconds": 3.56219499999861,
+      "job_id": "conv2-factor_r8-cpu-b1-k1",
+      "maximum_recursive_rss_bytes": 386605056,
+      "pid": 31428,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15315779584,
+        "cpu_percent": 8.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978610.087883
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cpu-b1-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cpu-b1-k2\\attempt-1",
+      "elapsed_seconds": 3.269459999999526,
+      "job_id": "conv2-materialized_r8-cpu-b1-k2",
+      "maximum_recursive_rss_bytes": 408772608,
+      "pid": 9208,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15336091648,
+        "cpu_percent": 7.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978613.7424252
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cpu-b1-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cpu-b1-k2\\attempt-1",
+      "elapsed_seconds": 3.6090687999967486,
+      "job_id": "conv2-factor_r8-cpu-b1-k2",
+      "maximum_recursive_rss_bytes": 384692224,
+      "pid": 38768,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15187709952,
+        "cpu_percent": 8.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978617.7654896
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cpu-b1-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cpu-b1-k2\\attempt-1",
+      "elapsed_seconds": 3.563944599998649,
+      "job_id": "conv2-original_dense-cpu-b1-k2",
+      "maximum_recursive_rss_bytes": 382111744,
+      "pid": 41504,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15305781248,
+        "cpu_percent": 8.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978621.75149
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.021645600001648,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 385519616,
+      "pid": 39728,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15273263104,
+        "cpu_percent": 6.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978627.1703184
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 4.859143400000903,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 384307200,
+      "pid": 78580,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15087861760,
+        "cpu_percent": 8.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978632.4389873
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 4.79741759999888,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 383471616,
+      "pid": 66060,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15175880704,
+        "cpu_percent": 7.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978637.6478393
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.069393300000229,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 386080768,
+      "pid": 63124,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15306440704,
+        "cpu_percent": 11.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978643.1413083
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.106151999996655,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 384872448,
+      "pid": 60380,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15254896640,
+        "cpu_percent": 10.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978648.640237
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cpu-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cpu-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 4.797560099999828,
+      "job_id": "artifact-33b7f7fce9b5ae84-cpu-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 386445312,
+      "pid": 80684,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 14934016000,
+        "cpu_percent": 6.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978653.8521035
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.037649400001101,
+      "job_id": "artifact-5567f927693d1a20-cpu-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 385761280,
+      "pid": 27584,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 14883225600,
+        "cpu_percent": 11.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978659.3013504
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.276058999999805,
+      "job_id": "artifact-5567f927693d1a20-cpu-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 384618496,
+      "pid": 69556,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15454146560,
+        "cpu_percent": 7.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978664.9821947
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 5.286287200000515,
+      "job_id": "artifact-5567f927693d1a20-cpu-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 387305472,
+      "pid": 54076,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15641415680,
+        "cpu_percent": 9.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978670.6888654
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.089705300000787,
+      "job_id": "artifact-5567f927693d1a20-cpu-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 386134016,
+      "pid": 10004,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 14933794816,
+        "cpu_percent": 11.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978676.1918705
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.067566100002296,
+      "job_id": "artifact-5567f927693d1a20-cpu-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 385945600,
+      "pid": 18276,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15745982464,
+        "cpu_percent": 3.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13982,
+          "physical_used_mib": 2069,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978681.6879792
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cpu-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cpu-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.100876500000595,
+      "job_id": "artifact-5567f927693d1a20-cpu-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 386433024,
+      "pid": 67148,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15724843008,
+        "cpu_percent": 3.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13975,
+          "physical_used_mib": 2076,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978687.1930406
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 4.925480699999753,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 386977792,
+      "pid": 71660,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15709257728,
+        "cpu_percent": 7.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13975,
+          "physical_used_mib": 2076,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978692.5219016
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 4.769394300001295,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 384720896,
+      "pid": 61036,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15173840896,
+        "cpu_percent": 6.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13975,
+          "physical_used_mib": 2076,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978697.7553203
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.0355006999998295,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 386211840,
+      "pid": 73220,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15145480192,
+        "cpu_percent": 4.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13975,
+          "physical_used_mib": 2076,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978703.208383
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 4.921339199998329,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 385544192,
+      "pid": 36976,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15585497088,
+        "cpu_percent": 12.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978708.5485282
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.014687300001242,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 385773568,
+      "pid": 83572,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15719243776,
+        "cpu_percent": 3.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978713.9718587
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cpu-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cpu-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.0257586000006995,
+      "job_id": "artifact-d3b23a546f08c955-cpu-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 385466368,
+      "pid": 56516,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15751098368,
+        "cpu_percent": 4.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978719.4111967
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.261818000002677,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 386957312,
+      "pid": 36528,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15724331008,
+        "cpu_percent": 4.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978725.1065536
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.005655299999489,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 385413120,
+      "pid": 76848,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15224463360,
+        "cpu_percent": 4.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978730.5253544
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 5.242188099997293,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 389206016,
+      "pid": 42720,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15192055808,
+        "cpu_percent": 12.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13970,
+          "physical_used_mib": 2081,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978736.170169
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.253173699999024,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 385748992,
+      "pid": 24984,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15535882240,
+        "cpu_percent": 4.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13975,
+          "physical_used_mib": 2076,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978741.8436112
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 4.982867800001259,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 386465792,
+      "pid": 42484,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15583047680,
+        "cpu_percent": 8.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978747.223681
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cpu-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cpu-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.330623699999705,
+      "job_id": "artifact-6cd867aa41f7cb95-cpu-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 387108864,
+      "pid": 44452,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15743447040,
+        "cpu_percent": 6.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978752.960495
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cpu-b64-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cpu-b64-k0\\attempt-1",
+      "elapsed_seconds": 4.144664100000227,
+      "job_id": "conv2-factor_r8-cpu-b64-k0",
+      "maximum_recursive_rss_bytes": 385355776,
+      "pid": 62004,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15711023104,
+        "cpu_percent": 7.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978757.5087912
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cpu-b64-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cpu-b64-k0\\attempt-1",
+      "elapsed_seconds": 4.087029400001484,
+      "job_id": "conv2-original_dense-cpu-b64-k0",
+      "maximum_recursive_rss_bytes": 380805120,
+      "pid": 61192,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15709835264,
+        "cpu_percent": 8.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978762.0090148
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cpu-b64-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cpu-b64-k0\\attempt-1",
+      "elapsed_seconds": 3.970104600000923,
+      "job_id": "conv2-materialized_r8-cpu-b64-k0",
+      "maximum_recursive_rss_bytes": 381472768,
+      "pid": 83324,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15776948224,
+        "cpu_percent": 1.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978766.3777544
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cpu-b64-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cpu-b64-k1\\attempt-1",
+      "elapsed_seconds": 3.728922300000704,
+      "job_id": "conv2-original_dense-cpu-b64-k1",
+      "maximum_recursive_rss_bytes": 382197760,
+      "pid": 81276,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15792947200,
+        "cpu_percent": 3.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978770.508904
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cpu-b64-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cpu-b64-k1\\attempt-1",
+      "elapsed_seconds": 3.848434299998189,
+      "job_id": "conv2-materialized_r8-cpu-b64-k1",
+      "maximum_recursive_rss_bytes": 381595648,
+      "pid": 39884,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15799582720,
+        "cpu_percent": 0.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978774.7365675
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cpu-b64-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cpu-b64-k1\\attempt-1",
+      "elapsed_seconds": 3.951532600000064,
+      "job_id": "conv2-factor_r8-cpu-b64-k1",
+      "maximum_recursive_rss_bytes": 385646592,
+      "pid": 59576,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15802589184,
+        "cpu_percent": 0.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978779.0821092
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cpu-b64-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cpu-b64-k2\\attempt-1",
+      "elapsed_seconds": 3.7531567000005452,
+      "job_id": "conv2-materialized_r8-cpu-b64-k2",
+      "maximum_recursive_rss_bytes": 381923328,
+      "pid": 61044,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15812870144,
+        "cpu_percent": 0.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978783.2221813
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cpu-b64-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cpu-b64-k2\\attempt-1",
+      "elapsed_seconds": 3.9638006999994104,
+      "job_id": "conv2-factor_r8-cpu-b64-k2",
+      "maximum_recursive_rss_bytes": 386146304,
+      "pid": 36352,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15776227328,
+        "cpu_percent": 0.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13977,
+          "physical_used_mib": 2074,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978787.5763175
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cpu-b64-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cpu-b64-k2\\attempt-1",
+      "elapsed_seconds": 4.041317799998069,
+      "job_id": "conv2-original_dense-cpu-b64-k2",
+      "maximum_recursive_rss_bytes": 383160320,
+      "pid": 71620,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15706505216,
+        "cpu_percent": 1.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13948,
+          "physical_used_mib": 2103,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 12
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978792.0124748
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.528213000001415,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 693538816,
+      "pid": 8400,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15689162752,
+        "cpu_percent": 3.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13942,
+          "physical_used_mib": 2109,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 6
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978797.928094
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.81252410000161,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 698556416,
+      "pid": 34796,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15507296256,
+        "cpu_percent": 16.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13976,
+          "physical_used_mib": 2075,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978804.1675007
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 6.1226104999987,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 699064320,
+      "pid": 44720,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15416770560,
+        "cpu_percent": 7.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13887,
+          "physical_used_mib": 2164,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978810.713166
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.664210200000525,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 693497856,
+      "pid": 12932,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15446708224,
+        "cpu_percent": 5.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13866,
+          "physical_used_mib": 2185,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978816.7689347
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.605124900001101,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 699604992,
+      "pid": 22204,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15510061056,
+        "cpu_percent": 0.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13930,
+          "physical_used_mib": 2121,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978822.7723508
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.506577100000868,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 694284288,
+      "pid": 14768,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15481757696,
+        "cpu_percent": 3.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13952,
+          "physical_used_mib": 2099,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978828.6639123
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.503549799999746,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 694317056,
+      "pid": 54468,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15524970496,
+        "cpu_percent": 2.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13949,
+          "physical_used_mib": 2102,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978834.5660882
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.938752699999895,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 743321600,
+      "pid": 42836,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15542124544,
+        "cpu_percent": 1.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13951,
+          "physical_used_mib": 2100,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978840.9009614
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 6.034775100000843,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 741060608,
+      "pid": 76672,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15514308608,
+        "cpu_percent": 4.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13959,
+          "physical_used_mib": 2092,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978847.334482
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.53388189999896,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 693780480,
+      "pid": 48568,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15540793344,
+        "cpu_percent": 2.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13960,
+          "physical_used_mib": 2091,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978853.250189
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.64332529999956,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 695263232,
+      "pid": 14216,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15476379648,
+        "cpu_percent": 1.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13978,
+          "physical_used_mib": 2073,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978859.2856746
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.96772300000157,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 741732352,
+      "pid": 34616,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15493169152,
+        "cpu_percent": 3.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13979,
+          "physical_used_mib": 2072,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978865.6438575
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.480895799999416,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 694951936,
+      "pid": 9868,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15493713920,
+        "cpu_percent": 5.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13972,
+          "physical_used_mib": 2079,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978871.510736
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 6.03472210000109,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 743575552,
+      "pid": 4072,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15440150528,
+        "cpu_percent": 6.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13978,
+          "physical_used_mib": 2073,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 8
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978877.9402063
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 5.92748219999703,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 742113280,
+      "pid": 50236,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15501672448,
+        "cpu_percent": 1.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978884.2683666
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.479063500002667,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 693829632,
+      "pid": 75468,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15507521536,
+        "cpu_percent": 2.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13973,
+          "physical_used_mib": 2078,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978890.1428385
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.780328700002428,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 741466112,
+      "pid": 13516,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15474679808,
+        "cpu_percent": 1.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13973,
+          "physical_used_mib": 2078,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978896.3102663
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.689531500000157,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 694284288,
+      "pid": 23420,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15535546368,
+        "cpu_percent": 5.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13973,
+          "physical_used_mib": 2078,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978902.4058988
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b1-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b1-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.953736800001934,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b1-k0-candidate",
+      "maximum_recursive_rss_bytes": 743231488,
+      "pid": 57796,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15487418368,
+        "cpu_percent": 3.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 6
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978908.7595408
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b1-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b1-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.557851200002915,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b1-k0-baseline",
+      "maximum_recursive_rss_bytes": 693551104,
+      "pid": 53924,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15468597248,
+        "cpu_percent": 10.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 5
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978914.7259393
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b1-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b1-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.892986800001381,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b1-k1-baseline",
+      "maximum_recursive_rss_bytes": 693673984,
+      "pid": 18860,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15076323328,
+        "cpu_percent": 5.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13987,
+          "physical_used_mib": 2064,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978921.0467615
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b1-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b1-k1-candidate\\attempt-1",
+      "elapsed_seconds": 6.248586900001101,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b1-k1-candidate",
+      "maximum_recursive_rss_bytes": 741347328,
+      "pid": 5380,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15467978752,
+        "cpu_percent": 4.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13987,
+          "physical_used_mib": 2064,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 6
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978927.7150002
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b1-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b1-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.7996536000027845,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b1-k2-baseline",
+      "maximum_recursive_rss_bytes": 694710272,
+      "pid": 58580,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15220248576,
+        "cpu_percent": 4.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 6
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978933.9334712
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b1-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b1-k2-candidate\\attempt-1",
+      "elapsed_seconds": 6.0582891999983985,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b1-k2-candidate",
+      "maximum_recursive_rss_bytes": 742391808,
+      "pid": 15420,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 14800203776,
+        "cpu_percent": 3.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978940.4199138
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cuda0-b1-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cuda0-b1-k0\\attempt-1",
+      "elapsed_seconds": 5.097243600001093,
+      "job_id": "conv2-original_dense-cuda0-b1-k0",
+      "maximum_recursive_rss_bytes": 631508992,
+      "pid": 66672,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15620104192,
+        "cpu_percent": 6.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 6
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978945.9410014
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cuda0-b1-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cuda0-b1-k0\\attempt-1",
+      "elapsed_seconds": 5.49586029999773,
+      "job_id": "conv2-factor_r8-cuda0-b1-k0",
+      "maximum_recursive_rss_bytes": 654991360,
+      "pid": 68736,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15213035520,
+        "cpu_percent": 5.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 7
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978951.8623264
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cuda0-b1-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cuda0-b1-k0\\attempt-1",
+      "elapsed_seconds": 5.054454299999634,
+      "job_id": "conv2-materialized_r8-cuda0-b1-k0",
+      "maximum_recursive_rss_bytes": 631767040,
+      "pid": 16988,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15018377216,
+        "cpu_percent": 10.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978957.3439991
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cuda0-b1-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cuda0-b1-k1\\attempt-1",
+      "elapsed_seconds": 5.420560400001705,
+      "job_id": "conv2-factor_r8-cuda0-b1-k1",
+      "maximum_recursive_rss_bytes": 656289792,
+      "pid": 35952,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15592947712,
+        "cpu_percent": 4.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978963.1862729
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cuda0-b1-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cuda0-b1-k1\\attempt-1",
+      "elapsed_seconds": 5.044752599998901,
+      "job_id": "conv2-materialized_r8-cuda0-b1-k1",
+      "maximum_recursive_rss_bytes": 630788096,
+      "pid": 71736,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15509204992,
+        "cpu_percent": 8.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978968.647584
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cuda0-b1-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cuda0-b1-k1\\attempt-1",
+      "elapsed_seconds": 5.018734200002655,
+      "job_id": "conv2-original_dense-cuda0-b1-k1",
+      "maximum_recursive_rss_bytes": 631504896,
+      "pid": 30964,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15618879488,
+        "cpu_percent": 5.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13981,
+          "physical_used_mib": 2070,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978974.093845
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cuda0-b1-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cuda0-b1-k2\\attempt-1",
+      "elapsed_seconds": 5.056322000000364,
+      "job_id": "conv2-materialized_r8-cuda0-b1-k2",
+      "maximum_recursive_rss_bytes": 631209984,
+      "pid": 63728,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15584378880,
+        "cpu_percent": 8.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13987,
+          "physical_used_mib": 2064,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978979.5599205
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cuda0-b1-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cuda0-b1-k2\\attempt-1",
+      "elapsed_seconds": 5.104845800000476,
+      "job_id": "conv2-original_dense-cuda0-b1-k2",
+      "maximum_recursive_rss_bytes": 630509568,
+      "pid": 21568,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15631781888,
+        "cpu_percent": 5.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13987,
+          "physical_used_mib": 2064,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978985.0658832
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cuda0-b1-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cuda0-b1-k2\\attempt-1",
+      "elapsed_seconds": 5.394017899998289,
+      "job_id": "conv2-factor_r8-cuda0-b1-k2",
+      "maximum_recursive_rss_bytes": 654573568,
+      "pid": 76312,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15517470720,
+        "cpu_percent": 4.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 6
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978990.8902144
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.822515299998486,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 694378496,
+      "pid": 29748,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15265390592,
+        "cpu_percent": 14.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 9
+        },
+        "pid": 27528,
+        "utc_epoch": 1791978997.1292863
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.780740299996978,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 699207680,
+      "pid": 78540,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15490383872,
+        "cpu_percent": 3.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 0
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979003.3358383
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.6184159000004,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 694951936,
+      "pid": 70100,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15486017536,
+        "cpu_percent": 10.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979009.368989
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 5.7966586999973515,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 699793408,
+      "pid": 59116,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15635578880,
+        "cpu_percent": 4.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979015.5914419
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 6.150887200001307,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 701095936,
+      "pid": 17552,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15589396480,
+        "cpu_percent": 10.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979022.1706297
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-33b7f7fce9b5ae84-cuda0-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-33b7f7fce9b5ae84-cuda0-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.863244799998938,
+      "job_id": "artifact-33b7f7fce9b5ae84-cuda0-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 696729600,
+      "pid": 62204,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15482609664,
+        "cpu_percent": 4.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979028.437966
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 6.072693900001468,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 741441536,
+      "pid": 83132,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15601098752,
+        "cpu_percent": 4.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 7
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979034.93631
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.856920300000638,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 696471552,
+      "pid": 67856,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15513452544,
+        "cpu_percent": 4.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979041.2252114
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 6.300532200002635,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 741076992,
+      "pid": 38400,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15521918976,
+        "cpu_percent": 7.4,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979047.9357364
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.8476817999980995,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 696008704,
+      "pid": 26752,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15572631552,
+        "cpu_percent": 4.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979054.184156
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.644799599998805,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 694444032,
+      "pid": 78564,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15610347520,
+        "cpu_percent": 1.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979060.230793
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-5567f927693d1a20-cuda0-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-5567f927693d1a20-cuda0-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.923280400002113,
+      "job_id": "artifact-5567f927693d1a20-cuda0-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 743170048,
+      "pid": 36356,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15653703680,
+        "cpu_percent": 0.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979066.5377378
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.465757799996936,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 695160832,
+      "pid": 14584,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15634001920,
+        "cpu_percent": 0.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979072.3930762
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.969099099998857,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 741036032,
+      "pid": 45412,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15514185728,
+        "cpu_percent": 3.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979078.7482245
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.502969400000438,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 695316480,
+      "pid": 69480,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15637209088,
+        "cpu_percent": 1.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979084.6491692
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 5.953678099998797,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 741511168,
+      "pid": 76620,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15630794752,
+        "cpu_percent": 1.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979090.9904509
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.915847500000382,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 741027840,
+      "pid": 66576,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15565266944,
+        "cpu_percent": 4.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979097.3190827
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.479104800000641,
+      "job_id": "artifact-d3b23a546f08c955-cuda0-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 696348672,
+      "pid": 70136,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15607119872,
+        "cpu_percent": 1.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979103.1921308
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b64-k0-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b64-k0-candidate\\attempt-1",
+      "elapsed_seconds": 5.946106100000179,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b64-k0-candidate",
+      "maximum_recursive_rss_bytes": 743264256,
+      "pid": 60888,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15571759104,
+        "cpu_percent": 1.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979109.5449805
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b64-k0-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b64-k0-baseline\\attempt-1",
+      "elapsed_seconds": 5.513425000001007,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b64-k0-baseline",
+      "maximum_recursive_rss_bytes": 722096128,
+      "pid": 31900,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15612678144,
+        "cpu_percent": 2.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979115.446599
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b64-k1-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b64-k1-candidate\\attempt-1",
+      "elapsed_seconds": 5.942531100001361,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b64-k1-candidate",
+      "maximum_recursive_rss_bytes": 741433344,
+      "pid": 16268,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15599755264,
+        "cpu_percent": 0.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979121.7757046
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b64-k1-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b64-k1-baseline\\attempt-1",
+      "elapsed_seconds": 5.437397600002441,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b64-k1-baseline",
+      "maximum_recursive_rss_bytes": 695984128,
+      "pid": 32156,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15628795904,
+        "cpu_percent": 0.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979127.595789
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b64-k2-baseline\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b64-k2-baseline\\attempt-1",
+      "elapsed_seconds": 5.433207400001265,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b64-k2-baseline",
+      "maximum_recursive_rss_bytes": 694865920,
+      "pid": 44352,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15637344256,
+        "cpu_percent": 1.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979133.4259787
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\artifact-6cd867aa41f7cb95-cuda0-b64-k2-candidate\\job.json"
+      ],
+      "directory": "local-package\\processes\\artifact-6cd867aa41f7cb95-cuda0-b64-k2-candidate\\attempt-1",
+      "elapsed_seconds": 5.939559200000076,
+      "job_id": "artifact-6cd867aa41f7cb95-cuda0-b64-k2-candidate",
+      "maximum_recursive_rss_bytes": 742461440,
+      "pid": 42732,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15598604288,
+        "cpu_percent": 6.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 7
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979139.7700527
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cuda0-b64-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cuda0-b64-k0\\attempt-1",
+      "elapsed_seconds": 5.012407999998686,
+      "job_id": "conv2-materialized_r8-cuda0-b64-k0",
+      "maximum_recursive_rss_bytes": 633737216,
+      "pid": 59756,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15626162176,
+        "cpu_percent": 1.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979145.1857226
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cuda0-b64-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cuda0-b64-k0\\attempt-1",
+      "elapsed_seconds": 5.248664399998233,
+      "job_id": "conv2-factor_r8-cuda0-b64-k0",
+      "maximum_recursive_rss_bytes": 655536128,
+      "pid": 60160,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15591153664,
+        "cpu_percent": 4.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13986,
+          "physical_used_mib": 2065,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 4
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979150.8321857
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cuda0-b64-k0\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cuda0-b64-k0\\attempt-1",
+      "elapsed_seconds": 4.939618399999745,
+      "job_id": "conv2-original_dense-cuda0-b64-k0",
+      "maximum_recursive_rss_bytes": 631103488,
+      "pid": 45532,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15582416896,
+        "cpu_percent": 8.9,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13980,
+          "physical_used_mib": 2071,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979156.1655076
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cuda0-b64-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cuda0-b64-k1\\attempt-1",
+      "elapsed_seconds": 5.276718699999037,
+      "job_id": "conv2-factor_r8-cuda0-b64-k1",
+      "maximum_recursive_rss_bytes": 657473536,
+      "pid": 42288,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15560400896,
+        "cpu_percent": 1.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 7
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979161.8423865
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cuda0-b64-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cuda0-b64-k1\\attempt-1",
+      "elapsed_seconds": 4.897618399998464,
+      "job_id": "conv2-original_dense-cuda0-b64-k1",
+      "maximum_recursive_rss_bytes": 632004608,
+      "pid": 21700,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15568654336,
+        "cpu_percent": 2.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979167.1323197
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cuda0-b64-k1\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cuda0-b64-k1\\attempt-1",
+      "elapsed_seconds": 5.012110899999243,
+      "job_id": "conv2-materialized_r8-cuda0-b64-k1",
+      "maximum_recursive_rss_bytes": 632750080,
+      "pid": 44612,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15557701632,
+        "cpu_percent": 4.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979172.5566585
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-original_dense-cuda0-b64-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-original_dense-cuda0-b64-k2\\attempt-1",
+      "elapsed_seconds": 5.0520395999992616,
+      "job_id": "conv2-original_dense-cuda0-b64-k2",
+      "maximum_recursive_rss_bytes": 632078336,
+      "pid": 58036,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15531474944,
+        "cpu_percent": 4.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979178.0108447
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-materialized_r8-cuda0-b64-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-materialized_r8-cuda0-b64-k2\\attempt-1",
+      "elapsed_seconds": 4.969683900002565,
+      "job_id": "conv2-materialized_r8-cuda0-b64-k2",
+      "maximum_recursive_rss_bytes": 632741888,
+      "pid": 63260,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15572647936,
+        "cpu_percent": 2.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 5
+        },
+        "pid": 27528,
+        "utc_epoch": 1791979183.3715682
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-package\\timing\\conv2-factor_r8-cuda0-b64-k2\\job.json"
+      ],
+      "directory": "local-package\\processes\\conv2-factor_r8-cuda0-b64-k2\\attempt-1",
+      "elapsed_seconds": 4.980612300001667,
+      "job_id": "conv2-factor_r8-cuda0-b64-k2",
+      "maximum_recursive_rss_bytes": 656371712,
+      "pid": 11268,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15096950784,
+        "cpu_percent": 6.2,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13979,
+          "physical_used_mib": 2072,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 9
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979249.7623487
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_svd",
+        "--objective",
+        "ce"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_svd-ce\\attempt-1",
+      "elapsed_seconds": 14.642694300000585,
+      "job_id": "recovery-conv2_svd-ce",
+      "maximum_recursive_rss_bytes": 1094078464,
+      "pid": 48416,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 14986878976,
+        "cpu_percent": 10.8,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13979,
+          "physical_used_mib": 2072,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979264.8261638
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_svd",
+        "--objective",
+        "ce_kl"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_svd-ce_kl\\attempt-1",
+      "elapsed_seconds": 9.719938099999126,
+      "job_id": "recovery-conv2_svd-ce_kl",
+      "maximum_recursive_rss_bytes": 1139683328,
+      "pid": 54204,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15500972032,
+        "cpu_percent": 5.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13979,
+          "physical_used_mib": 2072,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979274.9826148
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_weighted",
+        "--objective",
+        "ce"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_weighted-ce\\attempt-1",
+      "elapsed_seconds": 9.688022899998032,
+      "job_id": "recovery-conv2_weighted-ce",
+      "maximum_recursive_rss_bytes": 1096241152,
+      "pid": 81952,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15461433344,
+        "cpu_percent": 4.7,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979285.1115277
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_weighted",
+        "--objective",
+        "ce_kl"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_weighted-ce_kl\\attempt-1",
+      "elapsed_seconds": 9.971977999997762,
+      "job_id": "recovery-conv2_weighted-ce_kl",
+      "maximum_recursive_rss_bytes": 1140023296,
+      "pid": 18948,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15026470912,
+        "cpu_percent": 5.6,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13985,
+          "physical_used_mib": 2066,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979295.4961326
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_svd_linear16",
+        "--objective",
+        "ce"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_svd_linear16-ce\\attempt-1",
+      "elapsed_seconds": 9.542016100000183,
+      "job_id": "recovery-conv2_svd_linear16-ce",
+      "maximum_recursive_rss_bytes": 1094696960,
+      "pid": 47920,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15348920320,
+        "cpu_percent": 4.3,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13979,
+          "physical_used_mib": 2072,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979305.457999
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_svd_linear16",
+        "--objective",
+        "ce_kl"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_svd_linear16-ce_kl\\attempt-1",
+      "elapsed_seconds": 9.807629299997643,
+      "job_id": "recovery-conv2_svd_linear16-ce_kl",
+      "maximum_recursive_rss_bytes": 1139990528,
+      "pid": 66920,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15241662464,
+        "cpu_percent": 5.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13979,
+          "physical_used_mib": 2072,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979315.6701412
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_weighted_linear16",
+        "--objective",
+        "ce"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_weighted_linear16-ce\\attempt-1",
+      "elapsed_seconds": 9.576304599999276,
+      "job_id": "recovery-conv2_weighted_linear16-ce",
+      "maximum_recursive_rss_bytes": 1096032256,
+      "pid": 18448,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15433428992,
+        "cpu_percent": 5.5,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13956,
+          "physical_used_mib": 2095,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 3
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979325.662659
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "conv2_weighted_linear16",
+        "--objective",
+        "ce_kl"
+      ],
+      "directory": "local-package\\processes\\recovery-conv2_weighted_linear16-ce_kl\\attempt-1",
+      "elapsed_seconds": 10.11623150000014,
+      "job_id": "recovery-conv2_weighted_linear16-ce_kl",
+      "maximum_recursive_rss_bytes": 1138708480,
+      "pid": 12248,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15330775040,
+        "cpu_percent": 11.1,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13956,
+          "physical_used_mib": 2095,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 1
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979336.1982868
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "dense",
+        "--objective",
+        "ce"
+      ],
+      "directory": "local-package\\processes\\recovery-dense-ce\\attempt-1",
+      "elapsed_seconds": 8.993324700000812,
+      "job_id": "recovery-dense-ce",
+      "maximum_recursive_rss_bytes": 1074532352,
+      "pid": 69536,
+      "returncode": 0,
+      "violation": null
+    },
+    {
+      "attempt": 1,
+      "background_before": {
+        "available_ram_bytes": 15323951104,
+        "cpu_percent": 3.0,
+        "gpu": {
+          "name": "NVIDIA GeForce RTX 4080",
+          "physical_free_mib": 13979,
+          "physical_used_mib": 2072,
+          "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+          "utilization_percent": 2
+        },
+        "pid": 8364,
+        "utc_epoch": 1791979345.6160684
+      },
+      "command": [
+        "local-environment\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_local_package",
+        "--output",
+        "local-package",
+        "--worker",
+        "recovery",
+        "--name",
+        "dense",
+        "--objective",
+        "ce_kl"
+      ],
+      "directory": "local-package\\processes\\recovery-dense-ce_kl\\attempt-1",
+      "elapsed_seconds": 9.509266699998989,
+      "job_id": "recovery-dense-ce_kl",
+      "maximum_recursive_rss_bytes": 1119674368,
+      "pid": 44484,
+      "returncode": 0,
+      "violation": null
+    }
+  ],
+  "charged_seconds": 1660.7951499000155,
+  "post_validation_charged_seconds": 600.0,
+  "post_validation_reference": "validation.json",
+  "post_validation_scope": "Conservative allowance: 269.21 s reported full pytest suite plus startup, independent audit, analysis and publication computations. Not measured scientific worker time.",
+  "preflight_charged_seconds": 300.0,
+  "protocol_sha256": "996735197560c1ecb1447bb3cce1f84861c0febe03d85dc1f0044d9c48cb9c8f",
+  "schema": 1,
+  "scientific_ledger_snapshot": {
+    "charged_seconds_before_post_validation": 1060.7951499000155,
+    "path": "local-package\\ledger-scientific.json",
+    "sha256": "69fb2f26a349faf321b84c7481164bd331fdee4620082623654c50da31ce86f7"
+  },
+  "transform_attempts": 27
+}

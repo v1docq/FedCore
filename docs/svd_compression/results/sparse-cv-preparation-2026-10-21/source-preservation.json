@@ -1,0 +1,11 @@
+{
+  "unchanged_from_preintegration_snapshot": true,
+  "working_copies": 3,
+  "unfinished_files": 130,
+  "heads": [
+    "844114fc968c436e030b93e4ccac6f954ae76ff0",
+    "cd29823122f9454772ebde0aede3eabaa2977cd4",
+    "59028b228983a8a46bff8272e59c7aacfeee7916"
+  ],
+  "source_snapshot_sha256": "2695253175e71700c9d8906e1e103e2ed24efd2ac89b6c3b64c5e0dcb259fd8a"
+}

@@ -1,0 +1,283 @@
+{
+  "admission": {
+    "before_worker_spawn": true,
+    "elapsed_seconds": 2.764999999999418,
+    "extra_wait_seconds": 0.0,
+    "mandatory_observation_seconds": 2.764999999999418,
+    "protocol_sha256": "ebb27bb08ca15228c06f59e0502acbc9f8b78c30d13f1adf42932905ad7f6b1c",
+    "samples": [
+      {
+        "elapsed_seconds": 0.25,
+        "quiet_streak": 1,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13421535232,
+          "cpu_percent": 4.2,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14691.0,
+            "physical_used_mib": 1360.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791993806.1915107
+        }
+      },
+      {
+        "elapsed_seconds": 1.514999999999418,
+        "quiet_streak": 2,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13448810496,
+          "cpu_percent": 2.3,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14683.0,
+            "physical_used_mib": 1368.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791993807.458561
+        }
+      },
+      {
+        "elapsed_seconds": 2.764999999999418,
+        "quiet_streak": 3,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13446647808,
+          "cpu_percent": 1.6,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14691.0,
+            "physical_used_mib": 1360.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791993808.7135696
+        }
+      }
+    ],
+    "session_id": "artifact-conv2_weighted_linear16-cuda0-b64-k9-candidate",
+    "status": "admitted"
+  },
+  "command": [
+    "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+    "-m",
+    "fedcore.experiments.svd_second_package",
+    "--output",
+    "local-svd-second-package",
+    "--worker",
+    "timing",
+    "--job",
+    "local-svd-second-package\\timing\\artifact-conv2_weighted_linear16-cuda0-b64-k9-candidate\\job.json"
+  ],
+  "elapsed_seconds": 3.600705500000913,
+  "maximum_recursive_rss_bytes": 695492608,
+  "post_exit_observation": {
+    "drain_seconds": 2.2,
+    "elapsed_seconds": 2.7659999999959837,
+    "extra_wait_seconds": 0.0,
+    "mandatory_observation_seconds": 2.7659999999959837,
+    "samples": [
+      {
+        "elapsed_seconds": 0.25,
+        "quiet_streak": 1,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13431001088,
+          "cpu_percent": 4.1,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14683.0,
+            "physical_used_mib": 1368.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791993814.791825
+        }
+      },
+      {
+        "elapsed_seconds": 1.5159999999959837,
+        "quiet_streak": 2,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13432901632,
+          "cpu_percent": 7.0,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14691.0,
+            "physical_used_mib": 1360.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791993816.0478756
+        }
+      },
+      {
+        "elapsed_seconds": 2.7659999999959837,
+        "quiet_streak": 3,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 13451743232,
+          "cpu_percent": 1.0,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14691.0,
+            "physical_used_mib": 1360.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791993817.3065739
+        }
+      }
+    ],
+    "status": "admitted",
+    "worker_exited": true,
+    "worker_returncode": 0
+  },
+  "returncode": 0,
+  "samples": [
+    {
+      "active_utilization_eligibility": "metadata only, includes owned CUDA activity",
+      "available_ram_bytes": 13440499712,
+      "elapsed_seconds": 0.05718889999843668,
+      "global_gpu_metadata": {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "physical_free_mib": 14691.0,
+        "physical_used_mib": 1360.0,
+        "utilization_percent": 0.0
+      },
+      "owned_pids": [
+        68916,
+        51192
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 15876096
+    },
+    {
+      "active_utilization_eligibility": "metadata only, includes owned CUDA activity",
+      "available_ram_bytes": 13307641856,
+      "elapsed_seconds": 0.5692704000030062,
+      "global_gpu_metadata": {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "physical_free_mib": 14683.0,
+        "physical_used_mib": 1368.0,
+        "utilization_percent": 0.0
+      },
+      "owned_pids": [
+        68916,
+        51192
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 287494144
+    },
+    {
+      "active_utilization_eligibility": "metadata only, includes owned CUDA activity",
+      "available_ram_bytes": 13268250624,
+      "elapsed_seconds": 1.069302299998526,
+      "global_gpu_metadata": {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "physical_free_mib": 14683.0,
+        "physical_used_mib": 1368.0,
+        "utilization_percent": 0.0
+      },
+      "owned_pids": [
+        68916,
+        51192
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 327655424
+    },
+    {
+      "active_utilization_eligibility": "metadata only, includes owned CUDA activity",
+      "available_ram_bytes": 13260103680,
+      "elapsed_seconds": 1.572162099997513,
+      "global_gpu_metadata": {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "physical_free_mib": 14683.0,
+        "physical_used_mib": 1368.0,
+        "utilization_percent": 0.0
+      },
+      "owned_pids": [
+        68916,
+        51192
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 342851584
+    },
+    {
+      "active_utilization_eligibility": "metadata only, includes owned CUDA activity",
+      "available_ram_bytes": 13154242560,
+      "elapsed_seconds": 2.093314799996733,
+      "global_gpu_metadata": {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "physical_free_mib": 14371.0,
+        "physical_used_mib": 1680.0,
+        "utilization_percent": 0.0
+      },
+      "owned_pids": [
+        68916,
+        51192
+      ],
+      "stage": "setup",
+      "tree_sum_rss_bytes": 450203648
+    },
+    {
+      "active_utilization_eligibility": "metadata only, includes owned CUDA activity",
+      "available_ram_bytes": 12938674176,
+      "elapsed_seconds": 2.6101153999989037,
+      "global_gpu_metadata": {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "physical_free_mib": 14371.0,
+        "physical_used_mib": 1680.0,
+        "utilization_percent": 14.0
+      },
+      "owned_pids": [
+        68916,
+        51192
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 695492608
+    },
+    {
+      "active_utilization_eligibility": "metadata only, includes owned CUDA activity",
+      "available_ram_bytes": 13429923840,
+      "elapsed_seconds": 3.1291265999971074,
+      "global_gpu_metadata": {
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 4080",
+        "physical_free_mib": 14683.0,
+        "physical_used_mib": 1368.0,
+        "utilization_percent": 14.0
+      },
+      "owned_pids": [
+        68916
+      ],
+      "stage": "done",
+      "tree_sum_rss_bytes": 0
+    }
+  ],
+  "schema": 2,
+  "session_id": "artifact-conv2_weighted_linear16-cuda0-b64-k9-candidate",
+  "violation": null,
+  "worker_pid": 68916
+}

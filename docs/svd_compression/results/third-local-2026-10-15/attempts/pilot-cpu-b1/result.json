@@ -1,0 +1,3607 @@
+{
+  "admission": {
+    "before_worker_spawn": true,
+    "elapsed_seconds": 2.7970000000000255,
+    "extra_wait_seconds": 0.0,
+    "mandatory_observation_seconds": 2.7970000000000255,
+    "protocol_sha256": "1741475248cb1ff5dd408a0d2944a23e4a580f4e82e2eab71fdd88b5648fce1d",
+    "samples": [
+      {
+        "elapsed_seconds": 0.26499999999987267,
+        "quiet_streak": 1,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 17117155328,
+          "cpu_percent": 5.0,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14648.0,
+            "physical_used_mib": 1403.0,
+            "utilization_percent": 6.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 31496,
+          "utc_epoch": 1792056113.7939508
+        }
+      },
+      {
+        "elapsed_seconds": 1.530999999999949,
+        "quiet_streak": 2,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 17141325824,
+          "cpu_percent": 3.4,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14656.0,
+            "physical_used_mib": 1395.0,
+            "utilization_percent": 7.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 31496,
+          "utc_epoch": 1792056115.067583
+        }
+      },
+      {
+        "elapsed_seconds": 2.7970000000000255,
+        "quiet_streak": 3,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 17122545664,
+          "cpu_percent": 4.3,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14660.0,
+            "physical_used_mib": 1391.0,
+            "utilization_percent": 5.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 31496,
+          "utc_epoch": 1792056116.3244145
+        }
+      }
+    ],
+    "session_id": "pilot-cpu-b1",
+    "status": "admitted"
+  },
+  "control_runtime": "two independently loaded TorchScript objects from identical bytes, both warmed",
+  "job": {
+    "admission_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cpu-b1\\admission.json",
+    "batch": 1,
+    "device": "cpu",
+    "directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cpu-b1",
+    "expected_gpu_name": "NVIDIA GeForce RTX 4080",
+    "output": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15",
+    "protocol_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\protocol.json",
+    "protocol_sha256": "1741475248cb1ff5dd408a0d2944a23e4a580f4e82e2eab71fdd88b5648fce1d",
+    "session_id": "pilot-cpu-b1",
+    "stage": "pilot"
+  },
+  "memory": {
+    "cuda_peak_allocated_bytes": null,
+    "cuda_peak_reserved_bytes": null,
+    "rss_bytes": 374845440
+  },
+  "metrics": {
+    "cuda_event_ms": "stream elapsed interval, includes potential host launch gaps; not pure kernels",
+    "full_path_ms": "host input transfer + forward + output to CPU, synchronized host wall",
+    "throughput_seconds": "50 forwards with pre-resident inputs and one final synchronization",
+    "wall_ms": "pre-resident input, synchronized host wall per forward"
+  },
+  "parity": [
+    {
+      "argmax_agreement": true,
+      "max_abs": 2.1457672119140625e-06,
+      "subject": "svd"
+    },
+    {
+      "argmax_agreement": true,
+      "max_abs": 1.9073486328125e-06,
+      "subject": "weighted"
+    }
+  ],
+  "pid": 12308,
+  "profile": {
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "dtype": "float32",
+    "profiler": false,
+    "runtime": "torch.jit",
+    "tf32": false,
+    "threads": 1
+  },
+  "records": [
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1032,
+            0.0867,
+            0.0855,
+            0.0856,
+            0.0853,
+            0.0856,
+            0.0848,
+            0.0851,
+            0.0848,
+            0.0851
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12779.226090067987,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0039126
+          ],
+          "wall_ms": [
+            0.1063,
+            0.1035,
+            0.1022,
+            0.1022,
+            0.1034,
+            0.1028,
+            0.0826,
+            0.0821,
+            0.0816,
+            0.0899
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0873,
+            0.086,
+            0.0848,
+            0.085,
+            0.0856,
+            0.0852,
+            0.0849,
+            0.0843,
+            0.0845,
+            0.0848
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 13221.916649037445,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0037816
+          ],
+          "wall_ms": [
+            0.1178,
+            0.0871,
+            0.0851,
+            0.0849,
+            0.0942,
+            0.0859,
+            0.0882,
+            0.0816,
+            0.0899,
+            0.0826
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 0,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 0,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k0"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0731,
+            0.0726,
+            0.0717,
+            0.071,
+            0.081,
+            0.0713,
+            0.0712,
+            0.0709,
+            0.0745,
+            0.085
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14572.161342970388,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0034312
+          ],
+          "wall_ms": [
+            0.0719,
+            0.0703,
+            0.0698,
+            0.0693,
+            0.0699,
+            0.0871,
+            0.0748,
+            0.0682,
+            0.0679,
+            0.068
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0727,
+            0.0713,
+            0.0712,
+            0.0714,
+            0.071,
+            0.0709,
+            0.0828,
+            0.0728,
+            0.0716,
+            0.0713
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15846.855983772819,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0031552
+          ],
+          "wall_ms": [
+            0.0948,
+            0.072,
+            0.0994,
+            0.0775,
+            0.0684,
+            0.0677,
+            0.0678,
+            0.0674,
+            0.067,
+            0.0672
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 0,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 1,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k0"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0922,
+            0.0879,
+            0.0895,
+            0.0989,
+            0.093,
+            0.0873,
+            0.0865,
+            0.0869,
+            0.0864,
+            0.087
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12489.696000799342,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0040033
+          ],
+          "wall_ms": [
+            0.0906,
+            0.0876,
+            0.0865,
+            0.0864,
+            0.0858,
+            0.0854,
+            0.0855,
+            0.0841,
+            0.0935,
+            0.0949
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.113,
+            0.0963,
+            0.0874,
+            0.0866,
+            0.0868,
+            0.1441,
+            0.1016,
+            0.0933,
+            0.1,
+            0.097
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12773.023374632778,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0039145
+          ],
+          "wall_ms": [
+            0.1634,
+            0.1232,
+            0.1131,
+            0.1074,
+            0.1065,
+            0.1061,
+            0.1056,
+            0.1057,
+            0.1053,
+            0.1063
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 0,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 2,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k0"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0852,
+            0.0776,
+            0.076,
+            0.0761,
+            0.0752,
+            0.077,
+            0.0754,
+            0.0748,
+            0.0752,
+            0.0749
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14746.652509880256,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0033906
+          ],
+          "wall_ms": [
+            0.0924,
+            0.0817,
+            0.0787,
+            0.0768,
+            0.0764,
+            0.0774,
+            0.0765,
+            0.0719,
+            0.0715,
+            0.0719
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0771,
+            0.0752,
+            0.0744,
+            0.0741,
+            0.0891,
+            0.1092,
+            0.0736,
+            0.0742,
+            0.0729,
+            0.0725
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15285.84530724549,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.003271
+          ],
+          "wall_ms": [
+            0.1085,
+            0.0802,
+            0.0712,
+            0.0708,
+            0.0701,
+            0.0798,
+            0.071,
+            0.0696,
+            0.0704,
+            0.0706
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 0,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 3,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k0"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0857,
+            0.0885,
+            0.0809,
+            0.0774,
+            0.0734,
+            0.0735,
+            0.0735,
+            0.0743,
+            0.0732,
+            0.0728
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15604.519068722302,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032042
+          ],
+          "wall_ms": [
+            0.076,
+            0.075,
+            0.0742,
+            0.0745,
+            0.0744,
+            0.0752,
+            0.0747,
+            0.0739,
+            0.074,
+            0.0736
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0764,
+            0.0747,
+            0.0746,
+            0.0745,
+            0.0744,
+            0.0746,
+            0.0747,
+            0.0742,
+            0.074,
+            0.0748
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15129.966411474566,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0033047
+          ],
+          "wall_ms": [
+            0.1086,
+            0.0766,
+            0.0735,
+            0.0723,
+            0.0713,
+            0.0711,
+            0.0709,
+            0.0706,
+            0.0712,
+            0.0713
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 0,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 4,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k0"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0737,
+            0.073,
+            0.0729,
+            0.0727,
+            0.0723,
+            0.0724,
+            0.0719,
+            0.072,
+            0.072,
+            0.0716
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15119.900813450662,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0033069
+          ],
+          "wall_ms": [
+            0.0968,
+            0.0721,
+            0.069,
+            0.0687,
+            0.068,
+            0.069,
+            0.0693,
+            0.0686,
+            0.0686,
+            0.0689
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.08,
+            0.1195,
+            0.0877,
+            0.0778,
+            0.0758,
+            0.0742,
+            0.074,
+            0.0738,
+            0.0731,
+            0.0793
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15663.178998809599,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0031922
+          ],
+          "wall_ms": [
+            0.0889,
+            0.0998,
+            0.087,
+            0.0863,
+            0.0864,
+            0.0856,
+            0.0853,
+            0.0771,
+            0.0683,
+            0.0684
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 1,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 0,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k1"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.089,
+            0.0868,
+            0.0868,
+            0.0864,
+            0.0861,
+            0.0862,
+            0.0863,
+            0.0861,
+            0.0864,
+            0.086
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12744.0485293368,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0039234
+          ],
+          "wall_ms": [
+            0.1508,
+            0.132,
+            0.1054,
+            0.0953,
+            0.0836,
+            0.0819,
+            0.082,
+            0.0818,
+            0.0815,
+            0.0824
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1047,
+            0.0927,
+            0.092,
+            0.09,
+            0.0896,
+            0.0902,
+            0.0902,
+            0.0892,
+            0.0892,
+            0.0901
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12844.555193053666,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0038927
+          ],
+          "wall_ms": [
+            0.1073,
+            0.1049,
+            0.1029,
+            0.084,
+            0.0838,
+            0.0835,
+            0.0837,
+            0.0847,
+            0.084,
+            0.132
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 1,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 1,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k1"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0749,
+            0.0757,
+            0.073,
+            0.0744,
+            0.0859,
+            0.073,
+            0.072,
+            0.0725,
+            0.0738,
+            0.0723
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14999.70000599988,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0033334
+          ],
+          "wall_ms": [
+            0.115,
+            0.0733,
+            0.0702,
+            0.0691,
+            0.0679,
+            0.0683,
+            0.0677,
+            0.0977,
+            0.0725,
+            0.0686
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0898,
+            0.0784,
+            0.0744,
+            0.0798,
+            0.0732,
+            0.0728,
+            0.0727,
+            0.0718,
+            0.0716,
+            0.0711
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15512.534127575082,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0032232
+          ],
+          "wall_ms": [
+            0.0986,
+            0.0914,
+            0.0942,
+            0.0884,
+            0.0857,
+            0.0814,
+            0.0696,
+            0.0687,
+            0.0687,
+            0.0683
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 1,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 2,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k1"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0736,
+            0.0724,
+            0.0721,
+            0.0722,
+            0.0719,
+            0.0725,
+            0.0805,
+            0.0728,
+            0.0729,
+            0.082
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15311.121999020088,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032656
+          ],
+          "wall_ms": [
+            0.1022,
+            0.0732,
+            0.0702,
+            0.0699,
+            0.0695,
+            0.0748,
+            0.073,
+            0.0681,
+            0.0697,
+            0.0683
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.083,
+            0.0779,
+            0.132,
+            0.0871,
+            0.0804,
+            0.0953,
+            0.0815,
+            0.0849,
+            0.078,
+            0.0872
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14383.93602025258,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0034761
+          ],
+          "wall_ms": [
+            0.0797,
+            0.0752,
+            0.0742,
+            0.0743,
+            0.0728,
+            0.0738,
+            0.0733,
+            0.0728,
+            0.0728,
+            0.0724
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 1,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 3,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k1"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0884,
+            0.0875,
+            0.0872,
+            0.0868,
+            0.0863,
+            0.0862,
+            0.0862,
+            0.087,
+            0.0882,
+            0.0871
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12988.36242726517,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038496
+          ],
+          "wall_ms": [
+            0.1148,
+            0.0869,
+            0.086,
+            0.0843,
+            0.0834,
+            0.0916,
+            0.0857,
+            0.0833,
+            0.0823,
+            0.0837
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1044,
+            0.0881,
+            0.0876,
+            0.0886,
+            0.087,
+            0.0875,
+            0.0865,
+            0.0869,
+            0.0875,
+            0.0868
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12655.664675508759,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0039508
+          ],
+          "wall_ms": [
+            0.0879,
+            0.0957,
+            0.0856,
+            0.0844,
+            0.1259,
+            0.0888,
+            0.0845,
+            0.0844,
+            0.0844,
+            0.0915
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 1,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 4,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k1"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1064,
+            0.0933,
+            0.0913,
+            0.0895,
+            0.0889,
+            0.0886,
+            0.088,
+            0.0886,
+            0.0891,
+            0.089
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 13059.604032805724,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0038286
+          ],
+          "wall_ms": [
+            0.1072,
+            0.1062,
+            0.0859,
+            0.0842,
+            0.0842,
+            0.0835,
+            0.0837,
+            0.0838,
+            0.084,
+            0.1294
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0862,
+            0.0861,
+            0.0846,
+            0.0844,
+            0.0848,
+            0.133,
+            0.1015,
+            0.085,
+            0.085,
+            0.0842
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 13040.870086852196,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0038341
+          ],
+          "wall_ms": [
+            0.1088,
+            0.0853,
+            0.0848,
+            0.083,
+            0.0818,
+            0.0817,
+            0.0812,
+            0.0899,
+            0.082,
+            0.0816
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 2,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 0,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k2"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1508,
+            0.106,
+            0.0952,
+            0.0931,
+            0.0919,
+            0.0912,
+            0.0752,
+            0.0757,
+            0.075,
+            0.0761
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15258.7890625,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0032768
+          ],
+          "wall_ms": [
+            0.0884,
+            0.087,
+            0.0861,
+            0.0855,
+            0.0852,
+            0.0775,
+            0.068,
+            0.0675,
+            0.0677,
+            0.0691
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1331,
+            0.0762,
+            0.0716,
+            0.0711,
+            0.075,
+            0.0716,
+            0.0806,
+            0.0721,
+            0.0716,
+            0.0714
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15936.762924714732,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0031374
+          ],
+          "wall_ms": [
+            0.0943,
+            0.0713,
+            0.0695,
+            0.068,
+            0.0675,
+            0.0674,
+            0.0672,
+            0.0674,
+            0.0673,
+            0.0687
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 2,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 1,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k2"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1373,
+            0.0937,
+            0.0799,
+            0.0788,
+            0.0777,
+            0.0774,
+            0.0774,
+            0.0775,
+            0.0755,
+            0.0761
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15197.106470927936,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032901
+          ],
+          "wall_ms": [
+            0.0922,
+            0.0893,
+            0.0879,
+            0.0886,
+            0.0748,
+            0.0697,
+            0.0699,
+            0.0694,
+            0.0694,
+            0.07
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0748,
+            0.0732,
+            0.0726,
+            0.0796,
+            0.0745,
+            0.0729,
+            0.0796,
+            0.074,
+            0.0722,
+            0.0723
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15585.063275356897,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032082
+          ],
+          "wall_ms": [
+            0.1029,
+            0.0725,
+            0.071,
+            0.0697,
+            0.0775,
+            0.0718,
+            0.0693,
+            0.0689,
+            0.0752,
+            0.0716
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 2,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 2,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k2"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0976,
+            0.0886,
+            0.0888,
+            0.088,
+            0.0884,
+            0.0879,
+            0.089,
+            0.0879,
+            0.0882,
+            0.0883
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12961.090805402182,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038577
+          ],
+          "wall_ms": [
+            0.0963,
+            0.0897,
+            0.0856,
+            0.0858,
+            0.085,
+            0.0861,
+            0.0847,
+            0.0839,
+            0.0845,
+            0.0951
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0879,
+            0.0866,
+            0.0862,
+            0.0859,
+            0.086,
+            0.0864,
+            0.0888,
+            0.0854,
+            0.0863,
+            0.0861
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12801.802493791127,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0039057
+          ],
+          "wall_ms": [
+            0.121,
+            0.0863,
+            0.0835,
+            0.0825,
+            0.0824,
+            0.0831,
+            0.0828,
+            0.083,
+            0.0899,
+            0.0853
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 2,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 3,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k2"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.081,
+            0.0739,
+            0.0727,
+            0.1213,
+            0.1159,
+            0.1002,
+            0.0947,
+            0.0919,
+            0.1328,
+            0.0907
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15118.072143440268,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0033073
+          ],
+          "wall_ms": [
+            0.0717,
+            0.0701,
+            0.0693,
+            0.0695,
+            0.0688,
+            0.0688,
+            0.0688,
+            0.0689,
+            0.0691,
+            0.0693
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0965,
+            0.1201,
+            0.0816,
+            0.0863,
+            0.0754,
+            0.0737,
+            0.0769,
+            0.1149,
+            0.0923,
+            0.0748
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15325.67049808429,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0032625
+          ],
+          "wall_ms": [
+            0.1028,
+            0.0833,
+            0.0695,
+            0.0675,
+            0.1048,
+            0.079,
+            0.0698,
+            0.0685,
+            0.0687,
+            0.069
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 2,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 4,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k2"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0737,
+            0.0719,
+            0.0719,
+            0.0714,
+            0.0817,
+            0.0722,
+            0.0717,
+            0.0732,
+            0.0784,
+            0.0732
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15800.783718872457,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0031644
+          ],
+          "wall_ms": [
+            0.0974,
+            0.072,
+            0.0702,
+            0.0687,
+            0.0683,
+            0.0673,
+            0.0676,
+            0.0717,
+            0.0675,
+            0.0677
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0797,
+            0.0728,
+            0.0717,
+            0.1435,
+            0.1065,
+            0.0967,
+            0.0939,
+            0.0935,
+            0.0926,
+            0.0936
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15487.548011398834,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0032284
+          ],
+          "wall_ms": [
+            0.0728,
+            0.0713,
+            0.0713,
+            0.0714,
+            0.0716,
+            0.0704,
+            0.0705,
+            0.0707,
+            0.0711,
+            0.0708
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 3,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 0,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k3"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0747,
+            0.0797,
+            0.0737,
+            0.0728,
+            0.0728,
+            0.0725,
+            0.0736,
+            0.1102,
+            0.0782,
+            0.0732
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15280.706579872252,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032721
+          ],
+          "wall_ms": [
+            0.1025,
+            0.074,
+            0.0708,
+            0.0693,
+            0.069,
+            0.0686,
+            0.0686,
+            0.0689,
+            0.0684,
+            0.0692
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.117,
+            0.1382,
+            0.1462,
+            0.1175,
+            0.0994,
+            0.1317,
+            0.1081,
+            0.096,
+            0.1001,
+            0.0904
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14850.455908996406,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0033669
+          ],
+          "wall_ms": [
+            0.0759,
+            0.074,
+            0.0727,
+            0.0726,
+            0.0722,
+            0.073,
+            0.0726,
+            0.0718,
+            0.0723,
+            0.0723
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 3,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 1,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k3"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.088,
+            0.0856,
+            0.0857,
+            0.0855,
+            0.0854,
+            0.0854,
+            0.0851,
+            0.0849,
+            0.085,
+            0.085
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 13008.976193573566,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038435
+          ],
+          "wall_ms": [
+            0.121,
+            0.0864,
+            0.0844,
+            0.0825,
+            0.0832,
+            0.0821,
+            0.0819,
+            0.0823,
+            0.0903,
+            0.0829
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0927,
+            0.0872,
+            0.0852,
+            0.0858,
+            0.0855,
+            0.0848,
+            0.0849,
+            0.0854,
+            0.0853,
+            0.086
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12966.804979253111,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.003856
+          ],
+          "wall_ms": [
+            0.0879,
+            0.0867,
+            0.086,
+            0.0853,
+            0.0852,
+            0.0844,
+            0.0845,
+            0.0847,
+            0.094,
+            0.0849
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 3,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 2,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k3"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0922,
+            0.0745,
+            0.0808,
+            0.0719,
+            0.0713,
+            0.0713,
+            0.0712,
+            0.0905,
+            0.0736,
+            0.0711
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14967.371130934564,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0033406
+          ],
+          "wall_ms": [
+            0.0968,
+            0.0733,
+            0.0815,
+            0.0812,
+            0.0699,
+            0.0695,
+            0.0684,
+            0.0685,
+            0.0678,
+            0.0673
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0807,
+            0.1208,
+            0.0851,
+            0.096,
+            0.0939,
+            0.093,
+            0.092,
+            0.0929,
+            0.0922,
+            0.0934
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14959.758250306675,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0033423
+          ],
+          "wall_ms": [
+            0.0812,
+            0.0728,
+            0.0717,
+            0.0718,
+            0.0714,
+            0.0707,
+            0.0712,
+            0.0706,
+            0.0705,
+            0.0708
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 3,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 3,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k3"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0903,
+            0.0871,
+            0.0863,
+            0.0867,
+            0.0867,
+            0.0863,
+            0.086,
+            0.0859,
+            0.0858,
+            0.0891
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12592.238144407787,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0039707
+          ],
+          "wall_ms": [
+            0.1179,
+            0.0878,
+            0.0944,
+            0.0859,
+            0.093,
+            0.0864,
+            0.0837,
+            0.0831,
+            0.0827,
+            0.0835
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.138,
+            0.1158,
+            0.1233,
+            0.1091,
+            0.1093,
+            0.1085,
+            0.1089,
+            0.109,
+            0.0889,
+            0.0874
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12756.078271296274,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0039197
+          ],
+          "wall_ms": [
+            0.0873,
+            0.0851,
+            0.0849,
+            0.0844,
+            0.0842,
+            0.0839,
+            0.084,
+            0.0836,
+            0.0843,
+            0.1271
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 3,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 4,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k3"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0818,
+            0.0773,
+            0.135,
+            0.1045,
+            0.0836,
+            0.0807,
+            0.0795,
+            0.0785,
+            0.0794,
+            0.08
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15036.68952243474,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0033252
+          ],
+          "wall_ms": [
+            0.0864,
+            0.0738,
+            0.0729,
+            0.073,
+            0.0729,
+            0.0732,
+            0.0728,
+            0.0727,
+            0.0722,
+            0.0723
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0809,
+            0.0757,
+            0.073,
+            0.0726,
+            0.0732,
+            0.0727,
+            0.0731,
+            0.0894,
+            0.0746,
+            0.0729
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15328.95947023116,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032618
+          ],
+          "wall_ms": [
+            0.1031,
+            0.0727,
+            0.0708,
+            0.0785,
+            0.071,
+            0.0693,
+            0.0691,
+            0.0685,
+            0.0682,
+            0.0689
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 4,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 0,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k4"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0914,
+            0.0981,
+            0.0875,
+            0.0869,
+            0.086,
+            0.0855,
+            0.0859,
+            0.0857,
+            0.0863,
+            0.0855
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 13103.412128518266,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038158
+          ],
+          "wall_ms": [
+            0.0867,
+            0.086,
+            0.0827,
+            0.0831,
+            0.0832,
+            0.0831,
+            0.0826,
+            0.0821,
+            0.083,
+            0.0827
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.095,
+            0.0868,
+            0.0862,
+            0.0863,
+            0.0871,
+            0.0903,
+            0.0868,
+            0.0863,
+            0.0859,
+            0.0859
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12389.117399276476,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0040358
+          ],
+          "wall_ms": [
+            0.1559,
+            0.1004,
+            0.0907,
+            0.1172,
+            0.0844,
+            0.0823,
+            0.0822,
+            0.0822,
+            0.0816,
+            0.0892
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 4,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 1,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k4"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0801,
+            0.0745,
+            0.1199,
+            0.0892,
+            0.0786,
+            0.0765,
+            0.076,
+            0.0762,
+            0.0754,
+            0.0767
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15324.731050970056,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0032627
+          ],
+          "wall_ms": [
+            0.0881,
+            0.0862,
+            0.0811,
+            0.0702,
+            0.0694,
+            0.0694,
+            0.0695,
+            0.0697,
+            0.0693,
+            0.0697
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0751,
+            0.074,
+            0.0738,
+            0.0737,
+            0.0729,
+            0.0729,
+            0.0718,
+            0.0967,
+            0.0776,
+            0.073
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15899.262274230476,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0031448
+          ],
+          "wall_ms": [
+            0.095,
+            0.0732,
+            0.071,
+            0.0705,
+            0.0693,
+            0.0688,
+            0.0688,
+            0.0687,
+            0.0692,
+            0.069
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 4,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 2,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k4"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1002,
+            0.088,
+            0.0857,
+            0.0853,
+            0.0885,
+            0.0937,
+            0.0897,
+            0.092,
+            0.0937,
+            0.0887
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12543.274296322314,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0039862
+          ],
+          "wall_ms": [
+            0.087,
+            0.0852,
+            0.0844,
+            0.0831,
+            0.0943,
+            0.0846,
+            0.0822,
+            0.0822,
+            0.0827,
+            0.0816
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0916,
+            0.0865,
+            0.0873,
+            0.1266,
+            0.1069,
+            0.0902,
+            0.0882,
+            0.088,
+            0.0877,
+            0.0872
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12920.564370251692,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0038698
+          ],
+          "wall_ms": [
+            0.1284,
+            0.091,
+            0.09,
+            0.0834,
+            0.0903,
+            0.0839,
+            0.0833,
+            0.0829,
+            0.0917,
+            0.0839
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 4,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 3,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k4"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1205,
+            0.095,
+            0.0805,
+            0.0774,
+            0.0766,
+            0.0758,
+            0.0757,
+            0.0756,
+            0.0756,
+            0.0759
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15969.338869370808,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.003131
+          ],
+          "wall_ms": [
+            0.0738,
+            0.0719,
+            0.0707,
+            0.0706,
+            0.0697,
+            0.0701,
+            0.0702,
+            0.0699,
+            0.0696,
+            0.0699
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0735,
+            0.0732,
+            0.0727,
+            0.0725,
+            0.0723,
+            0.0795,
+            0.0719,
+            0.0717,
+            0.072,
+            0.0719
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15631.838929531672,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0031986
+          ],
+          "wall_ms": [
+            0.0957,
+            0.0728,
+            0.0699,
+            0.0681,
+            0.0681,
+            0.0683,
+            0.0672,
+            0.0675,
+            0.0675,
+            0.0685
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 4,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 4,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k4"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0884,
+            0.0866,
+            0.0855,
+            0.0862,
+            0.0865,
+            0.0858,
+            0.0863,
+            0.0859,
+            0.0866,
+            0.0862
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12791.649611133853,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0039088
+          ],
+          "wall_ms": [
+            0.1131,
+            0.0891,
+            0.0845,
+            0.0832,
+            0.0828,
+            0.0826,
+            0.0819,
+            0.0823,
+            0.0814,
+            0.0905
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0934,
+            0.087,
+            0.0859,
+            0.0858,
+            0.0862,
+            0.0858,
+            0.0859,
+            0.0857,
+            0.0863,
+            0.0877
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12828.736369467608,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038975
+          ],
+          "wall_ms": [
+            0.0938,
+            0.0879,
+            0.1138,
+            0.0868,
+            0.0839,
+            0.0839,
+            0.0832,
+            0.0834,
+            0.0885,
+            0.0956
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 5,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 0,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k5"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0722,
+            0.0719,
+            0.0723,
+            0.0721,
+            0.0716,
+            0.0719,
+            0.0717,
+            0.0815,
+            0.0734,
+            0.0714
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15544.846883258198,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0032165
+          ],
+          "wall_ms": [
+            0.0946,
+            0.0715,
+            0.0693,
+            0.085,
+            0.0737,
+            0.0674,
+            0.0663,
+            0.0668,
+            0.0667,
+            0.0667
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0811,
+            0.0832,
+            0.0722,
+            0.0722,
+            0.0715,
+            0.0717,
+            0.0898,
+            0.0747,
+            0.0719,
+            0.0717
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15959.144589849984,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.003133
+          ],
+          "wall_ms": [
+            0.0727,
+            0.0712,
+            0.0701,
+            0.07,
+            0.0703,
+            0.0703,
+            0.0704,
+            0.0698,
+            0.0811,
+            0.0766
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 5,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 1,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k5"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0885,
+            0.0864,
+            0.0865,
+            0.0861,
+            0.094,
+            0.0855,
+            0.0862,
+            0.0857,
+            0.0859,
+            0.0858
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12277.772320990078,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0040724
+          ],
+          "wall_ms": [
+            0.1126,
+            0.087,
+            0.0845,
+            0.0908,
+            0.0864,
+            0.0829,
+            0.0826,
+            0.082,
+            0.0824,
+            0.0826
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0988,
+            0.0904,
+            0.0888,
+            0.0881,
+            0.0886,
+            0.0874,
+            0.0877,
+            0.0882,
+            0.0872,
+            0.0872
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12675.877804537964,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0039445
+          ],
+          "wall_ms": [
+            0.1057,
+            0.1015,
+            0.0849,
+            0.0836,
+            0.0836,
+            0.0838,
+            0.0836,
+            0.0842,
+            0.1234,
+            0.1045
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 5,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 2,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k5"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0736,
+            0.0733,
+            0.0728,
+            0.0799,
+            0.076,
+            0.0728,
+            0.0726,
+            0.1015,
+            0.1089,
+            0.0758
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15942.86078693961,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0031362
+          ],
+          "wall_ms": [
+            0.0983,
+            0.0719,
+            0.0689,
+            0.0692,
+            0.0682,
+            0.0818,
+            0.0675,
+            0.0673,
+            0.0667,
+            0.0671
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0784,
+            0.0713,
+            0.0801,
+            0.0717,
+            0.1036,
+            0.0889,
+            0.0726,
+            0.0708,
+            0.0708,
+            0.0704
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15304.092314284839,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0032671
+          ],
+          "wall_ms": [
+            0.0715,
+            0.0705,
+            0.0696,
+            0.0697,
+            0.0694,
+            0.0687,
+            0.0692,
+            0.0756,
+            0.0974,
+            0.0712
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 5,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 3,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k5"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0817,
+            0.0755,
+            0.0727,
+            0.0734,
+            0.073,
+            0.0733,
+            0.0727,
+            0.0727,
+            0.0819,
+            0.0743
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15537.11817532084,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032181
+          ],
+          "wall_ms": [
+            0.1037,
+            0.0738,
+            0.071,
+            0.0707,
+            0.0771,
+            0.0716,
+            0.069,
+            0.0688,
+            0.0691,
+            0.0687
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1382,
+            0.0898,
+            0.0982,
+            0.0962,
+            0.0962,
+            0.0957,
+            0.1014,
+            0.1008,
+            0.0949,
+            0.0957
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14126.68813923264,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0035394
+          ],
+          "wall_ms": [
+            0.0956,
+            0.0823,
+            0.0766,
+            0.0751,
+            0.0751,
+            0.0748,
+            0.0751,
+            0.0754,
+            0.0746,
+            0.0751
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 5,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 4,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k5"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0786,
+            0.1216,
+            0.0861,
+            0.0785,
+            0.0755,
+            0.0754,
+            0.0749,
+            0.0842,
+            0.0913,
+            0.1275
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15021.78158329578,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0033285
+          ],
+          "wall_ms": [
+            0.0896,
+            0.0875,
+            0.0868,
+            0.0859,
+            0.0715,
+            0.0687,
+            0.0681,
+            0.0685,
+            0.0677,
+            0.0684
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0777,
+            0.0735,
+            0.0727,
+            0.0722,
+            0.1076,
+            0.0843,
+            0.0736,
+            0.0724,
+            0.0726,
+            0.072
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15487.068297971195,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.0032285
+          ],
+          "wall_ms": [
+            0.1416,
+            0.0754,
+            0.0701,
+            0.0694,
+            0.0683,
+            0.0679,
+            0.0681,
+            0.0684,
+            0.0699,
+            0.0688
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 6,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 0,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k6"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0931,
+            0.0873,
+            0.0865,
+            0.0857,
+            0.0853,
+            0.0853,
+            0.0853,
+            0.085,
+            0.0856,
+            0.0854
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12073.50348924251,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0041413
+          ],
+          "wall_ms": [
+            0.105,
+            0.0957,
+            0.084,
+            0.0892,
+            0.0825,
+            0.0832,
+            0.0831,
+            0.0828,
+            0.0832,
+            0.0958
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0895,
+            0.0878,
+            0.087,
+            0.0867,
+            0.0867,
+            0.0866,
+            0.0867,
+            0.086,
+            0.0867,
+            0.0889
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12975.554056158198,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0038534
+          ],
+          "wall_ms": [
+            0.111,
+            0.0866,
+            0.1085,
+            0.1015,
+            0.0847,
+            0.0855,
+            0.0838,
+            0.0824,
+            0.0827,
+            0.1111
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 6,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 1,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k6"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1167,
+            0.1019,
+            0.0815,
+            0.0778,
+            0.0777,
+            0.0777,
+            0.0765,
+            0.127,
+            0.1225,
+            0.0932
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15385.088771962213,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0032499
+          ],
+          "wall_ms": [
+            0.0932,
+            0.0891,
+            0.075,
+            0.0712,
+            0.0708,
+            0.0713,
+            0.0709,
+            0.0709,
+            0.0712,
+            0.0709
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0735,
+            0.0726,
+            0.072,
+            0.0714,
+            0.0718,
+            0.0718,
+            0.0717,
+            0.0715,
+            0.0713,
+            0.0722
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15818.27960391028,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0031609
+          ],
+          "wall_ms": [
+            0.1043,
+            0.072,
+            0.0697,
+            0.0683,
+            0.0686,
+            0.0682,
+            0.0687,
+            0.0887,
+            0.072,
+            0.0681
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 6,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 2,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k6"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0879,
+            0.079,
+            0.0761,
+            0.0759,
+            0.0757,
+            0.0726,
+            0.0723,
+            0.0729,
+            0.0722,
+            0.0728
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15766.902119071645,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0031712
+          ],
+          "wall_ms": [
+            0.0947,
+            0.0968,
+            0.0882,
+            0.0725,
+            0.0727,
+            0.0722,
+            0.0723,
+            0.072,
+            0.0726,
+            0.0728
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0746,
+            0.0744,
+            0.0728,
+            0.0729,
+            0.0729,
+            0.0725,
+            0.0897,
+            0.0747,
+            0.0723,
+            0.0726
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15559.358954411076,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0032135
+          ],
+          "wall_ms": [
+            0.0939,
+            0.0717,
+            0.0703,
+            0.0697,
+            0.0697,
+            0.0691,
+            0.0692,
+            0.0694,
+            0.0692,
+            0.0693
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 6,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 3,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k6"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0897,
+            0.0956,
+            0.0861,
+            0.0851,
+            0.0851,
+            0.0848,
+            0.0843,
+            0.0853,
+            0.084,
+            0.0846
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 13005.592404734036,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038445
+          ],
+          "wall_ms": [
+            0.0858,
+            0.0845,
+            0.0835,
+            0.0833,
+            0.0837,
+            0.0827,
+            0.0826,
+            0.0825,
+            0.0823,
+            0.0835
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0863,
+            0.0854,
+            0.0851,
+            0.0948,
+            0.0856,
+            0.0854,
+            0.0854,
+            0.0849,
+            0.0853,
+            0.0849
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12685.847668341197,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0039414
+          ],
+          "wall_ms": [
+            0.1095,
+            0.085,
+            0.083,
+            0.0823,
+            0.0821,
+            0.0816,
+            0.0812,
+            0.0816,
+            0.081,
+            0.0818
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 6,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "a",
+          "b"
+        ],
+        "position": 4,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k6"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0861,
+            0.0856,
+            0.0845,
+            0.0842,
+            0.0844,
+            0.0847,
+            0.085,
+            0.0851,
+            0.085,
+            0.0863
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12802.78588620884,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0039054
+          ],
+          "wall_ms": [
+            0.1101,
+            0.0855,
+            0.0836,
+            0.0822,
+            0.0817,
+            0.0817,
+            0.0815,
+            0.0814,
+            0.0878,
+            0.0843
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0931,
+            0.0873,
+            0.0849,
+            0.0843,
+            0.0841,
+            0.0844,
+            0.0839,
+            0.0837,
+            0.0838,
+            0.084
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12888.258796236629,
+          "source_sha256": "33af9d2341d5d5d23ae3a65d7c7a0cfdd7f3d6515e990b3b672bca42277536e9",
+          "throughput_seconds": [
+            0.0038795
+          ],
+          "wall_ms": [
+            0.1372,
+            0.0883,
+            0.0847,
+            0.0836,
+            0.0827,
+            0.0825,
+            0.0829,
+            0.0896,
+            0.085,
+            0.0831
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 7,
+        "kind": "control",
+        "models": {
+          "a": "weighted_factor",
+          "b": "weighted_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 0,
+        "subject": "weighted_factor",
+        "unit_id": "pilot-weighted_factor-k7"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0729,
+            0.0719,
+            0.0715,
+            0.0713,
+            0.0717,
+            0.072,
+            0.0715,
+            0.0717,
+            0.0716,
+            0.0779
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15991.300732401573,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0031267
+          ],
+          "wall_ms": [
+            0.0946,
+            0.0717,
+            0.0691,
+            0.0677,
+            0.0678,
+            0.0676,
+            0.0672,
+            0.0672,
+            0.0673,
+            0.0675
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0813,
+            0.1156,
+            0.0895,
+            0.079,
+            0.0771,
+            0.0759,
+            0.0752,
+            0.0748,
+            0.0765,
+            0.0762
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 15555.486420060357,
+          "source_sha256": "ef9b54925ef3f38b006a8374bf183c0d2e55cd78fef4e1dbfa33938b37f9f3d9",
+          "throughput_seconds": [
+            0.0032143
+          ],
+          "wall_ms": [
+            0.0886,
+            0.085,
+            0.0713,
+            0.0723,
+            0.0706,
+            0.0704,
+            0.0704,
+            0.0703,
+            0.0708,
+            0.0701
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 7,
+        "kind": "control",
+        "models": {
+          "a": "weighted_materialized",
+          "b": "weighted_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 1,
+        "subject": "weighted_materialized",
+        "unit_id": "pilot-weighted_materialized-k7"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0782,
+            0.0755,
+            0.0741,
+            0.0734,
+            0.0738,
+            0.0726,
+            0.073,
+            0.0729,
+            0.0732,
+            0.0731
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14785.025725944764,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0033818
+          ],
+          "wall_ms": [
+            0.1178,
+            0.0736,
+            0.0712,
+            0.0712,
+            0.0701,
+            0.0699,
+            0.0705,
+            0.0696,
+            0.0692,
+            0.0694
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0807,
+            0.0749,
+            0.0739,
+            0.0741,
+            0.0839,
+            0.0748,
+            0.0738,
+            0.0737,
+            0.0742,
+            0.0784
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14615.182251322674,
+          "source_sha256": "f3336487ca2aa41449525d0efe6f021420a0ccaa2766d36a89a3418dbbe4b233",
+          "throughput_seconds": [
+            0.0034211
+          ],
+          "wall_ms": [
+            0.0742,
+            0.0719,
+            0.0708,
+            0.0722,
+            0.07,
+            0.0699,
+            0.0703,
+            0.0705,
+            0.0703,
+            0.0702
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 7,
+        "kind": "control",
+        "models": {
+          "a": "dense",
+          "b": "dense"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 2,
+        "subject": "dense",
+        "unit_id": "pilot-dense-k7"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0876,
+            0.0868,
+            0.0862,
+            0.0914,
+            0.0882,
+            0.0862,
+            0.0857,
+            0.086,
+            0.0852,
+            0.085
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 13003.562976255493,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038451
+          ],
+          "wall_ms": [
+            0.1101,
+            0.0862,
+            0.1294,
+            0.0869,
+            0.0826,
+            0.0832,
+            0.0824,
+            0.082,
+            0.0831,
+            0.0832
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.1113,
+            0.0926,
+            0.0894,
+            0.0884,
+            0.0879,
+            0.088,
+            0.0869,
+            0.0869,
+            0.0872,
+            0.0879
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 12938.284383490749,
+          "source_sha256": "c2461e219593bc1e13f55c83eb60b9c955a881ffb8991826e54738089c765c8a",
+          "throughput_seconds": [
+            0.0038645
+          ],
+          "wall_ms": [
+            0.0876,
+            0.0855,
+            0.0853,
+            0.0847,
+            0.084,
+            0.0844,
+            0.084,
+            0.0835,
+            0.0831,
+            0.1754
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 7,
+        "kind": "control",
+        "models": {
+          "a": "svd_factor",
+          "b": "svd_factor"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 3,
+        "subject": "svd_factor",
+        "unit_id": "pilot-svd_factor-k7"
+      }
+    },
+    {
+      "sides": {
+        "a": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0736,
+            0.0722,
+            0.0715,
+            0.0712,
+            0.0717,
+            0.0717,
+            0.0748,
+            0.0719,
+            0.0716,
+            0.0716
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14289.797084881395,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.003499
+          ],
+          "wall_ms": [
+            0.0977,
+            0.0741,
+            0.0724,
+            0.0682,
+            0.0676,
+            0.0724,
+            0.0673,
+            0.0669,
+            0.067,
+            0.0681
+          ]
+        },
+        "b": {
+          "cuda_event_ms": [],
+          "full_path_ms": [
+            0.0801,
+            0.0727,
+            0.0727,
+            0.1387,
+            0.0855,
+            0.0726,
+            0.0726,
+            0.0724,
+            0.0719,
+            0.0707
+          ],
+          "input_sha256": "a770f0cd2f7309030433bbe3d2a00a93e3f7292501300566818336ae38b42594",
+          "samples_per_second": 14619.883040935672,
+          "source_sha256": "320c85b099e95f40aa3263b0378430278ed667af25977605b3efeff3b4866904",
+          "throughput_seconds": [
+            0.00342
+          ],
+          "wall_ms": [
+            0.1066,
+            0.1164,
+            0.0759,
+            0.0715,
+            0.0715,
+            0.0713,
+            0.0869,
+            0.0932,
+            0.0706,
+            0.0685
+          ]
+        }
+      },
+      "status": "succeeded",
+      "unit": {
+        "block": 7,
+        "kind": "control",
+        "models": {
+          "a": "svd_materialized",
+          "b": "svd_materialized"
+        },
+        "order": [
+          "b",
+          "a"
+        ],
+        "position": 4,
+        "subject": "svd_materialized",
+        "unit_id": "pilot-svd_materialized-k7"
+      }
+    }
+  ],
+  "resources": {
+    "bytes": 11083,
+    "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Third-Package-2026-10-15\\attempts\\pilot-cpu-b1\\resources.json",
+    "sha256": "bcdc009a726f4b25e34c1a18b15119896c6ca78348d4cd33a923480086b41c60"
+  },
+  "schema": 3,
+  "status": "succeeded",
+  "warmup": {
+    "dense-0": {
+      "calls": 3464,
+      "seconds": 0.2500107000000753
+    },
+    "dense-1": {
+      "calls": 3470,
+      "seconds": 0.25004290000015317
+    },
+    "svd_factor-0": {
+      "calls": 2882,
+      "seconds": 0.25006600000006074
+    },
+    "svd_factor-1": {
+      "calls": 2837,
+      "seconds": 0.2500465000002805
+    },
+    "svd_materialized-0": {
+      "calls": 3587,
+      "seconds": 0.2500572000003558
+    },
+    "svd_materialized-1": {
+      "calls": 3441,
+      "seconds": 0.2500513999998475
+    },
+    "weighted_factor-0": {
+      "calls": 2819,
+      "seconds": 0.25003860000015266
+    },
+    "weighted_factor-1": {
+      "calls": 2889,
+      "seconds": 0.25008840000009513
+    },
+    "weighted_materialized-0": {
+      "calls": 3532,
+      "seconds": 0.2500377000001208
+    },
+    "weighted_materialized-1": {
+      "calls": 3536,
+      "seconds": 0.25000249999993684
+    }
+  }
+}

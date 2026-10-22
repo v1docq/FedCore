@@ -1,0 +1,548 @@
+{
+  "attempt": 1,
+  "background_before": {
+    "available_ram_bytes": 15474679808,
+    "cpu_percent": 1.8,
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4080",
+      "physical_free_mib": 13973,
+      "physical_used_mib": 2078,
+      "scope": "global physical GPU usage, including unrelated processes and desktop renderer; not attributable to this model",
+      "utilization_percent": 3
+    },
+    "pid": 27528,
+    "utc_epoch": 1791978896.3102663
+  },
+  "command": [
+    "local-environment\\Scripts\\python.exe",
+    "-m",
+    "fedcore.experiments.svd_local_package",
+    "--output",
+    "local-package",
+    "--worker",
+    "timing",
+    "--job",
+    "local-package\\timing\\artifact-d3b23a546f08c955-cuda0-b1-k2-baseline\\job.json"
+  ],
+  "directory": "local-package\\processes\\artifact-d3b23a546f08c955-cuda0-b1-k2-baseline\\attempt-1",
+  "elapsed_seconds": 5.689531500000157,
+  "job_id": "artifact-d3b23a546f08c955-cuda0-b1-k2-baseline",
+  "maximum_recursive_rss_bytes": 694284288,
+  "pid": 23420,
+  "returncode": 0,
+  "samples": [
+    {
+      "available_ram_bytes": 15468576768,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5820484,
+          "os_threads": 4,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 10829824
+        }
+      ],
+      "seconds": 0.06219979999877978,
+      "tree_sum_rss_bytes": 15872000
+    },
+    {
+      "available_ram_bytes": 15395651584,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 0.28125,
+          "created": 1791978896.5820484,
+          "os_threads": 4,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 210468864
+        }
+      ],
+      "seconds": 0.30498679999800515,
+      "tree_sum_rss_bytes": 215511040
+    },
+    {
+      "available_ram_bytes": 15341301760,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 0.515625,
+          "created": 1791978896.5820484,
+          "os_threads": 4,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 277299200
+        }
+      ],
+      "seconds": 0.543691700000636,
+      "tree_sum_rss_bytes": 282341376
+    },
+    {
+      "available_ram_bytes": 15326453760,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 0.703125,
+          "created": 1791978896.5820484,
+          "os_threads": 11,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 310136832
+        }
+      ],
+      "seconds": 0.7975316000010935,
+      "tree_sum_rss_bytes": 315179008
+    },
+    {
+      "available_ram_bytes": 15303761920,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 0.90625,
+          "created": 1791978896.5820484,
+          "os_threads": 11,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 320397312
+        }
+      ],
+      "seconds": 1.0389797999996517,
+      "tree_sum_rss_bytes": 325439488
+    },
+    {
+      "available_ram_bytes": 15302311936,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 1.078125,
+          "created": 1791978896.5820484,
+          "os_threads": 11,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 329138176
+        }
+      ],
+      "seconds": 1.2751333999985945,
+      "tree_sum_rss_bytes": 334180352
+    },
+    {
+      "available_ram_bytes": 15294705664,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 1.28125,
+          "created": 1791978896.5820484,
+          "os_threads": 11,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 336904192
+        }
+      ],
+      "seconds": 1.5227048999986437,
+      "tree_sum_rss_bytes": 341946368
+    },
+    {
+      "available_ram_bytes": 15279923200,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 1.5,
+          "created": 1791978896.5820484,
+          "os_threads": 11,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 341360640
+        }
+      ],
+      "seconds": 1.768614399999933,
+      "tree_sum_rss_bytes": 346402816
+    },
+    {
+      "available_ram_bytes": 15306244096,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 1.75,
+          "created": 1791978896.5820484,
+          "os_threads": 11,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 344178688
+        }
+      ],
+      "seconds": 2.016146199999639,
+      "tree_sum_rss_bytes": 349220864
+    },
+    {
+      "available_ram_bytes": 15313473536,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 1.984375,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 362426368
+        }
+      ],
+      "seconds": 2.2686170999986643,
+      "tree_sum_rss_bytes": 367468544
+    },
+    {
+      "available_ram_bytes": 15289208832,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 2.03125,
+          "created": 1791978896.5820484,
+          "os_threads": 12,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 385286144
+        }
+      ],
+      "seconds": 2.504608899998857,
+      "tree_sum_rss_bytes": 390328320
+    },
+    {
+      "available_ram_bytes": 15161798656,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 2.171875,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 516947968
+        }
+      ],
+      "seconds": 2.7432244999981776,
+      "tree_sum_rss_bytes": 521990144
+    },
+    {
+      "available_ram_bytes": 15002513408,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 2.390625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689156096
+        }
+      ],
+      "seconds": 2.9933220999992045,
+      "tree_sum_rss_bytes": 694198272
+    },
+    {
+      "available_ram_bytes": 15008985088,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 2.625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689164288
+        }
+      ],
+      "seconds": 3.2450411999998323,
+      "tree_sum_rss_bytes": 694206464
+    },
+    {
+      "available_ram_bytes": 14964592640,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 2.890625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689168384
+        }
+      ],
+      "seconds": 3.5168463999980304,
+      "tree_sum_rss_bytes": 694210560
+    },
+    {
+      "available_ram_bytes": 14965436416,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 3.0625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689172480
+        }
+      ],
+      "seconds": 3.7797257999991416,
+      "tree_sum_rss_bytes": 694214656
+    },
+    {
+      "available_ram_bytes": 14988304384,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 3.0625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689172480
+        }
+      ],
+      "seconds": 4.030939299998863,
+      "tree_sum_rss_bytes": 694214656
+    },
+    {
+      "available_ram_bytes": 14991499264,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 3.0625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689172480
+        }
+      ],
+      "seconds": 4.2720865000010235,
+      "tree_sum_rss_bytes": 694214656
+    },
+    {
+      "available_ram_bytes": 14996246528,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 3.0625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689172480
+        }
+      ],
+      "seconds": 4.506813500000135,
+      "tree_sum_rss_bytes": 694214656
+    },
+    {
+      "available_ram_bytes": 14996926464,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 3.0625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689172480
+        }
+      ],
+      "seconds": 4.749008499999036,
+      "tree_sum_rss_bytes": 694214656
+    },
+    {
+      "available_ram_bytes": 15001890816,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 3.0625,
+          "created": 1791978896.5820484,
+          "os_threads": 13,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689172480
+        }
+      ],
+      "seconds": 4.987444099999266,
+      "tree_sum_rss_bytes": 694214656
+    },
+    {
+      "available_ram_bytes": 14996328448,
+      "owned_processes": [
+        {
+          "cpu_seconds": 0.015625,
+          "created": 1791978896.5674367,
+          "os_threads": 3,
+          "parent_pid": 27528,
+          "pid": 23420,
+          "rss_bytes": 5042176
+        },
+        {
+          "cpu_seconds": 3.15625,
+          "created": 1791978896.5820484,
+          "os_threads": 1,
+          "parent_pid": 23420,
+          "pid": 27992,
+          "rss_bytes": 689242112
+        }
+      ],
+      "seconds": 5.250363299997844,
+      "tree_sum_rss_bytes": 694284288
+    },
+    {
+      "available_ram_bytes": 15529070592,
+      "owned_processes": [],
+      "seconds": 5.482448300001124,
+      "tree_sum_rss_bytes": 0
+    }
+  ],
+  "violation": null
+}

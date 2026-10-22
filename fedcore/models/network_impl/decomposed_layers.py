@@ -46,6 +46,34 @@ class IDecomposed:
         self.register_parameter('Vh', None)
         if decomposing_mode is not None and decomposing_mode is not False:
             self.decompose()
+        self._register_state_dict_hook(self._save_representation_metadata)
+
+    def representation_metadata(self):
+        """Version the actual stored form, independently of the requested compose mode."""
+        solver = self.method if isinstance(self.method, str) else next(
+            (name for name, cls in DECOMPOSERS.items() if type(self.method) is cls), None)
+        if solver is None:
+            raise ValueError('The decomposer is not supported by the checkpoint allowlist')
+        parameters = dict(self.decomposer_params)
+        if not isinstance(self.method, str):
+            import inspect
+            for name in inspect.signature(type(self.method).__init__).parameters:
+                if name == 'self' or not hasattr(self.method, name):
+                    continue
+                value = getattr(self.method, name)
+                if value is None or type(value) in (str, bool, int, float):
+                    parameters[name] = value
+        return {'version': 1, 'layer_type': type(self).__name__,
+                'representation': self._representation, 'decomposing_mode': self.decomposing_mode,
+                'compose_mode': self.compose_mode, 'inference_mode': self.inference_mode,
+                'solver': solver, 'decomposer_params': parameters,
+                'bias': getattr(self, 'bias', None) is not None, 'groups': getattr(self, 'groups', 1),
+                'shapes': {name: list(parameter.shape) for name, parameter in self._parameters.items()
+                           if name in ('weight', 'U', 'S', 'Vh', 'bias') and parameter is not None}}
+
+    @staticmethod
+    def _save_representation_metadata(module, state, prefix, metadata):
+        metadata['fedcore_svd'] = module.representation_metadata()
 
     def decompose(self, W=None):
         W = self._weight_to_matrix(self.weight) if W is None else W
@@ -64,6 +92,8 @@ class IDecomposed:
         self._representation = 'three_layers'
 
     def set_U_S_Vh(self, u, s, vh, **kwargs):
+        if getattr(self, '_fedcore_tied_factors', False):
+            raise ValueError('Replace tied factors jointly at model level')
         s = s.reshape(u.shape[:-2] + (u.shape[-1],))
         if u.shape[-1] != vh.shape[-2] or s.shape[-1] != u.shape[-1]:
             raise ValueError('Incompatible U/S/Vh shapes')
@@ -111,6 +141,8 @@ class IDecomposed:
 
     def compose_weight_for_inference(self):
         mode = self.compose_mode or (self._evaluate_compose_mode() if self.U is not None else 'one_layer')
+        if getattr(self, '_fedcore_tied_factors', False) and mode != self._representation:
+            raise ValueError('Compose tied factors jointly at model level before changing their representation')
         if mode == 'one_layer':
             self._one_layer_compose()
         elif mode == 'two_layers':
@@ -123,6 +155,10 @@ class IDecomposed:
         self.inference_mode = True
 
     def _one_layer_compose(self):
+        if getattr(self, '_fedcore_tied_factors', False):
+            if self._representation != 'one_layer':
+                raise ValueError('Compose tied factors jointly at model level')
+            return
         weight = self._get_composed_weight().detach().clone()
         self.register_parameter('weight', Parameter(weight, requires_grad=self._weight_requires_grad))
         for name in ('U', 'S', 'Vh'):
@@ -130,6 +166,8 @@ class IDecomposed:
         self._representation = 'one_layer'
 
     def _two_layers_compose(self):
+        if getattr(self, '_fedcore_tied_factors', False) and self._representation != 'two_layers':
+            raise ValueError('Compose tied factors jointly at model level')
         if self.S is not None:
             self.register_parameter('Vh', Parameter((self.S.unsqueeze(-1) * self.Vh).detach().clone(), requires_grad=self._weight_requires_grad))
             self.register_parameter('S', None)

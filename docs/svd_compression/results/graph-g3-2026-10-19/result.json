@@ -1,0 +1,1756 @@
+{
+  "status": "succeeded",
+  "scope": "untrained random-MLP functional fixture; no utility or speedup claim",
+  "environment": {
+    "python": "3.10.0",
+    "torch": "2.2.0+cu121",
+    "numpy": "1.26.4",
+    "device": "cpu"
+  },
+  "seeds": {
+    "source": 162,
+    "calibration": 163,
+    "heldout": 164,
+    "search": 13
+  },
+  "calibration_shape": [
+    16,
+    4
+  ],
+  "heldout_shape": [
+    64,
+    4
+  ],
+  "calibration_role": "construct recipes",
+  "heldout_role": "full-model search fitness; not final test data",
+  "source_bytes": 208,
+  "budget_bytes": 192,
+  "centering_mutation": {
+    "schema_version": 1,
+    "genes": [
+      {
+        "aliases": [
+          "0"
+        ],
+        "recipe": "weighted_svd",
+        "choice": {
+          "rank": 1,
+          "representation": "two_layers",
+          "policy": {
+            "ridge": 0.0,
+            "rcond": null,
+            "nullspace_policy": "support_only"
+          },
+          "centering": "none",
+          "bias_policy": "preserve"
+        },
+        "recovery": "none"
+      },
+      {
+        "aliases": [
+          "2"
+        ],
+        "recipe": "afm",
+        "choice": {
+          "rank": 1,
+          "representation": "two_layers",
+          "centering": "output_mean",
+          "bias_policy": "affine_mean_correction"
+        },
+        "recovery": "none"
+      }
+    ]
+  },
+  "crossover_children": [
+    {
+      "schema_version": 1,
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "recipe": "weighted_svd",
+          "choice": {
+            "rank": 1,
+            "representation": "two_layers",
+            "policy": {
+              "ridge": 0.0,
+              "rcond": null,
+              "nullspace_policy": "support_only"
+            },
+            "centering": "none",
+            "bias_policy": "preserve"
+          },
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "recipe": "afm",
+          "choice": {
+            "rank": 1,
+            "representation": "two_layers",
+            "centering": "output_mean",
+            "bias_policy": "affine_mean_correction"
+          },
+          "recovery": "none"
+        }
+      ]
+    },
+    {
+      "schema_version": 1,
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "recipe": "weighted_svd",
+          "choice": {
+            "rank": 1,
+            "representation": "two_layers",
+            "policy": {
+              "ridge": 0.0,
+              "rcond": null,
+              "nullspace_policy": "support_only"
+            },
+            "centering": "none",
+            "bias_policy": "preserve"
+          },
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "recipe": "weighted_svd",
+          "choice": {
+            "rank": 1,
+            "representation": "two_layers",
+            "policy": {
+              "ridge": 0.0,
+              "rcond": null,
+              "nullspace_policy": "support_only"
+            },
+            "centering": "none",
+            "bias_policy": "preserve"
+          },
+          "recovery": "none"
+        }
+      ]
+    }
+  ],
+  "afm_mean_max_abs_error": 2.220446049250313e-16,
+  "afm_bytes_with_added_bias": 176,
+  "over_budget": {
+    "outcome": "ResourceFailure",
+    "code": "BudgetInfeasible"
+  },
+  "successful_evaluations": [
+    {
+      "workflow_fingerprint": "ac69859f4cd5e14b269d580d713e77d7782e74cdbe47972920287ded3902151c",
+      "genotype": {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "0"
+            ],
+            "recipe": "afm",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "centering": "output_mean",
+              "bias_policy": "affine_mean_correction"
+            },
+            "recovery": "none"
+          },
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      "heldout_mse": 0.003778382707086389,
+      "actual_backing_storage_bytes": 160
+    },
+    {
+      "workflow_fingerprint": "2fa99158a26381fcb0713ac3f0cc3f565da7c0111a5f58304e3e2b1f467eb5ec",
+      "genotype": {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "0"
+            ],
+            "recipe": "asvd",
+            "choice": {
+              "rank": 1,
+              "spec": {
+                "abs_mode": "abs_mean",
+                "alpha": 0.5,
+                "epsilon": 0.0,
+                "zero_policy": "support_only"
+              },
+              "representation": "two_layers",
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          },
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      "heldout_mse": 0.01469474567191094,
+      "actual_backing_storage_bytes": 128
+    },
+    {
+      "workflow_fingerprint": "2277557a9ee1a31ceed3a9cc5d6063d06c8c9bcbf5369cba310a331872e8c27b",
+      "genotype": {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "0"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 2,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          },
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      "heldout_mse": 0.003226508590148776,
+      "actual_backing_storage_bytes": 192
+    },
+    {
+      "workflow_fingerprint": "26c6e46780ed29ec51d06a8556935b89d6e5820f21d58d8c9496bb0349c02b38",
+      "genotype": {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "0"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          },
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      "heldout_mse": 0.003932051941135975,
+      "actual_backing_storage_bytes": 128
+    },
+    {
+      "workflow_fingerprint": "a1edff78b2e08225681e5799ec75e8487b5dc682d0c2b5ecd54c6c593d3d9683",
+      "genotype": {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      "heldout_mse": 0.0029379661520040398,
+      "actual_backing_storage_bytes": 192
+    },
+    {
+      "workflow_fingerprint": "256fbb893d09e0e388732d559e0272794ebf51d60bb3a4e4d757bcc323735dbb",
+      "genotype": {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "0"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          },
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "afm",
+            "choice": {
+              "rank": 2,
+              "representation": "two_layers",
+              "centering": "output_mean",
+              "bias_policy": "affine_mean_correction"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      "heldout_mse": 0.0038514164199320395,
+      "actual_backing_storage_bytes": 176
+    }
+  ],
+  "search": {
+    "status": "succeeded",
+    "reason": null,
+    "engine": "FedcoreEvoOptimizer",
+    "domain": "closed frozen-M0 compression grammar",
+    "fitness_context": "independent heldout:64:seed164; teacher MLP MSE; minimize MSE and actual bytes",
+    "best_genotypes": [
+      {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "0"
+            ],
+            "recipe": "afm",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "centering": "output_mean",
+              "bias_policy": "affine_mean_correction"
+            },
+            "recovery": "none"
+          },
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "0"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          },
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      },
+      {
+        "schema_version": 1,
+        "genes": [
+          {
+            "aliases": [
+              "2"
+            ],
+            "recipe": "weighted_svd",
+            "choice": {
+              "rank": 1,
+              "representation": "two_layers",
+              "policy": {
+                "ridge": 0.0,
+                "rcond": null,
+                "nullspace_policy": "support_only"
+              },
+              "centering": "none",
+              "bias_policy": "preserve"
+            },
+            "recovery": "none"
+          }
+        ]
+      }
+    ],
+    "charged_evaluations": 7,
+    "trace": [
+      {
+        "event": "evaluated",
+        "workflow_fingerprint": "ac69859f4cd5e14b269d580d713e77d7782e74cdbe47972920287ded3902151c",
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "outcome": "GrammarFitness",
+        "quality_accepted": true,
+        "fitness": [
+          0.003778382707086389,
+          160
+        ],
+        "failure": null,
+        "charged_evaluations": 1
+      },
+      {
+        "event": "evaluated",
+        "workflow_fingerprint": "2fa99158a26381fcb0713ac3f0cc3f565da7c0111a5f58304e3e2b1f467eb5ec",
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "asvd",
+              "choice": {
+                "rank": 1,
+                "spec": {
+                  "abs_mode": "abs_mean",
+                  "alpha": 0.5,
+                  "epsilon": 0.0,
+                  "zero_policy": "support_only"
+                },
+                "representation": "two_layers",
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "outcome": "GrammarFitness",
+        "quality_accepted": true,
+        "fitness": [
+          0.01469474567191094,
+          128
+        ],
+        "failure": null,
+        "charged_evaluations": 2
+      },
+      {
+        "event": "evaluated",
+        "workflow_fingerprint": "2277557a9ee1a31ceed3a9cc5d6063d06c8c9bcbf5369cba310a331872e8c27b",
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 2,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "outcome": "GrammarFitness",
+        "quality_accepted": true,
+        "fitness": [
+          0.003226508590148776,
+          192
+        ],
+        "failure": null,
+        "charged_evaluations": 3
+      },
+      {
+        "event": "evaluated",
+        "workflow_fingerprint": "26c6e46780ed29ec51d06a8556935b89d6e5820f21d58d8c9496bb0349c02b38",
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "outcome": "GrammarFitness",
+        "quality_accepted": true,
+        "fitness": [
+          0.003932051941135975,
+          128
+        ],
+        "failure": null,
+        "charged_evaluations": 4
+      },
+      {
+        "event": "population",
+        "size": 4,
+        "generation": 1,
+        "selection": "SPEA2",
+        "engine": "FedcoreEvoOptimizer"
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_crossover",
+        "parents": [
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "afm",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "centering": "output_mean",
+                  "bias_policy": "affine_mean_correction"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          },
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "asvd",
+                "choice": {
+                  "rank": 1,
+                  "spec": {
+                    "abs_mode": "abs_mean",
+                    "alpha": 0.5,
+                    "epsilon": 0.0,
+                    "zero_policy": "support_only"
+                  },
+                  "representation": "two_layers",
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          }
+        ],
+        "children": [
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "asvd",
+                "choice": {
+                  "rank": 1,
+                  "spec": {
+                    "abs_mode": "abs_mean",
+                    "alpha": 0.5,
+                    "epsilon": 0.0,
+                    "zero_policy": "support_only"
+                  },
+                  "representation": "two_layers",
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          },
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "afm",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "centering": "output_mean",
+                  "bias_policy": "affine_mean_correction"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_crossover",
+        "parents": [
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 2,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          },
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          }
+        ],
+        "children": [
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          },
+          {
+            "schema_version": 1,
+            "genes": [
+              {
+                "aliases": [
+                  "0"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 2,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              },
+              {
+                "aliases": [
+                  "2"
+                ],
+                "recipe": "weighted_svd",
+                "choice": {
+                  "rank": 1,
+                  "representation": "two_layers",
+                  "policy": {
+                    "ridge": 0.0,
+                    "rcond": null,
+                    "nullspace_policy": "support_only"
+                  },
+                  "centering": "none",
+                  "bias_policy": "preserve"
+                },
+                "recovery": "none"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_mutation",
+        "kind": "choice",
+        "parent": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "asvd",
+              "choice": {
+                "rank": 1,
+                "spec": {
+                  "abs_mode": "abs_mean",
+                  "alpha": 0.5,
+                  "epsilon": 0.0,
+                  "zero_policy": "support_only"
+                },
+                "representation": "two_layers",
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "child": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 2,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_mutation",
+        "kind": "scope",
+        "parent": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "child": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_mutation",
+        "kind": "choice",
+        "parent": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "child": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 2,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_mutation",
+        "kind": "scope",
+        "parent": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 2,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "child": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "event": "evaluated",
+        "workflow_fingerprint": "a1edff78b2e08225681e5799ec75e8487b5dc682d0c2b5ecd54c6c593d3d9683",
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "outcome": "GrammarFitness",
+        "quality_accepted": true,
+        "fitness": [
+          0.0029379661520040398,
+          192
+        ],
+        "failure": null,
+        "charged_evaluations": 5
+      },
+      {
+        "event": "evaluated",
+        "workflow_fingerprint": "256fbb893d09e0e388732d559e0272794ebf51d60bb3a4e4d757bcc323735dbb",
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 2,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "outcome": "GrammarFitness",
+        "quality_accepted": true,
+        "fitness": [
+          0.0038514164199320395,
+          176
+        ],
+        "failure": null,
+        "charged_evaluations": 6
+      },
+      {
+        "event": "evaluated",
+        "workflow_fingerprint": "e13f06df18cf4b6b0ed1650f719deaaa1add6b643c018dda47b69dd895d41752",
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 2,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "outcome": "ResourceFailure",
+        "quality_accepted": null,
+        "fitness": null,
+        "failure": "ResourceFailure(code='BudgetInfeasible', message='The actual complete backing-storage inventory exceeds the declared budget')",
+        "charged_evaluations": 7
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_mutation",
+        "kind": "scope",
+        "parent": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "child": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 2,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "event": "variation",
+        "operator": "grammar_mutation",
+        "kind": "scope",
+        "parent": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        },
+        "child": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "event": "population",
+        "size": 4,
+        "generation": 2,
+        "selection": "SPEA2",
+        "engine": "FedcoreEvoOptimizer"
+      }
+    ],
+    "finite_archive": [
+      {
+        "workflow_fingerprint": "ac69859f4cd5e14b269d580d713e77d7782e74cdbe47972920287ded3902151c",
+        "quality": 0.003778382707086389,
+        "cost": 160,
+        "quality_accepted": true,
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "afm",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "centering": "output_mean",
+                "bias_policy": "affine_mean_correction"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "workflow_fingerprint": "26c6e46780ed29ec51d06a8556935b89d6e5820f21d58d8c9496bb0349c02b38",
+        "quality": 0.003932051941135975,
+        "cost": 128,
+        "quality_accepted": true,
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "0"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            },
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      },
+      {
+        "workflow_fingerprint": "a1edff78b2e08225681e5799ec75e8487b5dc682d0c2b5ecd54c6c593d3d9683",
+        "quality": 0.0029379661520040398,
+        "cost": 192,
+        "quality_accepted": true,
+        "genotype": {
+          "schema_version": 1,
+          "genes": [
+            {
+              "aliases": [
+                "2"
+              ],
+              "recipe": "weighted_svd",
+              "choice": {
+                "rank": 1,
+                "representation": "two_layers",
+                "policy": {
+                  "ridge": 0.0,
+                  "rcond": null,
+                  "nullspace_policy": "support_only"
+                },
+                "centering": "none",
+                "bias_policy": "preserve"
+              },
+              "recovery": "none"
+            }
+          ]
+        }
+      }
+    ],
+    "best_role": "nondominated among evaluated finite fitness; quality acceptance is reported separately",
+    "stop_reason": "optimizer_stopped",
+    "wall_seconds": 2.2702987999982724,
+    "budget_enforcement": "before each uncached callback; in-flight callbacks may overrun",
+    "quality_rejection_count": 0,
+    "failure_count": 1,
+    "utility_claim": "functional grammar integration only; empirical search benefit is untested"
+  }
+}

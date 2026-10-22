@@ -141,20 +141,33 @@ class Conv2d(LoRALayer):
 
 def apply_lora(model,rank=4,lora_alpha=1,target_layers=None,adapter_name='default',lora_dropout=0.):
     """Return an independent model with adapters at explicitly selected layer paths."""
-    result=deepcopy(model)
+    from fedcore.algorithm.low_rank.topology import (
+        module_paths, validate_parameter_topology, replace_modules_atomically, TopologyError)
     mapping={nn.Linear:Linear,nn.Embedding:Embedding,nn.Conv2d:Conv2d}
-    if type(result) in mapping and (target_layers is None or list(target_layers)==['']):
-        return mapping[type(result)](result,adapter_name,r=rank,lora_alpha=lora_alpha,lora_dropout=lora_dropout)
-    prepared=[]
-    for name,layer in result.named_modules():
-        if name and type(layer) in mapping and (target_layers is None or name in target_layers):
-            prepared.append((name,mapping[type(layer)](layer,adapter_name,r=rank,lora_alpha=lora_alpha,lora_dropout=lora_dropout)))
-    if target_layers is not None and set(target_layers)!={n for n,_ in prepared}:
+    paths=module_paths(model)
+    targets=None if target_layers is None else set(target_layers)
+    selected={path:layer for path,layer in paths.items() if type(layer) in mapping
+              and (targets is None or path in targets)}
+    if targets is not None and targets!=set(selected):
         raise ValueError('Every target layer must be a supported module path')
-    for name,layer in prepared:
-        parent_path,_,leaf=name.rpartition('.')
-        setattr(result.get_submodule(parent_path) if parent_path else result,leaf,layer)
-    return result
+    topology=validate_parameter_topology(model,selected)
+    if topology.storage_aliases:
+        # deepcopy clones distinct Parameters separately, including untouched views.
+        raise TopologyError('LoRA model copying does not support shared storage views anywhere in the model')
+    selected_ids={id(layer) for layer in selected.values()}
+    for aliases in topology.parameter_aliases:
+        owners={id(paths[path.rpartition('.')[0]]) for path in aliases}
+        if len(owners)>1 and owners & selected_ids:
+            raise TopologyError('LoRA merge for tied Parameters requires a joint adapter profile')
+    result=deepcopy(model)
+    copied=module_paths(result)
+    prepared={};identities={}
+    for path in selected:
+        layer=copied[path]
+        if id(layer) not in identities:
+            identities[id(layer)]=mapping[type(layer)](layer,adapter_name,r=rank,lora_alpha=lora_alpha,lora_dropout=lora_dropout)
+        prepared[path]=identities[id(layer)]
+    return replace_modules_atomically(result,prepared)
 
 
 def transpose(weight,fan_in_fan_out):return weight.T if fan_in_fan_out else weight

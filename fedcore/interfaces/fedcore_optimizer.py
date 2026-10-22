@@ -33,7 +33,9 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
                  graph_generation_params: GraphGenerationParams,
                  graph_optimizer_params: GPAlgorithmParameters,
                  optimisation_params: dict = {'mutation_agent': 'random',
-                                              'mutation_strategy': 'params_mutation_strategy'}):
+                                              'mutation_strategy': 'params_mutation_strategy'},
+                 *, compression_grammar_profile: bool = False):
+        self.compression_grammar_profile = compression_grammar_profile
         graph_optimizer_params = self._init_industrial_optimizer_params(graph_optimizer_params, optimisation_params)
         super().__init__(objective, initial_graphs, requirements,
                          graph_generation_params, graph_optimizer_params)
@@ -49,6 +51,16 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
             delegate_evaluator=graph_generation_params.remote_evaluator)
 
     def _init_industrial_optimizer_params(self, graph_optimizer_params, optimisation_params):
+        if getattr(self, 'compression_grammar_profile', False):
+            # The closed grammar owns its verifier, native variation operators
+            # and fixed one-node representation. Keep GOLEM reproduction and
+            # selection, without imposing the legacy FEDOT pipeline strategy.
+            self.min_pop_size = graph_optimizer_params.pop_size
+            self.min_reproduce_attempt = 4
+            self.graph_generation_attempts = 4
+            graph_optimizer_params.adaptive_mutation_type = RandomAgent(
+                actions=graph_optimizer_params.mutation_types)
+            return graph_optimizer_params
         self.mutation_agent_dict = {'random': RandomAgent,
                                     'bandit': MultiArmedBanditAgent,
                                     'contextual_bandit': ContextualMultiArmedBanditAgent,
@@ -93,9 +105,11 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
                                for graph in self.initial_graphs]
         if len(initial_individuals) <= pop_size and pop_size != 1:  # in case we have only one init assumption
             # change strategy of init assumption creation. Set max probability to node change mutation
-            self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['initial_population_diversity_strategy']
+            if not getattr(self, 'compression_grammar_profile', False):
+                self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['initial_population_diversity_strategy']
             initial_individuals = self._extend_population(initial_individuals, pop_size)
-            self.mutation.agent._probs = self.optimisation_mutation_probs
+            if not getattr(self, 'compression_grammar_profile', False):
+                self.mutation.agent._probs = self.optimisation_mutation_probs
             label = 'extended_initial_assumptions'
         init_population = evaluator(initial_individuals)
         if init_population is None:
@@ -152,7 +166,8 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
     def _extend_population(self, pop: PopulationT, target_pop_size: int, mutation_prob: list = None) -> PopulationT:
         verifier, new_population = self.graph_generation_params.verifier, list(pop)
         # redefine golem's individual verification rules excluding unnecessary checks
-        verifier._rules = FEDCORE_GRAPH_VALIDATION
+        if not getattr(self, 'compression_grammar_profile', False):
+            verifier._rules = FEDCORE_GRAPH_VALIDATION
         if not pop or len(new_population) >= target_pop_size:
             return new_population
         pop_graphs = [ind.graph for ind in new_population]
@@ -208,6 +223,8 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         try: 
             new_population = self.reproducer.reproduce(individuals_to_select, evaluator)
         except Exception as x:
+            if getattr(self, 'compression_grammar_profile', False):
+                raise
             self.log.warning(f'Exception during reproduction: {x}')
             new_population = None
         if new_population is None:
@@ -234,14 +251,18 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         is_population_too_small = len(unique_population) <= self.min_pop_size
         # if size of unique population is too small, then extend it to MIN_POP_SIZE by repeating individuals
         if is_population_too_small:
-            self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['initial_population_diversity_strategy']
+            if not getattr(self, 'compression_grammar_profile', False):
+                self.mutation.agent._probs = FEDCORE_MUTATION_STRATEGY['initial_population_diversity_strategy']
             unique_population = self._extend_population(pop=unique_population,
                                                         target_pop_size=self.min_pop_size)
-            self.mutation.agent._probs = self.optimisation_mutation_probs
+            if not getattr(self, 'compression_grammar_profile', False):
+                self.mutation.agent._probs = self.optimisation_mutation_probs
             population = evaluator(unique_population)
         return population, evaluator
 
     def _update_requirements(self, population, evaluator):
+        if getattr(self, 'compression_grammar_profile', False):
+            return population, evaluator
         # Defines adaptive changes to algorithm parameters like pop_size and operator probabilities
         if not self.generations.is_any_improved:
             self.graph_optimizer_params.mutation_prob, self.graph_optimizer_params.crossover_prob = \

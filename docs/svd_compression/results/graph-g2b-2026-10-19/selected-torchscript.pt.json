@@ -1,0 +1,19 @@
+{
+  "format": "torchscript",
+  "input_spec": {
+    "version": 1,
+    "inputs": [
+      {
+        "name": "input",
+        "shape": [
+          16,
+          12
+        ],
+        "dtype": "float64"
+      }
+    ],
+    "layout": "single_tensor",
+    "dynamic_batch": false
+  },
+  "torch_version": "2.2.0+cu121"
+}

@@ -1,0 +1,349 @@
+{
+  "status": "succeeded",
+  "scope": "functional random-MLP fixture; no trained-model or practical-speedup claim",
+  "environment": {
+    "python": "3.10.0",
+    "torch": "2.2.0+cu121",
+    "numpy": "1.26.4",
+    "device": "cpu"
+  },
+  "seed": 161,
+  "calibration_seed": 162,
+  "validation_seed": 163,
+  "calibration_shape": [
+    64,
+    12
+  ],
+  "validation_shape": [
+    128,
+    12
+  ],
+  "calibration_role": "candidate_construction",
+  "validation_role": "whole_model_evaluation_only",
+  "budget_bytes": 1024,
+  "source_tensor_bytes": 1568,
+  "selected_tensor_bytes": 960,
+  "torchscript_tensor_bytes_after_reload": 960,
+  "allocation": {
+    "fingerprint": "ecf06e80dece0522adc8d1b57b462fd0d075228d01eeed93f4b85c181faafcae",
+    "catalog_fingerprint": "ac45cddae7a296652b8c13842a9508b887ac4b546b82f2da280d369a1d5d0912",
+    "context": {
+      "source": {
+        "graph_version": "g2b-functional-example-v1:inventory=a3a14d73138bfc3179fabb9db06ae359beac3062ea8956a093613e1c97f81241",
+        "fingerprint": "433e63c723aa22b5651ffb1a51e098d07f97759d1cc6a856704add009ada26bf"
+      },
+      "calibration": {
+        "fingerprint": "29f2af7f8a9647038728b84e5ba6d07d3b55e9a4a8a892357fa363d373eebb71",
+        "shape": [
+          64,
+          12
+        ],
+        "dtype": "float64",
+        "role": "calibration"
+      },
+      "source_inventory_fingerprint": "a3a14d73138bfc3179fabb9db06ae359beac3062ea8956a093613e1c97f81241",
+      "graph_version": "g2b-functional-example-v1",
+      "options": {
+        "batch_size": 16,
+        "max_workspace_bytes": 268435456,
+        "max_peak_bytes": 12884901888,
+        "parameter_budget": null,
+        "tensor_byte_budget": null
+      },
+      "rng_fingerprint": "637c498f86f0eb5055813f44d70c5b940584cf74adb717e6b3e6018299c3b0bf",
+      "semantics": "frozen_snapshot_surrogate",
+      "score": "local_output_squared_l2_per_observation",
+      "normalization": "weight_sum",
+      "regularization": "none",
+      "bias_policy": "preserve",
+      "coordinates": "original_operator_input_output"
+    },
+    "selection": {
+      "selected": [
+        {
+          "table_id": "0",
+          "option": {
+            "option_id": "6ca8d2be44ba767f0a7b6fe1b717de1a0b372a5da2163d7180728e82daace442",
+            "ranks": [
+              4
+            ],
+            "score": 0.7721131983631273,
+            "storages": [
+              {
+                "storage_id": "candidate:6ca8d2be44ba767f0a7b6fe1b717de1a0b372a5da2163d7180728e82daace442:7c9e2e9e4445a23539e2765a35ca5eb9c0b01861adeee4107ddf52670bd657e3",
+                "numel": 320,
+                "bytes_per_element": 1,
+                "category": "backing_storage"
+              },
+              {
+                "storage_id": "candidate:6ca8d2be44ba767f0a7b6fe1b717de1a0b372a5da2163d7180728e82daace442:99ae69d6c0fc8c36fe6792dbac49c2b2f4cb690c8be93464c0e278c32ce3c7b1",
+                "numel": 384,
+                "bytes_per_element": 1,
+                "category": "backing_storage"
+              },
+              {
+                "storage_id": "candidate:6ca8d2be44ba767f0a7b6fe1b717de1a0b372a5da2163d7180728e82daace442:f35fe4308bcdfc3228909b99c9209ea0fabc82cf4b594e14f00d47cda5ee0f75",
+                "numel": 80,
+                "bytes_per_element": 1,
+                "category": "backing_storage"
+              }
+            ]
+          }
+        },
+        {
+          "table_id": "2",
+          "option": {
+            "option_id": "0dfbce64bad1e58142f7eeac453136c722233944de1c725ff68eba6004ce7349",
+            "ranks": [
+              1
+            ],
+            "score": 0.1850265552753776,
+            "storages": [
+              {
+                "storage_id": "candidate:0dfbce64bad1e58142f7eeac453136c722233944de1c725ff68eba6004ce7349:48ce0bd8caa18b958187a85ce68dddcf8199c275d6fcaa46fee87bdf90e67294",
+                "numel": 48,
+                "bytes_per_element": 1,
+                "category": "backing_storage"
+              },
+              {
+                "storage_id": "candidate:0dfbce64bad1e58142f7eeac453136c722233944de1c725ff68eba6004ce7349:63e9701ed7966210f35c442a3f5eead5ab5f8fcff31ce4017b4d067b0407a604",
+                "numel": 80,
+                "bytes_per_element": 1,
+                "category": "backing_storage"
+              },
+              {
+                "storage_id": "candidate:0dfbce64bad1e58142f7eeac453136c722233944de1c725ff68eba6004ce7349:7d1d67f86a5f8ad08e152dfc422252b7801e6eda1f5ead85be1cf46cc6bb527a",
+                "numel": 48,
+                "bytes_per_element": 1,
+                "category": "backing_storage"
+              }
+            ]
+          }
+        }
+      ],
+      "total_cost": 960,
+      "objective_score": 0.9571397536385049,
+      "objective": {
+        "name": "frozen_local_output_error_sum",
+        "direction": "minimize",
+        "semantics": "additive_surrogate"
+      },
+      "unit": "bytes",
+      "algorithm": "additive_dynamic_program"
+    },
+    "recipes": [
+      {
+        "table": "0",
+        "recipe": {
+          "recipe": "weighted_svd",
+          "rank": 4,
+          "representation": "two_layers",
+          "policy": {
+            "ridge": 0.0,
+            "rcond": null,
+            "nullspace_policy": "support_only"
+          },
+          "method_spec": null
+        }
+      },
+      {
+        "table": "2",
+        "recipe": {
+          "recipe": "weighted_svd",
+          "rank": 1,
+          "representation": "two_layers",
+          "policy": {
+            "ridge": 0.0,
+            "rcond": null,
+            "nullspace_policy": "support_only"
+          },
+          "method_spec": null
+        }
+      }
+    ]
+  },
+  "execution": {
+    "catalog_fingerprint": "ac45cddae7a296652b8c13842a9508b887ac4b546b82f2da280d369a1d5d0912",
+    "allocation_fingerprint": "ecf06e80dece0522adc8d1b57b462fd0d075228d01eeed93f4b85c181faafcae",
+    "semantics": "frozen_snapshot_surrogate",
+    "local_score_name": "local_output_squared_l2_per_observation",
+    "local_score_sum": 0.9571397536385049,
+    "local_score_is_whole_model_quality": false,
+    "whole_model_evaluation": {
+      "status": "required_not_run"
+    },
+    "unit": "bytes",
+    "budget": 1024,
+    "actual_cost": 960,
+    "actual_tensor_bytes": 960,
+    "actual_parameter_numel": 120,
+    "stored_elements_semantics": "all_backing_storage_elements_including_buffers",
+    "selected": [
+      {
+        "table": "0",
+        "option": "6ca8d2be44ba767f0a7b6fe1b717de1a0b372a5da2163d7180728e82daace442",
+        "common_local_score": 0.7721131983631273,
+        "recipe": "weighted_svd",
+        "observe_forward_calls": 0
+      },
+      {
+        "table": "2",
+        "option": "0dfbce64bad1e58142f7eeac453136c722233944de1c725ff68eba6004ce7349",
+        "common_local_score": 0.1850265552753776,
+        "recipe": "weighted_svd",
+        "observe_forward_calls": 0
+      }
+    ],
+    "export_verification": {
+      "status": "required_not_run"
+    }
+  },
+  "whole_model_evaluation": {
+    "status": "completed",
+    "model": "reloaded TorchScript",
+    "quality_role": "validation",
+    "latency_batch_size": 16
+  },
+  "module_export": {
+    "status": "verified",
+    "format": "torch_save_module",
+    "actual_cost": 960,
+    "unit": "bytes",
+    "budget": 1024,
+    "tensor_bytes": 960,
+    "serialized_stream_bytes": 4872,
+    "parameter_numel": 120
+  },
+  "quality": {
+    "metric": "mse",
+    "value": 0.042378269067439765,
+    "loss": 0.042378269067439765,
+    "samples": 128,
+    "direction": "minimize"
+  },
+  "measurement": {
+    "status": "succeeded",
+    "artifact": {
+      "path": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Comparisons-2026-10-13\\checkout\\docs\\svd_compression\\results\\graph-g2b-2026-10-19\\selected-torchscript.pt",
+      "format": "torchscript",
+      "sha256": "a53d0d41a1b11d18d1639a8dc86f843e070ebccbdeccdf0c4ecb6f784466c0c8",
+      "device": "cpu",
+      "threads": 2
+    },
+    "profile": {
+      "device": "cpu",
+      "format": "torchscript",
+      "threads": 2,
+      "warmup": 5,
+      "repeats": 30,
+      "batch_size": 16,
+      "input_shape": [
+        16,
+        12
+      ],
+      "dtype": "torch.float64",
+      "synchronization": "synchronous CPU",
+      "concurrency": 1,
+      "idle_device_required": true,
+      "units": {
+        "latency_p50_ms": "ms/batch",
+        "latency_p95_ms": "ms/batch",
+        "throughput": "samples/s",
+        "file_bytes": "bytes",
+        "tensor_state_bytes": "bytes",
+        "cpu_rss_before_bytes": "bytes",
+        "cpu_rss_after_bytes": "bytes",
+        "cuda_peak_allocated_bytes": "bytes",
+        "cuda_peak_reserved_bytes": "bytes",
+        "load_seconds": "s"
+      },
+      "runtime": "torch.jit",
+      "hardware": "CPU"
+    },
+    "metrics": {
+      "latency_p50_ms": 0.041550000000000004,
+      "latency_p95_ms": 0.045704999999999996,
+      "throughput": 381224.6842983083,
+      "end_to_end_p50_ms": 0.046799999999999994,
+      "end_to_end_p95_ms": 0.05677999999999997,
+      "file_bytes": 9773,
+      "tensor_state_bytes": 960,
+      "cpu_rss_before_bytes": 411435008,
+      "cpu_rss_after_bytes": 438493184,
+      "cuda_peak_allocated_bytes": null,
+      "cuda_peak_reserved_bytes": null,
+      "cuda_allocated_before_bytes": null,
+      "cuda_reserved_before_bytes": null,
+      "cuda_allocated_increment_bytes": null,
+      "cuda_reserved_increment_bytes": null,
+      "load_seconds": 0.0034355999996478204
+    },
+    "raw_inference_ms": [
+      0.0462,
+      0.048,
+      0.0419,
+      0.0418,
+      0.0426,
+      0.0413,
+      0.0408,
+      0.041,
+      0.0419,
+      0.042,
+      0.0414,
+      0.0408,
+      0.0401,
+      0.0401,
+      0.0396,
+      0.0413,
+      0.0412,
+      0.0414,
+      0.0404,
+      0.0433,
+      0.0428,
+      0.0415,
+      0.0416,
+      0.0425,
+      0.041,
+      0.0416,
+      0.0414,
+      0.0451,
+      0.0429,
+      0.0416
+    ],
+    "raw_end_to_end_ms": [
+      0.0513,
+      0.0473,
+      0.0463,
+      0.0461,
+      0.0477,
+      0.047,
+      0.0718,
+      0.0504,
+      0.0466,
+      0.047,
+      0.0457,
+      0.0483,
+      0.047,
+      0.0469,
+      0.0466,
+      0.0611,
+      0.0484,
+      0.0466,
+      0.0471,
+      0.0449,
+      0.0453,
+      0.046,
+      0.0515,
+      0.0453,
+      0.0467,
+      0.0486,
+      0.0456,
+      0.0458,
+      0.0463,
+      0.0465
+    ],
+    "rss_kind": "process snapshots; not peak and not attributed exclusively to model",
+    "cuda_memory_kind": "process-wide peaks during measurement and increment over premeasurement snapshots; not model-exclusive",
+    "quality_parity_checked": true
+  }
+}

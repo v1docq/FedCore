@@ -1,0 +1,94 @@
+{
+  "frozen_scientific_sources_modified": false,
+  "numerical_status_invariance": {
+    "files": [
+      {
+        "byte_identity": true,
+        "file": "analysis.json",
+        "reference_sha256": "53804b976dc306e01d291db759812d20ebf39cb80ebeeed8ca7cfe4ccbba021b",
+        "replay_sha256": "53804b976dc306e01d291db759812d20ebf39cb80ebeeed8ca7cfe4ccbba021b",
+        "semantic_identity": true
+      },
+      {
+        "byte_identity": true,
+        "file": "blocks.csv",
+        "reference_sha256": "bada52cf0dea15e0f5696fb0bb18d6934dffcfe125840efbba18ad28348365bb",
+        "replay_sha256": "bada52cf0dea15e0f5696fb0bb18d6934dffcfe125840efbba18ad28348365bb",
+        "semantic_identity": true
+      },
+      {
+        "byte_identity": true,
+        "file": "comparisons.csv",
+        "reference_sha256": "b2cb79af356c59be163c12dfdd3f4048e53f8bcd504188485a2a433cacc22ced",
+        "replay_sha256": "b2cb79af356c59be163c12dfdd3f4048e53f8bcd504188485a2a433cacc22ced",
+        "semantic_identity": true
+      }
+    ],
+    "verified_against_existing_analysis": true,
+    "without_reference_basis": "exact same protocol/result/resources bytes and frozen analyzer"
+  },
+  "only_index_field_changes": "profiles[].stages.*.relative_path backslash to slash",
+  "original_files_modified": false,
+  "original_run_sha256": "5e31c144193255d9c1f29d0294aafc5fe7b36899b6e3567d6a9f24ebde313f52",
+  "post_measurement_adapter": true,
+  "protocol_bytes_unchanged": true,
+  "protocol_file_sha256": "86c3c083c6c47bd5ed4a7e86fdc44a9910941e83e927458285da5f9cecd89a26",
+  "references": [
+    {
+      "batch": 1,
+      "device": "cpu",
+      "normalized": "attempts/pilot-cpu-b1/result.json",
+      "original": "attempts\\pilot-cpu-b1\\result.json",
+      "resources_sha256": "bcdc009a726f4b25e34c1a18b15119896c6ca78348d4cd33a923480086b41c60",
+      "result_sha256": "f9c3dbe1ce3d2e40efcf727376c810dc398cd5701e1cb0201df3cc570aa23296",
+      "stage": "pilot"
+    },
+    {
+      "batch": 64,
+      "device": "cpu",
+      "normalized": "attempts/main-cpu-b64/result.json",
+      "original": "attempts\\main-cpu-b64\\result.json",
+      "resources_sha256": "b223d5861dec214ddf716232d66610ebb5d53931e008c1b3a75f39564b57d479",
+      "result_sha256": "7f4d637766fa8d8cda22ddd58c79aa2d626bfb98f672b26272fcd9a0be58dfc1",
+      "stage": "main"
+    },
+    {
+      "batch": 64,
+      "device": "cpu",
+      "normalized": "attempts/pilot-cpu-b64/result.json",
+      "original": "attempts\\pilot-cpu-b64\\result.json",
+      "resources_sha256": "bb9c2190f472acb6aae08f70999629ec4a529b14d8fdb07243614880691b3b1d",
+      "result_sha256": "1e92275d88bf2f052f187af4416fe5fd30ce5f78a3ee10a1b5cafa3492a7417c",
+      "stage": "pilot"
+    },
+    {
+      "batch": 1,
+      "device": "cuda:0",
+      "normalized": "attempts/pilot-cuda0-b1/result.json",
+      "original": "attempts\\pilot-cuda0-b1\\result.json",
+      "resources_sha256": "c80814aa086423ce9fe73a5b9fbeffbe27230730d34aaed883ad08d3ad59fa89",
+      "result_sha256": "5a195cf258b195904c2d36ebfb146239cf9fb8d680ca38996bf8f35ea486b21d",
+      "stage": "pilot"
+    },
+    {
+      "batch": 64,
+      "device": "cuda:0",
+      "normalized": "attempts/main-cuda0-b64/result.json",
+      "original": "attempts\\main-cuda0-b64\\result.json",
+      "resources_sha256": "4ea3369532a1fff8adaf18dec0eba20403ee5b4ec5508f3b61ab78d699a2fd1c",
+      "result_sha256": "5449ed483f4b2b5223b4ba109851d7452045849242c9b57a5d4a0bdb281421eb",
+      "stage": "main"
+    },
+    {
+      "batch": 64,
+      "device": "cuda:0",
+      "normalized": "attempts/pilot-cuda0-b64/result.json",
+      "original": "attempts\\pilot-cuda0-b64\\result.json",
+      "resources_sha256": "22c575cae110f945d7ccb863945d964ded3806c7c3ea3506c25d7c22c0358529",
+      "result_sha256": "8182e64a96584cc3228bbbc8836ff8b9e8e3c55b367693a273ac398dcded9204",
+      "stage": "pilot"
+    }
+  ],
+  "scope": "transport compatibility only; no new timings, training, thresholds, or metric selection",
+  "temporary_view_run_sha256": "413692499500872cb3fa5d2e028f1e201cd4d46311462975d715afcb224d3797"
+}

@@ -1,0 +1,41 @@
+{
+  "status": "launched",
+  "one_repeat_authorized": true,
+  "automatic_retry": false,
+  "source_commit": "3bc0825a9ef1bcd0ac8eb0181b6d5314b57ebb8d",
+  "wheel_sha256": "26fcf56c64c8b68dd6aa00879b16dc926193ed7f4159a01fc3b8e42e069fb913",
+  "protocol_sha256": "81e30bb6853080e2b6fedf966fc19f44cf717a8192988df5c3db552a3dd12010",
+  "parent_packet_sha256": "2c4034abefd3a4301bda6191af8086018e71440b2d588546383f655bda6e98da",
+  "packet_sha256": "a9c0a7b52cbef70533b3aabde75c9e4b7bd8d0dfc802f31d094b50ea6215d2d2",
+  "budget_guard_sha256": "454d8e365b6a4a67a55924ed3de7062214244daa1dfb561a94488c1b3fd7b478",
+  "prior_charged_seconds": 1379.477359779179,
+  "repeat_slot_seconds": 13020,
+  "total_authorized_seconds": 14400,
+  "command": [
+    "/root/fedcore_sparse_cv_20261021/.venv/bin/python",
+    "-m",
+    "fedcore.experiments.cv_sparse_supervision",
+    "--execute",
+    "--data-root",
+    "/root/fedcore_sparse_cv_20261021/data",
+    "--output-root",
+    "/root/fedcore_sparse_cv_20261021/results/pilot-2",
+    "--source-manifest",
+    "/root/fedcore_sparse_cv_20261021/source-manifest.json"
+  ],
+  "environment_overrides": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "HF_DATASETS_OFFLINE": "1",
+    "HF_HUB_OFFLINE": "1",
+    "MKL_NUM_THREADS": "4",
+    "NUMEXPR_NUM_THREADS": "4",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "PYTHONHASHSEED": "0",
+    "TRANSFORMERS_OFFLINE": "1"
+  },
+  "launch_utc": "2026-10-22T14:22:57.335993+00:00",
+  "launch_monotonic": 20235036.60903213,
+  "budget_guard_pid": 1542910
+}

@@ -1,0 +1,1203 @@
+{
+  "frozen_at": 9141.8744323,
+  "rule": "validation only; CE then bytes then canonical ID",
+  "selected": [
+    {
+      "byte_cap": 14824,
+      "job": "oracle-41",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "oracle-41",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "oracle-41",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "oracle-42",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "oracle-42",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 42003,
+      "job": "oracle-42",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 14824,
+      "job": "oracle-43",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 29649,
+      "job": "oracle-43",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 42003,
+      "job": "oracle-43",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-11-E",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-11-E",
+      "model_seed": 41,
+      "solution_id": "970ed89040b2b431639ae6c00c35664ef3b98fc0a58a424fdbc389beee4a369f",
+      "validation_quality": 0.2194294300668207
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-11-E",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-11-R",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-11-R",
+      "model_seed": 41,
+      "solution_id": "a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314",
+      "validation_quality": 0.2202963303686469
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-11-R",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-11-T",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-11-T",
+      "model_seed": 41,
+      "solution_id": "57140bfcd785b1b5394a8f05e53af607bbd305e741d37f58a1305e49c8771025",
+      "validation_quality": 0.2200883818329258
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-11-T",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-22-E",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-22-E",
+      "model_seed": 41,
+      "solution_id": "a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314",
+      "validation_quality": 0.2202963303686469
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-22-E",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-22-R",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-22-R",
+      "model_seed": 41,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.22041389055618768
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-22-R",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-22-T",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-22-T",
+      "model_seed": 41,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.22041389055618768
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-22-T",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-33-E",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-33-E",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-33-E",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-33-R",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-33-R",
+      "model_seed": 41,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.22041389055618768
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-33-R",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-attempts-33-T",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-attempts-33-T",
+      "model_seed": 41,
+      "solution_id": "a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314",
+      "validation_quality": 0.2202963303686469
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-attempts-33-T",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-11-E",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-11-E",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-11-E",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-11-R",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-11-R",
+      "model_seed": 41,
+      "solution_id": "a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314",
+      "validation_quality": 0.2202963303686469
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-11-R",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-11-T",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-11-T",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-11-T",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-22-E",
+      "model_seed": 41,
+      "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874",
+      "validation_quality": 0.22185222206287372
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-22-E",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-22-E",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-22-R",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-22-R",
+      "model_seed": 41,
+      "solution_id": "a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314",
+      "validation_quality": 0.2202963303686469
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-22-R",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-22-T",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-22-T",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-22-T",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-33-E",
+      "model_seed": 41,
+      "solution_id": "8aed38e07f89e24119b001d3b82636b9f5219c656f66d9b57f691118a4b0d359",
+      "validation_quality": 0.22168075659493125
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-33-E",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-33-E",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-33-R",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-33-R",
+      "model_seed": 41,
+      "solution_id": "a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314",
+      "validation_quality": 0.2202963303686469
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-33-R",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-41-time-33-T",
+      "model_seed": 41,
+      "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199",
+      "validation_quality": 0.2211473504634821
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-41-time-33-T",
+      "model_seed": 41,
+      "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23",
+      "validation_quality": 0.21847785042340565
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-41-time-33-T",
+      "model_seed": 41,
+      "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b",
+      "validation_quality": 0.21840153041599578
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-11-E",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-11-E",
+      "model_seed": 42,
+      "solution_id": "9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784",
+      "validation_quality": 0.0284260187724041
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-11-E",
+      "model_seed": 42,
+      "solution_id": "9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784",
+      "validation_quality": 0.0284260187724041
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-11-R",
+      "model_seed": 42,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.031453429629972336
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-11-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-11-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-11-T",
+      "model_seed": 42,
+      "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5",
+      "validation_quality": 0.03043188563983295
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-11-T",
+      "model_seed": 42,
+      "solution_id": "689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597",
+      "validation_quality": 0.027907992005543412
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-11-T",
+      "model_seed": 42,
+      "solution_id": "689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597",
+      "validation_quality": 0.027907992005543412
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-22-E",
+      "model_seed": 42,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.031453429629972336
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-22-E",
+      "model_seed": 42,
+      "solution_id": "9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784",
+      "validation_quality": 0.0284260187724041
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-22-E",
+      "model_seed": 42,
+      "solution_id": "9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784",
+      "validation_quality": 0.0284260187724041
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-22-R",
+      "model_seed": 42,
+      "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5",
+      "validation_quality": 0.03043188563983295
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-22-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-22-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-22-T",
+      "model_seed": 42,
+      "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5",
+      "validation_quality": 0.03043188563983295
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-22-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-22-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-33-E",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-33-E",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-33-E",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-33-R",
+      "model_seed": 42,
+      "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5",
+      "validation_quality": 0.03043188563983295
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-33-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-33-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-attempts-33-T",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-attempts-33-T",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-attempts-33-T",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-11-E",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-11-E",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-11-E",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-11-R",
+      "model_seed": 42,
+      "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5",
+      "validation_quality": 0.03043188563983295
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-11-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-11-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-11-T",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-11-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-11-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-22-E",
+      "model_seed": 42,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.031453429629972336
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-22-E",
+      "model_seed": 42,
+      "solution_id": "45da7851baa1dbb1cade652d994d4d1a9ba2d2b5c6399415ffdcb952168460d4",
+      "validation_quality": 0.027826694584314825
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-22-E",
+      "model_seed": 42,
+      "solution_id": "45da7851baa1dbb1cade652d994d4d1a9ba2d2b5c6399415ffdcb952168460d4",
+      "validation_quality": 0.027826694584314825
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-22-R",
+      "model_seed": 42,
+      "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5",
+      "validation_quality": 0.03043188563983295
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-22-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-22-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-22-T",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-22-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-22-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-33-E",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-33-E",
+      "model_seed": 42,
+      "solution_id": "689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597",
+      "validation_quality": 0.027907992005543412
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-33-E",
+      "model_seed": 42,
+      "solution_id": "689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597",
+      "validation_quality": 0.027907992005543412
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-33-R",
+      "model_seed": 42,
+      "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5",
+      "validation_quality": 0.03043188563983295
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-33-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-33-R",
+      "model_seed": 42,
+      "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50",
+      "validation_quality": 0.029983312573560607
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-42-time-33-T",
+      "model_seed": 42,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.02985290867799891
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-42-time-33-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-42-time-33-T",
+      "model_seed": 42,
+      "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e",
+      "validation_quality": 0.027580674963261165
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-11-E",
+      "model_seed": 43,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.012600407356949337
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-11-E",
+      "model_seed": 43,
+      "solution_id": "9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784",
+      "validation_quality": 0.012549992314694364
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-11-E",
+      "model_seed": 43,
+      "solution_id": "9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784",
+      "validation_quality": 0.012549992314694364
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-11-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-11-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-11-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-11-T",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-11-T",
+      "model_seed": 43,
+      "solution_id": "aea3ffcc2e33540e57ffc7372ed40f16844c37a7027f2746a2b5e52ef68c4439",
+      "validation_quality": 0.011418389213215566
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-11-T",
+      "model_seed": 43,
+      "solution_id": "aea3ffcc2e33540e57ffc7372ed40f16844c37a7027f2746a2b5e52ef68c4439",
+      "validation_quality": 0.011418389213215566
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-22-E",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-22-E",
+      "model_seed": 43,
+      "solution_id": "7428fa38ba4eff3626d9c0b4a81ad002ec4dfb02e0bf65cb7c53dd767b104e26",
+      "validation_quality": 0.011378931066298855
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-22-E",
+      "model_seed": 43,
+      "solution_id": "7428fa38ba4eff3626d9c0b4a81ad002ec4dfb02e0bf65cb7c53dd767b104e26",
+      "validation_quality": 0.011378931066298855
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-22-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-22-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-22-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-22-T",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-22-T",
+      "model_seed": 43,
+      "solution_id": "797e0f57b55ad47607c5f50f9c82b4370d7ebe2af8e4a78ea0855ec27e3b7f2c",
+      "validation_quality": 0.011388002049905999
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-22-T",
+      "model_seed": 43,
+      "solution_id": "797e0f57b55ad47607c5f50f9c82b4370d7ebe2af8e4a78ea0855ec27e3b7f2c",
+      "validation_quality": 0.011388002049905999
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-33-E",
+      "model_seed": 43,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.012600407356949337
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-33-E",
+      "model_seed": 43,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.012600407356949337
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-33-E",
+      "model_seed": 43,
+      "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255",
+      "validation_quality": 0.012600407356949337
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-33-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-33-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-33-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-attempts-33-T",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-attempts-33-T",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-attempts-33-T",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-11-E",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-11-E",
+      "model_seed": 43,
+      "solution_id": "e6185f31b722f21fc949b65f031bc47184f25ecf426fbe6e57652e8ee90f0853",
+      "validation_quality": 0.011461239951803946
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-11-E",
+      "model_seed": 43,
+      "solution_id": "e6185f31b722f21fc949b65f031bc47184f25ecf426fbe6e57652e8ee90f0853",
+      "validation_quality": 0.011461239951803946
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-11-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-11-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-11-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-11-T",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-11-T",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-11-T",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-22-E",
+      "model_seed": 43,
+      "solution_id": "e7bcec9896fa0c9a000fc2dc77db61740833c2c328a6fcd37a43a39d9a008763",
+      "validation_quality": 0.013090458300312902
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-22-E",
+      "model_seed": 43,
+      "solution_id": "b68eface112e2e3b04ea6f337903bbc1325cc452fdb4f582de431762d28ad1fc",
+      "validation_quality": 0.011242271202209544
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-22-E",
+      "model_seed": 43,
+      "solution_id": "b68eface112e2e3b04ea6f337903bbc1325cc452fdb4f582de431762d28ad1fc",
+      "validation_quality": 0.011242271202209544
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-22-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-22-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-22-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-22-T",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-22-T",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-22-T",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-33-E",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-33-E",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-33-E",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-33-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-33-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-33-R",
+      "model_seed": 43,
+      "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157",
+      "validation_quality": 0.013711511914537053
+    },
+    {
+      "byte_cap": 14824,
+      "job": "search-43-time-33-T",
+      "model_seed": 43,
+      "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a",
+      "validation_quality": 0.01252319531163039
+    },
+    {
+      "byte_cap": 29649,
+      "job": "search-43-time-33-T",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    },
+    {
+      "byte_cap": 42003,
+      "job": "search-43-time-33-T",
+      "model_seed": 43,
+      "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d",
+      "validation_quality": 0.011189849890040859
+    }
+  ]
+}

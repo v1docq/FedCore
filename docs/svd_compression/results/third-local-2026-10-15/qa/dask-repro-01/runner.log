@@ -1,0 +1,34 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________________ test_real_runner_fedcore_public_path _____________________
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-SVD-Third-QA-2026-10-15/dask-repro-01/runner-temp/test_real_runner_fedcore_publi0')
+
+    def test_real_runner_fedcore_public_path(tmp_path):
+        candidate = CandidateSpec("fedcore", {"operation": "training", "operation_parameters": {"epochs": 1}})
+        result = ExperimentRunner(bundle(), protocol(), tmp_path / "fedcore").run((candidate,))
+        record = result["candidates"][-1]
+>       assert record["status"] == "succeeded", record
+E       AssertionError: {'cache_hit': False, 'cache_key': '7d3ca37484dafca456d6463c268be46388bc45503085adabab81b359d850cf78', 'candidate_id': '6d468ed43844123d5d01', 'completed_seconds': 25.118909199999962, ...}
+E       assert 'failed' == 'succeeded'
+E         
+E         - succeeded
+E         + failed
+
+tests\petra\test_protocol_runner.py:198: AssertionError
+============================== warnings summary ===============================
+tests/petra/test_protocol_runner.py::test_real_runner_fedcore_public_path
+  C:\Users\user\AppData\Local\Programs\Python\Python310\lib\site-packages\hyperopt\atpe.py:19: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+    import pkg_resources
+
+tests/petra/test_protocol_runner.py::test_real_runner_fedcore_public_path
+tests/petra/test_protocol_runner.py::test_real_runner_fedcore_public_path
+  D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\pkg_resources\__init__.py:3147: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\user\Documents\Codex\FedCore-SVD-Third-QA-2026-10-15\dask-repro-01\runner-junit.xml -
+=========================== short test summary info ===========================
+FAILED tests/petra/test_protocol_runner.py::test_real_runner_fedcore_public_path
+1 failed, 3 warnings in 28.51s

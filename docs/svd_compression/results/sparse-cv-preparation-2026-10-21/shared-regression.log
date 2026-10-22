@@ -1,0 +1,192 @@
+........................................................................ [ 28%]
+.............F.......................................................... [ 56%]
+........................................................................ [ 85%]
+....................................s                                    [100%]
+================================== FAILURES ===================================
+_ test_real_optimizer_reproduction_calls_both_grammar_operators_and_keeps_its_constraints _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001FF0A3A20E0>
+
+    def test_real_optimizer_reproduction_calls_both_grammar_operators_and_keeps_its_constraints(monkeypatch):
+        from fedcore.algorithm.low_rank import grammar_search
+        from fedcore.algorithm.low_rank.grammar_search import GrammarFitness, GrammarSearchConfig
+        from fedcore.interfaces.fedcore_optimizer import FedcoreEvoOptimizer
+        originals = {name: getattr(grammar_search, name) for name in ("mutate_genotype", "crossover_genotypes")}
+        calls = {"mutation": 0, "crossover": 0, "optimise": 0, "reproduction": 0, "extension": 0}
+        instances = []
+        def mutation(*args, **kwargs):
+            calls["mutation"] += 1
+            return originals["mutate_genotype"](*args, **kwargs)
+        def crossover(*args, **kwargs):
+            calls["crossover"] += 1
+            return originals["crossover_genotypes"](*args, **kwargs)
+        original_optimise = FedcoreEvoOptimizer.optimise
+        original_evolve = FedcoreEvoOptimizer._evolve_population
+        original_extend = FedcoreEvoOptimizer._extend_population
+        def optimise(self, *args, **kwargs):
+            calls["optimise"] += 1
+            instances.append(self)
+            return original_optimise(self, *args, **kwargs)
+        def evolve(self, *args, **kwargs):
+            calls["reproduction"] += 1
+            return original_evolve(self, *args, **kwargs)
+        def extend(self, *args, **kwargs):
+            calls["extension"] += 1
+            rules = tuple(self.graph_generation_params.verifier._rules)
+            result = original_extend(self, *args, **kwargs)
+            assert tuple(self.graph_generation_params.verifier._rules) == rules
+            assert len(self.mutation.agent._probs) == len(self.graph_optimizer_params.mutation_types) == 1
+            return result
+        monkeypatch.setattr(grammar_search, "mutate_genotype", mutation)
+        monkeypatch.setattr(grammar_search, "crossover_genotypes", crossover)
+        monkeypatch.setattr(FedcoreEvoOptimizer, "optimise", optimise)
+        monkeypatch.setattr(FedcoreEvoOptimizer, "_evolve_population", evolve)
+        monkeypatch.setattr(FedcoreEvoOptimizer, "_extend_population", extend)
+        space = _fixed_space()
+        initial = tuple(CompressionGenotype((ScopeGene(("b",), choice),)) for choice in space.domains[1].alternatives[:4])
+        def evaluate(workflow):
+            _workflow_oracle(workflow)
+            rank = sum(gene.choice.rank for gene in workflow.genotype.genes)
+            return GrammarFitness(float(rank), 10. / rank)
+        python_state, numpy_state = random.getstate(), np.random.get_state()
+        result = grammar_search.run_grammar_search(space, GrammarSearchConfig(seed=13, population_size=4,
+            generations=2, max_evaluations=12, max_seconds=30), evaluate,
+            fitness_context="independent metadata-only reproduction witness", initial_genotypes=initial)
+        assert result["status"] == "succeeded", result
+        assert calls["optimise"] == 1 and len(instances) == 1
+        assert instances[0].compression_grammar_profile is True
+>       assert all(calls[name] > 0 for name in ("mutation", "crossover", "reproduction", "extension")), calls
+E       AssertionError: {'crossover': 0, 'extension': 3, 'mutation': 0, 'optimise': 1, ...}
+E       assert False
+E        +  where False = all(<generator object test_real_optimizer_reproduction_calls_both_grammar_operators_and_keeps_its_constraints.<locals>.<genexpr> at 0x000001FF08B494D0>)
+
+tests\refactoring\test_compression_grammar_independent.py:874: AssertionError
+---------------------------- Captured stdout call -----------------------------
+2026-10-21 16:55:43,086 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-21 16:55:43,088 - FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+2026-10-21 16:55:43,088 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-21 16:55:43,088 - FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+2026-10-21 16:55:43,934 - FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+2026-10-21 16:55:43,935 - FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+2026-10-21 16:55:43,935 - FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+2026-10-21 16:55:43,935 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-21 16:55:43,935 - FedcoreEvoOptimizer - Generation num: 1 size: 4
+2026-10-21 16:55:43,935 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (4): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=3.000 actual_cost=3.333>']
+2026-10-21 16:55:43,979 - FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+2026-10-21 16:55:43,979 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-21 16:55:43,979 - FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+2026-10-21 16:55:44,842 - FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+2026-10-21 16:55:44,842 - FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+2026-10-21 16:55:44,843 - FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+2026-10-21 16:55:44,843 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-21 16:55:44,843 - ReproductionController - Reproduction achieved pop size 4 using 1 attempt(s) with success rate 1.000
+2026-10-21 16:55:44,843 - FedcoreEvoOptimizer - Successful reproduction
+2026-10-21 16:55:44,843 - RandomAgent - len=4 nonzero=0 
+2026-10-21 16:55:44,843 - RandomAgent - actions/rewards: [('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0)]
+2026-10-21 16:55:44,844 - RandomAgent - exp=[1.] probs=[1.]
+2026-10-21 16:55:44,845 - FedcoreDispatcher - evaluate_population: 4 total, 0 to evaluate, 4 to skip
+2026-10-21 16:55:44,845 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-21 16:55:44,845 - FedcoreDispatcher - _multithread_eval: No individuals to evaluate
+2026-10-21 16:55:44,845 - FedcoreDispatcher - apply_evaluation_results: No evaluation results provided for 0 individuals
+2026-10-21 16:55:44,846 - FedcoreDispatcher - evaluate_population: 0 individuals successfully evaluated
+2026-10-21 16:55:44,846 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-21 16:55:44,847 - FedcoreEvoOptimizer - Generation num: 2 size: 4
+2026-10-21 16:55:44,847 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=4.000 actual_cost=2.500>']
+2026-10-21 16:55:44,847 - FedcoreEvoOptimizer - no improvements for 1 iterations
+2026-10-21 16:55:44,847 - FedcoreEvoOptimizer - spent time: 0.0 min
+2026-10-21 16:55:44,894 - FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+2026-10-21 16:55:44,895 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-21 16:55:44,895 - FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+2026-10-21 16:55:45,825 - FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+2026-10-21 16:55:45,826 - FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+2026-10-21 16:55:45,826 - FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+2026-10-21 16:55:45,826 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-21 16:55:45,826 - ReproductionController - Reproduction achieved pop size 4 using 1 attempt(s) with success rate 1.000
+2026-10-21 16:55:45,826 - FedcoreEvoOptimizer - Successful reproduction
+2026-10-21 16:55:45,826 - RandomAgent - len=4 nonzero=0 
+2026-10-21 16:55:45,826 - RandomAgent - actions/rewards: [('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0)]
+2026-10-21 16:55:45,827 - RandomAgent - exp=[1.] probs=[1.]
+2026-10-21 16:55:45,827 - FedcoreDispatcher - evaluate_population: 4 total, 0 to evaluate, 4 to skip
+2026-10-21 16:55:45,827 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-21 16:55:45,827 - FedcoreDispatcher - _multithread_eval: No individuals to evaluate
+2026-10-21 16:55:45,827 - FedcoreDispatcher - apply_evaluation_results: No evaluation results provided for 0 individuals
+2026-10-21 16:55:45,827 - FedcoreDispatcher - evaluate_population: 0 individuals successfully evaluated
+2026-10-21 16:55:45,827 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-21 16:55:45,829 - FedcoreEvoOptimizer - Generation num: 3 size: 4
+2026-10-21 16:55:45,829 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=4.000 actual_cost=2.500>']
+2026-10-21 16:55:45,829 - FedcoreEvoOptimizer - no improvements for 2 iterations
+2026-10-21 16:55:45,829 - FedcoreEvoOptimizer - spent time: 0.0 min
+2026-10-21 16:55:45,829 - OptimisationTimer - Composition time: 0.046 min
+2026-10-21 16:55:45,830 - FedcoreEvoOptimizer - Generation num: 4 size: 5
+2026-10-21 16:55:45,830 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=4.000 actual_cost=2.500>']
+2026-10-21 16:55:45,830 - FedcoreEvoOptimizer - no improvements for 3 iterations
+2026-10-21 16:55:45,831 - FedcoreEvoOptimizer - spent time: 0.0 min
+------------------------------ Captured log call ------------------------------
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+INFO     root:fedcore_dispatcher.py:242 FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+INFO     root:fedcore_dispatcher.py:54 FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+INFO     root:fedcore_dispatcher.py:152 FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+INFO     root:fedcore_dispatcher.py:222 FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+INFO     root:fedcore_dispatcher.py:249 FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+Level 45 root:log.py:170 FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+INFO     root:fedcore_optimizer.py:211 FedcoreEvoOptimizer - Generation num: 1 size: 4
+INFO     root:fedcore_optimizer.py:212 FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (4): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=3.000 actual_cost=3.333>']
+INFO     root:fedcore_dispatcher.py:242 FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+INFO     root:fedcore_dispatcher.py:54 FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+INFO     root:fedcore_dispatcher.py:152 FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+INFO     root:fedcore_dispatcher.py:222 FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+INFO     root:fedcore_dispatcher.py:249 FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+Level 45 root:log.py:170 FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+INFO     root:reproduction.py:119 ReproductionController - Reproduction achieved pop size 4 using 1 attempt(s) with success rate 1.000
+Level 45 root:log.py:170 FedcoreEvoOptimizer - Successful reproduction
+INFO     root:operator_agent.py:63 RandomAgent - len=4 nonzero=0 
+INFO     root:operator_agent.py:64 RandomAgent - actions/rewards: [('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0)]
+INFO     root:operator_agent.py:71 RandomAgent - exp=[1.] probs=[1.]
+INFO     root:fedcore_dispatcher.py:242 FedcoreDispatcher - evaluate_population: 4 total, 0 to evaluate, 4 to skip
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+WARNING  root:fedcore_dispatcher.py:51 FedcoreDispatcher - _multithread_eval: No individuals to evaluate
+WARNING  root:fedcore_dispatcher.py:203 FedcoreDispatcher - apply_evaluation_results: No evaluation results provided for 0 individuals
+INFO     root:fedcore_dispatcher.py:249 FedcoreDispatcher - evaluate_population: 0 individuals successfully evaluated
+Level 45 root:log.py:170 FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+INFO     root:fedcore_optimizer.py:211 FedcoreEvoOptimizer - Generation num: 2 size: 4
+INFO     root:fedcore_optimizer.py:212 FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=4.000 actual_cost=2.500>']
+INFO     root:fedcore_optimizer.py:214 FedcoreEvoOptimizer - no improvements for 1 iterations
+INFO     root:fedcore_optimizer.py:215 FedcoreEvoOptimizer - spent time: 0.0 min
+INFO     root:fedcore_dispatcher.py:242 FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+INFO     root:fedcore_dispatcher.py:54 FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+INFO     root:fedcore_dispatcher.py:152 FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+INFO     root:fedcore_dispatcher.py:222 FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+INFO     root:fedcore_dispatcher.py:249 FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+Level 45 root:log.py:170 FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+INFO     root:reproduction.py:119 ReproductionController - Reproduction achieved pop size 4 using 1 attempt(s) with success rate 1.000
+Level 45 root:log.py:170 FedcoreEvoOptimizer - Successful reproduction
+INFO     root:operator_agent.py:63 RandomAgent - len=4 nonzero=0 
+INFO     root:operator_agent.py:64 RandomAgent - actions/rewards: [('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0)]
+INFO     root:operator_agent.py:71 RandomAgent - exp=[1.] probs=[1.]
+INFO     root:fedcore_dispatcher.py:242 FedcoreDispatcher - evaluate_population: 4 total, 0 to evaluate, 4 to skip
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+WARNING  root:fedcore_dispatcher.py:51 FedcoreDispatcher - _multithread_eval: No individuals to evaluate
+WARNING  root:fedcore_dispatcher.py:203 FedcoreDispatcher - apply_evaluation_results: No evaluation results provided for 0 individuals
+INFO     root:fedcore_dispatcher.py:249 FedcoreDispatcher - evaluate_population: 0 individuals successfully evaluated
+Level 45 root:log.py:170 FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+INFO     root:fedcore_optimizer.py:211 FedcoreEvoOptimizer - Generation num: 3 size: 4
+INFO     root:fedcore_optimizer.py:212 FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=4.000 actual_cost=2.500>']
+INFO     root:fedcore_optimizer.py:214 FedcoreEvoOptimizer - no improvements for 2 iterations
+INFO     root:fedcore_optimizer.py:215 FedcoreEvoOptimizer - spent time: 0.0 min
+INFO     root:timer.py:77 OptimisationTimer - Composition time: 0.046 min
+INFO     root:fedcore_optimizer.py:211 FedcoreEvoOptimizer - Generation num: 4 size: 5
+INFO     root:fedcore_optimizer.py:212 FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=1.000 actual_cost=10.000>', '<heldout_quality=4.000 actual_cost=2.500>']
+INFO     root:fedcore_optimizer.py:214 FedcoreEvoOptimizer - no improvements for 3 iterations
+INFO     root:fedcore_optimizer.py:215 FedcoreEvoOptimizer - spent time: 0.0 min
+============================== warnings summary ===============================
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\Lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\Lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_compression_grammar_independent.py::test_real_optimizer_reproduction_calls_both_grammar_operators_and_keeps_its_constraints
+1 failed, 251 passed, 1 skipped, 1 warning in 41.76s

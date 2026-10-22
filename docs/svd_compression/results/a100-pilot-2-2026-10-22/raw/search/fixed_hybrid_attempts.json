@@ -1,0 +1,135 @@
+[
+  {
+    "attempt_id": 1,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "7da6096607f30b8f9248f3047d953e5f84806bba8a3fe5170fb83a264fd6c1dc",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 8.58306884765625e-06,
+      "file_bytes": 25789358,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "7392b70316c5f86f409ef57b6bda059c1c1acbc7b5a54d5c77cc1f8857dcd590",
+      "path": "checkpoints/short_fixed_hybrid_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.pt",
+      "phase": "short",
+      "sha256": "b6fcf1346754e664afc648b5cd9e0bfb4e8ed00d497b9634ab44a18383559b5f",
+      "solution_id": "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+      "tensor_bytes": 25733576
+    },
+    "checkpoint_file_bytes": 25789358,
+    "completed_within_deadline": true,
+    "correct": 4653,
+    "cost_ratio": 0.5752524097334651,
+    "cross_entropy": 0.25658166514635067,
+    "deadline": 20238402.309998363,
+    "ended_at": 20236912.840847787,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_fixed_hybrid_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.npz",
+    "prediction_sha256": "5aa7cfe9dc3031c12a896cbe8d7c9d72b18e91180e94e3de78a184e6ea466a2d",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "fixed_hybrid",
+    "solution_id": "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236909.56135412,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 25733576,
+    "top1": 0.9306,
+    "wall_seconds": 3.2794936671853065,
+    "workflow": "workflows/fixed_hybrid/62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.json",
+    "workflow_fingerprint": "315d293c51b1ba6a131fe1e85620e034a2a3a25551bbb6690b80837d0cb09ccf"
+  }
+]

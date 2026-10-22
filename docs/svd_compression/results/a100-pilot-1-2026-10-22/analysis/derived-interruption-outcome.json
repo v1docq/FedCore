@@ -1,0 +1,9 @@
+{
+  "failure": null,
+  "peak_allocated_bytes": 1316240896,
+  "peak_reserved_bytes": 1816133632,
+  "protocol_sha256": "81e30bb6853080e2b6fedf966fc19f44cf717a8192988df5c3db552a3dd12010",
+  "status": "supervisor_interrupted_baseline",
+  "stop_reason": "external_gpu_contention",
+  "wall_seconds": 1379.477359779179
+}

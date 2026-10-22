@@ -10,7 +10,7 @@ import random
 import shutil
 import subprocess
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 
 import torch
@@ -18,7 +18,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from fedcore.tools.atomic_json import write_atomic_json
 
-from .measurement import file_hash, load_artifact, _call_loaded, measure_artifact
+from .measurement import file_hash, load_artifact, _call_loaded, measure_artifact, tensor_state_bytes
 from .protocol import (ROLES, CandidateSpec, ExperimentBundle, ExperimentProtocol,
                        ProtocolError, TensorSplit, canonical_json, json_value,
                        role_content_identity, stable_hash, tensor_hash, validate_roles)
@@ -160,28 +160,138 @@ def quality_metrics(model, split, task, batch_size=16, device="cpu"):
     return _quality(_predictions(model, split, batch_size, device), split, task)
 
 
-def train_model(model, split, task, *, epochs, batch_size, learning_rate, device="cpu", seed=0):
+def train_model(model, split, task, *, epochs, batch_size, learning_rate, device="cpu", seed=0,
+                optimizer_validator=None, teacher=None, feature_path=None,
+                batch_objective=None, max_updates=None, drop_last=False):
     """Fixed-budget Adam training; validation and test cannot stop it."""
+    started = time.perf_counter()
     if type(epochs) is not int or epochs < 0:
         raise ProtocolError("Training epochs must be nonnegative")
+    if type(batch_size) is not int or batch_size <= 0:
+        raise ProtocolError("Training batch_size must be a positive integer")
+    if type(drop_last) is not bool:
+        raise ProtocolError("drop_last must be boolean")
+    epoch_batches = len(split.x) // batch_size if drop_last else math.ceil(len(split.x) / batch_size)
+    if epochs and epoch_batches == 0:
+        raise ProtocolError("Training requires at least one batch per epoch")
+    if max_updates is not None and (type(max_updates) is not int or max_updates <= 0
+            or max_updates > epochs * epoch_batches):
+        raise ProtocolError("max_updates must fit the declared training epoch budget")
+    if batch_objective is not None and (not callable(batch_objective)
+            or not hasattr(batch_objective, '__enter__') or not hasattr(batch_objective, '__exit__')):
+        raise ProtocolError("A custom batch objective must own a context-managed recovery boundary")
+    if batch_objective is not None and (teacher is not None or feature_path is not None):
+        raise ProtocolError("Custom recovery and GFM objectives require separate training stages")
+    for hook in ('before_step', 'after_step'):
+        if batch_objective is not None and hasattr(batch_objective, hook) and not callable(getattr(batch_objective, hook)):
+            raise ProtocolError('Training transition hooks must be callable')
+    split.verify_integrity()
     model.to(device)
     loader = DataLoader(TensorDataset(split.x, split.y), batch_size=batch_size, shuffle=True,
-                        generator=torch.Generator().manual_seed(seed))
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate) if epochs else None
+                        generator=torch.Generator().manual_seed(seed), drop_last=drop_last)
+    trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
+    initial_trainable = sum(parameter.numel() for parameter in trainable)
+    if epochs and not trainable:
+        raise ProtocolError('Training requires at least one live trainable Parameter')
+    optimizer = torch.optim.Adam(trainable, lr=learning_rate) if epochs else None
+    if optimizer is not None and optimizer_validator is not None:
+        optimizer_validator(optimizer)
+    if (teacher is None) != (feature_path is None):
+        raise ProtocolError('GFM requires both a fixed teacher and an explicit feature path')
+    if teacher is not None:
+        if teacher is model or not isinstance(feature_path, str):
+            raise ProtocolError('GFM teacher must be independent with an explicit late feature point')
+        teacher = copy.deepcopy(teacher).to(device).eval().requires_grad_(False)
     history = []
+    resource_history = []
     model.train()
-    for _ in range(epochs):
-        for x, y in loader:
-            optimizer.zero_grad()
-            loss = task_loss(model(x.to(device)), y.to(device), task)
-            if not torch.isfinite(loss):
-                raise ProtocolError("Nonfinite training loss")
-            loss.backward()
-            optimizer.step()
-            history.append(float(loss.detach()))
+    with batch_objective if batch_objective is not None else nullcontext():
+        for _ in range(epochs):
+            for x, y in loader:
+                if max_updates is not None and len(history) >= max_updates:
+                    break
+                optimizer.zero_grad()
+                if batch_objective is not None:
+                    loss = batch_objective(model, x.to(device), y.to(device))
+                elif teacher is None:
+                    loss = task_loss(model(x.to(device)), y.to(device), task)
+                else:
+                    student_features, teacher_features = [], []
+                    def student_hook(_layer, _args, output):
+                        student_features.append(output)
+                    def teacher_hook(_layer, _args, output):
+                        teacher_features.append(output.detach())
+                    handles = [model.get_submodule(feature_path).register_forward_hook(student_hook),
+                               teacher.get_submodule(feature_path).register_forward_hook(teacher_hook)]
+                    try:
+                        model(x.to(device))
+                        with torch.no_grad():
+                            teacher(x.to(device))
+                        if (len(student_features)!=1 or len(teacher_features)!=1
+                                or not isinstance(student_features[0],torch.Tensor)
+                                or student_features[0].shape!=teacher_features[0].shape):
+                            raise ProtocolError('GFM requires one compatible tensor feature per model')
+                        loss = nn.functional.mse_loss(student_features[0],teacher_features[0])
+                    finally:
+                        for handle in handles:
+                            handle.remove()
+                if not isinstance(loss, torch.Tensor) or loss.ndim != 0 or not torch.isfinite(loss):
+                    raise ProtocolError("Training objective must return one finite scalar tensor")
+                loss.backward()
+                if batch_objective is not None and hasattr(batch_objective, 'before_step'):
+                    batch_objective.before_step(model, optimizer)
+                optimizer.step()
+                if batch_objective is not None:
+                    storages = {}
+                    for state in optimizer.state.values():
+                        for value in state.values():
+                            if isinstance(value,torch.Tensor):
+                                storage = value.untyped_storage()
+                                storages[(str(value.device),storage.data_ptr(),storage.nbytes())] = storage.nbytes()
+                    resource_history.append({'optimizer_state_bytes':sum(storages.values()),
+                        'gradient_tensor_bytes':sum(p.grad.numel()*p.grad.element_size()
+                            for p in model.parameters() if p.grad is not None),
+                        'trainable_parameters':sum(p.numel() for p in model.parameters() if p.requires_grad)})
+                if batch_objective is not None and hasattr(batch_objective, 'after_step'):
+                    batch_objective.after_step(model, optimizer)
+                    live = {id(p) for p in model.parameters() if p.requires_grad}
+                    owned = [id(p) for group in optimizer.param_groups for p in group['params']]
+                    if set(owned) != live or len(owned) != len(set(owned)) or any(id(p) not in live for p in optimizer.state):
+                        raise ProtocolError('Structural transition left stale or duplicate optimizer parameters')
+                history.append(float(loss.detach()))
+            if max_updates is not None and len(history) >= max_updates:
+                break
     model.eval()
-    return {"training_steps": len(history), "epochs": epochs, "train_loss": history,
-            "optimizer": "Adam", "learning_rate": learning_rate, "training_role": "train"}
+    trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
+    optimizer_storages = {}
+    if optimizer is not None:
+        for state in optimizer.state.values():
+            for value in state.values():
+                if isinstance(value,torch.Tensor):
+                    storage = value.untyped_storage()
+                    optimizer_storages[(str(value.device),storage.data_ptr(),storage.nbytes())] = storage.nbytes()
+    evidence = {"training_steps": len(history), "epochs": epochs, "train_loss": history,
+            "optimizer": "Adam", "learning_rate": learning_rate, "training_role": "train",
+            "training_seconds": time.perf_counter()-started,
+            "trainable_parameters": sum(parameter.numel() for parameter in trainable),
+            "initial_trainable_parameters": initial_trainable,
+            "model_tensor_bytes": tensor_state_bytes(model),
+            "optimizer_state_bytes": sum(optimizer_storages.values()),
+            "gradient_tensor_bytes": sum(p.grad.numel()*p.grad.element_size() for p in trainable if p.grad is not None)}
+    if teacher is not None:
+        evidence.update(objective='GFM_late_feature_mse',teacher_checkpoint=model_state_hash(teacher),
+                        teacher_feature_map={'teacher':feature_path,'student':feature_path})
+    if batch_objective is not None:
+        evidence['recovery_objective'] = json_value(batch_objective.evidence)
+        evidence['max_updates'] = max_updates
+        evidence['seed'] = seed
+        evidence['batch_size'] = batch_size
+        evidence['drop_last'] = drop_last
+        evidence['training_data'] = split.manifest()
+        evidence['step_resource_history'] = resource_history
+        evidence['optimizer_state_bytes_peak'] = max((row['optimizer_state_bytes'] for row in resource_history),default=0)
+        evidence['gradient_tensor_bytes_peak'] = max((row['gradient_tensor_bytes'] for row in resource_history),default=0)
+    return evidence
 
 
 def _compression_input(model, bundle, protocol):
@@ -260,8 +370,41 @@ def _materialize_decomposed(model):
 
 def apply_candidate(model, bundle, protocol, candidate):
     """Execute a declared operation on an independent copy, never a no-op stub."""
+    from fedcore.algorithm.low_rank.topology import inspect_topology
+    from fedcore.algorithm.pruning.sparse.specs import reject_method
+    reject_method(candidate.method)
+    if inspect_topology(model).storage_aliases:
+        raise UnsupportedOperation("Candidate copying does not support shared storage views")
+    from fedcore.algorithm.pruning.sparse.checkpoint import validate_sparse_storage
+    try:
+        validate_sparse_storage(model)
+    except ValueError as error:
+        raise UnsupportedOperation(str(error)) from error
     model = copy.deepcopy(model)
     method, parameters = candidate.method, json_value(candidate.parameters)
+    if method in ('hassle_free', 'losparse', 'sola', 'flexigpt', 'prunenet', 'moe_i2'):
+        from fedcore.algorithm.pruning.sparse.execution import parse_sparse_spec, transform_sparse
+        if set(parameters) - {'spec', 'target_paths'} or 'spec' not in parameters:
+            raise ProtocolError('Sparse candidates require explicit spec and optional target_paths')
+        spec = parse_sparse_spec(method, parameters['spec'])
+        options = {}
+        if method == 'losparse':
+            from fedcore.algorithm.pruning.sparse.linear import LoSparseTrainingCallback
+            def training_executor(graph, modules, specification):
+                samples = len(bundle.train.x)
+                steps_per_epoch = (samples + protocol.batch_size - 1) // protocol.batch_size
+                if specification.total_steps % steps_per_epoch:
+                    raise ProtocolError('LoSparse total_steps must equal an integer number of training epochs')
+                callback = LoSparseTrainingCallback(modules,
+                    lambda m, x, y: task_loss(m(x), y, bundle.task))
+                train_model(graph, bundle.train, bundle.task,
+                    epochs=specification.total_steps // steps_per_epoch,
+                    batch_size=protocol.batch_size, learning_rate=protocol.learning_rate,
+                    device=protocol.device, seed=protocol.seed, batch_objective=callback)
+            options['train'] = training_executor
+        result = transform_sparse(model, method, spec, calibration=bundle.calibration.x,
+            target_paths=parameters.get('target_paths'), **options)
+        return result.model, {'implementation': 'FedCore sparse profile interpreter', **result.evidence}
     if method == "chain":
         steps = []
         for step in candidate.chain:
@@ -335,10 +478,113 @@ def apply_candidate(model, bundle, protocol, candidate):
         return model, {"implementation": "FedCore BasePruner dependency graph + Torch-Pruning step", "pruning_ratio": ratio,
                        "parameters_before": before, "parameters_after": after,
                        "representation": "structurally removed channels; decomposed inputs materialized first", **evidence}
+    named_methods = ('asvd','fwsvd','afm','bolaco','flar_svd','drone','svdllm_v1',
+        'svdllm_v2','svdllm_v5','mixed_rank','basis_sharing','groupreduce','eora',
+        'espace','pela','laser','ctr_mlp_afm','flat_vo','modegpt_vo','flat_mlp','modegpt_mlp','flat_qk','modegpt_qk',
+        'ars','dobi_svd','rankdyna')
+    if method == 'ctr_afm':
+        raise UnsupportedOperation('CTR fields require the explicit CTRFieldGraph public API; TensorSplit PETRA is not a field-dictionary protocol')
+    if method in named_methods:
+        from fedcore.algorithm.low_rank.method_specs import (parse_method, SVDLLMV5,
+            Bolaco, FWSVD, ESPACE, PELA, LASER, CTRMLPAFM, ARS, DobiSVD, RankDyna)
+        from fedcore.algorithm.low_rank.method_execution import transform_method
+        allowed = {'method_options','rank','rank_ratio','parameter_fraction','ranks',
+            'target_paths','parameter_budget','tensor_byte_budget','max_workspace_bytes','max_peak_bytes',
+            'finetune_epochs','gfm_feature_path','group_ids','base_candidate'}
+        if set(parameters)-allowed:
+            raise ProtocolError('Unknown named-method parameters')
+        if protocol.device!='cpu':
+            raise UnsupportedOperation('Named-method profiles require CPU')
+        spec = parse_method(method, parameters.get('method_options'))
+        if type(spec) in (ARS,DobiSVD,RankDyna):
+            expected_loss = {'classification':'cross_entropy','regression':'mse'}.get(bundle.task)
+            if expected_loss is None or spec.loss != expected_loss:
+                raise ProtocolError('P4 PETRA supports explicit regression MSE or classification cross-entropy; causal label shifting requires a separate profile')
+        options = {key:value for key,value in parameters.items() if key not in
+                   {'method_options','finetune_epochs','gfm_feature_path','group_ids','base_candidate'}}
+        base_evidence = None
+        if method=='eora':
+            base_payload=parameters.get('base_candidate')
+            if not isinstance(base_payload,dict) or base_payload.get('method')!='pruning':
+                raise ProtocolError('First EoRA PETRA profile requires an explicit pruning base_candidate')
+            base_candidate=CandidateSpec('pruning',base_payload.get('parameters',{}))
+            options['base_model'],base_evidence=apply_candidate(model,bundle,protocol,base_candidate)
+        elif 'base_candidate' in parameters:
+            raise ProtocolError('base_candidate is only valid for EoRA')
+        if type(spec) in (FWSVD, ESPACE):
+            options['labels']=bundle.calibration.y
+        if type(spec) is Bolaco:
+            # Explicit group IDs, never silently inferred from task labels.
+            groups = parameters.get('group_ids')
+            if groups is None:
+                raise ProtocolError('Bolaco requires explicit calibration group_ids')
+            options['group_labels']=torch.tensor(groups,dtype=torch.long)
+        if type(spec) is SVDLLMV5:
+            if parameters.get('finetune_epochs',0)!=0 or 'gfm_feature_path' in parameters:
+                raise ProtocolError('v5 stage budgets are distinct from ordinary fine-tuning/GFM')
+            def recover(current, side, epochs, stage):
+                return train_model(current,bundle.train,bundle.task,epochs=epochs,
+                    batch_size=protocol.batch_size,learning_rate=protocol.learning_rate,
+                    device=protocol.device,seed=protocol.seed,
+                    optimizer_validator=stage.validate_optimizer)
+            options['recovery_executor']=recover
+        fixed_recovery = type(spec) in (PELA,ARS,DobiSVD,RankDyna) or (type(spec) in (ESPACE,CTRMLPAFM) and spec.updates > 0)
+        projection_stages = []
+        if fixed_recovery:
+            if parameters.get('finetune_epochs',0) != 0 or 'gfm_feature_path' in parameters:
+                raise ProtocolError('Fixed-update recovery and ordinary fine-tuning/GFM require separate candidates')
+            def recover_projection(current, stage, updates, objective):
+                epochs = math.ceil(updates / math.ceil(len(bundle.train.x) / protocol.batch_size))
+                evidence = train_model(current,bundle.train,bundle.task,epochs=epochs,
+                    batch_size=protocol.batch_size,learning_rate=protocol.learning_rate,
+                    device=protocol.device,seed=protocol.seed,batch_objective=objective,
+                    max_updates=updates)
+                evidence = dict(evidence, updates=evidence['training_steps'], stage=stage)
+                projection_stages.append(evidence)
+                return evidence
+            options['recovery_executor'] = recover_projection
+        transformed = transform_method(model,bundle.calibration.x,spec,
+                                       batch_size=protocol.batch_size,**options)
+        result=transformed.model
+        training={'training_steps':0,'training_role':'train'}
+        if fixed_recovery:
+            training.update(training_steps=sum(stage['training_steps'] for stage in projection_stages),
+                            recovery_stages=projection_stages)
+        if type(spec) is not SVDLLMV5 and not fixed_recovery:
+            training=train_model(result,bundle.train,bundle.task,
+                epochs=parameters.get('finetune_epochs',0 if type(spec) is LASER else protocol.finetune_epochs),
+                batch_size=protocol.batch_size,learning_rate=protocol.learning_rate,
+                device=protocol.device,seed=protocol.seed,
+                teacher=model if 'gfm_feature_path' in parameters else None,
+                feature_path=parameters.get('gfm_feature_path'))
+        return result,{'implementation':'FedCore shared named-method interpreter',
+                       'method_transform':transformed.evidence,'base_candidate':base_evidence,**training}
+    if method == "weighted_svd":
+        allowed = {"rank", "rank_ratio", "parameter_fraction", "target_paths", "ridge", "rcond",
+                   "nullspace_policy", "max_workspace_bytes", "max_peak_bytes", "finetune_epochs"}
+        if set(parameters) - allowed:
+            raise ProtocolError("Unknown weighted SVD parameters")
+        if protocol.device != "cpu":
+            raise UnsupportedOperation("The first weighted SVD profile requires CPU")
+        from fedcore.algorithm.low_rank.execution import transform_weighted
+        from fedcore.algorithm.low_rank.plans import MetricPolicy
+        options = {key: value for key, value in parameters.items()
+                   if key not in {"ridge", "rcond", "nullspace_policy", "finetune_epochs"}}
+        result = transform_weighted(model, bundle.calibration.x,
+            policy=MetricPolicy(parameters.get("ridge", 0.0), parameters.get("rcond"),
+                                parameters.get("nullspace_policy", "support_only")),
+            batch_size=protocol.batch_size, **options)
+        model = result.model
+        training = train_model(model, bundle.train, bundle.task,
+            epochs=parameters.get("finetune_epochs", protocol.finetune_epochs),
+            batch_size=protocol.batch_size, learning_rate=protocol.learning_rate,
+            device=protocol.device, seed=protocol.seed)
+        return model, {"implementation": "FedCore shared weighted transform interpreter",
+                       "weighted_transform": result.evidence, **training}
     if method == "svd":
-        if set(parameters) - {"threshold", "strategy", "decomposer", "finetune_epochs", "rank", "rank_ratio"}:
+        if set(parameters) - {"threshold", "strategy", "decomposer", "finetune_epochs", "rank", "rank_ratio", "ranks", "target_paths"}:
             raise ProtocolError("Unknown SVD parameters")
-        if sum(key in parameters for key in ("rank", "rank_ratio", "threshold")) > 1:
+        if sum(key in parameters for key in ("rank", "rank_ratio", "threshold", "ranks")) > 1:
             raise ProtocolError("Choose exactly one explicit rank, rank_ratio or threshold policy")
         if "rank" in parameters and (type(parameters["rank"]) is not int or parameters["rank"] < 1):
             raise ProtocolError("Explicit SVD rank must be positive integer")
@@ -347,24 +593,47 @@ def apply_candidate(model, bundle, protocol, candidate):
         from fedcore.algorithm.low_rank.svd_tools import decompose_module
         from fedcore.algorithm.low_rank.rank_pruning import rank_threshold_pruning_in_place
         from fedcore.models.network_impl.decomposed_layers import IDecomposed
-        model = decompose_module(model, decomposer=parameters.get("decomposer", "svd"), compose_mode="two_layers")
-        layers = [layer for layer in model.modules() if isinstance(layer, IDecomposed)]
+        from fedcore.algorithm.low_rank.topology import module_paths
+        selected = parameters.get("target_paths")
+        explicit_ranks = parameters.get("ranks")
+        if explicit_ranks is not None and (not isinstance(explicit_ranks, dict) or selected is None
+                or set(explicit_ranks) != set(selected)
+                or any(type(value) is not int or value < 1 for value in explicit_ranks.values())):
+            raise ProtocolError("ranks must map every explicit target path to a positive integer")
+        if explicit_ranks is not None:
+            original_paths, alias_ranks = module_paths(model), {}
+            for path, rank in explicit_ranks.items():
+                if path in original_paths:
+                    identity = id(original_paths[path])
+                    if identity in alias_ranks and alias_ranks[identity] != rank:
+                        raise ProtocolError("Aliased module paths require the same explicit rank")
+                    alias_ranks[identity] = rank
+        model = decompose_module(model, decomposer=parameters.get("decomposer", "svd"),
+                                 compose_mode="two_layers", target_paths=selected)
+        targets, seen_targets = [], set()
+        for path, layer in module_paths(model).items():
+            if (isinstance(layer, IDecomposed) and (selected is None or path in selected)
+                    and id(layer) not in seen_targets):
+                targets.append((path, layer))
+                seen_targets.add(id(layer))
+        layers = [layer for _, layer in targets]
         if not layers:
             raise UnsupportedOperation("No supported layer was decomposed")
         ranks = []
-        for layer in layers:
-            if "rank" in parameters or "rank_ratio" in parameters:
+        for path, layer in targets:
+            if "rank" in parameters or "rank_ratio" in parameters or explicit_ranks is not None:
                 u, s, vh = layer.canonicalize()
-                rank = parameters.get("rank", max(1, int(s.shape[-1] * parameters.get("rank_ratio", 1))))
+                rank = (explicit_ranks[path] if explicit_ranks is not None else
+                        parameters.get("rank", max(1, int(s.shape[-1] * parameters.get("rank_ratio", 1)))))
                 if rank > s.shape[-1]:
                     raise ProtocolError("Explicit rank exceeds a layer's actual matrix rank bound")
                 layer.set_U_S_Vh(u[..., :rank], s[..., :rank], vh[..., :rank, :])
-                layer.rank_pruning_info = {"method": "operator_svd", "strategy": "explicit_rank" if "rank" in parameters else "rank_ratio",
+                layer.rank_pruning_info = {"method": "operator_svd", "strategy": "explicit_rank" if "rank" in parameters or explicit_ranks is not None else "rank_ratio",
                                            "rank": rank, "rank_bound": s.shape[-1]}
             else:
                 rank_threshold_pruning_in_place(layer, threshold=parameters.get("threshold", 0.8),
                                                  strategy=parameters.get("strategy", "explained_variance"), round_to_times=1)
-            ranks.append(dict(layer.rank_pruning_info))
+            ranks.append(dict(layer.rank_pruning_info, path=path))
         evidence = train_model(model, bundle.train, bundle.task,
                                epochs=parameters.get("finetune_epochs", protocol.finetune_epochs),
                                batch_size=protocol.batch_size, learning_rate=protocol.learning_rate,
@@ -421,6 +690,9 @@ class ExperimentRunner:
         self.cache_dir = Path(cache_dir).resolve() if cache_dir else self.output_dir / "cache"
         self.use_cache = use_cache
         self.baseline_checkpoint = baseline_checkpoint
+        from fedcore.algorithm.low_rank.topology import inspect_topology
+        if inspect_topology(bundle.original_model).storage_aliases:
+            raise UnsupportedOperation("Experiment copying does not support shared storage views")
         self.initial_model = copy.deepcopy(bundle.original_model).cpu()
         self.environment = environment_manifest()
         self.manifest = {"version": 1, "status": "created", "protocol": protocol.to_dict(),

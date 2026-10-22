@@ -1,0 +1,20 @@
+{
+  "cumulative100repeat_compute_forecast_seconds": 4288.269582637895,
+  "new_preflight_reserve_seconds": 300.0,
+  "pilot_ledger_sha256": "29a75b9afe409777fbcf973ff7bce60bfbc2e9046ddc0653f5dea24bccb4aaf3",
+  "preflight_charge_seconds": 756.119413499946,
+  "prior_package_all_charged_seconds": 456.11941349994595,
+  "prior_partial_successes_excluded": 39,
+  "prior_protocol_sha256": "d7370da181c0fc619e82ab0b12519832b120d526930d116ee3d31356dc56ac8f",
+  "prior_results_reused": 0,
+  "prior_source_sha256": "86e912be9c10cb4d9eb06be981c165784fa8350f5066d28ba9f1199f504846eb",
+  "prior_source_snapshot_manifest_sha256": "504ef835c9c74b78f13b2602544726f5cbbbe15cd28291e3bae48fc99877e957",
+  "prior_stop_audit_sha256": "c1548e37b9692e222d43024e8e078808e3e5afce7db051ca55f566417ac05999",
+  "prior_technical_failures_retained": 4,
+  "profile_sessions": 48,
+  "reason": "Root approved fresh unchanged584+48 matrix at100 repeats after8/8pilot and actual7-source load/parity checks. V1 was stopped between workers for Unicode filename handling. All V1 compute remains charged with a new300s technical reserve. V1 partial observations are preserved and excluded; no rank/dtype/threshold/model-source changes or training.",
+  "schema": 2,
+  "selected_individual_repeats": 100,
+  "source_sha256": "7a46d683d05d03bef3639f021606ba778c535c8083afcc3f4a38a31912da3616",
+  "timing_sessions": 584
+}

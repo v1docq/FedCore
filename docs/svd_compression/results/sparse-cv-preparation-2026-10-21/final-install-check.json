@@ -1,0 +1,9 @@
+{
+  "source_commit": "3bc0825a9ef1bcd0ac8eb0181b6d5314b57ebb8d",
+  "wheel_sha256": "26fcf56c64c8b68dd6aa00879b16dc926193ed7f4159a01fc3b8e42e069fb913",
+  "protocol_sha256": "81e30bb6853080e2b6fedf966fc19f44cf717a8192988df5c3db552a3dd12010",
+  "packaged_files_verified": 313,
+  "dry_run_status": "missing_data",
+  "cuda_visible_devices": "",
+  "gpu_pilot_started": false
+}

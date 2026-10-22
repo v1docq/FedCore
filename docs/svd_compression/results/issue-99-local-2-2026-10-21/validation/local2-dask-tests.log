@@ -1,0 +1,90 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+____________ test_real_caller_owned_dask_client_survives_training _____________
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-dask-temp-1/test_real_caller_owned_dask_cl0')
+
+    def test_real_caller_owned_dask_client_survives_training(tmp_path):
+        model = identity_model()
+>       cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False,
+                               protocol='inproc', dashboard_address=None, memory_limit=0)
+
+tests\refactoring\test_root_dask.py:9: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\deploy\local.py:253: in __init__
+    super().__init__(
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\deploy\spec.py:283: in __init__
+    self._loop_runner.start()
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\utils.py:551: in start
+    self._start_unlocked()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <distributed.utils.LoopRunner object at 0x0000027C6C9AA830>
+
+    def _start_unlocked(self) -> None:
+        assert not self._started
+    
+        if self._loop is not None:
+            try:
+                count, real_runner = self._all_loops[self._loop]
+            except KeyError:
+                assert self._loop.asyncio_loop.is_running()  # type: ignore[attr-defined]
+                self._started = True
+                return
+    
+            self._all_loops[self._loop] = count + 1, real_runner
+            self._started = True
+            return
+    
+        assert self._loop_thread is None
+    
+        start_evt = threading.Event()
+        start_exc = None
+        loop = None
+    
+        async def amain() -> None:
+            nonlocal loop
+            loop = IOLoop.current()
+            start_evt.set()
+            await self._stop_event.wait()
+    
+        def run_loop() -> None:
+            nonlocal start_exc
+            try:
+                asyncio_run(amain(), loop_factory=get_loop_factory())
+            except BaseException as e:
+                if start_evt.is_set():
+                    raise
+                start_exc = e
+                start_evt.set()
+    
+        self._loop_thread = _CollectErrorThread(
+            target=run_loop, daemon=True, name="IO loop"
+        )
+        start_evt.wait(timeout=10)
+        if start_exc is not None:
+            raise start_exc
+>       assert loop is not None
+E       AssertionError
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\distributed\utils.py:596: AssertionError
+____________________ test_real_runner_fedcore_public_path _____________________
+
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-dask-temp-1/test_real_runner_fedcore_publi0')
+
+    def test_real_runner_fedcore_public_path(tmp_path):
+        candidate = CandidateSpec("fedcore", {"operation": "training", "operation_parameters": {"epochs": 1}})
+        result = ExperimentRunner(bundle(), protocol(), tmp_path / "fedcore").run((candidate,))
+        record = result["candidates"][-1]
+>       assert record["status"] == "succeeded", record
+E       AssertionError: {'cache_hit': False, 'cache_key': 'be18a1a3e299327310f23f388481b011cadd92202e9cfbb85e648263e95312d6', 'candidate_id': '6d468ed43844123d5d01', 'completed_seconds': 10.35991720000311, ...}
+E       assert 'failed' == 'succeeded'
+E         
+E         - succeeded
+E         + failed
+
+tests\petra\test_protocol_runner.py:198: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_root_dask.py::test_real_caller_owned_dask_client_survives_training
+FAILED tests/petra/test_protocol_runner.py::test_real_runner_fedcore_public_path
+2 failed, 3 warnings in 31.86s

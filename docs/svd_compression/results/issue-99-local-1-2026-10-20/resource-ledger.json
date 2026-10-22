@@ -1,0 +1,2238 @@
+{
+  "completed_at": 9172.897434,
+  "elapsed_seconds": 2564.7784548,
+  "jobs": [
+    {
+      "error": null,
+      "job": "admission-0",
+      "kind": "admission",
+      "resources": {
+        "completed_at": 8167.0007402,
+        "elapsed_seconds": 16.08864480000011,
+        "minimum_available_ram_bytes": 15534551040,
+        "peak_tree_rss_bytes": 474939392,
+        "samples": 123,
+        "started_at": 8150.9120957
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\admission-0\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "admission-1",
+      "kind": "admission",
+      "resources": {
+        "completed_at": 8183.3064893,
+        "elapsed_seconds": 16.23124800000005,
+        "minimum_available_ram_bytes": 16125030400,
+        "peak_tree_rss_bytes": 475090944,
+        "samples": 125,
+        "started_at": 8167.0752415
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\admission-1\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "admission-2",
+      "kind": "admission",
+      "resources": {
+        "completed_at": 8199.3349344,
+        "elapsed_seconds": 15.954222900000786,
+        "minimum_available_ram_bytes": 16374345728,
+        "peak_tree_rss_bytes": 476532736,
+        "samples": 103,
+        "started_at": 8183.3807116
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\admission-2\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "304d739f27bb364f205a1501d217384b22e2a386b7f29a12e791908efb0bf0a6",
+        "job.json": "f0e3f7eef46faadedfed5ae51294ed7e4f26e9a16ba9a28adbadb8926625aa72",
+        "resources.json": "9ae3b1700c1feb55013372e1ea3a21a6a775d448d152b5de3d04e721a4fbe546",
+        "result.json": "463a9fb173c52547df679896a939e53739a54be002c04c149c7af0b82b0aadf0",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "admissibility",
+      "kind": "admissibility",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 6958.2625576,
+        "elapsed_seconds": 9.490540999999212,
+        "minimum_available_ram_bytes": 15879708672,
+        "peak_tree_rss_bytes": 375930880,
+        "samples": 68,
+        "started_at": 6948.7720169
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\admissibility\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "0d3d1d82a4f3e631936df299b7d25607707ece57093d7e6a380f349ab4eabc86",
+        "job.json": "dfa1dc178c1e1e1a8fe65df3b9ed92d45df1402a325de3fe0376753831c01962",
+        "resources.json": "dcb856cc5e8f676aa8e320ec779cb8f42ec94edf428a90abcb6be19be9ecd3d4",
+        "result.json": "358bd288979af8863ee3c58f1a9f414d2efbe94ebb6ea1bc1c64595d228c996d",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9911-A",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 6967.0897775,
+        "elapsed_seconds": 8.754574300000058,
+        "minimum_available_ram_bytes": 15584223232,
+        "peak_tree_rss_bytes": 375021568,
+        "samples": 69,
+        "started_at": 6958.3352034
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9911-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "e417b1489779a281d826c3bf40b7a6c13f187749d3d4164b7444d8497ae543f9",
+        "job.json": "36b263cabe0ea04cc6d855a0690678b679adc224f837240eb324abeb3e8d040c",
+        "resources.json": "edf8a13fe6a7b57995e6baf254ec90380dde36cd7411194a992ed0109b4fe2f5",
+        "result.json": "57f33b858e0cc827e1814ee99118ec617352fe6cafd0eaebc481d7fe52c47581",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9911-B",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 6975.2194176,
+        "elapsed_seconds": 8.060039400000278,
+        "minimum_available_ram_bytes": 15671537664,
+        "peak_tree_rss_bytes": 372391936,
+        "samples": 57,
+        "started_at": 6967.1593785
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9911-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "1bfafc8477e7d5d0e995e09d86babddae2640e1e8345a104d6c15d29776c7587",
+        "job.json": "3d02f726217b121f191407612cff1c0527ddd42abef3ab102c840402969ed5a4",
+        "resources.json": "edc278485913e8f2caa1eaaccfca9d55a7582a77692dbdf6ef678524ca13b82a",
+        "result.json": "88f4ee6b9ccb1a4f0bac5c3e3963e4e2ce9cace3aaa925ba8fcab3e0fd094bba",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9912-B",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 6982.8824827,
+        "elapsed_seconds": 7.586468399999831,
+        "minimum_available_ram_bytes": 15724318720,
+        "peak_tree_rss_bytes": 371720192,
+        "samples": 60,
+        "started_at": 6975.2960145
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9912-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "efa221d1c6d1c05ea80f8e69ada67d71e10756daa4558388862d4512e1f2bc30",
+        "job.json": "a8aaaf7f6dd226ab84b183ee5639ccf0fbe7acacf4fe9f0d29d8b7328dcfa6f1",
+        "resources.json": "849440d5e3e91822d9864064ee06af217bd16f7925e3dd6e94ecf71964ba01cc",
+        "result.json": "0d35bf2cb983ca2c0a6c86a65639b6189fbf177f2aff6dad9028fc96b0ce978d",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9912-A",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 6991.1452271,
+        "elapsed_seconds": 8.201787900000454,
+        "minimum_available_ram_bytes": 16020340736,
+        "peak_tree_rss_bytes": 375328768,
+        "samples": 58,
+        "started_at": 6982.9434395
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9912-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "ffdc3f7ee9e57b6de9039a418d3ca132dcb8b5d3945632401ca6635c3f15246f",
+        "job.json": "30fa19cb04059a553ac5a90b76c09fecd3b3a3070b3cf7cf1c02ad0a8f58329b",
+        "resources.json": "ea7bb3afa6faeeedde290299fb8f346e414a43b75dafb1695f5d3ddc52ea91ca",
+        "result.json": "5161b353333815042430e962897f69cfbcf6c492baad579be7808c4026f54727",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9913-B",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 6999.0802113,
+        "elapsed_seconds": 7.868140399999902,
+        "minimum_available_ram_bytes": 16000978944,
+        "peak_tree_rss_bytes": 372473856,
+        "samples": 55,
+        "started_at": 6991.2120711
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9913-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "cdb188ab62712ea578b7dfa1bda3841b3fbeaa5320a18571b543b25c5c369241",
+        "job.json": "a49ac2726684b50b0f3406bd0889c52c581f446b3afb0c0f9c51ab6d090c435b",
+        "resources.json": "a11ad33de0ba73ba0e4660bd40fd9d46543a2defefbb0d7d4442a7e62ee6a830",
+        "result.json": "c879feaada2ee450b5a3b8b1486166c7976b06dc76b30d0e9e6944cb939eb195",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9913-A",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7006.602092,
+        "elapsed_seconds": 7.454611499999373,
+        "minimum_available_ram_bytes": 16730296320,
+        "peak_tree_rss_bytes": 375398400,
+        "samples": 58,
+        "started_at": 6999.1474807
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9913-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "d8d3899fd503ee3aaf0b5cd44c4cb1c5a118cd15c7c1d63ba3e8334f28824ba8",
+        "job.json": "b73c08f6c777f56ab74a983b321c6a89260dd38f1240ac903579b891240be7ec",
+        "resources.json": "173f406cb1fa725f717f6041316329d796765ef5d8bc2e62ec8bdfa0982f1307",
+        "result.json": "69faeebe41c74271838eaa70178f26f7b72a280817a6d06078bb66f0ddd8e3fb",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9914-A",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7014.9489675,
+        "elapsed_seconds": 8.272129800000585,
+        "minimum_available_ram_bytes": 16619307008,
+        "peak_tree_rss_bytes": 375267328,
+        "samples": 57,
+        "started_at": 7006.6768379
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9914-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "e511e147f198274b08ade4bbb464eba9347b136ea015e34e9fb9d574c9c1dce8",
+        "job.json": "2fb48207327653e9c5f234608edc26182487ae5ac1e5d5439944358f9f3539be",
+        "resources.json": "c33274f18ff26124406bbe819256ef3d8ba4a8b7a96a1b79fb13219eb1ff1ffd",
+        "result.json": "b8b8c9c69db8a63ab6b8581439e7989256b948a4d6eb4ef5be515afeb4e9ff50",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9914-B",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7023.1740628,
+        "elapsed_seconds": 8.150439500000175,
+        "minimum_available_ram_bytes": 16726315008,
+        "peak_tree_rss_bytes": 372318208,
+        "samples": 58,
+        "started_at": 7015.0236235
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9914-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "f36000a8bbaa5672bbe088a5231b41cee57be982536b3e064d93ece9eb7b48ca",
+        "job.json": "1725f696e4dbc4557767bada6ca7c7a38ca034ea90dc4c54f243d6f677f1cc42",
+        "resources.json": "82b6244f478082b591f8f849f81ff3d9e8519224acf5c178b5bd28f38fa9b947",
+        "result.json": "5cc4ffe03735cc945523c6eecf86c0d900aa4002c6594084f65f8775808fbc5a",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9915-A",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7031.4694374,
+        "elapsed_seconds": 8.22715590000007,
+        "minimum_available_ram_bytes": 16888123392,
+        "peak_tree_rss_bytes": 376356864,
+        "samples": 63,
+        "started_at": 7023.2422817
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9915-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "44bd2a0c22cda44e1df18b568a0c78ef236da5e2d07e742486467a4a2f7e47d8",
+        "job.json": "dfbc3d6c6359d369b5ecbc3e506a73d1787e7c2e0a209e83a0d19bfd22d32e2e",
+        "resources.json": "8c028a1bf8b57c1dfa73816867c9a224144ee90d10b6ff294cce340fa32fcfef",
+        "result.json": "10c9d54e3159d40ad363e62037ae2bc1dc3f48e366561afe0e75914014283494",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9915-B",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7039.3277162,
+        "elapsed_seconds": 7.7876217000002725,
+        "minimum_available_ram_bytes": 17244590080,
+        "peak_tree_rss_bytes": 372518912,
+        "samples": 55,
+        "started_at": 7031.5400947
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9915-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "345e5458c66651e272e2a9ab6fa2d6038df09c25955626f70e3930d68d42a0eb",
+        "job.json": "82d37eff3e97750e9e58101f98c9944cfcbd0cd2bb668d063040cd31757625d6",
+        "resources.json": "38f0eb194709bc530ac329ed7d9df19d3a8c033d5d0630e64d50d9e0f82eb87e",
+        "result.json": "b67da940e3c83063483b22a91d430eb5578dfefffda96aaa0e80fba097654fde",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9916-B",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7047.1390253,
+        "elapsed_seconds": 7.750822299999527,
+        "minimum_available_ram_bytes": 17244811264,
+        "peak_tree_rss_bytes": 373342208,
+        "samples": 60,
+        "started_at": 7039.3882032
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9916-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "composition-events.jsonl": "7a0375b0d8e4b7b20e6be7d6b5c0d4039d96efde08d2b4a1f0a0522cecbee8ce",
+        "job.json": "8c33598d8067fb67edd82d633a1fb07d602b9e5af8b8ff1cba36c5e81f885ea7",
+        "resources.json": "897e11480a9e65233e19dee9f6b7573f562506ac4b0c0dc4134c6a5fcdba8447",
+        "result.json": "a1d08f91f48de44ecaf829533e0bc8b479dcbb75a9b1926b90e61f800a639f3a",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "toy-source.json": "f83469abe7b1376551aa323eac362940046f7ff045cad147f15bded1c7fddf15"
+      },
+      "evidence_reused": true,
+      "job": "early-late-9916-A",
+      "kind": "early_late",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7055.484592,
+        "elapsed_seconds": 8.276796200000717,
+        "minimum_available_ram_bytes": 17104482304,
+        "peak_tree_rss_bytes": 375877632,
+        "samples": 64,
+        "started_at": 7047.2077966
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\early-late-9916-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "artifacts/00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255.pt": "21a95ba24ffc51698fbb542e686014afad0a70b108eacd30629bf35c1bf70a6a",
+        "artifacts/06874415df1c2511ffc0613352ae91fed54e34d3ea22a316209433985b4aed99.pt": "6b7ffa7f9b22fc3194ff7ca01d5f6e261bdfc49dd10c5de0598700a9ad7383bc",
+        "artifacts/08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874.pt": "a6c0d6191208aa325af4171da5af17da9f85ae95c9c03b05aff5a9252e8eb9f8",
+        "artifacts/0a125ca5e87e5018ae538a9becfa66d0de5c95c2b0be90b0380847a48ecada6e.pt": "94a4e1f6a99681052ecac7762879907ef449321590272304fef55e3d4d4b002b",
+        "artifacts/0c0eda06f9b35753e124ef28fd0a37e5b884cfc0fe77e90d436b780955bd2652.pt": "09736c086b993a762cbb565bfe121148abcf9824802ef0fe5d0d1e98535a3aa8",
+        "artifacts/0e62173b11fdbf546652db9c6803b178274099bc4c1ca5f7c72b03b6704415c5.pt": "4347e6848c9d989f27b93e58180995e134910bf4ee13d154f306348bae9f8811",
+        "artifacts/0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23.pt": "f6924ff1e0c95a10d1af51201167ba5e6c16f34586f1ed3b8a2cdc60a19ec0c9",
+        "artifacts/103ea88b36b85f2b03eccd4ecf14366bbbf57b71e4cd0ecb72fb01a07e6024d2.pt": "4ab3b4da347151a9ebf06ed52464bf1d6f605dd65112e9564d8ca893e56adc59",
+        "artifacts/285f2bbc61dd887fd652687fe9e6b86f86e7c3b57c92b593427fbefbc5a19517.pt": "008a514d0ebf76c553c4450685421c49206bf26ab98ca7f2e128346b75b00e9b",
+        "artifacts/29bf77f6f967f6f72fd3048cbb63d07f3702b4d822933a6c92dcc4d31910189d.pt": "60f1ae862c1db07fd5649afaba9be5a65eb7cc49bbcc827068d7079b84cef532",
+        "artifacts/2c2c5c7f0f82abce5e856389925210c1ef7efd7cb18bef9f298e2f1d1f214f5f.pt": "badd75cd73d7ed0b21286e25600dffe77337c26eb3bff528b55afc15eedee12a",
+        "artifacts/338ccbbe91b9efe28ed5bef8f06f9170075a4ab519f7df8485dbd3fb380b99da.pt": "90e374eae1f1b37d5e283644ddf7fa6a6a2e65b6f8fbed32d1e01e15fe50c8c2",
+        "artifacts/3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d.pt": "65a401302100ce2eedfe609f8b50ecee04d2a685fa0904aca09845afdd8f206a",
+        "artifacts/45da7851baa1dbb1cade652d994d4d1a9ba2d2b5c6399415ffdcb952168460d4.pt": "13c8fd1f85b0a8a1becc56846c5400e0a7dd80fd35696c2b8ff8309d53c7862a",
+        "artifacts/481a074dcaf7a4f69a4058d934253c7b0264c64cfd319f39ff38661011aedd73.pt": "8a3a681786032a8773e10d5f9e223e3352794c646d789fcdea76b00dbd1e9854",
+        "artifacts/4afe6626fc2b8f0f2f2bd648d4c869c9e1a48944b0f3d9f907ba4cf80467c388.pt": "73bd165124256bce302c127e51d0659228084101e2e6bfbde90818091ea658ad",
+        "artifacts/4bac37fc5eff48dc7af74b0cdd36f383ef13dffba163ad1949e252b195b065fb.pt": "efcfaeccc6f9cd52bb38be362f0aacd15b951846735b89ec8e0684eafc9c5878",
+        "artifacts/4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e.pt": "020063e5f8c74a1e498e3c90db92ac7945d05ac35e17e5c3581991194b945e86",
+        "artifacts/5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50.pt": "f75f37d1982f01096c7f31e052d2cb7aa62c689004f5c4b7c15f0df6f75eaea9",
+        "artifacts/512402bce5c1d7c75bcdcd4e64650ef4a1e0b22fd28f604935421234d23d83e5.pt": "18cb802085488397e36aa8b524d48ae1174620c39bc4ee7fa99ed53958b84fe2",
+        "artifacts/52931940e9911dd1cd83d52cc1d79241d8e13d41f519e10fec0497f2122021d7.pt": "df3a899960da1b21cded3952f1be35134cd38609c74ab524c273401fef93698e",
+        "artifacts/53d8858e5f65c1256f6659462981ade5269ab04ba4d4f567ec641c0ca4ab2d8d.pt": "d458563effdd01a1798f4a96bb0fa3952f1b807bae630112f018fe718d8b70c2",
+        "artifacts/57140bfcd785b1b5394a8f05e53af607bbd305e741d37f58a1305e49c8771025.pt": "4e79dcb8f70316ebbdc2f00b82e593c98ba87efb083adc527b17eebb474d31a6",
+        "artifacts/5886fdc26b8a00d33a93005bff17ca64c7fa73dba4c6eb3e6504468b10cb0a3e.pt": "eec49d7f7479443fe767275194390895ad40f47d1478cbadd11aba581814cc6d",
+        "artifacts/5b2a53d1edd83d6e9b9aaeb27975466edfdc000f0be04af7a8ee6dd5233a27ae.pt": "5ee2e4bcd4d0968de896790ec48841ae885bcc438d4c23af69dc955f61dce8c6",
+        "artifacts/5c6b2edb09b76999a93b3002fa91530f3c65684dffd9f018aa2c82a95d94a17a.pt": "54ab242fed57ee777667609d29a390a8158cf5afaa04e24662b0999436fb1245",
+        "artifacts/5cbfe0727adb854124221127d501d501ae263c9efdcf33c45ec99d820eb73add.pt": "0c33dc48179508ff005eabb544c172d9447466a16e214634930171c09fe0411b",
+        "artifacts/5d265353e38928f510c213da547fcf839d71521c9b3ef594c5c93ca093779d44.pt": "ba098af7133388f680404c357e443697e7db8dbefe28fb7d86b41b7668bb66c4",
+        "artifacts/5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a.pt": "08be02987b3cccfe5af5c5d1c8b6a3c171283274c5bdecc4343cd5f824d3f483",
+        "artifacts/689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597.pt": "60610ff714e5e718a23b9cbe94cf366a4de919535e11a10f5045b977c934c8ad",
+        "artifacts/6ef052193bc45ada07f5901c24be2d626042b1be71b4afbdd965958f25108477.pt": "28a62c06cd055a767031e0d11cff50f63b40f91219efccd8376c14a927c4403b",
+        "artifacts/70510ebef108623c3f7b0806de44b0703643f3bd5ffb0f042898da0abe9bdb86.pt": "ccac820c9742c1026d8a30eb5690bbd6d80b4db7363a7fa5dd56f053ba187227",
+        "artifacts/71c9328b2e2685f6436fdea25dc81b2f75da4205c19b4a780383d58604c0d726.pt": "87b3ae0d2152e45b76d7c14841af6dde78bd663b96794aa2c25a1d8ded0835b7",
+        "artifacts/73977b91595c9bc3687bf151ec0a3e89182e70c7a2e2656c417fc5a9ec656516.pt": "6997bf7236f092eb44983da6fd58a9b1cd313faea2a8b3de1688b222c96519eb",
+        "artifacts/7428fa38ba4eff3626d9c0b4a81ad002ec4dfb02e0bf65cb7c53dd767b104e26.pt": "a2fae14a838ec247d832e955e0c9c6eac366582d3650f2a30fa4c78dba257eb9",
+        "artifacts/748b4d3d01c319601e622b0da80687fdf60000f42267d726c05ef2d7feb703ec.pt": "e4c90494b7bb1adae9ff93ba20c6dc8b05535fe1a4160df22a7a2e2c576d2b67",
+        "artifacts/797e0f57b55ad47607c5f50f9c82b4370d7ebe2af8e4a78ea0855ec27e3b7f2c.pt": "85acefc46b5d185217b72db39ab60d3900ec18f7c064cf16a1b955badc65d4c8",
+        "artifacts/7a8f4fe5b59f18f288b4291e5fa440e10a0e63b9157f305967d38cb7db4a84dd.pt": "460f120d931f920fa6ed3315d06d0b5d2ed4851b44111ce6be0b63688c6ce2f4",
+        "artifacts/7cac274ab6bc9f3c27527153b496fc9cbc22df10fafe9f888a31a5ffa2ae4d35.pt": "4753c2f50f35492915c67be87a9d4d792383792d25f6d81fa09d463f52adc606",
+        "artifacts/7f6243524c004e2b3434274bf2c6c927d404faeb91c61d715d8b7cd676813a6a.pt": "2639af78593b8b8e3b8986c0f23628171c47e9e85aa660b28916f3db8ca0819d",
+        "artifacts/81a1c024fcd353a219bc7995d00a1ec077b3aa94f1d161ee71c6510372c78715.pt": "a98bccdc79b6634bc7170efc24277a9a8ecfe1d1b70a6836253e63c72aa07e01",
+        "artifacts/81f7805541e6ecc160e8d321001938c5dcb6f79eb4ff3a4fd642cdb8e33ccbb8.pt": "457c3b0c93b292fc828560d8f9b325e08e2932440515f539e370b463a4bcde50",
+        "artifacts/8aed38e07f89e24119b001d3b82636b9f5219c656f66d9b57f691118a4b0d359.pt": "92b9b19c18c5d72db5ad91db4f2703255a411f7804802944d5a02246dbd818a9",
+        "artifacts/8d32152882d49f6a062ac0a0750bbe5dabbb028bd1761f6211bd0d3a6ff30f3a.pt": "118d83d5c605e18c5a199fc2da498f3cc1f15494d4105e0527ab214550b02bc1",
+        "artifacts/9035454ab4edccfeaf943a8aa42868b2d7d1d053144777cdf6c61c4eb046c80f.pt": "b1c2587e8aeb52a1be5061286cd4c2a2405c53b76d057c8cac11a5797ee749c4",
+        "artifacts/9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199.pt": "22116367c2efe4e60cfa0291333994292eaabe3e943c0111a1f2417a1f358b1b",
+        "artifacts/931d01123952bf6403642d5e277229b24393a09e5dd48130babe584e59de97f4.pt": "abf011c476ffd28f8cb7debd0d558a4de5e88d1ebe2da81353058650d0ad8638",
+        "artifacts/93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5.pt": "49323f772b3a993f74bcf36a7f42d1e968fefb67cf3ecc93ef3f6d7515c7c85f",
+        "artifacts/970ed89040b2b431639ae6c00c35664ef3b98fc0a58a424fdbc389beee4a369f.pt": "700245640002de12dad6689b66199357632fdaf9aea21619569db316039f1ffb",
+        "artifacts/984536dda1b8a8d19b0f69d9eddbd0f16cc378151eb65553b2d896e7bc72d807.pt": "d2ea720d427ce319e90abf8c1ed2fbf7efc337f1206c012ec55e405a5dddb31a",
+        "artifacts/9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784.pt": "733a0992976eb3827755bcf0aeb1d4f6f47de354b99476acd71c729701de6bb8",
+        "artifacts/a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314.pt": "b2ac33ed38a8d70c092e21c33e7c16819c4c9a2ec4218128fb571e93bb83bfc2",
+        "artifacts/a9dfd560598e677882519f5568f63052812ea45941741bc4dde7e50c0b32ae44.pt": "fe1cbcb7ec049eafd6cf185efacda165d6b52807ac390710b96fac1177869f6c",
+        "artifacts/ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157.pt": "127cb6a07a6ea481c5656d91b7f7e75beba5cab9585cc3635e2d58dd751bc71c",
+        "artifacts/adad747cb49e0392c41c5a4918d0fa221899f3b40407eb96cb54f467b2e03328.pt": "d6189279dab337db5feed0804685913117c20ae3679997d44e9f7e0fd8561632",
+        "artifacts/aea3ffcc2e33540e57ffc7372ed40f16844c37a7027f2746a2b5e52ef68c4439.pt": "5caf1e935e450cb2296996bac74fe74dce1dcab576fa329477bcb15339c2bed1",
+        "artifacts/b0d4e8870f624263a6efd6f6f42c65d2516b90be38f18e799accce6295e4c005.pt": "13830d7b58766de0ae450460e475152e68f41be7cd4470f01375881f4e93a921",
+        "artifacts/b68eface112e2e3b04ea6f337903bbc1325cc452fdb4f582de431762d28ad1fc.pt": "93f960b19d4557d787192e5f733a16de6c1a3e7a7283b5cafdd1179da67d115b",
+        "artifacts/baf373a2555c828b5e9c7024669769c23dfc5246bc6ded98d60f13af79ccb7e7.pt": "69e74d0ae6e3a87129dfbb16be988cfbd844af87566ec112c02aaa834cfc8a4c",
+        "artifacts/c263e5aa03e1fceda1ac17b41053efe6f9ca21ba2e3f4e7f6ae160d78c3c6f71.pt": "0b9730b0cb63c8538bef761b12b9cb52e9b7e7f111c3ad5bae377a06bfc35abd",
+        "artifacts/c8044b73d8970a6eb4184b4aa229442934d26c7985d5768fe6f4f66b4f48c79b.pt": "b3d91435322c81c276d4cf1728ba6e399ed00192da421712d92bda08f641e4ac",
+        "artifacts/c90fbeb9a862d6056e6373d310bec1e3988fe5ee0fde7f65444f358e08ada596.pt": "b6276db910b3b87133c20abbf4bac4dca953e608e7f4535e8e15b99dcd85b3b7",
+        "artifacts/ce2e61f4be7fe471a4fcfd6b0123ca7e546c7f476eb726705c8fe5ecb7b7ae4e.pt": "d552b72032fb22e79f774f3d0eda2ff7b49ac7f334402c74029a3035d8def402",
+        "artifacts/d128f8cda8c00bc17938fe3b55b6229a8388aab5908300f4afc0c245658a2a9d.pt": "05936d1c37a099dca1f8f27b5149566730df4535d34ab007285f4dae5faa804a",
+        "artifacts/d69e1a6cb447f381455a7f40324f9e7d7e41df5c60bbf98c9d0f1504c7e15b69.pt": "097754d3925e20bf1a3284e501e9935d474076ed6df30ce1bcb5fd076e4b2dc4",
+        "artifacts/d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b.pt": "6a75ecdf7d3dda44a79d34c966e6b045db6e9048a1932ad1a83da7983c7ccd20",
+        "artifacts/d764e8deabf7bc905e389c014ea92d6737d949b080ff1afcb07d5455c55297fa.pt": "4c124a9f05a640d9d23e96407b52194d5f064072a6fb7a1b7c0559bc350d3849",
+        "artifacts/d7da884e4b084da713f86c2d68306130a0368cf56575c86dc4f63dfd238a9634.pt": "cbc435e534f3c4fe789e5465cdcdae75fe6751adf6914d062e622ab4d821c594",
+        "artifacts/dadc9b957d9bad2a60f44ea114e05ce594e4e3e10db07e62d86acb7237b9b4a5.pt": "e5ce1eadbb4dcebd9321278c11c6113b22ae8799eacd22fa83edbf91215a8b28",
+        "artifacts/e6185f31b722f21fc949b65f031bc47184f25ecf426fbe6e57652e8ee90f0853.pt": "7948ed9448115043798bbfbf6ca93118d6eb5423f88b5700fc220bc86684f6e1",
+        "artifacts/e7bcec9896fa0c9a000fc2dc77db61740833c2c328a6fcd37a43a39d9a008763.pt": "7b5552b89c5d1b957a8b43449090e9a13d3e5602f3835ae3fdd353f6014a5bb3",
+        "artifacts/e9b0ee24175f9abc93dd159f1b4cf40d1134207f6d52383f18686bdb3d161e78.pt": "1e686804f6dbac2d8e5147a55941789df9275d565983a4523a8acfaac7ca82f3",
+        "artifacts/e9edf9e59569dd6562c8e8ae9197d0842a9665ed19f919b6f64868142c198265.pt": "2ca293052ea7a2ccf7ceee5e62366ec1af58cb3a19dd57d5ce9d8df25b51ed8b",
+        "artifacts/eaec1435c4c07f6931f0e471a13795b5eb96813da9afe9d94c35f572ac4503b1.pt": "6c9f931a7f948f47898bdc574a59f3990986a62e91c45595c37070fb0b3fbd43",
+        "artifacts/f0dccb7627943ff814ed1c2f3c225eeacfbabb90eaa159a7f621bc5b4f4d1571.pt": "a45de970e86b9f38a3f4dbd29b4f0540ab3ce7aec9a65d427b63236e8e447b64",
+        "artifacts/f4880ddd3130c9ee834558ffc23fa091b332decfae3d9898d72fe47b2465be67.pt": "05734075b29b3a84464455f8f43914154a7eddf1346de06884e26ebc2f65b54f",
+        "artifacts/f51fbd9d986bff55f70ed94187d9447bde0117483c0048045980a8357d4112a2.pt": "9300a7160fdca75deffca1577fb540db76d87ee87eea5791384fd793947d6f83",
+        "artifacts/f7bc315772c6824e49e28f6cd599f20a0334ecdc83a7b10ff9a7e75a2a654214.pt": "6ef59909ab42f989ea8386a60af6c84d2c6f20c970eb7d3a782612d89d894ef6",
+        "artifacts/fb91c1aea683b612db3c306662f42f80a0d770207420efc4847003995f9e5947.pt": "b8df16f36e1164cf098e34a2f27219cbaa35cb93eaa8a2b81732e61297bc9673",
+        "artifacts/fdc4df6a616e46224a3798cdba7129480195199a84dc79b45d64a6ac5b0c3afa.pt": "73c8b22c23092e0aa924e87db34d663b42bf6053ce750301e18b90c40987ec22",
+        "catalog.json": "03eecef59de7712d857aef9504dba94943fd7be760ef99096bfb33a9e2630846",
+        "events.jsonl": "b4b788f8666e1efe831b0ca9e39efa7bfbc9035c883264314b20bf0bb4e7dc3a",
+        "job.json": "758df43596bc7f40d0bf55b8ee7b4afd5294745bbc73e16cbca2134b57bdf518",
+        "resources.json": "fd7c71356d53a961a8538ecc340a7e83e7f7c74c81d1ae80677329dd1960eefb",
+        "result.json": "ff69d55200f001c981945442ffd24cd37dde6b7e61677fed2dffbbdb45d5084e",
+        "source-manifest.json": "118e0060d7fd5ac04ba7f6fbbe24b5d848f5458f5aab9b19e03fe86c975770c4",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "evidence_reused": true,
+      "job": "oracle-41",
+      "kind": "oracle",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7067.7919359,
+        "elapsed_seconds": 12.252450800000588,
+        "minimum_available_ram_bytes": 16839884800,
+        "peak_tree_rss_bytes": 385032192,
+        "samples": 93,
+        "started_at": 7055.5394853
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\oracle-41\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "artifacts/00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255.pt": "491d0e5c8758766dca80fb844323284f321c601d5a155b74ef4720b242b2fc34",
+        "artifacts/06874415df1c2511ffc0613352ae91fed54e34d3ea22a316209433985b4aed99.pt": "b423e5d8495b4e6be7850c12ff2b4d1089711bb62020b948e06d205c7e66255b",
+        "artifacts/08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874.pt": "8248a53184d57c60f3de011836e3dc72bf391f00b2e41ddc01d5755e8a23c2b9",
+        "artifacts/0a125ca5e87e5018ae538a9becfa66d0de5c95c2b0be90b0380847a48ecada6e.pt": "a61ddd6556353c1d6f5f8c652e93386d2bfb539e1468dcca061b269b7009fe03",
+        "artifacts/0c0eda06f9b35753e124ef28fd0a37e5b884cfc0fe77e90d436b780955bd2652.pt": "4bb9c76b78163dc591b6332bf1264fc3899ce2907c0f2b0b03be5a83602da25f",
+        "artifacts/0e62173b11fdbf546652db9c6803b178274099bc4c1ca5f7c72b03b6704415c5.pt": "cc21e0b976f793980997ae9d6937ba738bdcb633bc1d899ff783663b33e578f0",
+        "artifacts/0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23.pt": "4535043c9904acb49204134813d17dd019993bb8d6d7b3b13d7fa0ca0ee51805",
+        "artifacts/103ea88b36b85f2b03eccd4ecf14366bbbf57b71e4cd0ecb72fb01a07e6024d2.pt": "285d80709178b1f87fd432b3bd16abe46d0ee605ee243b972a602365adb74dea",
+        "artifacts/285f2bbc61dd887fd652687fe9e6b86f86e7c3b57c92b593427fbefbc5a19517.pt": "7200b715cf4962a3c7d0d46bccf1f7931a32bfe8fef2cf17e446b62cfe987882",
+        "artifacts/29bf77f6f967f6f72fd3048cbb63d07f3702b4d822933a6c92dcc4d31910189d.pt": "3a4a30dbeecb42257f739aa6b89e01ece5238b1179dcb15b52a11f69f4e738ad",
+        "artifacts/2c2c5c7f0f82abce5e856389925210c1ef7efd7cb18bef9f298e2f1d1f214f5f.pt": "bbb24e5d6b10c81e586880841a672d497cb0aa85c9b8dc5e1dcc6e5268f6db9c",
+        "artifacts/338ccbbe91b9efe28ed5bef8f06f9170075a4ab519f7df8485dbd3fb380b99da.pt": "a2fe4dfccd10a1a0043e889e8b1b72965417c3ecdfb392a6f403af8e0a6e3f89",
+        "artifacts/3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d.pt": "03556d19ded2823a290f8295df1ded2aeea925a86459d26ba18944fa97b4b436",
+        "artifacts/45da7851baa1dbb1cade652d994d4d1a9ba2d2b5c6399415ffdcb952168460d4.pt": "901883b988c57f06a16aa762ffa7ede38a0fc18597ac7a1f0ced13cb15f62acd",
+        "artifacts/481a074dcaf7a4f69a4058d934253c7b0264c64cfd319f39ff38661011aedd73.pt": "68daa71fb9cdc9aaef52f353495400961dca163de2ef3ce44c6cc6c5d7c8b8d5",
+        "artifacts/4afe6626fc2b8f0f2f2bd648d4c869c9e1a48944b0f3d9f907ba4cf80467c388.pt": "53c4ebcaed4ddcdb98e19ac02909e46afe023b5c2edf7adf8809ac71878c1811",
+        "artifacts/4bac37fc5eff48dc7af74b0cdd36f383ef13dffba163ad1949e252b195b065fb.pt": "00ead7a9884bb8d624775059337e696174a8cd31b405587cedc8f6b0ebb3ed02",
+        "artifacts/4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e.pt": "d5b70f031b3b289e1c16d9f34526662ca8ea299d031ec125c4fb8d039c701543",
+        "artifacts/5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50.pt": "a8eda35d2fea2098771c0e4102daef06302297b54019a48404cdad19919f6322",
+        "artifacts/512402bce5c1d7c75bcdcd4e64650ef4a1e0b22fd28f604935421234d23d83e5.pt": "9b5b86466bf54f584fe0393d9309a7495372adf8da346f0370b27a8e128ddbfc",
+        "artifacts/52931940e9911dd1cd83d52cc1d79241d8e13d41f519e10fec0497f2122021d7.pt": "47abdbc84b6395987f8820d779cad4f898d2b6c3a9b0f8e660d57c1e03875778",
+        "artifacts/53d8858e5f65c1256f6659462981ade5269ab04ba4d4f567ec641c0ca4ab2d8d.pt": "e29ae06c8a0b128e3c80467ec82f34c4b312dc204e17f1788770ecfff3735ce3",
+        "artifacts/57140bfcd785b1b5394a8f05e53af607bbd305e741d37f58a1305e49c8771025.pt": "d1b50fb1acf6c8ff65d2b2da31dc3d4539f2721d3f897c785134433d89826283",
+        "artifacts/5886fdc26b8a00d33a93005bff17ca64c7fa73dba4c6eb3e6504468b10cb0a3e.pt": "e9c93212a539fb0f1a170189a255c9fd31ad849e361c3392fd98cf060c67a09a",
+        "artifacts/5b2a53d1edd83d6e9b9aaeb27975466edfdc000f0be04af7a8ee6dd5233a27ae.pt": "9e7717296286632e287975778a244eff386ddf237e369bdc0cd20deacf4802ae",
+        "artifacts/5c6b2edb09b76999a93b3002fa91530f3c65684dffd9f018aa2c82a95d94a17a.pt": "17541fd1a4858fbb22d06162b5027c64a8baee467d73e70e49526e27772eabbe",
+        "artifacts/5cbfe0727adb854124221127d501d501ae263c9efdcf33c45ec99d820eb73add.pt": "78b4fc46ee88d6c997e3a44f23337e0c863d83a5ebefe273a9683bd7d4b29cd4",
+        "artifacts/5d265353e38928f510c213da547fcf839d71521c9b3ef594c5c93ca093779d44.pt": "e414238d97336c903fdef8476f1e34cdf2ce8b84ca3182bbfd326ad587fd10c8",
+        "artifacts/5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a.pt": "a717d76717fca663c04663382e242714c40d3213293a76fb8951b37f30132dae",
+        "artifacts/689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597.pt": "a7c809824ea38955dbbe2436c7d3b6f3052c2fdb78c01efc2d3b6a18e870a211",
+        "artifacts/6ef052193bc45ada07f5901c24be2d626042b1be71b4afbdd965958f25108477.pt": "1319237fcd3014064db57ca7ee4db6d4314ee474683365f32bd46e78b66aa64d",
+        "artifacts/70510ebef108623c3f7b0806de44b0703643f3bd5ffb0f042898da0abe9bdb86.pt": "d55616b56432dd2d6d1797498b640db4df149647a9f7edfb138dbd54c98f6822",
+        "artifacts/71c9328b2e2685f6436fdea25dc81b2f75da4205c19b4a780383d58604c0d726.pt": "9077513ded1a87179a2929b4b639b89e0745052407dc6ea919b3465413c45ba8",
+        "artifacts/73977b91595c9bc3687bf151ec0a3e89182e70c7a2e2656c417fc5a9ec656516.pt": "8ff47b1dc0e248b6a7935a80dfc65341ef7f4c2ef9d925c5b22bec7b4579d99d",
+        "artifacts/7428fa38ba4eff3626d9c0b4a81ad002ec4dfb02e0bf65cb7c53dd767b104e26.pt": "a45535cc400796791b6c5929c739bec300fa387de8c47aeb7e44cd900804c9c8",
+        "artifacts/748b4d3d01c319601e622b0da80687fdf60000f42267d726c05ef2d7feb703ec.pt": "37022b9af73449a42d54f048e0ff19a5ffaa58855ac2c16eda3aa02b8da2e36a",
+        "artifacts/797e0f57b55ad47607c5f50f9c82b4370d7ebe2af8e4a78ea0855ec27e3b7f2c.pt": "75c3a13f650ee60a08d999100fe2217185e5176da566054d33e9e4136aea1e9c",
+        "artifacts/7a8f4fe5b59f18f288b4291e5fa440e10a0e63b9157f305967d38cb7db4a84dd.pt": "26f4fbc08eacbef028b55bb4ef461c17adc8cf4285394183a3cca1051207da6a",
+        "artifacts/7cac274ab6bc9f3c27527153b496fc9cbc22df10fafe9f888a31a5ffa2ae4d35.pt": "422023f8725773b649260ede2bf3b0b9d52661d2998ff95ecce275272df118b1",
+        "artifacts/7f6243524c004e2b3434274bf2c6c927d404faeb91c61d715d8b7cd676813a6a.pt": "f4192429c2416d2c754431a3d87685739bede8b34f25b6b42f5e0a932c1c7138",
+        "artifacts/81a1c024fcd353a219bc7995d00a1ec077b3aa94f1d161ee71c6510372c78715.pt": "b1c68403147bbe198c80d4639a71908e83ead526e4e966627226e88602faf9ae",
+        "artifacts/81f7805541e6ecc160e8d321001938c5dcb6f79eb4ff3a4fd642cdb8e33ccbb8.pt": "19032cf70ad77cf51a9ac67d48aeecedbd889729d4638cc1874dc916a2e3b226",
+        "artifacts/8aed38e07f89e24119b001d3b82636b9f5219c656f66d9b57f691118a4b0d359.pt": "4b10043e77f89d8b1c44f640f382ec539192db1cf81cb41243687fdfea84faa2",
+        "artifacts/8d32152882d49f6a062ac0a0750bbe5dabbb028bd1761f6211bd0d3a6ff30f3a.pt": "075f6b1f901fedbc220fd644724aa5aba00d932291c7b36a2eb266e7094d6719",
+        "artifacts/9035454ab4edccfeaf943a8aa42868b2d7d1d053144777cdf6c61c4eb046c80f.pt": "5c30c667815e2145e74eed7f276742cd0000df05dfeb10e5c39776fd2aa9a5fe",
+        "artifacts/9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199.pt": "4b46b149dd289b62c8e3fe12f0c106c459bb44572103a5078ef2712e5828deff",
+        "artifacts/931d01123952bf6403642d5e277229b24393a09e5dd48130babe584e59de97f4.pt": "70cbc9af87f4c1cc28bbba6338a42bc5b8be10007f2855cdc0739f1fe92966b7",
+        "artifacts/93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5.pt": "94b378957b0b0d6ff8a32cb0e659ecb74e46cf59316bf0530e0b6885b0ade9cd",
+        "artifacts/970ed89040b2b431639ae6c00c35664ef3b98fc0a58a424fdbc389beee4a369f.pt": "493d1b6735c5cefd00d8093c51d8963cb0d1ba6c545f2a42cb7fe86d8d03c78e",
+        "artifacts/984536dda1b8a8d19b0f69d9eddbd0f16cc378151eb65553b2d896e7bc72d807.pt": "9b6c6c9b39760a3a8a02d9e453af9b823baf4613921a427ffe38ae56088d93e3",
+        "artifacts/9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784.pt": "d2e74699a8a906502900ae96fc67dbe9353145a3b0659dac761523b5ddc96bb6",
+        "artifacts/a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314.pt": "7f56c8ef8930bc6fe9ee5bf1ae5b1e44c95d4d5a9c03c4892dcc0e43b58615f8",
+        "artifacts/a9dfd560598e677882519f5568f63052812ea45941741bc4dde7e50c0b32ae44.pt": "eeff991e444097ba978d95ec2ea2d8a5c0befd48e8e56ba3d514244ea3c6b362",
+        "artifacts/ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157.pt": "f14d913c578cde7a9534d9a51f50e72a8b189f83b8d71a5b2886a8a43b619d52",
+        "artifacts/adad747cb49e0392c41c5a4918d0fa221899f3b40407eb96cb54f467b2e03328.pt": "063659e30c14da6f110f22eea777f245e6fad5503cfd94b37a83bfe702ffcfcc",
+        "artifacts/aea3ffcc2e33540e57ffc7372ed40f16844c37a7027f2746a2b5e52ef68c4439.pt": "c8b3b78c97e8f06f1d57d6406ad2dd50354f216614b3fda54d225d3c1a77db15",
+        "artifacts/b0d4e8870f624263a6efd6f6f42c65d2516b90be38f18e799accce6295e4c005.pt": "013cea40373fb576a3a0e61e929b73396738db4babc5bf946017b0d10793431c",
+        "artifacts/b68eface112e2e3b04ea6f337903bbc1325cc452fdb4f582de431762d28ad1fc.pt": "47cf2d818b4fb6879c06b870f7cce776a4bf8c95ec38b01f4f757f0cbf77e7f8",
+        "artifacts/baf373a2555c828b5e9c7024669769c23dfc5246bc6ded98d60f13af79ccb7e7.pt": "f7d3d39e3ef7f1bdee633c5fb5054300a68c40919475e43bdbcb37068265b3d5",
+        "artifacts/c263e5aa03e1fceda1ac17b41053efe6f9ca21ba2e3f4e7f6ae160d78c3c6f71.pt": "ecf06b1aa47c53da656c5d5ba5d7e7356d512c69fde8781650007a2450e8b875",
+        "artifacts/c8044b73d8970a6eb4184b4aa229442934d26c7985d5768fe6f4f66b4f48c79b.pt": "bee6d8d099daf0e57d9b3986c79fc7f03ecaec4646ec8f1f45911595c1223d50",
+        "artifacts/c90fbeb9a862d6056e6373d310bec1e3988fe5ee0fde7f65444f358e08ada596.pt": "47963b195165be91a0a89ede7fb790fa6f61b7691b91047edbb880adbbfd6a54",
+        "artifacts/ce2e61f4be7fe471a4fcfd6b0123ca7e546c7f476eb726705c8fe5ecb7b7ae4e.pt": "33c9a0e14c82a862e5f270304ee7dcf7bf03c1baf7cd47d028ede3da4c975133",
+        "artifacts/d128f8cda8c00bc17938fe3b55b6229a8388aab5908300f4afc0c245658a2a9d.pt": "bb415231b5d8a4c9945d96e2861c3f9f597b9e29d63006617a43aea991d11791",
+        "artifacts/d69e1a6cb447f381455a7f40324f9e7d7e41df5c60bbf98c9d0f1504c7e15b69.pt": "b12e5f8a9cabe898e926deab7f8418f2f7594fc4963c3fd2bb6acb65e153564d",
+        "artifacts/d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b.pt": "5d050e5e3e15bb7c0b1834254c33468a498d3586a6b088f531e83b347ac1c69a",
+        "artifacts/d764e8deabf7bc905e389c014ea92d6737d949b080ff1afcb07d5455c55297fa.pt": "be54b71b1e6ff2fd80e17d8499a09c76038a033a7a36889bf521991313a984ae",
+        "artifacts/d7da884e4b084da713f86c2d68306130a0368cf56575c86dc4f63dfd238a9634.pt": "e41c6e0efa00a87564ea954d34abd23beb52b98ccb40e86207a12b969f1f39f6",
+        "artifacts/dadc9b957d9bad2a60f44ea114e05ce594e4e3e10db07e62d86acb7237b9b4a5.pt": "38991452680ccccdbecadadd1ac4553b228f485f9dc2e000d220bf8f35172946",
+        "artifacts/e6185f31b722f21fc949b65f031bc47184f25ecf426fbe6e57652e8ee90f0853.pt": "bd488d21757d6ea6cf634730c0486306821500cefbad01a520e4aeeea78d5b76",
+        "artifacts/e7bcec9896fa0c9a000fc2dc77db61740833c2c328a6fcd37a43a39d9a008763.pt": "f8e120758ddda064d2eef4feca1d181a3fc8104396dcbef4623fc7bd6e56b6ca",
+        "artifacts/e9b0ee24175f9abc93dd159f1b4cf40d1134207f6d52383f18686bdb3d161e78.pt": "1df94222fe121d7ba907c4c45617378fe6c820d5f6426e410399a3a734cae472",
+        "artifacts/e9edf9e59569dd6562c8e8ae9197d0842a9665ed19f919b6f64868142c198265.pt": "d6c9549506ffc1faeef0938964f4e6967ea5ef7eb0bc82e1f3017a689b495240",
+        "artifacts/eaec1435c4c07f6931f0e471a13795b5eb96813da9afe9d94c35f572ac4503b1.pt": "536fb37eea7c2cf0c16bc859562737a12443db5e523e7c33a98e72e8fa3fb508",
+        "artifacts/f0dccb7627943ff814ed1c2f3c225eeacfbabb90eaa159a7f621bc5b4f4d1571.pt": "71241beb6896e106adadfe1760e7782d55571e3738ba5bb737d97817214c1f64",
+        "artifacts/f4880ddd3130c9ee834558ffc23fa091b332decfae3d9898d72fe47b2465be67.pt": "1a76b2585aa4f626f8f1ff6d18dee88a2cf103e525a283d408bbb957b9af60a9",
+        "artifacts/f51fbd9d986bff55f70ed94187d9447bde0117483c0048045980a8357d4112a2.pt": "93a7c959b1e3a49af0a82373484a18cfbbd75abf1318e827b00cd2308b43c414",
+        "artifacts/f7bc315772c6824e49e28f6cd599f20a0334ecdc83a7b10ff9a7e75a2a654214.pt": "340e0baa59fbca4ce1378c79601155484602ede15d20232f5af7af53866a1b79",
+        "artifacts/fb91c1aea683b612db3c306662f42f80a0d770207420efc4847003995f9e5947.pt": "b97e6a76d1d305e809fa42c66bd6b01a42556c8ea618b50edd6228e6279b6f43",
+        "artifacts/fdc4df6a616e46224a3798cdba7129480195199a84dc79b45d64a6ac5b0c3afa.pt": "dd01de701dab005ac3e794a0608742d517627ba767811595a3fa8d2c7fb75d16",
+        "catalog.json": "03eecef59de7712d857aef9504dba94943fd7be760ef99096bfb33a9e2630846",
+        "events.jsonl": "9b3f07dfb9ee5e44fb8b257202ee1104ffd712f8b98ce97ebebf5fbe6167dfe0",
+        "job.json": "e322e30e626af3687cd6d6846438de83e12aa997f78f4eef4e7a85c73ff980b9",
+        "resources.json": "c252106cc65b5fd5d360c27ce1f3be76d8c830f4b9f0ed25ef0daf03cd806f34",
+        "result.json": "966945f0966e7d743ec1245c7c331e61172eecb7299cca43ce3fe854c9ae3aac",
+        "source-manifest.json": "241fd2bcac9750df7a4cf6804bae8334806dee9b2c147254d8b2bc25234dc9de",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "evidence_reused": true,
+      "job": "oracle-42",
+      "kind": "oracle",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7081.3832992,
+        "elapsed_seconds": 13.514212100000805,
+        "minimum_available_ram_bytes": 15424917504,
+        "peak_tree_rss_bytes": 383848448,
+        "samples": 89,
+        "started_at": 7067.8690873
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\oracle-42\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "evidence_file_hashes": {
+        "artifacts/00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255.pt": "f452f87a13ebf47922d43268f576ad341a220f017121398bc9b6b0ec57a656ef",
+        "artifacts/06874415df1c2511ffc0613352ae91fed54e34d3ea22a316209433985b4aed99.pt": "21087b284e3170afd854f3c4df184dd511fd397266a19df77281b2a6510a0bf1",
+        "artifacts/08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874.pt": "4e0057b8f334c84f68222b1935aa524b564340b45249feface6c646e5e93ea7f",
+        "artifacts/0a125ca5e87e5018ae538a9becfa66d0de5c95c2b0be90b0380847a48ecada6e.pt": "140d666eadcfa5482d8c9c752180baff108de77df725183ad835008c217ff775",
+        "artifacts/0c0eda06f9b35753e124ef28fd0a37e5b884cfc0fe77e90d436b780955bd2652.pt": "e7bbf33b378c52d09d1201af2d7a1a5814d9f838a7406854fd7c20204a441347",
+        "artifacts/0e62173b11fdbf546652db9c6803b178274099bc4c1ca5f7c72b03b6704415c5.pt": "66156f04c263cef2fcaf6d9e18666ac12255a3e3e96c6103b53aea6209245c15",
+        "artifacts/0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23.pt": "ae209e0f2a4a914ba68424c4ef687c4fac0ff07483d92d5ac47bc3454cfa593f",
+        "artifacts/103ea88b36b85f2b03eccd4ecf14366bbbf57b71e4cd0ecb72fb01a07e6024d2.pt": "282642098cef7b4217c6b28746d39b8cf48749d3e2d00323b8e06175d479741d",
+        "artifacts/285f2bbc61dd887fd652687fe9e6b86f86e7c3b57c92b593427fbefbc5a19517.pt": "2cee726cf558092ebb64fe2020d6bf3ebefd9b245cae33ddf23d311a2e59cef0",
+        "artifacts/29bf77f6f967f6f72fd3048cbb63d07f3702b4d822933a6c92dcc4d31910189d.pt": "708899586767b89ea64483037ed4b6cabdaa0df2f7edaa891aae4c6f94d650ab",
+        "artifacts/2c2c5c7f0f82abce5e856389925210c1ef7efd7cb18bef9f298e2f1d1f214f5f.pt": "43420788c8bf7c2de2447f0ddd49db8664cfc8e2e687fc03d526824991f445ee",
+        "artifacts/338ccbbe91b9efe28ed5bef8f06f9170075a4ab519f7df8485dbd3fb380b99da.pt": "0017d9c39e69040e2868c35fc0b6785eac883ed01b9fc87aa797ed5050464efc",
+        "artifacts/3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d.pt": "f95b0d02cf2142accfae2ac78a00748d823a47be04cb9e6cfb670ec285d7a81f",
+        "artifacts/45da7851baa1dbb1cade652d994d4d1a9ba2d2b5c6399415ffdcb952168460d4.pt": "529b472c1cf4eb6f7f674c341ce0d33c1c38d471f1421e719f4bef8dbe06902a",
+        "artifacts/481a074dcaf7a4f69a4058d934253c7b0264c64cfd319f39ff38661011aedd73.pt": "182e32848935977092a36202047ad5dd6688099f3d18296bded24886f4079767",
+        "artifacts/4afe6626fc2b8f0f2f2bd648d4c869c9e1a48944b0f3d9f907ba4cf80467c388.pt": "794ba62f37b08bd8fec0a1268badc1f5ee0e25b39e91731578e84758fd5c61db",
+        "artifacts/4bac37fc5eff48dc7af74b0cdd36f383ef13dffba163ad1949e252b195b065fb.pt": "c20e503efd12d6859d1f9e6e4b0d11449a916b391d6494674225575ea46d7bb3",
+        "artifacts/4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e.pt": "0300d9579e4603b8f30e4e7500c8955703299df21d7dc659e223feb9d499513f",
+        "artifacts/5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50.pt": "0718a4b2d8922f2665c3ee83a9d30bce00085baea9a9e8f71030a82fcb987948",
+        "artifacts/512402bce5c1d7c75bcdcd4e64650ef4a1e0b22fd28f604935421234d23d83e5.pt": "219c76bea52bae04ff70b52e5097196bbf30b3024daa82dc07892114d718f294",
+        "artifacts/52931940e9911dd1cd83d52cc1d79241d8e13d41f519e10fec0497f2122021d7.pt": "e0b45329c208b09ac26f9c8a20d29d95e9037a5d04b3a2868f007b56c995f45e",
+        "artifacts/53d8858e5f65c1256f6659462981ade5269ab04ba4d4f567ec641c0ca4ab2d8d.pt": "1083d97ec322fc03813a2bcf985ba3f770d33de3bb6255a5c8a2edd507bbdcb3",
+        "artifacts/57140bfcd785b1b5394a8f05e53af607bbd305e741d37f58a1305e49c8771025.pt": "af29ce9ca63d2abc8dabb70e4aa8bee83a56a2d39ad5bf1ec6849d46bb9367f1",
+        "artifacts/5886fdc26b8a00d33a93005bff17ca64c7fa73dba4c6eb3e6504468b10cb0a3e.pt": "487802c924f53bdf3c5eed06a2901d0a8f8d8ba53326c4d65ae30af82717c06f",
+        "artifacts/5b2a53d1edd83d6e9b9aaeb27975466edfdc000f0be04af7a8ee6dd5233a27ae.pt": "e93c7bbc291ba8c95b7079057f5e3e9c622ba36e049264dd4f53b7bd9013e3b5",
+        "artifacts/5c6b2edb09b76999a93b3002fa91530f3c65684dffd9f018aa2c82a95d94a17a.pt": "e1cd5c1d38dfe7a0c002842d6af53d5663467178455798bb7910d96218035c46",
+        "artifacts/5cbfe0727adb854124221127d501d501ae263c9efdcf33c45ec99d820eb73add.pt": "11ef13e3b311a931796b365e0491e8398f49a27cd2818327a27b1b318f965e76",
+        "artifacts/5d265353e38928f510c213da547fcf839d71521c9b3ef594c5c93ca093779d44.pt": "a840402505f54bc8c1642da7b3869f88ceb0c8140a0059255776a29d74bb21d7",
+        "artifacts/5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a.pt": "f12ace32bdcfe5a28a9cfeb156e87962525e2fb9acd2ccdab2f95a614b2c30f2",
+        "artifacts/689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597.pt": "b53520826a9314cf1eb3d48438197943c04bd797e81ee392b308a13990c33b2b",
+        "artifacts/6ef052193bc45ada07f5901c24be2d626042b1be71b4afbdd965958f25108477.pt": "1c9e3e5517277624ab7ddad13c2bba8700c73c050ac7ca93a52b3637f484ef42",
+        "artifacts/70510ebef108623c3f7b0806de44b0703643f3bd5ffb0f042898da0abe9bdb86.pt": "18bebda32bf94d48f318d35275b51b7d35edd7127a591e462debf7ae0a5c239b",
+        "artifacts/71c9328b2e2685f6436fdea25dc81b2f75da4205c19b4a780383d58604c0d726.pt": "b75d40f778a33b1a7a676ad115a5825180be45c38d43ce0013dc9eccd17698a9",
+        "artifacts/73977b91595c9bc3687bf151ec0a3e89182e70c7a2e2656c417fc5a9ec656516.pt": "93672d67e0fb6389e8c19dd25ea5ce92980f6e69b266eda73d690d1cf0318309",
+        "artifacts/7428fa38ba4eff3626d9c0b4a81ad002ec4dfb02e0bf65cb7c53dd767b104e26.pt": "14a526b97392ad777ce3c71b74e8b754e8ec3289568436ad083255c9d428c4c8",
+        "artifacts/748b4d3d01c319601e622b0da80687fdf60000f42267d726c05ef2d7feb703ec.pt": "03d41d65682f970a5c18c58b17b7f025d208a41cdeec0b8a3760842ec5cc6ca1",
+        "artifacts/797e0f57b55ad47607c5f50f9c82b4370d7ebe2af8e4a78ea0855ec27e3b7f2c.pt": "5c17c2f383a584b0b839e2aa558ce42afe36441e4f3b7d986911845fa6e22d4d",
+        "artifacts/7a8f4fe5b59f18f288b4291e5fa440e10a0e63b9157f305967d38cb7db4a84dd.pt": "4750c8535df508b58292e0629736880d0041d3b5b205c3ec99bf573feb64b5c8",
+        "artifacts/7cac274ab6bc9f3c27527153b496fc9cbc22df10fafe9f888a31a5ffa2ae4d35.pt": "823f0525d4cab28aa19ffb01441e8a8490bbe85b3b3fba8c7c84c925be75707b",
+        "artifacts/7f6243524c004e2b3434274bf2c6c927d404faeb91c61d715d8b7cd676813a6a.pt": "c54a2cfdd3792f694ed91c0b31be51a954c88cdb699432b0e6b971129961020c",
+        "artifacts/81a1c024fcd353a219bc7995d00a1ec077b3aa94f1d161ee71c6510372c78715.pt": "e5dc5cea62781000c3ccc4f78d0ebd339a0fcb440bf9cbd19d39d3447952f02b",
+        "artifacts/81f7805541e6ecc160e8d321001938c5dcb6f79eb4ff3a4fd642cdb8e33ccbb8.pt": "2cd4451c48ba6450e10032a91a348dfd9093f88d0ec11918eea0a1fd19bbcc18",
+        "artifacts/8aed38e07f89e24119b001d3b82636b9f5219c656f66d9b57f691118a4b0d359.pt": "5dfeb2389835f06e83827fe485614bdd19e51b7278e7d9f1094c7f011051029a",
+        "artifacts/8d32152882d49f6a062ac0a0750bbe5dabbb028bd1761f6211bd0d3a6ff30f3a.pt": "1b95c44d977b383890c051427bdc4fa8199b32b7ca818d2a30d1b69768584b21",
+        "artifacts/9035454ab4edccfeaf943a8aa42868b2d7d1d053144777cdf6c61c4eb046c80f.pt": "7133364f91896554ac113498393c17f30b1f5ef4b436bfa367bb7419d2a2a423",
+        "artifacts/9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199.pt": "ff4a8cbf902b19a989c6758263da420e73e0e495b724e3ff6c15e250ea9eb7ba",
+        "artifacts/931d01123952bf6403642d5e277229b24393a09e5dd48130babe584e59de97f4.pt": "d31e4231f9c5520ea6e27b6d6042a55d914860a2928dac8f2cc68aecb94cc358",
+        "artifacts/93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5.pt": "d9a9d304149e401373edd2fd9c6fc95d0caa3ffc0f4ecea01a9c42564b3a7bd1",
+        "artifacts/970ed89040b2b431639ae6c00c35664ef3b98fc0a58a424fdbc389beee4a369f.pt": "b35927bc0b415c5c5a3f75f2f8e3655b2ea9791b05e12fa0c1552a51a25d28dd",
+        "artifacts/984536dda1b8a8d19b0f69d9eddbd0f16cc378151eb65553b2d896e7bc72d807.pt": "fc7fbe124e67ecc8167d36ae430e4f59752bdcf659593d47167a1da2109beeaf",
+        "artifacts/9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784.pt": "9305b1ead6c6b4208f028c930db3e5e07204a4a2381e5c2d2f8488a5ab2c43f7",
+        "artifacts/a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314.pt": "4d44e272753df257d6c3ea1866d318e351b93fb1f394c883133ca3fac2220cf4",
+        "artifacts/a9dfd560598e677882519f5568f63052812ea45941741bc4dde7e50c0b32ae44.pt": "a37a8b17d3ab545d5d7c15a51d15602dd8528a8be480acab5be5ef0648555bfe",
+        "artifacts/ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157.pt": "022fa8bd3406da4441ee858c10e9c6d0abfd91b009d86d63ca873d4dbfa8025f",
+        "artifacts/adad747cb49e0392c41c5a4918d0fa221899f3b40407eb96cb54f467b2e03328.pt": "f368214c741d43621c438fa610cf4792316aaccefe460a46fab11f3c7d67d974",
+        "artifacts/aea3ffcc2e33540e57ffc7372ed40f16844c37a7027f2746a2b5e52ef68c4439.pt": "61ccfdc94a355e9022e4fca821b0e05e49c2e340db916cb27c8a07755a9d64dd",
+        "artifacts/b0d4e8870f624263a6efd6f6f42c65d2516b90be38f18e799accce6295e4c005.pt": "d7c5b4bb03ea5148ed541a585b26c513ee5ae2cac81cc077c4110561c8059e07",
+        "artifacts/b68eface112e2e3b04ea6f337903bbc1325cc452fdb4f582de431762d28ad1fc.pt": "7c7c456a748efb2bc348f500d5b8463881af983aa227c9e87ed44465f4dfadf3",
+        "artifacts/baf373a2555c828b5e9c7024669769c23dfc5246bc6ded98d60f13af79ccb7e7.pt": "f38a1609b350dc85618ef30b08a0396f65c9369eb96b56f4b462d740c7dbc071",
+        "artifacts/c263e5aa03e1fceda1ac17b41053efe6f9ca21ba2e3f4e7f6ae160d78c3c6f71.pt": "018db9a34f689f2d7b5da1042ee80d822e86cfe8989f52cf511288114e765536",
+        "artifacts/c8044b73d8970a6eb4184b4aa229442934d26c7985d5768fe6f4f66b4f48c79b.pt": "8c9e7eec14a90e137fd8d7cfda1d5d2b0a7aa0e85fb82dbd8f241b442e432934",
+        "artifacts/c90fbeb9a862d6056e6373d310bec1e3988fe5ee0fde7f65444f358e08ada596.pt": "1cb2342162cc9bdbbafa86080b3f2ea90533ca5df1e09c4f5bcf27a74ba96b34",
+        "artifacts/ce2e61f4be7fe471a4fcfd6b0123ca7e546c7f476eb726705c8fe5ecb7b7ae4e.pt": "779ee646640193843c41328d3731b544e9ecbbd225064e9f1550b265f6638c5c",
+        "artifacts/d128f8cda8c00bc17938fe3b55b6229a8388aab5908300f4afc0c245658a2a9d.pt": "7fc9cbf1c3202cac83ede6253594f0db63bb928311177491d96a73a9af4d889b",
+        "artifacts/d69e1a6cb447f381455a7f40324f9e7d7e41df5c60bbf98c9d0f1504c7e15b69.pt": "9787f486f2879ade2d18407b41fce36d1f5d0876c97daff8a355af5a9f6a9391",
+        "artifacts/d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b.pt": "72b6cd76ef531723b61fda7b5de1fb7fbf9b68d410d5ca47c45022b9a0ff2f98",
+        "artifacts/d764e8deabf7bc905e389c014ea92d6737d949b080ff1afcb07d5455c55297fa.pt": "08cbc873f714392e9d5495816db611ba359ad1df6c46f9cbbeb4d8af2242f584",
+        "artifacts/d7da884e4b084da713f86c2d68306130a0368cf56575c86dc4f63dfd238a9634.pt": "68dc0ae49d2242ffae04d2d34a247caa23c172ad709d46aec15a2a14f928903c",
+        "artifacts/dadc9b957d9bad2a60f44ea114e05ce594e4e3e10db07e62d86acb7237b9b4a5.pt": "935513d2beeb6d579aabb90779f375dcc0e1e928a95027d25a62290e18a35117",
+        "artifacts/e6185f31b722f21fc949b65f031bc47184f25ecf426fbe6e57652e8ee90f0853.pt": "aeea135596df810f3aa56d76d90e2df717e52b3706a108a7b9b07038074b7be4",
+        "artifacts/e7bcec9896fa0c9a000fc2dc77db61740833c2c328a6fcd37a43a39d9a008763.pt": "34158e7ef7fccbb59de372a0cd93dc9297265a9a42de241538c2778a0ded5952",
+        "artifacts/e9b0ee24175f9abc93dd159f1b4cf40d1134207f6d52383f18686bdb3d161e78.pt": "9c7d36de68b8cb215066673a019f79a29ea00a9200e833a825921b7dd956929f",
+        "artifacts/e9edf9e59569dd6562c8e8ae9197d0842a9665ed19f919b6f64868142c198265.pt": "bcb0c30549b43a46b5b1d5bc2828c50a888865a332f31b7b58bcc807d3c43222",
+        "artifacts/eaec1435c4c07f6931f0e471a13795b5eb96813da9afe9d94c35f572ac4503b1.pt": "cc67455fd6590044726a29eac2db3deaf672f6c7acad3f04bb3856ff8358b064",
+        "artifacts/f0dccb7627943ff814ed1c2f3c225eeacfbabb90eaa159a7f621bc5b4f4d1571.pt": "99cbb7fed53b4444304c2623f5f03d866b9854fe0644009a7cea09f9b9dc3cbd",
+        "artifacts/f4880ddd3130c9ee834558ffc23fa091b332decfae3d9898d72fe47b2465be67.pt": "c03c00d162472ca269e3df348773d2fdc118e5f931b70fd817b8f8586d2d0ab4",
+        "artifacts/f51fbd9d986bff55f70ed94187d9447bde0117483c0048045980a8357d4112a2.pt": "09d0b50096e3e0e489adba3f6bd7305159c0a5f2de624502a3cea0dc094c2e5c",
+        "artifacts/f7bc315772c6824e49e28f6cd599f20a0334ecdc83a7b10ff9a7e75a2a654214.pt": "bf06d7626adca0cbf81606ef71a239831980f1ec2eea6d71b7d41300265b1312",
+        "artifacts/fb91c1aea683b612db3c306662f42f80a0d770207420efc4847003995f9e5947.pt": "40eee25336d0a21c8ade136db806bec97e717ac243eecc381d0dc2a27b1711ab",
+        "artifacts/fdc4df6a616e46224a3798cdba7129480195199a84dc79b45d64a6ac5b0c3afa.pt": "7be3dfda60fdbfd1e9af37f9555be96dd5c3e3fb6e65511f07d1b2bdc05fbf5a",
+        "catalog.json": "03eecef59de7712d857aef9504dba94943fd7be760ef99096bfb33a9e2630846",
+        "events.jsonl": "c5a8620595c7952fb2883e164e60aedbdffbfb18052128a61b84a8069551cb4a",
+        "job.json": "0f06687fa0236795ad22f37c0579cd93d95c5c4aa83c644417b75210b310fee6",
+        "resources.json": "509f3277df6743e68451f310773bcb2a53932d5393838bdeaec5eba0f15b8dea",
+        "result.json": "ea7da375d0bf26b60d86101ed600c15c28abcf7febf35d99ef8f79b25ea24943",
+        "source-manifest.json": "70f72875a4d710a8c9e004a0b36e4a143b203b10420ba9972f2adee6b155f246",
+        "stderr.log": "2db9c1951074361744997c635d78264c2dc3577c70c4cdbe58e22cfaed3a45c0",
+        "stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "evidence_reused": true,
+      "job": "oracle-43",
+      "kind": "oracle",
+      "new_attempts": 0,
+      "origin_execution": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+      "origin_protocol_sha256": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+      "origin_source_build": "3b5c0b040471a6b61c66a65c2f0caf2be3249253",
+      "resources": {
+        "completed_at": 7094.0279503,
+        "elapsed_seconds": 12.562450599999465,
+        "minimum_available_ram_bytes": 16943071232,
+        "peak_tree_rss_bytes": 384364544,
+        "samples": 93,
+        "started_at": 7081.4654999
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2\\jobs\\oracle-43\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "unchanged_execution_paths": {
+        "_run_job": "af02c94d1416d64e04a161123bdd39e395f7d2bc47e9d49a14d6e0c5c1b4279e",
+        "_source_evaluator": "4549c8772c7cc72dc84d7db23cbbad45580b61307ad4c6375f9e961755b48cd1",
+        "_toy": "618a222549e979d8f074e4f8fe2ab91b59e7d56cc9447e8a25af1669dcb6c3f4",
+        "composition_job": "f7148c4acead4c5f399bc9e61e53472968a48a16263bb8ebafa35ee5d26a1fb5",
+        "oracle_branch": "c71e94fcd20981573572da8cafa020a07a2d44d2c2ab6de72b1ddf970e29314d"
+      }
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8208.8092904,
+        "elapsed_seconds": 9.335855899998933,
+        "minimum_available_ram_bytes": 16787267584,
+        "peak_tree_rss_bytes": 381390848,
+        "samples": 64,
+        "started_at": 8199.4734348
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8217.9133014,
+        "elapsed_seconds": 9.039573199999722,
+        "minimum_available_ram_bytes": 16907157504,
+        "peak_tree_rss_bytes": 382447616,
+        "samples": 64,
+        "started_at": 8208.8737285
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8233.7243507,
+        "elapsed_seconds": 15.7287309000003,
+        "minimum_available_ram_bytes": 16565895168,
+        "peak_tree_rss_bytes": 475521024,
+        "samples": 112,
+        "started_at": 8217.99562
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8241.883711,
+        "elapsed_seconds": 8.084854200000336,
+        "minimum_available_ram_bytes": 16903692288,
+        "peak_tree_rss_bytes": 382713856,
+        "samples": 64,
+        "started_at": 8233.798857
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8256.7694116,
+        "elapsed_seconds": 14.822320900000705,
+        "minimum_available_ram_bytes": 16863789056,
+        "peak_tree_rss_bytes": 475533312,
+        "samples": 117,
+        "started_at": 8241.9470909
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8264.9762438,
+        "elapsed_seconds": 8.130970199999865,
+        "minimum_available_ram_bytes": 16772792320,
+        "peak_tree_rss_bytes": 382164992,
+        "samples": 64,
+        "started_at": 8256.8452738
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8280.1046706,
+        "elapsed_seconds": 15.051232599998912,
+        "minimum_available_ram_bytes": 15762788352,
+        "peak_tree_rss_bytes": 475480064,
+        "samples": 106,
+        "started_at": 8265.0534382
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8288.8695931,
+        "elapsed_seconds": 8.674540399999387,
+        "minimum_available_ram_bytes": 16759713792,
+        "peak_tree_rss_bytes": 382111744,
+        "samples": 61,
+        "started_at": 8280.1950529
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-attempts-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8298.9096423,
+        "elapsed_seconds": 9.962242500001594,
+        "minimum_available_ram_bytes": 15910309888,
+        "peak_tree_rss_bytes": 382947328,
+        "samples": 76,
+        "started_at": 8288.9474
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-attempts-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8311.7257034,
+        "elapsed_seconds": 9.976398299999346,
+        "minimum_available_ram_bytes": 15274459136,
+        "peak_tree_rss_bytes": 382492672,
+        "samples": 66,
+        "started_at": 8301.7493054
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8324.0456657,
+        "elapsed_seconds": 11.952823100000387,
+        "minimum_available_ram_bytes": 16594014208,
+        "peak_tree_rss_bytes": 384106496,
+        "samples": 84,
+        "started_at": 8312.0928429
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8354.83615,
+        "elapsed_seconds": 30.71580560000075,
+        "minimum_available_ram_bytes": 16155557888,
+        "peak_tree_rss_bytes": 476745728,
+        "samples": 217,
+        "started_at": 8324.1203446
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8366.9841107,
+        "elapsed_seconds": 12.070845800000825,
+        "minimum_available_ram_bytes": 16368791552,
+        "peak_tree_rss_bytes": 384217088,
+        "samples": 95,
+        "started_at": 8354.9132651
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8397.5699186,
+        "elapsed_seconds": 30.50477829999909,
+        "minimum_available_ram_bytes": 16549306368,
+        "peak_tree_rss_bytes": 476979200,
+        "samples": 241,
+        "started_at": 8367.0651409
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8406.0778429,
+        "elapsed_seconds": 8.429394599999796,
+        "minimum_available_ram_bytes": 16793427968,
+        "peak_tree_rss_bytes": 381890560,
+        "samples": 66,
+        "started_at": 8397.6484485
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8436.6933771,
+        "elapsed_seconds": 30.53746619999947,
+        "minimum_available_ram_bytes": 16901767168,
+        "peak_tree_rss_bytes": 478101504,
+        "samples": 243,
+        "started_at": 8406.1559111
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8445.0240535,
+        "elapsed_seconds": 8.25689710000006,
+        "minimum_available_ram_bytes": 17277485056,
+        "peak_tree_rss_bytes": 382287872,
+        "samples": 54,
+        "started_at": 8436.7671566
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-41-time-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8456.166143,
+        "elapsed_seconds": 11.068456000000879,
+        "minimum_available_ram_bytes": 17258569728,
+        "peak_tree_rss_bytes": 384081920,
+        "samples": 79,
+        "started_at": 8445.0976872
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-41-time-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8464.4325004,
+        "elapsed_seconds": 8.184051899999758,
+        "minimum_available_ram_bytes": 16954392576,
+        "peak_tree_rss_bytes": 382443520,
+        "samples": 50,
+        "started_at": 8456.2484487
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8472.5250197,
+        "elapsed_seconds": 8.016956299999947,
+        "minimum_available_ram_bytes": 17131307008,
+        "peak_tree_rss_bytes": 382177280,
+        "samples": 64,
+        "started_at": 8464.5080636
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8487.1312636,
+        "elapsed_seconds": 14.531418000000485,
+        "minimum_available_ram_bytes": 17030197248,
+        "peak_tree_rss_bytes": 475287552,
+        "samples": 104,
+        "started_at": 8472.5998459
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8495.3670951,
+        "elapsed_seconds": 8.164398099999744,
+        "minimum_available_ram_bytes": 17171189760,
+        "peak_tree_rss_bytes": 382676992,
+        "samples": 65,
+        "started_at": 8487.2026972
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8510.7621288,
+        "elapsed_seconds": 15.317841000000044,
+        "minimum_available_ram_bytes": 17152315392,
+        "peak_tree_rss_bytes": 475783168,
+        "samples": 122,
+        "started_at": 8495.444288
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8518.919042,
+        "elapsed_seconds": 8.086050300000352,
+        "minimum_available_ram_bytes": 17349197824,
+        "peak_tree_rss_bytes": 382042112,
+        "samples": 57,
+        "started_at": 8510.8329918
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8533.0181181,
+        "elapsed_seconds": 14.022582499999771,
+        "minimum_available_ram_bytes": 17025110016,
+        "peak_tree_rss_bytes": 476233728,
+        "samples": 99,
+        "started_at": 8518.9955358
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8541.0901006,
+        "elapsed_seconds": 7.994728499999837,
+        "minimum_available_ram_bytes": 17227612160,
+        "peak_tree_rss_bytes": 381890560,
+        "samples": 57,
+        "started_at": 8533.0953725
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-attempts-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8549.3396949,
+        "elapsed_seconds": 8.174096299999292,
+        "minimum_available_ram_bytes": 17212604416,
+        "peak_tree_rss_bytes": 382492672,
+        "samples": 58,
+        "started_at": 8541.1655988
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-attempts-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8557.5620799,
+        "elapsed_seconds": 8.146666100001312,
+        "minimum_available_ram_bytes": 17287589888,
+        "peak_tree_rss_bytes": 382283776,
+        "samples": 58,
+        "started_at": 8549.415414
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8568.9182039,
+        "elapsed_seconds": 11.27458149999984,
+        "minimum_available_ram_bytes": 17141944320,
+        "peak_tree_rss_bytes": 384053248,
+        "samples": 79,
+        "started_at": 8557.6436227
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8599.7529258,
+        "elapsed_seconds": 30.749494400000913,
+        "minimum_available_ram_bytes": 16884289536,
+        "peak_tree_rss_bytes": 477323264,
+        "samples": 243,
+        "started_at": 8569.0034315
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8610.8102224,
+        "elapsed_seconds": 10.986330699999598,
+        "minimum_available_ram_bytes": 17188368384,
+        "peak_tree_rss_bytes": 383840256,
+        "samples": 77,
+        "started_at": 8599.8238919
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8641.8335298,
+        "elapsed_seconds": 30.949086300001,
+        "minimum_available_ram_bytes": 17032724480,
+        "peak_tree_rss_bytes": 478404608,
+        "samples": 220,
+        "started_at": 8610.8844438
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8650.1328657,
+        "elapsed_seconds": 8.233472599999004,
+        "minimum_available_ram_bytes": 17160335360,
+        "peak_tree_rss_bytes": 382152704,
+        "samples": 54,
+        "started_at": 8641.8993933
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8680.7581207,
+        "elapsed_seconds": 30.559133999999176,
+        "minimum_available_ram_bytes": 17123524608,
+        "peak_tree_rss_bytes": 476950528,
+        "samples": 242,
+        "started_at": 8650.1989869
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8688.8907615,
+        "elapsed_seconds": 8.061031400000502,
+        "minimum_available_ram_bytes": 17416908800,
+        "peak_tree_rss_bytes": 382730240,
+        "samples": 64,
+        "started_at": 8680.8297303
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-42-time-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8699.9035696,
+        "elapsed_seconds": 10.942887600000176,
+        "minimum_available_ram_bytes": 17360637952,
+        "peak_tree_rss_bytes": 384622592,
+        "samples": 86,
+        "started_at": 8688.9606822
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-42-time-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8708.2183164,
+        "elapsed_seconds": 8.252252599999338,
+        "minimum_available_ram_bytes": 17089048576,
+        "peak_tree_rss_bytes": 382328832,
+        "samples": 64,
+        "started_at": 8699.966064
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8716.4695816,
+        "elapsed_seconds": 8.175989600000321,
+        "minimum_available_ram_bytes": 17151963136,
+        "peak_tree_rss_bytes": 382836736,
+        "samples": 65,
+        "started_at": 8708.2935923
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8731.1644338,
+        "elapsed_seconds": 14.579785100000663,
+        "minimum_available_ram_bytes": 17094557696,
+        "peak_tree_rss_bytes": 475766784,
+        "samples": 115,
+        "started_at": 8716.5846489
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8739.4606166,
+        "elapsed_seconds": 8.214195199998358,
+        "minimum_available_ram_bytes": 17228677120,
+        "peak_tree_rss_bytes": 382853120,
+        "samples": 58,
+        "started_at": 8731.2464216
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8755.2782908,
+        "elapsed_seconds": 15.741741199999524,
+        "minimum_available_ram_bytes": 17192796160,
+        "peak_tree_rss_bytes": 475168768,
+        "samples": 123,
+        "started_at": 8739.5365497
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8763.6471555,
+        "elapsed_seconds": 8.294278499999564,
+        "minimum_available_ram_bytes": 16888635392,
+        "peak_tree_rss_bytes": 382132224,
+        "samples": 58,
+        "started_at": 8755.3528772
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8777.4831047,
+        "elapsed_seconds": 13.751502000000983,
+        "minimum_available_ram_bytes": 17124265984,
+        "peak_tree_rss_bytes": 474796032,
+        "samples": 109,
+        "started_at": 8763.7316029
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8785.4871271,
+        "elapsed_seconds": 7.93117650000022,
+        "minimum_available_ram_bytes": 17310650368,
+        "peak_tree_rss_bytes": 381243392,
+        "samples": 63,
+        "started_at": 8777.5559508
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-attempts-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8793.9349997,
+        "elapsed_seconds": 8.372579700000642,
+        "minimum_available_ram_bytes": 17336528896,
+        "peak_tree_rss_bytes": 382529536,
+        "samples": 53,
+        "started_at": 8785.5624202
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-attempts-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8802.372467,
+        "elapsed_seconds": 8.353978400000415,
+        "minimum_available_ram_bytes": 17452208128,
+        "peak_tree_rss_bytes": 382210048,
+        "samples": 59,
+        "started_at": 8794.0184888
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8813.2190677,
+        "elapsed_seconds": 10.770741099999213,
+        "minimum_available_ram_bytes": 16838397952,
+        "peak_tree_rss_bytes": 384196608,
+        "samples": 85,
+        "started_at": 8802.4483268
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8843.9193017,
+        "elapsed_seconds": 30.623407999999472,
+        "minimum_available_ram_bytes": 16366792704,
+        "peak_tree_rss_bytes": 476651520,
+        "samples": 216,
+        "started_at": 8813.2958939
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8855.9865744,
+        "elapsed_seconds": 11.987325500000225,
+        "minimum_available_ram_bytes": 16634392576,
+        "peak_tree_rss_bytes": 384966656,
+        "samples": 85,
+        "started_at": 8843.999249
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8886.9752823,
+        "elapsed_seconds": 30.898212399999466,
+        "minimum_available_ram_bytes": 15933575168,
+        "peak_tree_rss_bytes": 477130752,
+        "samples": 217,
+        "started_at": 8856.0770701
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8895.376894,
+        "elapsed_seconds": 8.329336599999806,
+        "minimum_available_ram_bytes": 16954056704,
+        "peak_tree_rss_bytes": 381657088,
+        "samples": 66,
+        "started_at": 8887.0475576
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8925.534926,
+        "elapsed_seconds": 30.07871420000083,
+        "minimum_available_ram_bytes": 16544460800,
+        "peak_tree_rss_bytes": 477384704,
+        "samples": 235,
+        "started_at": 8895.456212
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8933.7662929,
+        "elapsed_seconds": 8.165200199999163,
+        "minimum_available_ram_bytes": 16796180480,
+        "peak_tree_rss_bytes": 382410752,
+        "samples": 58,
+        "started_at": 8925.6010929
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "search-43-time-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 8945.4159593,
+        "elapsed_seconds": 11.572113300000638,
+        "minimum_available_ram_bytes": 16445796352,
+        "peak_tree_rss_bytes": 384589824,
+        "samples": 81,
+        "started_at": 8933.8438462
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\search-43-time-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "order-41",
+      "kind": "order",
+      "resources": {
+        "completed_at": 8953.8762093,
+        "elapsed_seconds": 8.379518100000496,
+        "minimum_available_ram_bytes": 16591306752,
+        "peak_tree_rss_bytes": 379318272,
+        "samples": 59,
+        "started_at": 8945.4966914
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\order-41\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-41-9921-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 8962.5812901,
+        "elapsed_seconds": 8.629847000000154,
+        "minimum_available_ram_bytes": 16572772352,
+        "peak_tree_rss_bytes": 382816256,
+        "samples": 61,
+        "started_at": 8953.9514433
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-41-9921-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-41-9921-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 8973.308759,
+        "elapsed_seconds": 10.64494139999988,
+        "minimum_available_ram_bytes": 16681299968,
+        "peak_tree_rss_bytes": 383606784,
+        "samples": 82,
+        "started_at": 8962.6638178
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-41-9921-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-41-9922-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 8983.603029,
+        "elapsed_seconds": 10.214097000000038,
+        "minimum_available_ram_bytes": 17171804160,
+        "peak_tree_rss_bytes": 383094784,
+        "samples": 79,
+        "started_at": 8973.3889322
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-41-9922-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-41-9922-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 8991.926264,
+        "elapsed_seconds": 8.244349099999454,
+        "minimum_available_ram_bytes": 17311567872,
+        "peak_tree_rss_bytes": 382496768,
+        "samples": 65,
+        "started_at": 8983.6819151
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-41-9922-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-41-9923-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9000.2350612,
+        "elapsed_seconds": 8.230829600001016,
+        "minimum_available_ram_bytes": 17292541952,
+        "peak_tree_rss_bytes": 382504960,
+        "samples": 65,
+        "started_at": 8992.0042318
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-41-9923-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-41-9923-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9010.3219285,
+        "elapsed_seconds": 10.01214379999874,
+        "minimum_available_ram_bytes": 17125990400,
+        "peak_tree_rss_bytes": 383856640,
+        "samples": 78,
+        "started_at": 9000.3097849
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-41-9923-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "order-42",
+      "kind": "order",
+      "resources": {
+        "completed_at": 9018.699445,
+        "elapsed_seconds": 8.296973299999081,
+        "minimum_available_ram_bytes": 17186562048,
+        "peak_tree_rss_bytes": 379666432,
+        "samples": 65,
+        "started_at": 9010.4024719
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\order-42\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-42-9921-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9029.143969,
+        "elapsed_seconds": 10.363019800000984,
+        "minimum_available_ram_bytes": 17128013824,
+        "peak_tree_rss_bytes": 383668224,
+        "samples": 73,
+        "started_at": 9018.7809494
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-42-9921-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-42-9921-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9038.0088594,
+        "elapsed_seconds": 8.784305799999856,
+        "minimum_available_ram_bytes": 17141866496,
+        "peak_tree_rss_bytes": 383049728,
+        "samples": 62,
+        "started_at": 9029.2245538
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-42-9921-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-42-9922-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9046.8356062,
+        "elapsed_seconds": 8.744584800000666,
+        "minimum_available_ram_bytes": 17219366912,
+        "peak_tree_rss_bytes": 381628416,
+        "samples": 56,
+        "started_at": 9038.0910217
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-42-9922-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-42-9922-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9056.835524,
+        "elapsed_seconds": 9.917321700000684,
+        "minimum_available_ram_bytes": 17258745856,
+        "peak_tree_rss_bytes": 383565824,
+        "samples": 64,
+        "started_at": 9046.9182028
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-42-9922-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-42-9923-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9067.100031,
+        "elapsed_seconds": 10.18471849999878,
+        "minimum_available_ram_bytes": 16944775168,
+        "peak_tree_rss_bytes": 384036864,
+        "samples": 65,
+        "started_at": 9056.9153127
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-42-9923-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-42-9923-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9075.4900929,
+        "elapsed_seconds": 8.309014500000558,
+        "minimum_available_ram_bytes": 17125093376,
+        "peak_tree_rss_bytes": 381788160,
+        "samples": 65,
+        "started_at": 9067.1810785
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-42-9923-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "order-43",
+      "kind": "order",
+      "resources": {
+        "completed_at": 9083.9011299,
+        "elapsed_seconds": 8.334888399998817,
+        "minimum_available_ram_bytes": 17255333888,
+        "peak_tree_rss_bytes": 379969536,
+        "samples": 59,
+        "started_at": 9075.5662417
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\order-43\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-43-9921-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9092.3558892,
+        "elapsed_seconds": 8.370863300000565,
+        "minimum_available_ram_bytes": 17262940160,
+        "peak_tree_rss_bytes": 382296064,
+        "samples": 59,
+        "started_at": 9083.9850261
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-43-9921-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-43-9921-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9102.6289818,
+        "elapsed_seconds": 10.191222599998582,
+        "minimum_available_ram_bytes": 17408802816,
+        "peak_tree_rss_bytes": 383471616,
+        "samples": 72,
+        "started_at": 9092.4377595
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-43-9921-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-43-9922-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9113.2001996,
+        "elapsed_seconds": 10.484373700001015,
+        "minimum_available_ram_bytes": 17347903488,
+        "peak_tree_rss_bytes": 383635456,
+        "samples": 74,
+        "started_at": 9102.7158262
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-43-9922-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-43-9922-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9122.195331,
+        "elapsed_seconds": 8.90770220000013,
+        "minimum_available_ram_bytes": 17210683392,
+        "peak_tree_rss_bytes": 382291968,
+        "samples": 63,
+        "started_at": 9113.2876291
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-43-9922-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-43-9923-A",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9131.0697926,
+        "elapsed_seconds": 8.794362799999362,
+        "minimum_available_ram_bytes": 17242005504,
+        "peak_tree_rss_bytes": 382296064,
+        "samples": 67,
+        "started_at": 9122.2754299
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-43-9923-A\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "cache-43-9923-B",
+      "kind": "cache",
+      "resources": {
+        "completed_at": 9141.7312781,
+        "elapsed_seconds": 10.578074500001094,
+        "minimum_available_ram_bytes": 17217769472,
+        "peak_tree_rss_bytes": 384192512,
+        "samples": 81,
+        "started_at": 9131.1532039
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\cache-43-9923-B\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "finalize-41",
+      "kind": "finalize",
+      "resources": {
+        "completed_at": 9152.1310498,
+        "elapsed_seconds": 10.183014500000354,
+        "minimum_available_ram_bytes": 17243672576,
+        "peak_tree_rss_bytes": 385490944,
+        "samples": 65,
+        "started_at": 9141.9480355
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\finalize-41\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "finalize-42",
+      "kind": "finalize",
+      "resources": {
+        "completed_at": 9162.4630036,
+        "elapsed_seconds": 10.25137100000029,
+        "minimum_available_ram_bytes": 17387495424,
+        "peak_tree_rss_bytes": 385552384,
+        "samples": 80,
+        "started_at": 9152.2116328
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\finalize-42\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    },
+    {
+      "error": null,
+      "job": "finalize-43",
+      "kind": "finalize",
+      "resources": {
+        "completed_at": 9172.8793822,
+        "elapsed_seconds": 10.334912399999666,
+        "minimum_available_ram_bytes": 17404354560,
+        "peak_tree_rss_bytes": 383987712,
+        "samples": 63,
+        "started_at": 9162.5444701
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3\\jobs\\finalize-43\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null
+    }
+  ],
+  "mlp_attempts": 3010,
+  "protocol_sha256": "997321b0d46933ec466a7baee0526db372a9deea8244dfad3861d796d1bd91e3",
+  "started_at": 6608.1114349,
+  "status": "succeeded"
+}

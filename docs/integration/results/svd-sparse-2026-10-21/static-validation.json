@@ -1,0 +1,47 @@
+{
+  "source_preservation": {
+    "preserved": true,
+    "roots": 3,
+    "files": 130,
+    "before_manifest_sha256": "2695253175e71700c9d8906e1e103e2ed24efd2ac89b6c3b64c5e0dcb259fd8a",
+    "after_manifest_sha256": "2695253175e71700c9d8906e1e103e2ed24efd2ac89b6c3b64c5e0dcb259fd8a",
+    "scope": "HEAD, git status, byte counts and SHA256 of modified and non-ignored untracked files; originals were not stashed or reset",
+    "working_copies": [
+      {
+        "label": "legacy-working-copy",
+        "head": "844114fc968c436e030b93e4ccac6f954ae76ff0",
+        "status_sha256": "63c39eec18678e62e8144eb4b365feac5568837e19dd7837c0c696eec0c35ebb",
+        "files": 130
+      },
+      {
+        "label": "svd-source",
+        "head": "cd29823122f9454772ebde0aede3eabaa2977cd4",
+        "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "files": 0
+      },
+      {
+        "label": "sparse-source",
+        "head": "59028b228983a8a46bff8272e59c7aacfeee7916",
+        "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "files": 0
+      }
+    ]
+  },
+  "historical_sparse_files_sha256": {
+    "docs/sparse_compression/INTEGRATION.md": "4171980a0c3aa0cbc339aa92e4bc0383b77445706ae78c6a411a54ff12e527c5",
+    "docs/sparse_compression/LOCAL_EXPERIMENT_METRICS.json": "de1c0035483fb85ee40d14382e4ca932b5d9ddca8f301c5e66aa9cb8da9d6ec2",
+    "docs/sparse_compression/LOCAL_EXPERIMENT_PROTOCOL.md": "d2e4093202b93e65e05496d2dc6e5098d3c70eabdfda752af0b9fac5c9865988",
+    "docs/sparse_compression/LOCAL_EXPERIMENT_PROTOCOL_V2.md": "4509a689ea599e00f45b0cee03e8f0507266ad664c0da0f51b5423cb1f9750fa",
+    "docs/sparse_compression/LOCAL_EXPERIMENT_RESULTS.md": "3172fcf5ab505c834703ec59bc27d5e6b43a3a32498ecde12a9f73caceb7f42f",
+    "docs/sparse_compression/PLAN.md": "ed66b3c68c4edc1d8e9aba3bee06dafa9908482edee427be02de1c910ea60eb5",
+    "docs/sparse_compression/RESULTS_V2.md": "5abaaf80682dd55135d1c66a56b86b91d7a5f3000b54324c341b50f17807b731",
+    "docs/sparse_compression/results_v2_metrics.csv": "548c777c05e495baf33384ebd1e7432c98fb6848a03b64aa24da958db4383aa7",
+    "docs/sparse_compression/results_v2_metrics.json": "1e764a0648db3d9d140544cd666e7b1aab50aec8bffafd92417314ded60eb9b0"
+  },
+  "ci_static_validation": {
+    "target": "svd_compression",
+    "matrix_jobs": 4,
+    "optional_jobs": 2,
+    "offline_llm_contracts": true
+  }
+}

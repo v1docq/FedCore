@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "raw_archive_members": 919,
+  "html_bytes": 4327342,
+  "html_sha256": "4b3435998623420cbfc8c0994bd9d1eeabb2dea0f86c957e5c04b01e1d579b84",
+  "snapshot_file_sha256": "2a76cd765d530eca4165a97eb03895c60bc919e1f38aefccbd06e2ffbc05f6ee",
+  "artifact_id": "report:21484ada-8022-4a25-bd6e-ce6b0cf7f10e",
+  "standalone_export": true,
+  "browser_checks": {
+    "wide": [
+      1280,
+      720
+    ],
+    "narrow": [
+      390,
+      844
+    ],
+    "six_nonzero_charts": true,
+    "budget_filter": "attempts/time verified against recorded values",
+    "model_filter": "41/42 verified against recorded values",
+    "console_errors": 0,
+    "standalone_http_loaded": true,
+    "table_precision": "up to 8 decimals",
+    "viewport_override_reset": true
+  },
+  "numerical_build": "98dacd442ed32d0417671bf4223da9ebf8a3e909",
+  "local_test_results": {
+    "passed": 2499,
+    "skipped": 7,
+    "warnings": 38,
+    "seconds": 299.2
+  },
+  "independent_checks": 23954,
+  "limitations": [
+    "Browser check does not establish offline networking isolation; the verified exporter embeds the full snapshot.",
+    "Binary weights remain outside Git; raw hashes and paths are retained.",
+    "The interrupted run-2 worker has no final RSS record."
+  ]
+}

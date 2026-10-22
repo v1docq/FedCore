@@ -1,0 +1,127 @@
+[
+  {
+    "attempt_id": 1,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "59f44bf54a490fae5ea4f4438d74343a6c99f70a578b908a89b23a0d8471888e",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 2.7418136596679688e-06,
+      "file_bytes": 33651182,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "25f4faf4ebab65db92409a5599d336e5e23bf3967bd1c45cd3924ae8d3e21f42",
+      "path": "checkpoints/short_fixed_svd_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.pt",
+      "phase": "short",
+      "sha256": "54f12eb5f42cbc17e2758b9a369b35703bca54bbfdba38a45b6d92432c7d9b49",
+      "solution_id": "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+      "tensor_bytes": 33593288
+    },
+    "checkpoint_file_bytes": 33651182,
+    "completed_within_deadline": true,
+    "correct": 4689,
+    "cost_ratio": 0.7509496493169195,
+    "cross_entropy": 0.23255023837333325,
+    "deadline": 20238402.309998363,
+    "ended_at": 20236909.558939066,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "rank": 128
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "rank": 128
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "rank": 256
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "rank": 256
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_fixed_svd_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.npz",
+    "prediction_sha256": "8fa0397214a80de076060360e715b41b61bdd88546351aab3951e3006b2f0f21",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "fixed_svd",
+    "solution_id": "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236905.621126283,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 33593288,
+    "top1": 0.9378,
+    "wall_seconds": 3.9378127828240395,
+    "workflow": "workflows/fixed_svd/211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.json",
+    "workflow_fingerprint": "7481486d4ac851277acb541d20d7648d64aaf51eb99357dc05903b111b7d1a74"
+  }
+]

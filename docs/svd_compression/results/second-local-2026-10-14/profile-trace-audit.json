@@ -1,0 +1,6941 @@
+{
+  "helper_sha256": "3ea651610fd764ad283b7b454e9fbec0d3980c103614baef033a7fb54b94d6c0",
+  "protocol_sha256": "ebb27bb08ca15228c06f59e0502acbc9f8b78c30d13f1adf42932905ad7f6b1c",
+  "purpose": "postmeasurement inspection only; no profiled values enter latency ratios",
+  "traces": [
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 39
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 216,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 53,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": -11,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [
+              16
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 39,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [
+              16
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 732,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cpu-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 19797,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cpu-b1-original_dense\\trace.json",
+        "sha256": "a0cd55db68686e4a1984cd55582e6bcc41f13e9df4cd601298aa1e86a71ca3ff"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 30,
+        "cpu_op": 99
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 85,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 80,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 89,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 0,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [],
+            [
+              16
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 16,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [],
+            [
+              16
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 170,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cpu-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 45216,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cpu-b1-factor\\trace.json",
+        "sha256": "0ae9a7ec4cbadb2a2dcae795804680cc92ffbd8ac6677b75e59142cda0fabcdd"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 39
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 17,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": -28,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 50,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [
+              16
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 7,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [
+              16
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 111,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cpu-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 19731,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cpu-b1-materialized\\trace.json",
+        "sha256": "2cbcfe9209fe2f529da209847de4c5b0dfd5aa2f90d9117fd5d00238d8ef3613"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 19,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 10,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 19,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 2355,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cpu-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 19872,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cpu-b1-original_dense\\trace.json",
+        "sha256": "0d5b96f1240436816cf90281948ddee8befb2795bbc9068f4d0227ccae7a268e"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 30,
+        "cpu_op": 66
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 26,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 974,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 18,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [],
+            [
+              64
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 7,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [],
+            [
+              64
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 205,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cpu-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 34370,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cpu-b1-factor\\trace.json",
+        "sha256": "ceefbae8d5e58bc44416e935733fd60ba71cb3ea19b5f5b6133099ef5c789477"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": -661,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 687,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 18,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 2156,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cpu-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 19920,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cpu-b1-materialized\\trace.json",
+        "sha256": "ffd77efc0e2a05fb6a5992099a7009b81fa03573cb81bd88154b6167b71bd902"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": -915,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 942,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 17,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 2370,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cpu-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 19986,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cpu-b1-original_dense\\trace.json",
+        "sha256": "44dea0a1affeddfefaa1a10b90683c16fe72e00cd6d0d126ce5f9d6e53c78c66"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 30,
+        "cpu_op": 66
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 24,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 839,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 19,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [],
+            [
+              128
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 7,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [],
+            [
+              128
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 183,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cpu-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 34437,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cpu-b1-factor\\trace.json",
+        "sha256": "0c52c4cae979d32df4579832000e72db24032637c1816ec1a7212f148ad2c774"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 20,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 7,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 18,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 2284,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cpu-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 19929,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cpu-b1-materialized\\trace.json",
+        "sha256": "e438197c9c966cb9cacac7b938174cc08b672219d2aa6cbda3a37dec95784893"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 39
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 24,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 9,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 24,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [
+              256
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 9,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [
+              256
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 6523,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cpu-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 19946,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cpu-b1-original_dense\\trace.json",
+        "sha256": "3654038187ce2ffe1aa4507b787dc2bcbf0d6b406254b8611c0a305089ea79e9"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 18,
+        "cpu_op": 69
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 34,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 12,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 2769,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 28,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [],
+            [
+              256
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 8,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [],
+            [
+              256
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 287,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cpu-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 31580,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cpu-b1-factor\\trace.json",
+        "sha256": "0895dbf03e8e2aac2531e455951594b24a0fb1704b9fdc1324d2ebddf8805192"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 39
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 23,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 10,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 22,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [
+              256
+            ],
+            [],
+            []
+          ],
+          "name": "aten::thnn_conv2d",
+          "self_cpu_time_us": 11,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [
+              256
+            ],
+            [],
+            []
+          ],
+          "name": "aten::_slow_conv2d_forward",
+          "self_cpu_time_us": 6524,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cpu-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 19943,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cpu-b1-materialized\\trace.json",
+        "sha256": "65c08edaa9465a74f09969a68fe09ccb496dac33612262e563f5efd3321b0459"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 20,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 9,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 19,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 1196,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cpu-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 19803,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cpu-b64-original_dense\\trace.json",
+        "sha256": "5b1b70fb50b0f121f3d08ae5018f90b53a908ca7538cb720e7930dcd07a08fcf"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 60,
+        "cpu_op": 81
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 33,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 1001,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 21,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 341,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cpu-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 49345,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cpu-b64-factor\\trace.json",
+        "sha256": "fbb38a903ef5925e7bc45bb7c79b6a4da8a31afdcb625b3d0dc455b724fdae49"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 18,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 8,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 17,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 1058,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cpu-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 19860,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cpu-b64-materialized\\trace.json",
+        "sha256": "25b4ac68386800910c7acb823256817826e3017b8def646174b6d4bd986e5ebc"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 36,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 19,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 44,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 165182,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cpu-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 20063,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cpu-b64-original_dense\\trace.json",
+        "sha256": "1fadba94d11e508402d7e75996b709b1d2c0e40eac84aa4311e3478826f25cf4"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 48,
+        "cpu_op": 51
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 39,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 45678,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 36,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 11375,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cpu-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 35794,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cpu-b64-factor\\trace.json",
+        "sha256": "b89e9de3b95e2b847aed1fbc675208b0a9288bcb9a156eb710d618c6378458a9"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 27,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 11,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 32,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 118794,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cpu-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 20060,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cpu-b64-materialized\\trace.json",
+        "sha256": "a8612b121123eda9cbdbd0741bdae874241dd465c13778bbf69e50173f1d7161"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 27,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 15,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 31,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 120058,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cpu-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 20097,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cpu-b64-original_dense\\trace.json",
+        "sha256": "bffa94bef81edebcfd3135a8a1a8ada519ecfbc5a8d91eb7cc92009a2332afed"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 48,
+        "cpu_op": 51
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 30,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 33188,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 26,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 6978,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cpu-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 35729,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cpu-b64-factor\\trace.json",
+        "sha256": "8ae749fb810305796d319812919c6bfb8c725769d1830d5c2c15e39a9f5923a0"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 40,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 13,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 25,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 122737,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cpu-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 20095,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cpu-b64-materialized\\trace.json",
+        "sha256": "f498b87bd25ae757e00ca100522bbb95c3c72fad078f7d43cfe66f6a08375620"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 32,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 12,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 35,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 125867,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cpu-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 20029,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cpu-b64-original_dense\\trace.json",
+        "sha256": "2ab32fadcc047e677c4f18522fd3e26ba6480f5beb4adc463cd092b11b0189f5"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 48,
+        "cpu_op": 51
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 25,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 32665,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 19,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 5005,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cpu-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 35712,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cpu-b64-factor\\trace.json",
+        "sha256": "23bd1221245b0bf4ed6ff8e698bec049d49b856945fdf659fd49dc23608f09b3"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 27
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 23,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 12,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 24,
+          "self_cuda_time_us": 0
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::mkldnn_convolution",
+          "self_cpu_time_us": 116538,
+          "self_cuda_time_us": 0
+        }
+      ],
+      "device": "cpu",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cpu-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 19968,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cpu-b64-materialized\\trace.json",
+        "sha256": "7a3469ebd1e5e559075fd686f7b8c92fb362f4d641b517d692c10e186cfdac2f"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 62,
+          "self_cuda_time_us": 68
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 58,
+          "self_cuda_time_us": 39
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 469,
+          "self_cuda_time_us": 446
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 157,
+          "self_cuda_time_us": 177
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cuda0-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 14837,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cuda0-b1-original_dense\\trace.json",
+        "sha256": "40533ae3958f22f3a627840d43e08ed79f3ea6e2b3380ee312e1765cf9ef2c8c"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 30,
+        "cpu_op": 66
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 111,
+          "self_cuda_time_us": 101
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 277,
+          "self_cuda_time_us": 289
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 318,
+          "self_cuda_time_us": 252
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 175,
+          "self_cuda_time_us": 223
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cuda0-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 34712,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cuda0-b1-factor\\trace.json",
+        "sha256": "70ce37db50e47cdb2affa9dfe9e8d42b6e650f491fba66fd8c9ac83387a47d3f"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 51,
+          "self_cuda_time_us": 59
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 107,
+          "self_cuda_time_us": 63
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 192,
+          "self_cuda_time_us": 206
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 167,
+          "self_cuda_time_us": 186
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cuda0-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 14835,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cuda0-b1-materialized\\trace.json",
+        "sha256": "d1772eb50ef39a5a795478e8acab09c69b8ae44d527e0603f5cf37b282753f25"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 159,
+          "self_cuda_time_us": 211
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 126,
+          "self_cuda_time_us": 115
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 546,
+          "self_cuda_time_us": 439
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 351,
+          "self_cuda_time_us": 402
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cuda0-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 14886,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cuda0-b1-original_dense\\trace.json",
+        "sha256": "332ec0aa32b08129ac72a628a25520c7a7b37fc09617e1c90ff879e226fffd04"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 18,
+        "cpu_op": 36
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 144,
+          "self_cuda_time_us": 129
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 310,
+          "self_cuda_time_us": 336
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 469,
+          "self_cuda_time_us": 433
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 159,
+          "self_cuda_time_us": 174
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cuda0-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 20942,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cuda0-b1-factor\\trace.json",
+        "sha256": "83e2a361552cf3103ae03df32449a29e87978d5980991a83d7552d9f3a90ffe5"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 99,
+          "self_cuda_time_us": 232
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 143,
+          "self_cuda_time_us": 104
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 441,
+          "self_cuda_time_us": 436
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 340,
+          "self_cuda_time_us": 369
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cuda0-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 14928,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cuda0-b1-materialized\\trace.json",
+        "sha256": "e28520b686bb2de5e0f97688b1c93d16772302dc9aeb18ac810960bd0b4b79f1"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 54,
+          "self_cuda_time_us": 57
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 82,
+          "self_cuda_time_us": 54
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 192,
+          "self_cuda_time_us": 170
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 140,
+          "self_cuda_time_us": 174
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cuda0-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 14992,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cuda0-b1-original_dense\\trace.json",
+        "sha256": "f94eeb2951960f9a6dd15cfc74c86fd282000f397ce5f1b041d57ff1f9f23812"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 18,
+        "cpu_op": 36
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 209,
+          "self_cuda_time_us": 161
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 584,
+          "self_cuda_time_us": 662
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 491,
+          "self_cuda_time_us": 455
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 160,
+          "self_cuda_time_us": 174
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cuda0-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 21006,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cuda0-b1-factor\\trace.json",
+        "sha256": "c96a0615947e30df4cb3d2cd017698eab8fa69319fb76034efe562ea605ed878"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 104,
+          "self_cuda_time_us": 83
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 88,
+          "self_cuda_time_us": 98
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 240,
+          "self_cuda_time_us": 180
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 206,
+          "self_cuda_time_us": 243
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cuda0-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 14991,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cuda0-b1-materialized\\trace.json",
+        "sha256": "a8f8250b1943cf20925e444cf4f2538ed61db17c1b1619c27f6dad97fe6d4a20"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 61,
+          "self_cuda_time_us": 54
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 49,
+          "self_cuda_time_us": 49
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 247,
+          "self_cuda_time_us": 131
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 173,
+          "self_cuda_time_us": 249
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cuda0-b1-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 14958,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cuda0-b1-original_dense\\trace.json",
+        "sha256": "6ba7fd9a8969a0a9ed0cb23b5974ce155041dc32450b2ace303906e827ac3543"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 18,
+        "cpu_op": 36
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 96,
+          "self_cuda_time_us": 74
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 142,
+          "self_cuda_time_us": 228
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 233,
+          "self_cuda_time_us": 136
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 75,
+          "self_cuda_time_us": 126
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cuda0-b1-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 20902,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cuda0-b1-factor\\trace.json",
+        "sha256": "48adfb51e94b990ace9bdfaf992234807c09e567b331e6536f39be567e550f36"
+      }
+    },
+    {
+      "batch": 1,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 135,
+          "self_cuda_time_us": 213
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 131,
+          "self_cuda_time_us": 118
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 551,
+          "self_cuda_time_us": 458
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              1,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 274,
+          "self_cuda_time_us": 368
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cuda0-b1-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 14958,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cuda0-b1-materialized\\trace.json",
+        "sha256": "982ddbc0fc8264c39a5b5311655a51d5cfe71f758bda93923cc62a16c0c05bfe"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 70,
+          "self_cuda_time_us": 59
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 53,
+          "self_cuda_time_us": 51
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 203,
+          "self_cuda_time_us": 182
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 130,
+          "self_cuda_time_us": 152
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cuda0-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 14880,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cuda0-b64-original_dense\\trace.json",
+        "sha256": "808781e60a343ec80569520b6d3bd591fc73b18b0def2e29e191990754431a49"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 30,
+        "cpu_op": 66
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 81,
+          "self_cuda_time_us": 120
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              8,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 392,
+          "self_cuda_time_us": 393
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 195,
+          "self_cuda_time_us": 146
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              8,
+              8,
+              8
+            ],
+            [
+              16,
+              8,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 162,
+          "self_cuda_time_us": 152
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cuda0-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 34792,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cuda0-b64-factor\\trace.json",
+        "sha256": "5994473c350cc6dd3cab99ae72937f3f2125fc57ca52a3d0f39c316aa05081ca"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 66,
+          "self_cuda_time_us": 70
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 62,
+          "self_cuda_time_us": 47
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [
+              16
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 179,
+          "self_cuda_time_us": 158
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              8,
+              8
+            ],
+            [
+              16,
+              16,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 195,
+          "self_cuda_time_us": 218
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-digits_conv2-cuda0-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "digits_conv2",
+      "trace": {
+        "bytes": 14880,
+        "path": "local-svd-second-package\\profiling\\profile-digits_conv2-cuda0-b64-materialized\\trace.json",
+        "sha256": "328f40a2990471254cab51a55eed306b2ffae492aae9371797bd701741dd865d"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 145,
+          "self_cuda_time_us": 135
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 121,
+          "self_cuda_time_us": 111
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 240,
+          "self_cuda_time_us": 135
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 291,
+          "self_cuda_time_us": 567
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cuda0-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 14935,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cuda0-b64-original_dense\\trace.json",
+        "sha256": "673980f3e8bd6529de8e807327e5336058bbd8bb0534f5fc1b4e144435b4c7b7"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 36
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 143,
+          "self_cuda_time_us": 120
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              16,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 304,
+          "self_cuda_time_us": 410
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 283,
+          "self_cuda_time_us": 185
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              16,
+              32,
+              32
+            ],
+            [
+              64,
+              16,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 297,
+          "self_cuda_time_us": 312
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cuda0-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 22926,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cuda0-b64-factor\\trace.json",
+        "sha256": "24a808702ffa0ae448b89a7c32636c59b4b830d2c3dd5d5e61548879d7bbd778"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 60,
+          "self_cuda_time_us": 32
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 103,
+          "self_cuda_time_us": 18
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [
+              64
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 157,
+          "self_cuda_time_us": 72
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              32,
+              32
+            ],
+            [
+              64,
+              64,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 138,
+          "self_cuda_time_us": 489
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_64_32_r16-cuda0-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_64_32_r16",
+      "trace": {
+        "bytes": 14976,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_64_32_r16-cuda0-b64-materialized\\trace.json",
+        "sha256": "83a3ca599ede9d16244950a45231a73075de0ddf5e5b4023e298ba8bc7321bee"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 58,
+          "self_cuda_time_us": 37
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 59,
+          "self_cuda_time_us": 29
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 162,
+          "self_cuda_time_us": 61
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 142,
+          "self_cuda_time_us": 434
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cuda0-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 15039,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cuda0-b64-original_dense\\trace.json",
+        "sha256": "67750666f23d2a7484857736b26d0cb3bf2b3c0b9d91a98668ec5a0f00b611ac"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 36
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 83,
+          "self_cuda_time_us": 56
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              32,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 176,
+          "self_cuda_time_us": 446
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 172,
+          "self_cuda_time_us": 36
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              32,
+              16,
+              16
+            ],
+            [
+              128,
+              32,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 79,
+          "self_cuda_time_us": 82
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cuda0-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 19162,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cuda0-b64-factor\\trace.json",
+        "sha256": "a7b30493fbcee5305372b01198e646e8e7df23d89f04cef128138413bdeefc80"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 68,
+          "self_cuda_time_us": 36
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 69,
+          "self_cuda_time_us": 26
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [
+              128
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 146,
+          "self_cuda_time_us": 59
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              128,
+              16,
+              16
+            ],
+            [
+              128,
+              128,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 153,
+          "self_cuda_time_us": 441
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_128_16_r32-cuda0-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_128_16_r32",
+      "trace": {
+        "bytes": 15036,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_128_16_r32-cuda0-b64-materialized\\trace.json",
+        "sha256": "6ff35d4e3dc01eec973c368f445fbad806878698038227b7dbf1cf740c757b47"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 183,
+          "self_cuda_time_us": 218
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 197,
+          "self_cuda_time_us": 112
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 266,
+          "self_cuda_time_us": 270
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 386,
+          "self_cuda_time_us": 525
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cuda0-b64-original_dense",
+      "side": "original_dense",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 15011,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cuda0-b64-original_dense\\trace.json",
+        "sha256": "a52d0e70f7bb3f63b7ea6bf8ff2c05941e9500d8a530d327137af71fefb08005"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 24,
+        "cpu_op": 36
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 71,
+          "self_cuda_time_us": 37
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              64,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 137,
+          "self_cuda_time_us": 301
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 180,
+          "self_cuda_time_us": 143
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              64,
+              8,
+              8
+            ],
+            [
+              256,
+              64,
+              1,
+              1
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 103,
+          "self_cuda_time_us": 55
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cuda0-b64-factor",
+      "side": "factor",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 22941,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cuda0-b64-factor\\trace.json",
+        "sha256": "b91a689af99e095b2f69b78257df1d3f2a9bcdadc1a57274c22aac45e05b4389"
+      }
+    },
+    {
+      "batch": 64,
+      "categories": {
+        "": 7,
+        "Trace": 1,
+        "cpu_instant_event": 12,
+        "cpu_op": 24
+      },
+      "conv_operators": [
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::conv2d",
+          "self_cpu_time_us": 60,
+          "self_cuda_time_us": 102
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::convolution",
+          "self_cpu_time_us": 68,
+          "self_cuda_time_us": 55
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [
+              256
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::_convolution",
+          "self_cpu_time_us": 193,
+          "self_cuda_time_us": 122
+        },
+        {
+          "calls": 3,
+          "input_shapes": [
+            [
+              64,
+              256,
+              8,
+              8
+            ],
+            [
+              256,
+              256,
+              3,
+              3
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "name": "aten::cudnn_convolution",
+          "self_cpu_time_us": 260,
+          "self_cuda_time_us": 391
+        }
+      ],
+      "device": "cuda:0",
+      "kernel_event_count": 0,
+      "kernel_names": {},
+      "session_id": "profile-synthetic_256_8_r64-cuda0-b64-materialized",
+      "side": "materialized",
+      "status": "succeeded",
+      "subject": "synthetic_256_8_r64",
+      "trace": {
+        "bytes": 15007,
+        "path": "local-svd-second-package\\profiling\\profile-synthetic_256_8_r64-cuda0-b64-materialized\\trace.json",
+        "sha256": "5e71a60e955d0b1e054e7117e3258347b71c417a20a977e70c40e7d83402e83c"
+      }
+    }
+  ]
+}

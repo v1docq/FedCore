@@ -31,7 +31,7 @@ def test_real_fresh_process_remeasures_same_file_and_rejects_modified_weights(tm
     Path(artifact['path']).write_bytes(b'tampered')
     with pytest.raises(RuntimeError, match='session failed'):
         remeasure(tmp_path / 'run/manifest.json', tmp_path / 'tampered', sessions=1, repeats=1)
-    assert json.loads((tmp_path / 'tampered/failure.json').read_text())['status'] == 'failed'
+    assert json.loads((tmp_path / 'tampered/failure.json').read_text(encoding='utf-8'))['status'] == 'failed'
 
 
 def test_empty_or_duplicate_batches_do_not_start_sessions(tmp_path):

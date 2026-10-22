@@ -1,0 +1,48 @@
+{
+  "automatic_retry": false,
+  "command": [
+    "/root/fedcore_sparse_cv_20261021/.venv/bin/python",
+    "-m",
+    "fedcore.experiments.cv_sparse_supervision",
+    "--execute",
+    "--data-root",
+    "/root/fedcore_sparse_cv_20261021/data",
+    "--output-root",
+    "/root/fedcore_sparse_cv_20261021/results/pilot-2",
+    "--source-manifest",
+    "/root/fedcore_sparse_cv_20261021/source-manifest.json"
+  ],
+  "environment": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "HF_DATASETS_OFFLINE": "1",
+    "HF_HUB_OFFLINE": "1",
+    "MKL_NUM_THREADS": "4",
+    "NUMEXPR_NUM_THREADS": "4",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "PYTHONHASHSEED": "0",
+    "TRANSFORMERS_OFFLINE": "1"
+  },
+  "max_slot_seconds": 14400,
+  "one_compute_run_at_a_time": true,
+  "pilot_gpu_seconds_used": 0,
+  "preconditions": [
+    "explicit user notification that A100 is free",
+    "zero existing compute contexts from readonly nvidia-smi",
+    "successful CI for the frozen source commit",
+    "unchanged wheel and source manifest hashes"
+  ],
+  "schema": "fedcore-sparse-cv-launch-v1",
+  "source_commit": "3bc0825a9ef1bcd0ac8eb0181b6d5314b57ebb8d",
+  "source_manifest_sha256": "5732c95bb51c0afa1fdbdf18bc307ff327b8ffe38e37eb065b5b3b73e9af61e6",
+  "status": "not_started",
+  "worker_limit_seconds": 14390,
+  "output_root": "/root/fedcore_sparse_cv_20261021/results/pilot-2",
+  "repeat_slot_seconds": 13020,
+  "prior_charged_seconds": 1379.477359779179,
+  "repeat_authorized": true,
+  "parent_packet_sha256": "2c4034abefd3a4301bda6191af8086018e71440b2d588546383f655bda6e98da",
+  "launch_utc": "2026-10-22T14:22:57.335993+00:00",
+  "launch_monotonic": 20235036.60903213
+}

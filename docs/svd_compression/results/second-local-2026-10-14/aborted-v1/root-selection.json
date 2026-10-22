@@ -1,0 +1,17 @@
+{
+  "alternative_repeat200_projection_seconds": 5435.936137442435,
+  "compute_budget_seconds": 7200,
+  "maximum_warmup_calls": 100000,
+  "minimum_warmup_seconds": 0.2,
+  "pilot_compute_projection_seconds": 4720.163639057621,
+  "pilot_ledger_sha256": "698cc064fdedfa9ebed270b4f898a60b47e16ab57e6329eb4849ae1c13648df4",
+  "profile_sessions": 48,
+  "reason": "Root approved100 repeats after all8 pilot sessions passed; conservative4720s compute projection retains more headroom than5436s at200 repeats. Mandatory quiet observations and post-exit drains add a long wall window and are recorded separately from extra-noise waits and compute. No matrix reduction or training.",
+  "schema": 2,
+  "selected_individual_repeats": 100,
+  "source_sha256": "86e912be9c10cb4d9eb06be981c165784fa8350f5066d28ba9f1199f504846eb",
+  "throughput_blocks": 3,
+  "throughput_calls_per_block": 50,
+  "timing_sessions": 584,
+  "warmup_calls_minimum": 50
+}
