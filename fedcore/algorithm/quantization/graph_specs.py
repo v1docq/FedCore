@@ -7,6 +7,7 @@ import math
 
 from .tensor_formats import QuantizedTensorSpec, Grid, Rounding
 from fedcore.algorithm.low_rank.plans import ValidationFailure, Violation
+from fedcore.algorithm.low_rank.compression_graph import CalibrationRef
 
 
 class Method(str, Enum):
@@ -87,6 +88,7 @@ class CheckedCompressionPlan:
     processes: tuple[ProcessGraphSpec, ...]
     representations: tuple[RepresentationSpec, ...]
     fingerprint: str
+    calibration: CalibrationRef | None = None
     schema: str = "quantization_graph_v1"
 
 

@@ -39,12 +39,23 @@ class TenderLinear(nn.Module):
         x = rows.detach().double()
         centers = x.amin(0)*.5+x.amax(0)*.5
         ranges = (x-centers).abs().amax(0)
-        needed = ranges/(2**(activation_bits-1)-1)
-        positive = needed[needed > 0]
-        base = float(positive.min()) if positive.numel() else 1.
+        maximum = float(ranges.max())
+        positive = ranges > 0
+        if maximum:
+            depth = torch.zeros_like(ranges,dtype=torch.int64)
+            depth[positive] = torch.floor(torch.log2(maximum/ranges[positive])).long()
+            deepest = int(depth.max())
+            if deepest > 60:
+                raise ValueError("Tender channel-scale dynamic range exceeds reference profile")
+            # Exact half-maximum belongs to the next level. Zero channels share
+            # the finest supported level, with exact centered activation zero.
+            depth[~positive] = deepest
+            exponents = deepest-depth
+            base = maximum/(2**(activation_bits-1)-1)/2**deepest
+        else:
+            exponents,base = torch.zeros_like(ranges,dtype=torch.int64),1.
         if not math.isfinite(base) or base <= 0:
             raise ValueError("Tender scale underflow")
-        exponents = torch.where(needed>0, torch.ceil(torch.log2(torch.where(needed>0,needed/base,torch.ones_like(needed)))),0).long()
         if bool((exponents > 60).any()):
             raise ValueError("Tender channel-scale dynamic range exceeds reference profile")
         levels = sorted(set(exponents.tolist()),reverse=True)

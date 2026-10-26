@@ -42,6 +42,18 @@ def test_zero_channel_ranges_and_center_identity():
         layer(torch.ones(2,3))
 
 
+def test_tender_max_anchor_and_exact_half_threshold():
+    maxima = torch.tensor([10.,5.,3.,1.,0.],dtype=torch.float64)
+    layer = TenderLinear.calibrate(torch.ones(1,5,dtype=torch.float64),None,torch.stack((-maxima,maxima)),activation_bits=4)
+    actual = torch.zeros(5,dtype=torch.float64)
+    for g,e in enumerate(layer.exponents.tolist()):
+        ids = layer.activation_indices[layer.group_ptr[g]:layer.group_ptr[g+1]]
+        actual[ids] = layer.activation_scale[0]*2**e
+    torch.testing.assert_close(actual,torch.tensor([10/7,5/7,5/7,1.25/7,1.25/7],dtype=torch.float64))
+    # A minimum-anchored profile would give scale 8/7 to the first channel.
+    assert float(actual[0]) != 8/7
+
+
 def test_overflow_is_checked_before_torch_int64_wrap():
     rows = torch.tensor([[-1.,-1.,-1.],[1.,1.,1.]],dtype=torch.float64)
     layer = TenderLinear.calibrate(torch.ones(1,3,dtype=torch.float64),None,rows,accumulator_bits=16)

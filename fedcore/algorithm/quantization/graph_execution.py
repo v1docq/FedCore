@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 import io
 import time
+import hashlib
 
 import torch
 from torch import nn
@@ -25,7 +26,24 @@ class ExportVerifiedArtifact:
     evidence: dict
 
 
-def check_quantization_graph(model, request):
+def calibration_identity(calibration):
+    from fedcore.algorithm.low_rank.compression_graph import CalibrationRef
+    if calibration is None:
+        return None
+    values = sorted(calibration.items()) if type(calibration) is dict else [("model_input",calibration)]
+    digest = hashlib.sha256()
+    for path,value in values:
+        if (type(path) is not str or type(value) is not torch.Tensor or value.device.type != "cpu"
+                or value.dtype not in (torch.float32,torch.float64) or value.ndim < 2
+                or not value.numel() or not bool(torch.isfinite(value).all())):
+            raise ValueError("Explicit finite CPU calibration tensors with ordered rows required")
+        digest.update(path.encode()); digest.update(str((tuple(value.shape),value.dtype)).encode())
+        digest.update(value.detach().contiguous().numpy().tobytes())
+    value = values[0][1]
+    return CalibrationRef(digest.hexdigest(),tuple(value.shape),str(value.dtype)[6:])
+
+
+def check_quantization_graph(model, request, *, calibration=None):
     """No forward, calibration or weight transformation occurs at this boundary."""
     errors, aliases, graphs, representations = [], [], [], []
     if type(request) is not QuantizationGraphRequest or not isinstance(model, nn.Module):
@@ -36,6 +54,7 @@ def check_quantization_graph(model, request):
             or type(request.recipes) is not tuple or not request.recipes):
         return ValidationFailure((Violation("UnsupportedExecution", "request", "Explicit CPU reference execution and finite resource limits required"),))
     try:
+        calibration_ref = calibration_identity(calibration)
         inventory = capture_inventory(model)
         source = inventory_fingerprint(inventory)
         paths = module_paths(model)
@@ -72,7 +91,7 @@ def check_quantization_graph(model, request):
         if workspace > request.max_peak_bytes:
             return ValidationFailure((Violation("PeakBudget", "request", "Conservative transformation workspace exceeds the declared limit"),))
         return CheckedCompressionPlan(request, source, tuple(aliases), tuple(graphs), tuple(representations),
-            fingerprint({"source": source, "request": request, "aliases": aliases, "graphs": graphs}))
+            fingerprint({"source": source, "request": request, "aliases": aliases, "graphs": graphs,"calibration":calibration_ref}),calibration_ref)
     except (ValueError, TypeError, KeyError, CandidateStorageError) as error:
         return ValidationFailure((Violation("UnsupportedCapability", "model", str(error)),))
 
@@ -96,7 +115,7 @@ def _build(layer, spec, rows):
 def execute_quantization_graph(model, plan, *, calibration=None, ledger=None):
     if type(plan) is not CheckedCompressionPlan:
         return StructuralInvalid((Violation("UncheckedPlan", "plan", "A checked plan is required"),))
-    checked = check_quantization_graph(model, plan.request)
+    checked = check_quantization_graph(model, plan.request,calibration=calibration)
     if isinstance(checked, ValidationFailure) or checked != plan:
         return StructuralInvalid((Violation("StalePlan", "plan", "Source or checked metadata has changed"),))
     started = time.perf_counter()
@@ -155,7 +174,7 @@ def execute_quantization_graph(model, plan, *, calibration=None, ledger=None):
 
 
 def compress_quantization_graph(model, request, *, calibration=None, ledger=None):
-    plan = check_quantization_graph(model, request)
+    plan = check_quantization_graph(model, request,calibration=calibration)
     if isinstance(plan, ValidationFailure):
         return StructuralInvalid(plan.violations)
     return execute_quantization_graph(model, plan, calibration=calibration, ledger=ledger)

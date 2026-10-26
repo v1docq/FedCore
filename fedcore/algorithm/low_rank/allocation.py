@@ -33,6 +33,7 @@ class CandidateOption:
     ranks: tuple[int, ...]
     score: float
     storages: tuple[StorageCost, ...]
+    structure: str = "ranked"
 
 
 @dataclass(frozen=True)
@@ -116,7 +117,11 @@ def _validate(tables, objective, budget, fixed_storages, unit):
         if any(type(rank) is not int or rank <= 0 for rank in (*table.maximum_ranks, *table.rank_multiples)):
             raise ValueError("Shape maxima and hardware grid must be positive integers")
         for option in table.options:
-            if not isinstance(option.option_id, str) or not option.option_id or not isinstance(option.ranks, tuple) or not option.ranks or any(type(rank) is not int or rank <= 0 for rank in option.ranks):
+            if (not isinstance(option.option_id, str) or not option.option_id or not isinstance(option.ranks, tuple)
+                    or option.structure not in ("ranked", "unranked")
+                    or option.structure == "ranked" and not option.ranks
+                    or option.structure == "unranked" and (option.ranks or table.maximum_ranks or table.rank_multiples)
+                    or any(type(rank) is not int or rank <= 0 for rank in option.ranks)):
                 raise ValueError("Options must carry admissible positive integer structures")
             if table.maximum_ranks and (len(table.maximum_ranks) != len(option.ranks) or any(rank > maximum for rank, maximum in zip(option.ranks, table.maximum_ranks))):
                 raise ValueError("Option rank exceeds its declared operator shape")
