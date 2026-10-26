@@ -1,0 +1,3 @@
+{"case": "supervisor_alive", "owned_worker_stopped": true, "elapsed_seconds": 2.151752956211567}
+{"case": "supervisor_exited_before_capture", "owned_worker_stopped": true, "elapsed_seconds": 0.11068873852491379}
+{"cpu_only": true, "numerical_experiments": 0, "guard_cases_passed": 2}

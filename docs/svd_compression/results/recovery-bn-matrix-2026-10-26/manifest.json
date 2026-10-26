@@ -1,0 +1,633 @@
+{
+  "files": {
+    "RECOVERY_BN_MATRIX.md": {
+      "bytes": 17442,
+      "sha256": "1a34891ec4a000318e5a355b2b993779e8d7ef58201d8f41c64b58701b670254"
+    },
+    "recovery-bn-report.html": {
+      "bytes": 33793,
+      "sha256": "6d836f540c66cac9d0a663a78f6654f587e5390c4fdeeb550817e56daaeb7843"
+    },
+    "results/recovery-bn-matrix-2026-10-26/README.md": {
+      "bytes": 5048,
+      "sha256": "bf1fed6411579bd1196a4837ed75ebfcf62faeb391deee7fc0b48c578209a565"
+    },
+    "results/recovery-bn-matrix-2026-10-26/analysis/analysis.json": {
+      "bytes": 15855,
+      "sha256": "7445c83922c29b7d4293ec6a782b797d69c65311a06baf451be2e993be5b73e5"
+    },
+    "results/recovery-bn-matrix-2026-10-26/analysis/checks.json": {
+      "bytes": 66578,
+      "sha256": "62a93d111f22978873292bcda0afc38c4500a98fb75432997fa3996a91a2d84e"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/completion/report.json": {
+      "bytes": 277956,
+      "sha256": "2aa82ef99dd7a3137900c191c2fd9d1890f3cdeca6311fedbefee43156d22303"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/environment_freeze.txt": {
+      "bytes": 3859,
+      "sha256": "36884400b8a581ee404c021e502702937489e4aca3430b40c65e38c2b6611e5d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/predictions/M0_post_BN.npz": {
+      "bytes": 38103,
+      "sha256": "5f8f0a40129a91b6c4bbce8fd395eee611dfac264c8554a9d752d6bd88973711"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/predictions/M0_untouched.npz": {
+      "bytes": 37695,
+      "sha256": "588e866775621b786db062679a2addfc8541ec330093a20c551d860e75a7c0e6"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/predictions/SGD_lr_0.001_post_BN.npz": {
+      "bytes": 38088,
+      "sha256": "b632dbd12cd0e3402360bdd72074b15c0dccdb02e6f1cca9beb0d7bf451d172a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/predictions/SGD_lr_0.001_pre_BN.npz": {
+      "bytes": 37782,
+      "sha256": "fe0ae11c84ce9d75ca6b8626f4b7ad5e61f200d80d1d9f457239a3931c887c20"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/predictions/SGD_lr_0.01_post_BN.npz": {
+      "bytes": 38198,
+      "sha256": "e7e4ab3716aab29e34fd180c0e62847a148e702ede5618924fa8a5a74bbfb879"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/predictions/SGD_lr_0.01_pre_BN.npz": {
+      "bytes": 37843,
+      "sha256": "4a1ac475106d023b9112288aec3abb0f83ce159990c8bdd9e4aae8fc0ed3a4d5"
+    },
+    "results/recovery-bn-matrix-2026-10-26/inputs/diagnostic/report.json": {
+      "bytes": 323299,
+      "sha256": "a73489d743b541d58e267e9df75f01557499c92f552cd44c77909466a27848a9"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/E_SGD_lr_0.001.json": {
+      "bytes": 40211,
+      "sha256": "1f7034c5b8623ef587deb821c4dfe40abbdcbc3303a109f9af1bc6dc7dfd1d93"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/E_SGD_lr_0.01.json": {
+      "bytes": 40208,
+      "sha256": "d32327b4ceb366994933f751ab3c25e54b9019bf6a5d20d4f1ff367ad845574d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/E_no_SGD.json": {
+      "bytes": 40193,
+      "sha256": "8fde9f2e071d4ae713e98b53c1493a889e6d147d8ddce1ccda52c9359c6f2276"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/M0_SGD_lr_0.001.json": {
+      "bytes": 38390,
+      "sha256": "72c68a395438b1e445091d09b6faf77963db49b47bbd43c53f90b9935cae1ce0"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/M0_SGD_lr_0.01.json": {
+      "bytes": 38387,
+      "sha256": "b847f06a0878147f9a354b698bd5209c66c106bd4e45102db332ef5990065c5c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/M0_no_SGD.json": {
+      "bytes": 38372,
+      "sha256": "1b21b016e6cca90022737dac70e2fa68907b4fb8cfdea6531fffd8a13a0d112d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/P75_SGD_lr_0.001.json": {
+      "bytes": 38377,
+      "sha256": "a11d9496c3ed36fac0cb7f890e97471847cb2a4692e1baa8d342e4e7c43d5224"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/P75_SGD_lr_0.01.json": {
+      "bytes": 38374,
+      "sha256": "3d6dfd7e3ddccee143132571b3dff690bc1a27cad4b22bb41987eacedd08e272"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/P75_no_SGD.json": {
+      "bytes": 38359,
+      "sha256": "3e8b50c9371da92b6e773eee306abca4be41bb768bb74870800458fd73e389d2"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/R_SGD_lr_0.001.json": {
+      "bytes": 40219,
+      "sha256": "d998187a71bc82e34967d8ba3d6c4a3b4e5d439ed2ab8109cba250758c7d43c2"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/R_SGD_lr_0.01.json": {
+      "bytes": 40216,
+      "sha256": "0d734531fb3a3db574b9216bfd23b66e3daafbcb06a1ae47f889b27340df7bbd"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/R_no_SGD.json": {
+      "bytes": 40201,
+      "sha256": "72d407dc010c25a3c88d9f4d284ca225cd05b455bb229c14ca1d2dd5f9f5cd66"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/hybrid_SGD_lr_0.001.json": {
+      "bytes": 40218,
+      "sha256": "ca4ee320cdce2858dd8e2f5afd5e41512ae7025d0239013dbfddbecbcd4436f4"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/hybrid_SGD_lr_0.01.json": {
+      "bytes": 40215,
+      "sha256": "e08e3495b8f1621f79d1d64cae615fc2375be513ce15775f9ef48874951fc0da"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/BN_pairs/hybrid_no_SGD.json": {
+      "bytes": 40200,
+      "sha256": "849b80181ec2d0a8a97e447ba51bcea2451515ec0dc0b743d915e8901bf25a37"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/completion-file-inventory.json": {
+      "bytes": 22483,
+      "sha256": "c83086ca9f152969aadac7cc41fb750db10aaf78628d430d277d5bd809738d1f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/completion_admission.json": {
+      "bytes": 303887,
+      "sha256": "4ee181383379ce9ca0a213b65958dc2bcbb79b2bee476704e7570eff6514e3e8"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/data_roles.json": {
+      "bytes": 538980,
+      "sha256": "02657ebff2f36eca41744cdd5b093b3b63f2f1beba64a538dd5d90a32345111f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/diagnostic-file-inventory.json": {
+      "bytes": 12691,
+      "sha256": "8143a54166160a8f3f61bc8cc76bdc5c73956e496dcb5bd0ac6bf22005798ee7"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/diagnostic_admission.json": {
+      "bytes": 342392,
+      "sha256": "f2ac9ab7356cefa826568a3a1dad3bf66fac5ba99277225dac79b5e0968a467d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/environment.json": {
+      "bytes": 476,
+      "sha256": "ee04f8849fe55b338b7564ef31dadbd5389829ad7da2ec4a5743f135e640323c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/environment_freeze.txt": {
+      "bytes": 3854,
+      "sha256": "2d7226162521d1a52a6ed9a001812622a8d95c8b4e4fe9ed6b77af9c916f04ec"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/export_recovery.py": {
+      "bytes": 3057,
+      "sha256": "247ecd17df2121a82636534e1f9362c542eec79a030a6f356c78b41ccee5b71c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/heartbeats.jsonl": {
+      "bytes": 10956,
+      "sha256": "3cfac2f24c7f769c2040faea31f0248c65094d404515a821550a05a4191cb83a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/imported_sources.json": {
+      "bytes": 9050,
+      "sha256": "d32433526a57f107795db27abe96b50f71288f2bc6353ebd0f006802cc4acdc9"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/inherited/original_M0_predictions.npz": {
+      "bytes": 37695,
+      "sha256": "588e866775621b786db062679a2addfc8541ec330093a20c551d860e75a7c0e6"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/install.log": {
+      "bytes": 157,
+      "sha256": "1b1a1b2a59e49586811cbe07e9d5033833dd13358a2b7a2abbfae78c7cbc6125"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/installed-cpu-tests.log": {
+      "bytes": 341,
+      "sha256": "98246980f4ad485c08b0d8ab251c9ead88c288ad50256fabc67d07087f38b08d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/installed-preflight.json": {
+      "bytes": 196,
+      "sha256": "405d2b84d7e63887e67533e9c21dc3de2256c9ab1da8726924a458cee1fe0654"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/launch-console.log": {
+      "bytes": 530,
+      "sha256": "2a6c38a83dc0ba8a45a9026e91249064e00ef8354fc3a3f94eada8f5dad7bb8e"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/launch-packet.json": {
+      "bytes": 2069,
+      "sha256": "3bede2f2994fa7a7c8fde98934e971d0ae332f6bae0b46074da98e392e91fa5b"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/launch-receipt.json": {
+      "bytes": 2211,
+      "sha256": "b36f36d45e3e1b35d7ff6e21c4c07d44423ffbc2c62b1adde5661090972fd41b"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/launch_recovery.py": {
+      "bytes": 4188,
+      "sha256": "ba385361cd0aa3448320eb4ad14fb77fb875c27d9c5ddc2fcb2c6e30d0588cf2"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/ledger.jsonl": {
+      "bytes": 419045,
+      "sha256": "e6949582a4194f210deb5f02df997f240978ed80ca8b766fa6c5f1f37feafc29"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/pip-check.log": {
+      "bytes": 30,
+      "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/postrun-preservation.json": {
+      "bytes": 402,
+      "sha256": "8b1856a17b97553b21b0b399edff2c1d69c28a43de2085fa535843453648093d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/E_SGD_lr_0.001_post_BN.npz": {
+      "bytes": 38188,
+      "sha256": "54b0bf5efe2608932715ea829b55ae16d9ebb0a0f157aac98002c111ea28fdea"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/E_SGD_lr_0.001_pre_BN.npz": {
+      "bytes": 37821,
+      "sha256": "4585f6a70148f23bfd552f4914834a33083ee51ee7e4d9b237ab3cad0cadb91a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/E_SGD_lr_0.01_post_BN.npz": {
+      "bytes": 38471,
+      "sha256": "e8a94ffb920a701c2f7cc7efadfa1e0d39f9d196d7a3137cc3a21d1db9cd286b"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/E_SGD_lr_0.01_pre_BN.npz": {
+      "bytes": 38113,
+      "sha256": "334f54dd3826c18adfc10cb58b137f910ae8d313f41a5d296bb5d6731c645ae1"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/E_no_SGD_post_BN.npz": {
+      "bytes": 38141,
+      "sha256": "b0dba60e3cecc96263f432e5d9a241bb0ccf90e662e3fb875bd46f500d11ddb5"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/E_no_SGD_pre_BN.npz": {
+      "bytes": 37978,
+      "sha256": "0fbf5b4131539ccb57839b11e832500a77f8c33171fff303c67a7450d238be1f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/M0_SGD_lr_0.001_post_BN.npz": {
+      "bytes": 38088,
+      "sha256": "b632dbd12cd0e3402360bdd72074b15c0dccdb02e6f1cca9beb0d7bf451d172a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/M0_SGD_lr_0.001_pre_BN.npz": {
+      "bytes": 37782,
+      "sha256": "fe0ae11c84ce9d75ca6b8626f4b7ad5e61f200d80d1d9f457239a3931c887c20"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/M0_SGD_lr_0.01_post_BN.npz": {
+      "bytes": 38198,
+      "sha256": "e7e4ab3716aab29e34fd180c0e62847a148e702ede5618924fa8a5a74bbfb879"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/M0_SGD_lr_0.01_pre_BN.npz": {
+      "bytes": 37843,
+      "sha256": "4a1ac475106d023b9112288aec3abb0f83ce159990c8bdd9e4aae8fc0ed3a4d5"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/M0_no_SGD_post_BN.npz": {
+      "bytes": 38103,
+      "sha256": "5f8f0a40129a91b6c4bbce8fd395eee611dfac264c8554a9d752d6bd88973711"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/M0_no_SGD_pre_BN.npz": {
+      "bytes": 37695,
+      "sha256": "588e866775621b786db062679a2addfc8541ec330093a20c551d860e75a7c0e6"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/P75_SGD_lr_0.001_post_BN.npz": {
+      "bytes": 38228,
+      "sha256": "e7b75bb83c21202bc3146a6de1c1c854b3286d119260c72a622e1f4596954595"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/P75_SGD_lr_0.001_pre_BN.npz": {
+      "bytes": 37941,
+      "sha256": "032a08c1914605185b86c910d486b307e377816e23ab317d05038f05711d3f3b"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/P75_SGD_lr_0.01_post_BN.npz": {
+      "bytes": 38610,
+      "sha256": "24ff798263a6c126a59836a1dc6b105938452a59df4e1c06f1254213b582d556"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/P75_SGD_lr_0.01_pre_BN.npz": {
+      "bytes": 38137,
+      "sha256": "7d167a2bb67f4e897a3323c267c3fc90c6e2d3c283baef02542953879445eb74"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/P75_no_SGD_post_BN.npz": {
+      "bytes": 38305,
+      "sha256": "29a71464b5de295e07b172e87ae413de018dbeb9e6361583cf4bac1a1b83ef18"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/P75_no_SGD_pre_BN.npz": {
+      "bytes": 38465,
+      "sha256": "b0037d951a45c463fed52c3a9ff35ab4dae2b0cbc8ed01d99a3cbda95de8975a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/R_SGD_lr_0.001_post_BN.npz": {
+      "bytes": 38084,
+      "sha256": "670171ceae4a04fb148e6cfb1546df919a4b9095e4b09974d4ca0daae925798c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/R_SGD_lr_0.001_pre_BN.npz": {
+      "bytes": 37808,
+      "sha256": "ada8ed4c6b7f7298dbbff9a09045639fddfeb9892ecf2fd721bec5e305837224"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/R_SGD_lr_0.01_post_BN.npz": {
+      "bytes": 38427,
+      "sha256": "fc4297ae1cb2daf9b05e9968a5429bb2bd7577448390094af07894d2810221c3"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/R_SGD_lr_0.01_pre_BN.npz": {
+      "bytes": 38117,
+      "sha256": "45168d3334c1ad07a415c27a5c5a32d4552beb76ebddc5886f1d307cf7d91d1c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/R_no_SGD_post_BN.npz": {
+      "bytes": 38088,
+      "sha256": "8fa0397214a80de076060360e715b41b61bdd88546351aab3951e3006b2f0f21"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/R_no_SGD_pre_BN.npz": {
+      "bytes": 37637,
+      "sha256": "8bc31cad1043db1cd95ae840a299b01f54037d5f75d9ba583fce34a6fcc2053d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/hybrid_SGD_lr_0.001_post_BN.npz": {
+      "bytes": 38285,
+      "sha256": "cf89858734e7274b3f1d30f770c4a91f492e96e50a03f3daaba002da8e74105a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/hybrid_SGD_lr_0.001_pre_BN.npz": {
+      "bytes": 37922,
+      "sha256": "411ea9317ef9e23c62e0b956f827e0a2ddd662aa51d6a22023280ea5a3e6b53d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/hybrid_SGD_lr_0.01_post_BN.npz": {
+      "bytes": 38699,
+      "sha256": "77bdede078ddb538273ebf5b9adaaf2805846c236a2264824124c6c4a98f174f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/hybrid_SGD_lr_0.01_pre_BN.npz": {
+      "bytes": 38361,
+      "sha256": "0eb2570f89450e132dc5aeee3b8c81f4f106bf432d8bd73b893c804d0a531166"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/hybrid_no_SGD_post_BN.npz": {
+      "bytes": 38290,
+      "sha256": "5aa7cfe9dc3031c12a896cbe8d7c9d72b18e91180e94e3de78a184e6ea466a2d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/predictions/hybrid_no_SGD_pre_BN.npz": {
+      "bytes": 38515,
+      "sha256": "821a44bd5c759aa2c2cf8f5673d5191075f8a7ce4fc6dc63ad09add1aa9d98de"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/prepare_recovery_environment.py": {
+      "bytes": 1664,
+      "sha256": "649695c1a4846dbbdef93ac60bea79464fba80f4132ccdedf293ca43330a97da"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/probe_recovery_guard.py": {
+      "bytes": 2268,
+      "sha256": "09431e217905ae9d5294462ab7ca182151929ffe61ca5d21c1ec15260e8cd8a5"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/protocol.json": {
+      "bytes": 2483,
+      "sha256": "ee9b457f32676c6931168c598b627c62c647a2b21b32fd851ece0a52e32db34f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/E_SGD_lr_0.001_post_BN.json": {
+      "bytes": 4847,
+      "sha256": "a8c9abd8140767c9b9375b3e81270d01fc3e29dd1aa286ad932bb567761d13eb"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/E_SGD_lr_0.001_pre_BN.json": {
+      "bytes": 4846,
+      "sha256": "9e3071effb69d3c6d7cb18259941c40af70d83b756c987bfb7dea5c37de7d028"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/E_SGD_lr_0.01_post_BN.json": {
+      "bytes": 4839,
+      "sha256": "60bac0ad8aaefb0abc35dfd32fba79b3afe493812a1791af59b6cebd9e5c2315"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/E_SGD_lr_0.01_pre_BN.json": {
+      "bytes": 4840,
+      "sha256": "dcadbbb0d314ce8d79e8f46d73223b6177cb30e0ba18e8901cfa60f756537b1c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/E_no_SGD_post_BN.json": {
+      "bytes": 1688,
+      "sha256": "3ec2fd06e049332210dfc580b127fc8e2e95a0d8a6271ad1ba552e395628a6c8"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/E_no_SGD_pre_BN.json": {
+      "bytes": 29607,
+      "sha256": "44fdb3607659a51719f0d69ab98c390286704d43c521893f3999df21d34f0bc2"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/M0_SGD_lr_0.001_post_BN.json": {
+      "bytes": 4864,
+      "sha256": "33586ba42ba54c2cbe745da89010789153fdcd0c2ad66bcc2628afb6d149d716"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/M0_SGD_lr_0.001_pre_BN.json": {
+      "bytes": 4861,
+      "sha256": "365bedf50709307b08a13a2fab911aa71bf21a5b8b33180ac6b41c4062c25e5a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/M0_SGD_lr_0.01_post_BN.json": {
+      "bytes": 4856,
+      "sha256": "058fab020a9276ab0db4b717cabe55357abe936a2ccaeb1fe2e3877e4bf034a7"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/M0_SGD_lr_0.01_pre_BN.json": {
+      "bytes": 4856,
+      "sha256": "5ace3f55a5f2059103900f182624deae00165b21e647bf0693ed0f36609f49b1"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/M0_no_SGD_post_BN.json": {
+      "bytes": 2032,
+      "sha256": "1a4df9062dbc75bbcaabd427f35d21c30a705d79a6f5e44c08376506cc88ac4d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/M0_no_SGD_pre_BN.json": {
+      "bytes": 28311,
+      "sha256": "d7bc64d01087fad3e1a206183546959f0ce14b54e4d35967246f74b08f988df8"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/P75_SGD_lr_0.001_post_BN.json": {
+      "bytes": 4527,
+      "sha256": "5e281efc63e83b6678070ff3f6d5749c1abb3b33119b28dd7f2b4f9e7508ed39"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/P75_SGD_lr_0.001_pre_BN.json": {
+      "bytes": 4524,
+      "sha256": "c88d0c59e2fbdb4ed5f0ec86b8a5bca29f1be172859cdd470f35ff2790664fb3"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/P75_SGD_lr_0.01_post_BN.json": {
+      "bytes": 4520,
+      "sha256": "f7d75c8577bf6f964b78c8fc873b7d0075e728b92a9af1dc0923c88eb7de3c97"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/P75_SGD_lr_0.01_pre_BN.json": {
+      "bytes": 4518,
+      "sha256": "5d4fd7c694b7d41b4be33548586d6acc920eb489fc64eee02493ce2f3d128360"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/P75_no_SGD_post_BN.json": {
+      "bytes": 1696,
+      "sha256": "97607b3f2155428631f5a0b6433bb9ed15ba19fb5932b6718e62b71dd07d6d8b"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/P75_no_SGD_pre_BN.json": {
+      "bytes": 27614,
+      "sha256": "4a8d24c9216283d0d6002fbab8218e8a3dff34151cd666c5e158d2ef2324cb2e"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/R_SGD_lr_0.001_post_BN.json": {
+      "bytes": 4846,
+      "sha256": "e2a4733abae6a37b1bc4623661ec18f2f841e6347d2ffdec3cbb5fa997108738"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/R_SGD_lr_0.001_pre_BN.json": {
+      "bytes": 4846,
+      "sha256": "0fd7a652aa0339ef6ceede1cae59c69b4ab8394ea527acb338d85d966a9fa4b6"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/R_SGD_lr_0.01_post_BN.json": {
+      "bytes": 4841,
+      "sha256": "3d108ba4671d4e19fefdb976be6c5ffc10764af4193711dc01889eb7c63abbc9"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/R_SGD_lr_0.01_pre_BN.json": {
+      "bytes": 4839,
+      "sha256": "b1c55bd82bfc5a28a8c7ec8214519d2686e813cbb71cc3a9b0af0080e3eb0bd1"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/R_no_SGD_post_BN.json": {
+      "bytes": 1690,
+      "sha256": "947311473f3a6d5f64071896b03320fccfd7036cdcb4c8b5c335101ddff02839"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/R_no_SGD_pre_BN.json": {
+      "bytes": 29609,
+      "sha256": "cc6bc8f3abaa53261a368bee1a861d0457d72fe245a425189dd4b7ba7f7d8a31"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/hybrid_SGD_lr_0.001_post_BN.json": {
+      "bytes": 4867,
+      "sha256": "4d47b776afc8f2b44f9a42adb8ea10fa757ee06b60ad7f93f489a42ba6627aac"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/hybrid_SGD_lr_0.001_pre_BN.json": {
+      "bytes": 4863,
+      "sha256": "137b4d5702cf267ddcdf661838172a70af0ac51312a2a9e2d702a83c7829bf7a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/hybrid_SGD_lr_0.01_post_BN.json": {
+      "bytes": 4857,
+      "sha256": "67a415809a213f4f68c89420bf1d8213884b0d364801465ec3909cba148b6eeb"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/hybrid_SGD_lr_0.01_pre_BN.json": {
+      "bytes": 4856,
+      "sha256": "6537762b8a6f0efcd4e504813978d76fdc839cb505324438f602d05467ea9804"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/hybrid_no_SGD_post_BN.json": {
+      "bytes": 1708,
+      "sha256": "9c207806d0c3b7e5bce229e35b901bd548dbcb07cd6149361496015a3ee78521"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/quality/hybrid_no_SGD_pre_BN.json": {
+      "bytes": 29613,
+      "sha256": "d3d2dab52cb1ea7374cd50f832456a5b01f4f0f0654b4e9d7b390919f71ae898"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/read_recovery_status.py": {
+      "bytes": 1124,
+      "sha256": "c53eb86ee76ea72f467e1d7491bc9d4278ccc88b87e147133bbc16d17926bb3f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery-1-budget-guard-console.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery-1-budget-guard.json": {
+      "bytes": 564,
+      "sha256": "48ce9b20d6eb1e420c2fbdf38a051da9ae99135b979d9ca37a56c09304c10cec"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery-1-console.log": {
+      "bytes": 3681,
+      "sha256": "149dd399deca77ac4a15fc5f0786447f2d3f5c2783f67e4f257fd4ef433d533d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery-1-supervision.json": {
+      "bytes": 1412,
+      "sha256": "7ef94159f50b564a9f5c3c43071680ead3bf9f2bb5ccd09d42abe782e9a64136"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery-1-supervision.jsonl": {
+      "bytes": 26342,
+      "sha256": "06010b733430ed2a8f6d9fe97c9aad2f9c6a2ec3e9b77c23d91d5d6d8d41959c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery-file-inventory.json": {
+      "bytes": 36874,
+      "sha256": "e8ec61fa2b8e59350f294c1934196c406668cc7c4b8b07e3bce1a01b88b44e6c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery_budget_guard.py": {
+      "bytes": 5710,
+      "sha256": "47842c9cbc608df2ed2c2092588093cb6dbe3e29b2f53177d69d15d5926baf15"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery_protocol.json": {
+      "bytes": 2165,
+      "sha256": "58031314071ee23d27e79029bb4a282ab487315607fac51c39d8ab79328f5df4"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/recovery_tape.json": {
+      "bytes": 393822,
+      "sha256": "60ce01a12d4ab052c3c83971fa500157e313c6377132916920688be3bb28799f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/registry/registries/bounded-sparse-cv-pilot_registry.csv": {
+      "bytes": 2824,
+      "sha256": "693803ba45764aeb37cfe580e1f5ec281ec20aa3526a8aa4d679702e1b3087eb"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/report.json": {
+      "bytes": 1150679,
+      "sha256": "dda102a72595317c7f32345806f4c99b95d717a9361ea8592eb28d703590925c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/run_recovery_installed_checks.py": {
+      "bytes": 2494,
+      "sha256": "f432d2b2b45d7d6eb07341edeb60848ef7dbf66b804f95a492f3c5e2f5d9b912"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/source-manifest.json": {
+      "bytes": 38297,
+      "sha256": "0ad0811a86a9e788961bda5061525f2c7027986984f7549140a330a30f3f26e6"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/source_manifest.json": {
+      "bytes": 76458,
+      "sha256": "516055c2f644d2ac9f9deb0c25b43d3fa3397ac2a4785c39df6f9f835e58ecf5"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/starts/E.json": {
+      "bytes": 28627,
+      "sha256": "f6473422ad154f2b7d72d32d2f8de967f2d605fbb87bcc8aa71bfce821ac1fb6"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/starts/M0.json": {
+      "bytes": 26642,
+      "sha256": "ca90a147ff33f6014b2f182a39223a91d20daee4fcd61a367de225891f135e9c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/starts/P75.json": {
+      "bytes": 26633,
+      "sha256": "fb26a673dda6ac24f5181b4107b8c76def955495daa9bc49e5c8f3e136c1a259"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/starts/R.json": {
+      "bytes": 28631,
+      "sha256": "6be72bc0cf3dfb0d06e6122f95b4cbdf704af9a49abfbad8edaeb31b7c073ecf"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/starts/hybrid.json": {
+      "bytes": 28629,
+      "sha256": "b5cd0944f1ebf1ee2c500c4a4e28e6e7a0f5205529bc2db0e1d99ef844bbdee3"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/E_SGD_lr_0.001.json": {
+      "bytes": 3077,
+      "sha256": "df03322f226d0181742519149e40f9a1fa75983508795487a24ce9f3fe2e93db"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/E_SGD_lr_0.01.json": {
+      "bytes": 3076,
+      "sha256": "79675977daa7dd6df65290c1dc28eddb0d75eebf293aad544322b14b4ad874d9"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/M0_SGD_lr_0.001.json": {
+      "bytes": 2765,
+      "sha256": "d49c76e98d9a2bb11f0172a4ac61f2e3b0a727ed1fd5c72d9ff6315e8adad74f"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/M0_SGD_lr_0.01.json": {
+      "bytes": 2764,
+      "sha256": "1722b78dbc75fb7d50370e859c1264d4e61b21f8aecab8b1ba190701e75c6840"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/P75_SGD_lr_0.001.json": {
+      "bytes": 2765,
+      "sha256": "5760625ee195f6a7cc752beb7e769d7437a2d4392fec657f95f80de1ee343fa5"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/P75_SGD_lr_0.01.json": {
+      "bytes": 2764,
+      "sha256": "37dd38d40f3a102a7cc66f8478a9036508ead4e1417020b20c8d57aa0a6ef408"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/R_SGD_lr_0.001.json": {
+      "bytes": 3077,
+      "sha256": "da4f55bf176e0bd5a08cb83f325d35be686b0444c3fff6b32f4708a9ee610d8c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/R_SGD_lr_0.01.json": {
+      "bytes": 3076,
+      "sha256": "3cb8da753afe1911ec8cdf3d7a4e0a5c07f810aa35697b4c6bcf0994a3109943"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/hybrid_SGD_lr_0.001.json": {
+      "bytes": 3077,
+      "sha256": "e0208dacdfd7e7cd218fed89137168c62c2c5b376f3dcf0b1c49dea195f34ea4"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/training/hybrid_SGD_lr_0.01.json": {
+      "bytes": 3076,
+      "sha256": "0b6140c6b5b9097ae5880664a57ca101ef34036c610b5e0d8bf600cf82298514"
+    },
+    "results/recovery-bn-matrix-2026-10-26/raw/verify_recovery_preservation.py": {
+      "bytes": 2297,
+      "sha256": "200bb05e96b73c07d79deea0ef6a77d7bcf28ab9629b1bd5b5e228fc35945a8d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/tools/analyze_recovery_bn.py": {
+      "bytes": 16532,
+      "sha256": "8a21f69c88ae1e4227ebac8dbd8c106ff3b54430c8573d94cff15cded11ec700"
+    },
+    "results/recovery-bn-matrix-2026-10-26/tools/build_recovery_bn_report.py": {
+      "bytes": 17991,
+      "sha256": "880026441e20b7d39fb18e2e0c04ab3751437371bff986b9819c45cc4c42cc8d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/tools/recovery-bn.template.html": {
+      "bytes": 21051,
+      "sha256": "83583adfa0ae774623920cec2d5a422a89d592fb0235594f2da5b94aabb43a73"
+    },
+    "results/recovery-bn-matrix-2026-10-26/tools/verify_recovery_preservation.py": {
+      "bytes": 2297,
+      "sha256": "200bb05e96b73c07d79deea0ef6a77d7bcf28ab9629b1bd5b5e228fc35945a8d"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/preservation-after-recovery.json": {
+      "bytes": 28734,
+      "sha256": "2695253175e71700c9d8906e1e103e2ed24efd2ac89b6c3b64c5e0dcb259fd8a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/preservation-before-recovery.json": {
+      "bytes": 28734,
+      "sha256": "2695253175e71700c9d8906e1e103e2ed24efd2ac89b6c3b64c5e0dcb259fd8a"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/recovery-cpu-final.log": {
+      "bytes": 1636,
+      "sha256": "97cfd40d2e5cebdd5b49bc89f7ea01508374abb930d173841bc9cab751fdf10c"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/recovery-cpu-first.log": {
+      "bytes": 26841,
+      "sha256": "64a8879619726d0e1c9ca42dafece9cba83d5e77ecea359efac8e9a7ea1c64e0"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/recovery-cpu-targeted.log": {
+      "bytes": 116,
+      "sha256": "c22968bb16258b4540dabff3cc3dfe9fc2bf99b6b3afaa6d46d71858c0cd72f2"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/recovery-export-receipt.json": {
+      "bytes": 267,
+      "sha256": "92fa9fd4700ea28ab2a39dcb99f9407f2199a861093ff56393b46b27f84793f8"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/recovery-guard-probe.log": {
+      "bytes": 284,
+      "sha256": "2c51008b41debcf329d076d1dc79c5f2603aa9aab23858814bee9c8ee0eb5e40"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/recovery-wheel-build.log": {
+      "bytes": 105541,
+      "sha256": "a7276b866f74610fc577ba08d3a7f1580d6be3767095803bbb3d6fc40ffff5e3"
+    },
+    "results/recovery-bn-matrix-2026-10-26/validation/release-checks.json": {
+      "bytes": 2289,
+      "sha256": "8b18e63fdb431b14977215a2294fbc8038ab5746a1779578352d071249f3f6ce"
+    }
+  },
+  "schema": "fedcore-recovery-bn-published-v1"
+}

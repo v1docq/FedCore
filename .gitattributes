@@ -64,3 +64,8 @@ docs/svd_compression/results/bn-ts-diagnostic-preparation-2026-10-26/** -text -w
 docs/svd_compression/results/bn-ts-diagnostic-2026-10-26/** -text -whitespace
 docs/svd_compression/BN_TS_DIAGNOSTIC.md -text -whitespace
 docs/svd_compression/bn-ts-diagnostic-report.html -text -whitespace
+
+# Preserve exact recovery-matrix evidence, replay tools and report bytes.
+docs/svd_compression/results/recovery-bn-matrix-2026-10-26/** -text -whitespace
+docs/svd_compression/RECOVERY_BN_MATRIX.md -text -whitespace
+docs/svd_compression/recovery-bn-report.html -text -whitespace

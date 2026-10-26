@@ -1,0 +1,38 @@
+{
+  "SGD_updates": 0,
+  "additional_BN_calibration": true,
+  "artifact_id": "2b4c90ad3c76f3ec1745461202853373cf42845ea6ac02c1d516f1166094f11a",
+  "buffer_fingerprint": "24e481bf19b52de89031bd7e6bd8878861cd1b37ec712c138f1f50d401542e3f",
+  "completed_within_deadline": true,
+  "cpu_gpu_probe_max_abs": 2.86102294921875e-06,
+  "family": "E",
+  "file_bytes": 33373806,
+  "gpu_reload_exact": true,
+  "initial_checkpoint_sha256": "1aa1c09ed7bcecf85f31e43c96b32b1c668b389752423de5f335354e174cfa25",
+  "inventory_fingerprint": "05e8f1a42390bdf10f3873abf5a98a05e2db71fd4d4700963c2700fa3573f8c8",
+  "lr": null,
+  "parameter_fingerprint": "07ce5a571581cb256de6082b5894aaf7eac214fa6f8adf94fa8b15ccd3af3958",
+  "path": "checkpoints/E_no_SGD_post_BN.pt",
+  "phase": "recovery_E_no_SGD_post_BN",
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "sha256": "c3e2d23f92847b3e9004e23c3313727e58078a4bbc687d01c08b3406f18df59c",
+  "shared_pre_BN_checkpoint_sha256": "1aa1c09ed7bcecf85f31e43c96b32b1c668b389752423de5f335354e174cfa25",
+  "solution_id": "ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+  "source_M0_sha256": "531d02916a6a4ad7341f95a1f7e075c91c7b5350bc7009a09d5b93077c4d5510",
+  "state": "no_SGD",
+  "tensor_bytes": 33316040,
+  "training": {
+    "additional_BN_calibration": false,
+    "lr": null,
+    "training_BN_updates": false,
+    "updates": 0
+  },
+  "validation": {
+    "correct": 4703,
+    "cross_entropy": 0.23077286738274097,
+    "prediction_file": "predictions/E_no_SGD_post_BN.npz",
+    "prediction_sha256": "b0dba60e3cecc96263f432e5d9a241bb0ccf90e662e3fb875bd46f500d11ddb5",
+    "rows": 5000,
+    "top1": 0.9406
+  }
+}

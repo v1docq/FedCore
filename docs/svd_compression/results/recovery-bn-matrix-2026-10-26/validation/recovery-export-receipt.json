@@ -1,0 +1,8 @@
+{
+  "archive": "/root/fedcore_recovery_bn_20261026/export-recovery-1/evidence.tar.gz",
+  "bytes": 1899254,
+  "sha256": "d2f2d7e27ae649185a944df88c3aaef98ef05f401e168f78ee0b9b8df3e2d5c6",
+  "copied_files": 130,
+  "status": "completed",
+  "retained_binary_files": 41
+}

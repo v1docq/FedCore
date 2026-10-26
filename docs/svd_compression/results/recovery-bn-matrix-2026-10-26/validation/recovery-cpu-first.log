@@ -1,0 +1,366 @@
+....................................FFFF..ssssssss...................... [ 42%]
+........................................................................ [ 84%]
+..................sssss..s                                               [100%]
+================================== FAILURES ===================================
+_ test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[False] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2311/test_public_run_wires_fixed_ma0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DAEAC9F910>
+stop = False
+
+    @pytest.mark.parametrize('stop',[False,True,'malformed','budget'])
+    def test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence(tmp_path,monkeypatch,stop):
+        completion, diagnostic, inventories, old, previous, _ = miniature_parents(tmp_path,monkeypatch)
+        admitted = module.inspect_completion(completion,inventories[0])
+        replay = module.inspect_diagnostic(diagnostic,inventories[1])
+        prepared = {'status':'prepared','source':{},'completion':admitted,'diagnostic':replay}
+        monkeypatch.setattr(module,'recovery_preparation',lambda *args:prepared)
+        monkeypatch.setattr(module,'inspect_completion',lambda *args:admitted)
+        monkeypatch.setattr(module,'inspect_diagnostic',lambda *args:replay)
+        monkeypatch.setattr(module,'admit_free_gpu',lambda:{'compute_pids':[]})
+        monkeypatch.setattr(module,'verify_loaded_sources',lambda *args:{})
+        monkeypatch.setattr(module.subprocess,'run',lambda *args,**kwargs:SimpleNamespace(stdout='numpy==1.26.4\nfedcore==new\n'))
+        class Runtime:
+            def __init__(self,protocol,output,started):
+                self.protocol,self.output,self.deadline = protocol,output,started+1800
+                self.environment = old['environment']
+                self.torch = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda:0,max_memory_reserved=lambda:0))
+            def check(self,*args,**kwargs): pass
+        class Data:
+            def __init__(self,*args,**kwargs):
+                assert kwargs == {'download':False}
+                roles = json.loads((completion/'data_roles.json').read_text())
+                self.roles = SimpleNamespace(train=(1,2),sha256='fixed-roles',payload=lambda:roles)
+                self.source_hashes = old['data']['source_files']
+            def open_test(self): pytest.fail('Official test must stay sealed')
+        class Pilot:
+            def __init__(self,runtime,data):
+                self.runtime,self.gpu = runtime,SimpleNamespace(runtime=runtime)
+                self.space = SimpleNamespace(source_storage_bytes=44734408)
+                self.teacher_fingerprint = 'teacher'
+            def bind_teacher(self,model): self.teacher = model
+            def short(self,*args): pytest.fail('Short evaluations calibrate BN and must never run')
+            def random_search(self,*args): pytest.fail('New search is forbidden')
+            def evolution(self,*args): pytest.fail('New search is forbidden')
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_data',SimpleNamespace(CifarData=Data))
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_pilot',SimpleNamespace(Pilot=Pilot))
+        import fedcore.algorithm.low_rank.candidate_storage as storage
+        monkeypatch.setattr(storage,'capture_inventory',lambda model:())
+        monkeypatch.setattr(storage,'inventory_fingerprint',lambda inventory:'teacher')
+        monkeypatch.setattr(module,'Runtime',Runtime)
+        monkeypatch.setattr(module,'load_checkpoint',lambda *args:object())
+        monkeypatch.setattr(module,'decode_genotypes',lambda *args:{'fixed':'genotypes'})
+        tape = tuple((tuple(range(128)),index) for index in range(200))
+        tape_sha = module.digest(tape)
+        for item in old['recovered'].values(): item['recovery_tape_sha256'] = tape_sha
+        previous['recovery_tape_sha256'] = tape_sha
+        monkeypatch.setattr(module,'recovery_tape',lambda *args:tape)
+        calls = []
+        def quality(pilot,genotypes,shared_tape,**kwargs):
+            assert shared_tape is tape and genotypes == {'fixed':'genotypes'}
+            assert pilot.runtime.stage == 'quality' and kwargs['diagnostic'] is replay
+            calls.append('quality')
+            output = pilot.runtime.output
+            prediction = output.bytes('predictions/partial.npz',b'partial')
+            record = {**old['baseline'],'validation':{'rows':5000,'prediction_file':prediction['path'],
+                                                   'prediction_sha256':prediction['sha256']}}
+            partial = stop is True or stop == 'malformed'
+            count = 7 if partial else 200
+            roles = [(f'{family}_SGD_lr_{lr:g}',lr) for family,_,_ in module.recovery.FAMILIES for lr in module.recovery.LEARNING_RATES]
+            for trajectory, (role,lr) in enumerate(roles[:1] if partial else roles):
+                updates = 199 if stop == 'budget' and trajectory == 9 else count
+                for update in range(1,updates+1):
+                    output.append({'event':'diagnostic_SGD_update','trajectory':role,'updates':update,'lr':lr})
+                if not partial: kwargs['trajectories'][role] = {'updates':200}
+            for index in range(1 if partial else 30): kwargs['results'][str(index)] = record
+            if stop == 'malformed':
+                with output.ledger.open('a') as stream: stream.write('{broken\n')
+            if partial: raise module.PilotStop('quality','absolute_deadline')
+        monkeypatch.setattr(module,'run_quality',quality)
+        report = module.run_recovery(tmp_path/'data',tmp_path/'out',tmp_path/'manifest',
+            completion,inventories[0],diagnostic,inventories[1])
+        partial = stop is True or stop == 'malformed'
+        expected_status = 'failed' if stop in ('malformed','budget') else 'recovery_incomplete_quality' if stop is True else 'completed'
+>       assert calls == ['quality'] and report['total_SGD_updates'] == (7 if partial else 1999 if stop == 'budget' else 2000)
+E       AssertionError: assert ([] == ['quality']
+E         
+E         Right contains one more item: 'quality'
+E         Use -v to get more diff)
+
+tests\refactoring\test_sparse_cv_recovery.py:479: AssertionError
+_ test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[True] __
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2311/test_public_run_wires_fixed_ma1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DAEAC9D960>
+stop = True
+
+    @pytest.mark.parametrize('stop',[False,True,'malformed','budget'])
+    def test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence(tmp_path,monkeypatch,stop):
+        completion, diagnostic, inventories, old, previous, _ = miniature_parents(tmp_path,monkeypatch)
+        admitted = module.inspect_completion(completion,inventories[0])
+        replay = module.inspect_diagnostic(diagnostic,inventories[1])
+        prepared = {'status':'prepared','source':{},'completion':admitted,'diagnostic':replay}
+        monkeypatch.setattr(module,'recovery_preparation',lambda *args:prepared)
+        monkeypatch.setattr(module,'inspect_completion',lambda *args:admitted)
+        monkeypatch.setattr(module,'inspect_diagnostic',lambda *args:replay)
+        monkeypatch.setattr(module,'admit_free_gpu',lambda:{'compute_pids':[]})
+        monkeypatch.setattr(module,'verify_loaded_sources',lambda *args:{})
+        monkeypatch.setattr(module.subprocess,'run',lambda *args,**kwargs:SimpleNamespace(stdout='numpy==1.26.4\nfedcore==new\n'))
+        class Runtime:
+            def __init__(self,protocol,output,started):
+                self.protocol,self.output,self.deadline = protocol,output,started+1800
+                self.environment = old['environment']
+                self.torch = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda:0,max_memory_reserved=lambda:0))
+            def check(self,*args,**kwargs): pass
+        class Data:
+            def __init__(self,*args,**kwargs):
+                assert kwargs == {'download':False}
+                roles = json.loads((completion/'data_roles.json').read_text())
+                self.roles = SimpleNamespace(train=(1,2),sha256='fixed-roles',payload=lambda:roles)
+                self.source_hashes = old['data']['source_files']
+            def open_test(self): pytest.fail('Official test must stay sealed')
+        class Pilot:
+            def __init__(self,runtime,data):
+                self.runtime,self.gpu = runtime,SimpleNamespace(runtime=runtime)
+                self.space = SimpleNamespace(source_storage_bytes=44734408)
+                self.teacher_fingerprint = 'teacher'
+            def bind_teacher(self,model): self.teacher = model
+            def short(self,*args): pytest.fail('Short evaluations calibrate BN and must never run')
+            def random_search(self,*args): pytest.fail('New search is forbidden')
+            def evolution(self,*args): pytest.fail('New search is forbidden')
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_data',SimpleNamespace(CifarData=Data))
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_pilot',SimpleNamespace(Pilot=Pilot))
+        import fedcore.algorithm.low_rank.candidate_storage as storage
+        monkeypatch.setattr(storage,'capture_inventory',lambda model:())
+        monkeypatch.setattr(storage,'inventory_fingerprint',lambda inventory:'teacher')
+        monkeypatch.setattr(module,'Runtime',Runtime)
+        monkeypatch.setattr(module,'load_checkpoint',lambda *args:object())
+        monkeypatch.setattr(module,'decode_genotypes',lambda *args:{'fixed':'genotypes'})
+        tape = tuple((tuple(range(128)),index) for index in range(200))
+        tape_sha = module.digest(tape)
+        for item in old['recovered'].values(): item['recovery_tape_sha256'] = tape_sha
+        previous['recovery_tape_sha256'] = tape_sha
+        monkeypatch.setattr(module,'recovery_tape',lambda *args:tape)
+        calls = []
+        def quality(pilot,genotypes,shared_tape,**kwargs):
+            assert shared_tape is tape and genotypes == {'fixed':'genotypes'}
+            assert pilot.runtime.stage == 'quality' and kwargs['diagnostic'] is replay
+            calls.append('quality')
+            output = pilot.runtime.output
+            prediction = output.bytes('predictions/partial.npz',b'partial')
+            record = {**old['baseline'],'validation':{'rows':5000,'prediction_file':prediction['path'],
+                                                   'prediction_sha256':prediction['sha256']}}
+            partial = stop is True or stop == 'malformed'
+            count = 7 if partial else 200
+            roles = [(f'{family}_SGD_lr_{lr:g}',lr) for family,_,_ in module.recovery.FAMILIES for lr in module.recovery.LEARNING_RATES]
+            for trajectory, (role,lr) in enumerate(roles[:1] if partial else roles):
+                updates = 199 if stop == 'budget' and trajectory == 9 else count
+                for update in range(1,updates+1):
+                    output.append({'event':'diagnostic_SGD_update','trajectory':role,'updates':update,'lr':lr})
+                if not partial: kwargs['trajectories'][role] = {'updates':200}
+            for index in range(1 if partial else 30): kwargs['results'][str(index)] = record
+            if stop == 'malformed':
+                with output.ledger.open('a') as stream: stream.write('{broken\n')
+            if partial: raise module.PilotStop('quality','absolute_deadline')
+        monkeypatch.setattr(module,'run_quality',quality)
+        report = module.run_recovery(tmp_path/'data',tmp_path/'out',tmp_path/'manifest',
+            completion,inventories[0],diagnostic,inventories[1])
+        partial = stop is True or stop == 'malformed'
+        expected_status = 'failed' if stop in ('malformed','budget') else 'recovery_incomplete_quality' if stop is True else 'completed'
+>       assert calls == ['quality'] and report['total_SGD_updates'] == (7 if partial else 1999 if stop == 'budget' else 2000)
+E       AssertionError: assert ([] == ['quality']
+E         
+E         Right contains one more item: 'quality'
+E         Use -v to get more diff)
+
+tests\refactoring\test_sparse_cv_recovery.py:479: AssertionError
+_ test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[malformed] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2311/test_public_run_wires_fixed_ma2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DAEB213100>
+stop = 'malformed'
+
+    @pytest.mark.parametrize('stop',[False,True,'malformed','budget'])
+    def test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence(tmp_path,monkeypatch,stop):
+        completion, diagnostic, inventories, old, previous, _ = miniature_parents(tmp_path,monkeypatch)
+        admitted = module.inspect_completion(completion,inventories[0])
+        replay = module.inspect_diagnostic(diagnostic,inventories[1])
+        prepared = {'status':'prepared','source':{},'completion':admitted,'diagnostic':replay}
+        monkeypatch.setattr(module,'recovery_preparation',lambda *args:prepared)
+        monkeypatch.setattr(module,'inspect_completion',lambda *args:admitted)
+        monkeypatch.setattr(module,'inspect_diagnostic',lambda *args:replay)
+        monkeypatch.setattr(module,'admit_free_gpu',lambda:{'compute_pids':[]})
+        monkeypatch.setattr(module,'verify_loaded_sources',lambda *args:{})
+        monkeypatch.setattr(module.subprocess,'run',lambda *args,**kwargs:SimpleNamespace(stdout='numpy==1.26.4\nfedcore==new\n'))
+        class Runtime:
+            def __init__(self,protocol,output,started):
+                self.protocol,self.output,self.deadline = protocol,output,started+1800
+                self.environment = old['environment']
+                self.torch = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda:0,max_memory_reserved=lambda:0))
+            def check(self,*args,**kwargs): pass
+        class Data:
+            def __init__(self,*args,**kwargs):
+                assert kwargs == {'download':False}
+                roles = json.loads((completion/'data_roles.json').read_text())
+                self.roles = SimpleNamespace(train=(1,2),sha256='fixed-roles',payload=lambda:roles)
+                self.source_hashes = old['data']['source_files']
+            def open_test(self): pytest.fail('Official test must stay sealed')
+        class Pilot:
+            def __init__(self,runtime,data):
+                self.runtime,self.gpu = runtime,SimpleNamespace(runtime=runtime)
+                self.space = SimpleNamespace(source_storage_bytes=44734408)
+                self.teacher_fingerprint = 'teacher'
+            def bind_teacher(self,model): self.teacher = model
+            def short(self,*args): pytest.fail('Short evaluations calibrate BN and must never run')
+            def random_search(self,*args): pytest.fail('New search is forbidden')
+            def evolution(self,*args): pytest.fail('New search is forbidden')
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_data',SimpleNamespace(CifarData=Data))
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_pilot',SimpleNamespace(Pilot=Pilot))
+        import fedcore.algorithm.low_rank.candidate_storage as storage
+        monkeypatch.setattr(storage,'capture_inventory',lambda model:())
+        monkeypatch.setattr(storage,'inventory_fingerprint',lambda inventory:'teacher')
+        monkeypatch.setattr(module,'Runtime',Runtime)
+        monkeypatch.setattr(module,'load_checkpoint',lambda *args:object())
+        monkeypatch.setattr(module,'decode_genotypes',lambda *args:{'fixed':'genotypes'})
+        tape = tuple((tuple(range(128)),index) for index in range(200))
+        tape_sha = module.digest(tape)
+        for item in old['recovered'].values(): item['recovery_tape_sha256'] = tape_sha
+        previous['recovery_tape_sha256'] = tape_sha
+        monkeypatch.setattr(module,'recovery_tape',lambda *args:tape)
+        calls = []
+        def quality(pilot,genotypes,shared_tape,**kwargs):
+            assert shared_tape is tape and genotypes == {'fixed':'genotypes'}
+            assert pilot.runtime.stage == 'quality' and kwargs['diagnostic'] is replay
+            calls.append('quality')
+            output = pilot.runtime.output
+            prediction = output.bytes('predictions/partial.npz',b'partial')
+            record = {**old['baseline'],'validation':{'rows':5000,'prediction_file':prediction['path'],
+                                                   'prediction_sha256':prediction['sha256']}}
+            partial = stop is True or stop == 'malformed'
+            count = 7 if partial else 200
+            roles = [(f'{family}_SGD_lr_{lr:g}',lr) for family,_,_ in module.recovery.FAMILIES for lr in module.recovery.LEARNING_RATES]
+            for trajectory, (role,lr) in enumerate(roles[:1] if partial else roles):
+                updates = 199 if stop == 'budget' and trajectory == 9 else count
+                for update in range(1,updates+1):
+                    output.append({'event':'diagnostic_SGD_update','trajectory':role,'updates':update,'lr':lr})
+                if not partial: kwargs['trajectories'][role] = {'updates':200}
+            for index in range(1 if partial else 30): kwargs['results'][str(index)] = record
+            if stop == 'malformed':
+                with output.ledger.open('a') as stream: stream.write('{broken\n')
+            if partial: raise module.PilotStop('quality','absolute_deadline')
+        monkeypatch.setattr(module,'run_quality',quality)
+        report = module.run_recovery(tmp_path/'data',tmp_path/'out',tmp_path/'manifest',
+            completion,inventories[0],diagnostic,inventories[1])
+        partial = stop is True or stop == 'malformed'
+        expected_status = 'failed' if stop in ('malformed','budget') else 'recovery_incomplete_quality' if stop is True else 'completed'
+>       assert calls == ['quality'] and report['total_SGD_updates'] == (7 if partial else 1999 if stop == 'budget' else 2000)
+E       AssertionError: assert ([] == ['quality']
+E         
+E         Right contains one more item: 'quality'
+E         Use -v to get more diff)
+
+tests\refactoring\test_sparse_cv_recovery.py:479: AssertionError
+_ test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[budget] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2311/test_public_run_wires_fixed_ma3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DAEAAA9D20>
+stop = 'budget'
+
+    @pytest.mark.parametrize('stop',[False,True,'malformed','budget'])
+    def test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence(tmp_path,monkeypatch,stop):
+        completion, diagnostic, inventories, old, previous, _ = miniature_parents(tmp_path,monkeypatch)
+        admitted = module.inspect_completion(completion,inventories[0])
+        replay = module.inspect_diagnostic(diagnostic,inventories[1])
+        prepared = {'status':'prepared','source':{},'completion':admitted,'diagnostic':replay}
+        monkeypatch.setattr(module,'recovery_preparation',lambda *args:prepared)
+        monkeypatch.setattr(module,'inspect_completion',lambda *args:admitted)
+        monkeypatch.setattr(module,'inspect_diagnostic',lambda *args:replay)
+        monkeypatch.setattr(module,'admit_free_gpu',lambda:{'compute_pids':[]})
+        monkeypatch.setattr(module,'verify_loaded_sources',lambda *args:{})
+        monkeypatch.setattr(module.subprocess,'run',lambda *args,**kwargs:SimpleNamespace(stdout='numpy==1.26.4\nfedcore==new\n'))
+        class Runtime:
+            def __init__(self,protocol,output,started):
+                self.protocol,self.output,self.deadline = protocol,output,started+1800
+                self.environment = old['environment']
+                self.torch = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda:0,max_memory_reserved=lambda:0))
+            def check(self,*args,**kwargs): pass
+        class Data:
+            def __init__(self,*args,**kwargs):
+                assert kwargs == {'download':False}
+                roles = json.loads((completion/'data_roles.json').read_text())
+                self.roles = SimpleNamespace(train=(1,2),sha256='fixed-roles',payload=lambda:roles)
+                self.source_hashes = old['data']['source_files']
+            def open_test(self): pytest.fail('Official test must stay sealed')
+        class Pilot:
+            def __init__(self,runtime,data):
+                self.runtime,self.gpu = runtime,SimpleNamespace(runtime=runtime)
+                self.space = SimpleNamespace(source_storage_bytes=44734408)
+                self.teacher_fingerprint = 'teacher'
+            def bind_teacher(self,model): self.teacher = model
+            def short(self,*args): pytest.fail('Short evaluations calibrate BN and must never run')
+            def random_search(self,*args): pytest.fail('New search is forbidden')
+            def evolution(self,*args): pytest.fail('New search is forbidden')
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_data',SimpleNamespace(CifarData=Data))
+        monkeypatch.setitem(sys.modules,'fedcore.experiments.cv_sparse_pilot',SimpleNamespace(Pilot=Pilot))
+        import fedcore.algorithm.low_rank.candidate_storage as storage
+        monkeypatch.setattr(storage,'capture_inventory',lambda model:())
+        monkeypatch.setattr(storage,'inventory_fingerprint',lambda inventory:'teacher')
+        monkeypatch.setattr(module,'Runtime',Runtime)
+        monkeypatch.setattr(module,'load_checkpoint',lambda *args:object())
+        monkeypatch.setattr(module,'decode_genotypes',lambda *args:{'fixed':'genotypes'})
+        tape = tuple((tuple(range(128)),index) for index in range(200))
+        tape_sha = module.digest(tape)
+        for item in old['recovered'].values(): item['recovery_tape_sha256'] = tape_sha
+        previous['recovery_tape_sha256'] = tape_sha
+        monkeypatch.setattr(module,'recovery_tape',lambda *args:tape)
+        calls = []
+        def quality(pilot,genotypes,shared_tape,**kwargs):
+            assert shared_tape is tape and genotypes == {'fixed':'genotypes'}
+            assert pilot.runtime.stage == 'quality' and kwargs['diagnostic'] is replay
+            calls.append('quality')
+            output = pilot.runtime.output
+            prediction = output.bytes('predictions/partial.npz',b'partial')
+            record = {**old['baseline'],'validation':{'rows':5000,'prediction_file':prediction['path'],
+                                                   'prediction_sha256':prediction['sha256']}}
+            partial = stop is True or stop == 'malformed'
+            count = 7 if partial else 200
+            roles = [(f'{family}_SGD_lr_{lr:g}',lr) for family,_,_ in module.recovery.FAMILIES for lr in module.recovery.LEARNING_RATES]
+            for trajectory, (role,lr) in enumerate(roles[:1] if partial else roles):
+                updates = 199 if stop == 'budget' and trajectory == 9 else count
+                for update in range(1,updates+1):
+                    output.append({'event':'diagnostic_SGD_update','trajectory':role,'updates':update,'lr':lr})
+                if not partial: kwargs['trajectories'][role] = {'updates':200}
+            for index in range(1 if partial else 30): kwargs['results'][str(index)] = record
+            if stop == 'malformed':
+                with output.ledger.open('a') as stream: stream.write('{broken\n')
+            if partial: raise module.PilotStop('quality','absolute_deadline')
+        monkeypatch.setattr(module,'run_quality',quality)
+        report = module.run_recovery(tmp_path/'data',tmp_path/'out',tmp_path/'manifest',
+            completion,inventories[0],diagnostic,inventories[1])
+        partial = stop is True or stop == 'malformed'
+        expected_status = 'failed' if stop in ('malformed','budget') else 'recovery_incomplete_quality' if stop is True else 'completed'
+>       assert calls == ['quality'] and report['total_SGD_updates'] == (7 if partial else 1999 if stop == 'budget' else 2000)
+E       AssertionError: assert ([] == ['quality']
+E         
+E         Right contains one more item: 'quality'
+E         Use -v to get more diff)
+
+tests\refactoring\test_sparse_cv_recovery.py:479: AssertionError
+============================== warnings summary ===============================
+tests/refactoring/test_sparse_cv_continuation.py::test_completion_entrypoint_copies_evidence_and_wires_five_fresh_recoveries[False]
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+tests/refactoring/test_sparse_cv_continuation.py::test_completion_entrypoint_copies_evidence_and_wires_five_fresh_recoveries[False]
+tests/refactoring/test_sparse_cv_continuation.py::test_completion_entrypoint_copies_evidence_and_wires_five_fresh_recoveries[False]
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_sparse_cv_recovery.py::test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[False]
+FAILED tests/refactoring/test_sparse_cv_recovery.py::test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[True]
+FAILED tests/refactoring/test_sparse_cv_recovery.py::test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[malformed]
+FAILED tests/refactoring/test_sparse_cv_recovery.py::test_public_run_wires_fixed_matrix_and_keeps_partial_update_evidence[budget]
+4 failed, 152 passed, 14 skipped, 3 warnings in 19.62s
