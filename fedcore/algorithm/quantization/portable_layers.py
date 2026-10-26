@@ -11,9 +11,27 @@ def _input(x, width):
         raise ValueError("Compatible finite CPU floating input required")
 
 
+def _output(y,dtype):
+    result=y.to(dtype)
+    if not bool(torch.isfinite(result).all()):raise ValueError('Portable reference output overflow')
+    return result
+
+
+def _dimensions(in_features,out_features,bias):
+    if (type(in_features) is not int or type(out_features) is not int or min(in_features,out_features)<1
+            or in_features*out_features>2**26 or type(bias) is not bool):raise ValueError('Bounded positive Linear dimensions and explicit bias flag required')
+
+
+def _bias(value,width):
+    if (type(value) not in (torch.Tensor,nn.Parameter) or value.device.type!='cpu' or value.dtype not in (torch.float32,torch.float64)
+            or value.shape!=(width,) or not bool(torch.isfinite(value).all())):raise ValueError('Finite CPU floating bias required')
+    return value.detach().double().clone()
+
+
 class PortableQuantizedLinear(nn.Module):
     def __init__(self, in_features, out_features, bias=True, *, spec=QuantizedTensorSpec()):
         super().__init__()
+        _dimensions(in_features,out_features,bias)
         self.in_features, self.out_features = in_features, out_features
         self.weight = PackedTensor((out_features, in_features), spec)
         self.register_buffer("bias", torch.zeros(out_features, dtype=torch.float64) if bias else None)
@@ -23,19 +41,19 @@ class PortableQuantizedLinear(nn.Module):
         result = cls(weight.shape[1], weight.shape[0], bias is not None, spec=spec)
         result.weight = PackedTensor.from_tensor(weight, spec, generator=generator)
         if bias is not None:
-            if bias.shape != (weight.shape[0],) or not bool(torch.isfinite(bias).all()):
-                raise ValueError("Invalid bias")
-            result.bias = bias.detach().double().clone()
+            result.bias = _bias(bias,weight.shape[0])
         return result
 
     def forward(self, x):
         _input(x, self.in_features)
-        return F.linear(x.double(), self.weight.decode(), self.bias).to(x.dtype)
+        return _output(F.linear(x.double(), self.weight.decode(), self.bias),x.dtype)
 
 
 class PortableQuantizedFactorLinear(nn.Module):
     def __init__(self, in_features, out_features, rank, bias=True, *, left_spec=QuantizedTensorSpec(), right_spec=QuantizedTensorSpec()):
         super().__init__()
+        _dimensions(in_features,out_features,bias)
+        if type(rank) is not int or not 1<=rank<=min(in_features,out_features):raise ValueError('Bounded factor width required')
         self.in_features, self.out_features, self.rank = in_features, out_features, rank
         self.left = PackedTensor((out_features, rank), left_spec)
         self.right = PackedTensor((rank, in_features), right_spec)
@@ -49,14 +67,12 @@ class PortableQuantizedFactorLinear(nn.Module):
         result.left = PackedTensor.from_tensor(left, left_spec, generator=generator)
         result.right = PackedTensor.from_tensor(right, right_spec, generator=generator)
         if bias is not None:
-            if bias.shape != (left.shape[0],) or not bool(torch.isfinite(bias).all()):
-                raise ValueError("Invalid bias")
-            result.bias = bias.detach().double().clone()
+            result.bias = _bias(bias,left.shape[0])
         return result
 
     def forward(self, x):
         _input(x, self.in_features)
-        return F.linear(F.linear(x.double(), self.right.decode()), self.left.decode(), self.bias).to(x.dtype)
+        return _output(F.linear(F.linear(x.double(), self.right.decode()), self.left.decode(), self.bias),x.dtype)
 
 
 class QuantizedSumLinear(nn.Module):
@@ -70,4 +86,4 @@ class QuantizedSumLinear(nn.Module):
         self.in_features, self.out_features = base.in_features, base.out_features
 
     def forward(self, x):
-        return self.base(x) + self.correction(x)
+        return _output(self.base(x) + self.correction(x),x.dtype)

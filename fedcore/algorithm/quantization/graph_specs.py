@@ -7,13 +7,15 @@ import math
 
 from .tensor_formats import QuantizedTensorSpec, Grid, Rounding
 from fedcore.algorithm.low_rank.plans import ValidationFailure, Violation
-from fedcore.algorithm.low_rank.compression_graph import CalibrationRef
+from fedcore.algorithm.low_rank.compression_graph import CalibrationRef,SourceMode
 
 
 class Method(str, Enum):
     DENSE = "dense"
     PTQ = "weight_ptq"
     DSVD = "dsvd"
+    SVD = "real_svd"
+    FACTORS = "quantize_ready_factors"
     LPLR = "lplr"
     LPLR_SVD = "lplr_svd"
     CALDERA = "caldera_cpu_scalar"
@@ -41,6 +43,7 @@ class TransformSpec:
     inner_iterations: int = 2
     activation_bits: int = 8
     accumulator_bits: int = 64
+    prequantize: QuantizedTensorSpec | None = None
 
 
 @dataclass(frozen=True)
@@ -78,6 +81,7 @@ class QuantizationGraphRequest:
     target: ExecutionTargetSpec = ExecutionTargetSpec()
     max_storage_bytes: int | None = None
     max_peak_bytes: int = 1024**3
+    source_mode: SourceMode = SourceMode.FROZEN_SNAPSHOT
 
 
 @dataclass(frozen=True)
@@ -110,31 +114,42 @@ def fingerprint(value):
 
 def recipe_graph(spec):
     """Compile meaningful operations, preserving noncommuting Q(L) -> fit."""
-    operations = {
-        Method.DENSE: (("ExtractMatrix", ()),),
-        Method.PTQ: (("ExtractMatrix", ()), ("QuantizeTensor", (0,))),
-        Method.DSVD: (("ExtractMatrix", ()), ("SVDTruncate", (0,)), ("QuantizeFactors", (1,))),
-        Method.LPLR: (("ExtractMatrix", ()), ("RandomProject", (0,)), ("QuantizeTensor", (1,)),
-                      ("DecodeTensor", (2,)), ("LeastSquaresFit", (3, 0)), ("QuantizeTensor", (4,)), ("MatrixProduct", (2, 5))),
-        Method.LPLR_SVD: (("ExtractMatrix", ()), ("SVDTruncate", (0,)), ("QuantizeTensor", (1,)),
-                          ("DecodeTensor", (2,)), ("LeastSquaresFit", (3, 0)), ("QuantizeTensor", (4,)), ("MatrixProduct", (2, 5))),
-        Method.TENDER: (("ObserveInput", ()), ("BuildChannelGroups", (0,)), ("CenterInput", (1,)),
-                        ("GroupMatmul", (2,)), ("RequantizeAccumulator", (3,))),
-    }
-    if spec.method is Method.CALDERA:
-        ops = [("ExtractMatrix", ()), ("ObserveInput", ()), ("BuildMetric", (1,)), ("QuantizeTensor", (0,))]
-        previous = 3
-        for _ in range(spec.outer_iterations):
-            ops.extend((("SubtractMatrix", (0, previous)), ("WeightedFactorFit", (len(ops), 2))))
-            factors = len(ops)-1
-            ops.append(("LDLQ", (0, factors, 2)))
-            previous = len(ops)-1
-            ops.append(("SelectBest", (previous, factors)))
-        ops.append(("BuildSum", (previous, len(ops)-1)))
+    nodes=[]
+    def add(op,*inputs):
+        name=f'n{len(nodes)}';nodes.append(ProcessNode(name,op,tuple(inputs)));return name
+    if spec.method is Method.FACTORS:
+        factors=add('ExtractFactors');left=add('QuantizeLeftFactor',factors);right=add('QuantizeRightFactor',factors)
+        output=add('BuildFactorOperator',left,right)
     else:
-        ops = operations[spec.method]
-    nodes = tuple(ProcessNode(f"n{i}", operation, tuple(f"n{j}" for j in inputs)) for i, (operation, inputs) in enumerate(ops))
-    return ProcessGraphSpec(nodes, nodes[-1].name)
+        weight=add('ExtractMatrix')
+        if spec.prequantize is not None:
+            weight=add('DecodeTensor',add('PreQuantizeTensor',weight))
+        if spec.method is Method.DENSE:output=add('BuildDenseOperator',weight)
+        elif spec.method is Method.PTQ:output=add('BuildQuantizedOperator',add('QuantizeWeight',weight))
+        elif spec.method in (Method.SVD,Method.DSVD):
+            factors=add('SVDTruncate',weight)
+            if spec.method is Method.SVD:output=add('BuildRealFactorOperator',factors)
+            else:output=add('BuildFactorOperator',add('QuantizeLeftFactor',factors),add('QuantizeRightFactor',factors))
+        elif spec.method in (Method.LPLR,Method.LPLR_SVD):
+            first=add('RandomProject' if spec.method is Method.LPLR else 'SVDLeft',weight)
+            left=add('QuantizeLeft',first)
+            decoded=add('DecodeTensor',left)
+            fit=add('LeastSquaresFit',decoded,weight)
+            output=add('BuildFactorOperator',left,add('QuantizeRight',fit))
+            output=add('EvaluateWeightError',output,weight)
+        elif spec.method is Method.TENDER:
+            rows=add('ObserveInput');output=add('BuildTenderOperator',add('BuildChannelGroups',weight,rows))
+        else:
+            rows=add('ObserveInput');metric=add('BuildMetric',rows)
+            state=add('InitializeSum',weight,metric)
+            for _ in range(spec.outer_iterations):
+                state=add('SelectBest',add('LDLQ',state,weight,metric),weight,metric)
+                state=add('SelectBest',add('WeightedFactorFit',state,weight,metric),weight,metric)
+                for _ in range(spec.inner_iterations):
+                    state=add('RegressRight',state,weight,metric)
+                    state=add('SelectBest',add('RegressLeft',state,weight,metric),weight,metric)
+            output=add('BuildSum',state)
+    return ProcessGraphSpec(tuple(nodes),output)
 
 
 def canonical_graph(graph):
@@ -160,11 +175,13 @@ def validate_transform(spec, shape):
         problems.append(Violation("InvalidTransform", "transform", message))
     if type(spec) is not TransformSpec or type(spec.method) is not Method:
         return ValidationFailure((Violation("InvalidTransform", "transform", "Typed method required"),))
-    if spec.method in (Method.DSVD, Method.LPLR, Method.LPLR_SVD, Method.CALDERA):
+    if spec.method in (Method.SVD, Method.DSVD, Method.LPLR, Method.LPLR_SVD, Method.CALDERA):
         if type(spec.rank) is not int or not 1 <= spec.rank <= min(shape):
             bad("Factor width must fit both matrix axes")
     elif spec.rank is not None:
         bad("This representation has no rank")
+    if spec.prequantize is not None and (type(spec.prequantize) is not QuantizedTensorSpec or spec.method in (Method.FACTORS,Method.DENSE,Method.TENDER)):
+        bad('Prequantize/decode subgraph is unsupported for this source/target')
     if spec.comparison_rank is not None and (type(spec.comparison_rank) is not int or not 1 <= spec.comparison_rank <= min(shape)):
         bad("Comparison rank must fit matrix axes independently of factor width")
     if any(type(s) is not QuantizedTensorSpec for s in (spec.left, spec.right, spec.weight)):

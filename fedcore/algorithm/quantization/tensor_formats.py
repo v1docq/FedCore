@@ -126,6 +126,8 @@ class PackedTensor(nn.Module):
         self.shape, self.spec = tuple(shape), spec
         if type(spec) is not QuantizedTensorSpec:
             raise ValueError("Typed quantization specification required")
+        size=(math.prod(shape)*spec.bits+7)//8+(1 if spec.axis is None else shape[spec.axis])*8
+        if size>64*1024**2:raise ValueError('Packed tensor constructor exceeds portable 64 MiB component limit')
         self.register_buffer("packed", torch.zeros((math.prod(shape)*spec.bits+7)//8, dtype=torch.uint8))
         self.register_buffer("scale", torch.ones(1 if spec.axis is None else shape[spec.axis], dtype=torch.float64))
         # Offset codes representing zero, including the final zero padding bits.

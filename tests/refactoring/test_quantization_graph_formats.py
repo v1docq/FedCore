@@ -78,3 +78,38 @@ def test_corrupt_padding_and_scale_rejected():
         q.validate_state(state)
     with pytest.raises(ValueError):
         PackedTensor.from_tensor(torch.ones(2, 3), scale=torch.ones(3, dtype=torch.float64))
+
+
+@pytest.mark.parametrize('input_request',[
+    QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.PTQ)),),target=None),
+    QuantizationGraphRequest(({'path':'0'},)),
+    QuantizationGraphRequest((OperatorRecipe('0',None),)),
+    QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.LPLR,rank=1)),)),
+    QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.CALDERA,rank=1,weight=QuantizedTensorSpec(8,axis=1))),)),
+])
+def test_malformed_and_incompatible_metadata_have_typed_failures(input_request):
+    assert isinstance(check_quantization_graph(nn.Sequential(nn.Linear(3,2)),input_request),ValidationFailure)
+
+
+@pytest.mark.parametrize('calibration',[{}, {'missing':torch.ones(2,3)}, {'0':torch.ones(2,4)}, {1:torch.ones(2,3)}])
+def test_invalid_operator_calibration_is_rejected_before_effects(calibration):
+    result=check_quantization_graph(nn.Sequential(nn.Linear(3,2)),QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.PTQ)),)),calibration=calibration)
+    assert isinstance(result,ValidationFailure),result
+
+
+def test_root_child_overlap_and_tied_factor_outside_scope():
+    from fedcore.algorithm.low_rank.structured_layers import FactorizedLinear
+    layer=FactorizedLinear(4,3,2)
+    request=QuantizationGraphRequest((OperatorRecipe('',TransformSpec(Method.FACTORS)),OperatorRecipe('left',TransformSpec(Method.PTQ))))
+    assert isinstance(check_quantization_graph(layer,request),ValidationFailure)
+    outside=nn.Linear(2,3);outside.weight=layer.left.weight
+    model=nn.Sequential(layer,outside)
+    result=check_quantization_graph(model,QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.FACTORS)),)))
+    assert isinstance(result,ValidationFailure)
+
+
+def test_output_overflow_is_not_export_success():
+    layer=nn.Sequential(nn.Linear(1,1,bias=False))
+    layer[0].weight.data.fill_(1e30)
+    result=compress_quantization_graph(layer,QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.PTQ)),)),calibration=torch.tensor([[1e30]]))
+    assert isinstance(result,NumericalFailure),result

@@ -44,6 +44,7 @@ def test_qat_training_budget_failure_charged():
         calibration_batches=((x,y),),training_batches=((x,y),),ledger=ledger)
     assert isinstance(result,ResourceFailure),result
     assert ledger.training_steps==2
+    assert ledger.actual_training_steps==1
     assert ledger.events[-1]['status']=='refused'
 
 
@@ -59,3 +60,71 @@ def test_existing_factor_recovery_then_encode_ready_factors():
     assert all(stage['changed_parameters'] for stage in result.evidence['stages'])
     assert not torch.equal(result.model(x),model(x))
     for key,value in before.items():assert torch.equal(model.state_dict()[key],value)
+
+
+def test_mixed_float32_factor_recovery_and_alias_closure():
+    torch.manual_seed(18)
+    packed=PortableQuantizedFactorLinear.from_factors(torch.randn(4,2),torch.randn(2,4))
+    model=nn.Sequential(nn.Linear(4,4),packed,nn.Linear(4,4),packed)
+    x,y=torch.randn(6,4),torch.randn(6,4)
+    result=recover_quantized_factors(model,('1',),training_batches=((x,y),),steps=1,learning_rate=.02)
+    assert isinstance(result,ConvertedInference),result
+    assert result.model[1] is result.model[3]
+    assert result.model(x).dtype==torch.float32
+    assert result.evidence['resources']['actual_training_steps']==2
+
+
+def test_unified_program_qat_and_recovery_are_checked_stages():
+    from fedcore.algorithm.quantization.program import QuantizationProgram,RecoveryStageSpec,ProgramArtifact,quantize,training_identity
+    from fedcore.algorithm.quantization.graph_specs import QuantizationGraphRequest,OperatorRecipe,TransformSpec,Method
+    torch.manual_seed(6)
+    model=nn.Sequential(nn.Linear(4,3))
+    x,y=torch.randn(7,4),torch.randn(7,3);batches=((x,y),)
+    dense=QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.DENSE)),))
+    program=QuantizationProgram(dense,backend=BackendStageSpec('qat',('0',),training_steps=1),training_fingerprint=training_identity(batches))
+    result=quantize(model,program,calibration=x,training_batches=batches)
+    assert isinstance(result,ProgramArtifact),result
+    assert 'regional_prepare' in result.plan.stages and 'convert' in result.plan.stages
+    assert result.evidence['resources']['actual_training_steps']==1
+    factors=QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.DSVD,rank=2)),))
+    recovery=QuantizationProgram(factors,recovery=RecoveryStageSpec(('0',),steps=1),training_fingerprint=training_identity(batches))
+    recovered=quantize(model,recovery,calibration=x,training_batches=batches)
+    assert isinstance(recovered,ProgramArtifact),recovered
+    assert 'encode_ready_factors' in recovered.plan.stages
+    stale=quantize(model,recovery,calibration=x,training_batches=((x,y+1),))
+    assert isinstance(stale,StructuralInvalid)
+
+
+def test_cross_entropy_qat_accepts_integer_labels_and_hashes_their_order():
+    from fedcore.algorithm.quantization.program import QuantizationProgram,ProgramArtifact,quantize,training_identity
+    from fedcore.algorithm.quantization.graph_specs import QuantizationGraphRequest,OperatorRecipe,TransformSpec,Method
+    model=nn.Sequential(nn.Linear(3,3));x=torch.randn(5,3);labels=torch.tensor([0,1,2,0,1])
+    batches=((x,labels),)
+    request=QuantizationProgram(QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.DENSE)),)),
+        backend=BackendStageSpec('qat',('0',),training_steps=1,criterion='cross_entropy'),training_fingerprint=training_identity(batches))
+    result=quantize(model,request,calibration=x,training_batches=batches)
+    assert isinstance(result,ProgramArtifact),result
+    assert result.evidence['resources']['actual_training_steps']==1
+    assert training_identity(((x,labels.flip(0)),))!=training_identity(batches)
+
+
+@pytest.mark.parametrize('stage',['recovery','qat'])
+def test_seeded_program_is_reproducible_and_preserves_external_rng(stage):
+    from fedcore.algorithm.quantization.program import QuantizationProgram,RecoveryStageSpec,ProgramArtifact,quantize,training_identity
+    from fedcore.algorithm.quantization.graph_specs import QuantizationGraphRequest,OperatorRecipe,TransformSpec,Method
+    torch.manual_seed(25)
+    model=nn.Sequential(nn.Linear(3,3));x,y=torch.randn(6,3),torch.randn(6,3);batches=((x,y),)
+    compression=QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.DSVD,rank=2) if stage=='recovery' else TransformSpec(Method.DENSE)),))
+    program=QuantizationProgram(compression,recovery=RecoveryStageSpec(('0',),steps=1,seed=37) if stage=='recovery' else None,
+        backend=BackendStageSpec('qat',('0',),training_steps=1,seed=37) if stage=='qat' else None,training_fingerprint=training_identity(batches))
+    before=torch.random.get_rng_state().clone()
+    first=quantize(model,program,calibration=x,training_batches=batches)
+    assert isinstance(first,ProgramArtifact),first
+    assert torch.equal(torch.random.get_rng_state(),before)
+    torch.randn(17)  # Candidate order cannot change a seeded training artifact.
+    second_before=torch.random.get_rng_state().clone()
+    second=quantize(model,program,calibration=x,training_batches=batches)
+    assert isinstance(second,ProgramArtifact),second
+    assert torch.equal(torch.random.get_rng_state(),second_before)
+    assert torch.equal(first.model(x),second.model(x))
+    assert first.checkpoint_bytes==second.checkpoint_bytes

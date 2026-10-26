@@ -28,6 +28,21 @@ class BackendStageSpec:
     training_id: str = 'training'
     selection_id: str = 'selection'
     final_test_id: str = 'test'
+    criterion: str = 'mse'
+    seed: int = 0
+
+
+def validate_backend_spec(spec):
+    if (type(spec) is not BackendStageSpec or spec.mode not in ('static','qat') or spec.criterion not in ('mse','cross_entropy')
+            or type(spec.regions) is not tuple or not spec.regions or any(type(path) is not str for path in spec.regions)
+            or len(set(spec.regions))!=len(spec.regions) or type(spec.training_steps) is not int or spec.training_steps<1
+            or type(spec.learning_rate) not in (int,float) or not math.isfinite(spec.learning_rate) or spec.learning_rate<=0
+            or any(type(value) is not str or not value for value in (spec.calibration_id,spec.training_id,spec.selection_id,spec.final_test_id))
+            or len({spec.calibration_id,spec.training_id,spec.selection_id,spec.final_test_id})!=4
+            or spec.backend not in torch.backends.quantized.supported_engines or spec.backend=='none'
+            or type(spec.seed) is not int or not 0<=spec.seed<2**63):
+        return (Violation('InvalidTrainingPlan','stage','Explicit criterion, disjoint data roles, supported backend and bounded regional protocol required'),)
+    return ()
 
 
 @dataclass(frozen=True)
@@ -39,14 +54,18 @@ class ConvertedInference:
 
 
 def execute_backend_stage(model,spec,*,calibration_batches,training_batches=(),ledger=None):
+    violations=validate_backend_spec(spec)
+    if violations:return StructuralInvalid(violations)
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(spec.seed)
+        return _execute_backend_stage(model,spec,calibration_batches=calibration_batches,training_batches=training_batches,ledger=ledger)
+
+
+def _execute_backend_stage(model,spec,*,calibration_batches,training_batches=(),ledger=None):
     """One regional prepare/train/convert, followed by inspectable storage export."""
     ledger = ledger or ResourceLedger()
-    if (type(spec) is not BackendStageSpec or spec.mode not in ('static','qat')
-            or type(spec.regions) is not tuple or not spec.regions or len(set(spec.regions))!=len(spec.regions)
-            or type(spec.training_steps) is not int or spec.training_steps<1
-            or type(spec.learning_rate) not in (int,float) or not math.isfinite(spec.learning_rate) or spec.learning_rate<=0
-            or len({spec.calibration_id,spec.training_id,spec.selection_id,spec.final_test_id})!=4):
-        return StructuralInvalid((Violation('InvalidTrainingPlan','stage','Explicit disjoint data roles, regions and bounded training protocol required'),))
+    violations=validate_backend_spec(spec)
+    if violations:return StructuralInvalid(violations)
     paths = module_paths(model)
     if any(type(layer) in (RegisteredBackendGraph,RegisteredBackendLinear,PortableQuantizedFactorLinear) for layer in paths.values()):
         return StructuralInvalid((Violation('ConvertedInference','model','QAT requires an explicit float trainable source'),))
@@ -58,7 +77,7 @@ def execute_backend_stage(model,spec,*,calibration_batches,training_batches=(),l
         mapping = QConfigMapping().set_global(None)
         for path in spec.regions:mapping.set_module_name(path,qconfig)
         quantizer = BaseQuantizer({'quant_type':spec.mode,'backend':spec.backend,'qconfig_mapping':mapping,'stage_ledger':ledger,
-            'qat_params':{'epochs':spec.training_steps,'max_steps':spec.training_steps,'lr':spec.learning_rate,'optimizer':'sgd','criterion':'mse'}})
+            'qat_params':{'epochs':spec.training_steps,'max_steps':spec.training_steps,'lr':spec.learning_rate,'optimizer':'sgd','criterion':spec.criterion}})
         data = SimpleNamespace(model=model,calibration_dataloader=tuple(calibration_batches),train_dataloader=tuple(training_batches))
         if not data.calibration_dataloader:return StructuralInvalid((Violation('MissingCalibration','data','Nonempty calibration batches required'),))
         converted = quantizer.fit(data)
@@ -90,7 +109,15 @@ def execute_backend_stage(model,spec,*,calibration_batches,training_batches=(),l
     except (ValueError,TypeError,RuntimeError,KeyError) as error:return NumericalFailure(type(error).__name__,str(error))
 
 
-def recover_quantized_factors(model,paths,*,training_batches,steps=2,learning_rate=.01,adapter_rank=1,ledger=None):
+def recover_quantized_factors(model,paths,*,training_batches,steps=2,learning_rate=.01,adapter_rank=1,ledger=None,seed=0):
+    if type(seed) is not int or not 0<=seed<2**63:return StructuralInvalid((Violation('InvalidSeed','recovery','Bounded integer seed required'),))
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(seed)
+        return _recover_quantized_factors(model,paths,training_batches=training_batches,steps=steps,learning_rate=learning_rate,
+            adapter_rank=adapter_rank,ledger=ledger,seed=seed)
+
+
+def _recover_quantized_factors(model,paths,*,training_batches,steps=2,learning_rate=.01,adapter_rank=1,ledger=None,seed=0):
     """Explicit decode -> existing LoRA recovery -> encode ready factors, no SVD."""
     from fedcore.algorithm.low_rank.structured_layers import FactorizedLinear
     from fedcore.algorithm.low_rank.structured_profiles import FactorPair
@@ -98,16 +125,24 @@ def recover_quantized_factors(model,paths,*,training_batches,steps=2,learning_ra
     ledger = ledger or ResourceLedger()
     if type(steps) is not int or steps<1:
         return StructuralInvalid((Violation('InvalidRecovery','steps','Positive bounded update count required'),))
-    source = module_paths(model);formats={};replacements={}
+    batches=tuple(training_batches)
+    if not batches:return StructuralInvalid((Violation('MissingTraining','data','Recovery requires training batches'),))
+    train_dtype=batches[0][0].dtype
+    if train_dtype not in (torch.float32,torch.float64):return StructuralInvalid((Violation('TrainingDtype','data','CPU float training dtype required'),))
+    source = module_paths(model);formats={};replacements={};closed={};canonical=[]
     for path in paths:
         layer = source.get(path)
         if type(layer) is not PortableQuantizedFactorLinear:
             return StructuralInvalid((Violation('UnsupportedRecovery',path,'Explicit packed factor parents required'),))
-        formats[path]=(layer.left.spec,layer.right.spec)
-        replacements[path]=FactorizedLinear.from_factors(FactorPair(layer.left.decode(),layer.right.decode(),{'method':'explicit_decode'}),layer.bias)
+        aliases=tuple(sorted(p for p,item in source.items() if item is layer))
+        key=aliases[0]
+        if key in closed:continue
+        canonical.append(key);closed[key]=aliases
+        formats[key]=(layer.left.spec,layer.right.spec)
+        decoded=FactorizedLinear.from_factors(FactorPair(layer.left.decode().to(train_dtype),layer.right.decode().to(train_dtype),{'method':'explicit_decode'}),layer.bias)
+        for alias in aliases:replacements[alias]=decoded
     work=replace_modules_atomically(deepcopy(model),replacements)
-    batches=tuple(training_batches)
-    if not batches:return StructuralInvalid((Violation('MissingTraining','data','Recovery requires training batches'),))
+    paths=tuple(canonical)
     evidence=[]
     try:
         for factor in ('left','right'):
@@ -122,6 +157,7 @@ def recover_quantized_factors(model,paths,*,training_batches,steps=2,learning_ra
                 optimizer.zero_grad();loss=(stage.model(x)-y).square().mean()
                 if not bool(torch.isfinite(loss)):raise ValueError('Nonfinite recovery loss')
                 loss.backward();optimizer.step()
+                ledger.complete_training_step('factor_recovery_train')
             changed=tuple(name for name,p in stage.model.named_parameters() if name in before and not torch.equal(before[name],p.detach()))
             work,details=finish_factor_lora_stage(stage)
             details.update(training_steps=steps,changed_parameters=changed)
@@ -130,8 +166,9 @@ def recover_quantized_factors(model,paths,*,training_batches,steps=2,learning_ra
         replacements={}
         for path in paths:
             layer=module_paths(work)[path];left_spec,right_spec=formats[path]
-            replacements[path]=PortableQuantizedFactorLinear.from_factors(layer.left.weight,layer.right.weight,layer.left.bias,
-                left_spec=left_spec,right_spec=right_spec,generator=torch.Generator().manual_seed(0))
+            packed=PortableQuantizedFactorLinear.from_factors(layer.left.weight,layer.right.weight,layer.left.bias,
+                left_spec=left_spec,right_spec=right_spec,generator=torch.Generator().manual_seed(seed))
+            for alias in closed[path]:replacements[alias]=packed
         work=replace_modules_atomically(work,replacements).eval()
         from fedcore.tools.registry.checkpoint_manager import CheckpointManager
         manager=CheckpointManager(None);checkpoint=manager.serialize_to_bytes(work);loaded=manager.deserialize_from_bytes(checkpoint)

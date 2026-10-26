@@ -10,15 +10,17 @@ from torch import nn
 
 
 class RegisteredBackendLinear(nn.Module):
-    def __init__(self,in_features,out_features,channels,bias=True,*,fused_relu=False,backend='fbgemm'):
+    def __init__(self,in_features,out_features,channels,bias=True,*,fused_relu=False,backend='fbgemm',per_channel=True):
         super().__init__()
         if (any(type(v) is not int or v<1 for v in (in_features,out_features,channels))
                 or in_features*out_features>2**26 or channels not in (1,out_features)
-                or type(bias) is not bool or type(fused_relu) is not bool
+                or type(bias) is not bool or type(fused_relu) is not bool or type(per_channel) is not bool
+                or per_channel and channels!=out_features or not per_channel and channels!=1
                 or backend not in torch.backends.quantized.supported_engines or backend=='none'):
             raise ValueError('Invalid registered CPU backend Linear')
         self.in_features,self.out_features,self.channels = in_features,out_features,channels
         self.fused_relu,self.backend = fused_relu,backend
+        self.per_channel=per_channel
         self.register_buffer('codes',torch.zeros(out_features,in_features,dtype=torch.int8))
         self.register_buffer('scales',torch.ones(channels,dtype=torch.float64))
         self.register_buffer('zero_points',torch.zeros(channels,dtype=torch.int64))
@@ -33,7 +35,7 @@ class RegisteredBackendLinear(nn.Module):
             raise ValueError('Only qint8 backend storage is admitted')
         per_channel = weight.qscheme() in (torch.per_channel_affine,torch.per_channel_symmetric)
         result = cls(layer.in_features,layer.out_features,layer.out_features if per_channel else 1,bias is not None,
-                     fused_relu=type(layer).__name__=='LinearReLU',backend=backend)
+                     fused_relu=type(layer).__name__=='LinearReLU',backend=backend,per_channel=per_channel)
         result.codes = weight.int_repr().clone()
         result.scales = weight.q_per_channel_scales().clone() if per_channel else torch.tensor([weight.q_scale()],dtype=torch.float64)
         result.zero_points = weight.q_per_channel_zero_points().long().clone() if per_channel else torch.tensor([weight.q_zero_point()],dtype=torch.int64)
@@ -48,7 +50,7 @@ class RegisteredBackendLinear(nn.Module):
         if not x.is_quantized or x.dtype!=torch.quint8 or x.device.type!='cpu' or x.shape[-1]!=self.in_features:
             raise ValueError('Converted backend boundary requires CPU quint8 activations')
         weight = (torch._make_per_tensor_quantized_tensor(self.codes,float(self.scales[0]),int(self.zero_points[0]))
-                  if self.channels==1 else torch._make_per_channel_quantized_tensor(self.codes,self.scales,self.zero_points,0))
+                  if not self.per_channel else torch._make_per_channel_quantized_tensor(self.codes,self.scales,self.zero_points,0))
         previous = torch.backends.quantized.engine
         try:
             torch.backends.quantized.engine = self.backend
@@ -60,7 +62,7 @@ class RegisteredBackendLinear(nn.Module):
 
     def config(self):
         return {'in_features':self.in_features,'out_features':self.out_features,'channels':self.channels,
-                'bias':self.bias is not None,'fused_relu':self.fused_relu,'backend':self.backend}
+                'bias':self.bias is not None,'fused_relu':self.fused_relu,'backend':self.backend,'per_channel':self.per_channel}
 
     def validate_state(self,state,prefix=''):
         for name,expected in self._buffers.items():
@@ -99,12 +101,17 @@ class RegisteredBackendGraph(nn.Module):
     def from_converted(cls,graph,backend):
         from torch.fx import GraphModule
         if not isinstance(graph,GraphModule):raise ValueError('Converted FX GraphModule required')
-        instructions,operators,constants = [],{},{}
+        instructions,operators,constants,operator_ids = [],{},{},{}
         for node in graph.graph.nodes:
             target = node.target
             if node.op=='call_module':
                 key = 'operator_'+str(len(operators))
                 layer = graph.get_submodule(target)
+                if id(layer) in operator_ids:
+                    target=operator_ids[id(layer)]
+                    instructions.append({'name':node.name,'op':node.op,'target':target,'args':_encode_arg(node.args)})
+                    continue
+                operator_ids[id(layer)]=key
                 if type(layer).__module__.startswith(('torch.ao.nn.intrinsic.quantized','torch.ao.nn.quantized','torch.nn.quantized')) and type(layer).__name__ in ('Linear','LinearReLU'):
                     operators[key] = RegisteredBackendLinear.from_converted(layer,backend)
                 elif type(layer) in (nn.Linear,nn.ReLU,nn.Tanh,nn.Identity,nn.Sigmoid):operators[key] = deepcopy(layer)

@@ -29,6 +29,7 @@ class ResourceLedger:
     def __init__(self,budgets=StageBudgets()):
         self.budgets,self.started = budgets,time.perf_counter()
         self.training_steps,self.stages,self.events = 0,0,[]
+        self.actual_training_steps=0
 
     def checkpoint(self,stage,*,training_steps=0):
         now = time.perf_counter()
@@ -43,6 +44,11 @@ class ResourceLedger:
             event['status'] = 'refused'
             raise StageBudgetExceeded(code,'Shared stage resource budget exhausted')
 
+    def complete_training_step(self,stage):
+        self.actual_training_steps+=1
+        self.events.append({'stage':stage,'status':'update_completed','actual_training_steps':self.actual_training_steps,
+                            'elapsed_seconds':time.perf_counter()-self.started})
+
     def evidence(self):
-        return {'training_steps':self.training_steps,'stages':self.stages,'events':list(self.events),
+        return {'attempted_training_steps':self.training_steps,'actual_training_steps':self.actual_training_steps,'stages':self.stages,'events':list(self.events),
                 'wall_seconds':time.perf_counter()-self.started,'memory_semantics':'RSS admission samples; not measured peak'}

@@ -12,7 +12,7 @@ from fedcore.algorithm.low_rank.plans import Violation,ValidationFailure
 from fedcore.algorithm.low_rank.topology import module_paths
 from .graph_specs import OperatorRecipe,QuantizationGraphRequest,Method,fingerprint
 from .graph_execution import (check_quantization_graph,compress_quantization_graph,
-    ExportVerifiedArtifact,calibration_identity)
+    ExportVerifiedArtifact,calibration_identity,source_identity)
 
 
 @dataclass(frozen=True)
@@ -54,7 +54,7 @@ def prepare_quantization_catalogue(model, alternatives, *, calibration=None,
     entries,tables,target_names,retained_bytes = [],[],set(),0
     try:
         inventory = capture_inventory(model)
-        source = inventory_fingerprint(inventory)
+        source = source_identity(model)
         paths = module_paths(model)
         if calibration is not None:
             from .observation import observe_operator_rows
@@ -93,7 +93,9 @@ def prepare_quantization_catalogue(model, alternatives, *, calibration=None,
                 else:
                     if spec.method is Method.DENSE:w = layer.weight.detach().double()
                     elif hasattr(layer,"base"):w = layer.base.weight.decode()+layer.correction.left.decode()@layer.correction.right.decode()
-                    elif hasattr(layer,"left"):w = layer.left.decode()@layer.right.decode()
+                    elif hasattr(layer,"left"):
+                        w = (layer.left.weight.detach().double()@layer.right.weight.detach().double() if spec.method is Method.SVD
+                             else layer.left.decode()@layer.right.decode())
                     else:w = layer.weight.decode()
                     score = float((source_layer.weight.detach().double()-w).square().sum())
                 storages = tuple(StorageCost(s.storage_id,s.nbytes,1,"physical_bytes") for s in local_inventory)
@@ -113,6 +115,8 @@ def prepare_quantization_catalogue(model, alternatives, *, calibration=None,
              "build_seconds":time.perf_counter()-started,"objective":"additive_frozen_snapshot_surrogate",
              "local_units":"output_squared_error" if calibration is not None else "weight_frobenius_squared"})
     except (ValueError,TypeError,KeyError,RuntimeError) as error:
+        from .resources import StageBudgetExceeded
+        if isinstance(error,StageBudgetExceeded):return error.failure
         return NumericalFailure(type(error).__name__,str(error))
 
 
@@ -129,7 +133,7 @@ def assess_quantization_selection(model,catalogue,selection,*,calibration=None,e
         return ResourceFailure("StorageBudget",selection.reason)
     if type(evaluation_context) is not str or not evaluation_context:
         return StructuralInvalid((Violation("EvaluationContext","evaluation_context","Explicit heldout split/protocol identity required"),))
-    if inventory_fingerprint(capture_inventory(model)) != catalogue.source_fingerprint:
+    if source_identity(model) != catalogue.source_fingerprint:
         return StructuralInvalid((Violation("StaleCatalogue","model","Source inventory changed"),))
     ref = calibration_identity(calibration)
     if (ref.fingerprint if ref else None) != catalogue.calibration_fingerprint:
@@ -152,4 +156,6 @@ def assess_quantization_selection(model,catalogue,selection,*,calibration=None,e
             return NumericalFailure("InvalidQuality","Finite whole-model heldout quality required")
         return AssessedArtifact(artifact,selection.objective_score,float(quality),selection,evaluation_context)
     except Exception as error:
+        from .resources import StageBudgetExceeded
+        if isinstance(error,StageBudgetExceeded):return error.failure
         return CallbackFailure(type(error).__name__,str(error))

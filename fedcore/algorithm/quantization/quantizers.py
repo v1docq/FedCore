@@ -54,6 +54,7 @@ class BaseQuantizer(BaseCompressionModel):
         self.qconfig_mapping=params.get('qconfig_mapping')
         self.stage_ledger=params.get('stage_ledger')
         self.training_evidence={}
+        self._completed_training_steps=0
         self.history={'train_loss':[],'val_loss':[]}
         self.quantization_result=QuantizationResult('not_started',self.quant_type)
 
@@ -113,6 +114,12 @@ class BaseQuantizer(BaseCompressionModel):
                 loss=criterion(self.quant_model(features.cpu()),target.cpu())
                 if loss.ndim!=0 or not torch.isfinite(loss):raise ValueError('QAT requires a finite scalar training loss')
                 loss.backward();optimizer.step();steps+=1
+                self._completed_training_steps=steps
+                if self.stage_ledger is not None:self.stage_ledger.complete_training_step('qat_train')
+                self.training_evidence={'training_steps':steps,'changed_parameters':tuple(name for name,p in self.quant_model.named_parameters()
+                    if name in before and not torch.equal(p.detach(),before[name])),
+                    'parameter_delta_squared':sum(float((p.detach()-before[name]).double().square().sum())
+                        for name,p in self.quant_model.named_parameters() if name in before)}
                 self.history['train_loss'].append(float(loss.detach()))
             if max_steps is not None and steps>=max_steps:break
         if steps==0:raise ValueError('QAT training loader is empty')
@@ -142,7 +149,7 @@ class BaseQuantizer(BaseCompressionModel):
             self.quantization_result=QuantizationResult('completed',self.quant_type,candidate,training_steps=steps)
             return candidate
         except Exception as exc:
-            self.quantization_result=QuantizationResult('error',self.quant_type,reason=str(exc),training_steps=steps)
+            self.quantization_result=QuantizationResult('error',self.quant_type,reason=str(exc),training_steps=max(steps,self._completed_training_steps))
             raise QuantizationError(self.quantization_result) from exc
         finally:torch.backends.quantized.engine=engine
 

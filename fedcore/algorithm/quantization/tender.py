@@ -42,6 +42,8 @@ class TenderLinear(nn.Module):
         maximum = float(ranges.max())
         positive = ranges > 0
         if maximum:
+            if bool((ranges[positive]<maximum/2**60).any()):
+                raise ValueError('Tender channel-scale dynamic range exceeds reference profile')
             depth = torch.zeros_like(ranges,dtype=torch.int64)
             depth[positive] = torch.floor(torch.log2(maximum/ranges[positive])).long()
             deepest = int(depth.max())

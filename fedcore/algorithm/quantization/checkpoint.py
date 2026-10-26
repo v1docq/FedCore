@@ -63,7 +63,7 @@ def build_quantized(description):
     if kind == "TenderLinear":
         from .tender import TenderLinear
         return TenderLinear.from_config(config)
-    if kind == 'RegisteredBackendLinear' and set(config)=={'in_features','out_features','channels','bias','fused_relu','backend'}:
+    if kind == 'RegisteredBackendLinear' and set(config)=={'in_features','out_features','channels','bias','fused_relu','backend','per_channel'}:
         from .backend import RegisteredBackendLinear
         return RegisteredBackendLinear(**config)
     if kind == 'RegisteredBackendGraph' and set(config)=={'instructions','operators','constants'}:
