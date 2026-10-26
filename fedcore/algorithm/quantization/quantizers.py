@@ -51,6 +51,9 @@ class BaseQuantizer(BaseCompressionModel):
         self.dtype=params.get('dtype',torch.qint8)
         self.device=torch.device('cpu')
         self.qat_params=dict(params.get('qat_params') or {})
+        self.qconfig_mapping=params.get('qconfig_mapping')
+        self.stage_ledger=params.get('stage_ledger')
+        self.training_evidence={}
         self.history={'train_loss':[],'val_loss':[]}
         self.quantization_result=QuantizationResult('not_started',self.quant_type)
 
@@ -73,7 +76,8 @@ class BaseQuantizer(BaseCompressionModel):
     def _prepare_model(self,input_data):
         if self.quant_type=='dynamic':return self.quant_model
         qconfig=(get_default_qat_qconfig(self.backend) if self.quant_type=='qat' else get_default_qconfig(self.backend))
-        mapping=QConfigMapping().set_global(qconfig)
+        mapping=self.qconfig_mapping if self.qconfig_mapping is not None else QConfigMapping().set_global(qconfig)
+        if not isinstance(mapping,QConfigMapping):raise ValueError('qconfig_mapping must be QConfigMapping')
         prepare=prepare_qat_fx if self.quant_type=='qat' else prepare_fx
         self.quant_model.train(self.quant_type=='qat')
         self.quant_model=prepare(self.quant_model,mapping,(self.data_batch_for_calib,))
@@ -97,15 +101,25 @@ class BaseQuantizer(BaseCompressionModel):
             if criterion is None:raise ValueError('Unsupported QAT criterion')
             criterion=criterion()
         steps=0
+        max_steps=self.qat_params.get('max_steps')
+        if max_steps is not None and (type(max_steps) is not int or max_steps<1):raise ValueError('Positive max_steps required')
+        before={name:p.detach().clone() for name,p in self.quant_model.named_parameters() if p.requires_grad}
         self.quant_model.train()
         for _ in range(epochs):
             for features,target in input_data.train_dataloader:
+                if max_steps is not None and steps>=max_steps:break
+                if self.stage_ledger is not None:self.stage_ledger.checkpoint('qat_train',training_steps=1)
                 optimizer.zero_grad()
                 loss=criterion(self.quant_model(features.cpu()),target.cpu())
                 if loss.ndim!=0 or not torch.isfinite(loss):raise ValueError('QAT requires a finite scalar training loss')
                 loss.backward();optimizer.step();steps+=1
                 self.history['train_loss'].append(float(loss.detach()))
+            if max_steps is not None and steps>=max_steps:break
         if steps==0:raise ValueError('QAT training loader is empty')
+        self.training_evidence={'training_steps':steps,'changed_parameters':tuple(name for name,p in self.quant_model.named_parameters()
+            if name in before and not torch.equal(p.detach(),before[name])),
+            'parameter_delta_squared':sum(float((p.detach()-before[name]).double().square().sum())
+                for name,p in self.quant_model.named_parameters() if name in before)}
         return steps
 
     def fit(self,input_data):
