@@ -73,6 +73,8 @@ def check_quantization_program(model,program,*,calibration=None,training_batches
                 or type(r.steps) is not int or r.steps<1 or type(r.adapter_rank) is not int or r.adapter_rank<1
                 or type(r.seed) is not int or not 0<=r.seed<2**63):
             errors.append(Violation('UnsupportedRecovery','program','Recovery paths must refer to constructed packed factor operators'))
+        if Method.TENDER in methods.values():
+            errors.append(Violation('UnsupportedGradientBoundary','program','Factor recovery across a Tender integer reference requires a separate differentiable training adapter'))
         stages+=['decode_ready_factors','prepare_factor_lora','train_left','merge_left','train_right','merge_right','encode_ready_factors','export_verified']
     if program.backend is not None:
         b=program.backend
@@ -129,6 +131,12 @@ def _execute_quantization_program(model,program,*,calibration=None,training_batc
     from fedcore.tools.registry.checkpoint_manager import CheckpointManager
     current.model._fedcore_method_evidence=payload({'schema':'quantization_graph_v1','program':checked})
     manager=CheckpointManager(None);checkpoint=manager.serialize_to_bytes(current.model);loaded=manager.deserialize_from_bytes(checkpoint)
+    if type(calibration) is torch.Tensor:
+        from fedcore.algorithm.low_rank.grammar_execution import NumericalFailure
+        with torch.no_grad():
+            expected,actual=current.model(calibration),loaded(calibration)
+            if not bool(torch.isfinite(expected).all()) or not bool(torch.isfinite(actual).all()) or not torch.equal(expected,actual):
+                return NumericalFailure('ProgramRoundTrip','Final whole-program outputs must be finite and equal after loading')
     return ProgramArtifact(loaded,checkpoint,current.storage_bytes,checked,
         {'compression':artifact.evidence,'training_stages':stage_evidence,'resources':ledger.evidence(),'stages':checked.stages})
 

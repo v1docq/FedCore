@@ -59,6 +59,10 @@ def test_overflow_is_checked_before_torch_int64_wrap():
     layer = TenderLinear.calibrate(torch.ones(1,3,dtype=torch.float64),None,rows,accumulator_bits=16)
     with pytest.raises(OverflowError,match="intermediate"):
         layer(rows)
+    model=nn.Sequential(nn.Linear(3,1,bias=False).double())
+    model[0].weight.data.fill_(1)
+    result=compress_quantization_graph(model,QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.TENDER,accumulator_bits=16)),)),calibration=rows)
+    assert isinstance(result,NumericalFailure),result
 
 
 @pytest.mark.parametrize("corruption", ["indices","empty","center"])

@@ -130,6 +130,8 @@ class BaseQuantizer(BaseCompressionModel):
         return steps
 
     def fit(self,input_data):
+        self._completed_training_steps=0
+        self.training_evidence={}
         self._init_model(input_data)
         engine=torch.backends.quantized.engine
         steps=0

@@ -128,3 +128,17 @@ def test_seeded_program_is_reproducible_and_preserves_external_rng(stage):
     assert torch.equal(torch.random.get_rng_state(),second_before)
     assert torch.equal(first.model(x),second.model(x))
     assert first.checkpoint_bytes==second.checkpoint_bytes
+
+
+def test_reused_base_quantizer_clears_completed_steps_before_new_failure():
+    from types import SimpleNamespace
+    from fedcore.algorithm.quantization.quantizers import BaseQuantizer,QuantizationError
+    model=nn.Sequential(nn.Linear(3,2));x,y=torch.randn(4,3),torch.randn(4,2)
+    data=SimpleNamespace(model=model,calibration_dataloader=((x,y),),train_dataloader=((x,y),))
+    quantizer=BaseQuantizer({'quant_type':'qat','qat_params':{'epochs':1,'max_steps':1,'criterion':'mse'}})
+    quantizer.fit(data)
+    assert quantizer.quantization_result.training_steps==1
+    quantizer.qconfig_mapping='invalid'
+    with pytest.raises(QuantizationError):quantizer.fit(data)
+    assert quantizer.quantization_result.training_steps==0
+    assert quantizer.training_evidence=={}

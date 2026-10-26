@@ -86,6 +86,7 @@ def test_corrupt_padding_and_scale_rejected():
     QuantizationGraphRequest((OperatorRecipe('0',None),)),
     QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.LPLR,rank=1)),)),
     QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.CALDERA,rank=1,weight=QuantizedTensorSpec(8,axis=1))),)),
+    QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.TENDER,weight=QuantizedTensorSpec(8))),)),
 ])
 def test_malformed_and_incompatible_metadata_have_typed_failures(input_request):
     assert isinstance(check_quantization_graph(nn.Sequential(nn.Linear(3,2)),input_request),ValidationFailure)
@@ -113,3 +114,24 @@ def test_output_overflow_is_not_export_success():
     layer[0].weight.data.fill_(1e30)
     result=compress_quantization_graph(layer,QuantizationGraphRequest((OperatorRecipe('0',TransformSpec(Method.PTQ)),)),calibration=torch.tensor([[1e30]]))
     assert isinstance(result,NumericalFailure),result
+
+
+def test_checkpoint_refuses_aggregate_declared_allocations_before_buffers(monkeypatch):
+    from fedcore.tools.registry.checkpoint_manager import _build_model,CheckpointError
+    config={'type':'QuantizationGraph','schema':'quantization_graph_v1','kind':'PortableQuantizedLinear',
+        'config':{'in_features':8192,'out_features':3072,'bias':False,'spec':QuantizedTensorSpec(8).payload()}}
+    description={'type':'Sequential','children':{str(i):config for i in range(6)}}
+    monkeypatch.setattr(torch,'zeros',lambda *args,**kwargs:pytest.fail('allocation before descriptor admission'))
+    with pytest.raises(CheckpointError,match='allocation'):_build_model(description,{},'')
+
+
+def test_checkpoint_refuses_undeclared_shared_packed_storage():
+    import io
+    from fedcore.tools.registry.checkpoint_manager import CheckpointManager,CheckpointError
+    model=nn.Sequential(nn.Linear(3,3),nn.Linear(3,3))
+    artifact=compress_quantization_graph(model,QuantizationGraphRequest(tuple(OperatorRecipe(str(i),TransformSpec(Method.PTQ)) for i in range(2))),calibration=torch.randn(2,3))
+    assert type(artifact) is ExportVerifiedArtifact,artifact
+    payload=torch.load(io.BytesIO(artifact.checkpoint_bytes),weights_only=True)
+    payload['state_dict']['1.weight.packed']=payload['state_dict']['0.weight.packed']
+    with pytest.raises(CheckpointError,match='private quantization'):
+        CheckpointManager(None).restore(payload)

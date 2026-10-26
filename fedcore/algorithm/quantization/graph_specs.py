@@ -35,7 +35,7 @@ class TransformSpec:
     comparison_rank: int | None = None
     left: QuantizedTensorSpec = QuantizedTensorSpec()
     right: QuantizedTensorSpec = QuantizedTensorSpec()
-    weight: QuantizedTensorSpec = QuantizedTensorSpec()
+    weight: QuantizedTensorSpec = QuantizedTensorSpec(axis=0)
     seed: int = 0
     rcond: float = 1e-10
     ridge: float = 0.0
@@ -191,7 +191,7 @@ def validate_transform(spec, shape):
             bad("LPLR requires endpoint stochastic factor grids")
         if spec.method is Method.CALDERA and spec.weight.axis not in (None,0):
             bad("Scalar LDLQ supports only tensor/output-channel weight scales")
-        if spec.method is Method.TENDER and (spec.weight.grid is not Grid.SYMMETRIC or spec.weight.rounding is not Rounding.NEAREST or spec.weight.axis not in (None,0) or spec.weight.bound is not None):
+        if spec.method is Method.TENDER and (spec.weight.grid is not Grid.SYMMETRIC or spec.weight.rounding is not Rounding.NEAREST or spec.weight.axis != 0 or spec.weight.bound is not None):
             bad("Tender supports symmetric nearest output-channel weight calibration only")
     if type(spec.seed) is not int or not 0 <= spec.seed < 2**63:
         bad("Bounded nonnegative RNG seed required")

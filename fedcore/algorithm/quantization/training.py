@@ -85,7 +85,10 @@ def _execute_backend_stage(model,spec,*,calibration_batches,training_batches=(),
         registered = RegisteredBackendGraph.from_converted(converted,spec.backend).eval()
         x = data.calibration_dataloader[0][0] if isinstance(data.calibration_dataloader[0],(tuple,list)) else data.calibration_dataloader[0]
         with torch.no_grad():
-            if not torch.equal(converted(x),registered(x)):
+            expected,actual=converted(x),registered(x)
+            if not bool(torch.isfinite(expected).all()) or not bool(torch.isfinite(actual).all()):
+                return NumericalFailure('BackendOutputOverflow','Converted whole-model output must be finite')
+            if not torch.equal(expected,actual):
                 return NumericalFailure('BackendStorageAdapter','Registered integer backend differs from converted FX graph')
         from fedcore.tools.registry.checkpoint_manager import CheckpointManager
         manager = CheckpointManager(None)
@@ -172,6 +175,10 @@ def _recover_quantized_factors(model,paths,*,training_batches,steps=2,learning_r
         work=replace_modules_atomically(work,replacements).eval()
         from fedcore.tools.registry.checkpoint_manager import CheckpointManager
         manager=CheckpointManager(None);checkpoint=manager.serialize_to_bytes(work);loaded=manager.deserialize_from_bytes(checkpoint)
+        with torch.no_grad():
+            expected,actual=work(batches[0][0]),loaded(batches[0][0])
+            if not bool(torch.isfinite(expected).all()) or not bool(torch.isfinite(actual).all()) or not torch.equal(expected,actual):
+                return NumericalFailure('RecoveryRoundTrip','Recovered whole-model outputs must be finite and equal after loading')
         ledger.checkpoint('factor_recovery_export')
         return ConvertedInference(loaded,checkpoint,inventory_cost(capture_inventory(loaded),'bytes'),
             {'stages':evidence,'resources':ledger.evidence(),'transition':'explicit_decode_train_encode_ready_factors'})

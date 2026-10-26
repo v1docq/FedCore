@@ -2,7 +2,7 @@
 from dataclasses import dataclass,replace
 import random
 from fedcore.algorithm.low_rank.plans import ValidationFailure,Violation
-from fedcore.algorithm.low_rank.grammar_search import GrammarAdapter,run_grammar_search,GrammarFitness
+from fedcore.algorithm.low_rank.grammar_search import GrammarAdapter,run_grammar_search,GrammarFitness,GrammarSearchConfig
 from .graph_specs import (TransformSpec,OperatorRecipe,QuantizationGraphRequest,ProcessGraphSpec,
     Method,recipe_graph,canonical_graph,fingerprint,payload)
 from .tensor_formats import QuantizedTensorSpec,Rounding

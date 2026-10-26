@@ -95,6 +95,11 @@ def describe_model(model):
     except ValueError as error:
         raise CheckpointError(str(error)) from error
     _validate_remapped_state(model,model.state_dict())
+    from fedcore.algorithm.quantization.checkpoint import validate_quantized_storage
+    try:
+        validate_quantized_storage(model)
+    except (ValueError,TypeError,KeyError) as error:
+        raise CheckpointError('Invalid private quantization storage') from error
     return _describe_model(model, {}, '')
 
 
@@ -428,6 +433,12 @@ def build_model(description):
 def _build_model(description, seen, path):
     if not isinstance(description, dict):
         raise CheckpointError('Architecture is missing: provide model= or model_factory=')
+    if not path:
+        from fedcore.algorithm.quantization.checkpoint import validate_descriptor_budget
+        try:
+            validate_descriptor_budget(description)
+        except (ValueError,TypeError,KeyError) as error:
+            raise CheckpointError('Invalid quantization allocation descriptor') from error
     if description.get('type') == 'ModuleAlias':
         if set(description) != {'type', 'target'} or description.get('target') not in seen:
             raise CheckpointError('Invalid or forward module alias reference')
@@ -901,6 +912,11 @@ class CheckpointManager:
             raise CheckpointError(str(error)) from error
         _validate_remapped_state(candidate,candidate.state_dict())
         _validate_remapped_state(candidate,state)
+        from fedcore.algorithm.quantization.checkpoint import validate_quantized_storage
+        try:
+            validate_quantized_storage(candidate,state)
+        except (ValueError,TypeError,KeyError) as error:
+            raise CheckpointError('Invalid private quantization storage') from error
         buffer_ties = _validate_tied_buffers(candidate,state)
         try:
             topology = validate_tied_state(candidate, state)
