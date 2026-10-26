@@ -56,3 +56,6 @@ docs/svd_compression/A100_PILOT_2.md -text -whitespace
 docs/svd_compression/results/a100-completion-2026-10-26/** -text -whitespace
 docs/svd_compression/a100-completion-report.html -text -whitespace
 docs/svd_compression/A100_COMPLETION.md -text -whitespace
+
+# Preserve prepared diagnostic evidence before its GPU window starts.
+docs/svd_compression/results/bn-ts-diagnostic-preparation-2026-10-26/** -text -whitespace

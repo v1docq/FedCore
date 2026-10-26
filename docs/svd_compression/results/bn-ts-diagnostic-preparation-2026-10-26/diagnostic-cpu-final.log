@@ -1,0 +1,9 @@
+........................................................................ [ 60%]
+........................................sssss..s                         [100%]
+============================== warnings summary ===============================
+tests/refactoring/test_sparse_cv_continuation.py::test_completion_entrypoint_copies_evidence_and_wires_five_fresh_recoveries[False]
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\Lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+114 passed, 6 skipped, 1 warning in 12.19s

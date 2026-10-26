@@ -1,0 +1,26 @@
+{
+  "diagnostic-cpu-final.log": {
+    "bytes": 874,
+    "sha256": "6eadcc52d016ef5926c3dc81eb9b5c9001e7cbd2c359ad94896df253c40eb66f"
+  },
+  "diagnostic-cpu-first.log": {
+    "bytes": 874,
+    "sha256": "05f4481e3ac00285fc47869789a5e5db92254379c443bfc105d61e9cc784a1ed"
+  },
+  "diagnostic-source-manifest.json": {
+    "bytes": 38054,
+    "sha256": "9e57c688ee591754ea3a81b3bfa322d3af83461ddce48c4d9b449e93506f4a38"
+  },
+  "diagnostic-wheel-build.log": {
+    "bytes": 105016,
+    "sha256": "f61cb86b93a3049e4ce8e55ae3d8ab3b71bb4e813a0ecb536b2a11fa3a52435a"
+  },
+  "diagnostic_protocol.json": {
+    "bytes": 2093,
+    "sha256": "611c0134f94070b35b3657ff0f9b84e249586a4ae4412c758b377bcd528245d7"
+  },
+  "preparation-receipt.json": {
+    "bytes": 710,
+    "sha256": "e6bdd7426c1b37c9ff25056e6f4729f8b5ea17e89f69ed8aa0684e94ebdc2230"
+  }
+}
