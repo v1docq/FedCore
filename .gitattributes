@@ -69,3 +69,8 @@ docs/svd_compression/bn-ts-diagnostic-report.html -text -whitespace
 docs/svd_compression/results/recovery-bn-matrix-2026-10-26/** -text -whitespace
 docs/svd_compression/RECOVERY_BN_MATRIX.md -text -whitespace
 docs/svd_compression/recovery-bn-report.html -text -whitespace
+
+# Preserve saved-model evaluation evidence and deterministic report bytes.
+docs/svd_compression/results/saved-model-evaluation-2026-10-26/** -text -whitespace
+docs/svd_compression/SAVED_MODEL_EVALUATION.md -text -whitespace
+docs/svd_compression/saved-model-evaluation-report.html -text -whitespace

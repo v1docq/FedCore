@@ -1,0 +1,14 @@
+{
+  "schema": "fedcore-saved-evaluation-preservation-v1",
+  "checked_utc": "2026-10-26T12:23:11.990559+00:00",
+  "consumed_parent_files_verified": 14,
+  "old_snapshot_files_verified": 176,
+  "old_package_files_verified": {
+    "original": 313,
+    "completion": 314,
+    "diagnostic": 316,
+    "recovery": 318
+  },
+  "old_wheels_unchanged": true,
+  "gpu_compute_processes_after": ""
+}

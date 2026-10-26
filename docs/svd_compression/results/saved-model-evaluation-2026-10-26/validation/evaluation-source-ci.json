@@ -1,0 +1,44 @@
+{
+  "source_commit": "0693a4bec2cf0cc26397d705dfc2810c7d95f6e7",
+  "url": "https://github.com/v1docq/FedCore/actions/runs/40321039839",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 121565742075,
+      "name": "optional-llm",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121565742466,
+      "name": "cpu (ubuntu-latest, 3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121565742508,
+      "name": "cpu (windows-latest, 3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121565742524,
+      "name": "cpu (ubuntu-latest, 3.11)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121565742554,
+      "name": "cpu (windows-latest, 3.11)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121565742640,
+      "name": "optional-export-service",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

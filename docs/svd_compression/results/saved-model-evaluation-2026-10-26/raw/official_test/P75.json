@@ -1,0 +1,10 @@
+{
+  "correct": 9381,
+  "cross_entropy": 0.23009663610465117,
+  "prediction_file": "predictions/P75_TS_official_test.npz",
+  "prediction_sha256": "6528045a0fdd36c1b9a898dd24974c7f838ff6a9bd02039abeaa895165c1ef32",
+  "rows": 10000,
+  "source_checkpoint_sha256": "c8ac14f51f16b43a7087004205a90357b52e02422c95785b9ecc9605ed19f84b",
+  "top1": 0.9381,
+  "torchscript_sha256": "c0c54b1104d21ec1df4354f89555c0a0e0781dfabc8be528960f92cea55d4959"
+}
