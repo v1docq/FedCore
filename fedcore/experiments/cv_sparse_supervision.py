@@ -82,11 +82,19 @@ def expire_owned_worker(child, pgid, deadline_fired):
 
 def supervise(data_root, output_root, manifest, *, continuation_parent=None, parent_inventory=None,
               diagnostic_completion=None, completion_inventory=None, recovery_completion=None,
-              recovery_diagnostic=None, diagnostic_inventory=None):
+              recovery_diagnostic=None, diagnostic_inventory=None, evaluation_parent=None,
+              evaluation_inventory=None):
     if os.name != 'posix':
         raise RuntimeError('The A100 supervisor requires Linux process-group isolation')
     import psutil
     protocol = PilotProtocol()
+    evaluation = evaluation_parent is not None or evaluation_inventory is not None
+    if evaluation and (
+            evaluation_parent is None or evaluation_inventory is None
+            or any(value is not None for value in (continuation_parent, parent_inventory,
+                   diagnostic_completion, completion_inventory, recovery_completion,
+                   recovery_diagnostic, diagnostic_inventory))):
+        raise ValueError('Saved evaluation requires its parent and inventory as the only worker profile')
     if (continuation_parent is None) != (parent_inventory is None):
         raise ValueError('Continuation requires both the parent and its pinned inventory')
     recovery = any(value is not None for value in
@@ -101,7 +109,7 @@ def supervise(data_root, output_root, manifest, *, continuation_parent=None, par
     diagnostic = diagnostic_completion is not None
     if continuation and diagnostic:
         raise ValueError('Choose one named worker profile')
-    max_seconds = 1800 if continuation or diagnostic or recovery else protocol.max_slot_seconds
+    max_seconds = 1800 if continuation or diagnostic or recovery or evaluation else protocol.max_slot_seconds
     output = Path(output_root).resolve()
     source = Path(manifest).resolve()
     if output.exists() or not source.is_file():
@@ -130,6 +138,9 @@ def supervise(data_root, output_root, manifest, *, continuation_parent=None, par
     if recovery:
         from .cv_sparse_recovery_protocol import sha256
         state['recovery_protocol_sha256'] = sha256()
+    if evaluation:
+        from .cv_sparse_evaluation_protocol import sha256
+        state['evaluation_protocol_sha256'] = sha256()
 
     def stop_owned():
         terminate_owned_group(owned_pgid)
@@ -166,6 +177,10 @@ def supervise(data_root, output_root, manifest, *, continuation_parent=None, par
                             '--completion-inventory', str(Path(completion_inventory).resolve()),
                             '--diagnostic-root', str(Path(recovery_diagnostic).resolve()),
                             '--diagnostic-inventory', str(Path(diagnostic_inventory).resolve())])
+        if evaluation:
+            command[2] = 'fedcore.experiments.cv_sparse_evaluation'
+            command.extend(['--recovery-root', str(Path(evaluation_parent).resolve()),
+                            '--recovery-inventory', str(Path(evaluation_inventory).resolve())])
         state['worker_command'] = command
         with console_path.open('x', encoding='utf-8') as console:
             child = subprocess.Popen(command, env=environment, stdout=console, stderr=subprocess.STDOUT,
@@ -243,6 +258,8 @@ def main(argv=None):
     parser.add_argument('--recovery-completion')
     parser.add_argument('--recovery-diagnostic')
     parser.add_argument('--diagnostic-inventory')
+    parser.add_argument('--evaluation-parent')
+    parser.add_argument('--evaluation-inventory')
     parser.add_argument('--execute', action='store_true')
     args = parser.parse_args(argv)
     if not args.execute:
@@ -255,6 +272,8 @@ def main(argv=None):
         extra = {'recovery_completion': args.recovery_completion,
                  'recovery_diagnostic': args.recovery_diagnostic,
                  'diagnostic_inventory': args.diagnostic_inventory}
+    if args.evaluation_parent is not None or args.evaluation_inventory is not None:
+        extra.update(evaluation_parent=args.evaluation_parent, evaluation_inventory=args.evaluation_inventory)
     return supervise(args.data_root, args.output_root, args.source_manifest,
                      continuation_parent=args.continuation_parent, parent_inventory=args.parent_inventory,
                      diagnostic_completion=args.diagnostic_completion, completion_inventory=args.completion_inventory,
