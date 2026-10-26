@@ -8,7 +8,7 @@ from fedcore.algorithm.low_rank.structured_profiles import FactorPair,balanced_f
 from fedcore.algorithm.low_rank.structured_layers import FactorizedLinear
 from fedcore.algorithm.low_rank.approximation import prepare_weighted_metric,solve_weighted_prepared
 from fedcore.algorithm.low_rank.plans import MetricPolicy
-from .graph_specs import canonical_graph,recipe_graph
+from .graph_specs import canonical_graph,recipe_graph,DEFAULT_MAX_PEAK_BYTES
 from .graph_specs import fingerprint
 from .tensor_formats import PackedTensor
 from .portable_layers import PortableQuantizedLinear,QuantizedSumLinear
@@ -51,14 +51,14 @@ class SumState:
     feedback: tuple[dict,...] = ()
 
 
-def execute_process(layer,spec,graph,rows,*,model_version,scope,ledger=None,cache=None,calibration_fingerprint='none',max_peak_bytes=1024**3):
+def execute_process(layer,spec,graph,rows,*,model_version,scope,ledger=None,cache=None,calibration_fingerprint='none',max_peak_bytes=DEFAULT_MAX_PEAK_BYTES):
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(spec.seed)
         return _execute_process(layer,spec,graph,rows,model_version=model_version,scope=scope,ledger=ledger,cache=cache,
             calibration_fingerprint=calibration_fingerprint,max_peak_bytes=max_peak_bytes)
 
 
-def _execute_process(layer,spec,graph,rows,*,model_version,scope,ledger=None,cache=None,calibration_fingerprint='none',max_peak_bytes=1024**3):
+def _execute_process(layer,spec,graph,rows,*,model_version,scope,ledger=None,cache=None,calibration_fingerprint='none',max_peak_bytes=DEFAULT_MAX_PEAK_BYTES):
     """Read each node's actual dependencies; a changed prefix changes its tail."""
     graph=canonical_graph(graph)
     if graph!=recipe_graph(spec):raise ValueError('Process graph differs from its checked structural specification')

@@ -4,7 +4,7 @@ import random
 from fedcore.algorithm.low_rank.plans import ValidationFailure,Violation
 from fedcore.algorithm.low_rank.grammar_search import GrammarAdapter,run_grammar_search,GrammarFitness,GrammarSearchConfig
 from .graph_specs import (TransformSpec,OperatorRecipe,QuantizationGraphRequest,ProcessGraphSpec,
-    Method,recipe_graph,canonical_graph,fingerprint,payload)
+    Method,recipe_graph,canonical_graph,fingerprint,payload,DEFAULT_MAX_PEAK_BYTES)
 from .tensor_formats import QuantizedTensorSpec,Rounding
 from .graph_execution import check_quantization_graph,compress_quantization_graph,ExportVerifiedArtifact,source_identity,calibration_identity
 from .resources import ResourceLedger,StageBudgetExceeded
@@ -76,7 +76,7 @@ class QuantizationWorkflow:
     program: QuantizationProgram | None = None
 
 
-def prepare_quantization_space(model,alternatives,*,calibration=None,evaluation_context,max_storage_bytes=None,max_peak_bytes=1024**3,prequantize_bits=(2,4,8),training_choices=(None,),training_batches=()):
+def prepare_quantization_space(model,alternatives,*,calibration=None,evaluation_context,max_storage_bytes=None,max_peak_bytes=DEFAULT_MAX_PEAK_BYTES,prequantize_bits=(2,4,8),training_choices=(None,),training_batches=()):
     if type(alternatives) is not dict or not alternatives:return _failure('Nonempty finite alternatives required')
     domains=[]
     for path,choices in sorted(alternatives.items()):
@@ -194,7 +194,8 @@ def compile_genotype(genotype,space):
         recovery=normalized.training if type(normalized.training) is RecoveryStageSpec else None,training_fingerprint=space.training_fingerprint)
         if normalized.training is not None else None)
     identity=fingerprint({'source':space.source,'calibration':space.calibration,'evaluation':space.evaluation_context,
-        'genotype':genotype_payload(normalized),'target':request.target,'storage_budget':space.max_storage_bytes,'source_mode':request.source_mode})
+        'genotype':genotype_payload(normalized),'target':request.target,'storage_budget':space.max_storage_bytes,
+        'max_peak_bytes':space.max_peak_bytes,'source_mode':request.source_mode})
     identity=fingerprint({'workflow':identity,'training_data':space.training_fingerprint,'program':program})
     return QuantizationWorkflow(request,space.source,space.calibration,space.evaluation_context,identity,normalized,program)
 

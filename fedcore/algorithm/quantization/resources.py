@@ -3,6 +3,16 @@ from dataclasses import dataclass
 import time
 import psutil
 from fedcore.algorithm.low_rank.grammar_execution import ResourceFailure
+from fedcore.algorithm.low_rank.candidate_storage import CandidateStorageError
+from .graph_specs import DEFAULT_MAX_PEAK_BYTES
+
+
+def storage_resource_failure(error):
+    if isinstance(error,CandidateStorageError):
+        for violation in error.violations:
+            if violation.code=='ResourceLimitExceeded':
+                return ResourceFailure(violation.code,violation.message)
+    return None
 
 
 class StageBudgetExceeded(RuntimeError):
@@ -16,7 +26,7 @@ class StageBudgets:
     max_seconds: float = 60.
     max_training_steps: int = 32
     max_stages: int = 4096
-    max_rss_bytes: int = 12*1024**3
+    max_rss_bytes: int = DEFAULT_MAX_PEAK_BYTES
 
     def __post_init__(self):
         import math

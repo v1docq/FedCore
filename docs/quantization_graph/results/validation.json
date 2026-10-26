@@ -3,48 +3,123 @@
   "date": "2026-10-26",
   "base_revision": "69458e86d8d42f37c156da67e1a333241d269790",
   "profile": "small CPU Linear unit/integration and installed-package verification",
-  "environment": {"python": "3.10.0", "torch": "2.2.0+cpu", "pytest": "8.4.2"},
-  "stages": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"],
+  "environment": {
+    "python": "3.10.0",
+    "torch": "2.2.0+cpu",
+    "pytest": "8.4.2"
+  },
+  "stages": [
+    "P0",
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7"
+  ],
   "test_runs": [
     {
       "name": "broad G2/G3/G5, candidates, allocation and new quantization",
       "command": "python -m pytest tests/refactoring/test_quantization_graph_formats.py tests/refactoring/test_quantization_graph_methods.py tests/refactoring/test_quantization_graph_tender.py tests/refactoring/test_quantization_graph_catalogue.py tests/refactoring/test_quantization_graph_training.py tests/refactoring/test_quantization_graph_search.py tests/refactoring/test_compression_graph.py tests/refactoring/test_compression_graph_stages.py tests/refactoring/test_compression_graph_stages_independent.py tests/refactoring/test_compression_graph_candidates.py tests/refactoring/test_compression_graph_candidates_independent.py tests/refactoring/test_compression_grammar.py tests/refactoring/test_compression_grammar_independent.py tests/refactoring/test_compression_composition.py tests/refactoring/test_compression_composition_independent.py tests/refactoring/test_svd_allocation.py -q",
-      "passed": 455, "skipped": 0, "warnings": 8, "seconds": 32.50,
+      "passed": 455,
+      "skipped": 0,
+      "warnings": 8,
+      "seconds": 32.5,
       "record": "captured tool output; later global checkpoint changes checked separately below"
     },
     {
       "name": "existing BaseQuantizer/core/math plus training",
       "command": "python -m pytest tests/refactoring/test_core_contracts.py tests/refactoring/test_math_training.py tests/refactoring/test_quantization_graph_training.py -q",
-      "passed": 64, "skipped": 0, "warnings": 18, "seconds": 41.94,
+      "passed": 64,
+      "skipped": 0,
+      "warnings": 18,
+      "seconds": 41.94,
       "log": "build/quantization_package/base_quantizer_regression.log"
     },
     {
       "name": "final strict Tender format, boundaries and search",
       "command": "python -m pytest tests/refactoring/test_quantization_graph_formats.py tests/refactoring/test_quantization_graph_tender.py tests/refactoring/test_quantization_graph_search.py -q",
-      "passed": 46, "skipped": 0, "warnings": 1, "seconds": 12.10,
+      "passed": 46,
+      "skipped": 0,
+      "warnings": 1,
+      "seconds": 12.1,
       "log": "build/quantization_package/final_boundaries.log"
     },
     {
       "name": "aggregate checkpoint admission, private storage, old G5/core consumers",
       "command": "python -m pytest tests/refactoring/test_quantization_graph_formats.py tests/refactoring/test_quantization_graph_training.py tests/refactoring/test_quantization_graph_search.py tests/refactoring/test_compression_composition.py tests/refactoring/test_compression_composition_independent.py tests/refactoring/test_core_contracts.py -q",
-      "passed": 155, "skipped": 0, "warnings": 13, "seconds": 37.07,
+      "passed": 155,
+      "skipped": 0,
+      "warnings": 13,
+      "seconds": 37.07,
       "log": "build/quantization_package/final_checkpoint_regression.log"
     },
     {
       "name": "final finite training outputs and Tender facade overflow",
       "command": "python -m pytest tests/refactoring/test_quantization_graph_training.py tests/refactoring/test_quantization_graph_tender.py -q",
-      "passed": 17, "skipped": 0, "warnings": 9, "seconds": 11.51,
+      "passed": 17,
+      "skipped": 0,
+      "warnings": 9,
+      "seconds": 11.51,
       "log": "build/quantization_package_final/final_training_tender.log"
     },
     {
       "name": "old Dobi checkpoint consumers",
       "command": "python -m pytest tests/refactoring/test_svd_dobi_remapping.py tests/refactoring/test_svd_dobi_remapping_independent.py -q",
-      "passed": 146, "skipped": 1, "warnings": 1, "seconds": 9.19,
+      "passed": 146,
+      "skipped": 1,
+      "warnings": 1,
+      "seconds": 9.19,
       "skip_reason": "Existing test_cuda_device_transfer_forward_and_input_backward: CUDA unavailable; no added skips",
       "log": "build/quantization_package_final/final_dobi_regression.log"
+    },
+    {
+      "name": "CI ambient RSS regression and all new quantization/G5 consumers",
+      "command": "python -m pytest tests/refactoring/test_quantization_graph_resources.py tests/refactoring/test_quantization_graph_formats.py tests/refactoring/test_quantization_graph_methods.py tests/refactoring/test_quantization_graph_tender.py tests/refactoring/test_quantization_graph_catalogue.py tests/refactoring/test_quantization_graph_training.py tests/refactoring/test_quantization_graph_search.py tests/refactoring/test_compression_composition.py tests/refactoring/test_compression_composition_independent.py -q",
+      "passed": 133,
+      "skipped": 0,
+      "warnings": 9,
+      "seconds": 15.96,
+      "log": "build/quantization_ci_resource_fix.log"
     }
   ],
   "package": {
+    "commands": [
+      "python -m build --sdist --no-isolation --outdir build/quantization_package_rss_fix",
+      "python -m pip wheel --no-deps --no-build-isolation --no-cache-dir --wheel-dir build/quantization_package_rss_fix build/quantization_package_rss_fix/fedcore-0.0.5.4.tar.gz",
+      "python -m pip install --no-deps --no-compile --target build/quantization_install_target_rss_fix build/quantization_package_rss_fix/fedcore-0.0.5.4-py3-none-any.whl",
+      "From outside checkout: python -I /checkout/docs/quantization_graph/verify_installed.py /checkout/build/quantization_install_target_rss_fix"
+    ],
+    "sdist_sha256": "f6f1842a636f582e68802ad889bd96ab61b78e0a8b5c3d4d5ab601cf71f340a7",
+    "wheel_sha256": "39ec070658bfcbc973668c6e6d4c8dfb382bdb1335227e967c3a05874450ce42",
+    "report": "installed_package.json",
+    "log": "build/quantization_package_rss_fix/installed_verification.log",
+    "shared_environment_modified": false
+  },
+  "independent_root_checks": {
+    "passed": 5,
+    "report": "root_adversarial_check.json",
+    "script": "../root_adversarial_check.py"
+  },
+  "limitations": [
+    "CPU Linear reference only; no GPU/cluster/SSH or large-model study",
+    "No empirical speedup, task-quality or evolutionary-search superiority claim",
+    "RSS samples and conservative workspace admission are not measured peak memory",
+    "Persistent registered tensor bytes differ from serialized file size and total runtime-object memory",
+    "Full remote CI is a subsequent PR check"
+  ],
+  "ci_resource_fix": {
+    "original_ci_run": 40342048702,
+    "original_failure": "19 quantization tests exceeded a 1 GiB default because the full CI worker ambient RSS was already larger",
+    "default_max_peak_bytes": 12884901888,
+    "default_source": "fedcore.algorithm.low_rank.compression_graph.RuntimeOptions",
+    "explicit_limits_preserved": true,
+    "existing_named_buffer_reserve_bytes": 67108864,
+    "typed_failure": "ResourceFailure(ResourceLimitExceeded)",
+    "mocked_rss_tests_allocate_large_buffers": false
+  },
+  "previous_package": {
     "commands": [
       "python -m build --sdist --no-isolation --outdir build/quantization_package_final",
       "python -m pip wheel --no-deps --no-build-isolation --no-cache-dir --wheel-dir build/quantization_package_final build/quantization_package_final/fedcore-0.0.5.4.tar.gz",
@@ -56,13 +131,5 @@
     "report": "installed_package.json",
     "log": "build/quantization_package_final/installed_verification.log",
     "shared_environment_modified": false
-  },
-  "independent_root_checks": {"passed": 5, "report": "root_adversarial_check.json", "script": "../root_adversarial_check.py"},
-  "limitations": [
-    "CPU Linear reference only; no GPU/cluster/SSH or large-model study",
-    "No empirical speedup, task-quality or evolutionary-search superiority claim",
-    "RSS samples and conservative workspace admission are not measured peak memory",
-    "Persistent registered tensor bytes differ from serialized file size and total runtime-object memory",
-    "Full remote CI is a subsequent PR check"
-  ]
+  }
 }

@@ -10,7 +10,7 @@ from fedcore.algorithm.low_rank.candidate_storage import capture_inventory,inven
 from fedcore.algorithm.low_rank.grammar_execution import StructuralInvalid,NumericalFailure,ResourceFailure,CallbackFailure
 from fedcore.algorithm.low_rank.plans import Violation,ValidationFailure
 from fedcore.algorithm.low_rank.topology import module_paths
-from .graph_specs import OperatorRecipe,QuantizationGraphRequest,Method,fingerprint
+from .graph_specs import OperatorRecipe,QuantizationGraphRequest,Method,fingerprint,DEFAULT_MAX_PEAK_BYTES
 from .graph_execution import (check_quantization_graph,compress_quantization_graph,
     ExportVerifiedArtifact,calibration_identity,source_identity)
 
@@ -46,7 +46,7 @@ class AssessedArtifact:
 
 
 def prepare_quantization_catalogue(model, alternatives, *, calibration=None,
-        max_peak_bytes=1024**3,max_options=256,max_catalogue_bytes=128*1024**2,ledger=None):
+        max_peak_bytes=DEFAULT_MAX_PEAK_BYTES,max_options=256,max_catalogue_bytes=128*1024**2,ledger=None):
     """Build each finite option; keep only metadata, not all candidate models."""
     started = time.perf_counter()
     if type(alternatives) is not dict or not alternatives or sum(len(v) for v in alternatives.values()) > max_options:
@@ -115,8 +115,10 @@ def prepare_quantization_catalogue(model, alternatives, *, calibration=None,
              "build_seconds":time.perf_counter()-started,"objective":"additive_frozen_snapshot_surrogate",
              "local_units":"output_squared_error" if calibration is not None else "weight_frobenius_squared"})
     except (ValueError,TypeError,KeyError,RuntimeError) as error:
-        from .resources import StageBudgetExceeded
+        from .resources import StageBudgetExceeded,storage_resource_failure
         if isinstance(error,StageBudgetExceeded):return error.failure
+        resource_failure=storage_resource_failure(error)
+        if resource_failure is not None:return resource_failure
         return NumericalFailure(type(error).__name__,str(error))
 
 
@@ -156,6 +158,8 @@ def assess_quantization_selection(model,catalogue,selection,*,calibration=None,e
             return NumericalFailure("InvalidQuality","Finite whole-model heldout quality required")
         return AssessedArtifact(artifact,selection.objective_score,float(quality),selection,evaluation_context)
     except Exception as error:
-        from .resources import StageBudgetExceeded
+        from .resources import StageBudgetExceeded,storage_resource_failure
         if isinstance(error,StageBudgetExceeded):return error.failure
+        resource_failure=storage_resource_failure(error)
+        if resource_failure is not None:return resource_failure
         return CallbackFailure(type(error).__name__,str(error))

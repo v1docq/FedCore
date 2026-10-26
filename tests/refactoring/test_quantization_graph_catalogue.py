@@ -43,7 +43,7 @@ def test_alias_scope_counted_once_and_true_child_input_observed():
             super().__init__(); self.add_module("0",nn.Linear(3,2))
         def forward(self,x):return self._modules["0"](x*7+3)
     m = Preprocess(); x = torch.randn(5,3)
-    rows = observe_operator_rows(m,x,("0",),1024**3)
+    rows = observe_operator_rows(m,x,("0",),DEFAULT_MAX_PEAK_BYTES)
     assert torch.equal(rows["0"],x*7+3)
     layer = nn.Linear(3,2)
     model = nn.Sequential(layer,layer)

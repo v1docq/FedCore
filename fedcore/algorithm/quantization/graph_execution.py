@@ -12,7 +12,7 @@ from fedcore.algorithm.low_rank.grammar_execution import StructuralInvalid, Nume
 from fedcore.algorithm.low_rank.plans import ValidationFailure, Violation
 from fedcore.algorithm.low_rank.topology import module_paths, replace_modules_atomically
 from .graph_specs import (CheckedCompressionPlan, QuantizationGraphRequest, Method, OperatorRecipe, ExecutionTargetSpec,
-    RepresentationSpec, fingerprint, recipe_graph, validate_transform)
+    RepresentationSpec, fingerprint, recipe_graph, validate_transform,DEFAULT_MAX_PEAK_BYTES)
 
 
 @dataclass(frozen=True)
@@ -64,7 +64,7 @@ def check_quantization_graph(model, request, *, calibration=None):
         return ValidationFailure((Violation("InvalidRequest", "request", "Typed request and torch model required"),))
     from fedcore.algorithm.low_rank.compression_graph import SourceMode
     if (type(request.source_mode) is not SourceMode or type(request.target) is not ExecutionTargetSpec or request.target.runtime != "cpu_reference" or request.target.allow_float_decode is not True
-            or type(request.max_peak_bytes) is not int or not 1<=request.max_peak_bytes<=12*1024**3
+            or type(request.max_peak_bytes) is not int or not 1<=request.max_peak_bytes<=DEFAULT_MAX_PEAK_BYTES
             or request.max_storage_bytes is not None and (type(request.max_storage_bytes) is not int or request.max_storage_bytes < 0)
             or type(request.recipes) is not tuple or not request.recipes):
         return ValidationFailure((Violation("UnsupportedExecution", "request", "Explicit CPU reference execution and finite resource limits required"),))
@@ -205,8 +205,10 @@ def _execute_quantization_graph(model, plan, *, calibration=None, ledger=None,ca
              "build_seconds": time.perf_counter()-started, "observation_semantics": plan.request.source_mode.value,
              "workspace_policy": "conservative_preflight_not_measured_peak"})
     except (ValueError, TypeError, KeyError, RuntimeError, OverflowError) as error:
-        from .resources import StageBudgetExceeded
+        from .resources import StageBudgetExceeded,storage_resource_failure
         if isinstance(error,StageBudgetExceeded):return error.failure
+        resource_failure=storage_resource_failure(error)
+        if resource_failure is not None:return resource_failure
         return NumericalFailure(type(error).__name__, str(error))
 
 

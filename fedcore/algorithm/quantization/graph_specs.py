@@ -7,7 +7,11 @@ import math
 
 from .tensor_formats import QuantizedTensorSpec, Grid, Rounding
 from fedcore.algorithm.low_rank.plans import ValidationFailure, Violation
-from fedcore.algorithm.low_rank.compression_graph import CalibrationRef,SourceMode
+from fedcore.algorithm.low_rank.compression_graph import CalibrationRef,SourceMode,RuntimeOptions
+
+
+# Match the common CPU compression admission policy, including ambient RSS.
+DEFAULT_MAX_PEAK_BYTES = RuntimeOptions().max_peak_bytes
 
 
 class Method(str, Enum):
@@ -80,7 +84,7 @@ class QuantizationGraphRequest:
     recipes: tuple[OperatorRecipe, ...]
     target: ExecutionTargetSpec = ExecutionTargetSpec()
     max_storage_bytes: int | None = None
-    max_peak_bytes: int = 1024**3
+    max_peak_bytes: int = DEFAULT_MAX_PEAK_BYTES
     source_mode: SourceMode = SourceMode.FROZEN_SNAPSHOT
 
 
