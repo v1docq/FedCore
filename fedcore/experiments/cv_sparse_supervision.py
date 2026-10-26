@@ -81,20 +81,27 @@ def expire_owned_worker(child, pgid, deadline_fired):
 
 
 def supervise(data_root, output_root, manifest, *, continuation_parent=None, parent_inventory=None,
-              diagnostic_completion=None, completion_inventory=None):
+              diagnostic_completion=None, completion_inventory=None, recovery_completion=None,
+              recovery_diagnostic=None, diagnostic_inventory=None):
     if os.name != 'posix':
         raise RuntimeError('The A100 supervisor requires Linux process-group isolation')
     import psutil
     protocol = PilotProtocol()
     if (continuation_parent is None) != (parent_inventory is None):
         raise ValueError('Continuation requires both the parent and its pinned inventory')
-    if (diagnostic_completion is None) != (completion_inventory is None):
+    recovery = any(value is not None for value in
+                   (recovery_completion, recovery_diagnostic, diagnostic_inventory))
+    if recovery and (any(value is None for value in
+                        (recovery_completion, completion_inventory, recovery_diagnostic, diagnostic_inventory))
+                     or continuation_parent is not None or diagnostic_completion is not None):
+        raise ValueError('Recovery requires both immutable parents and inventories, as the only worker profile')
+    if not recovery and (diagnostic_completion is None) != (completion_inventory is None):
         raise ValueError('Diagnostics require both the completed run and its pinned inventory')
     continuation = continuation_parent is not None
     diagnostic = diagnostic_completion is not None
     if continuation and diagnostic:
         raise ValueError('Choose one named worker profile')
-    max_seconds = 1800 if continuation or diagnostic else protocol.max_slot_seconds
+    max_seconds = 1800 if continuation or diagnostic or recovery else protocol.max_slot_seconds
     output = Path(output_root).resolve()
     source = Path(manifest).resolve()
     if output.exists() or not source.is_file():
@@ -120,6 +127,9 @@ def supervise(data_root, output_root, manifest, *, continuation_parent=None, par
     if diagnostic:
         from .cv_sparse_diagnostic_protocol import sha256
         state['diagnostic_protocol_sha256'] = sha256()
+    if recovery:
+        from .cv_sparse_recovery_protocol import sha256
+        state['recovery_protocol_sha256'] = sha256()
 
     def stop_owned():
         terminate_owned_group(owned_pgid)
@@ -150,6 +160,12 @@ def supervise(data_root, output_root, manifest, *, continuation_parent=None, par
             command[2] = 'fedcore.experiments.cv_sparse_diagnostics'
             command.extend(['--completion-root', str(Path(diagnostic_completion).resolve()),
                             '--completion-inventory', str(Path(completion_inventory).resolve())])
+        if recovery:
+            command[2] = 'fedcore.experiments.cv_sparse_recovery'
+            command.extend(['--completion-root', str(Path(recovery_completion).resolve()),
+                            '--completion-inventory', str(Path(completion_inventory).resolve()),
+                            '--diagnostic-root', str(Path(recovery_diagnostic).resolve()),
+                            '--diagnostic-inventory', str(Path(diagnostic_inventory).resolve())])
         state['worker_command'] = command
         with console_path.open('x', encoding='utf-8') as console:
             child = subprocess.Popen(command, env=environment, stdout=console, stderr=subprocess.STDOUT,
@@ -224,15 +240,25 @@ def main(argv=None):
     parser.add_argument('--parent-inventory')
     parser.add_argument('--diagnostic-completion')
     parser.add_argument('--completion-inventory')
+    parser.add_argument('--recovery-completion')
+    parser.add_argument('--recovery-diagnostic')
+    parser.add_argument('--diagnostic-inventory')
     parser.add_argument('--execute', action='store_true')
     args = parser.parse_args(argv)
     if not args.execute:
         print(json.dumps({'protocol': PilotProtocol().payload(), 'protocol_sha256': PilotProtocol().sha256,
                           'status': 'dry_run', 'cuda_context_opened': False}))
         return 0
+    extra = {}
+    if any(value is not None for value in
+           (args.recovery_completion, args.recovery_diagnostic, args.diagnostic_inventory)):
+        extra = {'recovery_completion': args.recovery_completion,
+                 'recovery_diagnostic': args.recovery_diagnostic,
+                 'diagnostic_inventory': args.diagnostic_inventory}
     return supervise(args.data_root, args.output_root, args.source_manifest,
                      continuation_parent=args.continuation_parent, parent_inventory=args.parent_inventory,
-                     diagnostic_completion=args.diagnostic_completion, completion_inventory=args.completion_inventory)
+                     diagnostic_completion=args.diagnostic_completion, completion_inventory=args.completion_inventory,
+                     **extra)
 
 
 if __name__ == '__main__':
