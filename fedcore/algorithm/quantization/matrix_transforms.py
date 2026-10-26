@@ -81,7 +81,7 @@ def scalar_ldl(moment, rcond):
     if moment.shape[0] != moment.shape[1] or not torch.allclose(moment, moment.T, atol=1e-12, rtol=1e-12):
         raise ValueError("Symmetric moment required")
     h = moment.double()
-    tolerance = max(rcond, torch.finfo(h.dtype).eps*len(h)*16)*max(1., float(h.abs().max()))
+    tolerance = max(rcond, torch.finfo(h.dtype).eps*len(h)*16)*float(h.abs().max())
     if float(torch.linalg.eigvalsh(h).min()) < -tolerance:
         raise ValueError("LDLQ requires a PSD metric")
     l, d = torch.eye(len(h), dtype=torch.float64), torch.zeros(len(h), dtype=torch.float64)
@@ -157,6 +157,10 @@ def caldera(weight, bias, spec, rows, generator):
         residual = w-q.decode()
         # Weighted initialization reuses the existing prepared SVD kernel.
         left, right = quantized_factors(residual)
+        candidate_score = score(q,left,right)
+        history.append(candidate_score)
+        if candidate_score < best_score:
+            best_score, best = candidate_score, (q,left,right)
         for _ in range(spec.inner_iterations):
             target = residual@metric.root
             fit = linear_least_squares_fit(left.decode(), target, rcond=spec.rcond)

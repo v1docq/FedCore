@@ -5,7 +5,7 @@ import hashlib
 import json
 import math
 
-from .tensor_formats import QuantizedTensorSpec
+from .tensor_formats import QuantizedTensorSpec, Grid, Rounding
 from fedcore.algorithm.low_rank.plans import ValidationFailure, Violation
 
 
@@ -167,6 +167,13 @@ def validate_transform(spec, shape):
         bad("Comparison rank must fit matrix axes independently of factor width")
     if any(type(s) is not QuantizedTensorSpec for s in (spec.left, spec.right, spec.weight)):
         bad("Typed tensor formats required")
+    else:
+        if spec.method in (Method.LPLR, Method.LPLR_SVD) and any(s.grid is not Grid.ENDPOINT or s.rounding is not Rounding.STOCHASTIC for s in (spec.left,spec.right)):
+            bad("LPLR requires endpoint stochastic factor grids")
+        if spec.method is Method.CALDERA and spec.weight.axis not in (None,0):
+            bad("Scalar LDLQ supports only tensor/output-channel weight scales")
+        if spec.method is Method.TENDER and (spec.weight.grid is not Grid.SYMMETRIC or spec.weight.rounding is not Rounding.NEAREST or spec.weight.axis not in (None,0) or spec.weight.bound is not None):
+            bad("Tender supports symmetric nearest output-channel weight calibration only")
     if type(spec.seed) is not int or not 0 <= spec.seed < 2**63:
         bad("Bounded nonnegative RNG seed required")
     if any(type(v) not in (int, float) or not math.isfinite(v) or v < 0 for v in (spec.rcond, spec.ridge)):

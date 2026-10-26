@@ -11,7 +11,7 @@ from fedcore.algorithm.low_rank.candidate_storage import (capture_inventory, clo
 from fedcore.algorithm.low_rank.grammar_execution import StructuralInvalid, NumericalFailure, ResourceFailure, CallbackFailure
 from fedcore.algorithm.low_rank.plans import ValidationFailure, Violation
 from fedcore.algorithm.low_rank.topology import module_paths, replace_modules_atomically
-from .graph_specs import (CheckedCompressionPlan, QuantizationGraphRequest, Method,
+from .graph_specs import (CheckedCompressionPlan, QuantizationGraphRequest, Method, OperatorRecipe, ExecutionTargetSpec,
     RepresentationSpec, fingerprint, recipe_graph, validate_transform)
 from .portable_layers import PortableQuantizedLinear, PortableQuantizedFactorLinear
 
@@ -30,7 +30,7 @@ def check_quantization_graph(model, request):
     errors, aliases, graphs, representations = [], [], [], []
     if type(request) is not QuantizationGraphRequest or not isinstance(model, nn.Module):
         return ValidationFailure((Violation("InvalidRequest", "request", "Typed request and torch model required"),))
-    if (request.target.runtime != "cpu_reference" or request.target.allow_float_decode is not True
+    if (type(request.target) is not ExecutionTargetSpec or request.target.runtime != "cpu_reference" or request.target.allow_float_decode is not True
             or type(request.max_peak_bytes) is not int or request.max_peak_bytes < 1
             or request.max_storage_bytes is not None and (type(request.max_storage_bytes) is not int or request.max_storage_bytes < 0)
             or type(request.recipes) is not tuple or not request.recipes):
@@ -41,6 +41,9 @@ def check_quantization_graph(model, request):
         paths = module_paths(model)
         used = set()
         for recipe in request.recipes:
+            if type(recipe) is not OperatorRecipe or type(recipe.path) is not str:
+                errors.append(Violation("InvalidRecipe", "recipes", "Typed recipe with string path required"))
+                continue
             layer = paths.get(recipe.path)
             if type(layer) is not nn.Linear or layer.weight.dtype not in (torch.float32, torch.float64):
                 errors.append(Violation("UnsupportedOperator", recipe.path, "Only original CPU float Linear is accepted; converted inference cannot re-enter QAT"))
@@ -147,7 +150,7 @@ def execute_quantization_graph(model, plan, *, calibration=None, ledger=None):
             {"operators": evidence, "serialized_bytes": len(checkpoint), "loaded_tensor_bytes": cost,
              "build_seconds": time.perf_counter()-started, "observation_semantics": "frozen_snapshot_surrogate",
              "workspace_policy": "conservative_preflight_not_measured_peak"})
-    except (ValueError, TypeError, KeyError, RuntimeError) as error:
+    except (ValueError, TypeError, KeyError, RuntimeError, OverflowError) as error:
         return NumericalFailure(type(error).__name__, str(error))
 
 
