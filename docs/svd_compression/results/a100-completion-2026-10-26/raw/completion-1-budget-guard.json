@@ -1,0 +1,18 @@
+{
+  "schema": "fedcore-repeat-budget-guard-v1",
+  "status": "finished",
+  "repeat_slot_seconds": 1800,
+  "termination_reserve_seconds": 10,
+  "prior_charged_seconds": 3339.3260714150965,
+  "total_authorized_seconds": 14400,
+  "automatic_retry": false,
+  "subreaper_enabled": true,
+  "utc_started": "2026-10-26T09:25:54.093723+00:00",
+  "supervisor_pid": 1546012,
+  "elapsed_seconds": 151.8612541258335,
+  "owned_worker_pid": 1546015,
+  "reason": "supervisor_exit",
+  "returncode": 0,
+  "total_charged_seconds": 3491.18732554093,
+  "within_approved_total": true
+}

@@ -1,0 +1,13 @@
+{
+  "byte_identical_analysis_and_report_replay": true,
+  "html_links_and_embedded_analysis": true,
+  "immutable_raw_copies": true,
+  "independent_review": "No blocking scientific findings; wording changed to same held-out test for six artifacts and observations limited to this run.",
+  "model_and_secret_pattern_scan": true,
+  "previous_worktree_snapshot_preserved": {
+    "dirty_files": 130,
+    "roots": 3
+  },
+  "python_and_javascript_syntax": true,
+  "visual_review": "Browser screenshot reviewed: primary caveat, scatter, ranking reversal, final table and A/A; reference and clock selectors verified."
+}

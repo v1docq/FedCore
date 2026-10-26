@@ -1,0 +1,63 @@
+{
+  "admission_sha256": "65bbbb670550626c4203491091ce3cc02b2e6ba73dff523c315a8ea5d7d5425e",
+  "artifact_count": 6,
+  "artifacts": {
+    "13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09": {
+      "file_bytes": 33651502,
+      "path": "checkpoints/recovered_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.pt",
+      "phase": "recovered_200_updates",
+      "sha256": "dfa23191e76a0afe51ced09b155c2623bde61e1ae50f7bcabf0a99f30337d3cf",
+      "solution_id": "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+      "tensor_bytes": 33593288
+    },
+    "4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd": {
+      "file_bytes": 44782206,
+      "path": "checkpoints/recovered_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b.pt",
+      "phase": "recovered_200_updates",
+      "sha256": "1e5938f8aac846b4d5fda9882e949b9810e9760e7cc9d953ab0ad550e6c59988",
+      "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+      "tensor_bytes": 44734408
+    },
+    "5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d": {
+      "file_bytes": 44781054,
+      "path": "checkpoints/dense_original.pt",
+      "phase": "dense_original",
+      "sha256": "531d02916a6a4ad7341f95a1f7e075c91c7b5350bc7009a09d5b93077c4d5510",
+      "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+      "tensor_bytes": 44734408
+    },
+    "60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8": {
+      "file_bytes": 25789678,
+      "path": "checkpoints/recovered_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.pt",
+      "phase": "recovered_200_updates",
+      "sha256": "6c2b9beeccadd3371b18980fcbbe641a5299cf52a7dfe48576237de86a5f66fb",
+      "solution_id": "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+      "tensor_bytes": 25733576
+    },
+    "d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2": {
+      "file_bytes": 33793150,
+      "path": "checkpoints/recovered_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603.pt",
+      "phase": "recovered_200_updates",
+      "sha256": "2b3bfb0ffb3f1fed1512a1bea7ec546bd5d9695c263a7691283f09f71d913c17",
+      "solution_id": "ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+      "tensor_bytes": 33741256
+    },
+    "f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b": {
+      "file_bytes": 33374062,
+      "path": "checkpoints/recovered_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94.pt",
+      "phase": "recovered_200_updates",
+      "sha256": "5b7eab13c5bf3489ba2bc98b3baa5a64574345deb53f5ca504e5768148539d0d",
+      "solution_id": "ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+      "tensor_bytes": 33316040
+    }
+  },
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "roles": [
+    "dense_recovery",
+    "evolution_finalist",
+    "fixed_hybrid",
+    "fixed_prune",
+    "fixed_svd",
+    "random_finalist"
+  ]
+}

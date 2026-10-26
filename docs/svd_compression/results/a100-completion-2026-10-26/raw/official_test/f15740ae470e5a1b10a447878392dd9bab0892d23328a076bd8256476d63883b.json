@@ -1,0 +1,8 @@
+{
+  "correct": 9125,
+  "cross_entropy": 0.32018258515547443,
+  "prediction_file": "predictions/official_test_f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b.npz",
+  "prediction_sha256": "5bd4cbbe4b233fe1da3e02e40a7d0c31fbaa9d2838059b61e61e556bdc2adbea",
+  "rows": 10000,
+  "top1": 0.9125
+}

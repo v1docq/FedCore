@@ -1,0 +1,26 @@
+{
+  "artifact_id": "60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+  "completed_within_deadline": true,
+  "cpu_gpu_probe_max_abs": 7.62939453125e-06,
+  "file_bytes": 25789678,
+  "gpu_reload_exact": true,
+  "inventory_fingerprint": "8014b11b55de9fe10cccd0c2eb30d64c306bc829af979487f4a4c32d6e5fff12",
+  "path": "checkpoints/recovered_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.pt",
+  "phase": "recovered_200_updates",
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "recovery_updates": 200,
+  "roles": [
+    "fixed_hybrid"
+  ],
+  "sha256": "6c2b9beeccadd3371b18980fcbbe641a5299cf52a7dfe48576237de86a5f66fb",
+  "solution_id": "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+  "tensor_bytes": 25733576,
+  "validation": {
+    "correct": 4556,
+    "cross_entropy": 0.3226077538264528,
+    "prediction_file": "predictions/recovery_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd_validation.npz",
+    "prediction_sha256": "77bdede078ddb538273ebf5b9adaaf2805846c236a2264824124c6c4a98f174f",
+    "rows": 5000,
+    "top1": 0.9112
+  }
+}

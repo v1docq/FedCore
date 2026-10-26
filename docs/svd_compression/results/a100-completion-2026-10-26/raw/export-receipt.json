@@ -1,0 +1,8 @@
+{
+  "archive": "/root/fedcore_sparse_cv_completion_20261026/export-completion-1/evidence.tar.gz",
+  "bytes": 1032118,
+  "sha256": "ed802cee981ac60f0a8f3e1aa1b5cd23631a44500a8a0911f12320a7b761b474",
+  "copied_files": 75,
+  "status": "completed",
+  "retained_binary_files": 20
+}

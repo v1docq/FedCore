@@ -1,0 +1,1212 @@
+[
+  {
+    "check": "completed_terminal",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "authorized_single_completion",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "strict_own_slot",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "cumulative_budget",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "unchanged_scientific_protocol",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "new_source_wheel",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "guard_and_packet_hashes",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "source_manifest_hash",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "parent_pinned",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "parent_report_content",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "independent_dependency_versions",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "parent_snapshot_complete",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "no_training_or_new_search",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "free_gpu_admission",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:baseline.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:complete-parent-preflight.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:completion-1-budget-guard-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:completion-1-budget-guard.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:completion-1-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:completion-1-supervision.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:completion-1-supervision.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:completion_budget_guard.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:data_roles.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:environment.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:environment_freeze.txt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:export_completion.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:frozen_selection.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:heartbeats.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:imported_sources.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:install.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:installed-cpu-tests.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:installed-preflight.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:latency/final_13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:latency/final_5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:latency/final_5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d_AB.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:latency/final_60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:latency/final_f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:latency/initial_dense_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:launch-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:launch-packet.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:launch-receipt.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:launch_completion.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:ledger.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:official_test/13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:official_test/4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:official_test/5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:official_test/60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:official_test/d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:official_test/f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:parent-snapshot.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:parent_admission.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:pip-check.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/baseline_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/continuation_baseline_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/official_test_13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/official_test_4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/official_test_5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/official_test_60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/official_test_d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/official_test_f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/recovery_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/recovery_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/recovery_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/recovery_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:predictions/recovery_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:prepare_completion_environment.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:prepare_parent_snapshot.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:probe_completion_guard.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:protocol.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:read_completion_status.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:recovery/211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:recovery/4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:recovery/62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:recovery/ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:recovery/ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:recovery_selection.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:recovery_tape.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:registry/registries/bounded-sparse-cv-pilot_registry.csv",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:remote-file-inventory.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:report.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:run_completion_installed_checks.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:selected_artifacts_admission.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:source-manifest.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:source_manifest.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:torchscript/13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:torchscript/5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:torchscript/60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "copied_file:torchscript/f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "runtime_environment",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "installed_package_manifest",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "data_roles_hash",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "role_sizes",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "disjoint_training_roles",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:original_M0_validation",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:original_M0_validation",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:original_M0_validation",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:original_M0_validation",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:M0_recheck",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:M0_recheck",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:M0_recheck",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:M0_recheck",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "exact_M0_recheck",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "six_distinct_artifacts",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_original_M0",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "original_training_admission",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "original_ordered_selection",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "shared_200_update_tape",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "independent_recovery_rng",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "recovery_roles:211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:recovery_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:recovery_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:recovery_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:recovery_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "recovery_roles:4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:recovery_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:recovery_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:recovery_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:recovery_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "recovery_roles:62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:recovery_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:recovery_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:recovery_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:recovery_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "recovery_roles:ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:recovery_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:recovery_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:recovery_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:recovery_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "recovery_roles:ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:recovery_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:recovery_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:recovery_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:recovery_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "actual_tensor_storage:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_integrity:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "actual_tensor_storage:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_integrity:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "actual_tensor_storage:4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_integrity:4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "actual_tensor_storage:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_integrity:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "actual_tensor_storage:d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_integrity:d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "actual_tensor_storage:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_integrity:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "durable_six_artifact_seal",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "role_seal",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "test_opened_after_selection",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:official_13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:official_13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:official_13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:official_13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:official_4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:official_4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:official_4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:official_4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:official_5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:official_5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:official_5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:official_5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:official_60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:official_60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:official_60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:official_60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:official_d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:official_d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:official_d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:official_d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:official_f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_ids:official_f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_shapes:official_f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_metrics:official_f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_independent_test",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "frozen_acceptance_threshold",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "acceptance:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "acceptance:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "acceptance:4d5d470bfde579d267076b31e05bff9be5921b9bb3d9ea13a541ad4604b57fcd",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "acceptance:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "acceptance:d5fe068e2c15f1fecc739d61867bd5882587f7a0aff44ed3625c05514507f0b2",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "acceptance:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:initial_M0:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:initial_M0:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:initial_M0:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:initial_M0:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:initial_M0:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:initial_M0:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:initial_M0:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:initial_M0:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_full_gate:initial_M0",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_full_gate:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_full_gate:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_full_gate:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_orders:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_recount:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_batch_gate:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "aa_full_gate:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "speed_gate:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_loaded_file:13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "speed_gate:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_loaded_file:5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "speed_gate:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_loaded_file:60391830390f675fdab67b9b65aaa31afd74957785bc3de11cf51e9a8c03f1b8",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "speed_gate:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_loaded_file:f15740ae470e5a1b10a447878392dd9bab0892d23328a076bd8256476d63883b",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "no_compressed_speed_claim",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "completion_only_stages",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "1000_SGD_updates",
+    "details": null,
+    "passed": true
+  }
+]

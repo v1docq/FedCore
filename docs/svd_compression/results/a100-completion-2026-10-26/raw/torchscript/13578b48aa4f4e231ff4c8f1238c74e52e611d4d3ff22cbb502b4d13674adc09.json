@@ -1,0 +1,7 @@
+{
+  "artifact_id": "13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09",
+  "file_bytes": 33786911,
+  "format": "independently_reloaded_TorchScript",
+  "path": "torchscript/13578b48aa4f4e231ff4c8f1238c74e52e611d4d3ff22cbb502b4d13674adc09.pt",
+  "sha256": "20e4d988def274d26bc5e50754ca71156a9651a6b46abb01850ab682317d4601"
+}
