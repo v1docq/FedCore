@@ -1,0 +1,34 @@
+{
+  "SGD_updates": 200,
+  "additional_BN_calibration": true,
+  "artifact_id": "68ce62b0ff7d4ddf7b5cb1d2e0b5374b135439afb531d5bc1dcbf55866af0eb2",
+  "completed_within_deadline": true,
+  "cpu_gpu_probe_max_abs": 4.76837158203125e-06,
+  "file_bytes": 44781374,
+  "gpu_reload_exact": true,
+  "inventory_fingerprint": "04e5a6970bfaaba0133968ef677a5b2dd56a4cd1ba80ed1203f0a9fe76a7ff4e",
+  "lr": 0.001,
+  "path": "checkpoints/SGD_lr_0.001_post_BN.pt",
+  "phase": "diagnostic_SGD_lr_0.001_post_BN",
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "sha256": "5cc8636f870bb202967a5c6c87c220f1859a851ecab4e76d4a09040b299231ff",
+  "shared_200_update_checkpoint_sha256": "e00f6da9acc3451dcc765e878f78a665cfe6c44e601c12d7f79387969beff8b3",
+  "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+  "tensor_bytes": 44734408,
+  "training": {
+    "additional_BN_calibration": false,
+    "lr": 0.001,
+    "optimizer": "fresh_SGD_momentum_0.9_nesterov_weight_decay_0.0005",
+    "tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+    "training_BN_updates": true,
+    "updates": 200
+  },
+  "validation": {
+    "correct": 4689,
+    "cross_entropy": 0.23173940693504347,
+    "prediction_file": "predictions/SGD_lr_0.001_post_BN.npz",
+    "prediction_sha256": "b632dbd12cd0e3402360bdd72074b15c0dccdb02e6f1cca9beb0d7bf451d172a",
+    "rows": 5000,
+    "top1": 0.9378
+  }
+}

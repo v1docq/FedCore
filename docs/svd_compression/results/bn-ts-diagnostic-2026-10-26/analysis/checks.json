@@ -1,0 +1,1602 @@
+[
+  {
+    "check": "terminal_supervision",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "authorized_window",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "external_budget",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_diagnostic_protocol",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "code_and_wheel",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "packet_and_guard",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "manifest_bytes",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "read_only_sources",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "parent_identity",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "parent_report_bytes",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "parent_inventory_bytes",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "scientific_dependencies",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "scientific_runtime",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/M0_post_BN.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/SGD_lr_0.001_post_BN.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/SGD_lr_0.001_pre_BN.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/SGD_lr_0.01_post_BN.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/SGD_lr_0.01_pre_BN.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/dense_original.pt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:completion-file-inventory.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:completion-file-inventory.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:completion_admission.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:completion_admission.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:data_roles.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:data_roles.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic-1-budget-guard-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:diagnostic-1-budget-guard-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic-1-budget-guard.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:diagnostic-1-budget-guard.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic-1-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:diagnostic-1-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic-1-supervision.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:diagnostic-1-supervision.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic-1-supervision.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:diagnostic-1-supervision.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic_budget_guard.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:diagnostic_budget_guard.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic_protocol.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:diagnostic_protocol.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:environment.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:environment.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:environment_freeze.txt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:environment_freeze.txt",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:export_diagnostic.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:export_diagnostic.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:heartbeats.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:heartbeats.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:imported_sources.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:imported_sources.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:install.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:install.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:installed-cpu-tests.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:installed-cpu-tests.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:installed-preflight.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:installed-preflight.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/E_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/E_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/E_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/E_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/M0_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_final_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/M0_final_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/M0_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_vs_E_canonical_AB.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/M0_vs_E_canonical_AB.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_vs_R_canonical_AB.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/M0_vs_R_canonical_AB.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_vs_hybrid_canonical_AB.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/M0_vs_hybrid_canonical_AB.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/R_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/R_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/R_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/R_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/hybrid_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/hybrid_canonical_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/hybrid_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:latency/hybrid_legacy_AA.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:launch-console.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-packet.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:launch-packet.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-receipt.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:launch-receipt.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch_diagnostic.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:launch_diagnostic.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:ledger.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:ledger.jsonl",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:pip-check.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:pip-check.log",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_post_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:predictions/M0_post_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_untouched.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:predictions/M0_untouched.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/SGD_lr_0.001_post_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:predictions/SGD_lr_0.001_post_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/SGD_lr_0.001_pre_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:predictions/SGD_lr_0.001_pre_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/SGD_lr_0.01_post_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:predictions/SGD_lr_0.01_post_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/SGD_lr_0.01_pre_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:predictions/SGD_lr_0.01_pre_BN.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/baseline_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:predictions/baseline_validation.npz",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:prepare_diagnostic_environment.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:prepare_diagnostic_environment.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:probe_diagnostic_guard.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:probe_diagnostic_guard.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:protocol.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:protocol.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_post_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:quality/M0_post_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_untouched.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:quality/M0_untouched.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/SGD_lr_0.001_post_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:quality/SGD_lr_0.001_post_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/SGD_lr_0.001_pre_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:quality/SGD_lr_0.001_pre_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/SGD_lr_0.01_post_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:quality/SGD_lr_0.01_post_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/SGD_lr_0.01_pre_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:quality/SGD_lr_0.01_pre_BN.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:read_diagnostic_status.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:read_diagnostic_status.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery_tape.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:recovery_tape.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:report.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:report.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:run_diagnostic_installed_checks.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:run_diagnostic_installed_checks.py",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:source-manifest.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:source-manifest.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "export_presence:source_manifest.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "published_file:source_manifest.json",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "no_foreign_GPU",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_roles",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "common_200_step_tape",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "independent_tape_replay",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "no_third_SGD_trajectory",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "step_counter:SGD_lr_0.01",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "SGD_finite_loss:SGD_lr_0.01",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "step_counter:SGD_lr_0.001",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "SGD_finite_loss:SGD_lr_0.001",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:M0_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_rows:M0_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_values:M0_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_metrics:M0_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_cost:M0_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:M0_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:M0_untouched",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_rows:M0_untouched",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_values:M0_untouched",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_metrics:M0_untouched",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_cost:M0_untouched",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:M0_untouched",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:SGD_lr_0.001_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_rows:SGD_lr_0.001_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_values:SGD_lr_0.001_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_metrics:SGD_lr_0.001_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_cost:SGD_lr_0.001_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:SGD_lr_0.001_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_rows:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_values:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_metrics:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_cost:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:SGD_lr_0.01_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_rows:SGD_lr_0.01_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_values:SGD_lr_0.01_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_metrics:SGD_lr_0.01_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_cost:SGD_lr_0.01_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:SGD_lr_0.01_post_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "prediction_sha:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_rows:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_values:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "validation_metrics:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "checkpoint_cost:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "artifact_identity:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_pair_labels:M0_untouched",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_pair_labels:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "shared_post_SGD_checkpoint:SGD_lr_0.01_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_pair_labels:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "shared_post_SGD_checkpoint:SGD_lr_0.001_pre_BN",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "original_predictions_SHA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "exact_M0_replay",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_AA_order",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:E_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_canonical_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_canonical_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:E_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_canonical_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_canonical_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:E_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:E_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:E_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:E_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_legacy_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_legacy_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:E_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_legacy_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:E_legacy_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:E_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:E_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:E_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:M0_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_canonical_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_canonical_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:M0_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_canonical_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_canonical_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:M0_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:M0_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:M0_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:M0_final_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_final_canonical_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_final_canonical_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:M0_final_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_final_canonical_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_final_canonical_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:M0_final_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:M0_final_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:M0_final_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:M0_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_legacy_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_legacy_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:M0_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_legacy_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:M0_legacy_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:M0_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:M0_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:M0_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:R_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_canonical_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_canonical_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:R_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_canonical_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_canonical_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:R_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:R_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:R_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:R_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_legacy_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_legacy_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:R_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_legacy_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:R_legacy_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:R_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:R_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:R_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:hybrid_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_canonical_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_canonical_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:hybrid_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_canonical_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_canonical_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:hybrid_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:hybrid_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:hybrid_canonical_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:hybrid_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_legacy_AA:1:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_legacy_AA:1:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_pair_order:hybrid_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_legacy_AA:128:cuda_event",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_independent_gate:hybrid_legacy_AA:128:synchronized_wall",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AA_full_profile:hybrid_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "same_TS_probe:hybrid_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "fixed_timing_artifact:hybrid_legacy_AA",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_frozen_gate:E",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pinned_inputs:E",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pinned_loading:E",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_reload_probe:E:first",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_reload_probe:E:second",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:E:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:E:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_frozen_gate:R",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pinned_inputs:R",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pinned_loading:R",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_reload_probe:R:first",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_reload_probe:R:second",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:R:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:R:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_frozen_gate:hybrid",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pinned_inputs:hybrid",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pinned_loading:hybrid",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_reload_probe:hybrid:first",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_reload_probe:hybrid:second",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:hybrid:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:hybrid:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "successful_termination",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "complete_quality_workload",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "complete_timing_workload",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "exact_session_order",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "exact_pair_count",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:E_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:E_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:E_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:E_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_final_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_final_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:R_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:R_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:R_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:R_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:hybrid_canonical_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:hybrid_canonical_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:hybrid_legacy_AA:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:hybrid_legacy_AA:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_E_canonical_AB:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_E_canonical_AB:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_R_canonical_AB:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_R_canonical_AB:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_hybrid_canonical_AB:1",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_hybrid_canonical_AB:128",
+    "details": null,
+    "passed": true
+  },
+  {
+    "check": "worker_deadline",
+    "details": null,
+    "passed": true
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "schema": "fedcore-bn-ts-postrun-preservation-v1",
+  "checked_utc": "2026-10-26T10:37:55.989350+00:00",
+  "completion_consumed_files_verified": 10,
+  "old_parent_files_verified": 176,
+  "packaged_sources_verified": {
+    "original": 313,
+    "completion": 314
+  },
+  "original_wheels_unchanged": true,
+  "gpu_compute_processes_after": ""
+}

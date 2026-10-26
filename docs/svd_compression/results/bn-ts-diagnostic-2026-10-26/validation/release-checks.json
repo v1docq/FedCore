@@ -1,0 +1,84 @@
+{
+  "schema": "fedcore-bn-ts-release-verification-v1",
+  "cpu_local": {
+    "passed": 114,
+    "skipped": 6
+  },
+  "cpu_installed_A100": {
+    "passed": 120,
+    "seconds": 6.52
+  },
+  "offline_analysis": {
+    "checks": 320,
+    "consistent": true,
+    "new_prediction_rows": 30000,
+    "SGD_updates": 400,
+    "AA_sessions": 9,
+    "AB_sessions": 3,
+    "latency_pairs": 480
+  },
+  "replay": {
+    "analysis_byte_identical": true,
+    "report_byte_identical": true
+  },
+  "browser_QA": {
+    "quality_chart_inspected": true,
+    "timing_chart_inspected": true,
+    "batch_1_and_128_checked": true,
+    "both_clocks_checked": true,
+    "AA_table_expansion_checked": true,
+    "local_html_links_verified": 17
+  },
+  "prior_evidence": {
+    "manifest_files_verified": 249,
+    "local_workspaces": 3,
+    "preserved_unfinished_files": 130
+  },
+  "independent_review": {
+    "scientific_limits_checked": true,
+    "corrections_applied": [
+      "worker_RSS_label",
+      "9x2x2_AA_checks",
+      "remote_binary_inventory_scope",
+      "batch128_only_title",
+      "prior_package_counts"
+    ]
+  },
+  "source_CI": {
+    "run_id": 40305594360,
+    "source_commit": "7640681e198e1257cf58e9f21259b1ba4adce46e",
+    "jobs": [
+      {
+        "name": "optional-export-service",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "optional-llm",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (windows-latest, 3.10)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (windows-latest, 3.11)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (ubuntu-latest, 3.10)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (ubuntu-latest, 3.11)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "all_six_passed": true
+  }
+}
