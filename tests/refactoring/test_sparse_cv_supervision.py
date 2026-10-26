@@ -59,6 +59,56 @@ def test_fast_child_exit_before_psutil_attach_retains_success(monkeypatch, tmp_p
     assert state['returncode'] == 0 and state['rss_bytes'] is None
 
 
+@pytest.mark.skipif(os.name != 'posix', reason='Supervisor process groups require Linux')
+def test_diagnostic_worker_dispatch_and_limit_are_bound_before_one_Popen(monkeypatch, tmp_path):
+    import psutil
+    import fedcore.experiments.cv_sparse_supervision as module
+    commands=[]
+    class FinishedChild:
+        pid=999999999
+        returncode=0
+        def poll(self):return 0
+    def launch(command, **kwargs):commands.append(command);return FinishedChild()
+    def vanished(pid):raise psutil.NoSuchProcess(pid)
+    monkeypatch.setattr(module,'gpu_processes',lambda:[])
+    monkeypatch.setattr(module.subprocess,'Popen',launch)
+    monkeypatch.setattr(module,'terminate_owned_group',lambda *args:None)
+    monkeypatch.setattr(psutil,'Process',vanished)
+    manifest=tmp_path/'source.json';manifest.write_text('{}')
+    assert module.supervise(tmp_path/'data',tmp_path/'run',manifest,
+        diagnostic_completion=tmp_path/'completed',completion_inventory=tmp_path/'inventory')==0
+    state=json.loads((tmp_path/'run-supervision.json').read_text())
+    assert len(commands)==1 and commands[0][2]=='fedcore.experiments.cv_sparse_diagnostics'
+    assert commands[0][commands[0].index('--completion-root')+1]==str((tmp_path/'completed').resolve())
+    assert commands[0][commands[0].index('--completion-inventory')+1]==str((tmp_path/'inventory').resolve())
+    assert state['max_slot_seconds']==1800 and state['worker_limit_seconds']==1790
+    assert len(state['diagnostic_protocol_sha256'])==64
+
+
+@pytest.mark.skipif(os.name != 'posix', reason='Supervisor process groups require Linux')
+@pytest.mark.parametrize('extra',[
+    {'diagnostic_completion':'completed'},
+    {'completion_inventory':'inventory'},
+    {'diagnostic_completion':'completed','completion_inventory':'inventory','continuation_parent':'parent','parent_inventory':'old_inventory'},
+])
+def test_invalid_diagnostic_supervision_never_creates_a_lock_or_worker(tmp_path,monkeypatch,extra):
+    import fedcore.experiments.cv_sparse_supervision as module
+    def forbidden(*args,**kwargs):pytest.fail('Invalid profile launched a numerical worker')
+    monkeypatch.setattr(module.subprocess,'Popen',forbidden)
+    with pytest.raises(ValueError):module.supervise(tmp_path/'data',tmp_path/'output',tmp_path/'source',**extra)
+    assert not (tmp_path/'.fedcore-sparse-cv.lock').exists() and not (tmp_path/'output').exists()
+
+
+def test_diagnostic_CLI_dispatch_preserves_all_arguments(monkeypatch):
+    import fedcore.experiments.cv_sparse_supervision as module
+    calls=[]
+    monkeypatch.setattr(module,'supervise',lambda *a,**kw:calls.append((a,kw)) or 0)
+    assert module.main(['--execute','--data-root','data','--output-root','out','--source-manifest','source',
+                        '--diagnostic-completion','completed','--completion-inventory','inventory'])==0
+    assert calls==[(('data','out','source'),{'continuation_parent':None,'parent_inventory':None,
+                     'diagnostic_completion':'completed','completion_inventory':'inventory'})]
+
+
 def test_deadline_callback_after_success_does_not_turn_it_into_a_timeout(monkeypatch):
     import fedcore.experiments.cv_sparse_supervision as module
     completed = type('Completed', (), {'poll': lambda self: 0})()

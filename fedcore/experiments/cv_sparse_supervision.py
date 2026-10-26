@@ -80,15 +80,21 @@ def expire_owned_worker(child, pgid, deadline_fired):
     terminate_owned_group(pgid)
 
 
-def supervise(data_root, output_root, manifest, *, continuation_parent=None, parent_inventory=None):
+def supervise(data_root, output_root, manifest, *, continuation_parent=None, parent_inventory=None,
+              diagnostic_completion=None, completion_inventory=None):
     if os.name != 'posix':
         raise RuntimeError('The A100 supervisor requires Linux process-group isolation')
     import psutil
     protocol = PilotProtocol()
     if (continuation_parent is None) != (parent_inventory is None):
         raise ValueError('Continuation requires both the parent and its pinned inventory')
+    if (diagnostic_completion is None) != (completion_inventory is None):
+        raise ValueError('Diagnostics require both the completed run and its pinned inventory')
     continuation = continuation_parent is not None
-    max_seconds = 1800 if continuation else protocol.max_slot_seconds
+    diagnostic = diagnostic_completion is not None
+    if continuation and diagnostic:
+        raise ValueError('Choose one named worker profile')
+    max_seconds = 1800 if continuation or diagnostic else protocol.max_slot_seconds
     output = Path(output_root).resolve()
     source = Path(manifest).resolve()
     if output.exists() or not source.is_file():
@@ -111,6 +117,9 @@ def supervise(data_root, output_root, manifest, *, continuation_parent=None, par
     state = {'schema': 'cv-pilot-supervision-v1', 'status': 'preflight',
              'max_slot_seconds': max_seconds, 'worker_limit_seconds': limit,
              'termination_reserve_seconds': 10, 'protocol_sha256': protocol.sha256}
+    if diagnostic:
+        from .cv_sparse_diagnostic_protocol import sha256
+        state['diagnostic_protocol_sha256'] = sha256()
 
     def stop_owned():
         terminate_owned_group(owned_pgid)
@@ -137,6 +146,10 @@ def supervise(data_root, output_root, manifest, *, continuation_parent=None, par
             command[2] = 'fedcore.experiments.cv_sparse_continuation'
             command.extend(['--parent-root', str(Path(continuation_parent).resolve()),
                             '--parent-inventory', str(Path(parent_inventory).resolve())])
+        if diagnostic:
+            command[2] = 'fedcore.experiments.cv_sparse_diagnostics'
+            command.extend(['--completion-root', str(Path(diagnostic_completion).resolve()),
+                            '--completion-inventory', str(Path(completion_inventory).resolve())])
         state['worker_command'] = command
         with console_path.open('x', encoding='utf-8') as console:
             child = subprocess.Popen(command, env=environment, stdout=console, stderr=subprocess.STDOUT,
@@ -209,6 +222,8 @@ def main(argv=None):
     parser.add_argument('--source-manifest', required=True)
     parser.add_argument('--continuation-parent')
     parser.add_argument('--parent-inventory')
+    parser.add_argument('--diagnostic-completion')
+    parser.add_argument('--completion-inventory')
     parser.add_argument('--execute', action='store_true')
     args = parser.parse_args(argv)
     if not args.execute:
@@ -216,7 +231,8 @@ def main(argv=None):
                           'status': 'dry_run', 'cuda_context_opened': False}))
         return 0
     return supervise(args.data_root, args.output_root, args.source_manifest,
-                     continuation_parent=args.continuation_parent, parent_inventory=args.parent_inventory)
+                     continuation_parent=args.continuation_parent, parent_inventory=args.parent_inventory,
+                     diagnostic_completion=args.diagnostic_completion, completion_inventory=args.completion_inventory)
 
 
 if __name__ == '__main__':
