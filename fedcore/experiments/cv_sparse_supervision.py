@@ -80,11 +80,15 @@ def expire_owned_worker(child, pgid, deadline_fired):
     terminate_owned_group(pgid)
 
 
-def supervise(data_root, output_root, manifest):
+def supervise(data_root, output_root, manifest, *, continuation_parent=None, parent_inventory=None):
     if os.name != 'posix':
         raise RuntimeError('The A100 supervisor requires Linux process-group isolation')
     import psutil
     protocol = PilotProtocol()
+    if (continuation_parent is None) != (parent_inventory is None):
+        raise ValueError('Continuation requires both the parent and its pinned inventory')
+    continuation = continuation_parent is not None
+    max_seconds = 1800 if continuation else protocol.max_slot_seconds
     output = Path(output_root).resolve()
     source = Path(manifest).resolve()
     if output.exists() or not source.is_file():
@@ -103,9 +107,9 @@ def supervise(data_root, output_root, manifest):
     timer = None
     began, deadline_fired = time.perf_counter(), threading.Event()
     # Leave a small termination reserve inside the approved four-hour slot.
-    limit = protocol.max_slot_seconds - 10
+    limit = max_seconds - 10
     state = {'schema': 'cv-pilot-supervision-v1', 'status': 'preflight',
-             'max_slot_seconds': protocol.max_slot_seconds, 'worker_limit_seconds': limit,
+             'max_slot_seconds': max_seconds, 'worker_limit_seconds': limit,
              'termination_reserve_seconds': 10, 'protocol_sha256': protocol.sha256}
 
     def stop_owned():
@@ -129,6 +133,11 @@ def supervise(data_root, output_root, manifest):
         command = [sys.executable, '-m', 'fedcore.experiments.cv_sparse_pilot', '--execute',
                    '--data-root', str(Path(data_root).resolve()), '--output-root', str(output),
                    '--source-manifest', str(source)]
+        if continuation:
+            command[2] = 'fedcore.experiments.cv_sparse_continuation'
+            command.extend(['--parent-root', str(Path(continuation_parent).resolve()),
+                            '--parent-inventory', str(Path(parent_inventory).resolve())])
+        state['worker_command'] = command
         with console_path.open('x', encoding='utf-8') as console:
             child = subprocess.Popen(command, env=environment, stdout=console, stderr=subprocess.STDOUT,
                                      start_new_session=True)
@@ -198,13 +207,16 @@ def main(argv=None):
     parser.add_argument('--data-root', required=True)
     parser.add_argument('--output-root', required=True)
     parser.add_argument('--source-manifest', required=True)
+    parser.add_argument('--continuation-parent')
+    parser.add_argument('--parent-inventory')
     parser.add_argument('--execute', action='store_true')
     args = parser.parse_args(argv)
     if not args.execute:
         print(json.dumps({'protocol': PilotProtocol().payload(), 'protocol_sha256': PilotProtocol().sha256,
                           'status': 'dry_run', 'cuda_context_opened': False}))
         return 0
-    return supervise(args.data_root, args.output_root, args.source_manifest)
+    return supervise(args.data_root, args.output_root, args.source_manifest,
+                     continuation_parent=args.continuation_parent, parent_inventory=args.parent_inventory)
 
 
 if __name__ == '__main__':

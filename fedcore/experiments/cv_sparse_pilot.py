@@ -223,6 +223,80 @@ class Pilot:
         return result
 
 
+def finalize_pilot(pilot, baseline_artifact, recovered, initial_aa, report, deadline):
+    """Shared sealed-test and latency stage; no training or search occurs here."""
+    runtime, output, data, protocol = pilot.runtime, pilot.output, pilot.data, pilot.protocol
+    from .cv_sparse_data import FrozenSelection
+    all_artifacts = {baseline_artifact["artifact_id"]: baseline_artifact,
+                     **{artifact["artifact_id"]: artifact for artifact in recovered.values()}}
+    runtime.check(deadline)
+    artifact_admission = validate_selected_artifacts(output, all_artifacts, protocol)
+    output.json("selected_artifacts_admission.json", artifact_admission)
+    runtime.check(deadline)
+    roles = [("dense_original", baseline_artifact["artifact_id"])]
+    roles.extend((role, artifact["artifact_id"]) for artifact in recovered.values() for role in artifact["roles"])
+    selection = FrozenSelection(protocol.sha256, tuple(sorted(roles)),
+        tuple(sorted((key, artifact["sha256"]) for key, artifact in all_artifacts.items())))
+    output.json("frozen_selection.json", {**asdict(selection), "solution_ids": {key: artifact["solution_id"] for key, artifact in all_artifacts.items()},
+        "frozen_at": time.perf_counter(), "all_artifacts": all_artifacts})
+    # No official test labels or tensors are opened before this durable seal.
+    runtime.check(deadline)
+    test_data = data.open_test(selection)
+    report["test_opened_after_frozen_selection"] = True
+    from fedcore.tools.registry.checkpoint_manager import CheckpointManager
+    test_results = {}
+    for key, artifact in all_artifacts.items():
+        runtime.check(deadline, test_artifact=key)
+        path = output.root / artifact["path"]
+        if sha256_file(path) != artifact["sha256"]:
+            raise ValueError("A frozen checkpoint changed before official test")
+        model = CheckpointManager(".", auto_cleanup=False).deserialize_from_bytes(path.read_bytes(), device="cuda").eval()
+        test_results[key] = evaluate(model, pilot.gpu, tuple(range(10000)), deadline=deadline,
+            label=f"official_test_{key}", test_data=test_data)
+        output.json(f"official_test/{key}.json", test_results[key])
+        model.cpu()
+    report["official_test"] = test_results
+    dense_recovery = next(artifact for artifact in recovered.values() if "dense_recovery" in artifact["roles"])
+    threshold = test_results[dense_recovery["artifact_id"]]["top1"] - protocol.final_quality_drop
+    report["final_quality_threshold"] = threshold
+    report["final_acceptance"] = {key: {"storage_accepted": artifact["tensor_bytes"] <= pilot.byte_ceiling,
+        "quality_accepted": test_results[key]["top1"] >= threshold,
+        "accepted": artifact["tensor_bytes"] <= pilot.byte_ceiling and test_results[key]["top1"] >= threshold}
+        for key, artifact in all_artifacts.items()}
+    # At most four distinct report-only latency artifacts, each admitted
+    # against itself before any comparison against the dense baseline.
+    timing_artifacts = [baseline_artifact]
+    for role in ("fixed_hybrid", "random_finalist", "evolution_finalist"):
+        candidate = next((artifact for artifact in recovered.values() if role in artifact["roles"]), None)
+        if candidate is not None and candidate["artifact_id"] not in {item["artifact_id"] for item in timing_artifacts}:
+            timing_artifacts.append(candidate)
+    latency = {}
+    try:
+        baseline_ts, baseline_record = torchscript_artifact(baseline_artifact, pilot.gpu, deadline)
+        reference_aa_passed = initial_aa["accepted"]
+        for artifact in timing_artifacts:
+            runtime.check(deadline)
+            candidate_ts, ts_record = torchscript_artifact(artifact, pilot.gpu, deadline)
+            key = artifact["artifact_id"]
+            candidate_ts_copy = independent_torchscript(ts_record, pilot.gpu, deadline)
+            aa = paired_latency(candidate_ts, candidate_ts_copy, pilot.gpu, deadline=deadline, label=f"final_{key}_AA", aa=True)
+            del candidate_ts_copy
+            latency[key] = {"torchscript": ts_record, "AA": aa}
+            if key == baseline_artifact["artifact_id"]:
+                reference_aa_passed = reference_aa_passed and aa["accepted"]
+            if aa["accepted"] and reference_aa_passed:
+                latency[key]["AB"] = paired_latency(baseline_ts, candidate_ts, pilot.gpu, deadline=deadline, label=f"final_{key}_AB")
+            latency[key]["comparison_admitted"] = aa["accepted"] and reference_aa_passed
+            del candidate_ts
+        del baseline_ts
+    except PilotStop as error:
+        if error.reason != "absolute_deadline" or time.perf_counter() >= runtime.deadline:
+            raise
+        latency["incomplete"] = {"reason": "final_stage_deadline", "details": str(error)}
+    report["latency"] = latency
+    report["latency_claim"] = "paired raw measurements only; failed/incomplete AA prohibits speed claims"
+
+
 def run_pilot(data_root, output_root, source_manifest, *, started=None, protocol=PilotProtocol()):
     started = time.perf_counter() if started is None else started
     prepared = preparation(data_root, output_root, source_manifest, protocol)
@@ -323,75 +397,7 @@ def run_pilot(data_root, output_root, source_manifest, *, started=None, protocol
                 output.json(f"recovery/{key}.json", artifact)
         report["recovered"] = recovered
         with runtime.phase("final") as deadline:
-            from .cv_sparse_data import FrozenSelection
-            all_artifacts = {baseline_artifact["artifact_id"]: baseline_artifact,
-                             **{artifact["artifact_id"]: artifact for artifact in recovered.values()}}
-            runtime.check(deadline)
-            artifact_admission = validate_selected_artifacts(output, all_artifacts, protocol)
-            output.json("selected_artifacts_admission.json", artifact_admission)
-            runtime.check(deadline)
-            roles = [("dense_original", baseline_artifact["artifact_id"])]
-            roles.extend((role, artifact["artifact_id"]) for artifact in recovered.values() for role in artifact["roles"])
-            selection = FrozenSelection(protocol.sha256, tuple(sorted(roles)),
-                tuple(sorted((key, artifact["sha256"]) for key, artifact in all_artifacts.items())))
-            output.json("frozen_selection.json", {**asdict(selection), "solution_ids": {key: artifact["solution_id"] for key, artifact in all_artifacts.items()},
-                "frozen_at": time.perf_counter(), "all_artifacts": all_artifacts})
-            # No official test labels or tensors are opened before this durable seal.
-            runtime.check(deadline)
-            test_data = data.open_test(selection)
-            report["test_opened_after_frozen_selection"] = True
-            from fedcore.tools.registry.checkpoint_manager import CheckpointManager
-            test_results = {}
-            for key, artifact in all_artifacts.items():
-                runtime.check(deadline, test_artifact=key)
-                path = output.root / artifact["path"]
-                if sha256_file(path) != artifact["sha256"]:
-                    raise ValueError("A frozen checkpoint changed before official test")
-                model = CheckpointManager(".", auto_cleanup=False).deserialize_from_bytes(path.read_bytes(), device="cuda").eval()
-                test_results[key] = evaluate(model, pilot.gpu, tuple(range(10000)), deadline=deadline,
-                    label=f"official_test_{key}", test_data=test_data)
-                output.json(f"official_test/{key}.json", test_results[key])
-                model.cpu()
-            report["official_test"] = test_results
-            dense_recovery = next(artifact for artifact in recovered.values() if "dense_recovery" in artifact["roles"])
-            threshold = test_results[dense_recovery["artifact_id"]]["top1"] - protocol.final_quality_drop
-            report["final_quality_threshold"] = threshold
-            report["final_acceptance"] = {key: {"storage_accepted": artifact["tensor_bytes"] <= pilot.byte_ceiling,
-                "quality_accepted": test_results[key]["top1"] >= threshold,
-                "accepted": artifact["tensor_bytes"] <= pilot.byte_ceiling and test_results[key]["top1"] >= threshold}
-                for key, artifact in all_artifacts.items()}
-            # At most four distinct report-only latency artifacts, each admitted
-            # against itself before any comparison against the dense baseline.
-            timing_artifacts = [baseline_artifact]
-            for role in ("fixed_hybrid", "random_finalist", "evolution_finalist"):
-                candidate = next((artifact for artifact in recovered.values() if role in artifact["roles"]), None)
-                if candidate is not None and candidate["artifact_id"] not in {item["artifact_id"] for item in timing_artifacts}:
-                    timing_artifacts.append(candidate)
-            latency = {}
-            try:
-                baseline_ts, baseline_record = torchscript_artifact(baseline_artifact, pilot.gpu, deadline)
-                reference_aa_passed = initial_aa["accepted"]
-                for artifact in timing_artifacts:
-                    runtime.check(deadline)
-                    candidate_ts, ts_record = torchscript_artifact(artifact, pilot.gpu, deadline)
-                    key = artifact["artifact_id"]
-                    candidate_ts_copy = independent_torchscript(ts_record, pilot.gpu, deadline)
-                    aa = paired_latency(candidate_ts, candidate_ts_copy, pilot.gpu, deadline=deadline, label=f"final_{key}_AA", aa=True)
-                    del candidate_ts_copy
-                    latency[key] = {"torchscript": ts_record, "AA": aa}
-                    if key == baseline_artifact["artifact_id"]:
-                        reference_aa_passed = reference_aa_passed and aa["accepted"]
-                    if aa["accepted"] and reference_aa_passed:
-                        latency[key]["AB"] = paired_latency(baseline_ts, candidate_ts, pilot.gpu, deadline=deadline, label=f"final_{key}_AB")
-                    latency[key]["comparison_admitted"] = aa["accepted"] and reference_aa_passed
-                    del candidate_ts
-                del baseline_ts
-            except PilotStop as error:
-                if error.reason != "absolute_deadline" or time.perf_counter() >= runtime.deadline:
-                    raise
-                latency["incomplete"] = {"reason": "final_stage_deadline", "details": str(error)}
-            report["latency"] = latency
-            report["latency_claim"] = "paired raw measurements only; failed/incomplete AA prohibits speed claims"
+            finalize_pilot(pilot, baseline_artifact, recovered, initial_aa, report, deadline)
         with runtime.phase("close"):
             from fedcore.algorithm.low_rank.candidate_storage import capture_inventory, inventory_fingerprint
             if inventory_fingerprint(capture_inventory(pilot.teacher)) != pilot.teacher_fingerprint:
