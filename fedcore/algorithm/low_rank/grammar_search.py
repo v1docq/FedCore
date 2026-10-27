@@ -74,6 +74,7 @@ class GrammarAdapter:
     compile: Callable
     payload: Callable
     domain: str = "closed frozen-M0 compression grammar"
+    context_guard: Callable | None = None
 
 
 G3_GRAMMAR_ADAPTER = GrammarAdapter(
@@ -87,6 +88,10 @@ G3_GRAMMAR_ADAPTER = GrammarAdapter(
 
 
 class _BudgetStop(BaseException):
+    pass
+
+
+class _ContextInvalidStop(BaseException):
     pass
 
 
@@ -182,6 +187,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     if type(grammar_adapter) is not GrammarAdapter or type(strict_deadline) is not bool:
         raise ValueError("A typed grammar adapter and explicit deadline mode are required")
     adapter = grammar_adapter
+    if adapter.context_guard is not None and not callable(adapter.context_guard):
+        raise ValueError('context_guard must be callable or None')
     failure = adapter.validate_space(space)
     if failure is not None:
         return {"status": "structurally_invalid", "failure": failure, "charged_evaluations": 0, "trace": []}
@@ -212,6 +219,19 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     cache_hits, component_reads, repeated_failures = 0, 0, 0
     stop_reason, optimizer, trace_failure = "optimizer_stopped", None, None
     callback_working = True
+    context_failure = None
+
+    def check_context():
+        nonlocal context_failure
+        if context_failure is None and adapter.context_guard is not None:
+            try:
+                checked=adapter.context_guard()
+            except Exception as error:
+                checked=CallbackFailure(type(error).__name__,str(error))
+            if checked is not None:
+                context_failure=(checked if type(checked) in (StructuralInvalid,NumericalFailure,ResourceFailure,CallbackFailure)
+                                 else CallbackFailure('InvalidContextGuardResult','Return None or a typed execution failure'))
+        if context_failure is not None:raise _ContextInvalidStop()
 
     @contextmanager
     def phase(name, **metadata):
@@ -295,6 +315,7 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
 
     def _observed(graph, component):
         nonlocal cache_hits, component_reads, repeated_failures
+        check_context()
         genotype = decode(graph)
         with phase("candidate_compilation", component=component):
             workflow = adapter.compile(genotype, space)
@@ -358,6 +379,7 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
                 emit("deadline_excluded", workflow_fingerprint=identity, attempt_id=attempt,
                      charged_evaluations=attempt, reason="completed_after_absolute_deadline")
         observation = observations[identity]
+        check_context()
         if strict_deadline and identity not in deadline_eligible:
             raise ValueError("Late evaluation is charged but cannot receive selection fitness")
         if type(observation) is not GrammarFitness:
@@ -417,6 +439,9 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
             selection="SPEA2", engine="FedcoreEvoOptimizer"))
         with phase("optimizer_call"):
             best = [decode(graph) for graph in optimizer.optimise(objective)]
+    except _ContextInvalidStop:
+        status,stop_reason='failed','context_invalidated'
+        reason=str(context_failure)
     except _BudgetStop:
         pass
     except _TraceCallbackStop as error:
@@ -430,8 +455,13 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     finally:
         random.setstate(python_state)
         np.random.set_state(numpy_state)
+    try:check_context()
+    except _ContextInvalidStop:
+        status,stop_reason,reason='failed','context_invalidated',str(context_failure)
     budget_reason = budget.reason(time.perf_counter())
-    if trace_failure is None and budget_reason is not None:
+    if context_failure is not None:
+        stop_reason='context_invalidated'
+    elif trace_failure is None and budget_reason is not None:
         stop_reason = budget_reason
     elif trace_failure is None and optimizer is not None and status == "succeeded":
         if optimizer.current_generation_num >= config.generations:
@@ -441,8 +471,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         elif optimizer.timer.minutes_from_start * 60 >= remaining_seconds:
             stop_reason = "time_budget"
     finite = [(identity, observation) for identity, observation in observations.items()
-              if type(observation) is GrammarFitness and (not strict_deadline or identity in deadline_eligible)]
-    if observations and not finite and trace_failure is None:
+              if context_failure is None and type(observation) is GrammarFitness and (not strict_deadline or identity in deadline_eligible)]
+    if observations and not finite and trace_failure is None and context_failure is None:
         status = "no_valid_fitness"
         reason = "All charged proposals failed before obtaining finite heldout fitness"
     # This is a reporting archive of observed finite fitness, including when a
@@ -466,6 +496,11 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         reason = f"{error.failure.code}: {error.failure.message}"
         trace[-1].update(status=status, stop_reason=stop_reason,
                          failure_details=asdict(trace_failure))
+    try:check_context()
+    except _ContextInvalidStop:
+        status,stop_reason,reason='failed','context_invalidated',str(context_failure)
+        best,archive=[],[]
+        trace[-1].update(status=status,stop_reason=stop_reason,failure_details=asdict(context_failure))
     return {"status": status, "reason": reason, "engine": "FedcoreEvoOptimizer",
         "domain": adapter.domain, "fitness_context": fitness_context,
         "best_genotypes": best, "charged_evaluations": budget.attempts, "trace": trace,
@@ -473,6 +508,7 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         "repeated_failures": repeated_failures,
         "component_reads": component_reads, "cache_entries": len(observations),
         "trace_failure": asdict(trace_failure) if trace_failure is not None else None,
+        "context_failure": asdict(context_failure) if context_failure is not None else None,
         "finite_archive": [{"workflow_fingerprint": identity, "quality": observation.quality,
             "cost": observation.cost, "quality_accepted": observation.quality_accepted,
             "genotype": adapter.payload(measured_genotypes[identity])} for identity, observation in archive],

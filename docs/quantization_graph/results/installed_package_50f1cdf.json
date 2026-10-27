@@ -1,0 +1,108 @@
+{
+  "status": "passed",
+  "profile": "sdist -> wheel -> isolated install-target -> outside-checkout CPU execution",
+  "assertions": {
+    "cwd_outside_checkout": true,
+    "source_pythonpath_absent": true,
+    "fedcore_file_under_install_target": true,
+    "all_loaded_fedcore_modules_under_install_target": true,
+    "installed_sources_match_checkout": true
+  },
+  "python": "3.10.0",
+  "torch": "2.2.0+cpu",
+  "fedcore_version": "0.0.5.4",
+  "loaded_fedcore_module_count": 132,
+  "wall_seconds": 3.269773299998633,
+  "example": {
+    "profile": "CPU Linear reference",
+    "methods": {
+      "weight_ptq": {
+        "tensor_bytes": 192,
+        "file_bytes": 5964,
+        "mean_squared_error": 0.00020511605544015765
+      },
+      "real_svd": {
+        "tensor_bytes": 304,
+        "file_bytes": 6156,
+        "mean_squared_error": 0.011626546271145344
+      },
+      "dsvd": {
+        "tensor_bytes": 209,
+        "file_bytes": 7428,
+        "mean_squared_error": 0.01173507422208786
+      },
+      "lplr": {
+        "tensor_bytes": 209,
+        "file_bytes": 8772,
+        "mean_squared_error": 0.022345544770359993
+      },
+      "lplr_svd": {
+        "tensor_bytes": 209,
+        "file_bytes": 8772,
+        "mean_squared_error": 0.011875481344759464
+      },
+      "caldera": {
+        "tensor_bytes": 230,
+        "file_bytes": 11900,
+        "mean_squared_error": 2.459852839820087e-05
+      },
+      "tender": {
+        "tensor_bytes": 544,
+        "file_bytes": 8498,
+        "mean_squared_error": 2.9200339213275583e-06
+      }
+    },
+    "claims": "Functional small-matrix verification; no speed or task-quality claim",
+    "mixed": {
+      "tensor_bytes": 393,
+      "file_bytes": 13801,
+      "methods": [
+        "lplr m3 B4/B8",
+        "tender W8A8"
+      ]
+    },
+    "catalogue": {
+      "physical_budget": 4096,
+      "selected_bytes": 512,
+      "local_surrogate": 8.485816952786673e-05,
+      "whole_model_error": 0.0024950809311121702
+    },
+    "training": {
+      "recovery_updates": 2,
+      "qat_updates": 1,
+      "qat_tensor_bytes": 308
+    },
+    "search": {
+      "engine": "FedcoreEvoOptimizer",
+      "evaluations": 5,
+      "stop_reason": "evaluation_budget",
+      "archive_size": 2
+    }
+  },
+  "source_hashes": {
+    "fedcore/algorithm/quantization/backend.py": "2ec6b0545503ec6fe3f20cf98fd693f71e5b5172b7dfcad7cd3b61e7d2bb3645",
+    "fedcore/algorithm/quantization/cache.py": "ea246b596df53a57b5d0edf0677ba69a54dd8a59fb7be36dcc3cf3b961ffc945",
+    "fedcore/algorithm/quantization/catalogue.py": "0048a11a6917e5c7f6935bc8faf32a00d982dfde08b84b2b2d97937e08cc7e8f",
+    "fedcore/algorithm/quantization/checkpoint.py": "4a4b461c073d6ef04a6f7eb0f7776ecba644f93fc7671c2064bcfc06beb0111f",
+    "fedcore/algorithm/quantization/grammar.py": "59274a5e6905dd751319163d21de2bd41364b34824ff518f43b0332be452a855",
+    "fedcore/algorithm/quantization/graph_execution.py": "9970a366196a602e08f27e4ca2cf86d0ee8a229ddde92e6b171f4bf5624f0a47",
+    "fedcore/algorithm/quantization/graph_specs.py": "1b18c6f97e7949b82b20c6a94ec56220e5a5513979b979922e8b049a9f714eb0",
+    "fedcore/algorithm/quantization/hooks.py": "171e440a8e22b651069f58e5f3ff2545d49f27d2d81099576fd96b5127978d2c",
+    "fedcore/algorithm/quantization/matrix_transforms.py": "0aa5a97af17286df6541ba96051b5938d60690af86ce3a30fff1c83657266fda",
+    "fedcore/algorithm/quantization/observation.py": "c55ddb6bc6a7f254f48e33a0ba13878e9c79968ef2e64171f0eaf3a3403e419e",
+    "fedcore/algorithm/quantization/portable_layers.py": "22cc6eac205599f8bff21173ea8549830800eca0bf8de7f2ff44ba91105c469c",
+    "fedcore/algorithm/quantization/process.py": "7c3795d9a0eacd8a4d913e42ec75d32fdc0710ec4be627c98be0bd255f054fda",
+    "fedcore/algorithm/quantization/program.py": "33f347814d7583663726262449b4a8ac16161deca6228f14e172a282a35669b0",
+    "fedcore/algorithm/quantization/quantizers.py": "c57a13ef30c8c334165846e478fc9f74d96fdadd9706bd853285e91b8354a95a",
+    "fedcore/algorithm/quantization/resources.py": "7b009845d8e1bd8fe507bd7ffd0ce966bb1ebd81f5be23a39c2084f54755aad0",
+    "fedcore/algorithm/quantization/tender.py": "c6df02134ada662807ca15caa8ca85df7baacdbc50fd9e881134bc3806cc36c2",
+    "fedcore/algorithm/quantization/tensor_formats.py": "03d8497105c87e8dd94bc3ab6fe1a97acb67735fa488c28c6f4929f60814fee3",
+    "fedcore/algorithm/quantization/training.py": "fb14acac7cb9a7cc54c1f805fdbeacd8038cc2c4974aa8c4e9d09e4f8668644b",
+    "fedcore/algorithm/quantization/utils.py": "57c9319a39a4983ab590d764a7994a44144d48700bb28db537d46c7720211101",
+    "fedcore/algorithm/quantization/__init__.py": "30406d02f404dd540c445b8f2fabc656081694a83d6cd747abf47bb6a2d1c571",
+    "fedcore/tools/registry/checkpoint_manager.py": "1a29dddc9429bbd8197594e7c37166b8ad08ea9504a78e0d58b3e69db978134e",
+    "fedcore/algorithm/low_rank/compression_graph.py": "83f4d36e7829338e790bbb7029f7bbd6a93672225f58151358849d0cd5a994f9",
+    "fedcore/algorithm/low_rank/allocation.py": "3a8b6b880cdc2ad8491de29c6ce220506f618078a76c0febc56a77081ed33a15",
+    "fedcore/experiments/quantization_graph_reference.py": "cd7d79feefe3db82d39fc4efc313f9a64e1ff74a7a32f9494676171d084bad59"
+  }
+}

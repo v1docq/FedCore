@@ -1,0 +1,26 @@
+{
+  "checks": [
+    {
+      "name": "endpoint_zero_channel",
+      "passed": true
+    },
+    {
+      "name": "ldlq_metric_scale_invariance",
+      "passed": true
+    },
+    {
+      "name": "typed_invalid_inputs",
+      "passed": true
+    },
+    {
+      "name": "root_child_overlap",
+      "passed": true
+    },
+    {
+      "name": "numpy_graph_prefix_and_rng",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "Independent small CPU numerical/boundary probes; no quality/latency study"
+}

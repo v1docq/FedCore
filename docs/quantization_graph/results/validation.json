@@ -1,0 +1,95 @@
+{
+  "status": "passed",
+  "date": "2026-10-27",
+  "base_revision": "69458e86d8d42f37c156da67e1a333241d269790",
+  "reviewed_baseline": "50f1cdf51b9f65ea8a5d2b868b7ed46a35738f4c",
+  "artifact_identity": "SHA-256 of final working-tree source bytes, before the review-fix commit",
+  "profile": "bounded CPU Linear regressions, real FedcoreEvoOptimizer, independent numerical references and sdist-built installed wheel",
+  "environment": {
+    "python": "3.10.0",
+    "torch": "2.2.0+cpu",
+    "pytest": "8.4.2",
+    "platform": "Windows-10-10.0.26300-SP0"
+  },
+  "test_runs": [
+    {
+      "name": "final quantization public paths, formats, training, cache and resources",
+      "command": "python -m pytest tests/refactoring/test_quantization_graph_review_20261027.py tests/refactoring/test_quantization_graph_formats.py tests/refactoring/test_quantization_graph_catalogue.py tests/refactoring/test_quantization_graph_search.py tests/refactoring/test_quantization_graph_methods.py tests/refactoring/test_quantization_graph_tender.py tests/refactoring/test_quantization_graph_training.py tests/refactoring/test_quantization_graph_resources.py -q --disable-warnings",
+      "passed": 128,
+      "warnings": 19,
+      "seconds": 30.23
+    },
+    {
+      "name": "unchanged common grammar engine, G3/CV/search regressions and then-current review tests",
+      "command": "python -m pytest tests/refactoring/test_compression_grammar.py tests/refactoring/test_compression_grammar_independent.py tests/refactoring/test_cv_compression_grammar.py tests/refactoring/test_compression_search_observability.py tests/refactoring/test_compression_search_protocol.py tests/refactoring/test_compression_search_local3_protocol.py tests/refactoring/test_compression_search_local2_independent.py tests/refactoring/test_quantization_graph_review_20261027.py -q --disable-warnings",
+      "passed": 238,
+      "warnings": 9,
+      "seconds": 54.97,
+      "scope_note": "The common grammar engine did not change after this pass; later quantization-only additions are covered by the final 128-test run."
+    }
+  ],
+  "counting_note": "Runs overlap; pytest totals and the independent numerical checks are not added together.",
+  "independent_math": {
+    "passed": 175,
+    "total": 175,
+    "report": "../review20261027/math/final_verification.json",
+    "runner": "python docs/quantization_graph/review20261027/math/run_final_checks.py",
+    "copied_runner_verified": true
+  },
+  "independent_public_boundaries": {
+    "passed": 4,
+    "total": 4,
+    "report": "../review20261027/root_final_checks.json",
+    "large_allocations": false
+  },
+  "installed_package": {
+    "status": "passed",
+    "report": "installed_package.json",
+    "steps": [
+      "python -m build --sdist --no-isolation --outdir <review-package-dir>",
+      "python -m pip wheel <sdist> --no-deps --no-build-isolation --wheel-dir <review-package-dir>/wheels",
+      "python -m pip install --no-deps --target <review-package-dir>/install <wheel>",
+      "python -I <checkout>/docs/quantization_graph/verify_installed.py <review-package-dir>/install (cwd outside checkout)"
+    ],
+    "all_imported_fedcore_modules_from_install_target": true,
+    "final_source_hashes_verified": true,
+    "sdist_sha256": "3ed64e488dd5c30d1df82d04d5ea75ad63229823e3b52b28f81165218a8729ef",
+    "wheel_sha256": "5bb8f8d8d504e9d54234a44ffd77ed739a8325808f8cc9bbeac0af613ec51aec"
+  },
+  "source_hashes": {
+    "fedcore/algorithm/quantization/backend.py": "2ec6b0545503ec6fe3f20cf98fd693f71e5b5172b7dfcad7cd3b61e7d2bb3645",
+    "fedcore/algorithm/quantization/cache.py": "ea246b596df53a57b5d0edf0677ba69a54dd8a59fb7be36dcc3cf3b961ffc945",
+    "fedcore/algorithm/quantization/catalogue.py": "c40c1e20156c9cca7a2b07b548d456477042c2de6f3881acd03bf12ce97fa118",
+    "fedcore/algorithm/quantization/checkpoint.py": "9ef485fa36559ab18297731af82edf1bc29b354feca2cb10f062c6e9c6613b9b",
+    "fedcore/algorithm/quantization/grammar.py": "c07eb4aea686a3fd6a1f00a4bdad6b89ffcf95ba8fda8e8b35a494368e767bc8",
+    "fedcore/algorithm/quantization/graph_execution.py": "adf3c7c8d23744cac54c6f03b6f1b9876b7254d07705a9428e29703aefeac412",
+    "fedcore/algorithm/quantization/graph_specs.py": "1b18c6f97e7949b82b20c6a94ec56220e5a5513979b979922e8b049a9f714eb0",
+    "fedcore/algorithm/quantization/hooks.py": "171e440a8e22b651069f58e5f3ff2545d49f27d2d81099576fd96b5127978d2c",
+    "fedcore/algorithm/quantization/matrix_transforms.py": "b5d14bde0c5908f7bb3854329595a6f607a3451bac1b09c5846fc0f92e9f9e62",
+    "fedcore/algorithm/quantization/observation.py": "c55ddb6bc6a7f254f48e33a0ba13878e9c79968ef2e64171f0eaf3a3403e419e",
+    "fedcore/algorithm/quantization/portable_layers.py": "6321472e54783b851a7d2062f0a954f4f8526d62183ae469da6a6640ec0f58a9",
+    "fedcore/algorithm/quantization/process.py": "7c3795d9a0eacd8a4d913e42ec75d32fdc0710ec4be627c98be0bd255f054fda",
+    "fedcore/algorithm/quantization/program.py": "4034b5ec02580e5b357aab747b74a6ce08ae843098b0ddbbf89f068b821b3a58",
+    "fedcore/algorithm/quantization/quantizers.py": "c57a13ef30c8c334165846e478fc9f74d96fdadd9706bd853285e91b8354a95a",
+    "fedcore/algorithm/quantization/resources.py": "817d2b6ec90bb4f9513d23dba7aab7f407ea4015abf65c03e7bd929c764a4c3b",
+    "fedcore/algorithm/quantization/tender.py": "51d32edec5ffe3117c3d2b43c2228d048800837e0521f29127284a3e58e6a8ce",
+    "fedcore/algorithm/quantization/tensor_formats.py": "03d8497105c87e8dd94bc3ab6fe1a97acb67735fa488c28c6f4929f60814fee3",
+    "fedcore/algorithm/quantization/training.py": "6d2b604a13024e9a5e3c808f48c6f0718a8fe82e332d71bdbef7a8d2dc17ebd8",
+    "fedcore/algorithm/quantization/utils.py": "57c9319a39a4983ab590d764a7994a44144d48700bb28db537d46c7720211101",
+    "fedcore/algorithm/quantization/__init__.py": "30406d02f404dd540c445b8f2fabc656081694a83d6cd747abf47bb6a2d1c571",
+    "fedcore/tools/registry/checkpoint_manager.py": "1a29dddc9429bbd8197594e7c37166b8ad08ea9504a78e0d58b3e69db978134e",
+    "fedcore/algorithm/low_rank/compression_graph.py": "83f4d36e7829338e790bbb7029f7bbd6a93672225f58151358849d0cd5a994f9",
+    "fedcore/algorithm/low_rank/allocation.py": "3a8b6b880cdc2ad8491de29c6ce220506f618078a76c0febc56a77081ed33a15",
+    "fedcore/algorithm/low_rank/grammar_search.py": "edf221c4430794f4ac56e83bd237c328090821f27b358ae348fa8aa571140f7f",
+    "fedcore/experiments/quantization_graph_reference.py": "cd7d79feefe3db82d39fc4efc313f9a64e1ff74a7a32f9494676171d084bad59"
+  },
+  "historical_reports": [
+    "validation_50f1cdf.json",
+    "installed_package_50f1cdf.json"
+  ],
+  "limits": [
+    "Local tests do not replace the full post-push CI jobs.",
+    "No GPU, cluster, hardware acceleration, large-model quality or measured-peak-memory claim.",
+    "The finite process grammar exposes prefix rewrites and closed-region crossover; it does not claim unrestricted DAG search."
+  ]
+}
