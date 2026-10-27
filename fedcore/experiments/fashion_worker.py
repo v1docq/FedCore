@@ -30,11 +30,11 @@ from torch.nn import functional as F
 
 from .fashion_protocol import (FashionPlan, PATHS, RAW_FILES, MD5, CONTROLS, SEARCH_JOBS,
     default_manifest, stratified_partition, stratified_subset, classify_search_artifact,
-    select_archive_candidates, source_code_hashes)
+    select_archive_candidates, source_code_hashes, independent_initial)
 from .quantization_pilot_protocol import canonical_bytes, digest, file_hash, HARD_RSS, search_execution_summary
 from .quantization_pilot_guard import Limits, atomic_json
 from .quantization_pilot_worker import (jsonable, append_json, checkpoint, load_artifact,
-    require_guard, prefix_sample, unique_initial)
+    require_guard, prefix_sample)
 from fedcore.algorithm.quantization import (quantize, QuantizationGraphRequest, OperatorRecipe,
     TransformSpec, Method, QuantizedTensorSpec, Grid, Rounding, ExportVerifiedArtifact,
     ProgramArtifact, QuantizationProgram, BackendStageSpec, ResourceLedger, StageBudgets)
@@ -280,7 +280,12 @@ def seeded_request(workflow):
     return identity, seed, request
 
 
-def run_search(plan, root, job, source, data, budget, ledger, seconds, limits):
+def unique_initial(space, count, seed):
+    from fedcore.algorithm.quantization.grammar import genotype_payload
+    return independent_initial(space, count, seed, sample=prefix_sample, payload=genotype_payload)
+
+
+def run_search(plan, root, job, source, data, budget, ledger, seconds, limits, *, initial_sampler=unique_initial):
     from fedcore.algorithm.quantization.grammar import (prepare_quantization_space, QUANTIZATION_GRAMMAR_ADAPTER,
         source_identity, calibration_identity, genotype_payload)
     from fedcore.algorithm.quantization.cache import DependencyCache
@@ -325,7 +330,7 @@ def run_search(plan, root, job, source, data, budget, ledger, seconds, limits):
             record["seconds"] = time.perf_counter()-started
             attempts.append(record); append_json(root/"jobs"/(job+".attempts.jsonl"), record)
     seed = int(job.rsplit("_", 1)[1]); random_panel = job.startswith("random_")
-    initial = unique_initial(space, 24 if random_panel else 4, seed)
+    initial = initial_sampler(space, 24 if random_panel else 4, seed)
     adapter = replace(QUANTIZATION_GRAMMAR_ADAPTER, generate=prefix_sample, context_guard=context_guard)
     config = GrammarSearchConfig(seed=seed, population_size=24 if random_panel else 4,
         generations=1 if random_panel else 24, max_evaluations=24,
@@ -374,7 +379,7 @@ def run_search(plan, root, job, source, data, budget, ledger, seconds, limits):
         "random_semantics": "24 unique initial draws; same first four as Evo; identical engine, complete prefix sampler and assessment" if random_panel else "GOLEM evolution from four shared initial draws"}
 
 
-def run_job(plan, root, job, limits):
+def run_job(plan, root, job, limits, *, initial_sampler=unique_initial):
     if job not in plan.payload["jobs"]:
         raise ValueError("Undeclared job")
     path = root/"jobs"/(job+".json"); path.parent.mkdir(parents=True, exist_ok=True)
@@ -395,7 +400,8 @@ def run_job(plan, root, job, limits):
         if job == "dense32":
             metadata = trained["source"]
         elif job in SEARCH_JOBS:
-            metadata, evidence = run_search(plan, root, job, source, data, budget, ledger, seconds-(time.perf_counter()-start), limits)
+            metadata, evidence = run_search(plan, root, job, source, data, budget, ledger, seconds-(time.perf_counter()-start), limits,
+                initial_sampler=initial_sampler)
             result.update(evidence)
         else:
             if job == "static_int8":
@@ -474,7 +480,8 @@ def freeze_selection(plan, root, limits):
             start = time.perf_counter()
             with torch.inference_mode():
                 for _ in range(2): model(features(data["images"], probe_ids))
-            predicted = (time.perf_counter()-start)/2*math.ceil(10000/128)
+            test_rows = plan.payload["data"]["test_rows"]
+            predicted = (time.perf_counter()-start)/2*math.ceil(test_rows/128)
             item["preflight"] = {"batch_rows": 128, "timed_batches": 2, "predicted_full_seconds": predicted,
                 "cap_seconds": plan.payload["test_model_seconds"],
                 "eligible": predicted*plan.payload["preflight_safety_factor"] <= plan.payload["test_model_seconds"]}
@@ -485,12 +492,12 @@ def freeze_selection(plan, root, limits):
         if limits.remaining() <= 5: raise TimeoutError("Shared deadline exhausted during test preflight")
     value = {"manifest_sha256": plan.fingerprint, "trained_sha256": file_hash(root/"trained.json"),
         "prepared_sha256": file_hash(root/"prepared.json"), "code_lock_sha256": verify_code(root),
-        "frozen_unix": time.time(), "jobs": records, "test_rows": 10000}
+        "frozen_unix": time.time(), "jobs": records, "test_rows": plan.payload["data"]["test_rows"]}
     atomic_json(path, value)
     return value
 
 
-def closed_test(plan, root, limits):
+def closed_test(plan, root, limits, *, data_loader=None):
     verify_code(root)
     frozen = json.loads((root/"selection.lock.json").read_text())
     if (frozen["manifest_sha256"] != plan.fingerprint or frozen["trained_sha256"] != file_hash(root/"trained.json")
@@ -502,10 +509,17 @@ def closed_test(plan, root, limits):
     marker = root/"CLOSED_TEST_OPENED.json"
     with marker.open("x", encoding="utf-8") as stream:
         json.dump({"opened_unix": time.time(), "selection_sha256": file_hash(root/"selection.lock.json")}, stream)
-    # This is the only entry point that can decode test images or labels.
-    images = read_idx(verified_raw(plan, root, RAW_FILES[2], allow_test=True), images=True, expected_rows=10000)
-    labels = read_idx(verified_raw(plan, root, RAW_FILES[3], allow_test=True), images=False, expected_rows=10000)
-    ids = torch.arange(10000); baseline = None
+    # R2 can supply its predeclared unused-training holdout loader. Both loaders
+    # are invoked only after the same exclusive opening marker.
+    if data_loader is None:
+        images = read_idx(verified_raw(plan, root, RAW_FILES[2], allow_test=True), images=True, expected_rows=10000)
+        labels = read_idx(verified_raw(plan, root, RAW_FILES[3], allow_test=True), images=False, expected_rows=10000)
+        ids = torch.arange(10000)
+    else:
+        images, labels, ids = data_loader(plan, root)
+    if len(ids) != plan.payload["data"]["test_rows"]:
+        raise ValueError("Closed holdout must match the frozen full row count")
+    baseline = None
     result = {"manifest_sha256": plan.fingerprint, "selection_sha256": file_hash(root/"selection.lock.json"),
         "images_sha256": tensor_hash(images), "labels_sha256": tensor_hash(labels),
         "test_ids_sha256": tensor_hash(ids), "class_counts": class_counts(labels, ids), "jobs": {}, "status": "partial",

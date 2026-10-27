@@ -2,6 +2,7 @@
 import copy
 import gzip
 import json
+import random
 import struct
 from types import SimpleNamespace
 
@@ -9,7 +10,7 @@ import pytest
 from hypothesis import given, strategies as st
 
 from fedcore.experiments.fashion_protocol import (FashionPlan, RAW_FILES, default_manifest,
-    stratified_partition, stratified_subset, classify_search_artifact, select_archive_candidates)
+    stratified_partition, stratified_subset, classify_search_artifact, select_archive_candidates, independent_initial, ROLES)
 
 COMMIT = "4d7d9e1a73ab688cd3b8a496fdce4719025feaa5"
 HASHES = {name: "a"*64 for name in RAW_FILES}
@@ -23,6 +24,14 @@ def test_manifest_finite_boundary_and_narrowing():
     for field, value in (("search_seconds", 601), ("job_seconds", True), ("pick_seconds", 301)):
         modified = default_manifest(COMMIT, HASHES); modified[field] = value
         with pytest.raises(ValueError): FashionPlan.parse(modified)
+
+
+def test_manifest_partition_mutation_does_not_change_global_or_future_defaults():
+    before = dict(ROLES)
+    first = default_manifest(COMMIT, HASHES)
+    first["data"]["partition"]["fit"] = 1
+    assert ROLES == before
+    assert default_manifest(COMMIT, HASHES)["data"]["partition"] == before
     for key, value in (("model", {"dimensions": [1, 2]}), ("unreviewed_callable", "eval")):
         modified = default_manifest(COMMIT, HASHES); modified[key] = value
         with pytest.raises(ValueError): FashionPlan.parse(modified)
@@ -129,6 +138,37 @@ def test_random_and_evo_share_initial_prefix_and_mask():
     assert seeded_request(second)[1] != random_execution[1]
     assert all(item.transform.seed == random_execution[1] for item in random_execution[2].recipes)
     assert 0 <= random_execution[1] < 2**63
+    identities = [{json.dumps(genotype_payload(item), sort_keys=True) for item in unique_initial(space, 24, seed)}
+                  for seed in (17, 29, 43)]
+    # Each run remains unique; independent finite draws may naturally collide
+    # with a genotype drawn by another run.
+    assert all(len(group) == 24 for group in identities)
+
+
+def test_independent_proposal_streams_are_not_shifted_seed_windows_and_deduplicate():
+    caller_state = random.getstate()
+    proposal_seeds = {}
+    for seed in (17, 29, 43):
+        observed = []
+        def sample(space, *, seed):
+            observed.append(seed); return {"proposal_seed": seed}
+        initial = independent_initial(None, 24, seed, sample=sample, payload=lambda item: item)
+        proposal_seeds[seed] = observed
+        assert len(initial) == 24
+        assert all(0 <= value < 2**63 for value in observed)
+        prefix = independent_initial(None, 4, seed, sample=lambda space, *, seed: {"proposal_seed": seed},
+            payload=lambda item: item)
+        assert initial[:4] == prefix
+    assert not set(proposal_seeds[17]) & set(proposal_seeds[29])
+    assert not set(proposal_seeds[29]) & set(proposal_seeds[43])
+    assert proposal_seeds[17] != list(range(17, 41))
+    def small_space(space, *, seed): return {"choice": seed % 7}
+    first = independent_initial(None, 5, 17, sample=small_space, payload=lambda item: item)
+    independent_initial(None, 5, 43, sample=small_space, payload=lambda item: item)
+    second = independent_initial(None, 5, 17, sample=small_space, payload=lambda item: item)
+    assert first == second
+    assert len({item["choice"] for item in first}) == 5
+    assert random.getstate() == caller_state
 
 
 def test_checkpoint_roundtrip_keeps_dtype_and_unique_physical_storage(tmp_path):

@@ -64,3 +64,45 @@ exploratory exact McNemar values and a paired-example bootstrap. Three search se
 one M0 are descriptive and do not establish independent training replication or optimizer superiority.
 Fashion-MNIST remains a historical public benchmark; a bounded prior-use audit cannot establish
 global test-set pristineness. Reference kernels and compression ratios imply no hardware speed claim.
+
+## S2 amendment: independent proposal streams and a new closed holdout
+
+S1 is preserved at commit `9295f6b36151b1d163b06abc27f3d3ab182a624c`, including all raw records.
+Its inherited `search_seed + attempt` initializer produced overlapping shifted windows across seeds:
+12/24 initial Random genotypes overlapped for seeds 17/29 and 10/24 for 29/43. This does not break
+within-pair fairness, but those S1 search repetitions are correlated by construction.
+
+The corrected Fashion initializer owns one `random.Random(search_seed)` stream per run, draws a
+63-bit seed for every proposal, and deduplicates canonical genotypes. Evo and Random within a pair
+still share the exact first four proposals. Naturally recurring genotypes across independently seeded
+streams are allowed; there is no artificial exclusion between replicates. The old synthetic pilot
+initializer remains unchanged.
+
+S2 has its own finite schema, `pr166_fashion_s2_v1`, and module
+`fedcore.experiments.fashion_independent_worker`. It reuses the exact M0 checkpoint SHA256
+`b333cdaa33f29d07e9be27249145aa95ffba6459969c66ce481bf8ae15282429`, without training.
+All original fit, stop, C, Vsearch and Vpick identities remain unchanged. The five unchanged control
+artifacts are imported with byte-for-byte SHA256 verification; only the six search jobs are rerun.
+
+The official S1 10000-row test is never reopened. S2 instead freezes a 6000-row holdout, 600 per
+class, sampled with seed 20261031 from the sorted union of unused calibration and search pool rows.
+There are 6232 eligible rows (4744 calibration-pool remainder and 1488 search-pool remainder), and
+none belong to fit, stop, actual C, actual Vsearch or Vpick. Holdout metrics are computed once after
+S2 selection lock through the same exclusive-marker mechanism, with full 6000-row passes.
+
+S2 is authorized within the original shared deadline; it creates no new time allowance. The root
+orchestrator owns all tests, data preparation and computations. Its command sequence is:
+
+```
+python -m fedcore.experiments.fashion_independent_worker manifest --manifest S2/manifest.json --run-root S2 --limits ORIGINAL_LIMITS --source-commit COMMIT --parent-root S1 --parent-manifest S1/manifest.json
+python -m fedcore.experiments.fashion_independent_worker reuse-m0 --manifest S2/manifest.json --run-root S2 --limits ORIGINAL_LIMITS --parent-root S1 --parent-manifest S1/manifest.json
+python -m fedcore.experiments.fashion_independent_worker job --job random_17 --manifest S2/manifest.json --run-root S2 --limits ORIGINAL_LIMITS
+python -m fedcore.experiments.fashion_independent_worker freeze --manifest S2/manifest.json --run-root S2 --limits ORIGINAL_LIMITS
+python -m fedcore.experiments.fashion_independent_worker closed-test --manifest S2/manifest.json --run-root S2 --limits ORIGINAL_LIMITS
+python -m fedcore.experiments.fashion_independent_worker analyze --manifest S2/manifest.json --run-root S2 --limits ORIGINAL_LIMITS
+```
+
+`reuse-m0` also creates the five terminal imported-control records. Run only `random_17`, `evo_17`,
+`random_29`, `evo_29`, `random_43`, and `evo_43` as new jobs. Source roots must be separate siblings.
+Reports must distinguish S1 from S2 and never pool their different holdouts. All inference remains
+conditional on a single trained M0; independent proposal streams do not replicate training.

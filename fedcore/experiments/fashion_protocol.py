@@ -23,7 +23,7 @@ def default_manifest(source_commit, raw_sha256):
     return {
         "schema": "pr166_fashion_v1", "source_commit": source_commit, "raw_sha256": raw_sha256,
         "model": {"dimensions": [784, 256, 128, 10], "activation": "ReLU", "seed": 20261027},
-        "data": {"partition": ROLES, "partition_seed": 20261027, "calibration_rows": 256,
+        "data": {"partition": dict(ROLES), "partition_seed": 20261027, "calibration_rows": 256,
                  "search_rows": 512, "pick_rows": 8000, "test_rows": 10000,
                  "preprocessing": "uint8 / 255, flatten 784; no augmentation", "labels": "official ground truth"},
         "training": {"epochs": 20, "optimizer": "Adam", "lr": .001, "batch_size": 256,
@@ -119,6 +119,26 @@ def stratified_subset(ids, labels, rows, *, seed):
     return result
 
 
+def independent_initial(space, count, seed, *, sample, payload):
+    """One independently seeded proposal stream per search replicate.
+
+    A run's proposal seeds are random 63-bit values, rather than consecutive
+    integers whose shifted windows overlap across nearby search seeds.
+    """
+    if type(seed) is not int or not 0 <= seed < 2**63 or type(count) is not int or not 1 <= count <= 128:
+        raise ValueError("Bounded search seed and initial population required")
+    rng = random.Random(seed)
+    result, seen = [], set()
+    for _ in range(4096):
+        item = sample(space, seed=rng.getrandbits(63))
+        identity = digest(payload(item))
+        if identity not in seen:
+            seen.add(identity); result.append(item)
+        if len(result) == count:
+            return tuple(result)
+    raise ValueError("Finite space could not supply unique initial proposals")
+
+
 def classify_search_artifact(search, artifact):
     if artifact is None:
         return "failed"
@@ -142,6 +162,6 @@ def source_code_hashes():
              "algorithm/quantization/grammar.py", "algorithm/quantization/graph_execution.py",
              "algorithm/quantization/graph_specs.py", "algorithm/quantization/resources.py",
              "algorithm/low_rank/grammar_search.py", "tools/registry/checkpoint_manager.py",
-             "interfaces/fedcore_dispatcher.py"]
+             "interfaces/fedcore_dispatcher.py", "experiments/fashion_independent_worker.py"]
     paths.extend(path.relative_to(base).as_posix() for path in (base/"algorithm"/"quantization").rglob("*.py"))
     return {path: file_hash(base/path) for path in sorted(set(paths))}
