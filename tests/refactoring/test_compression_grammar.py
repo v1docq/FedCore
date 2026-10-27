@@ -150,3 +150,28 @@ def test_all_failed_callbacks_are_typed_charged_and_bounded():
     assert 0 < result["charged_evaluations"] <= 2
     assert result["failure_count"] == result["charged_evaluations"]
     assert all(event["fitness"] is None for event in result["trace"] if event["event"] == "evaluated")
+
+
+def test_mixed_initial_failures_do_not_prevent_actual_golem_variation():
+    from fedcore.algorithm.low_rank.grammar_execution import NumericalFailure
+    space = space_fixture()
+    choices = space.domains[0].alternatives
+    initial = tuple(CompressionGenotype((ScopeGene(("left",), choices[index]),)) for index in (0, 1, 3, 4))
+    rejected = {compile_genotype(item, space).fingerprint for item in initial[:3]}
+    called = []
+    def evaluate(workflow):
+        called.append(workflow.fingerprint)
+        if workflow.fingerprint in rejected:
+            return NumericalFailure("FixtureRejected", "A failed candidate has no selection fitness")
+        rank_sum = sum(gene.choice.rank for gene in workflow.genotype.genes)
+        return GrammarFitness(float(rank_sum), 10. / rank_sum)
+    result = run_grammar_search(space, GrammarSearchConfig(seed=13, population_size=4,
+        generations=3, max_evaluations=8, max_seconds=20, max_proposals=40), evaluate,
+        fitness_context="mixed null and finite initial fitness; actual GOLEM regression", initial_genotypes=initial)
+    assert result["status"] == "succeeded", result
+    assert result["failure_count"] == 3
+    assert result["charged_evaluations"] == len(called) > 4
+    assert result["finite_archive"]
+    assert any(event["event"] == "variation" for event in result["trace"])
+    failures = [event for event in result["trace"] if event["event"] == "evaluated" and event["outcome"] == "NumericalFailure"]
+    assert len(failures) == 3 and all(event["fitness"] is None for event in failures)

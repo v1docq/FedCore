@@ -88,6 +88,25 @@ def sampled_rss(identities, process_factory=psutil.Process, samples=None):
     return total, live
 
 
+def registered_controller_identities(raw=None, *, guardian=None):
+    """Admit only an explicitly named live ancestor with a matching birth time."""
+    if raw is None:
+        raw = os.environ.get("FEDCORE_PILOT_CONTROLLER_IDENTITY")
+    if raw is None:
+        return {}
+    value = json.loads(raw)
+    if (type(value) is not dict or set(value) != {"pid", "create_time"}
+            or type(value["pid"]) is not int or value["pid"] <= 0
+            or type(value["create_time"]) not in (int, float) or not math.isfinite(value["create_time"])):
+        raise ValueError("Controller identity requires an integer PID and finite creation time")
+    own = psutil.Process() if guardian is None else guardian
+    ancestors = {process.pid: process for process in own.parents()}
+    controller = ancestors.get(value["pid"])
+    if controller is None or controller.create_time() != value["create_time"] or not controller.is_running():
+        raise ValueError("Registered controller must be a live matching ancestor of this guardian")
+    return {value["pid"]: value["create_time"]}
+
+
 class WindowsJob:
     """Atomically create a suspended process in a kill-on-close Windows job.
 
@@ -264,6 +283,13 @@ def run_guarded(command, *, limits_path, run_root, report_path, cwd, timeout_sec
     try:
         for sig in (signal.SIGINT, signal.SIGTERM):
             old_handlers[sig] = signal.signal(sig, interrupted)
+        controllers = registered_controller_identities(guardian=own)
+        owner.update(controllers)
+        report["registered_controller_identities"] = [{"pid": pid, "create_time": created} for pid, created in controllers.items()]
+        report["controller_rss_accounting"] = "explicit registered ancestor included" if controllers else "no controller registered; parent/controller RSS excluded"
+        initial_rss, live_owner = sampled_rss(owner)
+        if len(live_owner) != len(owner) or initial_rss >= limits.soft_rss:
+            raise MemoryError("Controller/guardian ownership or RSS admission failed before launch")
         if limits.remaining() <= 0:
             raise TimeoutError("Shared absolute deadline exhausted before launch")
         if directory_bytes(root) >= limits.disk_bytes:
@@ -282,6 +308,10 @@ def run_guarded(command, *, limits_path, run_root, report_path, cwd, timeout_sec
                 if timeout_seconds is not None and now - started >= timeout_seconds:
                     raise TimeoutError("Per-job deadline exhausted within shared deadline")
                 identities = dict(owner)
+                for pid, created in controllers.items():
+                    controller = psutil.Process(pid)
+                    if controller.create_time() != created or not controller.is_running():
+                        raise RuntimeError("Registered controller identity vanished or changed")
                 for pid in child.pids():
                     try:
                         identities[pid] = psutil.Process(pid).create_time()

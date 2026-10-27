@@ -32,7 +32,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from fedcore.experiments.quantization_pilot_protocol import (
-    HARD_RSS, PATHS, PilotPlan, canonical_bytes, default_manifest, digest, file_hash, timing_summary)
+    HARD_RSS, PATHS, PilotPlan, canonical_bytes, default_manifest, digest, file_hash, timing_summary, search_execution_summary)
 from fedcore.experiments.quantization_pilot_guard import Limits, atomic_json
 from fedcore.algorithm.quantization import (
     quantize, QuantizationGraphRequest, OperatorRecipe, TransformSpec, Method,
@@ -396,11 +396,15 @@ def run_job(plan, root, job, limits):
             loaded = load_artifact(root, metadata)
         if metadata is not None:
             result["artifact"] = metadata
+            result["artifact_status"] = "verified_finite_roundtrip"
             result["selection"] = evaluate(loaded, data["selection"]["x"], data["selection"]["logits"])
             result["budget_bytes"] = budget
             result["baseline_budget_exempt"] = job in ("dense32", "dense64")
             result["within_budget"] = metadata["physical_tensor_bytes"] <= budget
             result["status"] = "succeeded" if result["within_budget"] or result["baseline_budget_exempt"] else "infeasible"
+            result.update(search_execution_summary(result))
+            if result["search_completed"] is False and result["status"] == "succeeded":
+                result["status"] = "partial_artifact"
         else:
             result["status"] = "failed"
     except Exception as error:

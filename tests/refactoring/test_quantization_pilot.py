@@ -8,7 +8,7 @@ import psutil
 import pytest
 from hypothesis import given, strategies as st
 
-from fedcore.experiments.quantization_pilot_guard import Limits, sampled_rss, directory_bytes
+from fedcore.experiments.quantization_pilot_guard import Limits, sampled_rss, directory_bytes, registered_controller_identities
 from fedcore.experiments.quantization_pilot_protocol import (PilotPlan, default_manifest, canonical_bytes,
     quantile, timing_summary, HARD_RSS)
 
@@ -50,6 +50,19 @@ def test_pid_reuse_is_not_family_membership():
 def test_unobservable_live_process_fails_closed():
     def process(pid): raise psutil.AccessDenied(pid)
     with pytest.raises(psutil.AccessDenied): sampled_rss({20: 2.}, process)
+
+
+def test_only_explicit_matching_live_controller_ancestor_is_counted(monkeypatch):
+    monkeypatch.delenv("FEDCORE_PILOT_CONTROLLER_IDENTITY", raising=False)
+    controller = SimpleNamespace(pid=50, create_time=lambda: 123., is_running=lambda: True)
+    guardian = SimpleNamespace(parents=lambda: [controller])
+    assert registered_controller_identities(guardian=guardian) == {}
+    assert registered_controller_identities('{"pid":50,"create_time":123.0}', guardian=guardian) == {50: 123.}
+    for invalid in ('{"pid":51,"create_time":123.0}', '{"pid":50,"create_time":124.0}',
+                    '{"pid":true,"create_time":123.0}'):
+        with pytest.raises(ValueError): registered_controller_identities(invalid, guardian=guardian)
+    controller.is_running = lambda: False
+    with pytest.raises(ValueError): registered_controller_identities('{"pid":50,"create_time":123.0}', guardian=guardian)
 
 
 def test_artifact_byte_count_includes_all_files(tmp_path):
@@ -170,3 +183,43 @@ def test_freeze_prevents_missing_jobs_and_closed_test_opens_once(tmp_path):
     # interrupted final assessment must preserve its partial report, not reopen.
     (tmp_path / "CLOSED_TEST_OPENED.json").write_text("{}")
     with pytest.raises(FileExistsError): closed_test(plan, tmp_path)
+
+
+def test_report_exposes_failed_search_with_valid_partial_artifact_without_rewriting_job(tmp_path):
+    from fedcore.experiments.quantization_pilot_analysis import analyze
+    from fedcore.experiments.quantization_pilot_guard import atomic_json
+    from fedcore.experiments.quantization_pilot_protocol import file_hash
+    plan = PilotPlan.parse(default_manifest(COMMIT))
+    path = tmp_path / "jobs" / "evo_17.json"
+    record = {"job": "evo_17", "status": "succeeded", "artifact": {"sha256": "a"*64, "physical_tensor_bytes": 200, "file_bytes": 400},
+              "search": {"status": "failed", "reason": "TypeError: invalid null fitness comparison", "stop_reason": "optimizer_failure",
+                         "charged_evaluations": 4, "created_proposals": 4, "trace": []}}
+    atomic_json(path, record); before = file_hash(path)
+    report = analyze(plan, tmp_path)
+    row = next(item for item in report["quality_storage"] if item["job"] == "evo_17")
+    assert row["recorded_job_status"] == "succeeded"
+    assert row["status"] == "partial_artifact"
+    assert row["artifact_status"] == "verified_finite_roundtrip"
+    assert row["search_status"] == "failed" and row["search_completed"] is False
+    assert row["search_charged_evaluations"] == 4
+    assert row["search_variation_candidates_assessed"] == 0
+    assert row["failure"] == record["search"]["reason"]
+    assert file_hash(path) == before
+
+
+def test_worker_classifies_failed_search_as_partial_without_discarding_artifact(tmp_path, monkeypatch):
+    import torch
+    from fedcore.experiments import quantization_pilot_worker as worker
+    plan = PilotPlan.parse(default_manifest(COMMIT))
+    data = {"calibration": {"x": torch.ones(1, 64)}, "selection": {"x": torch.ones(1, 64), "logits": torch.ones(1, 10)}}
+    metadata = {"sha256": "a"*64, "checkpoint": "cas/example.pt", "physical_tensor_bytes": 200, "file_bytes": 400}
+    monkeypatch.setattr(worker, "load_prepared", lambda *args: ({"budget_bytes": 500}, None, data))
+    monkeypatch.setattr(worker, "run_search", lambda *args: (metadata, {"search": {"status": "failed", "reason": "engine failure",
+                       "charged_evaluations": 4, "created_proposals": 4, "trace": []}}))
+    monkeypatch.setattr(worker, "load_artifact", lambda *args: None)
+    monkeypatch.setattr(worker, "evaluate", lambda *args: {"cross_entropy": 1., "teacher_agreement": 1., "logits_mse": 0.})
+    result = worker.run_job(plan, tmp_path, "evo_17", SimpleNamespace(remaining=lambda: 60.))
+    assert result["status"] == "partial_artifact"
+    assert result["artifact"] == metadata
+    assert result["artifact_status"] == "verified_finite_roundtrip"
+    assert result["search_completed"] is False and result["search_status"] == "failed"

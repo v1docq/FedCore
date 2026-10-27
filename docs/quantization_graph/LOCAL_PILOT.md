@@ -34,6 +34,14 @@ maximum; samples may miss shorter peaks. Windows job membership and kernel limit
 add protection between samples. A surviving child on root exit is explicitly
 recorded as guardian cleanup.
 
+An external experiment controller can register its identity before guardian launch:
+`FEDCORE_PILOT_CONTROLLER_IDENTITY` is JSON with the exact keys `pid` and
+`create_time`. The guardian requires a live ancestor with that creation time and
+includes its RSS in every family sample. Arbitrary app processes are not admitted.
+When this variable is absent, the receipt explicitly says that parent/controller
+RSS is excluded. Historical receipts created without registration retain that
+limitation; their measurements must not be relabeled as including the controller.
+
 The finite command sequence is:
 
 1. `manifest --source-commit c70d37914b152fd6d8886c4e692e4c8355ed05c2`
@@ -105,6 +113,23 @@ The optional recovery pair starts from identical decoded LPLR factors and uses
 the same training rows/logits, LoRA factor stages and eight SGD updates. One member
 is re-encoded to packed factors; the real-factor control retains its float factors.
 Both final storage costs are measured; neither is silently retuned.
+
+The first frozen series exposed an optimizer integration bug: failed candidates
+produced GOLEM `null_fitness`, but `FedcoreDispatcher` admitted those evaluation
+results into the population. GOLEM then failed while comparing invalid fitness.
+The narrow dispatcher repair excludes invalid fitness before population admission;
+the original failed assessments remain charged and recorded. Numerical forward
+implementations are unchanged. Historical job records and closed-test results are
+never replaced after this repair. An engineering diagnostic must use a separate
+directory, the remaining original deadline and selection data only.
+
+A valid finite artifact from an incomplete search is reported as `partial_artifact`.
+`recorded_job_status` preserves the historical job field. The report separately
+shows the nested engine status/reason, charged evaluations, requested evaluations
+and number of assessed variation proposals. Successful loading of an initial
+population artifact cannot establish that evolution completed. If a later
+profiling harness commit differs from the artifact construction commit, preserve
+both source identities explicitly before profiling.
 
 Run meaningful contract tests under the same guardian:
 

@@ -95,3 +95,19 @@ def timing_summary(values, *, target_requests=200):
     return {"observed_requests": len(values), "p50_seconds": quantile(values, .5),
             "p95_seconds": quantile(values, .95) if len(values) >= target_requests else None,
             "p95_eligible": len(values) >= target_requests, "request_seconds": list(values)}
+
+
+def search_execution_summary(result):
+    """Separate preserved finite artifacts from the engine's terminal state."""
+    search = result.get("search")
+    if search is None:
+        return {"search_status": None, "search_reason": None, "search_completed": None,
+                "search_charged_evaluations": None, "search_variation_candidates_assessed": None}
+    varied = {event["proposal_id"] for event in search.get("trace", [])
+              if event.get("event") == "proposal" and event.get("operator") != "initial"}
+    return {"search_status": search.get("status"), "search_reason": search.get("reason"),
+            "search_stop_reason": search.get("stop_reason"), "search_completed": search.get("status") == "succeeded",
+            "search_charged_evaluations": search.get("charged_evaluations"),
+            "search_created_proposals": search.get("created_proposals"),
+            "search_variation_candidates_assessed": sum(event.get("event") == "evaluated" and event.get("proposal_id") in varied
+                                                         for event in search.get("trace", []))}

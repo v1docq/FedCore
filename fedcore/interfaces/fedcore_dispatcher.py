@@ -213,6 +213,13 @@ class FedcoreDispatcher(MultiprocessingDispatcher):
             if not hasattr(res, 'uid_of_individual'):
                 self.logger.warning(f'apply_evaluation_results: Result has no uid_of_individual: {type(res)}')
                 continue
+            fitness = getattr(res, 'fitness', None)
+            if fitness is None or not fitness.valid:
+                # A GraphEvalResult can exist after an objective failure while
+                # carrying GOLEM null_fitness. Such a result is not a successful
+                # evaluation and must never enter Pareto selection/history.
+                self.logger.warning(f'apply_evaluation_results: Skipping invalid fitness for {res.uid_of_individual}')
+                continue
             valid_results[res.uid_of_individual] = res
         
         if not valid_results:
