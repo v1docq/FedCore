@@ -145,6 +145,16 @@ def test_dense64_checkpoint_preserves_dtype_and_complete_storage(tmp_path):
     assert metadata["physical_tensor_bytes"] == (4*3+3+3*2+2)*8
 
 
+def test_prepare_result_is_finite_plain_json(tmp_path):
+    from fedcore.experiments.quantization_pilot_worker import prepare, jsonable
+    plan = PilotPlan.parse(default_manifest(COMMIT))
+    result = prepare(plan, tmp_path)
+    assert type(result["torch_version"]) is str
+    assert json.loads(json.dumps(jsonable(result), allow_nan=False)) == result
+    assert result["closed_test_opened"] is False
+    assert not (tmp_path / "CLOSED_TEST_OPENED.json").exists()
+
+
 def test_freeze_prevents_missing_jobs_and_closed_test_opens_once(tmp_path):
     from fedcore.experiments.quantization_pilot_worker import freeze_selection, closed_test
     from fedcore.experiments.quantization_pilot_guard import atomic_json

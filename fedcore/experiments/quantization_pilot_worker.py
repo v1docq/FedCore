@@ -206,7 +206,7 @@ def prepare(plan, root):
     summary = {"manifest_sha256": plan.fingerprint, "source": source_meta, "data_sha256": file_hash(path),
                "budget_bytes": math.floor(source_meta["physical_tensor_bytes"] * plan.payload["budget_fraction"]),
                "roles": plan.payload["data"], "closed_test_opened": False,
-               "torch_version": torch.__version__, "python_version": sys.version, "platform": sys.platform,
+               "torch_version": str(torch.__version__), "python_version": sys.version, "platform": sys.platform,
                "split_provenance": {role: {"features_sha256": hashlib.sha256(item["x"].numpy().tobytes()).hexdigest(),
                                          "logits_sha256": hashlib.sha256(item["logits"].numpy().tobytes()).hexdigest(),
                                          "id": plan.payload["data"][role]["id"]} for role, item in data.items()}}
