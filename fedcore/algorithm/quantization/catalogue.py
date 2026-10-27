@@ -97,7 +97,9 @@ def prepare_quantization_catalogue(model, alternatives, *, calibration=None,
                         w = (layer.left.weight.detach().double()@layer.right.weight.detach().double() if spec.method is Method.SVD
                              else layer.left.decode()@layer.right.decode())
                     else:w = layer.weight.decode()
-                    score = float((source_layer.weight.detach().double()-w).square().sum())
+                    source_weight = (source_layer.left.weight.detach().double()@source_layer.right.weight.detach().double()
+                                     if spec.method is Method.FACTORS else source_layer.weight.detach().double())
+                    score = float((source_weight-w).square().sum())
                 storages = tuple(StorageCost(s.storage_id,s.nbytes,1,"physical_bytes") for s in local_inventory)
                 ranks = () if spec.rank is None else (spec.rank,)
                 options.append(CandidateOption(option_id,ranks,score,storages,"unranked" if not ranks else "ranked"))

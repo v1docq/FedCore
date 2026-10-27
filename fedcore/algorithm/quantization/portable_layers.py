@@ -86,4 +86,10 @@ class QuantizedSumLinear(nn.Module):
         self.in_features, self.out_features = base.in_features, base.out_features
 
     def forward(self, x):
-        return _output(self.base(x) + self.correction(x),x.dtype)
+        _input(x,self.in_features)
+        wide=x.double()
+        base=F.linear(wide,self.base.weight.decode())
+        correction=F.linear(F.linear(wide,self.correction.right.decode()),self.correction.left.decode())
+        value=base+correction
+        if self.base.bias is not None:value=value+self.base.bias
+        return _output(value,x.dtype)

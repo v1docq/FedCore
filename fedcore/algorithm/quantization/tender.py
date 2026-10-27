@@ -45,7 +45,10 @@ class TenderLinear(nn.Module):
             if bool((ranges[positive]<maximum/2**60).any()):
                 raise ValueError('Tender channel-scale dynamic range exceeds reference profile')
             depth = torch.zeros_like(ranges,dtype=torch.int64)
-            depth[positive] = torch.floor(torch.log2(maximum/ranges[positive])).long()
+            # Direct binary thresholds preserve exact halves and avoid the
+            # reciprocal overflow/rounding of scalar divided by Tensor.
+            for level in range(1,61):
+                depth[positive & (ranges<=maximum/2**level)]=level
             deepest = int(depth.max())
             if deepest > 60:
                 raise ValueError("Tender channel-scale dynamic range exceeds reference profile")
@@ -122,7 +125,19 @@ class TenderLinear(nn.Module):
     def forward(self, inputs):
         accumulator = self.integer_accumulator(inputs)
         final_scale = self.activation_scale[0]*2**int(self.exponents[-1])
-        output = accumulator.double()*final_scale*self.weight.scale+self.center_correction
+        # Separate mantissas/exponents: either multiplication order can overflow
+        # or underflow although the final three-factor product is representable.
+        a,ae=torch.frexp(accumulator.double())
+        b,be=torch.frexp(final_scale)
+        c,ce=torch.frexp(self.weight.scale)
+        mantissas,exponents=torch.broadcast_tensors(a*b*c,ae+be+ce)
+        try:
+            # Torch 2.2 ldexp forms 2**exponent first, losing finite extreme
+            # products. The scalar CPU oracle rounds only the complete product.
+            products=[math.ldexp(float(m),int(e)) for m,e in zip(mantissas.flatten(),exponents.flatten())]
+        except OverflowError as error:
+            raise ValueError('Tender output overflow') from error
+        output = torch.tensor(products,dtype=torch.float64).reshape(accumulator.shape)+self.center_correction
         if self.bias is not None:
             output = output+self.bias
         output = output.reshape(*inputs.shape[:-1],self.out_features).to(inputs.dtype)

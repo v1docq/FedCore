@@ -71,14 +71,19 @@ def _execute_backend_stage(model,spec,*,calibration_batches,training_batches=(),
         return StructuralInvalid((Violation('ConvertedInference','model','QAT requires an explicit float trainable source'),))
     if any(path not in paths or type(paths[path]) is not nn.Linear for path in spec.regions):
         return StructuralInvalid((Violation('UnsupportedRegion','regions','Regions must identify float Linear boundaries'),))
+    canonical_regions=tuple(sorted({next(path for path,layer in paths.items() if layer is paths[region]) for region in spec.regions}))
     try:
         ledger.checkpoint('backend_prepare')
+        # FX treats a root Linear as a functional call; give the selected
+        # boundary an explicit owned child so regional QConfigMapping applies.
+        backend_source=nn.Sequential(deepcopy(model)) if type(model) is nn.Linear else model
+        execution_regions=('0',) if type(model) is nn.Linear else canonical_regions
         qconfig = get_default_qat_qconfig(spec.backend) if spec.mode=='qat' else get_default_qconfig(spec.backend)
         mapping = QConfigMapping().set_global(None)
-        for path in spec.regions:mapping.set_module_name(path,qconfig)
+        for path in execution_regions:mapping.set_module_name(path,qconfig)
         quantizer = BaseQuantizer({'quant_type':spec.mode,'backend':spec.backend,'qconfig_mapping':mapping,'stage_ledger':ledger,
             'qat_params':{'epochs':spec.training_steps,'max_steps':spec.training_steps,'lr':spec.learning_rate,'optimizer':'sgd','criterion':spec.criterion}})
-        data = SimpleNamespace(model=model,calibration_dataloader=tuple(calibration_batches),train_dataloader=tuple(training_batches))
+        data = SimpleNamespace(model=backend_source,calibration_dataloader=tuple(calibration_batches),train_dataloader=tuple(training_batches))
         if not data.calibration_dataloader:return StructuralInvalid((Violation('MissingCalibration','data','Nonempty calibration batches required'),))
         converted = quantizer.fit(data)
         ledger.checkpoint('backend_convert')
@@ -99,7 +104,8 @@ def _execute_backend_stage(model,spec,*,calibration_batches,training_batches=(),
                 return NumericalFailure('BackendRoundTrip','Converted output changed after checkpoint')
         cost = inventory_cost(capture_inventory(loaded),'bytes')
         ledger.checkpoint('backend_export_verified')
-        return ConvertedInference(loaded,checkpoint,cost,{'mode':spec.mode,'regions':spec.regions,
+        return ConvertedInference(loaded,checkpoint,cost,{'mode':spec.mode,'regions':spec.regions,'canonical_regions':canonical_regions,
+            'execution_regions':execution_regions,
             'training':quantizer.training_evidence,'data_roles':{'calibration':spec.calibration_id,'training':spec.training_id,
             'selection':spec.selection_id,'final_test':spec.final_test_id},'resources':ledger.evidence(),
             'storage_adapter':'registered_codes_qparams_bias_v1','storage_bytes':cost,'serialized_bytes':len(checkpoint),

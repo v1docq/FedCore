@@ -12,6 +12,26 @@ def _types():
 
 def validate_descriptor_budget(description,max_bytes=128*1024**2):
     """Bound total declared quantized allocations before constructing any part."""
+    def constant_size(item):
+        if (type(item) is not dict or set(item)!={'shape','dtype'} or item['dtype'] not in ('float32','float64','int64','int32')
+                or type(item['shape']) is not list or len(item['shape'])>2
+                or any(type(v) is not int or v<0 for v in item['shape'])):
+            raise ValueError('Invalid bounded backend constant')
+        elements=__import__('math').prod(item['shape'])
+        if elements>2**20:raise ValueError('Invalid bounded backend constant')
+        return elements*({'float32':4,'float64':8,'int64':8,'int32':4}[item['dtype']])
+    def backend_operator_size(item):
+        if type(item) is not dict:raise ValueError('Invalid backend operator descriptor')
+        kind=item.get('type')
+        if kind=='QuantizationGraph' and item.get('kind')=='RegisteredBackendLinear':return size(item)
+        if kind in ('ReLU','Tanh','Identity','Sigmoid'):return 0
+        if kind=='Linear':
+            args=item['args'];i,o=args['in_features'],args['out_features']
+            if any(type(n) is not int or n<1 for n in (i,o)) or type(args['bias']) is not bool:
+                raise ValueError('Invalid backend float dimensions')
+            # The fixed Linear constructor allocates float32 before loading state.
+            return (i*o+(o if args['bias'] else 0))*(torch.finfo(torch.get_default_dtype()).bits//8)
+        raise ValueError('Unsupported converted backend operator descriptor')
     def packed(shape,spec):
         if len(shape)!=2 or any(type(n) is not int or n<1 for n in shape):raise ValueError('Invalid declared matrix shape')
         return (shape[0]*shape[1]*spec.bits+7)//8+(1 if spec.axis is None else shape[spec.axis])*8
@@ -37,6 +57,10 @@ def validate_descriptor_budget(description,max_bytes=128*1024**2):
             i,o,k=c['in_features'],c['out_features'],c['channels']
             if any(type(n) is not int or n<1 for n in (i,o,k)):raise ValueError('Invalid backend dimensions')
             return i*o+k*16+o*4+16
+        if kind=='RegisteredBackendGraph':
+            if type(c['constants']) is not dict or type(c['operators']) is not dict:
+                raise ValueError('Backend graph needs explicit constant/operator mappings')
+            return sum(constant_size(item) for item in c['constants'].values())+sum(backend_operator_size(item) for item in c['operators'].values())
         return sum(size(item) for item in c.values())
     if size(description)>max_bytes:raise ValueError('Quantization checkpoint declared allocation budget exceeded')
 
@@ -125,9 +149,6 @@ def build_quantized(description):
         from fedcore.tools.registry.checkpoint_manager import _build_model
         constants = {}
         for key,item in config['constants'].items():
-            if (set(item)!={'shape','dtype'} or item['dtype'] not in ('float32','float64','int64','int32')
-                    or len(item['shape'])>2 or any(type(v) is not int or v<0 for v in item['shape'])
-                    or __import__('math').prod(item['shape'])>2**20):raise ValueError('Invalid bounded backend constant')
             constants[key]=torch.zeros(item['shape'],dtype=getattr(torch,item['dtype']))
         operators = {key:_build_model(item,{},'') for key,item in config['operators'].items()}
         return RegisteredBackendGraph(config['instructions'],operators,constants)

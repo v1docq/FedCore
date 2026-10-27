@@ -1,6 +1,7 @@
 """Structural subgraph grammar over the existing GrammarAdapter/GOLEM engine."""
 from dataclasses import dataclass,replace
 import random
+import torch
 from fedcore.algorithm.low_rank.plans import ValidationFailure,Violation
 from fedcore.algorithm.low_rank.grammar_search import GrammarAdapter,run_grammar_search,GrammarFitness,GrammarSearchConfig
 from .graph_specs import (TransformSpec,OperatorRecipe,QuantizationGraphRequest,ProcessGraphSpec,
@@ -9,8 +10,9 @@ from .tensor_formats import QuantizedTensorSpec,Rounding
 from .graph_execution import check_quantization_graph,compress_quantization_graph,ExportVerifiedArtifact,source_identity,calibration_identity
 from .resources import ResourceLedger,StageBudgetExceeded
 from fedcore.algorithm.low_rank.compression_graph import SourceMode
-from .program import (RecoveryStageSpec,QuantizationProgram,ProgramArtifact,execute_quantization_program,training_identity)
-from .training import BackendStageSpec
+from .program import (RecoveryStageSpec,QuantizationProgram,ProgramArtifact,execute_quantization_program,training_identity,
+                      validate_recovery_spec,training_stage_violations)
+from .training import BackendStageSpec,validate_backend_spec
 
 
 def _failure(message):return ValidationFailure((Violation('InvalidQuantizationGrammar','genotype',message),))
@@ -78,6 +80,8 @@ class QuantizationWorkflow:
 
 def prepare_quantization_space(model,alternatives,*,calibration=None,evaluation_context,max_storage_bytes=None,max_peak_bytes=DEFAULT_MAX_PEAK_BYTES,prequantize_bits=(2,4,8),training_choices=(None,),training_batches=()):
     if type(alternatives) is not dict or not alternatives:return _failure('Nonempty finite alternatives required')
+    if type(training_choices) is tuple and any(type(stage) is BackendStageSpec for stage in training_choices) and type(calibration) is not torch.Tensor:
+        return _failure('Backend stages require an explicit root-model calibration tensor')
     domains=[]
     for path,choices in sorted(alternatives.items()):
         if type(choices) is not tuple or not choices:return _failure('Finite choice tuples required')
@@ -106,15 +110,36 @@ def validate_space(space):
         if type(domain) is not QuantizationDomain or not domain.aliases or not domain.choices:return _failure('Closed nonempty domains required')
         scopes.extend(domain.aliases)
     if len(set(scopes))!=len(scopes):return _failure('Overlapping alias regions')
+    for stage in space.training_choices:
+        violations=(validate_recovery_spec(stage) if type(stage) is RecoveryStageSpec else
+                    validate_backend_spec(stage) if stage is not None else ())
+        if violations:return ValidationFailure(violations)
+        if type(stage) is BackendStageSpec and space.calibration is None:
+            return _failure('Backend stages require explicit calibration data')
+        if (type(stage) is RecoveryStageSpec or type(stage) is BackendStageSpec and stage.mode=='qat') and not space.training_fingerprint:
+            return _failure('Training stages require exact ordered training data')
+        choices=[_stage_choices(domain,stage) for domain in space.domains]
+        if any(not options for options in choices):return _failure('Global training stage has no compatible local choices')
+        genes=[QuantizationGene(domain.aliases,options[0],recipe_graph(options[0])) for domain,options in zip(space.domains,choices)]
+        if not _compatible_training(stage,genes):return _failure('Global training stage refers to an undeclared output boundary')
     return None
 
 
 def _compatible_training(training,genes):
-    if training is None:return True
-    methods={g.aliases[0]:g.transform.method for g in genes}
-    if type(training) is RecoveryStageSpec:
-        return all(methods.get(path) in (Method.DSVD,Method.LPLR,Method.LPLR_SVD,Method.FACTORS) for path in training.paths)
-    return all(method in (Method.DENSE,Method.SVD) for method in methods.values())
+    methods={alias:gene.transform.method for gene in genes for alias in gene.aliases}
+    return not training_stage_violations(training,methods)
+
+
+def _stage_choices(domain,stage):
+    """Local restrictions of the checked global stage, without random retries."""
+    if stage is None:return domain.choices
+    if type(stage) is RecoveryStageSpec:
+        targeted=bool(set(domain.aliases).intersection(stage.paths))
+        return tuple(spec for spec in domain.choices if spec.method is not Method.TENDER and
+                     (not targeted or spec.method in (Method.DSVD,Method.LPLR,Method.LPLR_SVD,Method.FACTORS)))
+    direct=bool(set(domain.aliases).intersection(stage.regions))
+    needs_factors=any(region==(alias+'.' if alias else '')+side for region in stage.regions for alias in domain.aliases for side in ('left','right'))
+    return tuple(spec for spec in domain.choices if spec.method is Method.SVD and not direct or spec.method is Method.DENSE and not needs_factors)
 
 
 def normalize_genotype(genotype,space):
@@ -142,10 +167,12 @@ def normalize_genotype(genotype,space):
 
 
 def generate_genotype(space,*,seed=0):
+    failure=validate_space(space)
+    if failure is not None:return failure
     rng=random.Random(seed)
-    genes=tuple(QuantizationGene(d.aliases,spec,recipe_graph(spec)) for d in space.domains for spec in (rng.choice(d.choices),))
-    compatible=[stage for stage in space.training_choices if _compatible_training(stage,genes)]
-    return QuantizationGenotype(genes,training=rng.choice(compatible)) if compatible else _failure('No compatible global stage')
+    training=rng.choice(space.training_choices)
+    genes=tuple(QuantizationGene(d.aliases,spec,recipe_graph(spec)) for d in space.domains for spec in (rng.choice(_stage_choices(d,training)),))
+    return QuantizationGenotype(genes,training=training)
 
 
 def mutate_genotype(genotype,space,*,kind,seed=0):
@@ -163,7 +190,7 @@ def mutate_genotype(genotype,space,*,kind,seed=0):
         spec=rng.choice(alternatives or list(domain.choices))
     genes[index]=QuantizationGene(gene.aliases,spec,recipe_graph(spec))
     compatible=[stage for stage in space.training_choices if _compatible_training(stage,genes)]
-    if not compatible:return _failure('No compatible global stage')
+    if not compatible:return parent
     training=rng.choice(compatible)
     return normalize_genotype(QuantizationGenotype(tuple(genes),training=training),space)
 
@@ -174,6 +201,9 @@ def crossover_genotypes(first,second,space,*,seed=0):
     if isinstance(right,ValidationFailure):return right
     selected=random.Random(seed).randrange(len(left.genes));a,b=list(left.genes),list(right.genes)
     a[selected],b[selected]=b[selected],a[selected]
+    compatible_a=[stage for stage in space.training_choices if _compatible_training(stage,a)]
+    compatible_b=[stage for stage in space.training_choices if _compatible_training(stage,b)]
+    if not compatible_a or not compatible_b:return left,right
     def child(genes,training):
         compatible=[stage for stage in space.training_choices if _compatible_training(stage,genes)]
         return QuantizationGenotype(tuple(genes),training=training if training in compatible else compatible[0])
@@ -209,15 +239,19 @@ def run_quantization_search(model,space,config,*,calibration,evaluate,ledger=Non
     ledger=ledger or ResourceLedger()
     from .cache import DependencyCache
     cache=DependencyCache()
-    def assessment(workflow):
+    def context_guard():
         from fedcore.algorithm.low_rank.grammar_execution import StructuralInvalid
-        if source_identity(model)!=workflow.source:
+        if source_identity(model)!=space.source:
             return StructuralInvalid((Violation('StaleSource','model','Source architecture or tensor state changed'),))
         ref=calibration_identity(calibration)
-        if (ref.fingerprint if ref else None)!=workflow.calibration:
+        if (ref.fingerprint if ref else None)!=space.calibration:
             return StructuralInvalid((Violation('StaleCalibration','data','Calibration changed'),))
         if training_identity(training_batches)!=space.training_fingerprint:
             return StructuralInvalid((Violation('StaleTraining','data','Ordered training data changed'),))
+        return None
+    def assessment(workflow):
+        failure=context_guard()
+        if failure is not None:return failure
         try:ledger.checkpoint('search_assessment')
         except StageBudgetExceeded as error:return error.failure
         artifact=(execute_quantization_program(model,workflow.program,calibration=calibration,training_batches=training_batches,ledger=ledger,cache=cache)
@@ -228,7 +262,8 @@ def run_quantization_search(model,space,config,*,calibration,evaluate,ledger=Non
         except StageBudgetExceeded as error:return error.failure
         return GrammarFitness(float(quality),float(artifact.storage_bytes))
     result=run_grammar_search(space,config,assessment,fitness_context=space.evaluation_context,
-        grammar_adapter=QUANTIZATION_GRAMMAR_ADAPTER,strict_deadline=True,trace_callback=trace_callback,initial_genotypes=initial_genotypes)
+        grammar_adapter=replace(QUANTIZATION_GRAMMAR_ADAPTER,context_guard=context_guard),strict_deadline=True,
+        trace_callback=trace_callback,initial_genotypes=initial_genotypes)
     result['resource_ledger']=ledger.evidence()
     result['artifact_cache']={'bytes':cache.bytes,'events':cache.events}
     result['process_topology']='One GOLEM genotype node; structural variation occurs inside each checked executable process DAG'

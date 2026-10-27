@@ -1,0 +1,4 @@
+*.stdout.txt
+*.stderr.txt
+*_results.json
+baseline_matrix_transforms.py.txt

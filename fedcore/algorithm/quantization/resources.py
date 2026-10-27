@@ -1,5 +1,6 @@
 """Shared stage ledger; counters include failed work and explicit safe points."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from contextlib import contextmanager
 import time
 import psutil
 from fedcore.algorithm.low_rank.grammar_execution import ResourceFailure
@@ -40,6 +41,20 @@ class ResourceLedger:
         self.budgets,self.started = budgets,time.perf_counter()
         self.training_steps,self.stages,self.events = 0,0,[]
         self.actual_training_steps=0
+        self._rss_failure_code='RSSBudget'
+
+    @contextmanager
+    def limit_rss(self,max_bytes):
+        """A program may narrow an existing ledger, never relax its owner limit."""
+        previous=self.budgets
+        previous_code=self._rss_failure_code
+        self.budgets=replace(previous,max_rss_bytes=min(previous.max_rss_bytes,max_bytes))
+        if max_bytes<=previous.max_rss_bytes:self._rss_failure_code='ResourceLimitExceeded'
+        try:
+            yield
+        finally:
+            self.budgets=previous
+            self._rss_failure_code=previous_code
 
     def checkpoint(self,stage,*,training_steps=0):
         now = time.perf_counter()
@@ -49,7 +64,7 @@ class ResourceLedger:
         code = ('StageDeadline' if now-self.started>self.budgets.max_seconds else
                 'TrainingBudget' if self.training_steps>self.budgets.max_training_steps else
                 'StageCountBudget' if self.stages>self.budgets.max_stages else
-                'RSSBudget' if psutil.Process().memory_info().rss>self.budgets.max_rss_bytes else None)
+                self._rss_failure_code if psutil.Process().memory_info().rss>self.budgets.max_rss_bytes else None)
         if code:
             event['status'] = 'refused'
             raise StageBudgetExceeded(code,'Shared stage resource budget exhausted')

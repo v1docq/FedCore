@@ -1,5 +1,6 @@
 """One public workflow joining compression, recovery and regional conversion."""
 from dataclasses import dataclass
+import math
 import torch
 from .graph_specs import QuantizationGraphRequest,Method,fingerprint
 from .graph_execution import check_quantization_graph,compress_quantization_graph,ExportVerifiedArtifact,calibration_identity,source_identity
@@ -17,6 +18,47 @@ class RecoveryStageSpec:
     adapter_rank: int = 1
     training_id: str = 'recovery_training'
     seed: int = 0
+
+
+def validate_recovery_spec(spec):
+    if (type(spec) is not RecoveryStageSpec or type(spec.paths) is not tuple or not spec.paths
+            or any(type(path) is not str for path in spec.paths) or len(set(spec.paths)) != len(spec.paths)
+            or type(spec.steps) is not int or spec.steps < 1
+            or type(spec.adapter_rank) is not int or spec.adapter_rank < 1
+            or type(spec.learning_rate) not in (int, float) or not math.isfinite(spec.learning_rate) or spec.learning_rate <= 0
+            or type(spec.training_id) is not str or not spec.training_id
+            or type(spec.seed) is not int or not 0 <= spec.seed < 2**63):
+        return (Violation('InvalidRecoveryPlan', 'stage', 'Unique paths, positive finite training parameters and an explicit data identity required'),)
+    return ()
+
+
+def training_stage_violations(stage, methods):
+    """Validate the same global transition for programs and grammar operators."""
+    if stage is None:
+        return ()
+    if type(stage) is RecoveryStageSpec:
+        errors = list(validate_recovery_spec(stage))
+        if errors:
+            return tuple(errors)
+        if any(methods.get(path) not in (Method.DSVD, Method.LPLR, Method.LPLR_SVD, Method.FACTORS) for path in stage.paths):
+            errors.append(Violation('UnsupportedRecovery', 'program', 'Recovery paths must refer to constructed packed factor operators'))
+        if Method.TENDER in methods.values():
+            errors.append(Violation('UnsupportedGradientBoundary', 'program', 'Factor recovery across Tender requires a differentiable training adapter'))
+        return tuple(errors)
+    errors = list(validate_backend_spec(stage))
+    if errors:
+        return tuple(errors)
+    if any(method not in (Method.DENSE, Method.SVD) for method in methods.values()):
+        errors.append(Violation('UnsupportedBackendBoundary', 'program', 'Regional backend conversion requires float dense/real-factor output'))
+    for region in stage.regions:
+        parent = region.rsplit('.', 1)[0] if '.' in region else '' if region in ('left','right') else region
+        if methods.get(region) is Method.SVD:
+            errors.append(Violation('UnsupportedBackendRegion',region,'Select the explicit left/right Linear boundaries of real factors'))
+            continue
+        factor_boundary=region.endswith(('.left','.right')) or region in ('left','right')
+        if region not in methods and not (methods.get(parent) is Method.SVD and factor_boundary):
+            errors.append(Violation('UnsupportedBackendRegion', region, 'Region must identify a declared float output boundary'))
+    return tuple(errors)
 
 
 @dataclass(frozen=True)
@@ -65,28 +107,16 @@ def check_quantization_program(model,program,*,calibration=None,training_batches
     errors=[];stages=['checked_process_dag','apply_replacements','export_verified']
     if program.backend is not None and program.recovery is not None:
         errors.append(Violation('UnsupportedTrainingOrder','program','Backend QAT after packed-factor recovery requires a new explicit float source'))
-    methods={r.path:r.transform.method for r in program.compression.recipes}
+    methods={alias:recipe.transform.method for recipe,aliases in zip(program.compression.recipes,plan.aliases) for alias in aliases}
     if program.recovery is not None:
         r=program.recovery
-        if (type(r) is not RecoveryStageSpec or type(r.paths) is not tuple or not r.paths
-                or any(methods.get(path) not in (Method.DSVD,Method.LPLR,Method.LPLR_SVD,Method.FACTORS) for path in r.paths)
-                or type(r.steps) is not int or r.steps<1 or type(r.adapter_rank) is not int or r.adapter_rank<1
-                or type(r.seed) is not int or not 0<=r.seed<2**63):
-            errors.append(Violation('UnsupportedRecovery','program','Recovery paths must refer to constructed packed factor operators'))
-        if Method.TENDER in methods.values():
-            errors.append(Violation('UnsupportedGradientBoundary','program','Factor recovery across a Tender integer reference requires a separate differentiable training adapter'))
+        errors.extend(training_stage_violations(r,methods))
         stages+=['decode_ready_factors','prepare_factor_lora','train_left','merge_left','train_right','merge_right','encode_ready_factors','export_verified']
     if program.backend is not None:
         b=program.backend
-        violations=validate_backend_spec(b)
-        errors.extend(violations)
-        if violations or any(m not in (Method.DENSE,Method.SVD) for m in methods.values()):
-            errors.append(Violation('UnsupportedBackendBoundary','program','Regional backend conversion requires float dense/real-factor output'))
-        else:
-            for region in b.regions:
-                parent=region.rsplit('.',1)[0] if '.' in region else region
-                if region not in methods and not (parent in methods and methods[parent] is Method.SVD and region.endswith(('.left','.right'))):
-                    errors.append(Violation('UnsupportedBackendRegion',region,'Region must identify a declared float output boundary'))
+        errors.extend(training_stage_violations(b,methods))
+        if type(calibration) is not torch.Tensor:
+            errors.append(Violation('BackendCalibrationCoordinates','data','Regional FX conversion requires an explicit root-model input tensor'))
         stages+=['regional_prepare','train' if type(b) is BackendStageSpec and b.mode=='qat' else 'calibrate','convert','register_backend_storage','export_verified']
     if program.backend is not None or program.recovery is not None:
         try:
@@ -108,6 +138,14 @@ def _execute_quantization_program(model,program,*,calibration=None,training_batc
     checked=check_quantization_program(model,program,calibration=calibration,training_batches=training_batches)
     if isinstance(checked,ValidationFailure):return StructuralInvalid(checked.violations)
     ledger=ledger or ResourceLedger()
+    with ledger.limit_rss(program.compression.max_peak_bytes):
+        return _execute_checked_quantization_program(model,program,checked,calibration=calibration,
+            training_batches=training_batches,ledger=ledger,cache=cache)
+
+
+def _execute_checked_quantization_program(model,program,checked,*,calibration,training_batches,ledger,cache):
+    try:ledger.checkpoint('program_started')
+    except StageBudgetExceeded as error:return error.failure
     artifact=compress_quantization_graph(model,program.compression,calibration=calibration,ledger=ledger,cache=cache)
     if type(artifact) is not ExportVerifiedArtifact:return artifact
     current=artifact;stage_evidence=[]
@@ -137,6 +175,8 @@ def _execute_quantization_program(model,program,*,calibration=None,training_batc
             expected,actual=current.model(calibration),loaded(calibration)
             if not bool(torch.isfinite(expected).all()) or not bool(torch.isfinite(actual).all()) or not torch.equal(expected,actual):
                 return NumericalFailure('ProgramRoundTrip','Final whole-program outputs must be finite and equal after loading')
+    try:ledger.checkpoint('program_export_verified')
+    except StageBudgetExceeded as error:return error.failure
     return ProgramArtifact(loaded,checkpoint,current.storage_bytes,checked,
         {'compression':artifact.evidence,'training_stages':stage_evidence,'resources':ledger.evidence(),'stages':checked.stages})
 

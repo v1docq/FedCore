@@ -27,6 +27,7 @@ files=list((checkout/'fedcore'/'algorithm'/'quantization').glob('*.py'))+[
     checkout/'fedcore'/'tools'/'registry'/'checkpoint_manager.py',
     checkout/'fedcore'/'algorithm'/'low_rank'/'compression_graph.py',
     checkout/'fedcore'/'algorithm'/'low_rank'/'allocation.py',
+    checkout/'fedcore'/'algorithm'/'low_rank'/'grammar_search.py',
     checkout/'fedcore'/'experiments'/'quantization_graph_reference.py',
 ]
 hashes={}

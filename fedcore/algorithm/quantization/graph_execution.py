@@ -32,6 +32,7 @@ def calibration_identity(calibration):
         raise ValueError('Nonempty calibration mapping with string paths required')
     values = sorted(calibration.items()) if type(calibration) is dict else [("model_input",calibration)]
     digest = hashlib.sha256()
+    digest.update(b'operator_rows\0' if type(calibration) is dict else b'root_model_inputs\0')
     for path,value in values:
         if (type(path) is not str or type(value) is not torch.Tensor or value.device.type != "cpu"
                 or value.dtype not in (torch.float32,torch.float64) or value.ndim < 2

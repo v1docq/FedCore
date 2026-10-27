@@ -72,7 +72,17 @@ def input_second_moment(rows, width):
     if rows.shape[1] != width or len(rows) == 0:
         raise ValueError("Calibration rows must use the original input coordinates")
     x = rows.detach().double()
-    return x.T@x/len(x)
+    gram=x.T@x
+    moment=gram/len(x)
+    overflow=~torch.isfinite(gram)
+    if bool(overflow.any()):
+        # Preserve every finite raw entry, including subnormal moments. Only
+        # overflowing entries need normalization before their dot products.
+        scaled=x/math.sqrt(len(x))
+        normalized=scaled.T@scaled
+        moment[overflow]=normalized[overflow]
+    if not bool(torch.isfinite(moment).all()):raise ValueError('Calibration second moment overflow')
+    return moment
 
 
 def scalar_ldl(moment, rcond):
@@ -81,20 +91,34 @@ def scalar_ldl(moment, rcond):
     if moment.shape[0] != moment.shape[1] or not torch.allclose(moment, moment.T, atol=1e-12, rtol=1e-12):
         raise ValueError("Symmetric moment required")
     h = moment.double()
-    tolerance = max(rcond, torch.finfo(h.dtype).eps*len(h)*16)*float(h.abs().max())
+    roundoff = torch.finfo(h.dtype).eps*len(h)*32
+    scale = float(h.abs().max())
+    tolerance = max(rcond, roundoff)*scale
     if float(torch.linalg.eigvalsh(h).min()) < -tolerance:
         raise ValueError("LDLQ requires a PSD metric")
     l, d = torch.eye(len(h), dtype=torch.float64), torch.zeros(len(h), dtype=torch.float64)
     for j in range(len(h)):
-        pivot = h[j,j] - (l[j,:j].square()*d[:j]).sum()
-        if pivot < -tolerance:
+        # rcond selects spectral support before LDLQ. A small coordinate pivot
+        # can still carry that retained support, so use its local roundoff only.
+        scaled=l[:,:j]*d[:j].sqrt()
+        previous=scaled[j].square().sum()
+        pivot = h[j,j] - previous
+        local_tolerance=roundoff*(h[j,j].abs()+previous)
+        if pivot < -local_tolerance:
             raise ValueError("Numerical negative LDL pivot")
-        residual = h[j+1:,j] - (l[j+1:,:j]*l[j,:j]*d[:j]).sum(1)
-        if pivot > tolerance:
+        residual = h[j+1:,j] - scaled[j+1:]@scaled[j]
+        if pivot > local_tolerance:
             d[j] = pivot
             l[j+1:,j] = residual/pivot
-        elif residual.numel() and float(residual.abs().max()) > tolerance:
+        elif residual.numel() and float(residual.abs().max()) > roundoff*scale:
             raise ValueError("Unsupported unstable singular LDL pivot")
+        if not bool(torch.isfinite(l).all()) or not bool(torch.isfinite(d).all()):
+            raise ValueError('Nonfinite LDL factors')
+    scaled=l*d.sqrt()
+    reconstruction=scaled@scaled.T
+    if (not bool(torch.isfinite(reconstruction).all())
+            or float((reconstruction-h).abs().max()) > roundoff*4*scale):
+        raise ValueError('LDL backward error exceeds floating point tolerance')
     return l, d
 
 
