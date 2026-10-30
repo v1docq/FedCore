@@ -1,0 +1,19 @@
+{
+  "absolute_deadline": 20945385.676615328,
+  "independent_trainings": 3,
+  "protocol_sha256": "a4995a0c13c0e4db506605f3e7c72e50eedfc555eada718ca70fd06adcaf6c87",
+  "schema": "fedcore_sparse_cv_a100_independent_m0_v1",
+  "search_repetitions_per_model": 3,
+  "started_at": 20916595.869660255,
+  "status": "started",
+  "test_scope": "historically used official test, descriptive repetition",
+  "workers": [
+    {
+      "job": "manifest",
+      "kind": "manifest",
+      "process_returncode": 0,
+      "relative": "workers/manifest",
+      "status": "completed"
+    }
+  ]
+}

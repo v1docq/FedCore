@@ -1,0 +1,9 @@
+{
+  "installed_cpu_checks_passed": true,
+  "test_modules": 18,
+  "dependencies_match": true,
+  "guard_probes_passed": true,
+  "gpu_started": false,
+  "protocol_sha256": "a4995a0c13c0e4db506605f3e7c72e50eedfc555eada718ca70fd06adcaf6c87",
+  "source_commit": "a23bc9ecf43d05e468ecf40979a5425873772b18"
+}

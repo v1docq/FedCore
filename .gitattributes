@@ -74,3 +74,9 @@ docs/svd_compression/recovery-bn-report.html -text -whitespace
 docs/svd_compression/results/saved-model-evaluation-2026-10-26/** -text -whitespace
 docs/svd_compression/SAVED_MODEL_EVALUATION.md -text -whitespace
 docs/svd_compression/saved-model-evaluation-report.html -text -whitespace
+
+# Preserve the independent-M0 attempt, frozen failure evidence and report.
+docs/svd_compression/results/independent-m0-a100-2026-10-30/** -text -whitespace
+docs/svd_compression/independent-m0-report-source/** -text -whitespace
+docs/svd_compression/independent-m0-a100-report.html -text -whitespace
+docs/svd_compression/INDEPENDENT_M0_A100.md -text -whitespace

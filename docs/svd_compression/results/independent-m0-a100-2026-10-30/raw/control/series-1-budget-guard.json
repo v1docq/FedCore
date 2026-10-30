@@ -1,0 +1,39 @@
+{
+  "schema": "fedcore-independent-cv-guard-v1",
+  "status": "finished",
+  "automatic_retry": false,
+  "prior_seconds": 0,
+  "max_seconds": 28800,
+  "worker_seconds": 28790,
+  "launch_utc": "2026-10-30T11:42:16.486697+00:00",
+  "peak_tree_rss_bytes": 1460068352,
+  "peak_gpu_used_bytes": 2969567232,
+  "subreaper_enabled": true,
+  "telemetry_failures": 0,
+  "controller_pid": 1772545,
+  "elapsed_seconds": 237.48964320123196,
+  "last_observation": {
+    "elapsed_seconds": 237.3602984212339,
+    "controller_returncode": -15,
+    "tree_rss_bytes": 1444282368,
+    "gpu": [
+      {
+        "pid": 3457333,
+        "used_bytes": 2472542208
+      },
+      {
+        "pid": 3467145,
+        "used_bytes": 497025024
+      }
+    ],
+    "consecutive_telemetry_failures": 0,
+    "stop_reason": null
+  },
+  "reason": "controller_exit",
+  "returncode": -15,
+  "total_charged_seconds": 237.48964320123196,
+  "within_authorized_window": true,
+  "remaining_owned_pids": [
+    1772635
+  ]
+}

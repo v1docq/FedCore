@@ -1,0 +1,10 @@
+{
+  "schema": "fedcore-user-requested-cluster-stop-v1",
+  "utc": "2026-10-30T12:23:08.900477+00:00",
+  "new_numerical_launches": 0,
+  "matched_live_processes_before": 0,
+  "stopped": [],
+  "remaining_live_owned_processes": [],
+  "gpu_processes_observed_only": "",
+  "scope": "Only this exclusive FedCore task root; foreign GPU PIDs are never signal targets. Cluster work stopped at user request; no retry authorized."
+}

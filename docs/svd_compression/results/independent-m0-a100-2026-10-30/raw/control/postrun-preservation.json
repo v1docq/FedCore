@@ -1,0 +1,7 @@
+{
+  "schema": "fedcore-independent-cv-preservation-v1",
+  "old_files_verified": 1762,
+  "new_package_files_verified": 325,
+  "new_wheel_verified": true,
+  "gpu_processes_after": ""
+}

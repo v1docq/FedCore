@@ -1,0 +1,167 @@
+{
+  "export_utc": "2026-10-30T11:49:25.535448+00:00",
+  "files": {
+    "console/workers_baseline_M1.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "console/workers_manifest.log": {
+      "bytes": 109,
+      "sha256": "9ac08ee131e04504031946675be54453c3ce6ad15816b29a7fd1b6760e125c89"
+    },
+    "control/guard-main-probe.log": {
+      "bytes": 2701,
+      "sha256": "3c1b6be9c1d124765d8afb17b67b2ae9cc122dce468b927416e6f25c3eb1182a"
+    },
+    "control/guard-probe.log": {
+      "bytes": 314,
+      "sha256": "915b6541292165815e1498df47cc16d320a592868f8c273f1edf786fc6ab8522"
+    },
+    "control/independent_budget_guard.py": {
+      "bytes": 8751,
+      "sha256": "ddc515da64e963918efae162af1899458c585da763e621aa6815bc3c7adc7d43"
+    },
+    "control/install.log": {
+      "bytes": 160,
+      "sha256": "c5f07bf05c534c98e26acb2dd6071c3cafa9e07cdfbd92fdadb9b1db3117ed6c"
+    },
+    "control/installed-checks-receipt.json": {
+      "bytes": 301,
+      "sha256": "99c7b67328768720ba95412baf764133886efd439c017c6bfc96ea50d3862c8a"
+    },
+    "control/installed-cpu-tests.log": {
+      "bytes": 581,
+      "sha256": "2bd0960cfe7c30145fbbf35375504d5f2f6220f379713db540f95fab67698c29"
+    },
+    "control/installed-preflight.json": {
+      "bytes": 86687,
+      "sha256": "65cb4c31b3f9c064ea78d38c8a7b33ddc00e6aec8984a5a90c47191bfc6cb564"
+    },
+    "control/launch-packet.json": {
+      "bytes": 2393,
+      "sha256": "6c91b5a8aabc535036066ccc6a0a573a6711bfd2174a87e1e2091bfb6fd4f484"
+    },
+    "control/launch-receipt.json": {
+      "bytes": 190,
+      "sha256": "72095857d0fc2621b5b91b019dd8921830397177a4474f8d83a6f445695f090d"
+    },
+    "control/launch_independent.py": {
+      "bytes": 3999,
+      "sha256": "8c2b7c8ddd2a1a3a1c6939fc75d254547a921767d81cfa3e44056b9e79371e96"
+    },
+    "control/pip-check.log": {
+      "bytes": 30,
+      "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+    },
+    "control/postrun-preservation.json": {
+      "bytes": 183,
+      "sha256": "8ddf617472ef7b22f4016778e08b230fbd318cdc1365c4c2196ab05315c7eebd"
+    },
+    "control/prepare_independent_environment.py": {
+      "bytes": 1478,
+      "sha256": "284fb54788667bc8059bc092c1a4e73601960f24911013776bca4002f4f80cde"
+    },
+    "control/prior-preservation.json": {
+      "bytes": 416534,
+      "sha256": "287137ff7504094dfd2b454d5b076e677c8c750e29f73d087036adb4ad928419"
+    },
+    "control/probe_independent_guard.py": {
+      "bytes": 1664,
+      "sha256": "fd646c746339ad836aa782b2e71e2da4090af5de96c359d6b1416e6e79dd998d"
+    },
+    "control/probe_independent_guard_main.py": {
+      "bytes": 2892,
+      "sha256": "54edf2ac1095b245d2c61f620a0d705d4d214ab91dacc21824d8a1b7b136a41d"
+    },
+    "control/run_independent_pipeline.py": {
+      "bytes": 1976,
+      "sha256": "32be7e93226a2f86d0a25f04d927a5b7dfe93b3ee9501716dca260dfea2b0c81"
+    },
+    "control/source-manifest.json": {
+      "bytes": 38996,
+      "sha256": "da78937cbe9013a41670499a08ecd8351706569f7a7d078fd07ce5daed1b83a1"
+    },
+    "control/verify_and_export_independent.py": {
+      "bytes": 3855,
+      "sha256": "3ac086003bda4d4ee14e3aa98dff1a33114aa902c368d4ebe3647b10a9d105df"
+    },
+    "data_manifest.json": {
+      "bytes": 2030,
+      "sha256": "2e1f511321f493dd3849e4a9810d18196fc209cd19793ded3c2a7394818a30e2"
+    },
+    "job_order.json": {
+      "bytes": 1947,
+      "sha256": "a3323935f90340fccd2922eae9e554f49a6f7b18c61466e38e5ab4b016944423"
+    },
+    "ledger.jsonl": {
+      "bytes": 1832,
+      "sha256": "8c98ab64321eed4e71e9917dce1d1c12667ee847d831c7f6fab6959919574edb"
+    },
+    "protocol.json": {
+      "bytes": 5416,
+      "sha256": "248d54ad571d45b1d28dca6422a089fc76136ad9796205956a51dc735bf2270e"
+    },
+    "report.json": {
+      "bytes": 572,
+      "sha256": "dc1978410bcf0c032475b07ab84cb633c138a75430ed19733b1355e5710c4290"
+    },
+    "source_manifest.json": {
+      "bytes": 78015,
+      "sha256": "67ed6528b649a1a2af28a0ea27843eecbb6e1796a9f3a08c84916a6105a9d7c7"
+    },
+    "workers/baseline_M1/data_roles.json": {
+      "bytes": 539009,
+      "sha256": "b55512dd7d0e6ff260ca0afa6beb32de5fb195d49fdb04affc2eb55e037954c4"
+    },
+    "workers/baseline_M1/environment.json": {
+      "bytes": 448,
+      "sha256": "d5ef3d256ff49392d459ea0ace10ec9645eee43503fd1737ca7e3392d4fe87d4"
+    },
+    "workers/baseline_M1/heartbeats.jsonl": {
+      "bytes": 14890,
+      "sha256": "8c3c76227adee9f6b03c56a14d4d7e9085ba7118a4b4c5c12c601d471fa17059"
+    },
+    "workers/baseline_M1/initialization.json": {
+      "bytes": 232,
+      "sha256": "34e1b7b1d9b57269fd053034893eec63ab8ff1b13715b4e085648712e4d7a4eb"
+    },
+    "workers/baseline_M1/ledger.jsonl": {
+      "bytes": 820386,
+      "sha256": "b8f3c60cf769ebf0e7ea420e19bb6ed225ee03f6803f36510ec2434907e1f329"
+    },
+    "workers/manifest/data_roles.json": {
+      "bytes": 539009,
+      "sha256": "b55512dd7d0e6ff260ca0afa6beb32de5fb195d49fdb04affc2eb55e037954c4"
+    },
+    "workers/manifest/environment.json": {
+      "bytes": 448,
+      "sha256": "d5ef3d256ff49392d459ea0ace10ec9645eee43503fd1737ca7e3392d4fe87d4"
+    },
+    "workers/manifest/heartbeats.jsonl": {
+      "bytes": 244,
+      "sha256": "0ccc1387701e7f10ddaf4b95b28cae56f5f6e8d7726b34ecb5715756b4ef5ba8"
+    },
+    "workers/manifest/imported_sources.json": {
+      "bytes": 645,
+      "sha256": "c916b2388a965210e6a3cb4e94695cc0538eb4d7e848038d1c17c89745e665d1"
+    },
+    "workers/manifest/job_order.json": {
+      "bytes": 1947,
+      "sha256": "a3323935f90340fccd2922eae9e554f49a6f7b18c61466e38e5ab4b016944423"
+    },
+    "workers/manifest/ledger.jsonl": {
+      "bytes": 83,
+      "sha256": "9f3298aad2b3d1f69cc30b863001c3fe8d014d3491d979e83716a76d419ab14c"
+    },
+    "workers/manifest/result.json": {
+      "bytes": 1962,
+      "sha256": "c9f36c7cc98d4ff669742a1f19882d5b2e971f3f2bad519e36c1625c253556bc"
+    },
+    "workers/manifest/timing_windows.json": {
+      "bytes": 56,
+      "sha256": "e4f3d89faa732b3c71775b0ff6b00cf2688ccaa1c5fb2ee3a2927bcef501b58d"
+    }
+  },
+  "models": "retained on A100; hashed independently without executing Torch",
+  "schema": "fedcore-independent-cv-inventory-v1"
+}

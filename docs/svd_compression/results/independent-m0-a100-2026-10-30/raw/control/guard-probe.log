@@ -1,0 +1,3 @@
+{"case": "controller_alive", "detached_descendant_stopped": true, "elapsed_seconds": 0.10344339907169342}
+{"case": "controller_exited", "detached_descendant_stopped": true, "elapsed_seconds": 0.10380503535270691}
+{"cpu_only": true, "numerical_experiments": 0, "guard_lifetime_cases": 2, "telemetry_race_cases": 6}

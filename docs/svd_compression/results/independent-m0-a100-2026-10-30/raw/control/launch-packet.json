@@ -1,0 +1,58 @@
+{
+  "schema": "fedcore-independent-cv-launch-v1",
+  "one_launch_authorized": true,
+  "automatic_retry": false,
+  "max_seconds": 28800,
+  "worker_seconds": 28790,
+  "prior_seconds": 0,
+  "output_root": "/root/fedcore_independent_cv_20261030/results/series-1",
+  "command": [
+    "/root/fedcore_independent_cv_20261030/.venv/bin/python",
+    "/root/fedcore_independent_cv_20261030/run_independent_pipeline.py",
+    "--packet",
+    "/root/fedcore_independent_cv_20261030/launch-packet.json"
+  ],
+  "series_command": [
+    "/root/fedcore_independent_cv_20261030/.venv/bin/python",
+    "-m",
+    "fedcore.experiments.cv_independent_series",
+    "--execute",
+    "--data-root",
+    "/root/fedcore_sparse_cv_20261021/data",
+    "--output-root",
+    "/root/fedcore_independent_cv_20261030/results/series-1",
+    "--source-manifest",
+    "/root/fedcore_independent_cv_20261030/source-manifest.json",
+    "--absolute-deadline",
+    "20945385.676615328"
+  ],
+  "environment": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "HF_DATASETS_OFFLINE": "1",
+    "HF_HUB_OFFLINE": "1",
+    "MKL_NUM_THREADS": "4",
+    "NUMEXPR_NUM_THREADS": "4",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "PYTHONHASHSEED": "0",
+    "TRANSFORMERS_OFFLINE": "1",
+    "PYTHONPATH": "",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUNBUFFERED": "1",
+    "FEDCORE_PILOT_ABSOLUTE_DEADLINE": "20945385.676615328"
+  },
+  "launch_monotonic": 20916595.676615328,
+  "launch_utc": "2026-10-30T11:42:16.403666+00:00",
+  "guard_sha256": "ddc515da64e963918efae162af1899458c585da763e621aa6815bc3c7adc7d43",
+  "external_files_sha256": {
+    "independent_budget_guard.py": "ddc515da64e963918efae162af1899458c585da763e621aa6815bc3c7adc7d43",
+    "launch_independent.py": "8c2b7c8ddd2a1a3a1c6939fc75d254547a921767d81cfa3e44056b9e79371e96",
+    "run_independent_pipeline.py": "32be7e93226a2f86d0a25f04d927a5b7dfe93b3ee9501716dca260dfea2b0c81",
+    "verify_and_export_independent.py": "3ac086003bda4d4ee14e3aa98dff1a33114aa902c368d4ebe3647b10a9d105df"
+  },
+  "source_manifest_sha256": "da78937cbe9013a41670499a08ecd8351706569f7a7d078fd07ce5daed1b83a1",
+  "source_commit": "a23bc9ecf43d05e468ecf40979a5425873772b18",
+  "wheel_sha256": "a4ee75a960c4b280a042e9319f4a8b7bd5686463d1820a17857b4f5597effa1e",
+  "protocol_sha256": "a4995a0c13c0e4db506605f3e7c72e50eedfc555eada718ca70fd06adcaf6c87"
+}

@@ -1,0 +1,20 @@
+[
+  "tests/refactoring/test_compression_grammar.py",
+  "tests/refactoring/test_compression_grammar_independent.py",
+  "tests/refactoring/test_cv_compression_grammar.py",
+  "tests/refactoring/test_cv_independent_analysis.py",
+  "tests/refactoring/test_cv_independent_protocol.py",
+  "tests/refactoring/test_cv_independent_series.py",
+  "tests/refactoring/test_fedcore_dispatcher_population.py",
+  "tests/refactoring/test_independent_search_accounting.py",
+  "tests/refactoring/test_sparse_cv_continuation.py",
+  "tests/refactoring/test_sparse_cv_diagnostics.py",
+  "tests/refactoring/test_sparse_cv_evaluation.py",
+  "tests/refactoring/test_sparse_cv_evaluation_supervision.py",
+  "tests/refactoring/test_sparse_cv_pilot.py",
+  "tests/refactoring/test_sparse_cv_protocol.py",
+  "tests/refactoring/test_sparse_cv_recovery.py",
+  "tests/refactoring/test_sparse_cv_recovery_supervision.py",
+  "tests/refactoring/test_sparse_cv_search_reporting.py",
+  "tests/refactoring/test_sparse_cv_supervision.py"
+]

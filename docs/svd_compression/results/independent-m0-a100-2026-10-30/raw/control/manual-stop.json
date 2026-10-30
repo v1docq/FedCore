@@ -1,0 +1,63 @@
+{
+  "schema": "fedcore-independent-cv-manual-stop-v1",
+  "reason": "second_gpu_process_and_unresolved_host_pid_namespace",
+  "utc": "2026-10-30T11:46:13.498237+00:00",
+  "gpu_rows": [
+    "3457333, 2358",
+    "3467145, 474"
+  ],
+  "owned_descendants": [
+    {
+      "pid": 1772545,
+      "birth": 1793360535.76,
+      "cmdline": [
+        "/root/fedcore_independent_cv_20261030/.venv/bin/python",
+        "/root/fedcore_independent_cv_20261030/run_independent_pipeline.py",
+        "--packet",
+        "/root/fedcore_independent_cv_20261030/launch-packet.json"
+      ]
+    },
+    {
+      "pid": 1772548,
+      "birth": 1793360535.79,
+      "cmdline": [
+        "/root/fedcore_independent_cv_20261030/.venv/bin/python",
+        "-m",
+        "fedcore.experiments.cv_independent_series",
+        "--execute",
+        "--data-root",
+        "/root/fedcore_sparse_cv_20261021/data",
+        "--output-root",
+        "/root/fedcore_independent_cv_20261030/results/series-1",
+        "--source-manifest",
+        "/root/fedcore_independent_cv_20261030/source-manifest.json",
+        "--absolute-deadline",
+        "20945385.676615328"
+      ]
+    },
+    {
+      "pid": 1772635,
+      "birth": 1793360542.4,
+      "cmdline": [
+        "/root/fedcore_independent_cv_20261030/.venv/bin/python",
+        "-m",
+        "fedcore.experiments.cv_independent_series",
+        "--execute",
+        "--data-root",
+        "/root/fedcore_sparse_cv_20261021/data",
+        "--output-root",
+        "/root/fedcore_independent_cv_20261030/results/series-1/workers/baseline_M1",
+        "--source-manifest",
+        "/root/fedcore_independent_cv_20261030/source-manifest.json",
+        "--absolute-deadline",
+        "20919602.40609696",
+        "--worker",
+        "baseline",
+        "--job-id",
+        "M1",
+        "--series-root",
+        "/root/fedcore_independent_cv_20261030/results/series-1"
+      ]
+    }
+  ]
+}

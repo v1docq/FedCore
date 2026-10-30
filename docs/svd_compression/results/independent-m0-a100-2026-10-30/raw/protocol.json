@@ -1,0 +1,228 @@
+{
+  "Vreport_equivalence": {
+    "atol": 1e-05,
+    "exact_ids_labels_classes": true,
+    "rtol": 1e-05
+  },
+  "aa_pairs": 20,
+  "baseline_batch": 128,
+  "baseline_epochs": 80,
+  "baseline_lr": 0.1,
+  "baseline_min_top1": 0.9,
+  "baseline_seconds": 3000,
+  "bn_calibration": false,
+  "counts": {
+    "Vreport_eager_rows": 165000,
+    "Vreport_ts_rows": 165000,
+    "Vsearch_rows": 2364000,
+    "baseline_updates": 75120,
+    "control_updates": 2400,
+    "final_roles": 33,
+    "recovery_updates": 117600,
+    "search_attempts": 576,
+    "search_proposals": 4608,
+    "search_updates": 115200,
+    "test_ts_rows": 330000,
+    "timing_pairs": 7560,
+    "timing_sessions": 189,
+    "total_updates": 192720
+  },
+  "cpu_threads": 4,
+  "epoch_seed_derivation": "SHA256 JSON [domain, base_seed, epoch, batch]; first 8 hex digits",
+  "final_quality_drop": 0.02,
+  "finalist": "timely successful 200-update minimum CE; then bytes; then canonical ID; bytes <= floor(.8*M0)",
+  "fitness": [
+    "Vsearch_cross_entropy",
+    "whole_model_physical_bytes / own_M0_bytes"
+  ],
+  "global_seal": "all 18 outcomes, finalist IDs, all final checkpoint hashes before Vreport/test",
+  "gpu_dtype": "float32",
+  "grammar_recovery": "NoRecovery; caller_owned_recovery is mandatory",
+  "max_rss_bytes": 34359738368,
+  "max_slot_seconds": 28800,
+  "max_vram_bytes": 17179869184,
+  "minimum_disk_bytes": 107374182400,
+  "model_seeds": [
+    {
+      "augmentation": 140121,
+      "initialization": 140101,
+      "name": "M1",
+      "recovery": 140301,
+      "train_order": 140111
+    },
+    {
+      "augmentation": 140122,
+      "initialization": 140102,
+      "name": "M2",
+      "recovery": 140302,
+      "train_order": 140112
+    },
+    {
+      "augmentation": 140123,
+      "initialization": 140103,
+      "name": "M3",
+      "recovery": 140303,
+      "train_order": 140113
+    }
+  ],
+  "momentum": 0.9,
+  "prefix_menu_indices": [
+    0,
+    1,
+    3,
+    5
+  ],
+  "recovery": "fresh SGD; 200 updates; inherited BN; no extra BN reset/recalibration",
+  "recovery_batch": 128,
+  "recovery_lr": 0.001,
+  "recovery_tape": "NumPy PCG64; one train permutation, explicit per-image crop offsets and flips",
+  "recovery_updates": 200,
+  "roles": {
+    "Vreport": 5000,
+    "Vsearch": 4000,
+    "calibration": 1000,
+    "official_repeated_test": 10000,
+    "train": 40000
+  },
+  "schema": "fedcore_sparse_cv_a100_independent_m0_v1",
+  "search_cache": "empty independent process for every search; no factors/weights/fitness reuse",
+  "search_evaluations": 32,
+  "search_generations": 32,
+  "search_jobs": [
+    {
+      "model": "M1",
+      "name": "M1_140201_random",
+      "seed": 140201,
+      "strategy": "random"
+    },
+    {
+      "model": "M1",
+      "name": "M1_140201_evolution",
+      "seed": 140201,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M1",
+      "name": "M1_140202_evolution",
+      "seed": 140202,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M1",
+      "name": "M1_140202_random",
+      "seed": 140202,
+      "strategy": "random"
+    },
+    {
+      "model": "M1",
+      "name": "M1_140203_random",
+      "seed": 140203,
+      "strategy": "random"
+    },
+    {
+      "model": "M1",
+      "name": "M1_140203_evolution",
+      "seed": 140203,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M2",
+      "name": "M2_140201_evolution",
+      "seed": 140201,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M2",
+      "name": "M2_140201_random",
+      "seed": 140201,
+      "strategy": "random"
+    },
+    {
+      "model": "M2",
+      "name": "M2_140202_random",
+      "seed": 140202,
+      "strategy": "random"
+    },
+    {
+      "model": "M2",
+      "name": "M2_140202_evolution",
+      "seed": 140202,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M2",
+      "name": "M2_140203_evolution",
+      "seed": 140203,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M2",
+      "name": "M2_140203_random",
+      "seed": 140203,
+      "strategy": "random"
+    },
+    {
+      "model": "M3",
+      "name": "M3_140201_random",
+      "seed": 140201,
+      "strategy": "random"
+    },
+    {
+      "model": "M3",
+      "name": "M3_140201_evolution",
+      "seed": 140201,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M3",
+      "name": "M3_140202_evolution",
+      "seed": 140202,
+      "strategy": "evolution"
+    },
+    {
+      "model": "M3",
+      "name": "M3_140202_random",
+      "seed": 140202,
+      "strategy": "random"
+    },
+    {
+      "model": "M3",
+      "name": "M3_140203_random",
+      "seed": 140203,
+      "strategy": "random"
+    },
+    {
+      "model": "M3",
+      "name": "M3_140203_evolution",
+      "seed": 140203,
+      "strategy": "evolution"
+    }
+  ],
+  "search_population": 4,
+  "search_proposals": 256,
+  "search_seconds": 720,
+  "split_seed": 140100,
+  "stage_minutes": {
+    "baseline": 150,
+    "close": 14,
+    "controls": 10,
+    "final": 20,
+    "manifest": 20,
+    "search": 216,
+    "timing": 50
+  },
+  "storage_fraction": 0.8,
+  "test_role": "descriptive repeated evaluation; historically used, not untouched",
+  "tf32": false,
+  "timing": "3 fresh processes; initial dense AA, own candidate AA, dense pre AA, AB, dense post AA",
+  "timing_calls": 20,
+  "timing_warmup": 20,
+  "timing_window_seconds": 960,
+  "weight_decay": 0.0005,
+  "window_seeds": [
+    140401,
+    140402,
+    140403
+  ],
+  "worker_seconds": 28790
+}

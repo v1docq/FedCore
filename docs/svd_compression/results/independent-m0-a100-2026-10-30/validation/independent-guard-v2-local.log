@@ -1,0 +1,485 @@
+.................................................FFFFFFFFFFF.....FFF.    [100%]
+================================== FAILURES ===================================
+_ test_multiple_runtime_rows_decide_stop_then_signal_only_owned_local_births_and_write_receipt _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_multiple_runtime_rows_dec0')
+
+    def test_multiple_runtime_rows_decide_stop_then_signal_only_owned_local_births_and_write_receipt(tmp_path):
+        harness = Harness([(), ('80501, 10', '99999, 20')])
+        effects = harness.effects()
+    
+        def checked_process(pid):
+            if len(harness.queries) > 1:
+                ledger = tmp_path/'guard.json.jsonl'
+                assert ledger.is_file()
+                assert json.loads(ledger.read_text().splitlines()[0])['reason'] == 'multiple_gpu_rows'
+            return harness.process(pid)
+    
+>       result = run(harness, tmp_path, effects=replace(effects, process=checked_process))
+
+tests\refactoring\test_cv_independent_guard.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CD705B0>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_one_unmapped_runtime_row_stops_after_valid_sample_without_querying_later_empty_row _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_one_unmapped_runtime_row_0')
+
+    def test_one_unmapped_runtime_row_stops_after_valid_sample_without_querying_later_empty_row(tmp_path):
+        harness = Harness([(), ('80501, 10'), ('99999, 20'), ()])
+>       result = run(harness, tmp_path)
+
+tests\refactoring\test_cv_independent_guard.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CFA46A0>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_________ test_foreign_gpu_lifetime_is_never_a_cleanup_signal_target __________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_foreign_gpu_lifetime_is_n0')
+
+    def test_foreign_gpu_lifetime_is_never_a_cleanup_signal_target(tmp_path):
+        harness = Harness([(), ('80900, 10')])
+    
+        def provider(rows, owned):
+            return NamespaceBinding(verified=True, entries=(PidBinding(80900, ProcessIdentity(900, 1900.)),),
+                                    evidence='test external observer')
+    
+>       result = run(harness, tmp_path, provider=provider)
+
+tests\refactoring\test_cv_independent_guard.py:190: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CD39120>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+____ test_provider_losing_verification_is_terminal_even_when_gpu_is_empty _____
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_provider_losing_verificat0')
+
+    def test_provider_losing_verification_is_terminal_even_when_gpu_is_empty(tmp_path):
+        harness = Harness([(), ()])
+        calls = []
+    
+        def provider(rows, owned):
+            calls.append(rows)
+            return (harness.provider(rows, owned) if len(calls) == 1 else NamespaceBinding())
+    
+>       result = run(harness, tmp_path, provider=provider)
+
+tests\refactoring\test_cv_independent_guard.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CB7A5F0>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_verified_owned_gpu_sample_finishes_with_private_session_and_narrow_deadline _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_verified_owned_gpu_sample0')
+
+    def test_verified_owned_gpu_sample_finishes_with_private_session_and_narrow_deadline(tmp_path):
+        harness = Harness([(), ('80501, 10')])
+        harness.finish_on_poll = True
+>       result = run(harness, tmp_path)
+
+tests\refactoring\test_cv_independent_guard.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CD72A40>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree[rss-tree_rss_limit] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_live_bridge_enforces_froz0')
+resource = 'rss', reason = 'tree_rss_limit'
+
+    @pytest.mark.parametrize('resource,reason', [('rss', 'tree_rss_limit'), ('vram', 'vram_limit')])
+    def test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree(tmp_path, resource, reason):
+        harness = Harness([(), ('80501, 17000') if resource == 'vram' else ()])
+        if resource == 'rss':
+            harness.worker.rss = MAX_RSS_BYTES+1
+>       result = run(harness, tmp_path)
+
+tests\refactoring\test_cv_independent_guard.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CE69540>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree[vram-vram_limit] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_live_bridge_enforces_froz1')
+resource = 'vram', reason = 'vram_limit'
+
+    @pytest.mark.parametrize('resource,reason', [('rss', 'tree_rss_limit'), ('vram', 'vram_limit')])
+    def test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree(tmp_path, resource, reason):
+        harness = Harness([(), ('80501, 17000') if resource == 'vram' else ()])
+        if resource == 'rss':
+            harness.worker.rss = MAX_RSS_BYTES+1
+>       result = run(harness, tmp_path)
+
+tests\refactoring\test_cv_independent_guard.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CE41360>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_________ test_absolute_deadline_is_independent_of_gpu_query_success __________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_absolute_deadline_is_inde0')
+
+    def test_absolute_deadline_is_independent_of_gpu_query_success(tmp_path):
+        harness = Harness([(), (), ()])
+    
+        def sleep(seconds):
+            harness.now = 100.+WORKER_SECONDS
+    
+>       result = run(harness, tmp_path, effects=replace(harness.effects(), sleep=sleep))
+
+tests\refactoring\test_cv_independent_guard.py:238: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CF40820>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt[122-142-122.0] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_earlier_external_absolute0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002437CE40FA0>
+os_deadline = '122', passed_deadline = '142', expected = 122.0
+
+    @pytest.mark.parametrize('os_deadline,passed_deadline,expected', [
+        ('122', '142', 122.), ('142', '122', 122.), ('122', None, 122.),
+    ])
+    def test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt(
+            tmp_path, monkeypatch, os_deadline, passed_deadline, expected):
+        monkeypatch.setenv('FEDCORE_PILOT_ABSOLUTE_DEADLINE', os_deadline)
+        harness = Harness([(), (), ()])
+    
+        def sleep(seconds):
+            harness.now = expected
+    
+        environment = {} if passed_deadline is None else {'FEDCORE_PILOT_ABSOLUTE_DEADLINE': passed_deadline}
+>       result = run_guard(['cpu-noop-placeholder'], receipt_path=tmp_path/'guard.json',
+            binding_provider=harness.provider, environment=environment,
+            effects=replace(harness.effects(), sleep=sleep))
+
+tests\refactoring\test_cv_independent_guard.py:255: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CE42230>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt[142-122-122.0] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_earlier_external_absolute1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002437CE69210>
+os_deadline = '142', passed_deadline = '122', expected = 122.0
+
+    @pytest.mark.parametrize('os_deadline,passed_deadline,expected', [
+        ('122', '142', 122.), ('142', '122', 122.), ('122', None, 122.),
+    ])
+    def test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt(
+            tmp_path, monkeypatch, os_deadline, passed_deadline, expected):
+        monkeypatch.setenv('FEDCORE_PILOT_ABSOLUTE_DEADLINE', os_deadline)
+        harness = Harness([(), (), ()])
+    
+        def sleep(seconds):
+            harness.now = expected
+    
+        environment = {} if passed_deadline is None else {'FEDCORE_PILOT_ABSOLUTE_DEADLINE': passed_deadline}
+>       result = run_guard(['cpu-noop-placeholder'], receipt_path=tmp_path/'guard.json',
+            binding_provider=harness.provider, environment=environment,
+            effects=replace(harness.effects(), sleep=sleep))
+
+tests\refactoring\test_cv_independent_guard.py:255: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CE69540>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt[122-None-122.0] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_earlier_external_absolute2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002437CD71690>
+os_deadline = '122', passed_deadline = None, expected = 122.0
+
+    @pytest.mark.parametrize('os_deadline,passed_deadline,expected', [
+        ('122', '142', 122.), ('142', '122', 122.), ('122', None, 122.),
+    ])
+    def test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt(
+            tmp_path, monkeypatch, os_deadline, passed_deadline, expected):
+        monkeypatch.setenv('FEDCORE_PILOT_ABSOLUTE_DEADLINE', os_deadline)
+        harness = Harness([(), (), ()])
+    
+        def sleep(seconds):
+            harness.now = expected
+    
+        environment = {} if passed_deadline is None else {'FEDCORE_PILOT_ABSOLUTE_DEADLINE': passed_deadline}
+>       result = run_guard(['cpu-noop-placeholder'], receipt_path=tmp_path/'guard.json',
+            binding_provider=harness.provider, environment=environment,
+            effects=replace(harness.effects(), sleep=sleep))
+
+tests\refactoring\test_cv_independent_guard.py:255: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CD70AF0>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_finished_sequential_owned_child_may_leave_rss_but_never_remain_an_accepted_raw_gpu_identity[False] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_finished_sequential_owned0')
+gpu_still_reports_vanished = False
+
+    @pytest.mark.parametrize('gpu_still_reports_vanished', [False, True])
+    def test_finished_sequential_owned_child_may_leave_rss_but_never_remain_an_accepted_raw_gpu_identity(
+            tmp_path, gpu_still_reports_vanished):
+        next_row = '80501, 10' if gpu_still_reports_vanished else '80502, 10'
+        harness = Harness([(), ('80501, 10',), (next_row,)])
+        successor = harness.add_process(502)
+        harness.finish_after = 3
+        vanished = []
+    
+        def process(pid):
+            if pid == 501 and vanished:
+                raise psutil.NoSuchProcess(pid)
+            return harness.process(pid)
+    
+        def sleep(seconds):
+            vanished.append(True)
+            harness.root.descendants = [successor]
+            harness.now += seconds
+    
+        def provider(rows, owned):
+            return NamespaceBinding(verified=True, evidence='test sequential host observer', entries=(
+                PidBinding(80501, ProcessIdentity(501, 1501.)), PidBinding(80502, ProcessIdentity(502, 1502.))))
+    
+>       result = run(harness, tmp_path, provider=provider,
+            effects=replace(harness.effects(), process=process, sleep=sleep))
+
+tests\refactoring\test_cv_independent_guard.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CC1CDC0>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+_ test_finished_sequential_owned_child_may_leave_rss_but_never_remain_an_accepted_raw_gpu_identity[True] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_finished_sequential_owned1')
+gpu_still_reports_vanished = True
+
+    @pytest.mark.parametrize('gpu_still_reports_vanished', [False, True])
+    def test_finished_sequential_owned_child_may_leave_rss_but_never_remain_an_accepted_raw_gpu_identity(
+            tmp_path, gpu_still_reports_vanished):
+        next_row = '80501, 10' if gpu_still_reports_vanished else '80502, 10'
+        harness = Harness([(), ('80501, 10',), (next_row,)])
+        successor = harness.add_process(502)
+        harness.finish_after = 3
+        vanished = []
+    
+        def process(pid):
+            if pid == 501 and vanished:
+                raise psutil.NoSuchProcess(pid)
+            return harness.process(pid)
+    
+        def sleep(seconds):
+            vanished.append(True)
+            harness.root.descendants = [successor]
+            harness.now += seconds
+    
+        def provider(rows, owned):
+            return NamespaceBinding(verified=True, evidence='test sequential host observer', entries=(
+                PidBinding(80501, ProcessIdentity(501, 1501.)), PidBinding(80502, ProcessIdentity(502, 1502.))))
+    
+>       result = run(harness, tmp_path, provider=provider,
+            effects=replace(harness.effects(), process=process, sleep=sleep))
+
+tests\refactoring\test_cv_independent_guard.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CBCFAC0>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+__ test_cleanup_receipt_separates_zombie_and_unknown_and_never_signals_them ___
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2468/test_cleanup_receipt_separates0')
+
+    def test_cleanup_receipt_separates_zombie_and_unknown_and_never_signals_them(tmp_path):
+        harness = Harness([(), ('80501, 10', '99999, 20')])
+        harness.root.descendants = []
+        harness.root.zombie = True
+>       result = run(harness, tmp_path)
+
+tests\refactoring\test_cv_independent_guard.py:313: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\refactoring\test_cv_independent_guard.py:123: in run
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=receipt,
+fedcore\experiments\cv_independent_guard.py:269: in run_guard
+    state['cleanup'] = tree.stop()
+fedcore\experiments\cv_independent_guard.py:125: in stop
+    signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <reversed object at 0x000002437CD641F0>
+
+>   signals = [asdict(signal_local_owned(identity, owned=owned, signal_number=signal.SIGKILL,
+        process_factory=self.effects.process)) for identity in reversed(owned)]
+E   AttributeError: module 'signal' has no attribute 'SIGKILL'. Did you mean: 'SIGILL'?
+
+fedcore\experiments\cv_independent_guard.py:125: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_cv_independent_guard.py::test_multiple_runtime_rows_decide_stop_then_signal_only_owned_local_births_and_write_receipt
+FAILED tests/refactoring/test_cv_independent_guard.py::test_one_unmapped_runtime_row_stops_after_valid_sample_without_querying_later_empty_row
+FAILED tests/refactoring/test_cv_independent_guard.py::test_foreign_gpu_lifetime_is_never_a_cleanup_signal_target
+FAILED tests/refactoring/test_cv_independent_guard.py::test_provider_losing_verification_is_terminal_even_when_gpu_is_empty
+FAILED tests/refactoring/test_cv_independent_guard.py::test_verified_owned_gpu_sample_finishes_with_private_session_and_narrow_deadline
+FAILED tests/refactoring/test_cv_independent_guard.py::test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree[rss-tree_rss_limit]
+FAILED tests/refactoring/test_cv_independent_guard.py::test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree[vram-vram_limit]
+FAILED tests/refactoring/test_cv_independent_guard.py::test_absolute_deadline_is_independent_of_gpu_query_success
+FAILED tests/refactoring/test_cv_independent_guard.py::test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt[122-142-122.0]
+FAILED tests/refactoring/test_cv_independent_guard.py::test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt[142-122-122.0]
+FAILED tests/refactoring/test_cv_independent_guard.py::test_earlier_external_absolute_deadline_is_preserved_in_timer_child_env_and_stop_receipt[122-None-122.0]
+FAILED tests/refactoring/test_cv_independent_guard.py::test_finished_sequential_owned_child_may_leave_rss_but_never_remain_an_accepted_raw_gpu_identity[False]
+FAILED tests/refactoring/test_cv_independent_guard.py::test_finished_sequential_owned_child_may_leave_rss_but_never_remain_an_accepted_raw_gpu_identity[True]
+FAILED tests/refactoring/test_cv_independent_guard.py::test_cleanup_receipt_separates_zombie_and_unknown_and_never_signals_them
+14 failed, 55 passed in 1.13s
