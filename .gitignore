@@ -135,3 +135,7 @@ docs/svd_compression/independent-m0-report-source/src/content/*
 docs/svd_compression/independent-m0-report-source/src/content/report/*
 !docs/svd_compression/independent-m0-report-source/src/content/report/ReportContent.jsx
 !docs/svd_compression/independent-m0-report-source/src/content/report/report.css
+
+# The recorded worker named "manifest" is evidence, not a packaging MANIFEST.
+!docs/svd_compression/results/independent-m0-a100-2026-10-30/raw/workers/manifest/
+!docs/svd_compression/results/independent-m0-a100-2026-10-30/raw/workers/manifest/**

@@ -1,0 +1,18 @@
+{
+  "cpu_threads": 4,
+  "cuda": "12.1",
+  "cudnn": 8902,
+  "deterministic_algorithms": true,
+  "device": "NVIDIA A100-PCIE-40GB",
+  "environment": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "OMP_NUM_THREADS": "4",
+    "PYTHONHASHSEED": "0"
+  },
+  "interop_threads": 4,
+  "python": "3.10.12 (main, Jun 22 2026, 18:55:27) [GCC 11.4.0]",
+  "tf32": false,
+  "torch": "2.2.0+cu121",
+  "total_memory": 42285268992
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "model": "M1",
+    "name": "M1_140201_random",
+    "seed": 140201,
+    "strategy": "random"
+  },
+  {
+    "model": "M1",
+    "name": "M1_140201_evolution",
+    "seed": 140201,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M1",
+    "name": "M1_140202_evolution",
+    "seed": 140202,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M1",
+    "name": "M1_140202_random",
+    "seed": 140202,
+    "strategy": "random"
+  },
+  {
+    "model": "M1",
+    "name": "M1_140203_random",
+    "seed": 140203,
+    "strategy": "random"
+  },
+  {
+    "model": "M1",
+    "name": "M1_140203_evolution",
+    "seed": 140203,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M2",
+    "name": "M2_140201_evolution",
+    "seed": 140201,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M2",
+    "name": "M2_140201_random",
+    "seed": 140201,
+    "strategy": "random"
+  },
+  {
+    "model": "M2",
+    "name": "M2_140202_random",
+    "seed": 140202,
+    "strategy": "random"
+  },
+  {
+    "model": "M2",
+    "name": "M2_140202_evolution",
+    "seed": 140202,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M2",
+    "name": "M2_140203_evolution",
+    "seed": 140203,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M2",
+    "name": "M2_140203_random",
+    "seed": 140203,
+    "strategy": "random"
+  },
+  {
+    "model": "M3",
+    "name": "M3_140201_random",
+    "seed": 140201,
+    "strategy": "random"
+  },
+  {
+    "model": "M3",
+    "name": "M3_140201_evolution",
+    "seed": 140201,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M3",
+    "name": "M3_140202_evolution",
+    "seed": 140202,
+    "strategy": "evolution"
+  },
+  {
+    "model": "M3",
+    "name": "M3_140202_random",
+    "seed": 140202,
+    "strategy": "random"
+  },
+  {
+    "model": "M3",
+    "name": "M3_140203_random",
+    "seed": 140203,
+    "strategy": "random"
+  },
+  {
+    "model": "M3",
+    "name": "M3_140203_evolution",
+    "seed": 140203,
+    "strategy": "evolution"
+  }
+]

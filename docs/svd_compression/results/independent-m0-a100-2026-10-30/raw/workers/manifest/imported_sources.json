@@ -1,0 +1,10 @@
+{
+  "fedcore": "fedcore/__init__.py",
+  "fedcore.experiments": "fedcore/experiments/__init__.py",
+  "fedcore.experiments.cv_independent_data": "fedcore/experiments/cv_independent_data.py",
+  "fedcore.experiments.cv_independent_protocol": "fedcore/experiments/cv_independent_protocol.py",
+  "fedcore.experiments.cv_independent_runtime": "fedcore/experiments/cv_independent_runtime.py",
+  "fedcore.experiments.cv_sparse_pilot": "fedcore/experiments/cv_sparse_pilot.py",
+  "fedcore.experiments.cv_sparse_protocol": "fedcore/experiments/cv_sparse_protocol.py",
+  "fedcore.experiments.cv_sparse_runtime": "fedcore/experiments/cv_sparse_runtime.py"
+}

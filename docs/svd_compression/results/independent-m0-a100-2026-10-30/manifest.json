@@ -231,8 +231,8 @@
       "bytes": 56
     },
     "README.md": {
-      "sha256": "ed809d5757ce991fff9df747ed2818a307f9074fd053bed54bd9e6d04e4e638d",
-      "bytes": 2158
+      "sha256": "b05ac94685128bdc5bb9603e455e4b6a77e65b405d364a36e8345fbe5adcb381",
+      "bytes": 2734
     },
     "replay.py": {
       "sha256": "8a24a339b7d145999ff4189787ae364aa7b75dda4f0aaa966392ce8dd3c8f588",
@@ -317,6 +317,10 @@
     "validation/poststop-guard-checks-manifest.json": {
       "sha256": "6230513109d68ddd98b37da89bf902ea3674639cb24e560e082994120b69d3dc",
       "bytes": 695
+    },
+    "validation/poststop-guard-checks.tar.gz": {
+      "sha256": "8ae9ae41cdc9ede97f01c872ef54cd5d746e300b9e0ec6588c284a68f247eb27",
+      "bytes": 15007
     },
     "validation/poststop-guard-cpu-receipt.json": {
       "sha256": "4372e88cc348de456a8f0bf67f3fba341f84a28e02fd2a539e4c9b52d021e49d",
