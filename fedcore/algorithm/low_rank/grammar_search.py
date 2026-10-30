@@ -74,6 +74,7 @@ class GrammarAdapter:
     compile: Callable
     payload: Callable
     domain: str = "closed frozen-M0 compression grammar"
+    context_guard: Callable | None = None
 
 
 G3_GRAMMAR_ADAPTER = GrammarAdapter(
@@ -87,6 +88,10 @@ G3_GRAMMAR_ADAPTER = GrammarAdapter(
 
 
 class _BudgetStop(BaseException):
+    pass
+
+
+class _ContextInvalidStop(BaseException):
     pass
 
 
@@ -165,7 +170,8 @@ def graph_genotype(graph, space, *, adapter=G3_GRAMMAR_ADAPTER):
 
 def run_grammar_search(space, config, evaluate, *, fitness_context, initial_genotypes=None,
                        absolute_deadline=None, trace_callback=None, phase_callback=None,
-                       grammar_adapter=G3_GRAMMAR_ADAPTER, strict_deadline=False):
+                       grammar_adapter=G3_GRAMMAR_ADAPTER, strict_deadline=False,
+                       charge_before_compile=False):
     """Run actual FedcoreEvoOptimizer with grammar mutation and crossover.
 
     ``evaluate(CheckedWorkflow)`` returns GrammarFitness or an explicit failure.
@@ -179,9 +185,12 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     exceptions remain typed failures; a caller-owned BaseException can signal a
     fatal package stop. The default configuration preserves the old limits.
     """
-    if type(grammar_adapter) is not GrammarAdapter or type(strict_deadline) is not bool:
+    if (type(grammar_adapter) is not GrammarAdapter or type(strict_deadline) is not bool
+            or type(charge_before_compile) is not bool):
         raise ValueError("A typed grammar adapter and explicit deadline mode are required")
     adapter = grammar_adapter
+    if adapter.context_guard is not None and not callable(adapter.context_guard):
+        raise ValueError('context_guard must be callable or None')
     failure = adapter.validate_space(space)
     if failure is not None:
         return {"status": "structurally_invalid", "failure": failure, "charged_evaluations": 0, "trace": []}
@@ -212,6 +221,29 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     cache_hits, component_reads, repeated_failures = 0, 0, 0
     stop_reason, optimizer, trace_failure = "optimizer_stopped", None, None
     callback_working = True
+    # The opt-in independent-CV contract charges a canonical genotype before
+    # compilation, including failures. Legacy callers keep workflow-keyed
+    # accounting. Actual workflow fingerprints remain distinct from cache keys.
+    compiled_fingerprints = {}
+
+    def identity_metadata(identity):
+        if charge_before_compile:
+            return {'workflow_fingerprint': compiled_fingerprints.get(identity),
+                    'canonical_attempt_key': identity}
+        return {'workflow_fingerprint': identity}
+    context_failure = None
+
+    def check_context():
+        nonlocal context_failure
+        if context_failure is None and adapter.context_guard is not None:
+            try:
+                checked=adapter.context_guard()
+            except Exception as error:
+                checked=CallbackFailure(type(error).__name__,str(error))
+            if checked is not None:
+                context_failure=(checked if type(checked) in (StructuralInvalid,NumericalFailure,ResourceFailure,CallbackFailure)
+                                 else CallbackFailure('InvalidContextGuardResult','Return None or a typed execution failure'))
+        if context_failure is not None:raise _ContextInvalidStop()
 
     @contextmanager
     def phase(name, **metadata):
@@ -295,13 +327,17 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
 
     def _observed(graph, component):
         nonlocal cache_hits, component_reads, repeated_failures
+        check_context()
         genotype = decode(graph)
-        with phase("candidate_compilation", component=component):
-            workflow = adapter.compile(genotype, space)
-        if isinstance(workflow, ValidationFailure):
-            raise ValueError("Structurally invalid compilation")
-        identity = workflow.fingerprint
         solution_id = _solution_id(genotype, adapter)
+        if charge_before_compile:
+            identity, workflow = solution_id, None
+        else:
+            with phase("candidate_compilation", component=component):
+                workflow = adapter.compile(genotype, space)
+            if isinstance(workflow, ValidationFailure):
+                raise ValueError("Structurally invalid compilation")
+            identity = workflow.fingerprint
         number = getattr(graph, "_compression_proposal_id", latest_proposals.get(solution_id))
         if number not in proposal_metadata or proposal_metadata[number]["canonical_solution_id"] != solution_id:
             number = latest_proposals.get(solution_id)
@@ -316,21 +352,27 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
             cache_hits += int(successful_hit)
             repeated_failures += int(cached and not successful_hit)
             emit("cache_observation", proposal_id=number, canonical_solution_id=solution_id,
-                 workflow_fingerprint=identity, cache_hit=successful_hit,
+                 **identity_metadata(identity), cache_hit=successful_hit,
                  prior_observation=cached, repeated_failure=cached and not successful_hit,
                  charged_evaluations=budget.attempts, cache_hits=cache_hits,
                  repeated_failures=repeated_failures)
-        emit("fitness_read", proposal_id=number, workflow_fingerprint=identity,
+        emit("fitness_read", proposal_id=number, **identity_metadata(identity),
              component=component, technical_read=not first_read,
              component_reads=component_reads)
         if identity not in observations:
             attempt = budget.charge_evaluation(time.perf_counter())
             evaluation_started = time.perf_counter()
             emit("evaluation_started", proposal_id=number, canonical_solution_id=solution_id,
-                 workflow_fingerprint=identity, genotype=adapter.payload(genotype),
+                 **identity_metadata(identity), genotype=adapter.payload(genotype),
                  attempt_id=attempt, charged_evaluations=attempt, started_at=evaluation_started)
             try:
-                observation = evaluate(workflow)
+                if charge_before_compile:
+                    with phase("candidate_compilation", component=component):
+                        workflow = adapter.compile(genotype, space)
+                    if not isinstance(workflow, ValidationFailure):
+                        compiled_fingerprints[identity] = workflow.fingerprint
+                observation = (StructuralInvalid(workflow.violations)
+                               if isinstance(workflow, ValidationFailure) else evaluate(workflow))
             except Exception as error:
                 observation = CallbackFailure(type(error).__name__, str(error))
             if type(observation) is GrammarFitness:
@@ -344,7 +386,7 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
             evaluation_ended = time.perf_counter()
             if not strict_deadline or evaluation_ended <= deadline:
                 deadline_eligible.add(identity)
-            emit("evaluated", workflow_fingerprint=identity, proposal_id=number,
+            emit("evaluated", **identity_metadata(identity), proposal_id=number,
                 canonical_solution_id=solution_id, attempt_id=attempt,
                 genotype=adapter.payload(genotype), outcome=type(observation).__name__,
                 quality_accepted=observation.quality_accepted if type(observation) is GrammarFitness else None,
@@ -355,9 +397,10 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
                 completed_within_deadline=evaluation_ended <= deadline,
                 deadline_overrun_seconds=max(0.0, evaluation_ended - deadline))
             if strict_deadline and identity not in deadline_eligible:
-                emit("deadline_excluded", workflow_fingerprint=identity, attempt_id=attempt,
+                emit("deadline_excluded", **identity_metadata(identity), attempt_id=attempt,
                      charged_evaluations=attempt, reason="completed_after_absolute_deadline")
         observation = observations[identity]
+        check_context()
         if strict_deadline and identity not in deadline_eligible:
             raise ValueError("Late evaluation is charged but cannot receive selection fitness")
         if type(observation) is not GrammarFitness:
@@ -417,6 +460,9 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
             selection="SPEA2", engine="FedcoreEvoOptimizer"))
         with phase("optimizer_call"):
             best = [decode(graph) for graph in optimizer.optimise(objective)]
+    except _ContextInvalidStop:
+        status,stop_reason='failed','context_invalidated'
+        reason=str(context_failure)
     except _BudgetStop:
         pass
     except _TraceCallbackStop as error:
@@ -430,8 +476,13 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     finally:
         random.setstate(python_state)
         np.random.set_state(numpy_state)
+    try:check_context()
+    except _ContextInvalidStop:
+        status,stop_reason,reason='failed','context_invalidated',str(context_failure)
     budget_reason = budget.reason(time.perf_counter())
-    if trace_failure is None and budget_reason is not None:
+    if context_failure is not None:
+        stop_reason='context_invalidated'
+    elif trace_failure is None and budget_reason is not None:
         stop_reason = budget_reason
     elif trace_failure is None and optimizer is not None and status == "succeeded":
         if optimizer.current_generation_num >= config.generations:
@@ -441,8 +492,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         elif optimizer.timer.minutes_from_start * 60 >= remaining_seconds:
             stop_reason = "time_budget"
     finite = [(identity, observation) for identity, observation in observations.items()
-              if type(observation) is GrammarFitness and (not strict_deadline or identity in deadline_eligible)]
-    if observations and not finite and trace_failure is None:
+              if context_failure is None and type(observation) is GrammarFitness and (not strict_deadline or identity in deadline_eligible)]
+    if observations and not finite and trace_failure is None and context_failure is None:
         status = "no_valid_fitness"
         reason = "All charged proposals failed before obtaining finite heldout fitness"
     # This is a reporting archive of observed finite fitness, including when a
@@ -466,6 +517,11 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         reason = f"{error.failure.code}: {error.failure.message}"
         trace[-1].update(status=status, stop_reason=stop_reason,
                          failure_details=asdict(trace_failure))
+    try:check_context()
+    except _ContextInvalidStop:
+        status,stop_reason,reason='failed','context_invalidated',str(context_failure)
+        best,archive=[],[]
+        trace[-1].update(status=status,stop_reason=stop_reason,failure_details=asdict(context_failure))
     return {"status": status, "reason": reason, "engine": "FedcoreEvoOptimizer",
         "domain": adapter.domain, "fitness_context": fitness_context,
         "best_genotypes": best, "charged_evaluations": budget.attempts, "trace": trace,
@@ -473,7 +529,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         "repeated_failures": repeated_failures,
         "component_reads": component_reads, "cache_entries": len(observations),
         "trace_failure": asdict(trace_failure) if trace_failure is not None else None,
-        "finite_archive": [{"workflow_fingerprint": identity, "quality": observation.quality,
+        "context_failure": asdict(context_failure) if context_failure is not None else None,
+        "finite_archive": [{**identity_metadata(identity), "quality": observation.quality,
             "cost": observation.cost, "quality_accepted": observation.quality_accepted,
             "genotype": adapter.payload(measured_genotypes[identity])} for identity, observation in archive],
         "best_role": "nondominated among evaluated finite fitness; quality acceptance is reported separately",
@@ -481,17 +538,19 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         "started_at": started, "ended_at": time.perf_counter(), "absolute_deadline": deadline,
         "budget_enforcement": "before each uncached callback; in-flight callbacks may overrun",
         "strict_deadline": strict_deadline,
+        "charge_before_compile": charge_before_compile,
         "late_evaluation_count": sum(identity not in deadline_eligible for identity in observations) if strict_deadline else 0,
         "quality_rejection_count": sum(type(item) is GrammarFitness and not item.quality_accepted for item in observations.values()),
         "failure_count": sum(type(item) is not GrammarFitness for item in observations.values()),
         "utility_claim": "functional grammar integration only; empirical search benefit is untested"}
 
 
-def run_cv_grammar_search(space, config, evaluate, **options):
+def run_cv_grammar_search(space, config, evaluate, *, context_guard=None, **options):
     """Use real FedcoreEvoOptimizer/SPEA2 with strict CV deadline eligibility."""
     from .cv_grammar import (validate_cv_grammar_space, normalize_cv_genotype, generate_cv_genotype,
         mutate_cv_genotype, crossover_cv_genotypes, compile_cv_genotype, cv_genotype_payload)
     adapter = GrammarAdapter(validate_cv_grammar_space, normalize_cv_genotype, generate_cv_genotype,
         mutate_cv_genotype, crossover_cv_genotypes, compile_cv_genotype, cv_genotype_payload,
-        domain="closed frozen-M0 CIFAR ResNet18 structural-channel/SVD grammar")
+        domain="closed frozen-M0 CIFAR ResNet18 structural-channel/SVD grammar",
+        context_guard=context_guard)
     return run_grammar_search(space, config, evaluate, grammar_adapter=adapter, strict_deadline=True, **options)

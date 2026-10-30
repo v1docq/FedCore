@@ -25,6 +25,21 @@ def result_for(item):
                            {"source": "deterministic dispatcher fixture"})
 
 
+def test_null_fitness_result_never_enters_a_mixed_population(dispatcher):
+    good,bad=individual('good'),individual('failed-objective')
+    missing=GraphEvalResult(bad.uid,bad.fitness,bad.graph,{})
+    actual=dispatcher.instance.apply_evaluation_results([bad,good],[missing,result_for(good)])
+    assert_same_objects(actual,[good])
+    assert good.fitness.valid and not bad.fitness.valid
+
+
+def test_all_null_fitness_results_leave_no_successful_members(dispatcher):
+    population=[individual('a'),individual('b')]
+    outcomes=[GraphEvalResult(item.uid,item.fitness,item.graph,{}) for item in population]
+    assert dispatcher.instance.apply_evaluation_results(population,outcomes)==[]
+    assert all(not item.fitness.valid for item in population)
+
+
 @pytest.fixture
 def dispatcher(monkeypatch):
     instance = FedcoreDispatcher(adapter=IdentityAdapter(), n_jobs=1)
