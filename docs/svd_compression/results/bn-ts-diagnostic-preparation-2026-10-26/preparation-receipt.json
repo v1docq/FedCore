@@ -1,0 +1,15 @@
+{
+  "Linux_installed_checks": "not_run",
+  "authorized_GPU_seconds": 1800,
+  "connection_failure": "TCP established but SSH banner exchange times out before authentication",
+  "diagnostic_protocol_sha256": "2b2996e814fe31e83c2d042b499cf4bcd250fef1199892ce9ae80d8659747166",
+  "local_CPU_passed": 114,
+  "local_CPU_skipped": 6,
+  "new_charged_GPU_seconds": 0,
+  "numerical_GPU_experiment_started": false,
+  "prior_charged_seconds": 3491.18732554093,
+  "schema": "fedcore-bn-ts-preparation-v1",
+  "source_commit": "7640681e198e1257cf58e9f21259b1ba4adce46e",
+  "status": "awaiting_SSH_before_installed_checks",
+  "wheel_sha256": "0d49ffcb8ac517fb8f754bee113bb85444db51e104889f6049562c609a41084e"
+}

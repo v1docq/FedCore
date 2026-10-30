@@ -1,0 +1,29 @@
+{"python": "3.10.0 (tags/v3.10.0:b494f59, Oct  4 2021, 19:00:18) [MSC v.1929 64 bit (AMD64)]", "dask": "2024.4.2", "distributed": "2024.4.2", "loop_factory": "_WindowsSelectorEventLoop"}
+Timeout (0:00:03)!
+Thread 0x00003aa4 (most recent call first):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\socket.py", line 293 in accept
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\socket.py", line 644 in socketpair
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\asyncio\selector_events.py", line 108 in _make_self_pipe
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\asyncio\selector_events.py", line 61 in __init__
+  File "D:\data_old\WORK\obsidian\Papers_2025\\u041f\u0440\u043e\u0435\u043a\u0442\u044b \u0434\u043b\u044f \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u043a\u0438\\u0418\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u044b\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\compatibility.py", line 230 in asyncio_run
+  File "D:\data_old\WORK\obsidian\Papers_2025\\u041f\u0440\u043e\u0435\u043a\u0442\u044b \u0434\u043b\u044f \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u043a\u0438\\u0418\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u044b\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py", line 583 in run_loop
+  File "D:\data_old\WORK\obsidian\Papers_2025\\u041f\u0440\u043e\u0435\u043a\u0442\u044b \u0434\u043b\u044f \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u043a\u0438\\u0418\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u044b\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py", line 475 in wrapper
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\threading.py", line 946 in run
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\threading.py", line 1009 in _bootstrap_inner
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\threading.py", line 966 in _bootstrap
+
+Thread 0x00004e5c (most recent call first):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\threading.py", line 324 in wait
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\threading.py", line 600 in wait
+  File "D:\data_old\WORK\obsidian\Papers_2025\\u041f\u0440\u043e\u0435\u043a\u0442\u044b \u0434\u043b\u044f \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u043a\u0438\\u0418\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u044b\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py", line 593 in _start_unlocked
+  File "D:\data_old\WORK\obsidian\Papers_2025\\u041f\u0440\u043e\u0435\u043a\u0442\u044b \u0434\u043b\u044f \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u043a\u0438\\u0418\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u044b\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py", line 551 in start
+  File "C:\Users\user\Documents\Codex\FedCore-SVD-Third-QA-2026-10-15\dask-repro-01\minimal_dask_loop.py", line 12 in <module>
+Traceback (most recent call last):
+{"status": "failed", "type": "AssertionError", "message": "", "seconds": 10.013351700000385}
+  File "C:\Users\user\Documents\Codex\FedCore-SVD-Third-QA-2026-10-15\dask-repro-01\minimal_dask_loop.py", line 12, in <module>
+    runner.start()
+  File "D:\data_old\WORK\obsidian\Papers_2025\������� ��� ����������\����������������� �������\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py", line 551, in start
+    self._start_unlocked()
+  File "D:\data_old\WORK\obsidian\Papers_2025\������� ��� ����������\����������������� �������\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py", line 596, in _start_unlocked
+    assert loop is not None
+AssertionError

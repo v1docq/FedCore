@@ -1,0 +1,182 @@
+{
+  "audit_script_sha256": "338588d37dba0fbf56ddc7afb28ae01b99b3a6efb1cc5d44873c3a27dd4d4cab",
+  "checks": [
+    {
+      "name": "immutable_scientific_source_and_protocol",
+      "status": "passed"
+    },
+    {
+      "name": "historical_data_roles_tensor_hashes_and_nested_prefixes",
+      "status": "passed"
+    },
+    {
+      "name": "all_referenced_archive_file_hashes",
+      "status": "passed"
+    },
+    {
+      "name": "finite_27_transform_plan_validation_only_policy_and_refusals",
+      "status": "passed"
+    },
+    {
+      "name": "independent_physical_storage_closed_form_ranks_and_analytic_macs",
+      "status": "passed"
+    },
+    {
+      "name": "independent_elimination_oracle_for_stored_factor_and_operator_rank",
+      "status": "passed"
+    },
+    {
+      "name": "causal_controls_share_actual_factors_and_classifiers",
+      "status": "passed"
+    },
+    {
+      "name": "micro_factor_and_materialized_dense_share_same_approximation_and_bias",
+      "status": "passed"
+    },
+    {
+      "name": "all_timing_raw_observations_percentiles_noise_and_paired_blocks",
+      "status": "passed"
+    },
+    {
+      "name": "recovery_actual_adam_steps_storage_paired_batches_and_frozen_teacher",
+      "status": "passed"
+    },
+    {
+      "name": "checkpoint_export_reload_numerical_parity_records",
+      "status": "passed"
+    },
+    {
+      "name": "recursive_resource_limits_all_attempts_and_conservative_preflight_charge",
+      "status": "passed"
+    },
+    {
+      "name": "independent_recomputation_of_analysis_ratios_and_matched_dense_controls",
+      "status": "passed"
+    }
+  ],
+  "details": {
+    "all_referenced_archive_file_hashes": {
+      "verified_archives": 365
+    },
+    "all_timing_raw_observations_percentiles_noise_and_paired_blocks": {
+      "artifact_pairs": 48,
+      "blocked_calls": 66000,
+      "raw_cuda_event_ms": 33000,
+      "raw_full_path_ms": 66000,
+      "raw_synchronized_wall_ms": 66000,
+      "retained_invalid_sessions": 33,
+      "sessions": 132,
+      "valid_artifact_pairs": 31,
+      "valid_sessions": 99
+    },
+    "causal_controls_share_actual_factors_and_classifiers": {
+      "matched_first_svd3_controls": 4,
+      "matched_ordinary_linear16_heads": 4,
+      "unchanged_final_classifier_models": 25
+    },
+    "checkpoint_export_reload_numerical_parity_records": {
+      "checkpoints_with_validation_and_development_test_parity": 55
+    },
+    "finite_27_transform_plan_validation_only_policy_and_refusals": {
+      "attempts": 27,
+      "retained_rank_overflow_refusals": 2,
+      "selected_N": 32,
+      "selected_weighted": {
+        "alpha": 0.0,
+        "calibration_n": 32,
+        "case_id": "conv2-weighted-r8-N32",
+        "first_rank": null,
+        "linear_rank": null,
+        "method": "weighted_svd",
+        "nullspace": "support_only",
+        "path": "features.2",
+        "rank": 8,
+        "statistics_graph": "original"
+      },
+      "succeeded": 25
+    },
+    "historical_data_roles_tensor_hashes_and_nested_prefixes": {
+      "calibration": 180,
+      "test": 270,
+      "train": 1078,
+      "validation": 269
+    },
+    "immutable_scientific_source_and_protocol": {
+      "files": 258,
+      "protocol_sha256": "996735197560c1ecb1447bb3cce1f84861c0febe03d85dc1f0044d9c48cb9c8f",
+      "scientific_source_sha256": "0943a8c184d9b55ec4a2720b2a731f3571f937f03b20846dcef48486af0b9b8a"
+    },
+    "independent_elimination_oracle_for_stored_factor_and_operator_rank": {
+      "actual_factor_pairs_checked": 69,
+      "criterion": "Gaussian elimination threshold = max_abs * max_dimension * 1e-10; full column/row factor rank implies product rank"
+    },
+    "independent_physical_storage_closed_form_ranks_and_analytic_macs": {
+      "baseline_unique_physical_bytes": 274920,
+      "first_conv_dense_weight_elements": 144,
+      "first_conv_rank8_weight_elements": 200,
+      "verified_successful_models": 25
+    },
+    "independent_recomputation_of_analysis_ratios_and_matched_dense_controls": {
+      "invalid_rows_excluded_from_ratios": true,
+      "quality_rows": 30,
+      "raw_percentile_ratios_recomputed": true,
+      "timing_block_rows": 84,
+      "timing_summary_rows": 28
+    },
+    "micro_factor_and_materialized_dense_share_same_approximation_and_bias": {
+      "bias_hashes_equal": true,
+      "factor_physical_bytes": 5184,
+      "materialized_physical_bytes": 9280,
+      "maximum_independent_factor_product_error": 6.818867770430614e-08
+    },
+    "recovery_actual_adam_steps_storage_paired_batches_and_frozen_teacher": {
+      "curves": 10,
+      "matched_starting_models": 5,
+      "optimizer_snapshots_checked": 20,
+      "paired_batch_hashes": 400,
+      "student_updates": 4000,
+      "teacher_batch_forwards": 2000
+    },
+    "recursive_resource_limits_all_attempts_and_conservative_preflight_charge": {
+      "actual_worker_seconds": 760.7951499000155,
+      "charged_seconds": 1660.7951499000155,
+      "conservative_post_validation_seconds": 600.0,
+      "conservative_preflight_seconds": 300.0,
+      "maximum_recursive_sampled_rss_bytes": 1140023296,
+      "minimum_sampled_available_ram_bytes": 13689131008,
+      "original_scientific_ledger_sha256": "69fb2f26a349faf321b84c7481164bd331fdee4620082623654c50da31ce86f7",
+      "post_validation_suite": {
+        "log_sha256": "d93d903762b8fa082fd700bd1227c0bd09c493efbc635feebcaa4daa9e317110",
+        "passed": 1552,
+        "pytest_seconds": 269.21,
+        "skipped": 3
+      },
+      "retries": 0,
+      "violations": 0,
+      "workers": 143
+    }
+  },
+  "elapsed_seconds": 4.446043099997041,
+  "failures": [],
+  "input_json_sha256": {
+    "implementer-final-audit.json": "5c0426a19e544b2d87f61f77052ffc87aa471f419488b2f03d7bbeb3f1161b2a",
+    "ledger-scientific.json": "69fb2f26a349faf321b84c7481164bd331fdee4620082623654c50da31ce86f7",
+    "ledger.json": "49dc61e51c677318c9b34a4ab7a33159850fdcde8c24eb81a4a4c28fc87d5693",
+    "protocol.json": "7395eb78794090fb75e513cacc47a762ae352945545ec93d637eed60e2f23d61",
+    "recovery.json": "ee2f2337f871d5b6e2c8e7d54f54bcdc4ca1c5458d9c0d904ce539145ab8969b",
+    "timing.json": "c6b4066694d5720bffaba07022422e91ea8c88db73c668c419ccc6a80eb1d8c4",
+    "transforms.json": "0e5346e935d20e9fac8a5e3cad955b20af8116f475c821fbb6b64e94c9712a60",
+    "validation.json": "18ff165bca007515eadb4385064dde6226b7ee23abb92f34198a4a6f8cfa23e4"
+  },
+  "limitations": [
+    "One trained seed and three process blocks support a descriptive timing pilot only.",
+    "The 33 noise-invalid sessions remain archived and are excluded from valid pair summaries.",
+    "Before/after noise snapshots do not prove absence of interference inside a session.",
+    "The historical test set is development data; no independent final-test confirmation.",
+    "Forward-export parity is bound to immutable source and prior independent boundary tests; no new inference series was run.",
+    "Teacher immutability combines unchanged-hash evidence and independently tested runtime enforcement; the teacher was not separately archived."
+  ],
+  "method": "independent standard-library JSON, SHA256, inert Torch ZIP tensor/optimizer metadata and small scalar factor-product audit; no torch/model execution",
+  "schema": 1,
+  "status": "passed"
+}

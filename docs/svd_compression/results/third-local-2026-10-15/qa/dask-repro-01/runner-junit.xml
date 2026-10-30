@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="28.226" timestamp="2026-10-15T12:41:42.148988+03:00" hostname="16-321-IRevin"><testcase classname="tests.petra.test_protocol_runner" name="test_real_runner_fedcore_public_path" time="25.411"><failure message="AssertionError: {'cache_hit': False, 'cache_key': '7d3ca37484dafca456d6463c268be46388bc45503085adabab81b359d850cf78', 'candidate_id': '6d468ed43844123d5d01', 'completed_seconds': 25.118909199999962, ...}&#10;assert 'failed' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + failed">tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-SVD-Third-QA-2026-10-15/dask-repro-01/runner-temp/test_real_runner_fedcore_publi0')
+
+    def test_real_runner_fedcore_public_path(tmp_path):
+        candidate = CandidateSpec("fedcore", {"operation": "training", "operation_parameters": {"epochs": 1}})
+        result = ExperimentRunner(bundle(), protocol(), tmp_path / "fedcore").run((candidate,))
+        record = result["candidates"][-1]
+&gt;       assert record["status"] == "succeeded", record
+E       AssertionError: {'cache_hit': False, 'cache_key': '7d3ca37484dafca456d6463c268be46388bc45503085adabab81b359d850cf78', 'candidate_id': '6d468ed43844123d5d01', 'completed_seconds': 25.118909199999962, ...}
+E       assert 'failed' == 'succeeded'
+E         
+E         - succeeded
+E         + failed
+
+tests\petra\test_protocol_runner.py:198: AssertionError</failure></testcase></testsuite></testsuites>

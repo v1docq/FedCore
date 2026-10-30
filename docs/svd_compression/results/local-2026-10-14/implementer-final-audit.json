@@ -1,0 +1,33 @@
+{
+  "charged_seconds": 1060.7951499000155,
+  "checked_artifact_checkpoint_hashes": 252,
+  "curves": 10,
+  "files": {
+    "ledger.json": "69fb2f26a349faf321b84c7481164bd331fdee4620082623654c50da31ce86f7",
+    "protocol.json": "7395eb78794090fb75e513cacc47a762ae352945545ec93d637eed60e2f23d61",
+    "recovery.json": "ee2f2337f871d5b6e2c8e7d54f54bcdc4ca1c5458d9c0d904ce539145ab8969b",
+    "timing.json": "c6b4066694d5720bffaba07022422e91ea8c88db73c668c419ccc6a80eb1d8c4",
+    "transforms.json": "0e5346e935d20e9fac8a5e3cad955b20af8116f475c821fbb6b64e94c9712a60"
+  },
+  "git_lf_source_sha256": "0943a8c184d9b55ec4a2720b2a731f3571f937f03b20846dcef48486af0b9b8a",
+  "measured_computational_seconds": 760.7951499000155,
+  "preflight_allowance_seconds": 300.0,
+  "protocol_sha256": "996735197560c1ecb1447bb3cce1f84861c0febe03d85dc1f0044d9c48cb9c8f",
+  "resource_violations": 0,
+  "schema": 1,
+  "scope": "implementer file/count/source/invariant audit; independent review separately",
+  "status": "passed",
+  "student_updates": 4000,
+  "student_visited_samples": 256000,
+  "teacher_forwards": 2000,
+  "teacher_visited_samples": 128000,
+  "technical_retries": 0,
+  "timing_status": {
+    "invalid_noise": 33,
+    "succeeded": 99
+  },
+  "transform_status": {
+    "succeeded": 25,
+    "unsupported": 2
+  }
+}

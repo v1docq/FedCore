@@ -1,0 +1,6 @@
+{
+  "url": "https://nodejs.org/dist/v22.20.0/node-v22.20.0-linux-x64.tar.xz",
+  "archive_sha256": "00bbd05e306ea68b6e13e17360d0e2f680b493ef95f2fea1c4296ff7437530bc",
+  "node_sha256": "b1cbec894e45a5814b6ab756e1e14f8a76516273197e67e0412b57c1e10d0d9f",
+  "purpose": "Run the unchanged Data prebuilt build in WSL; Windows path join fails manifest validation. No npm packages or global files changed."
+}

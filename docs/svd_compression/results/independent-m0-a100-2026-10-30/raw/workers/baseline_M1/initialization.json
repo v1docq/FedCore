@@ -1,0 +1,10 @@
+{
+  "fingerprint": "625ce5ed3d8c7dfc9fbb404941175cf6430bd7832daed697fe8fe87489afc8aa",
+  "seeds": {
+    "augmentation": 140121,
+    "initialization": 140101,
+    "name": "M1",
+    "recovery": 140301,
+    "train_order": 140111
+  }
+}

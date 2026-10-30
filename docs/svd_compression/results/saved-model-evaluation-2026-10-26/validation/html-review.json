@@ -1,0 +1,18 @@
+{
+  "schema": "fedcore-saved-evaluation-html-review-v1",
+  "date": "2026-10-26",
+  "method": "Localhost browser inspection through cua_repl; no model execution",
+  "checks": {
+    "headline_cards_and_five_quality_rows_visible": true,
+    "storage_accuracy_scatter_labels_readable_after_E_label_adjustment": true,
+    "batch_128_cuda_events_all_families_matches_analysis": true,
+    "batch_1_synchronized_wall_matches_analysis": true,
+    "family_R_filter_shows_twenty_raw_pairs": true,
+    "raw_pair_disclosure_opens": true,
+    "AA_disclosure_shows_28_data_rows": true,
+    "no_browser_warnings_or_errors_observed": true,
+    "temporary_QA_tab_closed": true
+  },
+  "limits": ["Desktop viewport inspected; no claim of exhaustive responsive or accessibility testing"],
+  "external_resources": false
+}

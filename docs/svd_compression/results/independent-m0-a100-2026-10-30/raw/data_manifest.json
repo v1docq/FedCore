@@ -1,0 +1,68 @@
+{
+  "confirmed_baseline_updates": 0,
+  "confirmed_evaluation_rows": {},
+  "confirmed_recovery_updates": 0,
+  "deadline": 20917795.869660255,
+  "ended_at": 20916601.76180782,
+  "gpu_admission": {
+    "compute_pids": [],
+    "gpu_inventory": "0, GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8, NVIDIA A100-PCIE-40GB, 40960, 1"
+  },
+  "identity": "44a4c603463bff3f926ceefcb42d115dbc7ab0af3361331280aa563bff2056e9",
+  "job_id": "manifest",
+  "peak_allocated_bytes": 154001408,
+  "peak_reserved_bytes": 157286400,
+  "process_returncode": 0,
+  "roles_sha256": "7523013f3c936a917e72215122307130e0b732a40296d664ec310a8be6404066",
+  "source_files": {
+    "batches.meta": {
+      "bytes": 158,
+      "sha256": "f962466ef690d46b226450fb9aadc74ba4bc64a76aa526b5827fe4bc5c7125cb"
+    },
+    "data_batch_1": {
+      "bytes": 31035704,
+      "sha256": "54636561a3ce25bd3e19253c6b0d8538147b0ae398331ac4a2d86c6d987368cd"
+    },
+    "data_batch_2": {
+      "bytes": 31035320,
+      "sha256": "766b2cef9fbc745cf056b3152224f7cf77163b330ea9a15f9392beb8b89bc5a8"
+    },
+    "data_batch_3": {
+      "bytes": 31035999,
+      "sha256": "0f00d98ebfb30b3ec0ad19f9756dc2630b89003e10525f5e148445e82aa6a1f9"
+    },
+    "data_batch_4": {
+      "bytes": 31035696,
+      "sha256": "3f7bb240661948b8f4d53e36ec720d8306f5668bd0071dcb4e6c947f78e9682b"
+    },
+    "data_batch_5": {
+      "bytes": 31035623,
+      "sha256": "d91802434d8376bbaeeadf58a737e3a1b12ac839077e931237e0dcd43adcb154"
+    },
+    "readme.html": {
+      "bytes": 88,
+      "sha256": "4d1c3fb199d6a183ae03f5162b469d7bc04edf2fad9547bd5f224271d52f98e5"
+    },
+    "test_batch": {
+      "bytes": 31035526,
+      "sha256": "f53d8d457504f7cff4ea9e021afcf0e0ad8e24a91f3fc42091b8adef61157831"
+    }
+  },
+  "started_at": 20916596.680889174,
+  "status": "completed",
+  "transforms": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.2023,
+      0.1994,
+      0.201
+    ]
+  },
+  "wall_seconds": 5.080918647348881,
+  "worker": "manifest",
+  "worker_relative": "workers/manifest"
+}

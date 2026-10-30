@@ -1,0 +1,1276 @@
+* Getting build dependencies for wheel...
+running egg_info
+writing fedcore.egg-info\PKG-INFO
+writing dependency_links to fedcore.egg-info\dependency_links.txt
+writing requirements to fedcore.egg-info\requires.txt
+writing top-level names to fedcore.egg-info\top_level.txt
+reading manifest file 'fedcore.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+no previously-included directories found matching 'tests'
+no previously-included directories found matching 'examples'
+no previously-included directories found matching 'build'
+no previously-included directories found matching 'dist'
+warning: no previously-included files matching '__pycache__' found anywhere in distribution
+warning: no previously-included files matching '*.py[cod]' found anywhere in distribution
+adding license file 'LICENSE'
+writing manifest file 'fedcore.egg-info\SOURCES.txt'
+WARNING `project.license` as a TOML table is deprecated
+!!
+
+        ********************************************************************************
+        Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+
+        By 2027-Feb-18, you need to update your project and remove deprecated calls
+        or your builds will no longer be supported.
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+WARNING License classifiers are deprecated.
+!!
+
+        ********************************************************************************
+        Please consider removing the following classifiers in favor of a SPDX license expression:
+
+        License :: OSI Approved :: BSD License
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+WARNING License classifiers are deprecated.
+!!
+
+        ********************************************************************************
+        Please consider removing the following classifiers in favor of a SPDX license expression:
+
+        License :: OSI Approved :: BSD License
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+* Building wheel...
+running bdist_wheel
+running build
+running build_py
+copying external\__init__.py -> build\lib\external
+copying fedcore\__init__.py -> build\lib\fedcore
+copying model_exporter\api_server.py -> build\lib\model_exporter
+copying model_exporter\fedcore_ops.py -> build\lib\model_exporter
+copying model_exporter\loader_bundle.py -> build\lib\model_exporter
+copying model_exporter\log_analizer.py -> build\lib\model_exporter
+copying model_exporter\main.py -> build\lib\model_exporter
+copying model_exporter\model_analyzer.py -> build\lib\model_exporter
+copying model_exporter\model_exporter.py -> build\lib\model_exporter
+copying model_exporter\model_graph_view.py -> build\lib\model_exporter
+copying model_exporter\model_logic.py -> build\lib\model_exporter
+copying model_exporter\model_splitter.py -> build\lib\model_exporter
+copying model_exporter\model_splitter_gui.py -> build\lib\model_exporter
+copying model_exporter\__init__.py -> build\lib\model_exporter
+copying external\caracore\cara.py -> build\lib\external\caracore
+copying external\flatllmcore\__init__.py -> build\lib\external\flatllmcore
+copying external\transmlacore\lora_qkv.py -> build\lib\external\transmlacore
+copying external\transmlacore\modify_config.py -> build\lib\external\transmlacore
+copying external\transmlacore\partial_rope.py -> build\lib\external\transmlacore
+copying external\transmlacore\setup.py -> build\lib\external\transmlacore
+copying external\transmlacore\utils.py -> build\lib\external\transmlacore
+copying external\transmlacore\__init__.py -> build\lib\external\transmlacore
+copying external\flatllmcore\core\absorption.py -> build\lib\external\flatllmcore\core
+copying external\flatllmcore\core\prune.py -> build\lib\external\flatllmcore\core
+copying external\flatllmcore\core\rank_allocation.py -> build\lib\external\flatllmcore\core
+copying external\flatllmcore\core\__init__.py -> build\lib\external\flatllmcore\core
+copying external\flatllmcore\layers\attention_layers.py -> build\lib\external\flatllmcore\layers
+copying external\flatllmcore\layers\__init__.py -> build\lib\external\flatllmcore\layers
+copying external\flatllmcore\utils\data_utils.py -> build\lib\external\flatllmcore\utils
+copying external\flatllmcore\utils\layer_utils.py -> build\lib\external\flatllmcore\utils
+copying external\flatllmcore\utils\__init__.py -> build\lib\external\flatllmcore\utils
+copying fedcore\algorithm\base_compression_model.py -> build\lib\fedcore\algorithm
+copying fedcore\algorithm\__init__.py -> build\lib\fedcore\algorithm
+copying fedcore\api\api_configs.py -> build\lib\fedcore\api
+copying fedcore\api\config_factory.py -> build\lib\fedcore\api
+copying fedcore\api\llm_config.py -> build\lib\fedcore\api
+copying fedcore\api\main.py -> build\lib\fedcore\api
+copying fedcore\api\nlp_configs.py -> build\lib\fedcore\api
+copying fedcore\api\__init__.py -> build\lib\fedcore\api
+copying fedcore\architecture\__init__.py -> build\lib\fedcore\architecture
+copying fedcore\data\data.py -> build\lib\fedcore\data
+copying fedcore\data\dataloader.py -> build\lib\fedcore\data
+copying fedcore\data\__init__.py -> build\lib\fedcore\data
+copying fedcore\experiments\ablations.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\baseline.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_composition_reference.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_analysis.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_digits_evaluation.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_digits_protocol.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_digits_worker.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_evaluation.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_local2.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_local3.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_local3_evaluation.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_local3_matrix.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_local3_protocol.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_local3_worker.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_matrix.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_package.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\compression_search_protocol.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_continuation.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_data.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_diagnostics.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_diagnostic_protocol.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_pilot.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_protocol.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_recovery.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_recovery_protocol.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_runtime.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\cv_sparse_supervision.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\external_benchmark.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\local_study.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\math_checks.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\measurement.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\pilot.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\protocol.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\remeasure.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\reporting.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\runner.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\scenarios.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\search.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\sparse_pretrained.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\sparse_pretrained_v2.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\streaming.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_comparison.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_local_package.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_local_timing.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_profile_measurement.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_rank_policies.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_second_package.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_second_timing.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_third_package.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\svd_third_timing.py -> build\lib\fedcore\experiments
+copying fedcore\experiments\__init__.py -> build\lib\fedcore\experiments
+copying fedcore\external_runtime\adapters.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\client.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\contracts.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\execution.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\industrial_manifest.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\jobs.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\models.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\security.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\worker.py -> build\lib\fedcore\external_runtime
+copying fedcore\external_runtime\__init__.py -> build\lib\fedcore\external_runtime
+copying fedcore\inference\onnx.py -> build\lib\fedcore\inference
+copying fedcore\inference\__init__.py -> build\lib\fedcore\inference
+copying fedcore\interfaces\fedcore_dispatcher.py -> build\lib\fedcore\interfaces
+copying fedcore\interfaces\fedcore_optimizer.py -> build\lib\fedcore\interfaces
+copying fedcore\interfaces\fedcore_strategy.py -> build\lib\fedcore\interfaces
+copying fedcore\interfaces\search_space.py -> build\lib\fedcore\interfaces
+copying fedcore\interfaces\search_trace.py -> build\lib\fedcore\interfaces
+copying fedcore\interfaces\__init__.py -> build\lib\fedcore\interfaces
+copying fedcore\losses\distilation_loss.py -> build\lib\fedcore\losses
+copying fedcore\losses\losses_impl.py -> build\lib\fedcore\losses
+copying fedcore\losses\low_rank_loss.py -> build\lib\fedcore\losses
+copying fedcore\losses\regularization_losses.py -> build\lib\fedcore\losses
+copying fedcore\losses\utils.py -> build\lib\fedcore\losses
+copying fedcore\losses\__init__.py -> build\lib\fedcore\losses
+copying fedcore\metrics\api_metric.py -> build\lib\fedcore\metrics
+copying fedcore\metrics\cv_metrics.py -> build\lib\fedcore\metrics
+copying fedcore\metrics\metric_impl.py -> build\lib\fedcore\metrics
+copying fedcore\metrics\nlp_metrics.py -> build\lib\fedcore\metrics
+copying fedcore\metrics\pareto.py -> build\lib\fedcore\metrics
+copying fedcore\metrics\quality.py -> build\lib\fedcore\metrics
+copying fedcore\metrics\__init__.py -> build\lib\fedcore\metrics
+copying fedcore\models\__init__.py -> build\lib\fedcore\models
+copying fedcore\repository\capabilities.py -> build\lib\fedcore\repository
+copying fedcore\repository\config_repository.py -> build\lib\fedcore\repository
+copying fedcore\repository\constanst_repository.py -> build\lib\fedcore\repository
+copying fedcore\repository\constant_repository.py -> build\lib\fedcore\repository
+copying fedcore\repository\IndustrialOperationParameters.py -> build\lib\fedcore\repository
+copying fedcore\repository\initializer_industrial_models.py -> build\lib\fedcore\repository
+copying fedcore\repository\lazy_registry.py -> build\lib\fedcore\repository
+copying fedcore\repository\model_repository.py -> build\lib\fedcore\repository
+copying fedcore\repository\setups.py -> build\lib\fedcore\repository
+copying fedcore\repository\__init__.py -> build\lib\fedcore\repository
+copying fedcore\tools\atomic_json.py -> build\lib\fedcore\tools
+copying fedcore\tools\benchmark.py -> build\lib\fedcore\tools
+copying fedcore\tools\edge_device.py -> build\lib\fedcore\tools
+copying fedcore\tools\example_utils.py -> build\lib\fedcore\tools
+copying fedcore\tools\export.py -> build\lib\fedcore\tools
+copying fedcore\tools\index_resolver.py -> build\lib\fedcore\tools
+copying fedcore\tools\ruler.py -> build\lib\fedcore\tools
+copying fedcore\tools\scheduler.py -> build\lib\fedcore\tools
+copying fedcore\tools\svd_third_analysis.py -> build\lib\fedcore\tools
+copying fedcore\tools\viz.py -> build\lib\fedcore\tools
+copying fedcore\tools\__init__.py -> build\lib\fedcore\tools
+copying fedcore\algorithm\distillation\distilator.py -> build\lib\fedcore\algorithm\distillation
+copying fedcore\algorithm\distillation\hooks.py -> build\lib\fedcore\algorithm\distillation
+copying fedcore\algorithm\distillation\__init__.py -> build\lib\fedcore\algorithm\distillation
+copying fedcore\algorithm\low_rank\allocation.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\approximation.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\architecture_checkpoint.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\architecture_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\ars_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\ars_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\artifacts.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\candidate_graph.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\candidate_storage.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\compression_composition.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\compression_grammar.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\compression_graph.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\coupled_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\coupled_layers.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\coupled_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\coupled_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\cv_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\cv_grammar.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\decomposer.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\dobi_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\dobi_remapping.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\dobi_remapping_export.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\dobi_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\factor_recovery.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\grammar_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\grammar_search.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\graph_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\grouped_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\grouped_workflow.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\hooks.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\learned_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\learned_layers.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\lightformer_layers.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\lightformer_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\lightformer_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\lora_operation.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\low_rank_opt.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\lrt_layers.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\lrt_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\lrt_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\method_errors.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\method_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\method_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\plans.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\projection_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\projection_layers.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\projection_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\projection_recovery.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\projection_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\rankdyna_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\rankdyna_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\rank_distortion.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\rank_pruning.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\slicegpt_layers.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\slicegpt_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\slicegpt_specs.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\staged_execution.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\statistical_collectors.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\statistical_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\statistics.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\structured_layers.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\structured_profiles.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\svd_tools.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\topology.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\low_rank\__init__.py -> build\lib\fedcore\algorithm\low_rank
+copying fedcore\algorithm\pruning\hooks.py -> build\lib\fedcore\algorithm\pruning
+copying fedcore\algorithm\pruning\pruners.py -> build\lib\fedcore\algorithm\pruning
+copying fedcore\algorithm\pruning\pruning_validation.py -> build\lib\fedcore\algorithm\pruning
+copying fedcore\algorithm\pruning\sfp_tools.py -> build\lib\fedcore\algorithm\pruning
+copying fedcore\algorithm\pruning\__init__.py -> build\lib\fedcore\algorithm\pruning
+copying fedcore\algorithm\quantization\hooks.py -> build\lib\fedcore\algorithm\quantization
+copying fedcore\algorithm\quantization\quantizers.py -> build\lib\fedcore\algorithm\quantization
+copying fedcore\algorithm\quantization\utils.py -> build\lib\fedcore\algorithm\quantization
+copying fedcore\algorithm\quantization\__init__.py -> build\lib\fedcore\algorithm\quantization
+copying fedcore\algorithm\low_rank\reassembly\config_mixins.py -> build\lib\fedcore\algorithm\low_rank\reassembly
+copying fedcore\algorithm\low_rank\reassembly\core_reassemblers.py -> build\lib\fedcore\algorithm\low_rank\reassembly
+copying fedcore\algorithm\low_rank\reassembly\decomposed_recreation.py -> build\lib\fedcore\algorithm\low_rank\reassembly
+copying fedcore\algorithm\low_rank\reassembly\flatllm_reassembler.py -> build\lib\fedcore\algorithm\low_rank\reassembly
+copying fedcore\algorithm\low_rank\reassembly\transmla_reassembler.py -> build\lib\fedcore\algorithm\low_rank\reassembly
+copying fedcore\algorithm\low_rank\reassembly\__init__.py -> build\lib\fedcore\algorithm\low_rank\reassembly
+copying fedcore\algorithm\pruning\sparse\architectures.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\channels.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\checkpoint.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\cv_channels.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\cv_checkpoint.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\execution.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\layers.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\linear.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\moe.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\policies.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\specs.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\algorithm\pruning\sparse\__init__.py -> build\lib\fedcore\algorithm\pruning\sparse
+copying fedcore\api\utils\api_init.py -> build\lib\fedcore\api\utils
+copying fedcore\api\utils\checkers_collection.py -> build\lib\fedcore\api\utils
+copying fedcore\api\utils\data.py -> build\lib\fedcore\api\utils
+copying fedcore\api\utils\evaluation.py -> build\lib\fedcore\api\utils
+copying fedcore\api\utils\misc.py -> build\lib\fedcore\api\utils
+copying fedcore\api\utils\__init__.py -> build\lib\fedcore\api\utils
+copying fedcore\api\utils\plugins\nlp_plugin.py -> build\lib\fedcore\api\utils\plugins
+copying fedcore\architecture\abstraction\accessor.py -> build\lib\fedcore\architecture\abstraction
+copying fedcore\architecture\abstraction\decorators.py -> build\lib\fedcore\architecture\abstraction
+copying fedcore\architecture\abstraction\delegator.py -> build\lib\fedcore\architecture\abstraction
+copying fedcore\architecture\abstraction\placeholders.py -> build\lib\fedcore\architecture\abstraction
+copying fedcore\architecture\abstraction\__init__.py -> build\lib\fedcore\architecture\abstraction
+copying fedcore\architecture\comptutaional\devices.py -> build\lib\fedcore\architecture\comptutaional
+copying fedcore\architecture\comptutaional\__init__.py -> build\lib\fedcore\architecture\comptutaional
+copying fedcore\architecture\computational\devices.py -> build\lib\fedcore\architecture\computational
+copying fedcore\architecture\computational\__init__.py -> build\lib\fedcore\architecture\computational
+copying fedcore\architecture\dataset\api_loader.py -> build\lib\fedcore\architecture\dataset
+copying fedcore\architecture\dataset\custom_loader.py -> build\lib\fedcore\architecture\dataset
+copying fedcore\architecture\dataset\datasets_from_source.py -> build\lib\fedcore\architecture\dataset
+copying fedcore\architecture\dataset\splitters.py -> build\lib\fedcore\architecture\dataset
+copying fedcore\architecture\dataset\utils.py -> build\lib\fedcore\architecture\dataset
+copying fedcore\architecture\dataset\__init__.py -> build\lib\fedcore\architecture\dataset
+copying fedcore\architecture\preprocessing\data_convertor.py -> build\lib\fedcore\architecture\preprocessing
+copying fedcore\architecture\preprocessing\__init__.py -> build\lib\fedcore\architecture\preprocessing
+copying fedcore\architecture\settings\computational.py -> build\lib\fedcore\architecture\settings
+copying fedcore\architecture\settings\__init__.py -> build\lib\fedcore\architecture\settings
+copying fedcore\architecture\utils\loader.py -> build\lib\fedcore\architecture\utils
+copying fedcore\architecture\utils\misc.py -> build\lib\fedcore\architecture\utils
+copying fedcore\architecture\utils\paths.py -> build\lib\fedcore\architecture\utils
+copying fedcore\architecture\utils\__init__.py -> build\lib\fedcore\architecture\utils
+copying fedcore\architecture\visualisation\visualization.py -> build\lib\fedcore\architecture\visualisation
+copying fedcore\architecture\visualisation\__init__.py -> build\lib\fedcore\architecture\visualisation
+copying fedcore\architecture\dataset\task_specified\classification_datasets.py -> build\lib\fedcore\architecture\dataset\task_specified
+copying fedcore\architecture\dataset\task_specified\dummy_clf.py -> build\lib\fedcore\architecture\dataset\task_specified
+copying fedcore\architecture\dataset\task_specified\object_detection_datasets.py -> build\lib\fedcore\architecture\dataset\task_specified
+copying fedcore\architecture\dataset\task_specified\segmentation_dataset.py -> build\lib\fedcore\architecture\dataset\task_specified
+copying fedcore\architecture\dataset\task_specified\ts_dataset.py -> build\lib\fedcore\architecture\dataset\task_specified
+copying fedcore\architecture\dataset\task_specified\__init__.py -> build\lib\fedcore\architecture\dataset\task_specified
+copying fedcore\metrics\multiobjective\hypervolume.py -> build\lib\fedcore\metrics\multiobjective
+copying fedcore\metrics\multiobjective\multi_objective.py -> build\lib\fedcore\metrics\multiobjective
+copying fedcore\metrics\multiobjective\__init__.py -> build\lib\fedcore\metrics\multiobjective
+copying fedcore\models\backbone\backbone_loader.py -> build\lib\fedcore\models\backbone
+copying fedcore\models\backbone\__init__.py -> build\lib\fedcore\models\backbone
+copying fedcore\models\network_impl\base_nn_model.py -> build\lib\fedcore\models\network_impl
+copying fedcore\models\network_impl\decomposed_layers.py -> build\lib\fedcore\models\network_impl
+copying fedcore\models\network_impl\interfaces.py -> build\lib\fedcore\models\network_impl
+copying fedcore\models\network_impl\layers.py -> build\lib\fedcore\models\network_impl
+copying fedcore\models\network_impl\llm_trainer.py -> build\lib\fedcore\models\network_impl
+copying fedcore\models\network_impl\trainer_factory.py -> build\lib\fedcore\models\network_impl
+copying fedcore\models\network_impl\__init__.py -> build\lib\fedcore\models\network_impl
+copying fedcore\models\network_modules\activation.py -> build\lib\fedcore\models\network_modules
+copying fedcore\models\network_modules\losses.py -> build\lib\fedcore\models\network_modules
+copying fedcore\models\network_modules\other.py -> build\lib\fedcore\models\network_modules
+copying fedcore\models\network_modules\reversible.py -> build\lib\fedcore\models\network_modules
+copying fedcore\models\network_modules\__init__.py -> build\lib\fedcore\models\network_modules
+copying fedcore\models\backbone\convolutional\densenet.py -> build\lib\fedcore\models\backbone\convolutional
+copying fedcore\models\backbone\convolutional\efficientnet.py -> build\lib\fedcore\models\backbone\convolutional
+copying fedcore\models\backbone\convolutional\inception.py -> build\lib\fedcore\models\backbone\convolutional
+copying fedcore\models\backbone\convolutional\mobilenet.py -> build\lib\fedcore\models\backbone\convolutional
+copying fedcore\models\backbone\convolutional\resnet.py -> build\lib\fedcore\models\backbone\convolutional
+copying fedcore\models\backbone\convolutional\__init__.py -> build\lib\fedcore\models\backbone\convolutional
+copying fedcore\models\backbone\custom\custom.py -> build\lib\fedcore\models\backbone\custom
+copying fedcore\models\backbone\custom\custom_object_detection.py -> build\lib\fedcore\models\backbone\custom
+copying fedcore\models\backbone\custom\__init__.py -> build\lib\fedcore\models\backbone\custom
+copying fedcore\models\backbone\encoder_decoder\unet.py -> build\lib\fedcore\models\backbone\encoder_decoder
+copying fedcore\models\backbone\encoder_decoder\__init__.py -> build\lib\fedcore\models\backbone\encoder_decoder
+copying fedcore\models\backbone\pretrain_model\chronos.py -> build\lib\fedcore\models\backbone\pretrain_model
+copying fedcore\models\backbone\pretrain_model\segformer.py -> build\lib\fedcore\models\backbone\pretrain_model
+copying fedcore\models\backbone\pretrain_model\__init__.py -> build\lib\fedcore\models\backbone\pretrain_model
+copying fedcore\models\backbone\transformers\linformer.py -> build\lib\fedcore\models\backbone\transformers
+copying fedcore\models\backbone\transformers\tst.py -> build\lib\fedcore\models\backbone\transformers
+copying fedcore\models\backbone\transformers\__init__.py -> build\lib\fedcore\models\backbone\transformers
+copying fedcore\models\network_impl\utils\hooks.py -> build\lib\fedcore\models\network_impl\utils
+copying fedcore\models\network_impl\utils\hooks_collection.py -> build\lib\fedcore\models\network_impl\utils
+copying fedcore\models\network_impl\utils\interfaces.py -> build\lib\fedcore\models\network_impl\utils
+copying fedcore\models\network_impl\utils\trainer_factory.py -> build\lib\fedcore\models\network_impl\utils
+copying fedcore\models\network_impl\utils\_base.py -> build\lib\fedcore\models\network_impl\utils
+copying fedcore\models\network_modules\layers\attention_layers.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\backbone.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\conv_layers.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\head_layers.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\linear_layers.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\lora.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\padding_layers.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\pooling_layers.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\sequential_layers.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\special.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\models\network_modules\layers\__init__.py -> build\lib\fedcore\models\network_modules\layers
+copying fedcore\repository\data\__init__.py -> build\lib\fedcore\repository\data
+copying fedcore\repository\fedcore_impl\abstract.py -> build\lib\fedcore\repository\fedcore_impl
+copying fedcore\repository\fedcore_impl\data.py -> build\lib\fedcore\repository\fedcore_impl
+copying fedcore\repository\fedcore_impl\metrics.py -> build\lib\fedcore\repository\fedcore_impl
+copying fedcore\repository\fedcore_impl\optimisation.py -> build\lib\fedcore\repository\fedcore_impl
+copying fedcore\repository\fedcore_impl\__init__.py -> build\lib\fedcore\repository\fedcore_impl
+copying fedcore\tools\registry\checkpoint_manager.py -> build\lib\fedcore\tools\registry
+copying fedcore\tools\registry\metrics_tracker.py -> build\lib\fedcore\tools\registry
+copying fedcore\tools\registry\model_registry.py -> build\lib\fedcore\tools\registry
+copying fedcore\tools\registry\registry_storage.py -> build\lib\fedcore\tools\registry
+copying fedcore\tools\registry\__init__.py -> build\lib\fedcore\tools\registry
+copying fedcore\tools\visualisation\optimisation_history_vis.py -> build\lib\fedcore\tools\visualisation
+copying fedcore\tools\visualisation\vis_utils.py -> build\lib\fedcore\tools\visualisation
+running egg_info
+writing fedcore.egg-info\PKG-INFO
+writing dependency_links to fedcore.egg-info\dependency_links.txt
+writing requirements to fedcore.egg-info\requires.txt
+writing top-level names to fedcore.egg-info\top_level.txt
+reading manifest file 'fedcore.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+no previously-included directories found matching 'tests'
+no previously-included directories found matching 'examples'
+no previously-included directories found matching 'build'
+no previously-included directories found matching 'dist'
+warning: no previously-included files matching '__pycache__' found anywhere in distribution
+warning: no previously-included files matching '*.py[cod]' found anywhere in distribution
+adding license file 'LICENSE'
+writing manifest file 'fedcore.egg-info\SOURCES.txt'
+copying model_exporter\templates\web_ui.html -> build\lib\model_exporter\templates
+copying model_exporter\static\js\script.js -> build\lib\model_exporter\static\js
+copying model_exporter\static\css\style.css -> build\lib\model_exporter\static\css
+copying model_exporter\device_architectures\Google_tpu_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\gowin_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Hailo_8_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Huawei_acend_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Jetson_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\k510_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\NMcard_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\rk3588s_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Xilinx_arch.json -> build\lib\model_exporter\device_architectures
+copying fedcore\repository\data\compression_data_operation_repository.json -> build\lib\fedcore\repository\data
+copying fedcore\repository\data\compression_model_repository.json -> build\lib\fedcore\repository\data
+copying fedcore\repository\data\compression_operation_params.json -> build\lib\fedcore\repository\data
+copying fedcore\repository\data\mode_capabilities.json -> build\lib\fedcore\repository\data
+copying model_exporter\device_architectures\Google_tpu_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Hailo_8_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Huawei_acend_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Jetson_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\NMcard_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\Xilinx_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\gowin_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\k510_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\device_architectures\rk3588s_arch.json -> build\lib\model_exporter\device_architectures
+copying model_exporter\templates\web_ui.html -> build\lib\model_exporter\templates
+copying model_exporter\static\css\style.css -> build\lib\model_exporter\static\css
+copying model_exporter\static\js\script.js -> build\lib\model_exporter\static\js
+installing to build\bdist.win-amd64\wheel
+running install
+running install_lib
+creating build\bdist.win-amd64\wheel
+creating build\bdist.win-amd64\wheel\external
+creating build\bdist.win-amd64\wheel\external\caracore
+copying build\lib\external\caracore\cara.py -> build\bdist.win-amd64\wheel\.\external\caracore
+creating build\bdist.win-amd64\wheel\external\flatllmcore
+creating build\bdist.win-amd64\wheel\external\flatllmcore\core
+copying build\lib\external\flatllmcore\core\absorption.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\core
+copying build\lib\external\flatllmcore\core\prune.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\core
+copying build\lib\external\flatllmcore\core\rank_allocation.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\core
+copying build\lib\external\flatllmcore\core\__init__.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\core
+creating build\bdist.win-amd64\wheel\external\flatllmcore\layers
+copying build\lib\external\flatllmcore\layers\attention_layers.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\layers
+copying build\lib\external\flatllmcore\layers\__init__.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\layers
+creating build\bdist.win-amd64\wheel\external\flatllmcore\utils
+copying build\lib\external\flatllmcore\utils\data_utils.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\utils
+copying build\lib\external\flatllmcore\utils\layer_utils.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\utils
+copying build\lib\external\flatllmcore\utils\__init__.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore\utils
+copying build\lib\external\flatllmcore\__init__.py -> build\bdist.win-amd64\wheel\.\external\flatllmcore
+creating build\bdist.win-amd64\wheel\external\transmlacore
+copying build\lib\external\transmlacore\lora_qkv.py -> build\bdist.win-amd64\wheel\.\external\transmlacore
+copying build\lib\external\transmlacore\modify_config.py -> build\bdist.win-amd64\wheel\.\external\transmlacore
+copying build\lib\external\transmlacore\partial_rope.py -> build\bdist.win-amd64\wheel\.\external\transmlacore
+copying build\lib\external\transmlacore\setup.py -> build\bdist.win-amd64\wheel\.\external\transmlacore
+copying build\lib\external\transmlacore\utils.py -> build\bdist.win-amd64\wheel\.\external\transmlacore
+copying build\lib\external\transmlacore\__init__.py -> build\bdist.win-amd64\wheel\.\external\transmlacore
+copying build\lib\external\__init__.py -> build\bdist.win-amd64\wheel\.\external
+creating build\bdist.win-amd64\wheel\fedcore
+creating build\bdist.win-amd64\wheel\fedcore\algorithm
+copying build\lib\fedcore\algorithm\base_compression_model.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm
+creating build\bdist.win-amd64\wheel\fedcore\algorithm\distillation
+copying build\lib\fedcore\algorithm\distillation\distilator.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\distillation
+copying build\lib\fedcore\algorithm\distillation\hooks.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\distillation
+copying build\lib\fedcore\algorithm\distillation\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\distillation
+creating build\bdist.win-amd64\wheel\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\allocation.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\approximation.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\architecture_checkpoint.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\architecture_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\ars_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\ars_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\artifacts.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\candidate_graph.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\candidate_storage.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\compression_composition.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\compression_grammar.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\compression_graph.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\coupled_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\coupled_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\coupled_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\coupled_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\cv_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\cv_grammar.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\decomposer.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\dobi_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\dobi_remapping.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\dobi_remapping_export.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\dobi_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\factor_recovery.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\grammar_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\grammar_search.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\graph_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\grouped_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\grouped_workflow.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\hooks.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\learned_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\learned_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\lightformer_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\lightformer_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\lightformer_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\lora_operation.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\low_rank_opt.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\lrt_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\lrt_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\lrt_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\method_errors.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\method_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\method_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\plans.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\projection_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\projection_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\projection_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\projection_recovery.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\projection_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\rankdyna_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\rankdyna_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\rank_distortion.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\rank_pruning.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+creating build\bdist.win-amd64\wheel\fedcore\algorithm\low_rank\reassembly
+copying build\lib\fedcore\algorithm\low_rank\reassembly\config_mixins.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank\reassembly
+copying build\lib\fedcore\algorithm\low_rank\reassembly\core_reassemblers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank\reassembly
+copying build\lib\fedcore\algorithm\low_rank\reassembly\decomposed_recreation.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank\reassembly
+copying build\lib\fedcore\algorithm\low_rank\reassembly\flatllm_reassembler.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank\reassembly
+copying build\lib\fedcore\algorithm\low_rank\reassembly\transmla_reassembler.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank\reassembly
+copying build\lib\fedcore\algorithm\low_rank\reassembly\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank\reassembly
+copying build\lib\fedcore\algorithm\low_rank\slicegpt_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\slicegpt_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\slicegpt_specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\staged_execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\statistical_collectors.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\statistical_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\statistics.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\structured_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\structured_profiles.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\svd_tools.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\topology.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+copying build\lib\fedcore\algorithm\low_rank\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\low_rank
+creating build\bdist.win-amd64\wheel\fedcore\algorithm\pruning
+copying build\lib\fedcore\algorithm\pruning\hooks.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning
+copying build\lib\fedcore\algorithm\pruning\pruners.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning
+copying build\lib\fedcore\algorithm\pruning\pruning_validation.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning
+copying build\lib\fedcore\algorithm\pruning\sfp_tools.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning
+creating build\bdist.win-amd64\wheel\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\architectures.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\channels.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\checkpoint.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\cv_channels.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\cv_checkpoint.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\execution.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\layers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\linear.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\moe.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\policies.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\specs.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\sparse\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning\sparse
+copying build\lib\fedcore\algorithm\pruning\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\pruning
+creating build\bdist.win-amd64\wheel\fedcore\algorithm\quantization
+copying build\lib\fedcore\algorithm\quantization\hooks.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\quantization
+copying build\lib\fedcore\algorithm\quantization\quantizers.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\quantization
+copying build\lib\fedcore\algorithm\quantization\utils.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\quantization
+copying build\lib\fedcore\algorithm\quantization\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm\quantization
+copying build\lib\fedcore\algorithm\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\algorithm
+creating build\bdist.win-amd64\wheel\fedcore\api
+copying build\lib\fedcore\api\api_configs.py -> build\bdist.win-amd64\wheel\.\fedcore\api
+copying build\lib\fedcore\api\config_factory.py -> build\bdist.win-amd64\wheel\.\fedcore\api
+copying build\lib\fedcore\api\llm_config.py -> build\bdist.win-amd64\wheel\.\fedcore\api
+copying build\lib\fedcore\api\main.py -> build\bdist.win-amd64\wheel\.\fedcore\api
+copying build\lib\fedcore\api\nlp_configs.py -> build\bdist.win-amd64\wheel\.\fedcore\api
+creating build\bdist.win-amd64\wheel\fedcore\api\utils
+copying build\lib\fedcore\api\utils\api_init.py -> build\bdist.win-amd64\wheel\.\fedcore\api\utils
+copying build\lib\fedcore\api\utils\checkers_collection.py -> build\bdist.win-amd64\wheel\.\fedcore\api\utils
+copying build\lib\fedcore\api\utils\data.py -> build\bdist.win-amd64\wheel\.\fedcore\api\utils
+copying build\lib\fedcore\api\utils\evaluation.py -> build\bdist.win-amd64\wheel\.\fedcore\api\utils
+copying build\lib\fedcore\api\utils\misc.py -> build\bdist.win-amd64\wheel\.\fedcore\api\utils
+creating build\bdist.win-amd64\wheel\fedcore\api\utils\plugins
+copying build\lib\fedcore\api\utils\plugins\nlp_plugin.py -> build\bdist.win-amd64\wheel\.\fedcore\api\utils\plugins
+copying build\lib\fedcore\api\utils\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\api\utils
+copying build\lib\fedcore\api\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\api
+creating build\bdist.win-amd64\wheel\fedcore\architecture
+creating build\bdist.win-amd64\wheel\fedcore\architecture\abstraction
+copying build\lib\fedcore\architecture\abstraction\accessor.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\abstraction
+copying build\lib\fedcore\architecture\abstraction\decorators.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\abstraction
+copying build\lib\fedcore\architecture\abstraction\delegator.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\abstraction
+copying build\lib\fedcore\architecture\abstraction\placeholders.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\abstraction
+copying build\lib\fedcore\architecture\abstraction\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\abstraction
+creating build\bdist.win-amd64\wheel\fedcore\architecture\comptutaional
+copying build\lib\fedcore\architecture\comptutaional\devices.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\comptutaional
+copying build\lib\fedcore\architecture\comptutaional\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\comptutaional
+creating build\bdist.win-amd64\wheel\fedcore\architecture\computational
+copying build\lib\fedcore\architecture\computational\devices.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\computational
+copying build\lib\fedcore\architecture\computational\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\computational
+creating build\bdist.win-amd64\wheel\fedcore\architecture\dataset
+copying build\lib\fedcore\architecture\dataset\api_loader.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset
+copying build\lib\fedcore\architecture\dataset\custom_loader.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset
+copying build\lib\fedcore\architecture\dataset\datasets_from_source.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset
+copying build\lib\fedcore\architecture\dataset\splitters.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset
+creating build\bdist.win-amd64\wheel\fedcore\architecture\dataset\task_specified
+copying build\lib\fedcore\architecture\dataset\task_specified\classification_datasets.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset\task_specified
+copying build\lib\fedcore\architecture\dataset\task_specified\dummy_clf.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset\task_specified
+copying build\lib\fedcore\architecture\dataset\task_specified\object_detection_datasets.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset\task_specified
+copying build\lib\fedcore\architecture\dataset\task_specified\segmentation_dataset.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset\task_specified
+copying build\lib\fedcore\architecture\dataset\task_specified\ts_dataset.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset\task_specified
+copying build\lib\fedcore\architecture\dataset\task_specified\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset\task_specified
+copying build\lib\fedcore\architecture\dataset\utils.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset
+copying build\lib\fedcore\architecture\dataset\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\dataset
+creating build\bdist.win-amd64\wheel\fedcore\architecture\preprocessing
+copying build\lib\fedcore\architecture\preprocessing\data_convertor.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\preprocessing
+copying build\lib\fedcore\architecture\preprocessing\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\preprocessing
+creating build\bdist.win-amd64\wheel\fedcore\architecture\settings
+copying build\lib\fedcore\architecture\settings\computational.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\settings
+copying build\lib\fedcore\architecture\settings\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\settings
+creating build\bdist.win-amd64\wheel\fedcore\architecture\utils
+copying build\lib\fedcore\architecture\utils\loader.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\utils
+copying build\lib\fedcore\architecture\utils\misc.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\utils
+copying build\lib\fedcore\architecture\utils\paths.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\utils
+copying build\lib\fedcore\architecture\utils\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\utils
+creating build\bdist.win-amd64\wheel\fedcore\architecture\visualisation
+copying build\lib\fedcore\architecture\visualisation\visualization.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\visualisation
+copying build\lib\fedcore\architecture\visualisation\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture\visualisation
+copying build\lib\fedcore\architecture\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\architecture
+creating build\bdist.win-amd64\wheel\fedcore\data
+copying build\lib\fedcore\data\data.py -> build\bdist.win-amd64\wheel\.\fedcore\data
+copying build\lib\fedcore\data\dataloader.py -> build\bdist.win-amd64\wheel\.\fedcore\data
+copying build\lib\fedcore\data\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\data
+creating build\bdist.win-amd64\wheel\fedcore\experiments
+copying build\lib\fedcore\experiments\ablations.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\baseline.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_composition_reference.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_analysis.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_digits_evaluation.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_digits_protocol.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_digits_worker.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_evaluation.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_local2.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_local3.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_local3_evaluation.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_local3_matrix.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_local3_protocol.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_local3_worker.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_matrix.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_package.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\compression_search_protocol.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_continuation.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_data.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_diagnostics.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_diagnostic_protocol.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_pilot.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_protocol.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_recovery.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_recovery_protocol.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_runtime.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\cv_sparse_supervision.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\external_benchmark.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\local_study.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\math_checks.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\measurement.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\pilot.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\protocol.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\remeasure.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\reporting.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\runner.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\scenarios.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\search.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\sparse_pretrained.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\sparse_pretrained_v2.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\streaming.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_comparison.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_local_package.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_local_timing.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_profile_measurement.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_rank_policies.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_second_package.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_second_timing.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_third_package.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\svd_third_timing.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+copying build\lib\fedcore\experiments\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\experiments
+creating build\bdist.win-amd64\wheel\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\adapters.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\client.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\contracts.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\execution.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\industrial_manifest.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\jobs.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\models.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\security.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\worker.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+copying build\lib\fedcore\external_runtime\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\external_runtime
+creating build\bdist.win-amd64\wheel\fedcore\inference
+copying build\lib\fedcore\inference\onnx.py -> build\bdist.win-amd64\wheel\.\fedcore\inference
+copying build\lib\fedcore\inference\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\inference
+creating build\bdist.win-amd64\wheel\fedcore\interfaces
+copying build\lib\fedcore\interfaces\fedcore_dispatcher.py -> build\bdist.win-amd64\wheel\.\fedcore\interfaces
+copying build\lib\fedcore\interfaces\fedcore_optimizer.py -> build\bdist.win-amd64\wheel\.\fedcore\interfaces
+copying build\lib\fedcore\interfaces\fedcore_strategy.py -> build\bdist.win-amd64\wheel\.\fedcore\interfaces
+copying build\lib\fedcore\interfaces\search_space.py -> build\bdist.win-amd64\wheel\.\fedcore\interfaces
+copying build\lib\fedcore\interfaces\search_trace.py -> build\bdist.win-amd64\wheel\.\fedcore\interfaces
+copying build\lib\fedcore\interfaces\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\interfaces
+creating build\bdist.win-amd64\wheel\fedcore\losses
+copying build\lib\fedcore\losses\distilation_loss.py -> build\bdist.win-amd64\wheel\.\fedcore\losses
+copying build\lib\fedcore\losses\losses_impl.py -> build\bdist.win-amd64\wheel\.\fedcore\losses
+copying build\lib\fedcore\losses\low_rank_loss.py -> build\bdist.win-amd64\wheel\.\fedcore\losses
+copying build\lib\fedcore\losses\regularization_losses.py -> build\bdist.win-amd64\wheel\.\fedcore\losses
+copying build\lib\fedcore\losses\utils.py -> build\bdist.win-amd64\wheel\.\fedcore\losses
+copying build\lib\fedcore\losses\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\losses
+creating build\bdist.win-amd64\wheel\fedcore\metrics
+copying build\lib\fedcore\metrics\api_metric.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics
+copying build\lib\fedcore\metrics\cv_metrics.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics
+copying build\lib\fedcore\metrics\metric_impl.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics
+creating build\bdist.win-amd64\wheel\fedcore\metrics\multiobjective
+copying build\lib\fedcore\metrics\multiobjective\hypervolume.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics\multiobjective
+copying build\lib\fedcore\metrics\multiobjective\multi_objective.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics\multiobjective
+copying build\lib\fedcore\metrics\multiobjective\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics\multiobjective
+copying build\lib\fedcore\metrics\nlp_metrics.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics
+copying build\lib\fedcore\metrics\pareto.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics
+copying build\lib\fedcore\metrics\quality.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics
+copying build\lib\fedcore\metrics\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\metrics
+creating build\bdist.win-amd64\wheel\fedcore\models
+creating build\bdist.win-amd64\wheel\fedcore\models\backbone
+copying build\lib\fedcore\models\backbone\backbone_loader.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone
+creating build\bdist.win-amd64\wheel\fedcore\models\backbone\convolutional
+copying build\lib\fedcore\models\backbone\convolutional\densenet.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\convolutional
+copying build\lib\fedcore\models\backbone\convolutional\efficientnet.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\convolutional
+copying build\lib\fedcore\models\backbone\convolutional\inception.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\convolutional
+copying build\lib\fedcore\models\backbone\convolutional\mobilenet.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\convolutional
+copying build\lib\fedcore\models\backbone\convolutional\resnet.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\convolutional
+copying build\lib\fedcore\models\backbone\convolutional\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\convolutional
+creating build\bdist.win-amd64\wheel\fedcore\models\backbone\custom
+copying build\lib\fedcore\models\backbone\custom\custom.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\custom
+copying build\lib\fedcore\models\backbone\custom\custom_object_detection.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\custom
+copying build\lib\fedcore\models\backbone\custom\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\custom
+creating build\bdist.win-amd64\wheel\fedcore\models\backbone\encoder_decoder
+copying build\lib\fedcore\models\backbone\encoder_decoder\unet.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\encoder_decoder
+copying build\lib\fedcore\models\backbone\encoder_decoder\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\encoder_decoder
+creating build\bdist.win-amd64\wheel\fedcore\models\backbone\pretrain_model
+copying build\lib\fedcore\models\backbone\pretrain_model\chronos.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\pretrain_model
+copying build\lib\fedcore\models\backbone\pretrain_model\segformer.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\pretrain_model
+copying build\lib\fedcore\models\backbone\pretrain_model\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\pretrain_model
+creating build\bdist.win-amd64\wheel\fedcore\models\backbone\transformers
+copying build\lib\fedcore\models\backbone\transformers\linformer.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\transformers
+copying build\lib\fedcore\models\backbone\transformers\tst.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\transformers
+copying build\lib\fedcore\models\backbone\transformers\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone\transformers
+copying build\lib\fedcore\models\backbone\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\backbone
+creating build\bdist.win-amd64\wheel\fedcore\models\network_impl
+copying build\lib\fedcore\models\network_impl\base_nn_model.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl
+copying build\lib\fedcore\models\network_impl\decomposed_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl
+copying build\lib\fedcore\models\network_impl\interfaces.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl
+copying build\lib\fedcore\models\network_impl\layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl
+copying build\lib\fedcore\models\network_impl\llm_trainer.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl
+copying build\lib\fedcore\models\network_impl\trainer_factory.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl
+creating build\bdist.win-amd64\wheel\fedcore\models\network_impl\utils
+copying build\lib\fedcore\models\network_impl\utils\hooks.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl\utils
+copying build\lib\fedcore\models\network_impl\utils\hooks_collection.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl\utils
+copying build\lib\fedcore\models\network_impl\utils\interfaces.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl\utils
+copying build\lib\fedcore\models\network_impl\utils\trainer_factory.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl\utils
+copying build\lib\fedcore\models\network_impl\utils\_base.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl\utils
+copying build\lib\fedcore\models\network_impl\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_impl
+creating build\bdist.win-amd64\wheel\fedcore\models\network_modules
+copying build\lib\fedcore\models\network_modules\activation.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules
+creating build\bdist.win-amd64\wheel\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\attention_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\backbone.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\conv_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\head_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\linear_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\lora.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\padding_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\pooling_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\sequential_layers.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\special.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\layers\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules\layers
+copying build\lib\fedcore\models\network_modules\losses.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules
+copying build\lib\fedcore\models\network_modules\other.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules
+copying build\lib\fedcore\models\network_modules\reversible.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules
+copying build\lib\fedcore\models\network_modules\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models\network_modules
+copying build\lib\fedcore\models\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\models
+creating build\bdist.win-amd64\wheel\fedcore\repository
+copying build\lib\fedcore\repository\capabilities.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\config_repository.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\constanst_repository.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\constant_repository.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+creating build\bdist.win-amd64\wheel\fedcore\repository\data
+copying build\lib\fedcore\repository\data\compression_data_operation_repository.json -> build\bdist.win-amd64\wheel\.\fedcore\repository\data
+copying build\lib\fedcore\repository\data\compression_model_repository.json -> build\bdist.win-amd64\wheel\.\fedcore\repository\data
+copying build\lib\fedcore\repository\data\compression_operation_params.json -> build\bdist.win-amd64\wheel\.\fedcore\repository\data
+copying build\lib\fedcore\repository\data\mode_capabilities.json -> build\bdist.win-amd64\wheel\.\fedcore\repository\data
+copying build\lib\fedcore\repository\data\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\repository\data
+creating build\bdist.win-amd64\wheel\fedcore\repository\fedcore_impl
+copying build\lib\fedcore\repository\fedcore_impl\abstract.py -> build\bdist.win-amd64\wheel\.\fedcore\repository\fedcore_impl
+copying build\lib\fedcore\repository\fedcore_impl\data.py -> build\bdist.win-amd64\wheel\.\fedcore\repository\fedcore_impl
+copying build\lib\fedcore\repository\fedcore_impl\metrics.py -> build\bdist.win-amd64\wheel\.\fedcore\repository\fedcore_impl
+copying build\lib\fedcore\repository\fedcore_impl\optimisation.py -> build\bdist.win-amd64\wheel\.\fedcore\repository\fedcore_impl
+copying build\lib\fedcore\repository\fedcore_impl\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\repository\fedcore_impl
+copying build\lib\fedcore\repository\IndustrialOperationParameters.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\initializer_industrial_models.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\lazy_registry.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\model_repository.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\setups.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+copying build\lib\fedcore\repository\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\repository
+creating build\bdist.win-amd64\wheel\fedcore\tools
+copying build\lib\fedcore\tools\atomic_json.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\benchmark.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\edge_device.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\example_utils.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\export.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\index_resolver.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+creating build\bdist.win-amd64\wheel\fedcore\tools\registry
+copying build\lib\fedcore\tools\registry\checkpoint_manager.py -> build\bdist.win-amd64\wheel\.\fedcore\tools\registry
+copying build\lib\fedcore\tools\registry\metrics_tracker.py -> build\bdist.win-amd64\wheel\.\fedcore\tools\registry
+copying build\lib\fedcore\tools\registry\model_registry.py -> build\bdist.win-amd64\wheel\.\fedcore\tools\registry
+copying build\lib\fedcore\tools\registry\registry_storage.py -> build\bdist.win-amd64\wheel\.\fedcore\tools\registry
+copying build\lib\fedcore\tools\registry\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\tools\registry
+copying build\lib\fedcore\tools\ruler.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\scheduler.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\svd_third_analysis.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+creating build\bdist.win-amd64\wheel\fedcore\tools\visualisation
+copying build\lib\fedcore\tools\visualisation\optimisation_history_vis.py -> build\bdist.win-amd64\wheel\.\fedcore\tools\visualisation
+copying build\lib\fedcore\tools\visualisation\vis_utils.py -> build\bdist.win-amd64\wheel\.\fedcore\tools\visualisation
+copying build\lib\fedcore\tools\viz.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\tools\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore\tools
+copying build\lib\fedcore\__init__.py -> build\bdist.win-amd64\wheel\.\fedcore
+creating build\bdist.win-amd64\wheel\model_exporter
+copying build\lib\model_exporter\api_server.py -> build\bdist.win-amd64\wheel\.\model_exporter
+creating build\bdist.win-amd64\wheel\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\Google_tpu_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\gowin_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\Hailo_8_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\Huawei_acend_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\Jetson_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\k510_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\NMcard_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\rk3588s_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\device_architectures\Xilinx_arch.json -> build\bdist.win-amd64\wheel\.\model_exporter\device_architectures
+copying build\lib\model_exporter\fedcore_ops.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\loader_bundle.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\log_analizer.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\main.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\model_analyzer.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\model_exporter.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\model_graph_view.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\model_logic.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\model_splitter.py -> build\bdist.win-amd64\wheel\.\model_exporter
+copying build\lib\model_exporter\model_splitter_gui.py -> build\bdist.win-amd64\wheel\.\model_exporter
+creating build\bdist.win-amd64\wheel\model_exporter\static
+creating build\bdist.win-amd64\wheel\model_exporter\static\css
+copying build\lib\model_exporter\static\css\style.css -> build\bdist.win-amd64\wheel\.\model_exporter\static\css
+creating build\bdist.win-amd64\wheel\model_exporter\static\js
+copying build\lib\model_exporter\static\js\script.js -> build\bdist.win-amd64\wheel\.\model_exporter\static\js
+creating build\bdist.win-amd64\wheel\model_exporter\templates
+copying build\lib\model_exporter\templates\web_ui.html -> build\bdist.win-amd64\wheel\.\model_exporter\templates
+copying build\lib\model_exporter\__init__.py -> build\bdist.win-amd64\wheel\.\model_exporter
+running install_egg_info
+Copying fedcore.egg-info to build\bdist.win-amd64\wheel\.\fedcore-0.0.5.4-py3.10.egg-info
+running install_scripts
+creating build\bdist.win-amd64\wheel\fedcore-0.0.5.4.dist-info\WHEEL
+creating 'C:\\Users\\user\\Documents\\Codex\\FedCore-Sparse-CV-A100-2026-10-21\\recovery-dist\\.tmp-xct20lvz\\fedcore-0.0.5.4-py3-none-any.whl' and adding 'build\\bdist.win-amd64\\wheel' to it
+adding 'external/__init__.py'
+adding 'external/caracore/cara.py'
+adding 'external/flatllmcore/__init__.py'
+adding 'external/flatllmcore/core/__init__.py'
+adding 'external/flatllmcore/core/absorption.py'
+adding 'external/flatllmcore/core/prune.py'
+adding 'external/flatllmcore/core/rank_allocation.py'
+adding 'external/flatllmcore/layers/__init__.py'
+adding 'external/flatllmcore/layers/attention_layers.py'
+adding 'external/flatllmcore/utils/__init__.py'
+adding 'external/flatllmcore/utils/data_utils.py'
+adding 'external/flatllmcore/utils/layer_utils.py'
+adding 'external/transmlacore/__init__.py'
+adding 'external/transmlacore/lora_qkv.py'
+adding 'external/transmlacore/modify_config.py'
+adding 'external/transmlacore/partial_rope.py'
+adding 'external/transmlacore/setup.py'
+adding 'external/transmlacore/utils.py'
+adding 'fedcore/__init__.py'
+adding 'fedcore/algorithm/__init__.py'
+adding 'fedcore/algorithm/base_compression_model.py'
+adding 'fedcore/algorithm/distillation/__init__.py'
+adding 'fedcore/algorithm/distillation/distilator.py'
+adding 'fedcore/algorithm/distillation/hooks.py'
+adding 'fedcore/algorithm/low_rank/__init__.py'
+adding 'fedcore/algorithm/low_rank/allocation.py'
+adding 'fedcore/algorithm/low_rank/approximation.py'
+adding 'fedcore/algorithm/low_rank/architecture_checkpoint.py'
+adding 'fedcore/algorithm/low_rank/architecture_profiles.py'
+adding 'fedcore/algorithm/low_rank/ars_profiles.py'
+adding 'fedcore/algorithm/low_rank/ars_specs.py'
+adding 'fedcore/algorithm/low_rank/artifacts.py'
+adding 'fedcore/algorithm/low_rank/candidate_graph.py'
+adding 'fedcore/algorithm/low_rank/candidate_storage.py'
+adding 'fedcore/algorithm/low_rank/compression_composition.py'
+adding 'fedcore/algorithm/low_rank/compression_grammar.py'
+adding 'fedcore/algorithm/low_rank/compression_graph.py'
+adding 'fedcore/algorithm/low_rank/coupled_execution.py'
+adding 'fedcore/algorithm/low_rank/coupled_layers.py'
+adding 'fedcore/algorithm/low_rank/coupled_profiles.py'
+adding 'fedcore/algorithm/low_rank/coupled_specs.py'
+adding 'fedcore/algorithm/low_rank/cv_execution.py'
+adding 'fedcore/algorithm/low_rank/cv_grammar.py'
+adding 'fedcore/algorithm/low_rank/decomposer.py'
+adding 'fedcore/algorithm/low_rank/dobi_profiles.py'
+adding 'fedcore/algorithm/low_rank/dobi_remapping.py'
+adding 'fedcore/algorithm/low_rank/dobi_remapping_export.py'
+adding 'fedcore/algorithm/low_rank/dobi_specs.py'
+adding 'fedcore/algorithm/low_rank/execution.py'
+adding 'fedcore/algorithm/low_rank/factor_recovery.py'
+adding 'fedcore/algorithm/low_rank/grammar_execution.py'
+adding 'fedcore/algorithm/low_rank/grammar_search.py'
+adding 'fedcore/algorithm/low_rank/graph_execution.py'
+adding 'fedcore/algorithm/low_rank/grouped_execution.py'
+adding 'fedcore/algorithm/low_rank/grouped_workflow.py'
+adding 'fedcore/algorithm/low_rank/hooks.py'
+adding 'fedcore/algorithm/low_rank/learned_execution.py'
+adding 'fedcore/algorithm/low_rank/learned_layers.py'
+adding 'fedcore/algorithm/low_rank/lightformer_layers.py'
+adding 'fedcore/algorithm/low_rank/lightformer_profiles.py'
+adding 'fedcore/algorithm/low_rank/lightformer_specs.py'
+adding 'fedcore/algorithm/low_rank/lora_operation.py'
+adding 'fedcore/algorithm/low_rank/low_rank_opt.py'
+adding 'fedcore/algorithm/low_rank/lrt_layers.py'
+adding 'fedcore/algorithm/low_rank/lrt_profiles.py'
+adding 'fedcore/algorithm/low_rank/lrt_specs.py'
+adding 'fedcore/algorithm/low_rank/method_errors.py'
+adding 'fedcore/algorithm/low_rank/method_execution.py'
+adding 'fedcore/algorithm/low_rank/method_specs.py'
+adding 'fedcore/algorithm/low_rank/plans.py'
+adding 'fedcore/algorithm/low_rank/projection_execution.py'
+adding 'fedcore/algorithm/low_rank/projection_layers.py'
+adding 'fedcore/algorithm/low_rank/projection_profiles.py'
+adding 'fedcore/algorithm/low_rank/projection_recovery.py'
+adding 'fedcore/algorithm/low_rank/projection_specs.py'
+adding 'fedcore/algorithm/low_rank/rank_distortion.py'
+adding 'fedcore/algorithm/low_rank/rank_pruning.py'
+adding 'fedcore/algorithm/low_rank/rankdyna_profiles.py'
+adding 'fedcore/algorithm/low_rank/rankdyna_specs.py'
+adding 'fedcore/algorithm/low_rank/slicegpt_layers.py'
+adding 'fedcore/algorithm/low_rank/slicegpt_profiles.py'
+adding 'fedcore/algorithm/low_rank/slicegpt_specs.py'
+adding 'fedcore/algorithm/low_rank/staged_execution.py'
+adding 'fedcore/algorithm/low_rank/statistical_collectors.py'
+adding 'fedcore/algorithm/low_rank/statistical_profiles.py'
+adding 'fedcore/algorithm/low_rank/statistics.py'
+adding 'fedcore/algorithm/low_rank/structured_layers.py'
+adding 'fedcore/algorithm/low_rank/structured_profiles.py'
+adding 'fedcore/algorithm/low_rank/svd_tools.py'
+adding 'fedcore/algorithm/low_rank/topology.py'
+adding 'fedcore/algorithm/low_rank/reassembly/__init__.py'
+adding 'fedcore/algorithm/low_rank/reassembly/config_mixins.py'
+adding 'fedcore/algorithm/low_rank/reassembly/core_reassemblers.py'
+adding 'fedcore/algorithm/low_rank/reassembly/decomposed_recreation.py'
+adding 'fedcore/algorithm/low_rank/reassembly/flatllm_reassembler.py'
+adding 'fedcore/algorithm/low_rank/reassembly/transmla_reassembler.py'
+adding 'fedcore/algorithm/pruning/__init__.py'
+adding 'fedcore/algorithm/pruning/hooks.py'
+adding 'fedcore/algorithm/pruning/pruners.py'
+adding 'fedcore/algorithm/pruning/pruning_validation.py'
+adding 'fedcore/algorithm/pruning/sfp_tools.py'
+adding 'fedcore/algorithm/pruning/sparse/__init__.py'
+adding 'fedcore/algorithm/pruning/sparse/architectures.py'
+adding 'fedcore/algorithm/pruning/sparse/channels.py'
+adding 'fedcore/algorithm/pruning/sparse/checkpoint.py'
+adding 'fedcore/algorithm/pruning/sparse/cv_channels.py'
+adding 'fedcore/algorithm/pruning/sparse/cv_checkpoint.py'
+adding 'fedcore/algorithm/pruning/sparse/execution.py'
+adding 'fedcore/algorithm/pruning/sparse/layers.py'
+adding 'fedcore/algorithm/pruning/sparse/linear.py'
+adding 'fedcore/algorithm/pruning/sparse/moe.py'
+adding 'fedcore/algorithm/pruning/sparse/policies.py'
+adding 'fedcore/algorithm/pruning/sparse/specs.py'
+adding 'fedcore/algorithm/quantization/__init__.py'
+adding 'fedcore/algorithm/quantization/hooks.py'
+adding 'fedcore/algorithm/quantization/quantizers.py'
+adding 'fedcore/algorithm/quantization/utils.py'
+adding 'fedcore/api/__init__.py'
+adding 'fedcore/api/api_configs.py'
+adding 'fedcore/api/config_factory.py'
+adding 'fedcore/api/llm_config.py'
+adding 'fedcore/api/main.py'
+adding 'fedcore/api/nlp_configs.py'
+adding 'fedcore/api/utils/__init__.py'
+adding 'fedcore/api/utils/api_init.py'
+adding 'fedcore/api/utils/checkers_collection.py'
+adding 'fedcore/api/utils/data.py'
+adding 'fedcore/api/utils/evaluation.py'
+adding 'fedcore/api/utils/misc.py'
+adding 'fedcore/api/utils/plugins/nlp_plugin.py'
+adding 'fedcore/architecture/__init__.py'
+adding 'fedcore/architecture/abstraction/__init__.py'
+adding 'fedcore/architecture/abstraction/accessor.py'
+adding 'fedcore/architecture/abstraction/decorators.py'
+adding 'fedcore/architecture/abstraction/delegator.py'
+adding 'fedcore/architecture/abstraction/placeholders.py'
+adding 'fedcore/architecture/comptutaional/__init__.py'
+adding 'fedcore/architecture/comptutaional/devices.py'
+adding 'fedcore/architecture/computational/__init__.py'
+adding 'fedcore/architecture/computational/devices.py'
+adding 'fedcore/architecture/dataset/__init__.py'
+adding 'fedcore/architecture/dataset/api_loader.py'
+adding 'fedcore/architecture/dataset/custom_loader.py'
+adding 'fedcore/architecture/dataset/datasets_from_source.py'
+adding 'fedcore/architecture/dataset/splitters.py'
+adding 'fedcore/architecture/dataset/utils.py'
+adding 'fedcore/architecture/dataset/task_specified/__init__.py'
+adding 'fedcore/architecture/dataset/task_specified/classification_datasets.py'
+adding 'fedcore/architecture/dataset/task_specified/dummy_clf.py'
+adding 'fedcore/architecture/dataset/task_specified/object_detection_datasets.py'
+adding 'fedcore/architecture/dataset/task_specified/segmentation_dataset.py'
+adding 'fedcore/architecture/dataset/task_specified/ts_dataset.py'
+adding 'fedcore/architecture/preprocessing/__init__.py'
+adding 'fedcore/architecture/preprocessing/data_convertor.py'
+adding 'fedcore/architecture/settings/__init__.py'
+adding 'fedcore/architecture/settings/computational.py'
+adding 'fedcore/architecture/utils/__init__.py'
+adding 'fedcore/architecture/utils/loader.py'
+adding 'fedcore/architecture/utils/misc.py'
+adding 'fedcore/architecture/utils/paths.py'
+adding 'fedcore/architecture/visualisation/__init__.py'
+adding 'fedcore/architecture/visualisation/visualization.py'
+adding 'fedcore/data/__init__.py'
+adding 'fedcore/data/data.py'
+adding 'fedcore/data/dataloader.py'
+adding 'fedcore/experiments/__init__.py'
+adding 'fedcore/experiments/ablations.py'
+adding 'fedcore/experiments/baseline.py'
+adding 'fedcore/experiments/compression_composition_reference.py'
+adding 'fedcore/experiments/compression_search_analysis.py'
+adding 'fedcore/experiments/compression_search_digits_evaluation.py'
+adding 'fedcore/experiments/compression_search_digits_protocol.py'
+adding 'fedcore/experiments/compression_search_digits_worker.py'
+adding 'fedcore/experiments/compression_search_evaluation.py'
+adding 'fedcore/experiments/compression_search_local2.py'
+adding 'fedcore/experiments/compression_search_local3.py'
+adding 'fedcore/experiments/compression_search_local3_evaluation.py'
+adding 'fedcore/experiments/compression_search_local3_matrix.py'
+adding 'fedcore/experiments/compression_search_local3_protocol.py'
+adding 'fedcore/experiments/compression_search_local3_worker.py'
+adding 'fedcore/experiments/compression_search_matrix.py'
+adding 'fedcore/experiments/compression_search_package.py'
+adding 'fedcore/experiments/compression_search_protocol.py'
+adding 'fedcore/experiments/cv_sparse_continuation.py'
+adding 'fedcore/experiments/cv_sparse_data.py'
+adding 'fedcore/experiments/cv_sparse_diagnostic_protocol.py'
+adding 'fedcore/experiments/cv_sparse_diagnostics.py'
+adding 'fedcore/experiments/cv_sparse_pilot.py'
+adding 'fedcore/experiments/cv_sparse_protocol.py'
+adding 'fedcore/experiments/cv_sparse_recovery.py'
+adding 'fedcore/experiments/cv_sparse_recovery_protocol.py'
+adding 'fedcore/experiments/cv_sparse_runtime.py'
+adding 'fedcore/experiments/cv_sparse_supervision.py'
+adding 'fedcore/experiments/external_benchmark.py'
+adding 'fedcore/experiments/local_study.py'
+adding 'fedcore/experiments/math_checks.py'
+adding 'fedcore/experiments/measurement.py'
+adding 'fedcore/experiments/pilot.py'
+adding 'fedcore/experiments/protocol.py'
+adding 'fedcore/experiments/remeasure.py'
+adding 'fedcore/experiments/reporting.py'
+adding 'fedcore/experiments/runner.py'
+adding 'fedcore/experiments/scenarios.py'
+adding 'fedcore/experiments/search.py'
+adding 'fedcore/experiments/sparse_pretrained.py'
+adding 'fedcore/experiments/sparse_pretrained_v2.py'
+adding 'fedcore/experiments/streaming.py'
+adding 'fedcore/experiments/svd_comparison.py'
+adding 'fedcore/experiments/svd_local_package.py'
+adding 'fedcore/experiments/svd_local_timing.py'
+adding 'fedcore/experiments/svd_profile_measurement.py'
+adding 'fedcore/experiments/svd_rank_policies.py'
+adding 'fedcore/experiments/svd_second_package.py'
+adding 'fedcore/experiments/svd_second_timing.py'
+adding 'fedcore/experiments/svd_third_package.py'
+adding 'fedcore/experiments/svd_third_timing.py'
+adding 'fedcore/external_runtime/__init__.py'
+adding 'fedcore/external_runtime/adapters.py'
+adding 'fedcore/external_runtime/client.py'
+adding 'fedcore/external_runtime/contracts.py'
+adding 'fedcore/external_runtime/execution.py'
+adding 'fedcore/external_runtime/industrial_manifest.py'
+adding 'fedcore/external_runtime/jobs.py'
+adding 'fedcore/external_runtime/models.py'
+adding 'fedcore/external_runtime/security.py'
+adding 'fedcore/external_runtime/worker.py'
+adding 'fedcore/inference/__init__.py'
+adding 'fedcore/inference/onnx.py'
+adding 'fedcore/interfaces/__init__.py'
+adding 'fedcore/interfaces/fedcore_dispatcher.py'
+adding 'fedcore/interfaces/fedcore_optimizer.py'
+adding 'fedcore/interfaces/fedcore_strategy.py'
+adding 'fedcore/interfaces/search_space.py'
+adding 'fedcore/interfaces/search_trace.py'
+adding 'fedcore/losses/__init__.py'
+adding 'fedcore/losses/distilation_loss.py'
+adding 'fedcore/losses/losses_impl.py'
+adding 'fedcore/losses/low_rank_loss.py'
+adding 'fedcore/losses/regularization_losses.py'
+adding 'fedcore/losses/utils.py'
+adding 'fedcore/metrics/__init__.py'
+adding 'fedcore/metrics/api_metric.py'
+adding 'fedcore/metrics/cv_metrics.py'
+adding 'fedcore/metrics/metric_impl.py'
+adding 'fedcore/metrics/nlp_metrics.py'
+adding 'fedcore/metrics/pareto.py'
+adding 'fedcore/metrics/quality.py'
+adding 'fedcore/metrics/multiobjective/__init__.py'
+adding 'fedcore/metrics/multiobjective/hypervolume.py'
+adding 'fedcore/metrics/multiobjective/multi_objective.py'
+adding 'fedcore/models/__init__.py'
+adding 'fedcore/models/backbone/__init__.py'
+adding 'fedcore/models/backbone/backbone_loader.py'
+adding 'fedcore/models/backbone/convolutional/__init__.py'
+adding 'fedcore/models/backbone/convolutional/densenet.py'
+adding 'fedcore/models/backbone/convolutional/efficientnet.py'
+adding 'fedcore/models/backbone/convolutional/inception.py'
+adding 'fedcore/models/backbone/convolutional/mobilenet.py'
+adding 'fedcore/models/backbone/convolutional/resnet.py'
+adding 'fedcore/models/backbone/custom/__init__.py'
+adding 'fedcore/models/backbone/custom/custom.py'
+adding 'fedcore/models/backbone/custom/custom_object_detection.py'
+adding 'fedcore/models/backbone/encoder_decoder/__init__.py'
+adding 'fedcore/models/backbone/encoder_decoder/unet.py'
+adding 'fedcore/models/backbone/pretrain_model/__init__.py'
+adding 'fedcore/models/backbone/pretrain_model/chronos.py'
+adding 'fedcore/models/backbone/pretrain_model/segformer.py'
+adding 'fedcore/models/backbone/transformers/__init__.py'
+adding 'fedcore/models/backbone/transformers/linformer.py'
+adding 'fedcore/models/backbone/transformers/tst.py'
+adding 'fedcore/models/network_impl/__init__.py'
+adding 'fedcore/models/network_impl/base_nn_model.py'
+adding 'fedcore/models/network_impl/decomposed_layers.py'
+adding 'fedcore/models/network_impl/interfaces.py'
+adding 'fedcore/models/network_impl/layers.py'
+adding 'fedcore/models/network_impl/llm_trainer.py'
+adding 'fedcore/models/network_impl/trainer_factory.py'
+adding 'fedcore/models/network_impl/utils/_base.py'
+adding 'fedcore/models/network_impl/utils/hooks.py'
+adding 'fedcore/models/network_impl/utils/hooks_collection.py'
+adding 'fedcore/models/network_impl/utils/interfaces.py'
+adding 'fedcore/models/network_impl/utils/trainer_factory.py'
+adding 'fedcore/models/network_modules/__init__.py'
+adding 'fedcore/models/network_modules/activation.py'
+adding 'fedcore/models/network_modules/losses.py'
+adding 'fedcore/models/network_modules/other.py'
+adding 'fedcore/models/network_modules/reversible.py'
+adding 'fedcore/models/network_modules/layers/__init__.py'
+adding 'fedcore/models/network_modules/layers/attention_layers.py'
+adding 'fedcore/models/network_modules/layers/backbone.py'
+adding 'fedcore/models/network_modules/layers/conv_layers.py'
+adding 'fedcore/models/network_modules/layers/head_layers.py'
+adding 'fedcore/models/network_modules/layers/linear_layers.py'
+adding 'fedcore/models/network_modules/layers/lora.py'
+adding 'fedcore/models/network_modules/layers/padding_layers.py'
+adding 'fedcore/models/network_modules/layers/pooling_layers.py'
+adding 'fedcore/models/network_modules/layers/sequential_layers.py'
+adding 'fedcore/models/network_modules/layers/special.py'
+adding 'fedcore/repository/IndustrialOperationParameters.py'
+adding 'fedcore/repository/__init__.py'
+adding 'fedcore/repository/capabilities.py'
+adding 'fedcore/repository/config_repository.py'
+adding 'fedcore/repository/constanst_repository.py'
+adding 'fedcore/repository/constant_repository.py'
+adding 'fedcore/repository/initializer_industrial_models.py'
+adding 'fedcore/repository/lazy_registry.py'
+adding 'fedcore/repository/model_repository.py'
+adding 'fedcore/repository/setups.py'
+adding 'fedcore/repository/data/__init__.py'
+adding 'fedcore/repository/data/compression_data_operation_repository.json'
+adding 'fedcore/repository/data/compression_model_repository.json'
+adding 'fedcore/repository/data/compression_operation_params.json'
+adding 'fedcore/repository/data/mode_capabilities.json'
+adding 'fedcore/repository/fedcore_impl/__init__.py'
+adding 'fedcore/repository/fedcore_impl/abstract.py'
+adding 'fedcore/repository/fedcore_impl/data.py'
+adding 'fedcore/repository/fedcore_impl/metrics.py'
+adding 'fedcore/repository/fedcore_impl/optimisation.py'
+adding 'fedcore/tools/__init__.py'
+adding 'fedcore/tools/atomic_json.py'
+adding 'fedcore/tools/benchmark.py'
+adding 'fedcore/tools/edge_device.py'
+adding 'fedcore/tools/example_utils.py'
+adding 'fedcore/tools/export.py'
+adding 'fedcore/tools/index_resolver.py'
+adding 'fedcore/tools/ruler.py'
+adding 'fedcore/tools/scheduler.py'
+adding 'fedcore/tools/svd_third_analysis.py'
+adding 'fedcore/tools/viz.py'
+adding 'fedcore/tools/registry/__init__.py'
+adding 'fedcore/tools/registry/checkpoint_manager.py'
+adding 'fedcore/tools/registry/metrics_tracker.py'
+adding 'fedcore/tools/registry/model_registry.py'
+adding 'fedcore/tools/registry/registry_storage.py'
+adding 'fedcore/tools/visualisation/optimisation_history_vis.py'
+adding 'fedcore/tools/visualisation/vis_utils.py'
+adding 'fedcore-0.0.5.4.dist-info/licenses/LICENSE'
+adding 'model_exporter/__init__.py'
+adding 'model_exporter/api_server.py'
+adding 'model_exporter/fedcore_ops.py'
+adding 'model_exporter/loader_bundle.py'
+adding 'model_exporter/log_analizer.py'
+adding 'model_exporter/main.py'
+adding 'model_exporter/model_analyzer.py'
+adding 'model_exporter/model_exporter.py'
+adding 'model_exporter/model_graph_view.py'
+adding 'model_exporter/model_logic.py'
+adding 'model_exporter/model_splitter.py'
+adding 'model_exporter/model_splitter_gui.py'
+adding 'model_exporter/device_architectures/Google_tpu_arch.json'
+adding 'model_exporter/device_architectures/Hailo_8_arch.json'
+adding 'model_exporter/device_architectures/Huawei_acend_arch.json'
+adding 'model_exporter/device_architectures/Jetson_arch.json'
+adding 'model_exporter/device_architectures/NMcard_arch.json'
+adding 'model_exporter/device_architectures/Xilinx_arch.json'
+adding 'model_exporter/device_architectures/gowin_arch.json'
+adding 'model_exporter/device_architectures/k510_arch.json'
+adding 'model_exporter/device_architectures/rk3588s_arch.json'
+adding 'model_exporter/static/css/style.css'
+adding 'model_exporter/static/js/script.js'
+adding 'model_exporter/templates/web_ui.html'
+adding 'fedcore-0.0.5.4.dist-info/METADATA'
+adding 'fedcore-0.0.5.4.dist-info/WHEEL'
+adding 'fedcore-0.0.5.4.dist-info/top_level.txt'
+adding 'fedcore-0.0.5.4.dist-info/RECORD'
+removing build\bdist.win-amd64\wheel
+WARNING `project.license` as a TOML table is deprecated
+!!
+
+        ********************************************************************************
+        Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+
+        By 2027-Feb-18, you need to update your project and remove deprecated calls
+        or your builds will no longer be supported.
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+WARNING License classifiers are deprecated.
+!!
+
+        ********************************************************************************
+        Please consider removing the following classifiers in favor of a SPDX license expression:
+
+        License :: OSI Approved :: BSD License
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+WARNING License classifiers are deprecated.
+!!
+
+        ********************************************************************************
+        Please consider removing the following classifiers in favor of a SPDX license expression:
+
+        License :: OSI Approved :: BSD License
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+Successfully built fedcore-0.0.5.4-py3-none-any.whl

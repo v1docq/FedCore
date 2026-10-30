@@ -1,0 +1,4 @@
+﻿job,model_seed,mode,budget,search_seed,attempts,completed_attempts,incomplete_attempts,on_time,finite,complete,normalized_hypervolume,accepted_normalized_hypervolume,partial_archive_hypervolume,accepted,budget_label
+oracle-19901,19901,oracle,oracle,,440,440,0,440,440,True,0.8345232122726163,0.7578455326514468,0.8345232122726163,288,Полный каталог
+oracle-19911,19911,oracle,oracle,,440,440,0,440,440,True,0.840093024280072,0.7634972464826435,0.840093024280072,288,Полный каталог
+oracle-19921,19921,oracle,oracle,,440,440,0,440,440,True,0.8422403161412644,0.7655695142880077,0.8422403161412644,288,Полный каталог

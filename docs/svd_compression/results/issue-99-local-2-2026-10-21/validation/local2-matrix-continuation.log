@@ -1,0 +1,14 @@
+{"job": "matrix-admission-recovery-1", "status": "succeeded", "matrix": 53}
+{"job": "matrix-8", "status": "succeeded", "elapsed": 2030.4034637999998, "matrix": 909}
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\continue_matrix_local2.py", line 86, in <module>
+    row = parent.run_job(RUN, dict(job=f'matrix-{n}', kind='matrix', n=n, hard_seconds=SIZE_SECONDS[n]),
+  File "C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\experiments\compression_search_local2.py", line 158, in run_job
+    active = read_json(active_path)
+  File "C:\Users\user\Documents\Codex\FedCore-SVD-Comparisons-2026-10-13\checkout\fedcore\experiments\compression_search_local2.py", line 58, in read_json
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\pathlib.py", line 1132, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "C:\Users\user\AppData\Local\Programs\Python\Python310\lib\pathlib.py", line 1117, in open
+    return self._accessor.open(self, mode, buffering, encoding, errors,
+PermissionError: [Errno 13] Permission denied: 'C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-32\\active-request.json'

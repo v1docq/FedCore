@@ -1,0 +1,18 @@
+{
+  "schema": "cv-pilot-supervision-v1",
+  "status": "finished",
+  "max_slot_seconds": 14400,
+  "worker_limit_seconds": 14390,
+  "termination_reserve_seconds": 10,
+  "protocol_sha256": "81e30bb6853080e2b6fedf966fc19f44cf717a8192988df5c3db552a3dd12010",
+  "preflight_gpu_processes": [],
+  "owned_pid": 1542914,
+  "elapsed_seconds": 1959.073725901544,
+  "returncode": 1,
+  "rss_bytes": null,
+  "gpu_process_count": null,
+  "action": "finished",
+  "telemetry_failures": 0,
+  "peak_rss_bytes": 2278260736,
+  "reason": "child_exit"
+}

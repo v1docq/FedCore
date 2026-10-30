@@ -1,0 +1,28 @@
+.............F
+================================== FAILURES ===================================
+____ test_reached_transition_has_exact_svd_law_and_preserves_source[LD-A] _____
+
+arm = 'A', word = 'LD'
+tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-Issue99-Local-2026-10-20/local2-repro-temp-1/test_reached_transition_has_ex0')
+
+    @pytest.mark.parametrize("arm", ["A", "B", "C"])
+    @pytest.mark.parametrize("word", ["LD", "LL"])
+    def test_reached_transition_has_exact_svd_law_and_preserves_source(arm, word, tmp_path):
+        import torch
+        from fedcore.experiments.compression_search_evaluation import model_identity
+        source = matrix_source(8)
+        identity = model_identity(source)
+        rng = torch.get_rng_state().clone()
+        with SVDTelemetry(tmp_path) as telemetry:
+            actual, row = invoke_arm(source, matrix_request(8, word), arm)
+>           assert row["accepted"] == (word == "LD"), str(row.get("early_rejection") or row.get("rejection"))
+E           AssertionError: [{'code': 'ResourceLimitExceeded', 'path': 'candidate.storage', 'message': 'Named owned buffers exceed the declared peak floor'}]
+E           assert False == ('LD' == 'LD'
+E             
+E               LD)
+
+tests\refactoring\test_compression_search_matrix.py:43: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_compression_search_matrix.py::test_reached_transition_has_exact_svd_law_and_preserves_source[LD-A]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 13 passed, 3 warnings in 11.18s

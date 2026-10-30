@@ -1,0 +1,783 @@
+{
+  "checks": {
+    "artifacts": 951,
+    "budget": 102,
+    "cache": 900,
+    "catalog": 7,
+    "completeness": 100,
+    "deadlines": 162,
+    "early_late": 7962,
+    "g5": 245,
+    "immutability": 181,
+    "lineage": 12,
+    "metrics": 2570,
+    "order": 105,
+    "provenance": 166,
+    "published": 2031,
+    "resources": 194,
+    "reuse": 388,
+    "search": 2214,
+    "selection": 3094,
+    "storage": 2570
+  },
+  "facts": {
+    "baseline_test_rows": 3,
+    "cache_on_over_off_summary": {
+      "count": 9,
+      "maximum": 0.3783388143033272,
+      "median": 0.35882735621778955,
+      "minimum": 0.3333429655968817
+    },
+    "cache_pairs": [
+      {
+        "hits": 36,
+        "model": 41,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.3511034582759484,
+        "seed": 9921
+      },
+      {
+        "hits": 36,
+        "model": 41,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.3333429655968817,
+        "seed": 9922
+      },
+      {
+        "hits": 36,
+        "model": 41,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.3614284895909299,
+        "seed": 9923
+      },
+      {
+        "hits": 36,
+        "model": 42,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.35235202259998466,
+        "seed": 9921
+      },
+      {
+        "hits": 36,
+        "model": 42,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.3783388143033272,
+        "seed": 9922
+      },
+      {
+        "hits": 36,
+        "model": 42,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.36482631590677017,
+        "seed": 9923
+      },
+      {
+        "hits": 36,
+        "model": 43,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.3496875805556639,
+        "seed": 9921
+      },
+      {
+        "hits": 36,
+        "model": 43,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.3652709113822516,
+        "seed": 9922
+      },
+      {
+        "hits": 36,
+        "model": 43,
+        "off_evaluations": 48,
+        "on_evaluations": 12,
+        "on_over_off": 0.35882735621778955,
+        "seed": 9923
+      }
+    ],
+    "cumulative_attempts": 3010,
+    "early_late": [
+      {
+        "early_over_late": 1.8534828514286765,
+        "seed": 9911
+      },
+      {
+        "early_over_late": 2.18929578511354,
+        "seed": 9912
+      },
+      {
+        "early_over_late": 1.7276084515312597,
+        "seed": 9913
+      },
+      {
+        "early_over_late": 1.7511875577123786,
+        "seed": 9914
+      },
+      {
+        "early_over_late": 1.826949612288159,
+        "seed": 9915
+      },
+      {
+        "early_over_late": 1.545277080669025,
+        "seed": 9916
+      }
+    ],
+    "early_over_late_summary": {
+      "count": 6,
+      "maximum": 2.18929578511354,
+      "median": 1.7890685850002688,
+      "minimum": 1.545277080669025
+    },
+    "elapsed_seconds": 2564.7784548,
+    "inherited_attempts": 560,
+    "job_counts": {
+      "admissibility": 1,
+      "admission": 3,
+      "cache": 18,
+      "early_late": 12,
+      "finalize": 3,
+      "oracle": 3,
+      "order": 3,
+      "search": 54
+    },
+    "new_attempts": 2450,
+    "order_outputs": 36,
+    "order_pairs": 18,
+    "original_origin": 6608.1114349,
+    "paired_summary_by_model": [
+      {
+        "budget": "attempts",
+        "comparison": "RT",
+        "count": 3,
+        "maximum": 7.018573942474404e-05,
+        "median": -5.308468225129204e-05,
+        "minimum": -0.00010815150355059089,
+        "model": 41
+      },
+      {
+        "budget": "attempts",
+        "comparison": "TE",
+        "count": 3,
+        "maximum": 0.00035985434131680094,
+        "median": -6.595396722541835e-06,
+        "minimum": -5.326225879120905e-05,
+        "model": 41
+      },
+      {
+        "budget": "time",
+        "comparison": "RT",
+        "count": 3,
+        "maximum": 0.0004894729890996263,
+        "median": 0.0004894729890996263,
+        "minimum": 0.0004894729890996263,
+        "model": 41
+      },
+      {
+        "budget": "time",
+        "comparison": "TE",
+        "count": 3,
+        "maximum": -8.763823673829663e-05,
+        "median": -0.00016138465116388723,
+        "minimum": -0.00016682461146966254,
+        "model": 41
+      },
+      {
+        "budget": "attempts",
+        "comparison": "RT",
+        "count": 3,
+        "maximum": 0.0017174076083616985,
+        "median": 0.0016322368736385595,
+        "minimum": 0.00019750392333128808,
+        "model": 42
+      },
+      {
+        "budget": "attempts",
+        "comparison": "TE",
+        "count": 3,
+        "maximum": 0.0,
+        "median": -0.000230074865390284,
+        "minimum": -0.0006920106804026993,
+        "model": 42
+      },
+      {
+        "budget": "time",
+        "comparison": "RT",
+        "count": 3,
+        "maximum": 0.0017766456591759017,
+        "median": 0.0017766456591759017,
+        "minimum": 0.0017766456591759017,
+        "model": 42
+      },
+      {
+        "budget": "time",
+        "comparison": "TE",
+        "count": 3,
+        "maximum": 0.0,
+        "median": -0.0003580407883978509,
+        "minimum": -0.00038047934451057586,
+        "model": 42
+      },
+      {
+        "budget": "attempts",
+        "comparison": "RT",
+        "count": 3,
+        "maximum": 0.0016147772903321034,
+        "median": 0.0015883312969293684,
+        "minimum": 0.0009474309570705053,
+        "model": 43
+      },
+      {
+        "budget": "attempts",
+        "comparison": "TE",
+        "count": 3,
+        "maximum": -6.156026248804736e-05,
+        "median": -0.0001392965301587612,
+        "minimum": -0.0006674234946659752,
+        "model": 43
+      },
+      {
+        "budget": "time",
+        "comparison": "RT",
+        "count": 3,
+        "maximum": 0.0018740704087574223,
+        "median": 0.0018740704087574223,
+        "minimum": 0.0018740704087574223,
+        "model": 43
+      },
+      {
+        "budget": "time",
+        "comparison": "TE",
+        "count": 3,
+        "maximum": 0.0,
+        "median": -9.447094686576563e-05,
+        "minimum": -0.00018860884355498264,
+        "model": 43
+      }
+    ],
+    "published_analysis_sha256": "fe9b0d60aa2a1878ad78ddd49d3adf03dae686dd11950a8a4794e9da29186a4f",
+    "revisions": [
+      {
+        "attempts": 3010,
+        "directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3",
+        "protocol": "997321b0d46933ec466a7baee0526db372a9deea8244dfad3861d796d1bd91e3",
+        "status": "succeeded"
+      },
+      {
+        "attempts": 560,
+        "directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-2",
+        "protocol": "7a2e91960e5343e5186277c32ae6e3306df6fb3bc978cfd708876e87b6faea2a",
+        "status": "stopped"
+      },
+      {
+        "attempts": 1,
+        "directory": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-1",
+        "protocol": "d17c251230a1ff565e58f6168841b77b1718c42fa5bd0e0e6f5420f9993689f7",
+        "status": "stopped"
+      }
+    ],
+    "searches": [
+      {
+        "attempts": 12,
+        "hypervolume": 1.4192493467389047,
+        "job": "search-41-attempts-11-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.4193195324783294,
+        "job": "search-41-attempts-11-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.4192662702195384,
+        "job": "search-41-attempts-11-E",
+        "late": 0,
+        "proposals": 28,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.4191574369340074,
+        "job": "search-41-attempts-22-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.4191508415372847,
+        "job": "search-41-attempts-22-E",
+        "late": 0,
+        "proposals": 36,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.4192105216162587,
+        "job": "search-41-attempts-22-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.4194622244540251,
+        "job": "search-41-attempts-33-E",
+        "late": 0,
+        "proposals": 20,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.4192105216162587,
+        "job": "search-41-attempts-33-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.419102370112708,
+        "job": "search-41-attempts-33-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.4192493467389047,
+        "job": "search-41-time-11-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.4197388197280043,
+        "job": "search-41-time-11-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 44,
+        "hypervolume": 1.4195719951165349,
+        "job": "search-41-time-11-E",
+        "late": 0,
+        "proposals": 158,
+        "stop_reason": "optimizer_stopped",
+        "within": 44
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.4197388197280043,
+        "job": "search-41-time-22-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 41,
+        "hypervolume": 1.419651181491266,
+        "job": "search-41-time-22-E",
+        "late": 0,
+        "proposals": 165,
+        "stop_reason": "optimizer_stopped",
+        "within": 41
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.4192493467389047,
+        "job": "search-41-time-22-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 41,
+        "hypervolume": 1.4195774350768402,
+        "job": "search-41-time-33-E",
+        "late": 0,
+        "proposals": 174,
+        "stop_reason": "optimizer_stopped",
+        "within": 41
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.4192493467389047,
+        "job": "search-41-time-33-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.4197388197280043,
+        "job": "search-41-time-33-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5703647680594857,
+        "job": "search-42-attempts-11-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.571997004933124,
+        "job": "search-42-attempts-11-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5717669300677337,
+        "job": "search-42-attempts-11-E",
+        "late": 0,
+        "proposals": 28,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5722951833834533,
+        "job": "search-42-attempts-22-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5716031727030506,
+        "job": "search-42-attempts-22-E",
+        "late": 0,
+        "proposals": 36,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5705777757750918,
+        "job": "search-42-attempts-22-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.570775279698423,
+        "job": "search-42-attempts-33-E",
+        "late": 0,
+        "proposals": 20,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5705777757750918,
+        "job": "search-42-attempts-33-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.570775279698423,
+        "job": "search-42-attempts-33-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.5705777757750918,
+        "job": "search-42-time-11-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.5723544214342675,
+        "job": "search-42-time-11-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 50,
+        "hypervolume": 1.5723544214342675,
+        "job": "search-42-time-11-E",
+        "late": 0,
+        "proposals": 174,
+        "stop_reason": "optimizer_stopped",
+        "within": 50
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.5723544214342675,
+        "job": "search-42-time-22-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 45,
+        "hypervolume": 1.5719739420897572,
+        "job": "search-42-time-22-E",
+        "late": 0,
+        "proposals": 181,
+        "stop_reason": "optimizer_stopped",
+        "within": 45
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.5705777757750918,
+        "job": "search-42-time-22-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 41,
+        "hypervolume": 1.5719963806458697,
+        "job": "search-42-time-33-E",
+        "late": 0,
+        "proposals": 182,
+        "stop_reason": "optimizer_stopped",
+        "within": 41
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.5705777757750918,
+        "job": "search-42-time-33-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.5723544214342675,
+        "job": "search-42-time-33-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5836446269301754,
+        "job": "search-43-attempts-11-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5852329582271045,
+        "job": "search-43-attempts-11-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5845655347324388,
+        "job": "search-43-attempts-11-E",
+        "late": 0,
+        "proposals": 28,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5852594042205075,
+        "job": "search-43-attempts-22-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.585120107690349,
+        "job": "search-43-attempts-22-E",
+        "late": 0,
+        "proposals": 36,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5836446269301754,
+        "job": "search-43-attempts-22-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5845304976247578,
+        "job": "search-43-attempts-33-E",
+        "late": 0,
+        "proposals": 20,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5836446269301754,
+        "job": "search-43-attempts-33-R",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 12,
+        "hypervolume": 1.5845920578872459,
+        "job": "search-43-attempts-33-T",
+        "late": 0,
+        "proposals": 12,
+        "stop_reason": "evaluation_budget",
+        "within": 12
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.5836446269301754,
+        "job": "search-43-time-11-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.5855186973389328,
+        "job": "search-43-time-11-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 50,
+        "hypervolume": 1.5853300884953778,
+        "job": "search-43-time-11-E",
+        "late": 0,
+        "proposals": 174,
+        "stop_reason": "optimizer_stopped",
+        "within": 50
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.5855186973389328,
+        "job": "search-43-time-22-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      },
+      {
+        "attempts": 43,
+        "hypervolume": 1.585424226392067,
+        "job": "search-43-time-22-E",
+        "late": 0,
+        "proposals": 173,
+        "stop_reason": "optimizer_stopped",
+        "within": 43
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.5836446269301754,
+        "job": "search-43-time-22-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 40,
+        "hypervolume": 1.5855186973389328,
+        "job": "search-43-time-33-E",
+        "late": 0,
+        "proposals": 166,
+        "stop_reason": "optimizer_stopped",
+        "within": 40
+      },
+      {
+        "attempts": 15,
+        "hypervolume": 1.5836446269301754,
+        "job": "search-43-time-33-R",
+        "late": 0,
+        "proposals": 15,
+        "stop_reason": "catalog_exhausted",
+        "within": 15
+      },
+      {
+        "attempts": 80,
+        "hypervolume": 1.5855186973389328,
+        "job": "search-43-time-33-T",
+        "late": 0,
+        "proposals": 80,
+        "stop_reason": "catalog_exhausted",
+        "within": 80
+      }
+    ],
+    "selected_test_rows": 171
+  },
+  "failures": [],
+  "limitations": [
+    "No model, dataset, logits or checkpoint tensor was loaded. CE/F1 and tensor content parity rely on recorded execution witnesses and earlier independent tests; this audit checks stored-normalization arithmetic, provenance and hashes.",
+    "Absence of unlogged oracle/test reads cannot be proved from event files alone; frozen source review plus fresh charged evaluations provide the isolation evidence."
+  ],
+  "run": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\run-3",
+  "status": "passed",
+  "verifier_sha256": "85d0dc4d2d1bed51365f5f4c76f57bc1e83073f198746e81ec7babc1f901245c"
+}

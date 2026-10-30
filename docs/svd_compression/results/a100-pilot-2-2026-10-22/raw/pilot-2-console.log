@@ -1,0 +1,231 @@
+/root/fedcore_sparse_cv_20261021/.venv/lib/python3.10/site-packages/hyperopt/atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2026-10-22 14:23:03,603 - Trying to use device <cuda>
+2026-10-22 14:23:03,603 - Device <cuda:0> is selected
+2026-10-22 14:23:03,604 - ModelRegistry initialized: auto_cleanup=False, base_dir=/root/fedcore_sparse_cv_20261021/results/pilot-2/registry
+2026-10-22 14:23:03,604 - Device <cuda:0> is selected
+2026-10-22 14:23:03,604 - Device <cuda:0> is selected
+2026-10-22 14:54:04,439 - model_before setter called: value=not None, _model_id_before=None
+2026-10-22 14:54:04,440 - Registering model_before in ModelRegistry
+2026-10-22 14:54:04,440 - register_model called: fedcore_id=bounded-sparse-cv-pilot, model_type=CifarResNet18, stage=before, mode=None
+2026-10-22 14:54:04,679 - model_before registered with id=model_132077445447200
+2026-10-22 14:54:04,679 - model_after setter called: value=not None, _model_id_after=None
+2026-10-22 14:54:04,679 - Registering new model_after in ModelRegistry
+2026-10-22 14:54:04,679 - register_model called: fedcore_id=bounded-sparse-cv-pilot, model_type=CifarResNet18, stage=after, mode=None
+2026-10-22 14:54:04,854 - model_after registered with id=model_132077444548880
+2026-10-22 14:54:08,499 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:08,499 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:08,704 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:08,704 - Registering changes for model_after
+2026-10-22 14:54:08,704 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:08,870 - model_after changes registered
+2026-10-22 14:54:12,071 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:12,071 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:12,251 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:12,251 - Registering changes for model_after
+2026-10-22 14:54:12,251 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:12,361 - model_after changes registered
+2026-10-22 14:54:15,012 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:15,012 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:15,222 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:15,222 - Registering changes for model_after
+2026-10-22 14:54:15,222 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:15,420 - model_after changes registered
+2026-10-22 14:54:18,281 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:18,281 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:18,495 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:18,495 - Registering changes for model_after
+2026-10-22 14:54:18,495 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:18,631 - model_after changes registered
+2026-10-22 14:54:22,059 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:22,059 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:22,230 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:22,230 - Registering changes for model_after
+2026-10-22 14:54:22,230 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:22,370 - model_after changes registered
+2026-10-22 14:54:25,449 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:25,449 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:25,609 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:25,609 - Registering changes for model_after
+2026-10-22 14:54:25,609 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:25,726 - model_after changes registered
+2026-10-22 14:54:28,290 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:28,290 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:28,511 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:28,511 - Registering changes for model_after
+2026-10-22 14:54:28,511 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:28,692 - model_after changes registered
+2026-10-22 14:54:31,752 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:31,752 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:31,956 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:31,956 - Registering changes for model_after
+2026-10-22 14:54:31,956 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:32,089 - model_after changes registered
+2026-10-22 14:54:35,044 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:35,044 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:35,247 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:35,247 - Registering changes for model_after
+2026-10-22 14:54:35,247 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:35,382 - model_after changes registered
+2026-10-22 14:54:38,426 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:38,426 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:38,607 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:38,607 - Registering changes for model_after
+2026-10-22 14:54:38,607 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:38,746 - model_after changes registered
+2026-10-22 14:54:42,260 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:42,261 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:42,423 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:42,423 - Registering changes for model_after
+2026-10-22 14:54:42,423 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:42,554 - model_after changes registered
+2026-10-22 14:54:45,803 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:45,803 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:45,960 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:45,960 - Registering changes for model_after
+2026-10-22 14:54:45,960 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:46,078 - model_after changes registered
+2026-10-22 14:54:48,781 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:48,782 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:48,942 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:48,942 - Registering changes for model_after
+2026-10-22 14:54:48,942 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:49,044 - model_after changes registered
+2026-10-22 14:54:51,912 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:51,912 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:52,078 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:52,078 - Registering changes for model_after
+2026-10-22 14:54:52,078 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:52,195 - model_after changes registered
+2026-10-22 14:54:53,513 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-22 14:54:53,513 - FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+2026-10-22 14:54:53,514 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-22 14:54:53,514 - FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+2026-10-22 14:54:55,304 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:55,305 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:55,466 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:55,466 - Registering changes for model_after
+2026-10-22 14:54:55,466 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:55,581 - model_after changes registered
+2026-10-22 14:54:59,085 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:54:59,085 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:54:59,289 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:54:59,289 - Registering changes for model_after
+2026-10-22 14:54:59,290 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:54:59,457 - model_after changes registered
+2026-10-22 14:55:02,338 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:02,338 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:02,507 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:02,507 - Registering changes for model_after
+2026-10-22 14:55:02,507 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:02,650 - model_after changes registered
+2026-10-22 14:55:05,570 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:05,571 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:05,780 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:05,780 - Registering changes for model_after
+2026-10-22 14:55:05,781 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:05,961 - model_after changes registered
+2026-10-22 14:55:07,608 - FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+2026-10-22 14:55:07,608 - FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+2026-10-22 14:55:07,608 - FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+2026-10-22 14:55:07,608 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-22 14:55:07,610 - FedcoreEvoOptimizer - Generation num: 1 size: 4
+2026-10-22 14:55:07,610 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (3): ['<heldout_quality=0.230 actual_cost=1.000>', '<heldout_quality=0.233 actual_cost=0.751>', '<heldout_quality=0.257 actual_cost=0.575>']
+2026-10-22 14:55:07,637 - FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+2026-10-22 14:55:07,637 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-22 14:55:07,637 - FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+2026-10-22 14:55:09,058 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:09,058 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:09,239 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:09,239 - Registering changes for model_after
+2026-10-22 14:55:09,239 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:09,405 - model_after changes registered
+2026-10-22 14:55:12,417 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:12,417 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:12,592 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:12,592 - Registering changes for model_after
+2026-10-22 14:55:12,592 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:12,735 - model_after changes registered
+2026-10-22 14:55:16,314 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:16,315 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:16,516 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:16,517 - Registering changes for model_after
+2026-10-22 14:55:16,517 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:16,654 - model_after changes registered
+2026-10-22 14:55:20,002 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:20,002 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:20,155 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:20,156 - Registering changes for model_after
+2026-10-22 14:55:20,156 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:20,271 - model_after changes registered
+2026-10-22 14:55:21,578 - FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+2026-10-22 14:55:21,579 - FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+2026-10-22 14:55:21,579 - FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+2026-10-22 14:55:21,579 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-22 14:55:21,579 - ReproductionController - Reproduction achieved pop size 4 using 1 attempt(s) with success rate 1.000
+2026-10-22 14:55:21,579 - FedcoreEvoOptimizer - Successful reproduction
+2026-10-22 14:55:21,579 - RandomAgent - len=4 nonzero=0 
+2026-10-22 14:55:21,579 - RandomAgent - actions/rewards: [('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0)]
+2026-10-22 14:55:21,580 - RandomAgent - exp=[1.] probs=[1.]
+2026-10-22 14:55:21,580 - FedcoreDispatcher - evaluate_population: 4 total, 0 to evaluate, 4 to skip
+2026-10-22 14:55:21,581 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-22 14:55:21,581 - FedcoreDispatcher - _multithread_eval: No individuals to evaluate
+2026-10-22 14:55:21,581 - FedcoreDispatcher - apply_evaluation_results: No evaluation results provided for 0 individuals
+2026-10-22 14:55:21,581 - FedcoreDispatcher - evaluate_population: 0 individuals successfully evaluated
+2026-10-22 14:55:21,581 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-22 14:55:21,582 - FedcoreEvoOptimizer - Generation num: 2 size: 4
+2026-10-22 14:55:21,583 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (4): ['<heldout_quality=0.230 actual_cost=1.000>', '<heldout_quality=0.231 actual_cost=0.745>', '<heldout_quality=0.247 actual_cost=0.580>', '<heldout_quality=0.257 actual_cost=0.575>']
+2026-10-22 14:55:21,583 - FedcoreEvoOptimizer - no improvements for 1 iterations
+2026-10-22 14:55:21,583 - FedcoreEvoOptimizer - spent time: 0.5 min
+2026-10-22 14:55:21,609 - FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+2026-10-22 14:55:21,609 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-22 14:55:21,609 - FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+2026-10-22 14:55:23,075 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:23,075 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:23,270 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:23,270 - Registering changes for model_after
+2026-10-22 14:55:23,270 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:23,458 - model_after changes registered
+2026-10-22 14:55:26,563 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:26,563 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:26,752 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:26,752 - Registering changes for model_after
+2026-10-22 14:55:26,752 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:26,886 - model_after changes registered
+2026-10-22 14:55:30,022 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:30,022 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:30,205 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:30,205 - Registering changes for model_after
+2026-10-22 14:55:30,205 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:30,318 - model_after changes registered
+2026-10-22 14:55:33,513 - model_before setter called: value=not None, _model_id_before=model_132077445447200
+2026-10-22 14:55:33,513 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077445447200, stage=before, mode=None
+2026-10-22 14:55:33,701 - model_after setter called: value=not None, _model_id_after=model_132077444548880
+2026-10-22 14:55:33,701 - Registering changes for model_after
+2026-10-22 14:55:33,701 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_132077444548880, stage=after, mode=None
+2026-10-22 14:55:33,822 - model_after changes registered
+2026-10-22 14:55:35,138 - FedcoreDispatcher - _multithread_eval: 4 succeeded, 0 failed out of 4
+2026-10-22 14:55:35,139 - FedcoreDispatcher - apply_evaluation_results: 4 valid results out of 4 total
+2026-10-22 14:55:35,139 - FedcoreDispatcher - evaluate_population: 4 individuals successfully evaluated
+2026-10-22 14:55:35,139 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-22 14:55:35,139 - ReproductionController - Reproduction achieved pop size 4 using 1 attempt(s) with success rate 1.000
+2026-10-22 14:55:35,139 - FedcoreEvoOptimizer - Successful reproduction
+2026-10-22 14:55:35,139 - RandomAgent - len=4 nonzero=0 
+2026-10-22 14:55:35,139 - RandomAgent - actions/rewards: [('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0), ('mutate', 0.0)]
+2026-10-22 14:55:35,140 - RandomAgent - exp=[1.] probs=[1.]
+2026-10-22 14:55:35,140 - FedcoreDispatcher - evaluate_population: 4 total, 0 to evaluate, 4 to skip
+2026-10-22 14:55:35,141 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-22 14:55:35,141 - FedcoreDispatcher - _multithread_eval: No individuals to evaluate
+2026-10-22 14:55:35,141 - FedcoreDispatcher - apply_evaluation_results: No evaluation results provided for 0 individuals
+2026-10-22 14:55:35,141 - FedcoreDispatcher - evaluate_population: 0 individuals successfully evaluated
+2026-10-22 14:55:35,141 - FedcoreDispatcher - 4 individuals out of 4 in previous population were evaluated successfully.
+2026-10-22 14:55:35,143 - FedcoreEvoOptimizer - Generation num: 3 size: 4
+2026-10-22 14:55:35,143 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=0.230 actual_cost=1.000>', '<heldout_quality=0.231 actual_cost=0.745>', '<heldout_quality=0.240 actual_cost=0.608>', '<heldout_quality=0.247 actual_cost=0.580>', '<heldout_quality=0.257 actual_cost=0.575>']
+2026-10-22 14:55:35,143 - FedcoreEvoOptimizer - no improvements for 2 iterations
+2026-10-22 14:55:35,143 - FedcoreEvoOptimizer - spent time: 0.7 min
+2026-10-22 14:55:35,143 - OptimisationTimer - Composition time: 0.694 min
+2026-10-22 14:55:35,145 - FedcoreEvoOptimizer - Generation num: 4 size: 5
+2026-10-22 14:55:35,145 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (5): ['<heldout_quality=0.230 actual_cost=1.000>', '<heldout_quality=0.231 actual_cost=0.745>', '<heldout_quality=0.240 actual_cost=0.608>', '<heldout_quality=0.247 actual_cost=0.580>', '<heldout_quality=0.257 actual_cost=0.575>']
+2026-10-22 14:55:35,145 - FedcoreEvoOptimizer - no improvements for 3 iterations
+2026-10-22 14:55:35,145 - FedcoreEvoOptimizer - spent time: 0.7 min
+{"status": "failed", "report": "/root/fedcore_sparse_cv_20261021/results/pilot-2/report.json"}

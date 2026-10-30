@@ -116,3 +116,26 @@ build/
 docs/_build/
 /work/
 *.pt
+
+# Keep generated Data report exports/caches out of the editable source.
+docs/svd_compression/independent-m0-report-source/.data-app-offline/
+docs/svd_compression/independent-m0-report-source/.openai/
+
+# Store authored report inputs and the reproducer, not a copied third-party runtime.
+docs/svd_compression/independent-m0-report-source/*
+!docs/svd_compression/independent-m0-report-source/AGENTS.md
+!docs/svd_compression/independent-m0-report-source/README.md
+!docs/svd_compression/independent-m0-report-source/rebuild-report.mjs
+!docs/svd_compression/independent-m0-report-source/src/
+docs/svd_compression/independent-m0-report-source/src/*
+!docs/svd_compression/independent-m0-report-source/src/data.json
+!docs/svd_compression/independent-m0-report-source/src/content/
+docs/svd_compression/independent-m0-report-source/src/content/*
+!docs/svd_compression/independent-m0-report-source/src/content/report/
+docs/svd_compression/independent-m0-report-source/src/content/report/*
+!docs/svd_compression/independent-m0-report-source/src/content/report/ReportContent.jsx
+!docs/svd_compression/independent-m0-report-source/src/content/report/report.css
+
+# The recorded worker named "manifest" is evidence, not a packaging MANIFEST.
+!docs/svd_compression/results/independent-m0-a100-2026-10-30/raw/workers/manifest/
+!docs/svd_compression/results/independent-m0-a100-2026-10-30/raw/workers/manifest/**

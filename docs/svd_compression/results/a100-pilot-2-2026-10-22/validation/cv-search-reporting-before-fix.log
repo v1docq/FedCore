@@ -1,0 +1,118 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+____ test_evolution_saves_portable_genotypes_without_mutating_typed_result ____
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{49fa9099-519e-4c4d-bc91-e7655cb3a079}/AC/Temp/pytest-of-user/pytest-0/test_evolution_saves_portable_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001FC2C86F1F0>
+
+    def test_evolution_saves_portable_genotypes_without_mutating_typed_result(tmp_path, monkeypatch):
+        from fedcore.algorithm.low_rank import grammar_search
+        from fedcore.algorithm.low_rank.cv_grammar import CVGenotype, cv_genotype_payload
+        result = search_result()
+        identities = [pilot.solution_id(value) for value in result["best_genotypes"]]
+        output = runtime.Output(tmp_path / "out")
+        owner = SimpleNamespace(protocol=PilotProtocol(), records={}, space=object(), output=output,
+                                prefix=pilot.fixed_prefix(pilot.cv_menu()), short=lambda *args: None)
+        monkeypatch.setattr(grammar_search, "run_cv_grammar_search", lambda *args, **kwargs: result)
+>       returned = pilot.Pilot.evolution(owner, time.perf_counter() + 60)
+
+tests\refactoring\test_sparse_cv_search_reporting.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_sparse_pilot.py:208: in evolution
+    self.output.json("search/evolution_attempts.json", self.records[run])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <fedcore.experiments.cv_sparse_runtime.Output object at 0x000001FC2C86D930>
+relative = 'search/evolution_attempts.json', value = []
+
+    def json(self, relative, value):
+        target = self._target(relative)
+        temporary = target.with_name(target.name + ".tmp")
+        with temporary.open("w", encoding="utf-8", newline="\n") as stream:
+            json.dump(value, stream, sort_keys=True, indent=2, allow_nan=False)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+>       os.replace(temporary, target)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{49fa9099-519e-4c4d-bc91-e7655cb3a079}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_evolution_saves_portable_0\\out\\search\\evolution_attempts.json.tmp' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{49fa9099-519e-4c4d-bc91-e7655cb3a079}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_evolution_saves_portable_0\\out\\search\\evolution_attempts.json'
+
+fedcore\experiments\cv_sparse_runtime.py:238: PermissionError
+_______ test_run_pilot_projects_typed_evolution_again_for_final_report ________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Packages/sandbox.{49fa9099-519e-4c4d-bc91-e7655cb3a079}/AC/Temp/pytest-of-user/pytest-0/test_run_pilot_projects_typed_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001FC369839A0>
+
+    def test_run_pilot_projects_typed_evolution_again_for_final_report(tmp_path, monkeypatch):
+        from fedcore.experiments import cv_sparse_data
+        result = search_result()
+        prefix = pilot.fixed_prefix(pilot.cv_menu())
+        data = SimpleNamespace(roles=SimpleNamespace(sha256="b" * 64, payload=lambda: {}), source_hashes={})
+        class FakeRuntime:
+            def __init__(self, protocol, output, started):
+                self.deadline = started + 60
+                self.environment = {}
+                self.torch = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda: 0,
+                                                                 max_memory_reserved=lambda: 0))
+            def phase(self, name):
+                return nullcontext(self.deadline)
+            def check(self, *args, **kwargs):
+                pass
+        class FakePilot:
+            def __init__(self, runtime, data):
+                self.prefix = prefix
+                self.gpu = object()
+                self.genotypes = {}
+                self.records = {"random": [], "evolution": []}
+                self.byte_ceiling = 80
+                self.space = SimpleNamespace(source_storage_bytes=100)
+            def bind_teacher(self, teacher):
+                pass
+            def short(self, *args):
+                pass
+            def random_search(self, deadline):
+                return {"status": "completed"}
+            def evolution(self, deadline):
+                return result
+        def stop_before_recovery(*args):
+            raise runtime.PilotStop("recovery", "test_boundary_before_numerics")
+        monkeypatch.setattr(pilot, "preparation", lambda *args: {"status": "prepared", "source": {}})
+        monkeypatch.setattr(pilot, "admit_free_gpu", lambda: {})
+        monkeypatch.setattr(pilot, "Runtime", FakeRuntime)
+        monkeypatch.setattr(pilot, "Pilot", FakePilot)
+        monkeypatch.setattr(cv_sparse_data, "CifarData", lambda *args, **kwargs: data)
+        monkeypatch.setattr(pilot.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(stdout=""))
+        monkeypatch.setattr(pilot, "verify_loaded_sources", lambda *args: {})
+        monkeypatch.setattr(pilot, "train_baseline", lambda *args: (object(), {"top1": .95}, {}))
+        monkeypatch.setattr(pilot, "checkpoint", lambda *args, **kwargs: ({"artifact_id": "a" * 64}, object()))
+        monkeypatch.setattr(pilot, "torchscript_artifact", lambda *args: (object(), {}))
+        monkeypatch.setattr(pilot, "independent_torchscript", lambda *args: object())
+        monkeypatch.setattr(pilot, "paired_latency", lambda *args, **kwargs: {"accepted": True})
+        monkeypatch.setattr(pilot, "recovery_tape", stop_before_recovery)
+>       returned = pilot.run_pilot(tmp_path / "data", tmp_path / "out", tmp_path / "source.json")
+
+tests\refactoring\test_sparse_cv_search_reporting.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_sparse_pilot.py:225: in run_pilot
+    output.json("protocol.json", protocol.payload())
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <fedcore.experiments.cv_sparse_runtime.Output object at 0x000001FC36981ED0>
+relative = 'protocol.json'
+value = {'aa_pairs': 20, 'architecture': 'CIFAR ResNet18: 3x3 stride-1 stem, no maxpool, standard 8 BasicBlocks', 'baseline_batch': 128, 'baseline_epochs': 80, ...}
+
+    def json(self, relative, value):
+        target = self._target(relative)
+        temporary = target.with_name(target.name + ".tmp")
+        with temporary.open("w", encoding="utf-8", newline="\n") as stream:
+            json.dump(value, stream, sort_keys=True, indent=2, allow_nan=False)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+>       os.replace(temporary, target)
+E       PermissionError: [WinError 5] Отказано в доступе: 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{49fa9099-519e-4c4d-bc91-e7655cb3a079}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_run_pilot_projects_typed_0\\out\\protocol.json.tmp' -> 'C:\\Users\\user\\AppData\\Local\\Packages\\sandbox.{49fa9099-519e-4c4d-bc91-e7655cb3a079}\\AC\\Temp\\pytest-of-user\\pytest-0\\test_run_pilot_projects_typed_0\\out\\protocol.json'
+
+fedcore\experiments\cv_sparse_runtime.py:238: PermissionError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_sparse_cv_search_reporting.py::test_evolution_saves_portable_genotypes_without_mutating_typed_result
+FAILED tests/refactoring/test_sparse_cv_search_reporting.py::test_run_pilot_projects_typed_evolution_again_for_final_report
+2 failed in 3.69s

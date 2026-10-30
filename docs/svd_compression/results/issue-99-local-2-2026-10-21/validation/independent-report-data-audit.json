@@ -1,0 +1,285 @@
+{
+  "schema": "issue99-local2-report-data-audit-v1",
+  "status": "passed",
+  "findings": [],
+  "data_sha256": "e279bfa5f49b68b8149e04687220e94a3d4948f216de2a6e930eda801b764d63",
+  "data_id": "report:71ccb67c-8f25-4c57-bdc3-041c216b436a",
+  "buildStatus": "complete",
+  "query_counts": {
+    "baselines": 3,
+    "search_summary": 18,
+    "search_runs": 54,
+    "curves": 3609,
+    "paired": 36,
+    "common_bytes": 36,
+    "oracles": 3,
+    "frontiers": 299,
+    "test_selected": 171,
+    "matrix_summary": 40,
+    "matrix_streams": 533,
+    "jobs": 74,
+    "plateau": 54,
+    "matrix_pairs": 240,
+    "matrix_controls": 79,
+    "resources": 1
+  },
+  "plateau_counts": {
+    "triggered": 24,
+    "not_applicable": 18,
+    "not_triggered": 12
+  },
+  "plateau": [
+    {
+      "job": "search-19901-attempts-11-E",
+      "status": "triggered",
+      "stop_after_finite": 22
+    },
+    {
+      "job": "search-19901-attempts-11-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19901-attempts-11-T",
+      "status": "triggered",
+      "stop_after_finite": 19
+    },
+    {
+      "job": "search-19901-attempts-22-E",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19901-attempts-22-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19901-attempts-22-T",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19901-attempts-33-E",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19901-attempts-33-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19901-attempts-33-T",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19901-time-11-E",
+      "status": "triggered",
+      "stop_after_finite": 22
+    },
+    {
+      "job": "search-19901-time-11-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19901-time-11-T",
+      "status": "triggered",
+      "stop_after_finite": 19
+    },
+    {
+      "job": "search-19901-time-22-E",
+      "status": "triggered",
+      "stop_after_finite": 52
+    },
+    {
+      "job": "search-19901-time-22-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19901-time-22-T",
+      "status": "triggered",
+      "stop_after_finite": 30
+    },
+    {
+      "job": "search-19901-time-33-E",
+      "status": "triggered",
+      "stop_after_finite": 27
+    },
+    {
+      "job": "search-19901-time-33-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19901-time-33-T",
+      "status": "triggered",
+      "stop_after_finite": 35
+    },
+    {
+      "job": "search-19911-attempts-11-E",
+      "status": "triggered",
+      "stop_after_finite": 22
+    },
+    {
+      "job": "search-19911-attempts-11-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19911-attempts-11-T",
+      "status": "triggered",
+      "stop_after_finite": 18
+    },
+    {
+      "job": "search-19911-attempts-22-E",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19911-attempts-22-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19911-attempts-22-T",
+      "status": "triggered",
+      "stop_after_finite": 23
+    },
+    {
+      "job": "search-19911-attempts-33-E",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19911-attempts-33-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19911-attempts-33-T",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19911-time-11-E",
+      "status": "triggered",
+      "stop_after_finite": 22
+    },
+    {
+      "job": "search-19911-time-11-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19911-time-11-T",
+      "status": "triggered",
+      "stop_after_finite": 18
+    },
+    {
+      "job": "search-19911-time-22-E",
+      "status": "triggered",
+      "stop_after_finite": 52
+    },
+    {
+      "job": "search-19911-time-22-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19911-time-22-T",
+      "status": "triggered",
+      "stop_after_finite": 23
+    },
+    {
+      "job": "search-19911-time-33-E",
+      "status": "triggered",
+      "stop_after_finite": 27
+    },
+    {
+      "job": "search-19911-time-33-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19911-time-33-T",
+      "status": "triggered",
+      "stop_after_finite": 35
+    },
+    {
+      "job": "search-19921-attempts-11-E",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19921-attempts-11-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19921-attempts-11-T",
+      "status": "triggered",
+      "stop_after_finite": 18
+    },
+    {
+      "job": "search-19921-attempts-22-E",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19921-attempts-22-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19921-attempts-22-T",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19921-attempts-33-E",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19921-attempts-33-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19921-attempts-33-T",
+      "status": "not_triggered",
+      "stop_after_finite": null
+    },
+    {
+      "job": "search-19921-time-11-E",
+      "status": "triggered",
+      "stop_after_finite": 34
+    },
+    {
+      "job": "search-19921-time-11-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19921-time-11-T",
+      "status": "triggered",
+      "stop_after_finite": 18
+    },
+    {
+      "job": "search-19921-time-22-E",
+      "status": "triggered",
+      "stop_after_finite": 25
+    },
+    {
+      "job": "search-19921-time-22-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19921-time-22-T",
+      "status": "triggered",
+      "stop_after_finite": 30
+    },
+    {
+      "job": "search-19921-time-33-E",
+      "status": "triggered",
+      "stop_after_finite": 50
+    },
+    {
+      "job": "search-19921-time-33-R",
+      "status": "not_applicable"
+    },
+    {
+      "job": "search-19921-time-33-T",
+      "status": "triggered",
+      "stop_after_finite": 35
+    }
+  ]
+}

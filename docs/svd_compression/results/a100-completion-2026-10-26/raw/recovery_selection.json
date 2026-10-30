@@ -1,0 +1,25 @@
+{
+  "finalists": {
+    "evolution": "ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+    "random": "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40"
+  },
+  "roles": {
+    "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40": [
+      "fixed_svd",
+      "random_finalist"
+    ],
+    "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b": [
+      "dense_recovery"
+    ],
+    "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd": [
+      "fixed_hybrid"
+    ],
+    "ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603": [
+      "fixed_prune"
+    ],
+    "ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94": [
+      "evolution_finalist"
+    ]
+  },
+  "source_report_sha256": "10ea02afb504252e925bedb9556712ba3b2d9964659e39c93691c3fc5a4af05d"
+}

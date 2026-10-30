@@ -1,0 +1,14 @@
+{
+  "schema": "fedcore-independent-cv-manual-export-budget-v1",
+  "launch_utc": "2026-10-30T11:42:16.403666+00:00",
+  "export_closed_utc": "2026-10-30T11:49:25.729377+00:00",
+  "guard_supervised_seconds": 237.48964320123196,
+  "launch_to_export_closed_seconds": 429.325710773468,
+  "manual_close_after_guard_seconds": 191.83606757223606,
+  "manual_close_within_14_minutes": true,
+  "within_original_8_hours": true,
+  "outer_guard_covered_export": false,
+  "explanation": "Manual stop killed the pipeline; the immutable postrun export was executed once separately, inside the original deadline. No numerical repeat.",
+  "automatic_retry": false,
+  "additional_numerical_launches": 0
+}

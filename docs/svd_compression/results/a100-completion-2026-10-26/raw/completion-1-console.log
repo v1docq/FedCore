@@ -1,0 +1,38 @@
+2026-10-26 09:26:08,454 - Trying to use device <cuda>
+2026-10-26 09:26:08,454 - Device <cuda:0> is selected
+2026-10-26 09:26:08,455 - ModelRegistry initialized: auto_cleanup=False, base_dir=/root/fedcore_sparse_cv_completion_20261026/results/completion-1/registry
+2026-10-26 09:26:08,455 - Device <cuda:0> is selected
+2026-10-26 09:26:08,455 - Device <cuda:0> is selected
+2026-10-26 09:26:22,598 - model_before setter called: value=not None, _model_id_before=None
+2026-10-26 09:26:22,598 - Registering model_before in ModelRegistry
+2026-10-26 09:26:22,599 - register_model called: fedcore_id=bounded-sparse-cv-pilot, model_type=CifarResNet18, stage=before, mode=None
+2026-10-26 09:26:22,816 - model_before registered with id=model_139657521265440
+2026-10-26 09:26:22,816 - model_after setter called: value=not None, _model_id_after=None
+2026-10-26 09:26:22,816 - Registering new model_after in ModelRegistry
+2026-10-26 09:26:22,816 - register_model called: fedcore_id=bounded-sparse-cv-pilot, model_type=CifarResNet18, stage=after, mode=None
+2026-10-26 09:26:23,012 - model_after registered with id=model_139657518334016
+2026-10-26 09:26:35,802 - model_before setter called: value=not None, _model_id_before=model_139657521265440
+2026-10-26 09:26:35,802 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657521265440, stage=before, mode=None
+2026-10-26 09:26:36,020 - model_after setter called: value=not None, _model_id_after=model_139657518334016
+2026-10-26 09:26:36,020 - Registering changes for model_after
+2026-10-26 09:26:36,020 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657518334016, stage=after, mode=None
+2026-10-26 09:26:36,195 - model_after changes registered
+2026-10-26 09:26:47,982 - model_before setter called: value=not None, _model_id_before=model_139657521265440
+2026-10-26 09:26:47,982 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657521265440, stage=before, mode=None
+2026-10-26 09:26:48,205 - model_after setter called: value=not None, _model_id_after=model_139657518334016
+2026-10-26 09:26:48,205 - Registering changes for model_after
+2026-10-26 09:26:48,205 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657518334016, stage=after, mode=None
+2026-10-26 09:26:48,347 - model_after changes registered
+2026-10-26 09:27:00,993 - model_before setter called: value=not None, _model_id_before=model_139657521265440
+2026-10-26 09:27:00,993 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657521265440, stage=before, mode=None
+2026-10-26 09:27:01,227 - model_after setter called: value=not None, _model_id_after=model_139657518334016
+2026-10-26 09:27:01,228 - Registering changes for model_after
+2026-10-26 09:27:01,228 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657518334016, stage=after, mode=None
+2026-10-26 09:27:01,351 - model_after changes registered
+2026-10-26 09:27:12,994 - model_before setter called: value=not None, _model_id_before=model_139657521265440
+2026-10-26 09:27:12,994 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657521265440, stage=before, mode=None
+2026-10-26 09:27:13,207 - model_after setter called: value=not None, _model_id_after=model_139657518334016
+2026-10-26 09:27:13,207 - Registering changes for model_after
+2026-10-26 09:27:13,207 - register_changes called: fedcore_id=bounded-sparse-cv-pilot, model_id=model_139657518334016, stage=after, mode=None
+2026-10-26 09:27:13,349 - model_after changes registered
+{"status": "completed", "output": "/root/fedcore_sparse_cv_completion_20261026/results/completion-1"}

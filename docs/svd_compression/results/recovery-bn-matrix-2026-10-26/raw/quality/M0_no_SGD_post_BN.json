@@ -1,0 +1,50 @@
+{
+  "SGD_updates": 0,
+  "additional_BN_calibration": true,
+  "artifact_id": "05f6f233791ab82f68794224c778aa94a535fcaa3790382ead998d30bf5b44e1",
+  "buffer_fingerprint": "ffaa1edf7c90ceb07cd4a492db0cb4903576c26be1e3cfbc681408356824234b",
+  "completed_within_deadline": true,
+  "cpu_gpu_probe_max_abs": 1.9073486328125e-06,
+  "dense_replay": {
+    "current_sha256": "5f8f0a40129a91b6c4bbce8fd395eee611dfac264c8554a9d752d6bd88973711",
+    "exact": true,
+    "fields": [
+      "cross_entropy",
+      "labels",
+      "predictions",
+      "row_ids"
+    ],
+    "previous_sha256": "5f8f0a40129a91b6c4bbce8fd395eee611dfac264c8554a9d752d6bd88973711",
+    "rows": 5000
+  },
+  "family": "M0",
+  "file_bytes": 44781886,
+  "gpu_reload_exact": true,
+  "initial_checkpoint_sha256": "6883e6544a6f4b55b7a48b0d9db41d072764e7d4d066dddd2473252fb0d7e859",
+  "inventory_fingerprint": "691935a20c8beebbbc2f2c71f8fe86e3399107f6db5aa2f1ea4917820c2eecfd",
+  "lr": null,
+  "parameter_fingerprint": "87d14257671135daa459d3cfde786ed77034a81e4ae1f0ee185306daa33fa0ec",
+  "path": "checkpoints/M0_no_SGD_post_BN.pt",
+  "phase": "recovery_M0_no_SGD_post_BN",
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "sha256": "55b3af15d3a7891cfc1d178b236058cf840c66313919be95219c02ea014711c6",
+  "shared_pre_BN_checkpoint_sha256": "6883e6544a6f4b55b7a48b0d9db41d072764e7d4d066dddd2473252fb0d7e859",
+  "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+  "source_M0_sha256": "531d02916a6a4ad7341f95a1f7e075c91c7b5350bc7009a09d5b93077c4d5510",
+  "state": "no_SGD",
+  "tensor_bytes": 44734408,
+  "training": {
+    "additional_BN_calibration": false,
+    "lr": null,
+    "training_BN_updates": false,
+    "updates": 0
+  },
+  "validation": {
+    "correct": 4692,
+    "cross_entropy": 0.22983539575973372,
+    "prediction_file": "predictions/M0_no_SGD_post_BN.npz",
+    "prediction_sha256": "5f8f0a40129a91b6c4bbce8fd395eee611dfac264c8554a9d752d6bd88973711",
+    "rows": 5000,
+    "top1": 0.9384
+  }
+}

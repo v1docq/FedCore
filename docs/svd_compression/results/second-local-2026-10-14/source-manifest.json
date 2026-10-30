@@ -1,0 +1,1053 @@
+{
+  "all_lf_hashes_verified": true,
+  "file_count": 261,
+  "files": {
+    "fedcore/__init__.py": {
+      "git_lf_sha256": "c10dd264f3fa0e3248cd9978d601c3eef8402ee356ca17c4417ca1a465fd61dd",
+      "raw_sha256": "b0ed1246c999a9ea05630b1109724893daf59d9a745e290ab114aaf362714b30"
+    },
+    "fedcore/algorithm/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/algorithm/base_compression_model.py": {
+      "git_lf_sha256": "7ad5ffc52c65321c39d5b451bde2b39cba0595908c412d68884b137595f2a9fd",
+      "raw_sha256": "41d649df32a35686a4a35058e0bd96eb8a4986b5dfdade9e422a7d431056378e"
+    },
+    "fedcore/algorithm/distillation/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/algorithm/distillation/distilator.py": {
+      "git_lf_sha256": "55affc72483d80280910f7055ddb6279cf998a26224e83e5753dd812a2ec0c9a",
+      "raw_sha256": "ddce702908fd8e0287fc8b90e667e08cd98be793474ead8b7138b0e82d41a11c"
+    },
+    "fedcore/algorithm/distillation/hooks.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/algorithm/low_rank/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/algorithm/low_rank/allocation.py": {
+      "git_lf_sha256": "d144ded9d6c6d98fb67f86023432e5e93e863284c2974268bf9b81ed22128fe5",
+      "raw_sha256": "ac7754ce946492e5a8706c03b483c4981f1b2b993bcd20f7992125ca3ad40c13"
+    },
+    "fedcore/algorithm/low_rank/approximation.py": {
+      "git_lf_sha256": "5505e10d14f45b502a3db7bac2d1b2248fe52f879c68b8d9c79621016cd410b4",
+      "raw_sha256": "4f8fec4e9085b2159893d6a4ba07eb3d12a85c9d77610fee4d6116a4e19537b0"
+    },
+    "fedcore/algorithm/low_rank/architecture_checkpoint.py": {
+      "git_lf_sha256": "ab1caf75102dde7c4ffd794ce9780262cd2b570e90ca64c9b7beb82372743de7",
+      "raw_sha256": "9a63a39a0581542fa3cdd046e486b76206f655adbfdf2498675842666af64a7e"
+    },
+    "fedcore/algorithm/low_rank/architecture_profiles.py": {
+      "git_lf_sha256": "3e6dbee0d452541634ff89c0aca4ec4c64c77107c1627a6a517dcc87fe48c6aa",
+      "raw_sha256": "7bd03963ede2e82c70048a06000763eded9a8ab54fdeb4ed46db8fbbffa05fe1"
+    },
+    "fedcore/algorithm/low_rank/ars_profiles.py": {
+      "git_lf_sha256": "073abe8dfe52643b1713628130913e0b93fc332b31e2ed5f2efab97ad6d167d5",
+      "raw_sha256": "4bbeb42d1753553e58d92f1f427f78173b0c28cb90faa69338e137e31306f65d"
+    },
+    "fedcore/algorithm/low_rank/ars_specs.py": {
+      "git_lf_sha256": "50d49fbf6c3548e013032a75dd4fd1222f35dbc2b5a79e19d0e4f00829c0cd51",
+      "raw_sha256": "a9b049b7fe420dfb9f29b2e5b8bfdff8ad9e72c52a745ea20665c742c3b36d27"
+    },
+    "fedcore/algorithm/low_rank/coupled_execution.py": {
+      "git_lf_sha256": "fda9fafd22c54fb9954da3ae91b0628b651c2f548c7eeb362acb27b9877dd895",
+      "raw_sha256": "fc1199af54d630c5252fb83b097d0f98cf5e8f83b1abb26218d72a148161f411"
+    },
+    "fedcore/algorithm/low_rank/coupled_layers.py": {
+      "git_lf_sha256": "6d9d79617a1f2a4e48f7182d83d4c076ae39ee980e3a94a7a2942869eaa14a5f",
+      "raw_sha256": "ee2d3f9e0e1220ce59e198cc7e04eb77cb4a69ebead16e9a2850c1a3e2654c64"
+    },
+    "fedcore/algorithm/low_rank/coupled_profiles.py": {
+      "git_lf_sha256": "3f431019f9453473114e47292548e2a023e225f8d7a6873b657c2d4e4c4639bb",
+      "raw_sha256": "81e87221cdac4159cc2c736a15f031a915168162d1920c2863c166252646c30c"
+    },
+    "fedcore/algorithm/low_rank/coupled_specs.py": {
+      "git_lf_sha256": "751e731b737270ccb8e449880b5eef97793a6ea8ad94a53412eb3bee8699475d",
+      "raw_sha256": "e5744d0af9d90f82c4b8d2c8f5df64a31c0ae81012dce3321f33582a565e1928"
+    },
+    "fedcore/algorithm/low_rank/decomposer.py": {
+      "git_lf_sha256": "3e4627d2a9b66a4668969bc7e9f00aad28efdad837a758e471e01937e97305ff",
+      "raw_sha256": "6e89c46c0f39cef3c66f63107c3237cd15ddb5d625fa95b9e72804fcfc50d099"
+    },
+    "fedcore/algorithm/low_rank/dobi_profiles.py": {
+      "git_lf_sha256": "5f4e1fd33731820ca54145dc7fdfc3c18796d6fdc742ca228899ea20d3e972c7",
+      "raw_sha256": "0ec660f085c3382499a6ea6a2709a5affaf9c64689028465162099af53fca1af"
+    },
+    "fedcore/algorithm/low_rank/dobi_remapping.py": {
+      "git_lf_sha256": "86a4c8d3640982a51770b3209a669cb0d95348052c463b6f1db9cd1839a41cc3",
+      "raw_sha256": "37fa62ab6956ea601260b627f6c80d4a9930471fb62d1259efb5a64d3f43ae56"
+    },
+    "fedcore/algorithm/low_rank/dobi_remapping_export.py": {
+      "git_lf_sha256": "fccd1d14791f3b46bc9fc1e0ebd4f9f497e880da811297e36a1015af61301ccd",
+      "raw_sha256": "6214365b0c213c8be93727d3f75c8f64d77bffd7756f1b5aba740ed9638bd55d"
+    },
+    "fedcore/algorithm/low_rank/dobi_specs.py": {
+      "git_lf_sha256": "cef974e6935305170f85d6b2921484219877472144b8747e5c0dba10eeddcab2",
+      "raw_sha256": "c1cdf4041f969b9643c20356676b7b2deb8de9d389838f53984c80621f340c5c"
+    },
+    "fedcore/algorithm/low_rank/execution.py": {
+      "git_lf_sha256": "db42adb537d35dac602308fdf1faf0744a16b1a3b0d1883f9dd3e60006813a1f",
+      "raw_sha256": "ebcb974382436476c9ffff0bd8bf7de1bc082d2c84078a62b7913f68af1bf4d3"
+    },
+    "fedcore/algorithm/low_rank/factor_recovery.py": {
+      "git_lf_sha256": "ce4542ae585237137b754c773e1008cc5714b95d1a09ff06a7f539bc5ef2afec",
+      "raw_sha256": "f89cc3aa441ebbe1d6ee30c9b5a53a266a12ab10b6155b6b08132d545329cf43"
+    },
+    "fedcore/algorithm/low_rank/hooks.py": {
+      "git_lf_sha256": "a42856c770ce4e173c116aee489d49d9040ba13eba8044ee3bf325388861092e",
+      "raw_sha256": "ce138abd0ca2bfec01d2b5841eb56585dc15bcf0623493b45428435163f55ffd"
+    },
+    "fedcore/algorithm/low_rank/learned_execution.py": {
+      "git_lf_sha256": "41cd4e67bf1c17c4d5a3b63d2cbd3885a472339960cea4ecab44ba15b7e7fa35",
+      "raw_sha256": "3973925699a37b3d9e79cbb71b28c3e1bc6a67d0abc110af25271e56bf09a948"
+    },
+    "fedcore/algorithm/low_rank/learned_layers.py": {
+      "git_lf_sha256": "7d643b8a1a595e00c35a127bc86d5b07b2254c5b3de4d0465d58b56fc67ba21c",
+      "raw_sha256": "87df22ae0a03bf3fec6d02d6b4f27a5109d9b53adae5c9c881e39f04b39f687c"
+    },
+    "fedcore/algorithm/low_rank/lightformer_layers.py": {
+      "git_lf_sha256": "6394fe234b81b76f25a9ae84c31c9fe142f4162de40257940a9fbe1232c70f16",
+      "raw_sha256": "2828520dc29a629461882d051eb0f2c61b4834d3fc9757191995a5ed036d5f66"
+    },
+    "fedcore/algorithm/low_rank/lightformer_profiles.py": {
+      "git_lf_sha256": "09aef71d82249821258901335e171f997399cdd856dd719a1fcd86cfb3dc0a66",
+      "raw_sha256": "0dab18c30c38933d7496881167d94174b6e1c2f3c6ac939a492db32b0806702f"
+    },
+    "fedcore/algorithm/low_rank/lightformer_specs.py": {
+      "git_lf_sha256": "a70b78b0a274809ccbd92614a4958cedc2f360c5956eb37e514241653221cb71",
+      "raw_sha256": "f0ffe9e56d186706194734e0d14d2e96d35c28074905c2ea6e9d777fd5147dc4"
+    },
+    "fedcore/algorithm/low_rank/lora_operation.py": {
+      "git_lf_sha256": "3733e2c241c4c5c030b478de7f982e4d1ba50531c3f4c10180132ffd90b5095f",
+      "raw_sha256": "63fd3e01396152012c683a96cb1c694f5a6cbc79776886991389013e1361d569"
+    },
+    "fedcore/algorithm/low_rank/low_rank_opt.py": {
+      "git_lf_sha256": "216dfd8ad06e0d354b8d49ce2f91db431e058e4c6414bdf7019a916ab38c116f",
+      "raw_sha256": "f6c07a6ab1621602506c13dd2644fe42f45428e2328170a40c235d536ff65939"
+    },
+    "fedcore/algorithm/low_rank/lrt_layers.py": {
+      "git_lf_sha256": "3004aa762fa281d42e302f39dee1ecdacc18ae0443239c2b38ae24288e000a8d",
+      "raw_sha256": "8c2e0d6bceb6fbb29d23efb069820afcf721f8d820b14459279ee05642706cc4"
+    },
+    "fedcore/algorithm/low_rank/lrt_profiles.py": {
+      "git_lf_sha256": "e7e623395acfcef385e54569d29face2116e35d1635f05b88ac9ddf03ccba1af",
+      "raw_sha256": "40c653c3e18e9e062f3f5e21be7a6f371618b5168056969e38b8ec64285e8f3d"
+    },
+    "fedcore/algorithm/low_rank/lrt_specs.py": {
+      "git_lf_sha256": "c58ef37625a60c722e2b949e16f9dca35919c7b9858a4fc7e0447fecb3095de0",
+      "raw_sha256": "32a21b2a4850e35e6ba49cfae37ba25e52bd77afbdcd991e9e29d3035d69bd75"
+    },
+    "fedcore/algorithm/low_rank/method_errors.py": {
+      "git_lf_sha256": "70e352e623ea3fbbe7fb780eb453d520e451ba43f0f25f7fd8308c2b707344fc",
+      "raw_sha256": "4ab97763aaaf0305b02286ae7c304de66da24224e4b32452ff446f9cb6ec891c"
+    },
+    "fedcore/algorithm/low_rank/method_execution.py": {
+      "git_lf_sha256": "fcf4b49fbbde60e32c8903b269236d3b079ed54e3af0c6e1582e2638b8581f69",
+      "raw_sha256": "49b78e3d10018bc46eb1b19db057fd8b6d881a4903e9e493579dfdb65917e201"
+    },
+    "fedcore/algorithm/low_rank/method_specs.py": {
+      "git_lf_sha256": "2da75d317c22cbe09f3295c1a60b38a5fb56524dabf85707d15a954411e3014e",
+      "raw_sha256": "7548d09c9a9352f244fa661f5ccb0d0b04a8dd4ad3553efac04381c53069169a"
+    },
+    "fedcore/algorithm/low_rank/plans.py": {
+      "git_lf_sha256": "dbb7f588024d6dc14d43997e71381879dc94c44468d18bea61d466adeac0c3b8",
+      "raw_sha256": "48553308bf0c4297fda77e6d68cac031d075dd75b903bf4e87a79f4c17b6a31c"
+    },
+    "fedcore/algorithm/low_rank/projection_execution.py": {
+      "git_lf_sha256": "b52e0ad3ed6a44b6ba986147dde3e087d05363ab313e74ffbebb375c5c710321",
+      "raw_sha256": "ad33fe37751d66de6fa1ce50baca85d94abbc96b8ebfa1fe979654af03c6b6de"
+    },
+    "fedcore/algorithm/low_rank/projection_layers.py": {
+      "git_lf_sha256": "97e45ce745d0a07ec9b79a342a97f247a5a9d176be60c8a87ce6d248237dda5f",
+      "raw_sha256": "9f9e42be7bc1fe29b18b57a172d1b1341169f9600d291b4f40de40377504eb55"
+    },
+    "fedcore/algorithm/low_rank/projection_profiles.py": {
+      "git_lf_sha256": "1ac71f094d38e655eac7babb3dddc1e3d6ae053583df72e9e247ca039a586e97",
+      "raw_sha256": "a181169d26ce5300922239aeaf066662e3313282ecc68ea80c1cb019763b05d0"
+    },
+    "fedcore/algorithm/low_rank/projection_recovery.py": {
+      "git_lf_sha256": "bfcbd06024ae05530ccdb5da054329c9e37a89a5c93b9c6b18b9be80b2c5721f",
+      "raw_sha256": "3810133663d432921a9c52180105144a68f722c7a591298ddc7f41431708ff6f"
+    },
+    "fedcore/algorithm/low_rank/projection_specs.py": {
+      "git_lf_sha256": "dbe9279984cef90ad09fd1df0d26858a1e049caedb13f512f171f7cb7c92439b",
+      "raw_sha256": "ee3dd6104d7db230cb214978128ed7e83c224520e9593df9cc3b066c50e4c1d0"
+    },
+    "fedcore/algorithm/low_rank/rank_distortion.py": {
+      "git_lf_sha256": "5700cb67ed24e2d1222a9e87cf204182fc4b4749c67155c1c53821c22954c54b",
+      "raw_sha256": "5b2038d2afcb034e83b5013cc2ee84819ca46ae1d461f928c7d3a88f0f5dea3d"
+    },
+    "fedcore/algorithm/low_rank/rank_pruning.py": {
+      "git_lf_sha256": "9358ba6609e309b3edadd77a8e47a20d7fc21bd08fd3cfbe29111e51b5e70202",
+      "raw_sha256": "99b596be68f33ac7cb12b189b25c92fb96bc601cd5facbfc57b5baaa1a3504c7"
+    },
+    "fedcore/algorithm/low_rank/rankdyna_profiles.py": {
+      "git_lf_sha256": "7b8a81d2965fab7ad4b466cb7aa62e84c213035b52f85bce5e9b62cdd1e8054e",
+      "raw_sha256": "1d3055c8c557effd5108637282a7b29559043f3bbba4dfb568321b76d8be0b94"
+    },
+    "fedcore/algorithm/low_rank/rankdyna_specs.py": {
+      "git_lf_sha256": "dba71b6cfd6b45a43ddb2e6cba66e27e5ed1fb10f58478a7a1b3ce2258a77650",
+      "raw_sha256": "0ed0fd2d7bd7a2616f2c09910762cea5733488cc3ee5361c10ae9b4fbb6bf00f"
+    },
+    "fedcore/algorithm/low_rank/reassembly/__init__.py": {
+      "git_lf_sha256": "8d759342ad78a86c94083730dfddc18ed090cfc94cebdc94b41d44d0ff8515a7",
+      "raw_sha256": "31a5415ca1a0329a7058a00138f324b1e40bf774d54002ef0bbea2effc2215c6"
+    },
+    "fedcore/algorithm/low_rank/reassembly/config_mixins.py": {
+      "git_lf_sha256": "510339c5f47f56c634e8a9fcbba9445a54a5e03104f60c104b323919db34dbee",
+      "raw_sha256": "cd728c8c7dca2c7d1e64d8a2aa73725ff60cb45dda9dd0c2770d00cb0693349d"
+    },
+    "fedcore/algorithm/low_rank/reassembly/core_reassemblers.py": {
+      "git_lf_sha256": "4839e3b72e1a90368f987bac9a21134713e86e6627a1967c434f276256aabc61",
+      "raw_sha256": "50b30525efb0fb1d1dbfb0068be8153821f988138aa20961626969f5d734e1b0"
+    },
+    "fedcore/algorithm/low_rank/reassembly/decomposed_recreation.py": {
+      "git_lf_sha256": "d6af123f5deef24911f169b56225a9b1cb859f005578b72756631e573af2913d",
+      "raw_sha256": "5cf4a0d01decc4ef3241fe1f5102e4c3ef08ed6c80607d03318918819d091e1c"
+    },
+    "fedcore/algorithm/low_rank/reassembly/flatllm_reassembler.py": {
+      "git_lf_sha256": "34385cf9618b7738a579847fb131617a36b14a2234ad1bffc96c2afec63c4b9a",
+      "raw_sha256": "678340d9b3ac087e88490ffb919da0e96a8ac9b7619b523c6169b58b3cb6bc59"
+    },
+    "fedcore/algorithm/low_rank/reassembly/transmla_reassembler.py": {
+      "git_lf_sha256": "c0a2c3e161fcfb0e89d4fbb5e46ed94771d5106329fcb88f75edaefd35b6900b",
+      "raw_sha256": "8814f78cecc56f1b466519498026201c414f952d4734a511a8cb2c23105c1dca"
+    },
+    "fedcore/algorithm/low_rank/slicegpt_layers.py": {
+      "git_lf_sha256": "b30dd3e7f03c093e3a96071c797513c3cf72518241abeaec419854f2df01781d",
+      "raw_sha256": "35abcaa0c975bb3cd2bfe125920785e50d9f8eefea91986e43f891de3e6db6f0"
+    },
+    "fedcore/algorithm/low_rank/slicegpt_profiles.py": {
+      "git_lf_sha256": "40aa1edd91ee811e11579bc2c8758f5b927eb41db6db17557a7334e935808559",
+      "raw_sha256": "486b843791ad1dc7bfa740fbac87a9f8a76f6a39c844d7aa478e45e9b5f99664"
+    },
+    "fedcore/algorithm/low_rank/slicegpt_specs.py": {
+      "git_lf_sha256": "a75586e4ac25b2b2bec979d44afb6ec403c8f7058b0062f52687affebcba2864",
+      "raw_sha256": "f566d23df32e351142a46d07c41b9fbfe2ffbc94eb9a6edeb0c709368dc37f47"
+    },
+    "fedcore/algorithm/low_rank/statistical_collectors.py": {
+      "git_lf_sha256": "cc8165081c5553239bb25e4eed201bbd6c89660f694485ddd7ed22e7067fc5cc",
+      "raw_sha256": "63ffb7efee466c8a0e0fe22bb8b4a5f451e0c6b64d28bfe091cdc2b751739a5d"
+    },
+    "fedcore/algorithm/low_rank/statistical_profiles.py": {
+      "git_lf_sha256": "dd0f986960e031b5d4958b2d98a7d847e4c69a6e6ddef3885f2a2e83b259db88",
+      "raw_sha256": "55286e57cd15ef046c9b1aa70d95b9bce585c3649b501db7ec03ad3fc1b7a80b"
+    },
+    "fedcore/algorithm/low_rank/statistics.py": {
+      "git_lf_sha256": "566381b386b1da15fcce9cefab20696fd666c325055f012f551017f8b395fa8d",
+      "raw_sha256": "d4d79491ef0830d2eb9e5f5793a839c962d52c35d6dab7c4de63d7f6e927798f"
+    },
+    "fedcore/algorithm/low_rank/structured_layers.py": {
+      "git_lf_sha256": "c2c42f6811047f805bf6a3793c41bc6201b32dceb8d216970f41770692b91e3e",
+      "raw_sha256": "17055204fb774c52547dfd9b8e7728b5252fa111c3547fbe70ec667de07c6e5e"
+    },
+    "fedcore/algorithm/low_rank/structured_profiles.py": {
+      "git_lf_sha256": "dc9f153f276ee7d5d5530949311da950f034ec27eea1c244e4355291d4826242",
+      "raw_sha256": "14e7dbf86b0f00e45a8b9a93b0a1e787a974aecb257b17161ecf8cc3ec7a574e"
+    },
+    "fedcore/algorithm/low_rank/svd_tools.py": {
+      "git_lf_sha256": "c09ceb6145b8f952a1a44b6ee3fa3fdf1a687a7a55017a16c237cd0a1790177b",
+      "raw_sha256": "c09ceb6145b8f952a1a44b6ee3fa3fdf1a687a7a55017a16c237cd0a1790177b"
+    },
+    "fedcore/algorithm/low_rank/topology.py": {
+      "git_lf_sha256": "c1512cb55c583bbeaf7dae855f4e8d021e651ef5edcf506ade9d2f2a3c7553ef",
+      "raw_sha256": "7234a36734b239fec98099f17a1aeb737e5a7032563e2418aba305bd41b63b3d"
+    },
+    "fedcore/algorithm/pruning/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/algorithm/pruning/hooks.py": {
+      "git_lf_sha256": "026f914a8369b52d22e5b29321a9261f740f3b9ec30ae98b2b2212ffb68a0922",
+      "raw_sha256": "00f28a891c64420cf0f9866b9ded0db74d6d330a252afdfd6541ea42a2ecc240"
+    },
+    "fedcore/algorithm/pruning/pruners.py": {
+      "git_lf_sha256": "647eb5a65bc5d38f076a4cdd35c8b0f09504b31c420cad96a24adc12a3a1111b",
+      "raw_sha256": "e5ed545834bd87e23917a300be3e0b1e18ac0a0a5ef2a89580cca2e06a60cc34"
+    },
+    "fedcore/algorithm/pruning/pruning_validation.py": {
+      "git_lf_sha256": "f8a37c447f321588b3bfee1f7dfffae9d0ee828e7cd198141d578fd5a21d40fa",
+      "raw_sha256": "e410134dcee1fe65d7ec54b6b16c763011e1e6e8f15d60991213e58528baa4bb"
+    },
+    "fedcore/algorithm/pruning/sfp_tools.py": {
+      "git_lf_sha256": "46186c230f5248fa599ba281bce06ce08bfefa109e8a2d92c9f28ed7e647bc42",
+      "raw_sha256": "1b87908da17412193d87e724e1aad30e68dafaabf4c0d8e07db34dae0c123c93"
+    },
+    "fedcore/algorithm/quantization/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/algorithm/quantization/hooks.py": {
+      "git_lf_sha256": "e5a96084b3f3600d0e87eb1650e240aeefbab84180e03f3f67f65e04291a58e6",
+      "raw_sha256": "171e440a8e22b651069f58e5f3ff2545d49f27d2d81099576fd96b5127978d2c"
+    },
+    "fedcore/algorithm/quantization/quantizers.py": {
+      "git_lf_sha256": "0300ddce365ed012b4ba685db1c31c5cf0f4f3c41faff88138abfd068b20faaa",
+      "raw_sha256": "dea0d53cd141b210b4f862acb273f990ef63a7fbe880a2f42fc34dc412be7e62"
+    },
+    "fedcore/algorithm/quantization/utils.py": {
+      "git_lf_sha256": "475628565a0059d53f274aeaa061b43672eee626dbd90cbcfa35d7c9c423ed06",
+      "raw_sha256": "57c9319a39a4983ab590d764a7994a44144d48700bb28db537d46c7720211101"
+    },
+    "fedcore/api/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/api/api_configs.py": {
+      "git_lf_sha256": "632ec8280b25cd04ff3421beeb85428c785cb1fa34140d7c0ec628ff8cb81ae1",
+      "raw_sha256": "7845ac619c234d1e528a6f2e38c570facb58b021b05e732a0581d1cd8de35459"
+    },
+    "fedcore/api/config_factory.py": {
+      "git_lf_sha256": "8300dcf5a8fecbb6c73d64e998a54fe472ff14c7868c4ecba1fcc1ef9900321d",
+      "raw_sha256": "168cda2132ec3d6861e97e07826d5e02851e1e5cbda371749d4103a925decaa2"
+    },
+    "fedcore/api/llm_config.py": {
+      "git_lf_sha256": "456ee8238b7c7ba84c7ca0d254937e997742d62442e207f4208944deaf365725",
+      "raw_sha256": "9074a1dcd8bbd41f2530157511726e9843d749856fcf5b040819a3c6b8406fec"
+    },
+    "fedcore/api/main.py": {
+      "git_lf_sha256": "6b01470fb4089434f025d2aab2817a682cf26f7daf7f448c6988d97ceb4e6059",
+      "raw_sha256": "43f317a763ba89c49d10532c7aff70c7f6e1ee86150b6621f4bb9b1fce61c640"
+    },
+    "fedcore/api/nlp_configs.py": {
+      "git_lf_sha256": "f8ed50a4921031f8a5f2d3fbb0d4a88b27eb0d6e99c7ffea47fc0d2ae0049e16",
+      "raw_sha256": "10b1ad2012e024619210f61a10a3d3b7032241f70454d24ae769eeb9aec908d0"
+    },
+    "fedcore/api/utils/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/api/utils/api_init.py": {
+      "git_lf_sha256": "6396b5d841a12ce5be04c05502a72101abdb099ddd2c565042751adc473d8761",
+      "raw_sha256": "4730ff02e1a3c4748a20846a7860a899639fc2aae15b7a1ddeced9ca9d9a6d87"
+    },
+    "fedcore/api/utils/checkers_collection.py": {
+      "git_lf_sha256": "5f4dd344bf5e3e5c5fb8d11d41fde60037327c8517b56861d2ed9aeaa737bafb",
+      "raw_sha256": "2036188afe76c3a50fc9cfe8c968620404ad3e3ae0a762d7a67facf986fd18c7"
+    },
+    "fedcore/api/utils/data.py": {
+      "git_lf_sha256": "c89b783ef059678c73acdeea0c2957d0ccf909e278dbe4a8e84e3dadc7612126",
+      "raw_sha256": "e86812b955067b03e9970aa684c8784a8c338899d3d7073bc675568d74e1a2b7"
+    },
+    "fedcore/api/utils/evaluation.py": {
+      "git_lf_sha256": "b1999dd523f5a0ec6024038286321cc4a3f3c1df14fa92df002e9f1477b62b5b",
+      "raw_sha256": "ff940aa5c7b00e5cd507eecc44530922a916083b11145707f6029a3ae908e53e"
+    },
+    "fedcore/api/utils/misc.py": {
+      "git_lf_sha256": "e2acdce274ac892556e271cd361c4a24f5bd7069166355f96456826d29a34673",
+      "raw_sha256": "21d6363d7cbf84a3237d425efb74a351ce2c069b2047903186367018062ec680"
+    },
+    "fedcore/api/utils/plugins/nlp_plugin.py": {
+      "git_lf_sha256": "849afa2df9e93fd000e9ba643f109a904263ffa40f00446d7974a70e590f2fdb",
+      "raw_sha256": "915b8b838f203c4a0cf55bdf51b213e4c20268d84f5bc393089afb5dfd85a600"
+    },
+    "fedcore/architecture/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/abstraction/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/abstraction/accessor.py": {
+      "git_lf_sha256": "04acdcddfe5a4f3f8aab6b581246fa0b1b1deb28f860beef37e33633fae98f15",
+      "raw_sha256": "28b5e8eac4ada6568217073b040dc8c0cfa44be97103e42887b5492feaec4639"
+    },
+    "fedcore/architecture/abstraction/decorators.py": {
+      "git_lf_sha256": "d6808cfba90fa5c12966c5b4a18b3953f764eb273f91e7c067e98f5bf65b25dd",
+      "raw_sha256": "49ac59c51523f510d6382284ab53414f8a8b47fec8bb2d6dc32bd8df14fa3fbe"
+    },
+    "fedcore/architecture/abstraction/delegator.py": {
+      "git_lf_sha256": "13b750b4e8e75930d116db53d7f063ff244b057e8118dbd7377b38d1c693587a",
+      "raw_sha256": "204df2d01d0cb03e191f6d0c40d514166f394402e63f1eed71cc960a3fc95840"
+    },
+    "fedcore/architecture/abstraction/placeholders.py": {
+      "git_lf_sha256": "0cfa1a48b0019ec798d9d56cdfb55c85f6e10eb093bf4e2b578c103a402a94f3",
+      "raw_sha256": "db1c946c954a690ba4d07a294c16308fc353e4ffb3d09cfa10f798af4bfcbfa0"
+    },
+    "fedcore/architecture/comptutaional/__init__.py": {
+      "git_lf_sha256": "28e2f10d26882935939f42770e7969955c3c88fabdcf2affd2ddc1b20a8b4a23",
+      "raw_sha256": "6c9e823eb71c257680b7ca4093d4d916c5cb46c7379413d105e62e0fd7f1915c"
+    },
+    "fedcore/architecture/comptutaional/devices.py": {
+      "git_lf_sha256": "2454e341be634b86ad8b649776bc8f159ea019579647274addba27135a038b6b",
+      "raw_sha256": "66b6e17841dc6c973446a4e7529239a0724c71a7bf8fff11437ebef16c17e6fc"
+    },
+    "fedcore/architecture/computational/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/computational/devices.py": {
+      "git_lf_sha256": "2454e341be634b86ad8b649776bc8f159ea019579647274addba27135a038b6b",
+      "raw_sha256": "66b6e17841dc6c973446a4e7529239a0724c71a7bf8fff11437ebef16c17e6fc"
+    },
+    "fedcore/architecture/dataset/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/dataset/api_loader.py": {
+      "git_lf_sha256": "348302aa8aca7c6941ed2a3bd4ee549278e179896018115ec4ab11b539ef566c",
+      "raw_sha256": "f0d8737874d68e5b53dcd92adae026765a4a39c3f82b36b5d7611e0b2252ac4a"
+    },
+    "fedcore/architecture/dataset/custom_loader.py": {
+      "git_lf_sha256": "c831c95c0f459f6e01597303b0d1674fb8c050e16e060635708215908bbf208a",
+      "raw_sha256": "90259c97d30abf60657aa47b265513435f3718fef8821b3ee407a672f6954da0"
+    },
+    "fedcore/architecture/dataset/datasets_from_source.py": {
+      "git_lf_sha256": "d50739603b2a6bece57795ac30ef9a662aab4dcbe4cc6d7d25b41eb84fe8f6ab",
+      "raw_sha256": "794b04a0a2cdf40db1397ecd9acfc17dbb88b7958ab9f74ee6b82443b3500006"
+    },
+    "fedcore/architecture/dataset/splitters.py": {
+      "git_lf_sha256": "b2a45342a214957734f66d079cb8490f12c7c279ed6e43443327e2c84e819ea2",
+      "raw_sha256": "362331d24aa31e572da4fa61ec955145b677bbbe800195c5dcbb8469ae368bc0"
+    },
+    "fedcore/architecture/dataset/task_specified/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/dataset/task_specified/classification_datasets.py": {
+      "git_lf_sha256": "45d12c7ccb6db0e6f5513f47ee36edeb13fddb2360fe97e2f78ea280b9a691fc",
+      "raw_sha256": "d0ca23a93aa8855f64e27fc770289ec536437072e04348260d281f4fb366d37f"
+    },
+    "fedcore/architecture/dataset/task_specified/dummy_clf.py": {
+      "git_lf_sha256": "54604fca614e914be0b0e74c45cb1fbc4b1a365480dc38661580b753160b4baf",
+      "raw_sha256": "9c5d37e9bd5adb25b2d7470332f8d8e2db85ebea8479f410fbd46609fbdbcc22"
+    },
+    "fedcore/architecture/dataset/task_specified/object_detection_datasets.py": {
+      "git_lf_sha256": "96d65e162f0b05341b38c52a0fe8c8b6a8bcc10220a8cead23cb4428bea30678",
+      "raw_sha256": "b9ba70688f4b6b9b58bc13fb461ddc4c5adfca4f1f72a674ddc103cc27983e15"
+    },
+    "fedcore/architecture/dataset/task_specified/segmentation_dataset.py": {
+      "git_lf_sha256": "fe0842885e3a8bb87bb7d183086b255601c4b2972614c1bfc72b8c738f827ffa",
+      "raw_sha256": "752e5dd44721e8256d28f44c092bbc7a859cbb07ae4d15fcb0096f7ceafc4fb9"
+    },
+    "fedcore/architecture/dataset/task_specified/ts_dataset.py": {
+      "git_lf_sha256": "74ec6f7361695f4ea1fb61d7e0c43c074700c9081404be323d8626fba466afc4",
+      "raw_sha256": "702bb5b7c450a639a9f7d0d658949c9216e4fc3a4ed7ad77fde41d4e98f4c8b7"
+    },
+    "fedcore/architecture/dataset/utils.py": {
+      "git_lf_sha256": "3d6204413763504a2b9c508698339713ab6648431447f69a4394466af27513d2",
+      "raw_sha256": "038fca76f6a05fd71b07897ff597dda48b635ded96464996dd958458c8cbe4ee"
+    },
+    "fedcore/architecture/preprocessing/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/preprocessing/data_convertor.py": {
+      "git_lf_sha256": "c41560b6bae1ab12e3e3a3c46ecc85492612e40827946274d392a6c84c4738ef",
+      "raw_sha256": "ec8f246a234a55dd02b89fcbbfce00dd612fb70bfe0dace44097e415cc7d2132"
+    },
+    "fedcore/architecture/settings/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/settings/computational.py": {
+      "git_lf_sha256": "9e9abe76fe7cd999a7eb2500ec2bcb3787d0237104eb11d4cead0136501ec70a",
+      "raw_sha256": "334c2ccc108b1e811ab89a03f1ab214b90252595ec4317a3ff338fa8372f12f6"
+    },
+    "fedcore/architecture/utils/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/utils/loader.py": {
+      "git_lf_sha256": "fef594040e1a5ea6e71e367809314bc0c29d565de6430396992ebbe67a9610d1",
+      "raw_sha256": "6a11cd5b3897006d6595df242490908e3a13da3d66ac2638e5fcaef1e7002d83"
+    },
+    "fedcore/architecture/utils/misc.py": {
+      "git_lf_sha256": "864c847601153a83bc84278b38863fca0c3f56e692d5915362d38b95ac2c18ea",
+      "raw_sha256": "b5a2b40c9f77c4b86db4dac4d70bb8f291fd3a7d76d52a7e65e0a6de112357b3"
+    },
+    "fedcore/architecture/utils/paths.py": {
+      "git_lf_sha256": "61b6fa1aee1196a9c55d50c52d607bbd7fb95a998a050deb460e78457f0a9294",
+      "raw_sha256": "d5f66b854e82c0d93978c81747cb67a7e41c295847527cab85f7755924b57753"
+    },
+    "fedcore/architecture/visualisation/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/architecture/visualisation/visualization.py": {
+      "git_lf_sha256": "38dcb1e86551beb9da32f0a6a7b4166f4e94d475ef407c3a92f2572d39f39224",
+      "raw_sha256": "f63c3c5a8f19abafcf4045aae4eeb45e379cad01a16bb3eedc76446efc31da8a"
+    },
+    "fedcore/data/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/data/data.py": {
+      "git_lf_sha256": "2deda08be5caee3e7a2750acb307a4f846e2f02df34daa6afc04c74abd0f5586",
+      "raw_sha256": "75248ab7663c020b616e1f7e933b763f4a0313053a047d70b34bce114a38902e"
+    },
+    "fedcore/data/dataloader.py": {
+      "git_lf_sha256": "e1d8ab54470b8d256fecc7e0d59e99b355e1d721314fc962609ad90fc7115d43",
+      "raw_sha256": "91b29eb7b3e79b5937e88f8328dcc27d7ae848fdfe20970b16019b6f98774c48"
+    },
+    "fedcore/experiments/__init__.py": {
+      "git_lf_sha256": "a7c46fa6087d25fdb136c4efb48452d2adac539de6f89c3db983db3d765bb0dc",
+      "raw_sha256": "33183c3d68a2bdfbc93e8cb63d835629dfc32e1658eed2d31186af00d1cbc142"
+    },
+    "fedcore/experiments/ablations.py": {
+      "git_lf_sha256": "3061680298fc4ef680e8d985134b7fdd950e8cb026222a1342fa351d836b94d7",
+      "raw_sha256": "540011608783b0c1e2fa8135da36745bcdf327c74c8b3dbb0aec80ddc0143004"
+    },
+    "fedcore/experiments/baseline.py": {
+      "git_lf_sha256": "554422a40bd31f1eed9a93399793ca66e6c1b8e75f109cc64cf747d8357da943",
+      "raw_sha256": "957873a9479fd51eeb36aeb09c1160b55c38d6b72d916557177ebc612342eace"
+    },
+    "fedcore/experiments/external_benchmark.py": {
+      "git_lf_sha256": "5976e942e75f6423c89341bfb596185f6c0be6cccf3cd007998ad48ddb0750fc",
+      "raw_sha256": "845370ae01e73544a16cf075f254d4945975c16a2d65dcd31edc1c601c0f519f"
+    },
+    "fedcore/experiments/local_study.py": {
+      "git_lf_sha256": "c72f30af8ddee8d3f52047b22a37c3473d02ba70d272d793506717adb0e49b9a",
+      "raw_sha256": "fa12d4a77ed9a231f94f093c28811acc29cc06ed7852552d1fd3f179969fe28e"
+    },
+    "fedcore/experiments/math_checks.py": {
+      "git_lf_sha256": "f10e2034464ecd0b4084d28dba867b73f261ad6d6011f487198f591f2464e1de",
+      "raw_sha256": "0d613e691de708ddaf16d12d28d67d321480ca834fbc8ed2bdb14ee5ede87aad"
+    },
+    "fedcore/experiments/measurement.py": {
+      "git_lf_sha256": "aaa497dabc1a7274751c09a45287385b32e4105dc8a8ec0eef7a263cabafc8b2",
+      "raw_sha256": "5949fc0d8808783a2939ccc8a42da144eedd7bf3c256e2a218e35dc37d412248"
+    },
+    "fedcore/experiments/pilot.py": {
+      "git_lf_sha256": "0a5d3d3af0c83931069159b3557dc56c76497b74950e5946152ac55e5748f377",
+      "raw_sha256": "96c5d9ea4c10c7914913def67eec864a009f60f7dad795973af54d2d4c2873ca"
+    },
+    "fedcore/experiments/protocol.py": {
+      "git_lf_sha256": "2934b60fa84ed0b1f57b00988aaea7315f7937a0007dfa235e11b10e8efc292d",
+      "raw_sha256": "dde90e954997d24538afe867cdb400048b5e88bb4edfb7a6a784ee91d6b2b411"
+    },
+    "fedcore/experiments/remeasure.py": {
+      "git_lf_sha256": "e55a501834f14b4050ec4e01e26880fb95227bb25fdff34b8931a3542962c62f",
+      "raw_sha256": "a739e48a66b45f3411a950442ef1c4aedff43519894d4c832532f5d62f57a3cb"
+    },
+    "fedcore/experiments/reporting.py": {
+      "git_lf_sha256": "7ec0787995dc82108f47dcca644b0ab58227bd79b1d146f144a5bacbc111275c",
+      "raw_sha256": "926c76ca66e57fb4dc19e4a2062b78831441ca9a94ee47bb40ca7a4c552d9dbd"
+    },
+    "fedcore/experiments/runner.py": {
+      "git_lf_sha256": "b3912df4b4ade53f7cfbb756796d59f0683ef2bd782956f544a96a2a0fc9dc16",
+      "raw_sha256": "b3912df4b4ade53f7cfbb756796d59f0683ef2bd782956f544a96a2a0fc9dc16"
+    },
+    "fedcore/experiments/scenarios.py": {
+      "git_lf_sha256": "a7f026d65f6d52f35a283ad3a8eaa5c07b31e75255ae4affa189b4226ad179bb",
+      "raw_sha256": "7019fb9c066464af3aa1dbf75381774ffe86f6075cb41b19bc0cf1eeac557e0a"
+    },
+    "fedcore/experiments/search.py": {
+      "git_lf_sha256": "c93d47218b24922b5680c289fdb4b364720b385caae5489430890aa4330c5b9c",
+      "raw_sha256": "3426bf8f604da0035372ea8af04c27d7cc402e7fe34e28b2b58be2a76b9dd447"
+    },
+    "fedcore/experiments/streaming.py": {
+      "git_lf_sha256": "db933d506f6d779b8d8b1bd030963363366872f96fff17bce64ddf413602ae47",
+      "raw_sha256": "c046be7ed816f88243fbbdb38f1ff13404598475f81c97fec915301d64a1d479"
+    },
+    "fedcore/experiments/svd_comparison.py": {
+      "git_lf_sha256": "79365073393b49dbe6814da8fd0064349caa8e8d9a7184313c988c01ba7ca2cd",
+      "raw_sha256": "79365073393b49dbe6814da8fd0064349caa8e8d9a7184313c988c01ba7ca2cd"
+    },
+    "fedcore/experiments/svd_local_package.py": {
+      "git_lf_sha256": "116208894f9729459ff6126cbd96449c61553a43a726cc2a6650791bd7d6b098",
+      "raw_sha256": "116208894f9729459ff6126cbd96449c61553a43a726cc2a6650791bd7d6b098"
+    },
+    "fedcore/experiments/svd_local_timing.py": {
+      "git_lf_sha256": "5ddd81adc79db18d4c6d248b87725f66bbfd9f32b620e8a8358b5cae1dc2d1ee",
+      "raw_sha256": "5ddd81adc79db18d4c6d248b87725f66bbfd9f32b620e8a8358b5cae1dc2d1ee"
+    },
+    "fedcore/experiments/svd_profile_measurement.py": {
+      "git_lf_sha256": "094ce4445a5ddc9422e6eb2c4e63e06b5d5a4f060b104bd33fce1f0a21ac750e",
+      "raw_sha256": "74a4be89c75d478adef19584c21fa64d396afee81817145e531f89984dca16ba"
+    },
+    "fedcore/experiments/svd_rank_policies.py": {
+      "git_lf_sha256": "0773991d037f6f7ae85e0dd95dcf5ef50330814cea9723cea300120109fcf1dc",
+      "raw_sha256": "9a197bd6e37e061c80e52a25ad02d91d2f6b7e964e256b0fe8b95d5b9b4ed330"
+    },
+    "fedcore/experiments/svd_second_package.py": {
+      "git_lf_sha256": "42d67e60dffbc2f482a5c26831b12dd183f34d8e33f0e4f03cbb58571b319653",
+      "raw_sha256": "42d67e60dffbc2f482a5c26831b12dd183f34d8e33f0e4f03cbb58571b319653"
+    },
+    "fedcore/experiments/svd_second_timing.py": {
+      "git_lf_sha256": "4f5f27337f52c01e2d500aa252c4ce0b3c7e953b06cc0f3b9067a7d3b8a80d1d",
+      "raw_sha256": "4f5f27337f52c01e2d500aa252c4ce0b3c7e953b06cc0f3b9067a7d3b8a80d1d"
+    },
+    "fedcore/external_runtime/__init__.py": {
+      "git_lf_sha256": "b910670a03e846ac8861546dffad5b3e07eb5ff3138437cd9eed713d3a822d75",
+      "raw_sha256": "a386fb43a28714b869f514bd3ee235e2e0cb21938cbe713cc601614541555529"
+    },
+    "fedcore/external_runtime/adapters.py": {
+      "git_lf_sha256": "6dd455b5121d3d39d2218d4d6e8acc7eefd8149764a183d7a4dda0b7097aaf37",
+      "raw_sha256": "a8695b1c4adb35c4503f5e27021feb8f5546968fa0816768f903d2d743ae84c5"
+    },
+    "fedcore/external_runtime/client.py": {
+      "git_lf_sha256": "cf17e987a992637eeb4ab52e72322c877bdfa676879b9568cbeb825cc1700335",
+      "raw_sha256": "b6cb5e4bd45af35b5a618801ba079ce45f90b4fea7f93274d884933cb50cde8d"
+    },
+    "fedcore/external_runtime/contracts.py": {
+      "git_lf_sha256": "e7cc60591f65df10bbbca612b4d5e2ab9b00441eef26b42c4097f63344e84f13",
+      "raw_sha256": "8d50ad8f5e4f9edde6b309ed59032774b78eef902c06b530cfbf9628c23ecb01"
+    },
+    "fedcore/external_runtime/execution.py": {
+      "git_lf_sha256": "d6cfab4c5aa58888ff92c9306554e01e75c7428c2bbd8c74bb0a518a4a46a23b",
+      "raw_sha256": "e1cf2233dc8e356c09093867ea0fc7b71846fd9a3bed0a3f5a9691da03c2babc"
+    },
+    "fedcore/external_runtime/industrial_manifest.py": {
+      "git_lf_sha256": "3132e4f91b0eb87b16cc386ee82a81720c3e5ea7b3f295464067d6ef3ab2cc37",
+      "raw_sha256": "b601262ab6e91c147f5eac975d011afedd750bbb541475dc309ebf0dc877ba1e"
+    },
+    "fedcore/external_runtime/jobs.py": {
+      "git_lf_sha256": "130f7317a212a40527a321f079480db66c68e2c2e6f6248b50983f118926e906",
+      "raw_sha256": "7e304a03649084a1009c3e88519c7fbc46f3a0e3d154dbf8345589002efc7318"
+    },
+    "fedcore/external_runtime/models.py": {
+      "git_lf_sha256": "70abf1c771677167d07b383a69a8587b776b870035a25ae7c42c212cb3f52e6a",
+      "raw_sha256": "5ead2120c11dd7abb3c2c3d89df03370a23f4a28168c06ba60b300eb5924f4a1"
+    },
+    "fedcore/external_runtime/security.py": {
+      "git_lf_sha256": "a076f79d26dd0e44dbd363387f14d934dc764efba46e96dc5771ad08727648dc",
+      "raw_sha256": "72524ae606d27dfd2c6817f119ee7ddad96d934c77ebc67e41a121ea5db323e4"
+    },
+    "fedcore/external_runtime/worker.py": {
+      "git_lf_sha256": "c1d726f7aea8d0b040554ca35c4f4f67907eb309818953eb551269f981117c94",
+      "raw_sha256": "843924a3fc5c4b4b5fad566c046669d4786c1ecebdcb8381eca9dc873a61078f"
+    },
+    "fedcore/inference/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/inference/onnx.py": {
+      "git_lf_sha256": "b463fab5a95a43a846d1fd97f5de739004bd27a8f30df5b480c55def6fab2cdc",
+      "raw_sha256": "28f3196cd92d7116e4e6abdfa79d307ad529d8f4807467c3366da88bfe266517"
+    },
+    "fedcore/interfaces/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/interfaces/fedcore_dispatcher.py": {
+      "git_lf_sha256": "a46c857ec89d7ee8c367478d15932b0a734f0e36fe8d665d5a3911e22399a5dc",
+      "raw_sha256": "2e2e462576a6feef442d9203f4c6ade4950ebf992cb18eaebde8a8ec01badc0c"
+    },
+    "fedcore/interfaces/fedcore_optimizer.py": {
+      "git_lf_sha256": "8d87915ddc572eca9b4030cd0f80bde3bc021d2f9c457124c18f8e4a883d045a",
+      "raw_sha256": "a856bab09c5b907bb5fee4f652628cd7408d92f771780c66b5b14a2426d8a0a5"
+    },
+    "fedcore/interfaces/fedcore_strategy.py": {
+      "git_lf_sha256": "34e241694019234e8dab899bbc257a467974b7e0974900ff94efcb252fe5b86a",
+      "raw_sha256": "d29f87b4a13a022c3de4a0a8860cc9c5859e36265e6ea125a84de3edebaaa500"
+    },
+    "fedcore/interfaces/search_space.py": {
+      "git_lf_sha256": "673ac7660b4fa62474e08ee15b67d0828067afa1752308b58a82863838730354",
+      "raw_sha256": "aa8153853c1b77cddff9b5e8dd7a01c0c832164b5a9214c3cfc0124c3da0ab18"
+    },
+    "fedcore/interfaces/search_trace.py": {
+      "git_lf_sha256": "11aa64faca15a4e1880227a0f52b11fa47fd197233d321cc646e462b1d5198eb",
+      "raw_sha256": "06472f65bcb9954f97595a4243a1a5388685a5bee708ae1a062958aa47e7ae69"
+    },
+    "fedcore/losses/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/losses/distilation_loss.py": {
+      "git_lf_sha256": "ebc8864027c1aff11f4457b6479788c97acf3fa5a9725dfec3d128d4fe69333a",
+      "raw_sha256": "54b068fc202457ebed426b521720e36f4d6b0288e8f035a90a04ef11230b8799"
+    },
+    "fedcore/losses/losses_impl.py": {
+      "git_lf_sha256": "338e2864bca7e71e4f7c8306835bdd6c8c8dea7bfe0f9513adf6a66b967f3d3f",
+      "raw_sha256": "d2b7312162d72c5b388428ac502e11d3798c3991b1556b779b28bcbe39b2ec8f"
+    },
+    "fedcore/losses/low_rank_loss.py": {
+      "git_lf_sha256": "648f625f36c06006531ce348c0c4f6763955621a6d20f72e93fbab368be84f18",
+      "raw_sha256": "ec7560aeeb9fc62781b7ef84b385b8eea809cd90c6b2ebd618fea44741d3e23e"
+    },
+    "fedcore/losses/regularization_losses.py": {
+      "git_lf_sha256": "e6e75e7e03f66f99efe45f28b9fbf5e06f774db717d875ee33b27d81eabad910",
+      "raw_sha256": "b37b3a1f946d4bf8e6939dc1296132b95183152457b2f057614c5e9b9ad8d57a"
+    },
+    "fedcore/losses/utils.py": {
+      "git_lf_sha256": "887f996014a14685558b0036a214ba5a488e91d72ac983a4a0df2cc29952f87c",
+      "raw_sha256": "8db343807575afa09a22f25068c52173594af9dff0ece492c8f016660f99c7da"
+    },
+    "fedcore/metrics/__init__.py": {
+      "git_lf_sha256": "7089e437691ab3b57160d96b1c1b7571b9c34c840b767ac6516954eebd99e395",
+      "raw_sha256": "7089e437691ab3b57160d96b1c1b7571b9c34c840b767ac6516954eebd99e395"
+    },
+    "fedcore/metrics/api_metric.py": {
+      "git_lf_sha256": "ec93b9c38dd1176cbcf993529d2ae473246162466d78544db0073a98a1bde5a6",
+      "raw_sha256": "36a6bda48f676445eb8cd8b3aab30842d42729cf32c5ae02f0845e4a2fa8dfaf"
+    },
+    "fedcore/metrics/cv_metrics.py": {
+      "git_lf_sha256": "b655fdbbf7e1bfd524b84931f5c0ca2f835d932d6c55baa62618d52408624ab9",
+      "raw_sha256": "c6c13ab5ac164b8eddceb0990110ceec5b058aa772bc931259462bce6ae6dceb"
+    },
+    "fedcore/metrics/metric_impl.py": {
+      "git_lf_sha256": "dd005e024d95f8ab0cfa4f32d018cf442e943826c0ad136a6806e83f28c60d37",
+      "raw_sha256": "5956cdc348da270aa285ab584cfe7d794c70600caebc92ef77ad3462afbd3fbf"
+    },
+    "fedcore/metrics/multiobjective/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/metrics/multiobjective/hypervolume.py": {
+      "git_lf_sha256": "552086a149ff15040816a536f2e168dec52b7ec52e386116622453c665a5e587",
+      "raw_sha256": "c7c0216216c3e9e1d384680d5b02b8a095e96b7909e7196c3ef3e70931a72a37"
+    },
+    "fedcore/metrics/multiobjective/multi_objective.py": {
+      "git_lf_sha256": "c1f91dff74d23c8c7abe4da5e3630cebba9666634ab94d623f6791cc156367f7",
+      "raw_sha256": "460fa40416cef3b65d148660e968685098b407ef7f8244d782d3d16bcb8814d1"
+    },
+    "fedcore/metrics/nlp_metrics.py": {
+      "git_lf_sha256": "4fdee24b7ed0977633010e1159918da5f162264efae50642216e15fa5ff8bf20",
+      "raw_sha256": "55fecf94ef20510f3e31ab773d2cbe2509478ba7c9177fbd5ec7a887348f16c9"
+    },
+    "fedcore/metrics/pareto.py": {
+      "git_lf_sha256": "dceebe24265a50aff22c8c467dd5cbbcbbafd11ec99ac8d9e0bbd0f2df32b232",
+      "raw_sha256": "af3ba785e8476e45023c49b5f6d0236044c8d549242f58786885be5c1cb0989c"
+    },
+    "fedcore/metrics/quality.py": {
+      "git_lf_sha256": "f71e710450a4ea8d726bfb1a0fe91ba19ccbc6319310d0dde8e3686c8c36e029",
+      "raw_sha256": "2f2248b17daa9376075954127936d9df6e7af0999260f62dec94712468e4e2f2"
+    },
+    "fedcore/models/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/backbone/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/backbone/backbone_loader.py": {
+      "git_lf_sha256": "be602cb7eaa8b4ab4195ac4e25f92d08edc96f1bba8a6aabf3bffe6b9cfc66e7",
+      "raw_sha256": "37c7be6223e699a1bb7f7471abbcc37db2c4692242084041aed0c51c2116a102"
+    },
+    "fedcore/models/backbone/convolutional/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/backbone/convolutional/densenet.py": {
+      "git_lf_sha256": "4bc56720e2d645de10e744eb238cfda7eb9a269a206ccf262b5591f9c3b4a898",
+      "raw_sha256": "6f3ec5614454fa33e725b4b4ac4390350c594829fb06dfd5a60d5c878dc7d320"
+    },
+    "fedcore/models/backbone/convolutional/efficientnet.py": {
+      "git_lf_sha256": "3791335e587b50817820b299effced55e4dc75b533ef9f95ccfe46ff43075f7c",
+      "raw_sha256": "b05cdd910e7803b1bacc575ab15a33e6b2e0d11e66d8c282b882836e170ca921"
+    },
+    "fedcore/models/backbone/convolutional/inception.py": {
+      "git_lf_sha256": "332b7e3ed62439bb719d18852e1b454e2d28e1ec70126282b663197f7a1dae8a",
+      "raw_sha256": "fd85902ba732637098f1b27d4d651a6134758fcf995c5ef0b657c1521a063741"
+    },
+    "fedcore/models/backbone/convolutional/mobilenet.py": {
+      "git_lf_sha256": "b642e03596f6d393844b5116692016b792d585130e59ac85e055211a9abe944c",
+      "raw_sha256": "6ba62c0d010cddaf68aef4110bf9ab5f88fb6dab900fe512143494b3d093f792"
+    },
+    "fedcore/models/backbone/convolutional/resnet.py": {
+      "git_lf_sha256": "524c307f4f204e03dd5cb75d6e5fc67895c11b29c700b3569f83d9b51c329db2",
+      "raw_sha256": "414296cb6301d169ccc611684d2b1d4808888458607fbc722dc154b7009c8b6b"
+    },
+    "fedcore/models/backbone/custom/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/backbone/custom/custom.py": {
+      "git_lf_sha256": "b2f41399cfd79ed7c891d4ad6ae1535048768390bb740130dd564b354d7ffada",
+      "raw_sha256": "f4d45d0aace8d2bfde51f027a223fe987a3e09110c9986bc20dcb5bc72d58806"
+    },
+    "fedcore/models/backbone/custom/custom_object_detection.py": {
+      "git_lf_sha256": "8076f518609464a0f800b8a1f9af58efc2246c0f6d6307db4c0455243a611185",
+      "raw_sha256": "6103eab19180ca9f5c096f6ff42aba3d624a374b671d228d72acc1d817517f2a"
+    },
+    "fedcore/models/backbone/encoder_decoder/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/backbone/encoder_decoder/unet.py": {
+      "git_lf_sha256": "3b1c40c42ae8149fd6d9d1489ca8a89f1657e03a81452255808120fb57c3bbfc",
+      "raw_sha256": "2572e9dc06f720b94b0b5af5e361d3f1832088d5301d873f3e1a83cab450ba15"
+    },
+    "fedcore/models/backbone/pretrain_model/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/backbone/pretrain_model/chronos.py": {
+      "git_lf_sha256": "bec1bb3f2ff3a1c80612bed14f94d9bfc1799256aaf50ceb74cc9186514d8f0e",
+      "raw_sha256": "e57f5d410450dc228ea39ac2292f6d72a481937fd05726d36cc1b304ff6c7deb"
+    },
+    "fedcore/models/backbone/pretrain_model/segformer.py": {
+      "git_lf_sha256": "a03d34369758126cd8d501682bbb091361028e4525b55ad8aae06b7676d39859",
+      "raw_sha256": "f8073eebe2a5bee1af67c88edd663994488d830f3ea8ba2215a85b211a663a4e"
+    },
+    "fedcore/models/backbone/transformers/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/backbone/transformers/linformer.py": {
+      "git_lf_sha256": "552834b13d6d61dbede32a85ac50fb0eabfef75eb5223348e76a704a709fec10",
+      "raw_sha256": "d349e619316d4459ed4ebfeabfe8c84d6a747a35c001e165b938153ae7ae1520"
+    },
+    "fedcore/models/backbone/transformers/tst.py": {
+      "git_lf_sha256": "ff52fc4a5f59d906a3c9f2fd4e64092c47564d7b7eb199bef2046eba150d8048",
+      "raw_sha256": "8a0835dbc55910ae7086e69f742fdbf1d53f3dbcc354bf3e18930cec7160af5b"
+    },
+    "fedcore/models/network_impl/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/network_impl/base_nn_model.py": {
+      "git_lf_sha256": "c756882bc659312bb3b75fe354aaed30337d8a8c15251ce7f85bfaadf031945e",
+      "raw_sha256": "87ac0d150590a545125057a15925b7c16171be698e0b148a28107dc72d0d3f7e"
+    },
+    "fedcore/models/network_impl/decomposed_layers.py": {
+      "git_lf_sha256": "be8d43505dc40081e326b9ce2351aa02fbb34d73b6c3b3a5a10d77c494b14b77",
+      "raw_sha256": "95edaeba5d58515b5734e83ece8a7dedf79f1e0857aeaf97defa6a83e9a04ba5"
+    },
+    "fedcore/models/network_impl/interfaces.py": {
+      "git_lf_sha256": "120bdecaad1cf0675f79b82caf4436e3a0bb5e6bfd43f9fe322094d5069ada80",
+      "raw_sha256": "32eeb507c513e7196710ef82afa59d1f31910f1e320ec5f93d9b3c5b1c518aa2"
+    },
+    "fedcore/models/network_impl/layers.py": {
+      "git_lf_sha256": "acb690288612fdcbb822b127d6fe5981e39ee97ada5b69924fb350bf6aeb37ff",
+      "raw_sha256": "571293195dbd75b0c12612d692533c13096cd48902d6e9e89cacd393c17b9021"
+    },
+    "fedcore/models/network_impl/llm_trainer.py": {
+      "git_lf_sha256": "7b8e594ee33ca534e7f24a3638d6f56fb6e046881c9941b3599b28313b9823b9",
+      "raw_sha256": "df9161f20e594026d488ea62bd78208b315a98b8b00d8819218932a1c0d7a084"
+    },
+    "fedcore/models/network_impl/trainer_factory.py": {
+      "git_lf_sha256": "ab0fd68807f207001b44a52551a815c39b5c2620aaaa8b7b2e98a5c25ddefadb",
+      "raw_sha256": "d8040e7785b3cc99db8155992e6d199513ee727ee640a939d0e8a7f28457be97"
+    },
+    "fedcore/models/network_impl/utils/_base.py": {
+      "git_lf_sha256": "4c0b1a249b57b8b92fd0d7c22421e63b829c7ae044acb67448a765b186f2d298",
+      "raw_sha256": "db64395db1352c3e1921e1fffc58a7bdfdc47fc7c542498bedf5461efa2d7f67"
+    },
+    "fedcore/models/network_impl/utils/hooks.py": {
+      "git_lf_sha256": "4aba26f34562b2773b4fd888431ebb2f6da1b4e968123fa2a2f2f383744311d5",
+      "raw_sha256": "77bf776e347a2296e953094f3ef3aa07ecffa02a0277d95c2ecc2f287767e74c"
+    },
+    "fedcore/models/network_impl/utils/hooks_collection.py": {
+      "git_lf_sha256": "db35004dfc52a6b67742a7961878e7571f8b1fddf4ea06a6657b1dd802362169",
+      "raw_sha256": "21f410bdffc3ccf55038498cce5f4ffa5519a81c4d67fe4250f9464ec6acd50a"
+    },
+    "fedcore/models/network_impl/utils/interfaces.py": {
+      "git_lf_sha256": "055cda9218a99a63c532e01f7ff656ddba473ea615f163eb6e5706409409890a",
+      "raw_sha256": "364385df97e88cfc9569e4274c7ef2cae97d980f5bcf162b7ea7af272cb4c13c"
+    },
+    "fedcore/models/network_impl/utils/trainer_factory.py": {
+      "git_lf_sha256": "e4ad27fbbe86d8b0b9b1212832ff0b305a889399258a978f39d6588e7730ed6e",
+      "raw_sha256": "e70a60dcfc1efea1dd3ed0c5eee231bc17a649ef6934ed4711c934a004558c62"
+    },
+    "fedcore/models/network_modules/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/network_modules/activation.py": {
+      "git_lf_sha256": "d26708b199e38142642dd7b66a8619a843f7a13f220f86912fb703fa0b7c110f",
+      "raw_sha256": "be7c0a485a282aea441846ec39e0dec143e7e71b2b5bfd0586c8abdc34e167bd"
+    },
+    "fedcore/models/network_modules/layers/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/models/network_modules/layers/attention_layers.py": {
+      "git_lf_sha256": "a2818c755890c9bfc152975251900cb130899bfc3f9141b9d8bc51932a8e28ca",
+      "raw_sha256": "a521410f94782611795c2b5e86b365a3c8d8c3c103aa92d729ffe8c3dcaa1101"
+    },
+    "fedcore/models/network_modules/layers/backbone.py": {
+      "git_lf_sha256": "cf18d85009760c983bbd64eabbeb0ca04b98010664a8e5a1a78e1809dbbb1add",
+      "raw_sha256": "7455118d911098a112dd2d4490df1cbc8913140d787b2cd5b00a329c8ab09621"
+    },
+    "fedcore/models/network_modules/layers/conv_layers.py": {
+      "git_lf_sha256": "649082f0522224c1519f406f6cff28bec2392bd8b3dd7889cef7b1a46cd390c8",
+      "raw_sha256": "cad55c84eca8f5efcdce3bfa31e3997561f35625cdde859976f6fea8666dc737"
+    },
+    "fedcore/models/network_modules/layers/head_layers.py": {
+      "git_lf_sha256": "4c4fae6e3a5c57d53ed877a3ee75c508a24d9bf2a006719460f8d0d3a62f8613",
+      "raw_sha256": "87cbc1f9a01c59a94e096c0fdaf096d4d222697b90acbc055b191aa796607b45"
+    },
+    "fedcore/models/network_modules/layers/linear_layers.py": {
+      "git_lf_sha256": "571b6a88fe1acaaaef6eedc7df3f4c17434edd238fb7e1db804a108b6957372e",
+      "raw_sha256": "023f64bf2bc47366bcfb6bf2fe48c6a12af60fa99503b33775671a37eb5708e4"
+    },
+    "fedcore/models/network_modules/layers/lora.py": {
+      "git_lf_sha256": "ea4c28a70d9983fb6a0d141221b4cc38b467d315118f953b68a6737669a7972f",
+      "raw_sha256": "26145b11c1946029995a0b9c0731a6588400ecb184c6abc86748a4c51bb0e24f"
+    },
+    "fedcore/models/network_modules/layers/padding_layers.py": {
+      "git_lf_sha256": "9f9329256473f3160304922c2d6fe48284e2e7c8c99cd9e09fb1e332eb9edaa2",
+      "raw_sha256": "133d0ef2083bac6237d9ab6e40ef256e7fbb03aa5220f81d4877661ff24f716f"
+    },
+    "fedcore/models/network_modules/layers/pooling_layers.py": {
+      "git_lf_sha256": "b0488a0da59a6fd8f3559a371657ff6cfb3b7233d01efec35a236cdc673f4b28",
+      "raw_sha256": "7d0b29c3723c7b13c8add0e4f0afff667f64385cc4d7cb65620b8b7f0c1b711d"
+    },
+    "fedcore/models/network_modules/layers/sequential_layers.py": {
+      "git_lf_sha256": "bf77ce6efc54368f3cd2b11b7fbe7600fcebdf654a83b045b4302b68302d37a4",
+      "raw_sha256": "316152518a9f0ed418bb59c5d1226db68b6a87c699766f62b458e8b21cbb6c94"
+    },
+    "fedcore/models/network_modules/layers/special.py": {
+      "git_lf_sha256": "e2d4f1527cdd2b16bcf04a6fdf854dd00f6255df2afab6a2cc765d6a8162c7ab",
+      "raw_sha256": "33fd6c7a29802e259fc9449a39fd0abd86d133c09a7eb42b2de3422e4dcfa257"
+    },
+    "fedcore/models/network_modules/losses.py": {
+      "git_lf_sha256": "3ca67400f040bb380ea344e0e4dceecbd06834108910b2d2070831a2eab59cc7",
+      "raw_sha256": "4a3a6aa19349a779a3a4f323fa2bc501ead529320cd2771e9bd1a15f605fd735"
+    },
+    "fedcore/models/network_modules/other.py": {
+      "git_lf_sha256": "d422461c46ee7b5b28ab8bcd512cb4beb48c4d516c9783917b58c33d080d2c22",
+      "raw_sha256": "780e15df67981ccaaec4e6c16354b303e3f7a15d58d00149523a4e00aaffa42b"
+    },
+    "fedcore/models/network_modules/reversible.py": {
+      "git_lf_sha256": "224ef06765beccd9f1d33949635b05513b6bf325724e0a80303ed5d03cba9924",
+      "raw_sha256": "3622f3e0606316ddc5fee98bd1ea493bbc87da8e7aad6ab3c9bc46de95c4e15b"
+    },
+    "fedcore/repository/IndustrialOperationParameters.py": {
+      "git_lf_sha256": "e249238909b925d47b4ef29f7dd9dfc64e37d08639e77920980774dffb746e06",
+      "raw_sha256": "8a131fc93d8153e1c779b5e82a9e1e40c4768ddef2d5b4d5ea7883743b2a2883"
+    },
+    "fedcore/repository/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/repository/capabilities.py": {
+      "git_lf_sha256": "ce57241f94681a5855561c16e8d37960a01a4c3a0097235fc17a75c3b052cb92",
+      "raw_sha256": "98d56ab36bc060fbcbf3ec970ae6ff4d5e930509c3dc9d8f8102af5b967bdfb6"
+    },
+    "fedcore/repository/config_repository.py": {
+      "git_lf_sha256": "d1a3d1fc45dc1aca7ee620c17b80f2ef0d2a3083446ff540d2bb35163b601fa1",
+      "raw_sha256": "ae6b1862c7a83757a9acc7667e6373088a035077fd09ab7f4830e3c7281fbb38"
+    },
+    "fedcore/repository/constanst_repository.py": {
+      "git_lf_sha256": "d5a357d4e6e3d2bd7de954e877a19df4ddf3cd0d650c7649880a7e97314d692e",
+      "raw_sha256": "3496b82e65eb41ed4918892d4cea91f5b2fddf28e8e846d659623819db1ada31"
+    },
+    "fedcore/repository/constant_repository.py": {
+      "git_lf_sha256": "4b1f2ccac0329a0f2be18348deca53d7ba09aa10f3bef8c173ee2ce2b78fe6dd",
+      "raw_sha256": "882d6c51eeee6534579a30c5c39413500228f2cb2983c8a266b9f30acae089c6"
+    },
+    "fedcore/repository/data/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/repository/fedcore_impl/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/repository/fedcore_impl/abstract.py": {
+      "git_lf_sha256": "7da2d3ed56ab6947fb67b60ddb562299ddd34ce84f7739f4efb692f48ac32f50",
+      "raw_sha256": "62cdbdac90da287699e4d48f66bd1e3b1781f1c3114ce4eadd8cab3dfbb1911e"
+    },
+    "fedcore/repository/fedcore_impl/data.py": {
+      "git_lf_sha256": "0591d121c80e6041ffb659704be02161a357521225b589b538c9f9636b4d596e",
+      "raw_sha256": "ce98cb85d79d36688823acb1b918d8f5088d79ed49ad0f6194d4d6f1cfb67436"
+    },
+    "fedcore/repository/fedcore_impl/metrics.py": {
+      "git_lf_sha256": "2aa1a6e83a80e17c1a49731248ba0507ac33e38b3a12bec1247846b5d9c991b6",
+      "raw_sha256": "890a19e983cfb64ecc15691841494e0a00e4615526e531f2975cca460aee2ce5"
+    },
+    "fedcore/repository/fedcore_impl/optimisation.py": {
+      "git_lf_sha256": "e6f5c90a325430a6213758660de3bf22196b52edf0c18961fb3d069e70557929",
+      "raw_sha256": "409bee29f7fc5b053db847cd1aa2da7ddb7c4a2ef5f13e7af3e4e3847b614b55"
+    },
+    "fedcore/repository/initializer_industrial_models.py": {
+      "git_lf_sha256": "02b594cdbb320c10568368b58f3d5990335a5c1740b5301eb58325a2c80a33c3",
+      "raw_sha256": "e7f9fba24afb3291e4990b936bd6356419540d8282d1b343e717c2bb4d0e5116"
+    },
+    "fedcore/repository/lazy_registry.py": {
+      "git_lf_sha256": "fd5df8dc903925ab83ee14cb53d135c44631cedb211034fc195d20e30abd9b68",
+      "raw_sha256": "4a04b17178702aad2b5ad78e7934c0dd1e7cd78a46f890b1b3dd3c13ccf88f57"
+    },
+    "fedcore/repository/model_repository.py": {
+      "git_lf_sha256": "4a32e04e9980c6bd69e9fe227f580deef7b0364f9253f5f8ff3d8ed55e0f6f16",
+      "raw_sha256": "71c81df876c1195c19b87bc4ddb7a8a4355beb103fe200ba4af0c517c5739f8a"
+    },
+    "fedcore/repository/setups.py": {
+      "git_lf_sha256": "4d96f7643f538af46b6c1f3185af2e6e58e33abc1e63887c4a01f7433b8cd531",
+      "raw_sha256": "d650efa382d16f44a02de77f99605f1d63a123c56f2cdd317bcae2045bec95fa"
+    },
+    "fedcore/tools/__init__.py": {
+      "git_lf_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fedcore/tools/atomic_json.py": {
+      "git_lf_sha256": "87f0d9237e523b752147fbdd27b7cdd903f610f29c58780a42b313e0aadbb020",
+      "raw_sha256": "5ac0f80cd586b353148327484d28221ff6ce9494f59d13ecfc01043c809b9651"
+    },
+    "fedcore/tools/benchmark.py": {
+      "git_lf_sha256": "94a5916d57530ae9a752c888a95135bad191f8dbd8486830a078b442f533982c",
+      "raw_sha256": "0807638dfa7a310fd6845650d1f73edfc21660c94f1e541aa52bf92006ceabf2"
+    },
+    "fedcore/tools/edge_device.py": {
+      "git_lf_sha256": "ec7278e92b92390be9f94aec1b7d432f7479d91779d700194d0ceee58ab0e364",
+      "raw_sha256": "b0f5b7f87c4e0f78daf29d217a1f2f0c5afb4a0ddd5baac47b583f4a2a8a03d0"
+    },
+    "fedcore/tools/example_utils.py": {
+      "git_lf_sha256": "93242f4ab42e2e776be2fec36cb65d0e45a661c606c717623065c148682f9171",
+      "raw_sha256": "b015b412c87620727c4c3bc0651286a899d93b4b1ef4216fa710d8a8d1d2ae7c"
+    },
+    "fedcore/tools/export.py": {
+      "git_lf_sha256": "b0381705442c4a62ab80dc66cad52c4bc5f17b8c6770c6c653bc5c9e7a2f7c37",
+      "raw_sha256": "27cf190fda2953011d356be69570c7864046540f41eb116e58fec475dd8673be"
+    },
+    "fedcore/tools/index_resolver.py": {
+      "git_lf_sha256": "bcc2b865c75b2ecfc57943465f8dc321a1e8d18eca9cb8e32e4b6023bd5eb920",
+      "raw_sha256": "6e1b4a293d4d376b87563961420e2a4b5baebfe850a4a650985f8d8fa98c1286"
+    },
+    "fedcore/tools/registry/__init__.py": {
+      "git_lf_sha256": "62161f0f48c63e96ff980921f88dafdf533bdee8b9a9dfce9cf7964e893afd66",
+      "raw_sha256": "a1938482e18f74beb0b8df549b316ff83f548ae12fe315671381ed0b2b8061ca"
+    },
+    "fedcore/tools/registry/checkpoint_manager.py": {
+      "git_lf_sha256": "4f481c636aadb4b1e552d6496efb46495324868e4e3276b5170d034c54ee220c",
+      "raw_sha256": "365e1ecbee47171d08d248929fd6b98bf51f153a68520979ed232bcb9287b14d"
+    },
+    "fedcore/tools/registry/metrics_tracker.py": {
+      "git_lf_sha256": "9f8f2967b94b5a5145cc646478bb92da30773e7fb37ede1f1d87efe10092f627",
+      "raw_sha256": "7e0c3277965200c5fb89720ed8766feeadbc7c377029eb2d33ed7656fc4c4ef5"
+    },
+    "fedcore/tools/registry/model_registry.py": {
+      "git_lf_sha256": "bb9dd7ff712d94f38397ae05de7affcef3aaf7af158ff00ec2511b4542b636d3",
+      "raw_sha256": "0b36e538c2cea44fce25f0960b915f5eea9854e404534c0756b377887d4dd543"
+    },
+    "fedcore/tools/registry/registry_storage.py": {
+      "git_lf_sha256": "c79aef815d6d6cde49273a2cab8f36e617bcfe88fc6d72171c25a24f118fd1dc",
+      "raw_sha256": "aa1e00bf2aa0f63281dd8793b6d25a86617cff7fe927273459615bfc3a7ee81f"
+    },
+    "fedcore/tools/ruler.py": {
+      "git_lf_sha256": "487ae2309179be2ef9dfc4331f363377f1676e543176518dd2da289d31b018d9",
+      "raw_sha256": "2beb3d983514ff77e614c9e210354fb9df5500c490e4c985e8e926e5570a3ae0"
+    },
+    "fedcore/tools/scheduler.py": {
+      "git_lf_sha256": "253a9cc73d5f948421a2a33b50188f948b5a3a9c3b58dbc2c0b8dd18a101daab",
+      "raw_sha256": "852b44c47f4826226d3b84eaf1c61c845e7cd6bdcf2ed7802271f428b89b9139"
+    },
+    "fedcore/tools/visualisation/optimisation_history_vis.py": {
+      "git_lf_sha256": "36f1c95f205b8342350a2eb9cc5ad05519664863343b55139a1e2bbefcf2fb5f",
+      "raw_sha256": "d0fa1f80ce669b9f866cc19cf0ad36bc9325c8ded07ea9764808fe00de506782"
+    },
+    "fedcore/tools/visualisation/vis_utils.py": {
+      "git_lf_sha256": "605870fbe11c2f632c1205fb0c065ed6c539c09563d2f4048de69d2a74ef669d",
+      "raw_sha256": "698ab5b9e71674be14262d9f442513ac67c1f95a7deda26632be77436c98e206"
+    },
+    "fedcore/tools/viz.py": {
+      "git_lf_sha256": "164364eaf6b90f81f480e2cc5fe99939d560de0111b14a438ef97d2de0beaedd",
+      "raw_sha256": "6299f21a55aca7a2fdf4754851cf10724399a9d54139f45da51293996b543a01"
+    },
+    "scripts/analyze_svd_second_package.py": {
+      "git_lf_sha256": "45b34dd21e224d8a8f685aa3288a746f2bc42cee1049beab12de9b4de75ac424",
+      "raw_sha256": "45b34dd21e224d8a8f685aa3288a746f2bc42cee1049beab12de9b4de75ac424"
+    },
+    "tests/refactoring/test_svd_second_package.py": {
+      "git_lf_sha256": "c87f32d4444abc3f2115e068d4c33dac2951a41ca555a37b805a355fb54383af",
+      "raw_sha256": "c87f32d4444abc3f2115e068d4c33dac2951a41ca555a37b805a355fb54383af"
+    },
+    "tests/refactoring/test_svd_second_package_independent.py": {
+      "git_lf_sha256": "58df368dbc20c776a926e2b4968431a8cc2e687dd7c03c46dca7177684ae7855",
+      "raw_sha256": "58df368dbc20c776a926e2b4968431a8cc2e687dd7c03c46dca7177684ae7855"
+    }
+  },
+  "protocol_sha256": "ebb27bb08ca15228c06f59e0502acbc9f8b78c30d13f1adf42932905ad7f6b1c",
+  "schema": 2,
+  "source_sha256": "7a46d683d05d03bef3639f021606ba778c535c8083afcc3f4a38a31912da3616"
+}

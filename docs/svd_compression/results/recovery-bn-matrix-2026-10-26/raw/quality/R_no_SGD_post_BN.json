@@ -1,0 +1,38 @@
+{
+  "SGD_updates": 0,
+  "additional_BN_calibration": true,
+  "artifact_id": "ea8ef524e5b517344fb568bacc0f3ee823ebf44e51c24e4393e97d74a677095a",
+  "buffer_fingerprint": "4c277d6e2471dac1700a0c79683e3b3e72a9630a4210ae12c868cb72c73dd359",
+  "completed_within_deadline": true,
+  "cpu_gpu_probe_max_abs": 2.7418136596679688e-06,
+  "family": "R",
+  "file_bytes": 33651182,
+  "gpu_reload_exact": true,
+  "initial_checkpoint_sha256": "3525edca1a758a810207ff3f87e5a62f5f5740f5598e5ca01aa5f925416974fa",
+  "inventory_fingerprint": "25f4faf4ebab65db92409a5599d336e5e23bf3967bd1c45cd3924ae8d3e21f42",
+  "lr": null,
+  "parameter_fingerprint": "08b45467dcacd055605bd93f1b6af937a64f69b6d52f68ddb4d166e7cc628e57",
+  "path": "checkpoints/R_no_SGD_post_BN.pt",
+  "phase": "recovery_R_no_SGD_post_BN",
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "sha256": "e12379d2f4d0ff05209621b971346f8e10c38cd52d5e26d8a03b8a8680d8d26b",
+  "shared_pre_BN_checkpoint_sha256": "3525edca1a758a810207ff3f87e5a62f5f5740f5598e5ca01aa5f925416974fa",
+  "solution_id": "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+  "source_M0_sha256": "531d02916a6a4ad7341f95a1f7e075c91c7b5350bc7009a09d5b93077c4d5510",
+  "state": "no_SGD",
+  "tensor_bytes": 33593288,
+  "training": {
+    "additional_BN_calibration": false,
+    "lr": null,
+    "training_BN_updates": false,
+    "updates": 0
+  },
+  "validation": {
+    "correct": 4689,
+    "cross_entropy": 0.23255023837333325,
+    "prediction_file": "predictions/R_no_SGD_post_BN.npz",
+    "prediction_sha256": "8fa0397214a80de076060360e715b41b61bdd88546351aab3951e3006b2f0f21",
+    "rows": 5000,
+    "top1": 0.9378
+  }
+}

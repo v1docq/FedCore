@@ -1,0 +1,1502 @@
+[
+  {
+    "attempt_id": 1,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "7da6096607f30b8f9248f3047d953e5f84806bba8a3fe5170fb83a264fd6c1dc",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 8.58306884765625e-06,
+      "file_bytes": 25789358,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "7392b70316c5f86f409ef57b6bda059c1c1acbc7b5a54d5c77cc1f8857dcd590",
+      "path": "checkpoints/short_evolution_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.pt",
+      "phase": "short",
+      "sha256": "b6fcf1346754e664afc648b5cd9e0bfb4e8ed00d497b9634ab44a18383559b5f",
+      "solution_id": "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+      "tensor_bytes": 25733576
+    },
+    "checkpoint_file_bytes": 25789358,
+    "common_search_completed_at": 20236956.00447804,
+    "completed_within_deadline": true,
+    "correct": 4653,
+    "cost_ratio": 0.5752524097334651,
+    "cross_entropy": 0.25658166514635067,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236956.001978617,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.npz",
+    "prediction_sha256": "5aa7cfe9dc3031c12a896cbe8d7c9d72b18e91180e94e3de78a184e6ea466a2d",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236952.791193668,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 25733576,
+    "top1": 0.9306,
+    "wall_seconds": 3.210784949362278,
+    "workflow": "workflows/evolution/62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd.json",
+    "workflow_fingerprint": "315d293c51b1ba6a131fe1e85620e034a2a3a25551bbb6690b80837d0cb09ccf"
+  },
+  {
+    "attempt_id": 2,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "59f44bf54a490fae5ea4f4438d74343a6c99f70a578b908a89b23a0d8471888e",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 2.7418136596679688e-06,
+      "file_bytes": 33651182,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "25f4faf4ebab65db92409a5599d336e5e23bf3967bd1c45cd3924ae8d3e21f42",
+      "path": "checkpoints/short_evolution_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.pt",
+      "phase": "short",
+      "sha256": "54f12eb5f42cbc17e2758b9a369b35703bca54bbfdba38a45b6d92432c7d9b49",
+      "solution_id": "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+      "tensor_bytes": 33593288
+    },
+    "checkpoint_file_bytes": 33651182,
+    "common_search_completed_at": 20236960.063460145,
+    "completed_within_deadline": true,
+    "correct": 4689,
+    "cost_ratio": 0.7509496493169195,
+    "cross_entropy": 0.23255023837333325,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236960.061208315,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "rank": 128
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "rank": 128
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "rank": 256
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "rank": 256
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.npz",
+    "prediction_sha256": "8fa0397214a80de076060360e715b41b61bdd88546351aab3951e3006b2f0f21",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236956.229672916,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 33593288,
+    "top1": 0.9378,
+    "wall_seconds": 3.8315353989601135,
+    "workflow": "workflows/evolution/211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40.json",
+    "workflow_fingerprint": "7481486d4ac851277acb541d20d7648d64aaf51eb99357dc05903b111b7d1a74"
+  },
+  {
+    "attempt_id": 3,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "034d9792758dcca303bf0eb0626b4f2ee3cb607b9b768e74f7625570ab62740a",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 4.76837158203125e-06,
+      "file_bytes": 33792830,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "dc33bc0ccafaacfba80f2ae99e8f504c47c879489004b7cb62330e7712737d05",
+      "path": "checkpoints/short_evolution_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603.pt",
+      "phase": "short",
+      "sha256": "468ede5b26c329a4ad01cf9e5ad409dd8332ae8c51a69208e1e800e93afe8c2c",
+      "solution_id": "ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+      "tensor_bytes": 33741256
+    },
+    "checkpoint_file_bytes": 33792830,
+    "common_search_completed_at": 20236963.223908663,
+    "completed_within_deadline": true,
+    "correct": 4654,
+    "cost_ratio": 0.7542573492869292,
+    "cross_entropy": 0.25491621180796814,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236963.221279304,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "keep_channels": 48
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "keep_channels": 96
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "keep_channels": 96
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "keep_channels": 192
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "keep_channels": 384
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 384
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603.npz",
+    "prediction_sha256": "29a71464b5de295e07b172e87ae413de018dbeb9e6361583cf4bac1a1b83ef18",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236960.235425293,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 33741256,
+    "top1": 0.9308,
+    "wall_seconds": 2.985854011029005,
+    "workflow": "workflows/evolution/ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603.json",
+    "workflow_fingerprint": "5b4fb4599bb4be6aaf2f46b7c4ddb57907e496e458bd7eba504312bfe3e42ba6"
+  },
+  {
+    "attempt_id": 4,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "0f7e54e08ca2bdf1b698a824a2f9911c320e36d97b5e3e979d52b8d0e66e77c0",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 1.9073486328125e-06,
+      "file_bytes": 44781886,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "691935a20c8beebbbc2f2c71f8fe86e3399107f6db5aa2f1ea4917820c2eecfd",
+      "path": "checkpoints/short_evolution_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b.pt",
+      "phase": "short",
+      "sha256": "8406367198d04423e1dd71430fb52be3125ddfebdf2b5c9b40314a64e4de4ed4",
+      "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+      "tensor_bytes": 44734408
+    },
+    "checkpoint_file_bytes": 44781886,
+    "common_search_completed_at": 20236966.71481699,
+    "completed_within_deadline": true,
+    "correct": 4692,
+    "cost_ratio": 1.0,
+    "cross_entropy": 0.22983539575973372,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236966.712451898,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b.npz",
+    "prediction_sha256": "5f8f0a40129a91b6c4bbce8fd395eee611dfac264c8554a9d752d6bd88973711",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236963.405973576,
+    "status": "succeeded",
+    "storage_accepted": false,
+    "tensor_bytes": 44734408,
+    "top1": 0.9384,
+    "wall_seconds": 3.3064783215522766,
+    "workflow": "workflows/evolution/4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b.json",
+    "workflow_fingerprint": "937d8198e49688a1717abb88d09cc20cd08e2ee5aa1abbff16bf6dc714d8c8a8"
+  },
+  {
+    "attempt_id": 5,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "37aee04276a19ddf526b39639541527ea4fdb9f7ffb4b5931ef3adcab82a125e",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 6.67572021484375e-06,
+      "file_bytes": 43950652,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "dfb4fd7f02aaf203498955ce8f3f5acb922f78694531d5119eeaef270ac245bd",
+      "path": "checkpoints/short_evolution_8ed25d480333670351e47353881a420dd4b227a501c1259f19ad5551a8ecedb5.pt",
+      "phase": "short",
+      "sha256": "ef5ec72b5c839f22f3e34d881949f604b37a3c3e63a672f092c44dad81473ef9",
+      "solution_id": "8ed25d480333670351e47353881a420dd4b227a501c1259f19ad5551a8ecedb5",
+      "tensor_bytes": 43901896
+    },
+    "checkpoint_file_bytes": 43950652,
+    "common_search_completed_at": 20236970.13917179,
+    "completed_within_deadline": true,
+    "correct": 4686,
+    "cost_ratio": 0.9813898956704646,
+    "cross_entropy": 0.24542545940158797,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236970.136202145,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "keep_channels": 96
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_8ed25d480333670351e47353881a420dd4b227a501c1259f19ad5551a8ecedb5.npz",
+    "prediction_sha256": "419ad9ec68bd8a5f5b6fe9002240a6c2e1a4c51e5b07cdd54f49bbffaed78424",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "8ed25d480333670351e47353881a420dd4b227a501c1259f19ad5551a8ecedb5",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236966.91355285,
+    "status": "succeeded",
+    "storage_accepted": false,
+    "tensor_bytes": 43901896,
+    "top1": 0.9372,
+    "wall_seconds": 3.2226492948830128,
+    "workflow": "workflows/evolution/8ed25d480333670351e47353881a420dd4b227a501c1259f19ad5551a8ecedb5.json",
+    "workflow_fingerprint": "f88d524e4fcda984e104ee0e72bed6994df4747b5987471aa8a82a97e9d1531a"
+  },
+  {
+    "attempt_id": 6,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "9b9dda9b8e60e0efcac91721702e7fc8299342dc859ff23ee32d21ae74fced9a",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 3.814697265625e-06,
+      "file_bytes": 34009404,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "a6461cb0d5409f40e106b2921f91d0fbac8eb41b7d6d1979f4f8fe3f44859514",
+      "path": "checkpoints/short_evolution_e561efd9c9b87beda4c528bea4009e392282df191aaed8cbe33b15dc93245f0f.pt",
+      "phase": "short",
+      "sha256": "3660eb7799b85f2f789cbc9f1cf3d450bad7e03d44e84fc79af083fef7352888",
+      "solution_id": "e561efd9c9b87beda4c528bea4009e392282df191aaed8cbe33b15dc93245f0f",
+      "tensor_bytes": 33957832
+    },
+    "checkpoint_file_bytes": 34009404,
+    "common_search_completed_at": 20236973.325500112,
+    "completed_within_deadline": true,
+    "correct": 4646,
+    "cost_ratio": 0.7590987232914762,
+    "cross_entropy": 0.257333820613021,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236973.322646245,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 16
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "keep_channels": 96
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "keep_channels": 192
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "keep_channels": 384
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 384
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_e561efd9c9b87beda4c528bea4009e392282df191aaed8cbe33b15dc93245f0f.npz",
+    "prediction_sha256": "e127d332bbacb463ce09a001b063c725a23896ad509f9e0ef692bea664210fe2",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "e561efd9c9b87beda4c528bea4009e392282df191aaed8cbe33b15dc93245f0f",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236970.322820306,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 33957832,
+    "top1": 0.9292,
+    "wall_seconds": 2.9998259395360947,
+    "workflow": "workflows/evolution/e561efd9c9b87beda4c528bea4009e392282df191aaed8cbe33b15dc93245f0f.json",
+    "workflow_fingerprint": "060d2d670ac8ec1696c5d00eb2760b59eab8c1932737814707a3d2da489d92da"
+  },
+  {
+    "attempt_id": 7,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "b6dbb39755aa878f65d6b62d52b655837441fc90e9694fb69085399c30293d77",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 2.86102294921875e-06,
+      "file_bytes": 33373742,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "05e8f1a42390bdf10f3873abf5a98a05e2db71fd4d4700963c2700fa3573f8c8",
+      "path": "checkpoints/short_evolution_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94.pt",
+      "phase": "short",
+      "sha256": "5b1412ec029bd730ecba2a2f7d24a883daaaaa53177f7aea6108bd4d79966ed5",
+      "solution_id": "ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+      "tensor_bytes": 33316040
+    },
+    "checkpoint_file_bytes": 33373742,
+    "common_search_completed_at": 20236977.249432355,
+    "completed_within_deadline": true,
+    "correct": 4703,
+    "cost_ratio": 0.7447520038713824,
+    "cross_entropy": 0.23077286738274097,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236977.246292483,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "rank": 128
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "rank": 128
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "rank": 256
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "rank": 256
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94.npz",
+    "prediction_sha256": "b0dba60e3cecc96263f432e5d9a241bb0ccf90e662e3fb875bd46f500d11ddb5",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236973.499056585,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 33316040,
+    "top1": 0.9406,
+    "wall_seconds": 3.7472358979284763,
+    "workflow": "workflows/evolution/ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94.json",
+    "workflow_fingerprint": "308eab650e7621d7c024719fdb48c3b45812e50bfcb1d093c19e0eb25cea0e07"
+  },
+  {
+    "attempt_id": 8,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "29dba16eeb73bdbec283e5d4e2001d259cf061823a4c6c6c19ddeb71a464e6bd",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 2.86102294921875e-06,
+      "file_bytes": 25995438,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "984a6f576ed873a37daded5de373ded8d94e323b5241898a583fcc425f0dcabc",
+      "path": "checkpoints/short_evolution_ab49fda4b9ba6f74d4662329ea95e1eb4f1db4577af6525974fbadcbcba31c88.pt",
+      "phase": "short",
+      "sha256": "fd5ec02141cf958d3761dd0616f0c7dfaa97c8f7ec2bc014f42a46b74bb1ddba",
+      "solution_id": "ab49fda4b9ba6f74d4662329ea95e1eb4f1db4577af6525974fbadcbcba31c88",
+      "tensor_bytes": 25939400
+    },
+    "checkpoint_file_bytes": 25995438,
+    "common_search_completed_at": 20236980.68373785,
+    "completed_within_deadline": true,
+    "correct": 4673,
+    "cost_ratio": 0.5798534318370772,
+    "cross_entropy": 0.2474160580217286,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236980.680632226,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_ab49fda4b9ba6f74d4662329ea95e1eb4f1db4577af6525974fbadcbcba31c88.npz",
+    "prediction_sha256": "badaba305e840f98e1fa1cf8bb26a7fac5d46306b8187e3827ebac6bc6d7cac2",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "ab49fda4b9ba6f74d4662329ea95e1eb4f1db4577af6525974fbadcbcba31c88",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236977.435835335,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 25939400,
+    "top1": 0.9346,
+    "wall_seconds": 3.2447968907654285,
+    "workflow": "workflows/evolution/ab49fda4b9ba6f74d4662329ea95e1eb4f1db4577af6525974fbadcbcba31c88.json",
+    "workflow_fingerprint": "b5c29db3072445f9e137ca0b1d97ddeb8a713c4d5177c14d96a6849416779ca4"
+  },
+  {
+    "attempt_id": 9,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "abb53ff3d68e2b988a1556eb6c7e96a9e2d4a72679fce6be8eb454e05a0c9bc6",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 2.86102294921875e-06,
+      "file_bytes": 44125562,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "59671509f7a586d16782fb08b73d69fbc922d8151282615ad2a4ae820a76a00a",
+      "path": "checkpoints/short_evolution_a2a1e88127e8fc7fcbc00488e781c91c6b9eb8e9912314ef65a1668cb2c484a3.pt",
+      "phase": "short",
+      "sha256": "837324ea24da6ad43443c1335245a83987527670b11e31f05bb85eaf5419bc51",
+      "solution_id": "a2a1e88127e8fc7fcbc00488e781c91c6b9eb8e9912314ef65a1668cb2c484a3",
+      "tensor_bytes": 44076232
+    },
+    "checkpoint_file_bytes": 44125562,
+    "common_search_completed_at": 20236984.247659016,
+    "completed_within_deadline": true,
+    "correct": 4688,
+    "cost_ratio": 0.9852870300641958,
+    "cross_entropy": 0.23391673100189228,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236984.24417351,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {},
+          "recipe": "DenseCV",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_a2a1e88127e8fc7fcbc00488e781c91c6b9eb8e9912314ef65a1668cb2c484a3.npz",
+    "prediction_sha256": "9ece8de06eb0a80b32dd50806871c930190f0b562c74c7653f013f4e2b2beeff",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "a2a1e88127e8fc7fcbc00488e781c91c6b9eb8e9912314ef65a1668cb2c484a3",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236980.885525014,
+    "status": "succeeded",
+    "storage_accepted": false,
+    "tensor_bytes": 44076232,
+    "top1": 0.9376,
+    "wall_seconds": 3.358648493885994,
+    "workflow": "workflows/evolution/a2a1e88127e8fc7fcbc00488e781c91c6b9eb8e9912314ef65a1668cb2c484a3.json",
+    "workflow_fingerprint": "6e792d088e553997e603b078a36bde4298466c50df7807f166bff43076a9974e"
+  },
+  {
+    "attempt_id": 10,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "1deda57bb2647578649bbcf0342c68cbbbb0bf98f90fab1e1c2709104230064c",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 3.814697265625e-06,
+      "file_bytes": 33399610,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "f185eae1eba866bfbf4e766d817b3456f859ba3f246169150db10ea2bbbc10b6",
+      "path": "checkpoints/short_evolution_84da2cdf5169c0103ad2027184e0d634a5403f8d61473fe34c77bd780015cb2a.pt",
+      "phase": "short",
+      "sha256": "2a47540d96b0337f585950a38042ef06603576fdacfd22dcc8a1196b3f46bc00",
+      "solution_id": "84da2cdf5169c0103ad2027184e0d634a5403f8d61473fe34c77bd780015cb2a",
+      "tensor_bytes": 33347016
+    },
+    "checkpoint_file_bytes": 33399610,
+    "common_search_completed_at": 20236987.43666696,
+    "completed_within_deadline": true,
+    "correct": 4648,
+    "cost_ratio": 0.7454444462526474,
+    "cross_entropy": 0.2643154570403155,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236987.433156714,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 16
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "keep_channels": 96
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "keep_channels": 192
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "keep_channels": 384
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 384
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_84da2cdf5169c0103ad2027184e0d634a5403f8d61473fe34c77bd780015cb2a.npz",
+    "prediction_sha256": "6e0d03a61908c7b933fcd0c1f860bac817ba563cf89e93052be1b91554062476",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "84da2cdf5169c0103ad2027184e0d634a5403f8d61473fe34c77bd780015cb2a",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236984.423959255,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 33347016,
+    "top1": 0.9296,
+    "wall_seconds": 3.00919745862484,
+    "workflow": "workflows/evolution/84da2cdf5169c0103ad2027184e0d634a5403f8d61473fe34c77bd780015cb2a.json",
+    "workflow_fingerprint": "edfc48a8e03220d9c2945020776b439ea0109d4348cbdf4acafe2eaef4111398"
+  },
+  {
+    "attempt_id": 11,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "be994225ca5e4fe9b67927ac1fc8382e9229d9e849399ab8237edd79b84b70a6",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 3.814697265625e-06,
+      "file_bytes": 27238960,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "58cdc4089f4781af3f8137444f13ae8e5735246a91f730a6fa713874a40f2dc2",
+      "path": "checkpoints/short_evolution_3962f96d7074936d43b81276628828ccdf9462d7efc28d8a78e05c738a2d979c.pt",
+      "phase": "short",
+      "sha256": "51074c167629c672b15f9c0141b0b4bb1aa9041e3dc8106f77a4acd6b2330cc2",
+      "solution_id": "3962f96d7074936d43b81276628828ccdf9462d7efc28d8a78e05c738a2d979c",
+      "tensor_bytes": 27183304
+    },
+    "checkpoint_file_bytes": 27238960,
+    "common_search_completed_at": 20236990.78657984,
+    "completed_within_deadline": true,
+    "correct": 4692,
+    "cost_ratio": 0.6076598577095287,
+    "cross_entropy": 0.23993897545914425,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236990.782826997,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "rank": 128
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "rank": 256
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 256
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_3962f96d7074936d43b81276628828ccdf9462d7efc28d8a78e05c738a2d979c.npz",
+    "prediction_sha256": "c904d02c4b6fb059c7697a377eb149b8ae1760c7c2768d05c145c97050ed1b95",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "3962f96d7074936d43b81276628828ccdf9462d7efc28d8a78e05c738a2d979c",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236987.61807259,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 27183304,
+    "top1": 0.9384,
+    "wall_seconds": 3.164754405617714,
+    "workflow": "workflows/evolution/3962f96d7074936d43b81276628828ccdf9462d7efc28d8a78e05c738a2d979c.json",
+    "workflow_fingerprint": "f67637523aa8d093fd8f94d575fee9a469cbadd33de74ca78eb5e194f4b2b91a"
+  },
+  {
+    "attempt_id": 12,
+    "charged_attempt": true,
+    "checkpoint": {
+      "artifact_id": "45ed7635d8bb7dbd8072f8a77b80246aba4edca14cbe49c3d0920517e3f18c5a",
+      "completed_within_deadline": true,
+      "cpu_gpu_probe_max_abs": 4.291534423828125e-06,
+      "file_bytes": 26748592,
+      "gpu_reload_exact": true,
+      "inventory_fingerprint": "0a5bf1305492d6a3c209e27b853b351b7c0f398838486271fc06a6d139eb2e9a",
+      "path": "checkpoints/short_evolution_b189e1bc02a684f33080f92d4e90219b3af15ee612fb138e6463cf216901d532.pt",
+      "phase": "short",
+      "sha256": "d27751f80ef72bebaca50485d2c44354d6b792800703ea25a9a75fc50bfcb1aa",
+      "solution_id": "b189e1bc02a684f33080f92d4e90219b3af15ee612fb138e6463cf216901d532",
+      "tensor_bytes": 26693064
+    },
+    "checkpoint_file_bytes": 26748592,
+    "common_search_completed_at": 20236994.234475933,
+    "completed_within_deadline": true,
+    "correct": 4672,
+    "cost_ratio": 0.5967009555597561,
+    "cross_entropy": 0.24796483512875467,
+    "deadline": 20238752.6046656,
+    "ended_at": 20236994.229914363,
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "layer1.0"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer1.1"
+          ],
+          "choice": {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.0"
+          ],
+          "choice": {
+            "rank": 32
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer2.1"
+          ],
+          "choice": {
+            "rank": 64
+          },
+          "recipe": "ConvSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.0"
+          ],
+          "choice": {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer3.1"
+          ],
+          "choice": {
+            "keep_channels": 192
+          },
+          "recipe": "ChannelPrune",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.0"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "layer4.1"
+          ],
+          "choice": {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          "recipe": "ChannelPruneSVD",
+          "recovery": "none"
+        }
+      ],
+      "profile": "cv_internal_channels_v1",
+      "schema_version": 1
+    },
+    "prediction_file": "predictions/short_evolution_b189e1bc02a684f33080f92d4e90219b3af15ee612fb138e6463cf216901d532.npz",
+    "prediction_sha256": "5e6471104252db8f25731acca914e1e3f751d945cfb60eda5c3b0c5d268ceaff",
+    "quality_accepted": true,
+    "rows": 5000,
+    "run": "evolution",
+    "solution_id": "b189e1bc02a684f33080f92d4e90219b3af15ee612fb138e6463cf216901d532",
+    "source_tensor_bytes": 44734408,
+    "started_at": 20236990.972627163,
+    "status": "succeeded",
+    "storage_accepted": true,
+    "tensor_bytes": 26693064,
+    "top1": 0.9344,
+    "wall_seconds": 3.257287200540304,
+    "workflow": "workflows/evolution/b189e1bc02a684f33080f92d4e90219b3af15ee612fb138e6463cf216901d532.json",
+    "workflow_fingerprint": "768c4731aeed7c775807234976a8da1681636c0055d060fd98fb63d0b87f4a26"
+  }
+]

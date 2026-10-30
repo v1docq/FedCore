@@ -1,0 +1,86 @@
+{
+  "aa_pairs": 20,
+  "architecture": "CIFAR ResNet18: 3x3 stride-1 stem, no maxpool, standard 8 BasicBlocks",
+  "baseline_batch": 128,
+  "baseline_epochs": 80,
+  "baseline_lr": 0.1,
+  "baseline_min_top1": 0.9,
+  "bn_calibration": true,
+  "calibration_rows": 1000,
+  "choice_menu": [
+    "dense",
+    "P:0.75",
+    "P:0.5",
+    "SVD:0.5",
+    "SVD:0.25",
+    "P:0.75->SVD:0.5",
+    "P:0.75->SVD:0.25"
+  ],
+  "cpu_threads": 4,
+  "dataset": "CIFAR-10 official Python archive",
+  "final_quality_drop": 0.02,
+  "final_quality_reference": "dense-recovery after the same 200 SGD updates and BN calibration",
+  "finalist_order": [
+    "minimum short CE with timely completion and bytes <= ceiling",
+    "bytes",
+    "canonical genotype id"
+  ],
+  "fitness": [
+    "search_validation_cross_entropy",
+    "physical_tensor_bytes / dense_tensor_bytes"
+  ],
+  "gpu_dtype": "float32",
+  "latency": "report only; not a third search objective or a claim of CUDA sparse kernels",
+  "max_slot_seconds": 14400,
+  "max_vram_bytes": 38654705664,
+  "model_seed": 20261021,
+  "momentum": 0.9,
+  "prefix": [
+    "dense",
+    "P:0.75",
+    "SVD:0.5",
+    "P:0.75->SVD:0.5"
+  ],
+  "random_and_evolution": "independent empty caches; identical evaluated prefix; distinct uniformly sampled random proposals versus actual FedcoreEvoOptimizer/SPEA2",
+  "recovery_batch": 128,
+  "recovery_lr": 0.01,
+  "recovery_seed": 990032,
+  "recovery_updates": 200,
+  "roles": {
+    "calibration": 1000,
+    "sealed_test": 10000,
+    "search_validation": 5000,
+    "train": 44000
+  },
+  "schema": "fedcore_sparse_cv_a100_pilot_v1",
+  "search_evaluations": 12,
+  "search_generations": 3,
+  "search_order": [
+    "random",
+    "evolution"
+  ],
+  "search_population": 4,
+  "search_proposals": 48,
+  "search_rows": 5000,
+  "search_seconds": 1800,
+  "search_seed": 31,
+  "short_fidelity": "0 SGD updates; same image-only BatchNorm calibration for every graph",
+  "short_quality_accepted": "finite logits/loss and valid independently restored artifact; final quality tolerance is not an early rejection rule",
+  "split_seed": 990031,
+  "stage_minutes": {
+    "admission": 15,
+    "baseline": 80,
+    "close": 5,
+    "controls": 25,
+    "final": 10,
+    "manifest": 15,
+    "recovery": 30,
+    "search": 60
+  },
+  "storage_fraction": 0.8,
+  "test_gate": "test is opened only after selected IDs and all completed recovery artifacts are frozen",
+  "tf32": false,
+  "timing_calls": 20,
+  "timing_warmup": 20,
+  "weight_decay": 0.0005
+}

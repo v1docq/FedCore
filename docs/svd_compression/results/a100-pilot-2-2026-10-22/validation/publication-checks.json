@@ -1,0 +1,11 @@
+{
+  "browser_review": "Rendered and visually inspected using localhost:8775; failed status, 80/80 epochs, 27/27 attempts, primary table, missing final results and 536 checks visible.",
+  "byte_identical_replayed_files": 7,
+  "html_embedded_data_and_links": true,
+  "independent_review": "Read-only reviewer confirmed actual scope; final requested visible HTML reverse-order note added.",
+  "javascript_syntax": true,
+  "no_model_binaries_or_credential_patterns": true,
+  "python_syntax": true,
+  "raw_files_unchanged": 91,
+  "visible_reverse_prefix_order_note": true
+}

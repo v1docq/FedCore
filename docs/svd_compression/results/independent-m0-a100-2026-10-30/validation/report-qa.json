@@ -1,0 +1,24 @@
+{
+  "schema": "fedcore-independent-m0-report-qa-v1",
+  "report_sha256": "01e23d8104dd89d89eba82c5bdc876be8bc6850b12a3e57c60dbb04af7285c3c",
+  "bytes": 2519909,
+  "artifact_id": "report:ab29227f-5279-4ccc-958c-f3e90fa6d989",
+  "snapshot_sha256": "41cca829bda5a3582e9a8bd671b2278d89749129d35c7fa0e2b740bea08233d0",
+  "build_runtime_sha256": "18896172786ae9fbbfed81fdc93754ee0d68d5a8502c99ee0c27066d5f9edf51",
+  "offline_export_requires_cdn": false,
+  "http_preview": "http://127.0.0.1:8776/?view=1",
+  "browser": "C UA / in-app browser, separate background tab",
+  "checks": {
+    "desktop_opening": true,
+    "two_plotted_charts": true,
+    "stage_table_eight_rows": true,
+    "source_inspector_scope": true,
+    "source_preview_382_rows": true,
+    "mobile_390x844_opening_and_progress_chart": true,
+    "viewport_reset": true,
+    "portable_html_matches_verified_export": true
+  },
+  "file_scheme_rendering": "blocked by browser URL policy; no workaround attempted. Existing HTTP preview of split build verified. Portable export verified by supported export and byte comparison.",
+  "build_environment": "Unchanged Data prebuilt runtime under WSL + isolated official Node22.20.0. Native Windows build failed strict POSIX path validation; no protected source changed.",
+  "scope": "This is a completed report about an interrupted attempt, not a completed numerical comparison."
+}

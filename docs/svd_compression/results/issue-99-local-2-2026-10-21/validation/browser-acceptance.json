@@ -1,0 +1,37 @@
+{
+  "schema": "issue99-local2-browser-acceptance-v1",
+  "status": "passed",
+  "html": {
+    "file": "docs/svd_compression/issue-99-local-2-report.html",
+    "bytes": 5838711,
+    "sha256": "08048387f3cf7c1c1dc9af031e2fa3420f38f62bdba7e3b07eadcf1e98dabb9f"
+  },
+  "artifact_id": "report:71ccb67c-8f25-4c57-bdc3-041c216b436a",
+  "checks": {
+    "rendered_charts": 6,
+    "rendered_marks_offline": 47,
+    "search_filters": [
+      "model 19921",
+      "model All combined rows; no mixed trajectory",
+      "restore 19901",
+      "attempts: E24/R15/T24",
+      "restore time"
+    ],
+    "matrix_filters": "1024; 75% shows B/B false, no eligible win; restore 50%",
+    "source_inspector": "1024/75% filters and query sources visible",
+    "narrow_viewport": [
+      390,
+      844
+    ],
+    "narrow_document_scroll_width": 375,
+    "internal_table_scroll": true,
+    "viewport_reset": true,
+    "console_errors": 0,
+    "complete_status_visible": true,
+    "offline_html_loaded_over_loopback": true
+  },
+  "limitations": [
+    "Visual acceptance does not prove network isolation.",
+    "No additional numerical training or matrix measurements were performed during report assembly."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "SGD_updates": 0,
+  "additional_BN_calibration": true,
+  "artifact_id": "45b7e6896088c193438e5df137075c9e277a0b65109ba799cf94b13f3bf182a6",
+  "completed_within_deadline": true,
+  "cpu_gpu_probe_max_abs": 1.9073486328125e-06,
+  "file_bytes": 44781054,
+  "gpu_reload_exact": true,
+  "inventory_fingerprint": "691935a20c8beebbbc2f2c71f8fe86e3399107f6db5aa2f1ea4917820c2eecfd",
+  "lr": null,
+  "path": "checkpoints/M0_post_BN.pt",
+  "phase": "diagnostic_M0_post_BN",
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "sha256": "99cef51470907264b89058bde17f2bcc60847edcb235aab7856723bcca6d2618",
+  "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+  "tensor_bytes": 44734408,
+  "validation": {
+    "correct": 4692,
+    "cross_entropy": 0.22983539575973372,
+    "prediction_file": "predictions/M0_post_BN.npz",
+    "prediction_sha256": "5f8f0a40129a91b6c4bbce8fd395eee611dfac264c8554a9d752d6bd88973711",
+    "rows": 5000,
+    "top1": 0.9384
+  }
+}

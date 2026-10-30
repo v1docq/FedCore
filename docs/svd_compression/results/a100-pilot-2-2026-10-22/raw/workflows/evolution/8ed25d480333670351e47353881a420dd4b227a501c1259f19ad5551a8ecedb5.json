@@ -1,0 +1,643 @@
+{
+  "blocks": [
+    {
+      "final_tensor_bytes": 295944,
+      "gene": {
+        "choice": {},
+        "path": "layer1.0",
+        "recovery": {}
+      },
+      "internal_width": 64,
+      "original_tensor_bytes": 295944,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 295944,
+      "gene": {
+        "choice": {},
+        "path": "layer1.1",
+        "recovery": {}
+      },
+      "internal_width": 64,
+      "original_tensor_bytes": 295944,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 349704,
+      "gene": {
+        "choice": {
+          "keep_channels": 96,
+          "rank": 32
+        },
+        "path": "layer2.0",
+        "recovery": {}
+      },
+      "internal_width": 96,
+      "original_tensor_bytes": 886792,
+      "rank": 32,
+      "solver_workspace_bytes": 8126464
+    },
+    {
+      "final_tensor_bytes": 886280,
+      "gene": {
+        "choice": {
+          "keep_channels": 96
+        },
+        "path": "layer2.1",
+        "recovery": {}
+      },
+      "internal_width": 96,
+      "original_tensor_bytes": 1181704,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 3543048,
+      "gene": {
+        "choice": {},
+        "path": "layer3.0",
+        "recovery": {}
+      },
+      "internal_width": 256,
+      "original_tensor_bytes": 3543048,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 4722696,
+      "gene": {
+        "choice": {},
+        "path": "layer3.1",
+        "recovery": {}
+      },
+      "internal_width": 256,
+      "original_tensor_bytes": 4722696,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 14163976,
+      "gene": {
+        "choice": {},
+        "path": "layer4.0",
+        "recovery": {}
+      },
+      "internal_width": 512,
+      "original_tensor_bytes": 14163976,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 18882568,
+      "gene": {
+        "choice": {},
+        "path": "layer4.1",
+        "recovery": {}
+      },
+      "internal_width": 512,
+      "original_tensor_bytes": 18882568,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    }
+  ],
+  "expected_storage_bytes": 43901896,
+  "external_artifacts": [
+    {
+      "coordinates": "cifar_resnet18_original_channels",
+      "key": "model:M0",
+      "kind": "model_version",
+      "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201",
+      "scope": []
+    },
+    {
+      "coordinates": "NCHW_CIFAR32",
+      "key": "data:calibration",
+      "kind": "calibration_observations",
+      "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201",
+      "scope": []
+    }
+  ],
+  "fingerprint": "f88d524e4fcda984e104ee0e72bed6994df4747b5987471aa8a82a97e9d1531a",
+  "genotype": {
+    "genes": [
+      {
+        "choice": {},
+        "path": "layer1.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer1.1",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "keep_channels": 96,
+          "rank": 32
+        },
+        "path": "layer2.0",
+        "recovery": {}
+      },
+      {
+        "choice": {
+          "keep_channels": 96
+        },
+        "path": "layer2.1",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer3.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer3.1",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer4.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer4.1",
+        "recovery": {}
+      }
+    ],
+    "schema_version": 1
+  },
+  "nodes": [
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:2:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:2:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:2:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:2:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:2:compact",
+          "kind": "operator_replacement",
+          "model_version": "062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201:compact",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:2:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        }
+      ],
+      "key": "cv:2:solve",
+      "outputs": [
+        {
+          "coordinates": "conv2_out_by_reduced_input_kernel",
+          "key": "cv:2:svd",
+          "kind": "low_rank_approximation",
+          "model_version": "062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201:compact",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "cv:2:compact",
+          "kind": "operator_replacement",
+          "name": "compact"
+        },
+        {
+          "artifact": "cv:2:svd",
+          "kind": "low_rank_approximation",
+          "name": "svd"
+        }
+      ],
+      "key": "cv:2:factors",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:2:factors",
+          "kind": "operator_replacement",
+          "model_version": "062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201:factors",
+          "scope": [
+            "layer2.0"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.0"
+      ],
+      "scope": [
+        "layer2.0"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:3:select",
+      "outputs": [
+        {
+          "coordinates": "original_conv1_output_bn1_conv2_input",
+          "key": "cv:3:channels",
+          "kind": "selected_structural_channels",
+          "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201",
+          "scope": [
+            "layer2.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.1"
+      ],
+      "scope": [
+        "layer2.1"
+      ],
+      "stage": "solve",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:3:channels",
+          "kind": "selected_structural_channels",
+          "name": "channels"
+        }
+      ],
+      "key": "cv:3:compact",
+      "outputs": [
+        {
+          "coordinates": "reduced_internal_channels_fixed_residual_output",
+          "key": "cv:3:compact",
+          "kind": "operator_replacement",
+          "model_version": "062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201:compact",
+          "scope": [
+            "layer2.1"
+          ]
+        }
+      ],
+      "reads": [
+        "layer2.1"
+      ],
+      "scope": [
+        "layer2.1"
+      ],
+      "stage": "build_replacement",
+      "writes": []
+    },
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        },
+        {
+          "artifact": "cv:2:factors",
+          "kind": "operator_replacement",
+          "name": "0"
+        },
+        {
+          "artifact": "cv:3:compact",
+          "kind": "operator_replacement",
+          "name": "1"
+        }
+      ],
+      "key": "cv:apply_batch",
+      "outputs": [
+        {
+          "coordinates": "cifar_resnet18_graph",
+          "key": "model:compressed",
+          "kind": "model_version",
+          "model_version": "062a379dc842f73be7ece4d99d5831fbbc5d06c5b3b67cd56580fdf61c196201:compressed",
+          "scope": []
+        }
+      ],
+      "reads": [],
+      "scope": [
+        "layer2.0",
+        "layer2.1"
+      ],
+      "stage": "apply_replacements",
+      "writes": [
+        "layer2.0",
+        "layer2.1"
+      ]
+    }
+  ],
+  "source_semantics": "independent_frozen_M0_coupled_blocks_then_atomic_apply",
+  "space": {
+    "calibration": {
+      "dtype": "float32",
+      "fingerprint": "84b29f87f5440c4259adc35028da3ae1fbd55d35a898e790be071721fecf48b3",
+      "role": "calibration",
+      "shape": [
+        1000,
+        3,
+        32,
+        32
+      ]
+    },
+    "domains": [
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 48
+          },
+          {
+            "keep_channels": 32
+          },
+          {
+            "rank": 32
+          },
+          {
+            "rank": 16
+          },
+          {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          {
+            "keep_channels": 48,
+            "rank": 16
+          }
+        ],
+        "path": "layer1.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 48
+          },
+          {
+            "keep_channels": 32
+          },
+          {
+            "rank": 32
+          },
+          {
+            "rank": 16
+          },
+          {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          {
+            "keep_channels": 48,
+            "rank": 16
+          }
+        ],
+        "path": "layer1.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 96
+          },
+          {
+            "keep_channels": 64
+          },
+          {
+            "rank": 64
+          },
+          {
+            "rank": 32
+          },
+          {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          {
+            "keep_channels": 96,
+            "rank": 32
+          }
+        ],
+        "path": "layer2.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 96
+          },
+          {
+            "keep_channels": 64
+          },
+          {
+            "rank": 64
+          },
+          {
+            "rank": 32
+          },
+          {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          {
+            "keep_channels": 96,
+            "rank": 32
+          }
+        ],
+        "path": "layer2.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 192
+          },
+          {
+            "keep_channels": 128
+          },
+          {
+            "rank": 128
+          },
+          {
+            "rank": 64
+          },
+          {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          {
+            "keep_channels": 192,
+            "rank": 64
+          }
+        ],
+        "path": "layer3.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 192
+          },
+          {
+            "keep_channels": 128
+          },
+          {
+            "rank": 128
+          },
+          {
+            "rank": 64
+          },
+          {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          {
+            "keep_channels": 192,
+            "rank": 64
+          }
+        ],
+        "path": "layer3.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 384
+          },
+          {
+            "keep_channels": 256
+          },
+          {
+            "rank": 256
+          },
+          {
+            "rank": 128
+          },
+          {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          {
+            "keep_channels": 384,
+            "rank": 128
+          }
+        ],
+        "path": "layer4.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 384
+          },
+          {
+            "keep_channels": 256
+          },
+          {
+            "rank": 256
+          },
+          {
+            "rank": 128
+          },
+          {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          {
+            "keep_channels": 384,
+            "rank": 128
+          }
+        ],
+        "path": "layer4.1"
+      }
+    ],
+    "dtype": "float32",
+    "num_classes": 10,
+    "options": {
+      "batch_size": 16,
+      "max_peak_bytes": 12884901888,
+      "max_workspace_bytes": 268435456,
+      "parameter_budget": null,
+      "tensor_byte_budget": null
+    },
+    "profile": "cifar_resnet18_internal_channel_l1_svd_v1",
+    "source": {
+      "fingerprint": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4",
+      "graph_version": "cv-compression-v1"
+    },
+    "source_storage_bytes": 44734408,
+    "source_storage_fingerprint": "1e9f7af154c7e6af99316a9e850bf01d1c67f301b95a9c9d4a6ba56dd374c3d0"
+  }
+}

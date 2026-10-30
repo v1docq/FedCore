@@ -1,0 +1,130 @@
+........................................................................ [ 21%]
+........................................................................ [ 42%]
+...........................................FF........................... [ 63%]
+........................................................................ [ 84%]
+...................................................                      [100%]
+================================== FAILURES ===================================
+_________ test_numerical_failures_are_not_misclassified_as_structural _________
+
+args = (tensor([[-1.4844,  0.7861,  0.6113, -1.4041, -1.3243, -0.4016, -0.6958,  0.5172],
+        [-0.1794,  0.0744,  0.5477,...3566],
+        [-2.5313, -0.3331,  0.7939, -0.4536, -0.9764, -1.0971,  0.9426, -0.0646]],
+       dtype=torch.float64),)
+kwargs = {'full_matrices': False}
+
+    def fails(*args, **kwargs):
+>       raise torch.linalg.LinAlgError("injected nonconvergence")
+E       torch._C._LinAlgError: injected nonconvergence
+
+tests\refactoring\test_compression_search_package_independent.py:228: _LinAlgError
+
+During handling of the above exception, another exception occurred:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001B37B8F9900>
+
+    def test_numerical_failures_are_not_misclassified_as_structural(monkeypatch):
+        model = _model()
+    
+        def fails(*args, **kwargs):
+            raise torch.linalg.LinAlgError("injected nonconvergence")
+    
+        monkeypatch.setattr(torch.linalg, "svd", fails)
+        request = _request("L")
+        assert inspect_contract(request, model).accepted
+>       result = execute_reference(model, request)
+
+tests\refactoring\test_compression_search_package_independent.py:233: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\utils\_contextlib.py:115: in decorate_context
+    return func(*args, **kwargs)
+fedcore\experiments\compression_composition_reference.py:570: in execute_reference
+    except (MemoryError, torch.OutOfMemoryError) as error:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'OutOfMemoryError'
+
+    def __getattr__(name):
+        # Deprecated attrs
+        replacement = _deprecated_attrs.get(name)
+        if replacement is not None:
+            import warnings
+            warnings.warn(f"'{name}' is deprecated, please use '{replacement.__module__}.{replacement.__name__}()'", stacklevel=2)
+            return replacement()
+    
+        # Lazy modules
+        if name in _lazy_modules:
+            import importlib
+            return importlib.import_module(f".{name}", __name__)
+    
+>       raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+E       AttributeError: module 'torch' has no attribute 'OutOfMemoryError'
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\__init__.py:1932: AttributeError
+___________ test_memory_and_unknown_runtime_errors_remain_distinct ____________
+
+_error = MemoryError('injected')
+args = (Linear(in_features=8, out_features=8, bias=True), LowRank(rank=2), tensor([[-1.4844,  0.7861,  0.6113, -1.4041, -1.32...as=True, rank=2, storage_bytes=320), <function execute_reference.<locals>.decomposition_started at 0x000001B37D9977F0>)
+kwargs = {}
+
+    def fails(*args, _error=error, **kwargs):
+>       raise _error
+E       MemoryError: injected
+
+tests\refactoring\test_compression_search_package_independent.py:245: MemoryError
+
+During handling of the above exception, another exception occurred:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001B37B88EEF0>
+
+    def test_memory_and_unknown_runtime_errors_remain_distinct(monkeypatch):
+        import fedcore.experiments.compression_composition_reference as reference
+        model = _model()
+        for error, category in ((MemoryError("injected"), "resource"), (RuntimeError("injected"), "shell")):
+            def fails(*args, _error=error, **kwargs):
+                raise _error
+            monkeypatch.setattr(reference, "_primitive", fails)
+>           result = execute_reference(model, _request("L"))
+
+tests\refactoring\test_compression_search_package_independent.py:247: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\utils\_contextlib.py:115: in decorate_context
+    return func(*args, **kwargs)
+fedcore\experiments\compression_composition_reference.py:570: in execute_reference
+    except (MemoryError, torch.OutOfMemoryError) as error:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'OutOfMemoryError'
+
+    def __getattr__(name):
+        # Deprecated attrs
+        replacement = _deprecated_attrs.get(name)
+        if replacement is not None:
+            import warnings
+            warnings.warn(f"'{name}' is deprecated, please use '{replacement.__module__}.{replacement.__name__}()'", stacklevel=2)
+            return replacement()
+    
+        # Lazy modules
+        if name in _lazy_modules:
+            import importlib
+            return importlib.import_module(f".{name}", __name__)
+    
+>       raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+E       AttributeError: module 'torch' has no attribute 'OutOfMemoryError'
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\torch\__init__.py:1932: AttributeError
+============================== warnings summary ===============================
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_numerical_failures_are_not_misclassified_as_structural
+FAILED tests/refactoring/test_compression_search_package_independent.py::test_memory_and_unknown_runtime_errors_remain_distinct
+2 failed, 337 passed, 3 warnings in 24.28s

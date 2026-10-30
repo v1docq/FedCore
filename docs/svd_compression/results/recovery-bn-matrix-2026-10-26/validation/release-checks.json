@@ -1,0 +1,92 @@
+{
+  "schema": "fedcore-recovery-bn-release-v1",
+  "source_commit": "981a048d7d1d6fa57bdf2a725f0f446af03596a3",
+  "source_CI": {
+    "run_id": 40313331232,
+    "jobs": [
+      {
+        "name": "optional-llm",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (ubuntu-latest, 3.10)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "optional-export-service",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (windows-latest, 3.11)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (windows-latest, 3.10)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "cpu (ubuntu-latest, 3.11)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "all_six_passed": true
+  },
+  "cpu_local": {
+    "passed": 209,
+    "skipped": 14,
+    "seconds": 54.58
+  },
+  "cpu_installed_linux": {
+    "passed": 223,
+    "seconds": 35.24
+  },
+  "offline_analysis": {
+    "checks": 746,
+    "consistent": true,
+    "updates": 2000,
+    "new_prediction_rows": 150000,
+    "dense_exact_replays": 6,
+    "BN_pairs": 15
+  },
+  "independent_review": {
+    "code_controllers_and_results_reviewed": true,
+    "corrections_applied": [
+      "BN_before_SGD_order_not_tested",
+      "binary_export_scope",
+      "partial_ledger_preservation",
+      "interactive_heading_scope"
+    ]
+  },
+  "browser_QA": {
+    "BN_effect_chart_inspected": true,
+    "quality_chart_inspected": true,
+    "all_six_training_metric_combinations_checked": true,
+    "BN_pair_table_rows_checked": 15
+  },
+  "read_only_previous_data": {
+    "consumed_parent_files": 16,
+    "old_snapshot_files": 176,
+    "old_package_files": [
+      313,
+      314,
+      316
+    ],
+    "preserved_workspaces": 3,
+    "preserved_unfinished_files": 130
+  },
+  "offline_replay": {
+    "analysis_byte_identical": true,
+    "report_byte_identical": true
+  },
+  "publication_checks": {
+    "local_HTML_targets_verified": 16,
+    "HTML_links_total": 18,
+    "old_manifest_files_unchanged": 323
+  }
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/export.py",
+    "bytes": 15567,
+    "sha256": "7e1bab2b929d48fe3f402ce19df7b5a36750a448283f078921d72d40a29dcd33"
+  },
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/findings.js",
+    "bytes": 22081,
+    "sha256": "d26f999d97e4b3b9b9faf7550532d657959c796e80f1435d89d92fd8044a3c72"
+  },
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/prepare_report.py",
+    "bytes": 14355,
+    "sha256": "2ab8a3dc94e0746de2e8709b8e6b4ba3c6c5c21b2ac96a7ac0ed2414e696d2bd"
+  },
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/README.md",
+    "bytes": 6086,
+    "sha256": "8da39e8ee09c12744d5314cb542f1dd25e0f431db4f29225749f4f34aad937af"
+  },
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/report.css",
+    "bytes": 2169,
+    "sha256": "336e157c30c4cffd9208b81115175a143981965c56a06bd8672e1b7714ef9bce"
+  },
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/ReportContent.jsx",
+    "bytes": 24807,
+    "sha256": "49b0d0dc003098a3fac015e874d601acc19da7c94a5da020604eca58850265b7"
+  },
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/verify_run.py",
+    "bytes": 27155,
+    "sha256": "670d11f100af547eaeeaba108fdbb43b0ecc7dec0e0d2c0402b620da2d05e042"
+  },
+  {
+    "file": "docs/svd_compression/issue99-local2-report-source/write-markdown.mjs",
+    "bytes": 6910,
+    "sha256": "e3c7770c12aa01d4b2d2c4945274d81e53b8eb7661dcd778fc19b7b736b041bf"
+  },
+  {
+    "file": "docs/svd_compression/issue-99-local-2-report.html",
+    "bytes": 5838711,
+    "sha256": "08048387f3cf7c1c1dc9af031e2fa3420f38f62bdba7e3b07eadcf1e98dabb9f"
+  },
+  {
+    "file": "docs/svd_compression/ISSUE_99_LOCAL_2.md",
+    "bytes": 27624,
+    "sha256": "e4fcd51ee6c2977a1e8a000df927ca2ca1d0adfc7bc7495a1429c96575057e9b"
+  }
+]

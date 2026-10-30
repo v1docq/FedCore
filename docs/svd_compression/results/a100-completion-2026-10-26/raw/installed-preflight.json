@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/root/fedcore_sparse_cv_completion_20261026/.venv/lib/python3.10/site-packages/fedcore/experiments/cv_sparse_continuation.py", line 318, in <module>
+    raise SystemExit(main())
+  File "/root/fedcore_sparse_cv_completion_20261026/.venv/lib/python3.10/site-packages/fedcore/experiments/cv_sparse_continuation.py", line 308, in main
+    result = continuation_preparation(*values)
+  File "/root/fedcore_sparse_cv_completion_20261026/.venv/lib/python3.10/site-packages/fedcore/experiments/cv_sparse_continuation.py", line 121, in continuation_preparation
+    parent = inspect_parent(root, inventory)
+  File "/root/fedcore_sparse_cv_completion_20261026/.venv/lib/python3.10/site-packages/fedcore/experiments/cv_sparse_continuation.py", line 96, in inspect_parent
+    target = confined_file(root, name)
+  File "/root/fedcore_sparse_cv_completion_20261026/.venv/lib/python3.10/site-packages/fedcore/experiments/cv_sparse_continuation.py", line 46, in confined_file
+    raise ValueError('Parent artifact is missing or escapes its root')
+ValueError: Parent artifact is missing or escapes its root

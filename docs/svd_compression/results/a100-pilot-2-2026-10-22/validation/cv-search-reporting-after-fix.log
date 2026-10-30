@@ -1,0 +1,65 @@
+.F...........................................                            [100%]
+================================== FAILURES ===================================
+_______ test_run_pilot_projects_typed_evolution_again_for_final_report ________
+
+tmp_path = WindowsPath('C:/Users/user/Documents/Codex/FedCore-Sparse-CV-A100-2026-10-21/tmp-reporting-green-2026-10-22/test_run_pilot_projects_typed_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000286C0BCCD00>
+
+    def test_run_pilot_projects_typed_evolution_again_for_final_report(tmp_path, monkeypatch):
+        from fedcore.experiments import cv_sparse_data
+        result = search_result()
+        prefix = pilot.fixed_prefix(pilot.cv_menu())
+        data = SimpleNamespace(roles=SimpleNamespace(sha256="b" * 64, payload=lambda: {}), source_hashes={})
+        class FakeRuntime:
+            def __init__(self, protocol, output, started):
+                self.deadline = started + 60
+                self.environment = {}
+                self.torch = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda: 0,
+                                                                 max_memory_reserved=lambda: 0))
+            def phase(self, name):
+                return nullcontext(self.deadline)
+            def check(self, *args, **kwargs):
+                pass
+        class FakePilot:
+            def __init__(self, runtime, data):
+                self.prefix = prefix
+                self.gpu = object()
+                self.genotypes = {}
+                self.records = {"random": [], "evolution": []}
+                self.byte_ceiling = 80
+                self.space = SimpleNamespace(source_storage_bytes=100)
+            def bind_teacher(self, teacher):
+                pass
+            def short(self, *args):
+                pass
+            def random_search(self, deadline):
+                return {"status": "completed"}
+            def evolution(self, deadline):
+                return result
+        def stop_before_recovery(*args):
+            raise runtime.PilotStop("recovery", "test_boundary_before_numerics")
+        monkeypatch.setattr(pilot, "preparation", lambda *args: {"status": "prepared", "source": {}})
+        monkeypatch.setattr(pilot, "admit_free_gpu", lambda: {})
+        monkeypatch.setattr(pilot, "Runtime", FakeRuntime)
+        monkeypatch.setattr(pilot, "Pilot", FakePilot)
+        monkeypatch.setattr(cv_sparse_data, "CifarData", lambda *args, **kwargs: data)
+        monkeypatch.setattr(pilot.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(stdout=""))
+        monkeypatch.setattr(pilot, "verify_loaded_sources", lambda *args: {})
+        monkeypatch.setattr(pilot, "train_baseline", lambda *args: (object(), {"top1": .95}, {}))
+        monkeypatch.setattr(pilot, "checkpoint", lambda *args, **kwargs: ({"artifact_id": "a" * 64}, object()))
+        monkeypatch.setattr(pilot, "torchscript_artifact", lambda *args: (object(), {}))
+        monkeypatch.setattr(pilot, "independent_torchscript", lambda *args: object())
+        monkeypatch.setattr(pilot, "paired_latency", lambda *args, **kwargs: {"accepted": True})
+        monkeypatch.setattr(pilot, "recovery_tape", stop_before_recovery)
+        returned = pilot.run_pilot(tmp_path / "data", tmp_path / "out", tmp_path / "source.json")
+        saved = json.loads((tmp_path / "out/report.json").read_text())
+>       assert returned["status"] == saved["status"] == "pilot_incomplete_recovery"
+E       AssertionError: assert 'failed' == 'pilot_incomplete_recovery'
+E         
+E         - pilot_incomplete_recovery
+E         + failed
+
+tests\refactoring\test_sparse_cv_search_reporting.py:87: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_sparse_cv_search_reporting.py::test_run_pilot_projects_typed_evolution_again_for_final_report
+1 failed, 44 passed in 2.56s

@@ -1,0 +1,4 @@
+{"job": "matrix-128", "status": "succeeded", "elapsed": 2451.3235588, "matrix": 2621}
+{"job": "matrix-512", "status": "succeeded", "elapsed": 2537.4629676, "matrix": 3477}
+{"job": "matrix-1024", "status": "partial", "elapsed": 2886.5154998, "matrix": 4320}
+{"status": "partial", "elapsed": 2886.5311111, "mlp": 5106, "matrix": 4320}

@@ -1,0 +1,9 @@
+{
+  "archive": "/root/fedcore_sparse_cv_20261021/export-pilot-1-2026-10-22/evidence.tar.gz",
+  "bytes": 197658,
+  "sha256": "62bdf7fbe12f75cbee42f05520af38e27af932575105868f9bcbf2fddab2c8aa",
+  "copied_files": 19,
+  "retained_binary_files": 2,
+  "pilot_status": "supervisor_interrupted_without_worker_report",
+  "original_files_modified": false
+}

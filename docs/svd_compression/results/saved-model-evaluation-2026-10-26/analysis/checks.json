@@ -1,0 +1,1818 @@
+[
+  {
+    "check": "approved_window",
+    "passed": true
+  },
+  {
+    "check": "external_accounting",
+    "passed": true
+  },
+  {
+    "check": "frozen_profile",
+    "passed": true
+  },
+  {
+    "check": "frozen_code_wheel",
+    "passed": true
+  },
+  {
+    "check": "source_manifest_bytes",
+    "passed": true
+  },
+  {
+    "check": "launch_guard_identity",
+    "passed": true
+  },
+  {
+    "check": "parent_identity",
+    "passed": true
+  },
+  {
+    "check": "parent_inventory",
+    "passed": true
+  },
+  {
+    "check": "no_training_search_BN",
+    "passed": true
+  },
+  {
+    "check": "previous_test_use_disclosed",
+    "passed": true
+  },
+  {
+    "check": "export_presence:data_roles.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:data_roles.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:environment.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:environment.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:environment_freeze.txt",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:environment_freeze.txt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:evaluation-1-budget-guard-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:evaluation-1-budget-guard-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:evaluation-1-budget-guard.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:evaluation-1-budget-guard.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:evaluation-1-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:evaluation-1-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:evaluation-1-supervision.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:evaluation-1-supervision.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:evaluation-1-supervision.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:evaluation-1-supervision.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_presence:evaluation_budget_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:evaluation_budget_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:evaluation_protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:evaluation_protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:export_evaluation.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:export_evaluation.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:frozen_selection.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:frozen_selection.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:heartbeats.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:heartbeats.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_presence:imported_sources.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:imported_sources.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/E.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/E_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/E_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/M0.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/M0_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/M0_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/P75.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/P75_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/P75_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/R.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/R_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/R_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/hybrid.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/hybrid_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:inherited/hybrid_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:install.log",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:install.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:installed-cpu-tests.log",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:installed-cpu-tests.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:installed-preflight.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:installed-preflight.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/E_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/E_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_initial_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/M0_initial_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_post_AB_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/M0_post_AB_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_pre_AB_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/M0_pre_AB_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_vs_E_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/M0_vs_E_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_vs_P75_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/M0_vs_P75_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_vs_R_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/M0_vs_R_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/M0_vs_hybrid_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/M0_vs_hybrid_AB.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/P75_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/P75_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/R_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/R_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:latency/hybrid_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:latency/hybrid_AA.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:launch-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-packet.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:launch-packet.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-receipt.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:launch-receipt.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch_evaluation.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:launch_evaluation.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:ledger.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:ledger.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_presence:official_test/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:official_test/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:official_test/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:official_test/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:official_test/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:official_test/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:official_test/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:official_test/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:official_test/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:official_test/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:pip-check.log",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:pip-check.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:postrun-preservation.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:postrun-preservation.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/E_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/E_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/E_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/M0_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/M0_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/M0_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/P75_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/P75_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/P75_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/R_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/R_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/R_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/hybrid_TS_official_test.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/hybrid_TS_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:predictions/hybrid_eager_validation.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:prepare_evaluation_environment.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:prepare_evaluation_environment.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:probe_evaluation_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:probe_evaluation_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:quality/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:quality/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:quality/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:quality/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:quality/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:read_evaluation_status.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:read_evaluation_status.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery-file-inventory.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:recovery-file-inventory.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery_admission.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:recovery_admission.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:report.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:report.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:run_evaluation_installed_checks.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:run_evaluation_installed_checks.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:source-manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:source-manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:source_manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:source_manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/1bab94c7fd286a1761f513c9c22c2f0edba2b7dcb3e53728cfde5e9a38a6fa02.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:torchscript/1bab94c7fd286a1761f513c9c22c2f0edba2b7dcb3e53728cfde5e9a38a6fa02.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/1bab94c7fd286a1761f513c9c22c2f0edba2b7dcb3e53728cfde5e9a38a6fa02.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/86f685755ffff9acdddb3650bf470c57981b6f1d6e2cbc716a7c936aacdb6586.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:torchscript/86f685755ffff9acdddb3650bf470c57981b6f1d6e2cbc716a7c936aacdb6586.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/86f685755ffff9acdddb3650bf470c57981b6f1d6e2cbc716a7c936aacdb6586.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/975de01e04cac2bd073beeec030c6a887edc31aa176609971d20c37ff7206889.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:torchscript/975de01e04cac2bd073beeec030c6a887edc31aa176609971d20c37ff7206889.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/975de01e04cac2bd073beeec030c6a887edc31aa176609971d20c37ff7206889.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/9d45320c7bf9210de9dba27132db094141095459cbe647184a4179a133d9edad.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:torchscript/9d45320c7bf9210de9dba27132db094141095459cbe647184a4179a133d9edad.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/9d45320c7bf9210de9dba27132db094141095459cbe647184a4179a133d9edad.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/fcf09ce9e75f07524690dbc13d910109a3b5657d4fc915be3f69885a7443dcd7.json",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:torchscript/fcf09ce9e75f07524690dbc13d910109a3b5657d4fc915be3f69885a7443dcd7.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:torchscript/fcf09ce9e75f07524690dbc13d910109a3b5657d4fc915be3f69885a7443dcd7.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:verify_evaluation_preservation.py",
+    "passed": true
+  },
+  {
+    "check": "export_SHA:verify_evaluation_preservation.py",
+    "passed": true
+  },
+  {
+    "check": "scientific_dependencies",
+    "passed": true
+  },
+  {
+    "check": "scientific_environment",
+    "passed": true
+  },
+  {
+    "check": "same_data_roles",
+    "passed": true
+  },
+  {
+    "check": "same_CIFAR_source_files",
+    "passed": true
+  },
+  {
+    "check": "historical_test_labels_source_SHA",
+    "passed": true
+  },
+  {
+    "check": "historical_test_population",
+    "passed": true
+  },
+  {
+    "check": "live_telemetry_complete",
+    "passed": true
+  },
+  {
+    "check": "no_foreign_GPU_observed",
+    "passed": true
+  },
+  {
+    "check": "ledger_parse",
+    "passed": true
+  },
+  {
+    "check": "no_training_events",
+    "passed": true
+  },
+  {
+    "check": "exact_batch_prefixes",
+    "passed": true
+  },
+  {
+    "check": "fixed_evaluation_order",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:M0_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:M0_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:M0_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:M0_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:M0_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:M0_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:M0_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:M0_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:P75_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:P75_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:P75_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:P75_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:P75_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:P75_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:P75_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:P75_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:R_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:R_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:R_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:R_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:R_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:R_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:R_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:R_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:E_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:E_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:E_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:E_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:E_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:E_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:E_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:E_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:hybrid_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:hybrid_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:hybrid_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:hybrid_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:hybrid_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:hybrid_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "row_order:hybrid_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "finite_values:hybrid_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:M0_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:M0_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "row_order:M0_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "official_labels:M0_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "finite_values:M0_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:P75_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:P75_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "row_order:P75_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "official_labels:P75_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "finite_values:P75_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:R_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:R_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "row_order:R_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "official_labels:R_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "finite_values:R_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:E_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:E_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "row_order:E_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "official_labels:E_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "finite_values:E_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "last_prefix_SHA:hybrid_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "NPZ_schema:hybrid_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "row_order:hybrid_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "official_labels:hybrid_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "finite_values:hybrid_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "count:total_eager_validation_rows",
+    "passed": true
+  },
+  {
+    "check": "count:total_TS_validation_rows",
+    "passed": true
+  },
+  {
+    "check": "count:total_official_test_rows",
+    "passed": true
+  },
+  {
+    "check": "registered_workload_rows",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:M0_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:M0_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:P75_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:P75_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:R_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:R_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:E_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:E_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:hybrid_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "validation_labels:hybrid_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "source_identity:E",
+    "passed": true
+  },
+  {
+    "check": "source_state:E",
+    "passed": true
+  },
+  {
+    "check": "metric:E_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "inherited_prediction_SHA:E",
+    "passed": true
+  },
+  {
+    "check": "exact_eager_replay:E",
+    "passed": true
+  },
+  {
+    "check": "metric:E_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "exact_TS_classes:E",
+    "passed": true
+  },
+  {
+    "check": "TS_CE_tolerance:E",
+    "passed": true
+  },
+  {
+    "check": "metric:E_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "tested_TS_identity:E",
+    "passed": true
+  },
+  {
+    "check": "TS_physical_bytes:E",
+    "passed": true
+  },
+  {
+    "check": "descriptive_matched_control:E",
+    "passed": true
+  },
+  {
+    "check": "source_identity:M0",
+    "passed": true
+  },
+  {
+    "check": "source_state:M0",
+    "passed": true
+  },
+  {
+    "check": "metric:M0_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "inherited_prediction_SHA:M0",
+    "passed": true
+  },
+  {
+    "check": "exact_eager_replay:M0",
+    "passed": true
+  },
+  {
+    "check": "metric:M0_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "exact_TS_classes:M0",
+    "passed": true
+  },
+  {
+    "check": "TS_CE_tolerance:M0",
+    "passed": true
+  },
+  {
+    "check": "metric:M0_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "tested_TS_identity:M0",
+    "passed": true
+  },
+  {
+    "check": "TS_physical_bytes:M0",
+    "passed": true
+  },
+  {
+    "check": "descriptive_matched_control:M0",
+    "passed": true
+  },
+  {
+    "check": "source_identity:P75",
+    "passed": true
+  },
+  {
+    "check": "source_state:P75",
+    "passed": true
+  },
+  {
+    "check": "metric:P75_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "inherited_prediction_SHA:P75",
+    "passed": true
+  },
+  {
+    "check": "exact_eager_replay:P75",
+    "passed": true
+  },
+  {
+    "check": "metric:P75_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "exact_TS_classes:P75",
+    "passed": true
+  },
+  {
+    "check": "TS_CE_tolerance:P75",
+    "passed": true
+  },
+  {
+    "check": "metric:P75_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "tested_TS_identity:P75",
+    "passed": true
+  },
+  {
+    "check": "TS_physical_bytes:P75",
+    "passed": true
+  },
+  {
+    "check": "descriptive_matched_control:P75",
+    "passed": true
+  },
+  {
+    "check": "source_identity:R",
+    "passed": true
+  },
+  {
+    "check": "source_state:R",
+    "passed": true
+  },
+  {
+    "check": "metric:R_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "inherited_prediction_SHA:R",
+    "passed": true
+  },
+  {
+    "check": "exact_eager_replay:R",
+    "passed": true
+  },
+  {
+    "check": "metric:R_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "exact_TS_classes:R",
+    "passed": true
+  },
+  {
+    "check": "TS_CE_tolerance:R",
+    "passed": true
+  },
+  {
+    "check": "metric:R_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "tested_TS_identity:R",
+    "passed": true
+  },
+  {
+    "check": "TS_physical_bytes:R",
+    "passed": true
+  },
+  {
+    "check": "descriptive_matched_control:R",
+    "passed": true
+  },
+  {
+    "check": "source_identity:hybrid",
+    "passed": true
+  },
+  {
+    "check": "source_state:hybrid",
+    "passed": true
+  },
+  {
+    "check": "metric:hybrid_eager_validation",
+    "passed": true
+  },
+  {
+    "check": "inherited_prediction_SHA:hybrid",
+    "passed": true
+  },
+  {
+    "check": "exact_eager_replay:hybrid",
+    "passed": true
+  },
+  {
+    "check": "metric:hybrid_TS_validation",
+    "passed": true
+  },
+  {
+    "check": "exact_TS_classes:hybrid",
+    "passed": true
+  },
+  {
+    "check": "TS_CE_tolerance:hybrid",
+    "passed": true
+  },
+  {
+    "check": "metric:hybrid_TS_official_test",
+    "passed": true
+  },
+  {
+    "check": "tested_TS_identity:hybrid",
+    "passed": true
+  },
+  {
+    "check": "TS_physical_bytes:hybrid",
+    "passed": true
+  },
+  {
+    "check": "descriptive_matched_control:hybrid",
+    "passed": true
+  },
+  {
+    "check": "seal_SHA",
+    "passed": true
+  },
+  {
+    "check": "sealed_scope",
+    "passed": true
+  },
+  {
+    "check": "sealed_artifacts:M0",
+    "passed": true
+  },
+  {
+    "check": "sealed_artifacts:P75",
+    "passed": true
+  },
+  {
+    "check": "sealed_artifacts:R",
+    "passed": true
+  },
+  {
+    "check": "sealed_artifacts:E",
+    "passed": true
+  },
+  {
+    "check": "sealed_artifacts:hybrid",
+    "passed": true
+  },
+  {
+    "check": "positive_finite_timing_values",
+    "passed": true
+  },
+  {
+    "check": "AA_TS_identity:E_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_order:E_AA:1",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:E_AA:1:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:E_AA:1:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_order:E_AA:128",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:E_AA:128:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:E_AA:128:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_full_gate:E_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_TS_identity:M0_initial_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_order:M0_initial_AA:1",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_initial_AA:1:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_initial_AA:1:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_order:M0_initial_AA:128",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_initial_AA:128:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_initial_AA:128:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_full_gate:M0_initial_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_TS_identity:M0_post_AB_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_order:M0_post_AB_AA:1",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_post_AB_AA:1:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_post_AB_AA:1:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_order:M0_post_AB_AA:128",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_post_AB_AA:128:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_post_AB_AA:128:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_full_gate:M0_post_AB_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_TS_identity:M0_pre_AB_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_order:M0_pre_AB_AA:1",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_pre_AB_AA:1:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_pre_AB_AA:1:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_order:M0_pre_AB_AA:128",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_pre_AB_AA:128:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:M0_pre_AB_AA:128:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_full_gate:M0_pre_AB_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_TS_identity:P75_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_order:P75_AA:1",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:P75_AA:1:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:P75_AA:1:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_order:P75_AA:128",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:P75_AA:128:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:P75_AA:128:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_full_gate:P75_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_TS_identity:R_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_order:R_AA:1",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:R_AA:1:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:R_AA:1:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_order:R_AA:128",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:R_AA:128:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:R_AA:128:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_full_gate:R_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_TS_identity:hybrid_AA",
+    "passed": true
+  },
+  {
+    "check": "AA_order:hybrid_AA:1",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:hybrid_AA:1:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:hybrid_AA:1:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_order:hybrid_AA:128",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:hybrid_AA:128:cuda_event",
+    "passed": true
+  },
+  {
+    "check": "AA_raw_gate:hybrid_AA:128:synchronized_wall",
+    "passed": true
+  },
+  {
+    "check": "AA_full_gate:hybrid_AA",
+    "passed": true
+  },
+  {
+    "check": "AB_pre_gate:E",
+    "passed": true
+  },
+  {
+    "check": "AB_final_gate:E",
+    "passed": true
+  },
+  {
+    "check": "AB_TS_identity:E",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:E:1",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:E:128",
+    "passed": true
+  },
+  {
+    "check": "AB_pre_gate:P75",
+    "passed": true
+  },
+  {
+    "check": "AB_final_gate:P75",
+    "passed": true
+  },
+  {
+    "check": "AB_TS_identity:P75",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:P75:1",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:P75:128",
+    "passed": true
+  },
+  {
+    "check": "AB_pre_gate:R",
+    "passed": true
+  },
+  {
+    "check": "AB_final_gate:R",
+    "passed": true
+  },
+  {
+    "check": "AB_TS_identity:R",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:R:1",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:R:128",
+    "passed": true
+  },
+  {
+    "check": "AB_pre_gate:hybrid",
+    "passed": true
+  },
+  {
+    "check": "AB_final_gate:hybrid",
+    "passed": true
+  },
+  {
+    "check": "AB_TS_identity:hybrid",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:hybrid:1",
+    "passed": true
+  },
+  {
+    "check": "AB_pairs:hybrid:128",
+    "passed": true
+  },
+  {
+    "check": "timing_counters",
+    "passed": true
+  },
+  {
+    "check": "timing_session_order",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:E_AA:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:E_AA:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_initial_AA:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_initial_AA:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_post_AB_AA:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_post_AB_AA:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_pre_AB_AA:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_pre_AB_AA:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:P75_AA:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:P75_AA:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:R_AA:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:R_AA:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:hybrid_AA:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:hybrid_AA:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_E_AB:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_E_AB:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_P75_AB:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_P75_AB:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_R_AB:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_R_AB:128",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_hybrid_AB:1",
+    "passed": true
+  },
+  {
+    "check": "timing_ledger:M0_vs_hybrid_AB:128",
+    "passed": true
+  },
+  {
+    "check": "successful_completion",
+    "passed": true
+  },
+  {
+    "check": "full_fixed_workload",
+    "passed": true
+  },
+  {
+    "check": "full_timing_budget",
+    "passed": true
+  }
+]

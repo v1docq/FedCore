@@ -1,0 +1,663 @@
+{
+  "aa": true,
+  "accepted": true,
+  "artifact_id": "5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+  "batches": {
+    "1": {
+      "accepted": true,
+      "cuda_event_admission": {
+        "ab_ba_median_ratio": 0.9961772617881883,
+        "accepted": true,
+        "inside_15_percent": 20,
+        "median_ratio": 0.9941747624281935
+      },
+      "orders": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "pairs": [
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014199551582336424,
+            "synchronized_wall_seconds": 0.0014215383678674697
+          },
+          "B": {
+            "cuda_event_seconds": 0.00142434720993042,
+            "synchronized_wall_seconds": 0.0014254346489906311
+          },
+          "cuda_event_ratio_B_over_A": 1.0030930918285061,
+          "order": "AB",
+          "pair": 0,
+          "synchronized_wall_ratio_B_over_A": 1.0027408905811008
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014260640144348143,
+            "synchronized_wall_seconds": 0.0014271756634116172
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014222736358642579,
+            "synchronized_wall_seconds": 0.0014236479997634887
+          },
+          "cuda_event_ratio_B_over_A": 0.9973420698284301,
+          "order": "BA",
+          "pair": 1,
+          "synchronized_wall_ratio_B_over_A": 0.9975282204296451
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014386879920959472,
+            "synchronized_wall_seconds": 0.0014400245621800424
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014261119842529297,
+            "synchronized_wall_seconds": 0.0014274256303906442
+          },
+          "cuda_event_ratio_B_over_A": 0.9912586968737425,
+          "order": "AB",
+          "pair": 2,
+          "synchronized_wall_ratio_B_over_A": 0.9912508910470772
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014101311683654785,
+            "synchronized_wall_seconds": 0.0014113156124949456
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014151472091674805,
+            "synchronized_wall_seconds": 0.0014164168387651443
+          },
+          "cuda_event_ratio_B_over_A": 1.0035571448348428,
+          "order": "BA",
+          "pair": 3,
+          "synchronized_wall_ratio_B_over_A": 1.0036145184146166
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014303376197814942,
+            "synchronized_wall_seconds": 0.00143166221678257
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014134464263916016,
+            "synchronized_wall_seconds": 0.0014146137982606888
+          },
+          "cuda_event_ratio_B_over_A": 0.98819076478428,
+          "order": "AB",
+          "pair": 4,
+          "synchronized_wall_ratio_B_over_A": 0.9880918708882359
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014364591598510742,
+            "synchronized_wall_seconds": 0.0014375923201441765
+          },
+          "B": {
+            "cuda_event_seconds": 0.001434545612335205,
+            "synchronized_wall_seconds": 0.0014359083026647568
+          },
+          "cuda_event_ratio_B_over_A": 0.9986678719664627,
+          "order": "BA",
+          "pair": 5,
+          "synchronized_wall_ratio_B_over_A": 0.9988285848109909
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.001437177562713623,
+            "synchronized_wall_seconds": 0.00143955796957016
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014274847984313967,
+            "synchronized_wall_seconds": 0.0014286501333117484
+          },
+          "cuda_event_ratio_B_over_A": 0.9932556946798383,
+          "order": "AB",
+          "pair": 6,
+          "synchronized_wall_ratio_B_over_A": 0.9924227877661165
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014125679969787597,
+            "synchronized_wall_seconds": 0.0014137007296085359
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014157119750976563,
+            "synchronized_wall_seconds": 0.0014169929549098016
+          },
+          "cuda_event_ratio_B_over_A": 1.0022257180720653,
+          "order": "BA",
+          "pair": 7,
+          "synchronized_wall_ratio_B_over_A": 1.0023287993224546
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014313568115234374,
+            "synchronized_wall_seconds": 0.0014326279982924462
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014362192153930665,
+            "synchronized_wall_seconds": 0.0014373665675520898
+          },
+          "cuda_event_ratio_B_over_A": 1.0033970592311319,
+          "order": "AB",
+          "pair": 8,
+          "synchronized_wall_ratio_B_over_A": 1.0033076062071182
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014280943870544434,
+            "synchronized_wall_seconds": 0.0014292445033788682
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014369536399841307,
+            "synchronized_wall_seconds": 0.0014382144436240196
+          },
+          "cuda_event_ratio_B_over_A": 1.0062035485959442,
+          "order": "BA",
+          "pair": 9,
+          "synchronized_wall_ratio_B_over_A": 1.0062760012187877
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014402959823608399,
+            "synchronized_wall_seconds": 0.0014415636658668518
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014173503875732421,
+            "synchronized_wall_seconds": 0.0014185810461640358
+          },
+          "cuda_event_ratio_B_over_A": 0.9840688337198672,
+          "order": "AB",
+          "pair": 10,
+          "synchronized_wall_ratio_B_over_A": 0.9840571594255632
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.001431009578704834,
+            "synchronized_wall_seconds": 0.001432190276682377
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014101728439331056,
+            "synchronized_wall_seconds": 0.0014119114726781844
+          },
+          "cuda_event_ratio_B_over_A": 0.9854391367592471,
+          "order": "BA",
+          "pair": 11,
+          "synchronized_wall_ratio_B_over_A": 0.9858407054325437
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014480480194091797,
+            "synchronized_wall_seconds": 0.0014493392780423164
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014320303916931152,
+            "synchronized_wall_seconds": 0.0014330945909023286
+          },
+          "cuda_event_ratio_B_over_A": 0.9889384692348808,
+          "order": "AB",
+          "pair": 12,
+          "synchronized_wall_ratio_B_over_A": 0.9887916601819208
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014303584098815918,
+            "synchronized_wall_seconds": 0.00143156535923481
+          },
+          "B": {
+            "cuda_event_seconds": 0.001412009620666504,
+            "synchronized_wall_seconds": 0.001413281261920929
+          },
+          "cuda_event_ratio_B_over_A": 0.987171894059331,
+          "order": "BA",
+          "pair": 13,
+          "synchronized_wall_ratio_B_over_A": 0.9872278990295951
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014244303703308107,
+            "synchronized_wall_seconds": 0.0014262156561017036
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014102928161621093,
+            "synchronized_wall_seconds": 0.0014114204794168472
+          },
+          "cuda_event_ratio_B_over_A": 0.9900749419113986,
+          "order": "AB",
+          "pair": 14,
+          "synchronized_wall_ratio_B_over_A": 0.9896262696166888
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014310912132263183,
+            "synchronized_wall_seconds": 0.0014322163537144662
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014236319541931152,
+            "synchronized_wall_seconds": 0.0014248579740524293
+          },
+          "cuda_event_ratio_B_over_A": 0.9947877123664349,
+          "order": "BA",
+          "pair": 15,
+          "synchronized_wall_ratio_B_over_A": 0.994862242954458
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.001425160026550293,
+            "synchronized_wall_seconds": 0.0014264065772294997
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014169487953186034,
+            "synchronized_wall_seconds": 0.0014180954545736312
+          },
+          "cuda_event_ratio_B_over_A": 0.9942383794951326,
+          "order": "AB",
+          "pair": 16,
+          "synchronized_wall_ratio_B_over_A": 0.9941733845114405
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014209919929504395,
+            "synchronized_wall_seconds": 0.0014221033081412316
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014126239776611328,
+            "synchronized_wall_seconds": 0.0014139095321297646
+          },
+          "cuda_event_ratio_B_over_A": 0.9941111453612543,
+          "order": "BA",
+          "pair": 17,
+          "synchronized_wall_ratio_B_over_A": 0.9942382694952192
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.001439633560180664,
+            "synchronized_wall_seconds": 0.001440899446606636
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014342703819274904,
+            "synchronized_wall_seconds": 0.0014355320483446122
+          },
+          "cuda_event_ratio_B_over_A": 0.9962746226529335,
+          "order": "AB",
+          "pair": 18,
+          "synchronized_wall_ratio_B_over_A": 0.9962749668100267
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.0014363056182861327,
+            "synchronized_wall_seconds": 0.0014374013990163803
+          },
+          "B": {
+            "cuda_event_seconds": 0.0014118687629699708,
+            "synchronized_wall_seconds": 0.0014131126925349235
+          },
+          "cuda_event_ratio_B_over_A": 0.9829863122408996,
+          "order": "BA",
+          "pair": 19,
+          "synchronized_wall_ratio_B_over_A": 0.9831023494911876
+        }
+      ],
+      "synchronized_wall_admission": {
+        "ab_ba_median_ratio": 0.995624961707504,
+        "accepted": true,
+        "inside_15_percent": 20,
+        "median_ratio": 0.9942058270033298
+      }
+    },
+    "128": {
+      "accepted": true,
+      "cuda_event_admission": {
+        "ab_ba_median_ratio": 1.0011095471665774,
+        "accepted": true,
+        "inside_15_percent": 20,
+        "median_ratio": 0.9998478862111815
+      },
+      "orders": [
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA",
+        "AB",
+        "BA"
+      ],
+      "pairs": [
+        {
+          "A": {
+            "cuda_event_seconds": 0.007897318267822266,
+            "synchronized_wall_seconds": 0.007899003475904465
+          },
+          "B": {
+            "cuda_event_seconds": 0.007896955108642578,
+            "synchronized_wall_seconds": 0.00789895337074995
+          },
+          "cuda_event_ratio_B_over_A": 0.9999540148734833,
+          "order": "AB",
+          "pair": 0,
+          "synchronized_wall_ratio_B_over_A": 0.9999936567752289
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.00793015365600586,
+            "synchronized_wall_seconds": 0.007931379973888398
+          },
+          "B": {
+            "cuda_event_seconds": 0.007897372436523439,
+            "synchronized_wall_seconds": 0.007898739911615849
+          },
+          "cuda_event_ratio_B_over_A": 0.9958662567077002,
+          "order": "BA",
+          "pair": 1,
+          "synchronized_wall_ratio_B_over_A": 0.9958846931580625
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007928008270263671,
+            "synchronized_wall_seconds": 0.007929356209933758
+          },
+          "B": {
+            "cuda_event_seconds": 0.007888706970214845,
+            "synchronized_wall_seconds": 0.007890013977885246
+          },
+          "cuda_event_ratio_B_over_A": 0.9950427271631088,
+          "order": "AB",
+          "pair": 2,
+          "synchronized_wall_ratio_B_over_A": 0.995038407784074
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007916905975341797,
+            "synchronized_wall_seconds": 0.007918167114257812
+          },
+          "B": {
+            "cuda_event_seconds": 0.007928240203857422,
+            "synchronized_wall_seconds": 0.007929540425539016
+          },
+          "cuda_event_ratio_B_over_A": 1.0014316487464834,
+          "order": "BA",
+          "pair": 3,
+          "synchronized_wall_ratio_B_over_A": 1.0014363565604374
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007892132568359375,
+            "synchronized_wall_seconds": 0.007893473468720913
+          },
+          "B": {
+            "cuda_event_seconds": 0.007924327850341797,
+            "synchronized_wall_seconds": 0.00792557541280985
+          },
+          "cuda_event_ratio_B_over_A": 1.0040794147467185,
+          "order": "AB",
+          "pair": 4,
+          "synchronized_wall_ratio_B_over_A": 1.0040668970658033
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007928582763671876,
+            "synchronized_wall_seconds": 0.007929801754653455
+          },
+          "B": {
+            "cuda_event_seconds": 0.007898548889160157,
+            "synchronized_wall_seconds": 0.007899931631982327
+          },
+          "cuda_event_ratio_B_over_A": 0.9962119491708743,
+          "order": "BA",
+          "pair": 5,
+          "synchronized_wall_ratio_B_over_A": 0.9962331816613701
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.00791956787109375,
+            "synchronized_wall_seconds": 0.007920960523188114
+          },
+          "B": {
+            "cuda_event_seconds": 0.007918225860595703,
+            "synchronized_wall_seconds": 0.007919500581920147
+          },
+          "cuda_event_ratio_B_over_A": 0.9998305449842857,
+          "order": "AB",
+          "pair": 6,
+          "synchronized_wall_ratio_B_over_A": 0.9998156863345433
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007914859008789063,
+            "synchronized_wall_seconds": 0.007916257716715336
+          },
+          "B": {
+            "cuda_event_seconds": 0.007905770874023438,
+            "synchronized_wall_seconds": 0.007907135412096977
+          },
+          "cuda_event_ratio_B_over_A": 0.9988517628986779,
+          "order": "BA",
+          "pair": 7,
+          "synchronized_wall_ratio_B_over_A": 0.9988476493635248
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007920931243896484,
+            "synchronized_wall_seconds": 0.007922310382127762
+          },
+          "B": {
+            "cuda_event_seconds": 0.007929219055175782,
+            "synchronized_wall_seconds": 0.007930484041571617
+          },
+          "cuda_event_ratio_B_over_A": 1.0010463177906872,
+          "order": "AB",
+          "pair": 8,
+          "synchronized_wall_ratio_B_over_A": 1.00103172673748
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007930977630615234,
+            "synchronized_wall_seconds": 0.007932214811444283
+          },
+          "B": {
+            "cuda_event_seconds": 0.007929908752441405,
+            "synchronized_wall_seconds": 0.00793131161481142
+          },
+          "cuda_event_ratio_B_over_A": 0.9998652274380774,
+          "order": "BA",
+          "pair": 9,
+          "synchronized_wall_ratio_B_over_A": 0.9998861356311783
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007931886291503907,
+            "synchronized_wall_seconds": 0.007933578826487065
+          },
+          "B": {
+            "cuda_event_seconds": 0.007912721252441406,
+            "synchronized_wall_seconds": 0.007914961501955985
+          },
+          "cuda_event_ratio_B_over_A": 0.9975837980578429,
+          "order": "AB",
+          "pair": 10,
+          "synchronized_wall_ratio_B_over_A": 0.9976533510363667
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007925577545166016,
+            "synchronized_wall_seconds": 0.007927423901855945
+          },
+          "B": {
+            "cuda_event_seconds": 0.007879401397705078,
+            "synchronized_wall_seconds": 0.00788135901093483
+          },
+          "cuda_event_ratio_B_over_A": 0.9941737813808784,
+          "order": "BA",
+          "pair": 11,
+          "synchronized_wall_ratio_B_over_A": 0.9941891727386585
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007884425354003907,
+            "synchronized_wall_seconds": 0.007886104844510555
+          },
+          "B": {
+            "cuda_event_seconds": 0.007950068664550782,
+            "synchronized_wall_seconds": 0.007951518706977367
+          },
+          "cuda_event_ratio_B_over_A": 1.0083256937062053,
+          "order": "AB",
+          "pair": 12,
+          "synchronized_wall_ratio_B_over_A": 1.0082948253613881
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.00792977752685547,
+            "synchronized_wall_seconds": 0.007931040972471238
+          },
+          "B": {
+            "cuda_event_seconds": 0.00793245620727539,
+            "synchronized_wall_seconds": 0.00793401561677456
+          },
+          "cuda_event_ratio_B_over_A": 1.000337800198158,
+          "order": "BA",
+          "pair": 13,
+          "synchronized_wall_ratio_B_over_A": 1.0003750635400381
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007912230682373046,
+            "synchronized_wall_seconds": 0.007914007268846035
+          },
+          "B": {
+            "cuda_event_seconds": 0.007919684600830078,
+            "synchronized_wall_seconds": 0.007920942828059196
+          },
+          "cuda_event_ratio_B_over_A": 1.0009420754722986,
+          "order": "AB",
+          "pair": 14,
+          "synchronized_wall_ratio_B_over_A": 1.0008763650294414
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007930016326904297,
+            "synchronized_wall_seconds": 0.00793131347745657
+          },
+          "B": {
+            "cuda_event_seconds": 0.007928196716308594,
+            "synchronized_wall_seconds": 0.007929625548422336
+          },
+          "cuda_event_ratio_B_over_A": 0.9997705413809138,
+          "order": "BA",
+          "pair": 15,
+          "synchronized_wall_ratio_B_over_A": 0.9997871816516859
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007920021057128907,
+            "synchronized_wall_seconds": 0.007921453565359116
+          },
+          "B": {
+            "cuda_event_seconds": 0.007927037048339844,
+            "synchronized_wall_seconds": 0.007928190380334854
+          },
+          "cuda_event_ratio_B_over_A": 1.0008858551208804,
+          "order": "AB",
+          "pair": 16,
+          "synchronized_wall_ratio_B_over_A": 1.0008504518672177
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007928421020507812,
+            "synchronized_wall_seconds": 0.007929694093763828
+          },
+          "B": {
+            "cuda_event_seconds": 0.007902268981933594,
+            "synchronized_wall_seconds": 0.007903582230210305
+          },
+          "cuda_event_ratio_B_over_A": 0.996701482110174,
+          "order": "BA",
+          "pair": 17,
+          "synchronized_wall_ratio_B_over_A": 0.9967070780732818
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007930974578857422,
+            "synchronized_wall_seconds": 0.007932343892753125
+          },
+          "B": {
+            "cuda_event_seconds": 0.007929281616210936,
+            "synchronized_wall_seconds": 0.007930593565106392
+          },
+          "cuda_event_ratio_B_over_A": 0.9997865378800987,
+          "order": "AB",
+          "pair": 18,
+          "synchronized_wall_ratio_B_over_A": 0.9997793429444818
+        },
+        {
+          "A": {
+            "cuda_event_seconds": 0.007929446411132812,
+            "synchronized_wall_seconds": 0.007930674217641353
+          },
+          "B": {
+            "cuda_event_seconds": 0.007928747558593751,
+            "synchronized_wall_seconds": 0.007930031605064869
+          },
+          "cuda_event_ratio_B_over_A": 0.999911866162803,
+          "order": "BA",
+          "pair": 19,
+          "synchronized_wall_ratio_B_over_A": 0.9999189712552994
+        }
+      ],
+      "synchronized_wall_admission": {
+        "ab_ba_median_ratio": 1.0011053933379683,
+        "accepted": true,
+        "inside_15_percent": 20,
+        "median_ratio": 0.9998509109828608
+      }
+    }
+  },
+  "condition": "legacy",
+  "label": "M0_legacy_AA",
+  "probe": {
+    "atol": 1e-05,
+    "max_abs_difference": 0.0,
+    "rows": 2,
+    "rtol": 1e-05,
+    "same_device_logits_accepted": true,
+    "same_probe": true
+  },
+  "role": "M0",
+  "torchscript": {
+    "artifact_id": "5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d",
+    "file_bytes": 44894883,
+    "format": "independently_reloaded_TorchScript",
+    "path": "torchscript/5d6e2584b61161197937c8f1e14102a4e9ca4581d2eb5fa30b05ad207d68fd8d.pt",
+    "sha256": "39c01cc314090b1abcaef86e1c122e65dfd23b58081d369fc2edfaa98be0d8eb"
+  }
+}

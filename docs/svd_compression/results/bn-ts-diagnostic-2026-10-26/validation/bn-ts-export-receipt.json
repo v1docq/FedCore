@@ -1,0 +1,8 @@
+{
+  "archive": "/root/fedcore_bn_ts_diagnostic_20261026/export-diagnostic-1/evidence.tar.gz",
+  "bytes": 681254,
+  "sha256": "1447f77e9c4d5838c615b2b1482b72da150d4dd7fb75ca8021636ea584c61d00",
+  "copied_files": 59,
+  "status": "completed",
+  "retained_binary_files": 6
+}

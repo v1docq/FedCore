@@ -6,3 +6,77 @@ examples/petra/* text eol=lf
 docs/petra/examples.md text eol=lf
 # Preserve the recorded evidence bytes and hashes across Windows/Linux checkouts.
 docs/petra/results/readiness-2026-10-06/** -text whitespace=cr-at-eol
+
+# Preserve the second SVD packet's portable evidence bytes on every checkout.
+docs/svd_compression/results/second-local-2026-10-14/** -text whitespace=cr-at-eol
+docs/svd_compression/second-local-package-infographic.html text eol=lf
+
+# Preserve the third SVD packet's original evidence bytes and frozen source ZIP.
+docs/svd_compression/results/third-local-2026-10-15/** -text whitespace=cr-at-eol
+# Preserve diagnostic exception output verbatim, including its trailing spaces.
+docs/svd_compression/results/third-local-2026-10-15/**/*.log -whitespace
+docs/svd_compression/results/third-local-2026-10-15/**/*.xml -whitespace
+docs/svd_compression/third-local-package-infographic.html text eol=lf
+
+# Preserve issue-99 recorded evidence and authored report hashes on all hosts.
+docs/svd_compression/results/issue-99-local-1-2026-10-20/** -text whitespace=cr-at-eol
+docs/svd_compression/results/issue-99-local-1-2026-10-20/**/*.log -whitespace
+docs/svd_compression/issue99-report-source/** -text whitespace=cr-at-eol
+docs/svd_compression/issue-99-local-1-report.html -text -whitespace
+
+# Preserve the second issue-99 packet's original evidence and portable report.
+docs/svd_compression/results/issue-99-local-2-2026-10-21/** -text whitespace=cr-at-eol
+docs/svd_compression/results/issue-99-local-2-2026-10-21/**/*.log -whitespace
+docs/svd_compression/issue99-local2-report-source/** -text whitespace=cr-at-eol
+docs/svd_compression/issue-99-local-2-report.html -text -whitespace
+
+# Keep imported Sparse protocols and recorded evidence byte-identical.
+docs/sparse_compression/*.md text eol=lf
+docs/sparse_compression/LOCAL_EXPERIMENT_METRICS.json -text whitespace=cr-at-eol
+docs/sparse_compression/results_v2_metrics.json -text whitespace=cr-at-eol
+docs/sparse_compression/results_v2_metrics.csv -text whitespace=cr-at-eol
+
+# Preserve the bytes hashed in the integration evidence manifest.
+docs/integration/results/svd-sparse-2026-10-21/** -text -whitespace
+
+# Preserve CPU validation records for the bounded Sparse/CV pilot preparation.
+docs/svd_compression/results/sparse-cv-preparation-2026-10-21/** -text -whitespace
+
+# Preserve hashes of interrupted A100 pilot evidence and its offline report.
+docs/svd_compression/results/a100-pilot-1-2026-10-22/** -text -whitespace
+docs/svd_compression/a100-pilot-1-report.html -text -whitespace
+docs/svd_compression/A100_PILOT_1.md -text -whitespace
+
+# Preserve the stopped repeat, derived analysis and offline report byte-for-byte.
+docs/svd_compression/results/a100-pilot-2-2026-10-22/** -text -whitespace
+docs/svd_compression/a100-pilot-2-report.html -text -whitespace
+docs/svd_compression/A100_PILOT_2.md -text -whitespace
+
+# Keep the completion packet's source and derived hashes reproducible.
+docs/svd_compression/results/a100-completion-2026-10-26/** -text -whitespace
+docs/svd_compression/a100-completion-report.html -text -whitespace
+docs/svd_compression/A100_COMPLETION.md -text -whitespace
+
+# Preserve prepared diagnostic evidence before its GPU window starts.
+docs/svd_compression/results/bn-ts-diagnostic-preparation-2026-10-26/** -text -whitespace
+
+# Preserve the completed diagnostic packet and reproducible report bytes.
+docs/svd_compression/results/bn-ts-diagnostic-2026-10-26/** -text -whitespace
+docs/svd_compression/BN_TS_DIAGNOSTIC.md -text -whitespace
+docs/svd_compression/bn-ts-diagnostic-report.html -text -whitespace
+
+# Preserve exact recovery-matrix evidence, replay tools and report bytes.
+docs/svd_compression/results/recovery-bn-matrix-2026-10-26/** -text -whitespace
+docs/svd_compression/RECOVERY_BN_MATRIX.md -text -whitespace
+docs/svd_compression/recovery-bn-report.html -text -whitespace
+
+# Preserve saved-model evaluation evidence and deterministic report bytes.
+docs/svd_compression/results/saved-model-evaluation-2026-10-26/** -text -whitespace
+docs/svd_compression/SAVED_MODEL_EVALUATION.md -text -whitespace
+docs/svd_compression/saved-model-evaluation-report.html -text -whitespace
+
+# Preserve the independent-M0 attempt, frozen failure evidence and report.
+docs/svd_compression/results/independent-m0-a100-2026-10-30/** -text -whitespace
+docs/svd_compression/independent-m0-report-source/** -text -whitespace
+docs/svd_compression/independent-m0-a100-report.html -text -whitespace
+docs/svd_compression/INDEPENDENT_M0_A100.md -text -whitespace

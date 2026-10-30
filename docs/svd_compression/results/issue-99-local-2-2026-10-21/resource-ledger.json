@@ -1,0 +1,1561 @@
+{
+  "baseline_gate": {
+    "accuracies": [
+      0.9591078066914498,
+      0.9553903345724907,
+      0.9776951672862454
+    ],
+    "passed": true,
+    "threshold": 0.9
+  },
+  "continuations": [
+    {
+      "kind": "approved-independent-finalize-after-status-io-stop",
+      "no_matrix_retry": true,
+      "original_started_at": 716.9891238,
+      "original_stop_reason": "RuntimeError: Matrix correctness admission failed: {'job': 'matrix-admission', 'kind': 'matrix_admission', 'status': 'failed', 'returncode': 1, 'stop': None, 'result_path': 'C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\FedCore-Issue99-Local-2026-10-20\\\\local2-run-1\\\\jobs\\\\matrix-admission\\\\result.json', 'svd_telemetry': {'started': 13, 'completed': 13, 'last_started_at': 1950.4450473, 'last_completed_at': 1950.4473837, 'format': '<QQdd; 64-byte file; read after worker termination'}, 'resources': {'started_at': 1942.2143855, 'completed_at': 1951.1903479, 'elapsed_seconds': 8.975962400000071, 'peak_tree_rss_bytes': 375697408, 'minimum_available_ram_bytes': 16610668544, 'samples': 73}, 'error': \"PermissionError: [WinError 5] Отказано в доступе: 'C:\\\\\\\\Users\\\\\\\\user\\\\\\\\Documents\\\\\\\\Codex\\\\\\\\FedCore-Issue99-Local-2026-10-20\\\\\\\\local2-run-1\\\\\\\\jobs\\\\\\\\matrix-admission\\\\\\\\active-request.json.pending' -> 'C:\\\\\\\\Users\\\\\\\\user\\\\\\\\Documents\\\\\\\\Codex\\\\\\\\FedCore-Issue99-Local-2026-10-20\\\\\\\\local2-run-1\\\\\\\\jobs\\\\\\\\matrix-admission\\\\\\\\active-request.json'\"}",
+      "source_sha256": "c935caeb0bde24de23d7dd709aaf4262633e97188b11e19fd1f46982333c8ada",
+      "started_at": 2164.6808488
+    },
+    {
+      "completed_at": 2767.7209956,
+      "git_revision": "72beec323c3972f664c1b99882f5dba64bf30130",
+      "kind": "one_relocated_matrix_admission_after_status_io_failure",
+      "original_matrix_deadline": 3742.1477145,
+      "original_started_at": 716.9891238,
+      "protocol_sha256": "2e4b16a48f5301071f5bbcb3373033f59993f932471ce4eba8d5e2b59c624daa",
+      "source_sha256": "e6245d64e2d886a66480f3f8c6275a7dc9396bfcb9ac1109c9331a51fd9d1b13",
+      "started_at": 2714.0477498
+    },
+    {
+      "completed_at": 3603.5202331,
+      "git_revision": "13c3b38b03a9287b4267a51c96bc85c1c55dcc2d",
+      "kind": "status_reader_fix_and_only_unstarted_sizes",
+      "previous_matrix_completed_at": 2767.7209956,
+      "previous_stop_reason": "PermissionError: [Errno 13] Permission denied: 'C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\FedCore-Issue99-Local-2026-10-20\\\\local2-run-1\\\\jobs\\\\matrix-32\\\\active-request.json'",
+      "protocol_sha256": "afc8c4d071be3e51abed7b168da896cd12af7663a4e6d38a3f1b721b99d709a9",
+      "source_sha256": "dd8690ea31f1d0f17b268bdfcbf2fee87b7ffad63a0d5a3c1feecb7e848f220f",
+      "started_at": 3145.8070979
+    }
+  ],
+  "elapsed_seconds": 2886.5311111,
+  "historical_stop_reason": "RuntimeError: Matrix correctness admission failed: {'job': 'matrix-admission', 'kind': 'matrix_admission', 'status': 'failed', 'returncode': 1, 'stop': None, 'result_path': 'C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\FedCore-Issue99-Local-2026-10-20\\\\local2-run-1\\\\jobs\\\\matrix-admission\\\\result.json', 'svd_telemetry': {'started': 13, 'completed': 13, 'last_started_at': 1950.4450473, 'last_completed_at': 1950.4473837, 'format': '<QQdd; 64-byte file; read after worker termination'}, 'resources': {'started_at': 1942.2143855, 'completed_at': 1951.1903479, 'elapsed_seconds': 8.975962400000071, 'peak_tree_rss_bytes': 375697408, 'minimum_available_ram_bytes': 16610668544, 'samples': 73}, 'error': \"PermissionError: [WinError 5] Отказано в доступе: 'C:\\\\\\\\Users\\\\\\\\user\\\\\\\\Documents\\\\\\\\Codex\\\\\\\\FedCore-Issue99-Local-2026-10-20\\\\\\\\local2-run-1\\\\\\\\jobs\\\\\\\\matrix-admission\\\\\\\\active-request.json.pending' -> 'C:\\\\\\\\Users\\\\\\\\user\\\\\\\\Documents\\\\\\\\Codex\\\\\\\\FedCore-Issue99-Local-2026-10-20\\\\\\\\local2-run-1\\\\\\\\jobs\\\\\\\\matrix-admission\\\\\\\\active-request.json'\"}",
+  "jobs": [
+    {
+      "error": null,
+      "job": "prepare",
+      "kind": "prepare",
+      "resources": {
+        "completed_at": 726.8921064,
+        "elapsed_seconds": 7.970970399999942,
+        "minimum_available_ram_bytes": 15248322560,
+        "peak_tree_rss_bytes": 377638912,
+        "samples": 65,
+        "started_at": 718.921136
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\prepare\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "train-19901",
+      "kind": "train",
+      "resources": {
+        "completed_at": 738.3628824,
+        "elapsed_seconds": 11.407144499999958,
+        "minimum_available_ram_bytes": 14989271040,
+        "peak_tree_rss_bytes": 419016704,
+        "samples": 93,
+        "started_at": 726.9557379
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\train-19901\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "train-19911",
+      "kind": "train",
+      "resources": {
+        "completed_at": 749.9923792,
+        "elapsed_seconds": 11.556407199999967,
+        "minimum_available_ram_bytes": 14682624000,
+        "peak_tree_rss_bytes": 420700160,
+        "samples": 93,
+        "started_at": 738.435972
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\train-19911\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "train-19921",
+      "kind": "train",
+      "resources": {
+        "completed_at": 761.5786295,
+        "elapsed_seconds": 11.519440200000076,
+        "minimum_available_ram_bytes": 14953422848,
+        "peak_tree_rss_bytes": 423198720,
+        "samples": 94,
+        "started_at": 750.0591893
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\train-19921\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "admission-19901",
+      "kind": "admission",
+      "resources": {
+        "completed_at": 777.8469199,
+        "elapsed_seconds": 16.190189000000032,
+        "minimum_available_ram_bytes": 14767620096,
+        "peak_tree_rss_bytes": 477069312,
+        "samples": 132,
+        "started_at": 761.6567309
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\admission-19901\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "admission-19911",
+      "kind": "admission",
+      "resources": {
+        "completed_at": 794.8244915,
+        "elapsed_seconds": 16.91151720000005,
+        "minimum_available_ram_bytes": 14679789568,
+        "peak_tree_rss_bytes": 475090944,
+        "samples": 137,
+        "started_at": 777.9129743
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\admission-19911\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "admission-19921",
+      "kind": "admission",
+      "resources": {
+        "completed_at": 810.756314,
+        "elapsed_seconds": 15.865412799999945,
+        "minimum_available_ram_bytes": 14737063936,
+        "peak_tree_rss_bytes": 475709440,
+        "samples": 129,
+        "started_at": 794.8909012
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\admission-19921\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 820.156888,
+        "elapsed_seconds": 9.329241300000035,
+        "minimum_available_ram_bytes": 14742425600,
+        "peak_tree_rss_bytes": 384114688,
+        "samples": 76,
+        "started_at": 810.8276467
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 829.9540159,
+        "elapsed_seconds": 9.726118499999984,
+        "minimum_available_ram_bytes": 14779666432,
+        "peak_tree_rss_bytes": 386088960,
+        "samples": 79,
+        "started_at": 820.2278974
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 850.4634819,
+        "elapsed_seconds": 20.433373000000074,
+        "minimum_available_ram_bytes": 14209482752,
+        "peak_tree_rss_bytes": 476606464,
+        "samples": 166,
+        "started_at": 830.0301089
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 860.2585893,
+        "elapsed_seconds": 9.710873300000003,
+        "minimum_available_ram_bytes": 14504001536,
+        "peak_tree_rss_bytes": 385409024,
+        "samples": 79,
+        "started_at": 850.547716
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 879.3006877,
+        "elapsed_seconds": 18.97485419999998,
+        "minimum_available_ram_bytes": 14407561216,
+        "peak_tree_rss_bytes": 476745728,
+        "samples": 155,
+        "started_at": 860.3258335
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 887.7198037,
+        "elapsed_seconds": 8.3487255,
+        "minimum_available_ram_bytes": 14618423296,
+        "peak_tree_rss_bytes": 383860736,
+        "samples": 68,
+        "started_at": 879.3710782
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 906.5537594,
+        "elapsed_seconds": 18.76602749999995,
+        "minimum_available_ram_bytes": 14307639296,
+        "peak_tree_rss_bytes": 477642752,
+        "samples": 153,
+        "started_at": 887.7877319
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 915.6346369,
+        "elapsed_seconds": 9.014542699999993,
+        "minimum_available_ram_bytes": 14218493952,
+        "peak_tree_rss_bytes": 384589824,
+        "samples": 67,
+        "started_at": 906.6200942
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-attempts-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 927.549351,
+        "elapsed_seconds": 11.819304200000033,
+        "minimum_available_ram_bytes": 13963878400,
+        "peak_tree_rss_bytes": 386473984,
+        "samples": 94,
+        "started_at": 915.7300468
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-attempts-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 936.5105575,
+        "elapsed_seconds": 8.882312700000057,
+        "minimum_available_ram_bytes": 14275821568,
+        "peak_tree_rss_bytes": 384540672,
+        "samples": 72,
+        "started_at": 927.6282448
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 967.336213,
+        "elapsed_seconds": 30.7589332,
+        "minimum_available_ram_bytes": 14268026880,
+        "peak_tree_rss_bytes": 386301952,
+        "samples": 250,
+        "started_at": 936.5772798
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 997.4509944,
+        "elapsed_seconds": 30.049308399999973,
+        "minimum_available_ram_bytes": 14128730112,
+        "peak_tree_rss_bytes": 478617600,
+        "samples": 246,
+        "started_at": 967.401686
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1028.1717168,
+        "elapsed_seconds": 30.650238700000045,
+        "minimum_available_ram_bytes": 14369267712,
+        "peak_tree_rss_bytes": 388235264,
+        "samples": 250,
+        "started_at": 997.5214781
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1058.2810009,
+        "elapsed_seconds": 30.031414799999993,
+        "minimum_available_ram_bytes": 16251478016,
+        "peak_tree_rss_bytes": 479121408,
+        "samples": 245,
+        "started_at": 1028.2495861
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1066.9483692,
+        "elapsed_seconds": 8.577298999999812,
+        "minimum_available_ram_bytes": 16495284224,
+        "peak_tree_rss_bytes": 383934464,
+        "samples": 70,
+        "started_at": 1058.3710702
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1096.9880184,
+        "elapsed_seconds": 29.972543300000098,
+        "minimum_available_ram_bytes": 15715721216,
+        "peak_tree_rss_bytes": 479551488,
+        "samples": 244,
+        "started_at": 1067.0154751
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1105.5382827,
+        "elapsed_seconds": 8.480278200000157,
+        "minimum_available_ram_bytes": 16006062080,
+        "peak_tree_rss_bytes": 383889408,
+        "samples": 69,
+        "started_at": 1097.0580045
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19901-time-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1136.2670121,
+        "elapsed_seconds": 30.66241570000011,
+        "minimum_available_ram_bytes": 15768125440,
+        "peak_tree_rss_bytes": 387395584,
+        "samples": 250,
+        "started_at": 1105.6045964
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19901-time-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1144.6813278,
+        "elapsed_seconds": 8.34788720000006,
+        "minimum_available_ram_bytes": 15633022976,
+        "peak_tree_rss_bytes": 384548864,
+        "samples": 68,
+        "started_at": 1136.3334406
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1154.2280703,
+        "elapsed_seconds": 9.47632920000001,
+        "minimum_available_ram_bytes": 15672373248,
+        "peak_tree_rss_bytes": 385032192,
+        "samples": 77,
+        "started_at": 1144.7517411
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1173.1262849,
+        "elapsed_seconds": 18.80492789999994,
+        "minimum_available_ram_bytes": 15546052608,
+        "peak_tree_rss_bytes": 477409280,
+        "samples": 153,
+        "started_at": 1154.321357
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1183.4207554,
+        "elapsed_seconds": 10.222600899999861,
+        "minimum_available_ram_bytes": 15349993472,
+        "peak_tree_rss_bytes": 385585152,
+        "samples": 83,
+        "started_at": 1173.1981545
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1202.9369482,
+        "elapsed_seconds": 19.42732060000003,
+        "minimum_available_ram_bytes": 15352340480,
+        "peak_tree_rss_bytes": 477114368,
+        "samples": 158,
+        "started_at": 1183.5096276
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1212.6284437,
+        "elapsed_seconds": 9.614735099999962,
+        "minimum_available_ram_bytes": 15303036928,
+        "peak_tree_rss_bytes": 384004096,
+        "samples": 78,
+        "started_at": 1203.0137086
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1233.351064,
+        "elapsed_seconds": 20.64738999999986,
+        "minimum_available_ram_bytes": 14988337152,
+        "peak_tree_rss_bytes": 478085120,
+        "samples": 168,
+        "started_at": 1212.703674
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1242.9091888,
+        "elapsed_seconds": 9.48608460000014,
+        "minimum_available_ram_bytes": 15419715584,
+        "peak_tree_rss_bytes": 384425984,
+        "samples": 71,
+        "started_at": 1233.4231042
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-attempts-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1253.0392033,
+        "elapsed_seconds": 10.061192800000072,
+        "minimum_available_ram_bytes": 15369347072,
+        "peak_tree_rss_bytes": 386412544,
+        "samples": 82,
+        "started_at": 1242.9780105
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-attempts-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1262.791663,
+        "elapsed_seconds": 9.665601499999866,
+        "minimum_available_ram_bytes": 15033724928,
+        "peak_tree_rss_bytes": 384389120,
+        "samples": 67,
+        "started_at": 1253.1260615
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1293.6481051,
+        "elapsed_seconds": 30.768497300000035,
+        "minimum_available_ram_bytes": 15214067712,
+        "peak_tree_rss_bytes": 386682880,
+        "samples": 251,
+        "started_at": 1262.8796078
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1323.889221,
+        "elapsed_seconds": 30.166333399999985,
+        "minimum_available_ram_bytes": 15949279232,
+        "peak_tree_rss_bytes": 478629888,
+        "samples": 246,
+        "started_at": 1293.7228876
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1354.7152475,
+        "elapsed_seconds": 30.728015800000094,
+        "minimum_available_ram_bytes": 15891439616,
+        "peak_tree_rss_bytes": 387862528,
+        "samples": 227,
+        "started_at": 1323.9872317
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1384.6964932,
+        "elapsed_seconds": 29.893383400000175,
+        "minimum_available_ram_bytes": 16422215680,
+        "peak_tree_rss_bytes": 478715904,
+        "samples": 244,
+        "started_at": 1354.8031098
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1392.9933151,
+        "elapsed_seconds": 8.226305700000012,
+        "minimum_available_ram_bytes": 16704782336,
+        "peak_tree_rss_bytes": 383737856,
+        "samples": 67,
+        "started_at": 1384.7670094
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1423.1945124,
+        "elapsed_seconds": 30.128475099999832,
+        "minimum_available_ram_bytes": 16160423936,
+        "peak_tree_rss_bytes": 479981568,
+        "samples": 246,
+        "started_at": 1393.0660373
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1432.7277959,
+        "elapsed_seconds": 9.439056599999958,
+        "minimum_available_ram_bytes": 15904432128,
+        "peak_tree_rss_bytes": 384290816,
+        "samples": 77,
+        "started_at": 1423.2887393
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19911-time-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1463.8773591,
+        "elapsed_seconds": 30.74946799999998,
+        "minimum_available_ram_bytes": 15437094912,
+        "peak_tree_rss_bytes": 387039232,
+        "samples": 227,
+        "started_at": 1433.1278911
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19911-time-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1472.4277353,
+        "elapsed_seconds": 8.480753099999902,
+        "minimum_available_ram_bytes": 16652427264,
+        "peak_tree_rss_bytes": 384491520,
+        "samples": 69,
+        "started_at": 1463.9469822
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1482.0910128,
+        "elapsed_seconds": 9.5913551000001,
+        "minimum_available_ram_bytes": 16543358976,
+        "peak_tree_rss_bytes": 385675264,
+        "samples": 78,
+        "started_at": 1472.4996577
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1503.9197924,
+        "elapsed_seconds": 21.753696600000012,
+        "minimum_available_ram_bytes": 15384264704,
+        "peak_tree_rss_bytes": 477552640,
+        "samples": 176,
+        "started_at": 1482.1660958
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1515.233894,
+        "elapsed_seconds": 11.219764299999952,
+        "minimum_available_ram_bytes": 15620153344,
+        "peak_tree_rss_bytes": 385495040,
+        "samples": 91,
+        "started_at": 1504.0141297
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1536.696978,
+        "elapsed_seconds": 21.38467249999985,
+        "minimum_available_ram_bytes": 15638519808,
+        "peak_tree_rss_bytes": 476864512,
+        "samples": 158,
+        "started_at": 1515.3123055
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1546.3482466,
+        "elapsed_seconds": 9.56784349999998,
+        "minimum_available_ram_bytes": 15752482816,
+        "peak_tree_rss_bytes": 384286720,
+        "samples": 78,
+        "started_at": 1536.7804031
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1568.2841172,
+        "elapsed_seconds": 21.83483010000009,
+        "minimum_available_ram_bytes": 15413972992,
+        "peak_tree_rss_bytes": 477978624,
+        "samples": 161,
+        "started_at": 1546.4492871
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1577.9123199,
+        "elapsed_seconds": 9.542842000000064,
+        "minimum_available_ram_bytes": 15592030208,
+        "peak_tree_rss_bytes": 384581632,
+        "samples": 71,
+        "started_at": 1568.3694779
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-attempts-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1588.6604969,
+        "elapsed_seconds": 10.664725399999952,
+        "minimum_available_ram_bytes": 15560368128,
+        "peak_tree_rss_bytes": 385761280,
+        "samples": 87,
+        "started_at": 1577.9957715
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-attempts-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-11-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1597.9203922,
+        "elapsed_seconds": 9.181254999999965,
+        "minimum_available_ram_bytes": 15791321088,
+        "peak_tree_rss_bytes": 383717376,
+        "samples": 68,
+        "started_at": 1588.7391372
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-11-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-11-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1628.7574113,
+        "elapsed_seconds": 30.756428600000163,
+        "minimum_available_ram_bytes": 15593144320,
+        "peak_tree_rss_bytes": 387637248,
+        "samples": 250,
+        "started_at": 1598.0009827
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-11-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-11-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1659.3471602,
+        "elapsed_seconds": 30.501853600000004,
+        "minimum_available_ram_bytes": 16377180160,
+        "peak_tree_rss_bytes": 479248384,
+        "samples": 248,
+        "started_at": 1628.8453066
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-11-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-22-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1690.3203878,
+        "elapsed_seconds": 30.875938299999916,
+        "minimum_available_ram_bytes": 16225435648,
+        "peak_tree_rss_bytes": 386785280,
+        "samples": 251,
+        "started_at": 1659.4444495
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-22-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-22-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1721.3093186,
+        "elapsed_seconds": 30.895395000000008,
+        "minimum_available_ram_bytes": 16207282176,
+        "peak_tree_rss_bytes": 480608256,
+        "samples": 252,
+        "started_at": 1690.4139236
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-22-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-22-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1731.0355513,
+        "elapsed_seconds": 9.648966199999904,
+        "minimum_available_ram_bytes": 16335532032,
+        "peak_tree_rss_bytes": 384229376,
+        "samples": 79,
+        "started_at": 1721.3865851
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-22-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-33-E",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1761.7566834,
+        "elapsed_seconds": 30.62644329999989,
+        "minimum_available_ram_bytes": 16200916992,
+        "peak_tree_rss_bytes": 478781440,
+        "samples": 231,
+        "started_at": 1731.1302401
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-33-E\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-33-R",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1771.639536,
+        "elapsed_seconds": 9.794979399999875,
+        "minimum_available_ram_bytes": 16298995712,
+        "peak_tree_rss_bytes": 384802816,
+        "samples": 80,
+        "started_at": 1761.8445566
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-33-R\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "search-19921-time-33-T",
+      "kind": "search",
+      "resources": {
+        "completed_at": 1802.6088482,
+        "elapsed_seconds": 30.879746999999952,
+        "minimum_available_ram_bytes": 16185647104,
+        "peak_tree_rss_bytes": 387387392,
+        "samples": 230,
+        "started_at": 1771.7291012
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\search-19921-time-33-T\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "oracle-19901",
+      "kind": "oracle",
+      "resources": {
+        "completed_at": 1849.0410339,
+        "elapsed_seconds": 46.33442809999997,
+        "minimum_available_ram_bytes": 15965040640,
+        "peak_tree_rss_bytes": 388935680,
+        "samples": 376,
+        "started_at": 1802.7066058
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\oracle-19901\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "oracle-19911",
+      "kind": "oracle",
+      "resources": {
+        "completed_at": 1895.8977763,
+        "elapsed_seconds": 46.76353670000003,
+        "minimum_available_ram_bytes": 15461314560,
+        "peak_tree_rss_bytes": 388743168,
+        "samples": 380,
+        "started_at": 1849.1342396
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\oracle-19911\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "oracle-19921",
+      "kind": "oracle",
+      "resources": {
+        "completed_at": 1942.1190041,
+        "elapsed_seconds": 46.125132299999905,
+        "minimum_available_ram_bytes": 16144793600,
+        "peak_tree_rss_bytes": 389107712,
+        "samples": 376,
+        "started_at": 1895.9938718
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\oracle-19921\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": "PermissionError: [WinError 5] Отказано в доступе: 'C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\FedCore-Issue99-Local-2026-10-20\\\\local2-run-1\\\\jobs\\\\matrix-admission\\\\active-request.json.pending' -> 'C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\FedCore-Issue99-Local-2026-10-20\\\\local2-run-1\\\\jobs\\\\matrix-admission\\\\active-request.json'",
+      "job": "matrix-admission",
+      "kind": "matrix_admission",
+      "resources": {
+        "completed_at": 1951.1903479,
+        "elapsed_seconds": 8.975962400000071,
+        "minimum_available_ram_bytes": 16610668544,
+        "peak_tree_rss_bytes": 375697408,
+        "samples": 73,
+        "started_at": 1942.2143855
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-admission\\result.json",
+      "returncode": 1,
+      "status": "failed",
+      "stop": null,
+      "svd_telemetry": {
+        "completed": 13,
+        "format": "<QQdd; 64-byte file; read after worker termination",
+        "last_completed_at": 1950.4473837,
+        "last_started_at": 1950.4450473,
+        "started": 13
+      }
+    },
+    {
+      "error": null,
+      "job": "finalize-19901",
+      "kind": "finalize",
+      "resources": {
+        "completed_at": 2175.0556447,
+        "elapsed_seconds": 10.214899399999922,
+        "minimum_available_ram_bytes": 16301375488,
+        "peak_tree_rss_bytes": 385495040,
+        "samples": 83,
+        "started_at": 2164.8407453
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\finalize-19901\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "finalize-19911",
+      "kind": "finalize",
+      "resources": {
+        "completed_at": 2185.1510998,
+        "elapsed_seconds": 10.00110020000011,
+        "minimum_available_ram_bytes": 16300281856,
+        "peak_tree_rss_bytes": 386252800,
+        "samples": 81,
+        "started_at": 2175.1499996
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\finalize-19911\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "finalize-19921",
+      "kind": "finalize",
+      "resources": {
+        "completed_at": 2195.4817084,
+        "elapsed_seconds": 10.241568299999926,
+        "minimum_available_ram_bytes": 16344084480,
+        "peak_tree_rss_bytes": 385994752,
+        "samples": 83,
+        "started_at": 2185.2401401
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\finalize-19921\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": null
+    },
+    {
+      "error": null,
+      "job": "matrix-admission-recovery-1",
+      "kind": "matrix_admission",
+      "resources": {
+        "completed_at": 2727.3262311,
+        "elapsed_seconds": 13.196135299999696,
+        "minimum_available_ram_bytes": 15873245184,
+        "peak_tree_rss_bytes": 559075328,
+        "samples": 105,
+        "started_at": 2714.1300958
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-admission-recovery-1\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": {
+        "completed": 25,
+        "format": "<QQdd; 64-byte file; read after worker termination",
+        "last_completed_at": 2726.3442351,
+        "last_started_at": 2725.9548604,
+        "started": 25
+      }
+    },
+    {
+      "error": null,
+      "job": "matrix-8",
+      "kind": "matrix",
+      "resources": {
+        "completed_at": 2747.3087502,
+        "elapsed_seconds": 19.88753259999976,
+        "minimum_available_ram_bytes": 15821684736,
+        "peak_tree_rss_bytes": 373809152,
+        "samples": 151,
+        "started_at": 2727.4212176
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-8\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": {
+        "completed": 704,
+        "format": "<QQdd; 64-byte file; read after worker termination",
+        "last_completed_at": 2746.4156445,
+        "last_started_at": 2746.4155735,
+        "started": 704
+      }
+    },
+    {
+      "child_absence_confirmed_at": 3145.7902218,
+      "error": "PermissionError: [Errno 13] Permission denied: 'C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\FedCore-Issue99-Local-2026-10-20\\\\local2-run-1\\\\jobs\\\\matrix-32\\\\active-request.json'",
+      "job": "matrix-32",
+      "kind": "matrix",
+      "monitoring_complete": false,
+      "note": "Child result and telemetry completed; original monitor did not record its resource envelope. Timing is diagnostic only.",
+      "resources": {
+        "completed_at": null,
+        "elapsed_seconds": null,
+        "minimum_available_ram_bytes": null,
+        "peak_tree_rss_bytes": null,
+        "samples": null,
+        "started_at": 2747.4741091
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-32\\result.json",
+      "returncode": null,
+      "status": "monitoring_interrupted",
+      "stop": "parent_status_read_permission_error",
+      "svd_telemetry": {
+        "completed": 704,
+        "format": "<QQdd; 64-byte file; read after worker termination",
+        "last_completed_at": 2768.2847445,
+        "last_started_at": 2768.284437,
+        "started": 704
+      }
+    },
+    {
+      "error": null,
+      "job": "matrix-128",
+      "kind": "matrix",
+      "resources": {
+        "completed_at": 3168.3018699,
+        "elapsed_seconds": 22.438110199999755,
+        "minimum_available_ram_bytes": 17265176576,
+        "peak_tree_rss_bytes": 378212352,
+        "samples": 149,
+        "started_at": 3145.8637597
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-128\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": {
+        "completed": 704,
+        "format": "<QQdd; 64-byte file; read after worker termination",
+        "last_completed_at": 3167.6027946,
+        "last_started_at": 3167.6003727,
+        "started": 704
+      }
+    },
+    {
+      "error": null,
+      "job": "matrix-512",
+      "kind": "matrix",
+      "resources": {
+        "completed_at": 3254.4391366,
+        "elapsed_seconds": 86.04634110000006,
+        "minimum_available_ram_bytes": 15399170048,
+        "peak_tree_rss_bytes": 442765312,
+        "samples": 636,
+        "started_at": 3168.3927955
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-512\\result.json",
+      "returncode": 0,
+      "status": "succeeded",
+      "stop": null,
+      "svd_telemetry": {
+        "completed": 704,
+        "format": "<QQdd; 64-byte file; read after worker termination",
+        "last_completed_at": 3253.5770958,
+        "last_started_at": 3253.5119823,
+        "started": 704
+      }
+    },
+    {
+      "error": "Worker stopped or incomplete",
+      "job": "matrix-1024",
+      "kind": "matrix",
+      "resources": {
+        "completed_at": 3603.4872471,
+        "elapsed_seconds": 348.9617172999997,
+        "minimum_available_ram_bytes": 15203315712,
+        "peak_tree_rss_bytes": 617971712,
+        "samples": 2469,
+        "started_at": 3254.5255298
+      },
+      "result_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Issue99-Local-2026-10-20\\local2-run-1\\jobs\\matrix-1024\\result.json",
+      "returncode": 0,
+      "status": "partial",
+      "stop": null,
+      "svd_telemetry": {
+        "completed": 691,
+        "format": "<QQdd; 64-byte file; read after worker termination",
+        "last_completed_at": 3602.5268507,
+        "last_started_at": 3602.1504489,
+        "started": 691
+      }
+    }
+  ],
+  "matrix_attempts": 4320,
+  "mlp_attempts": 5106,
+  "selections_sha256": "81fa1119c110ac296e46b8d44d8aedcbd62be6ccec6e4d8c321a5c877e9b4323",
+  "stages": [
+    {
+      "completed_at": 726.8983454,
+      "deadline": 1018.8725501,
+      "jobs": [
+        "prepare"
+      ],
+      "stage": "prepare",
+      "started_at": 718.8725501
+    },
+    {
+      "completed_at": 761.5921961,
+      "deadline": 1626.9020282000001,
+      "jobs": [
+        "train-19901",
+        "train-19911",
+        "train-19921"
+      ],
+      "stage": "train",
+      "started_at": 726.9020282
+    },
+    {
+      "completed_at": 810.7689642,
+      "deadline": 1061.5965018000002,
+      "jobs": [
+        "admission-19901",
+        "admission-19911",
+        "admission-19921"
+      ],
+      "stage": "admission",
+      "started_at": 761.5965018
+    },
+    {
+      "completed_at": 1802.6265826,
+      "deadline": 3210.7727247000003,
+      "jobs": [
+        "search-19901-attempts-11-R",
+        "search-19901-attempts-11-T",
+        "search-19901-attempts-11-E",
+        "search-19901-attempts-22-T",
+        "search-19901-attempts-22-E",
+        "search-19901-attempts-22-R",
+        "search-19901-attempts-33-E",
+        "search-19901-attempts-33-R",
+        "search-19901-attempts-33-T",
+        "search-19901-time-11-R",
+        "search-19901-time-11-T",
+        "search-19901-time-11-E",
+        "search-19901-time-22-T",
+        "search-19901-time-22-E",
+        "search-19901-time-22-R",
+        "search-19901-time-33-E",
+        "search-19901-time-33-R",
+        "search-19901-time-33-T",
+        "search-19911-attempts-11-R",
+        "search-19911-attempts-11-T",
+        "search-19911-attempts-11-E",
+        "search-19911-attempts-22-T",
+        "search-19911-attempts-22-E",
+        "search-19911-attempts-22-R",
+        "search-19911-attempts-33-E",
+        "search-19911-attempts-33-R",
+        "search-19911-attempts-33-T",
+        "search-19911-time-11-R",
+        "search-19911-time-11-T",
+        "search-19911-time-11-E",
+        "search-19911-time-22-T",
+        "search-19911-time-22-E",
+        "search-19911-time-22-R",
+        "search-19911-time-33-E",
+        "search-19911-time-33-R",
+        "search-19911-time-33-T",
+        "search-19921-attempts-11-R",
+        "search-19921-attempts-11-T",
+        "search-19921-attempts-11-E",
+        "search-19921-attempts-22-T",
+        "search-19921-attempts-22-E",
+        "search-19921-attempts-22-R",
+        "search-19921-attempts-33-E",
+        "search-19921-attempts-33-R",
+        "search-19921-attempts-33-T",
+        "search-19921-time-11-R",
+        "search-19921-time-11-T",
+        "search-19921-time-11-E",
+        "search-19921-time-22-T",
+        "search-19921-time-22-E",
+        "search-19921-time-22-R",
+        "search-19921-time-33-E",
+        "search-19921-time-33-R",
+        "search-19921-time-33-T"
+      ],
+      "stage": "search",
+      "started_at": 810.7727247
+    },
+    {
+      "completed_at": 1942.1393492,
+      "deadline": 2402.6336618,
+      "jobs": [
+        "oracle-19901",
+        "oracle-19911",
+        "oracle-19921"
+      ],
+      "stage": "oracle",
+      "started_at": 1802.6336618
+    },
+    {
+      "completed_at": 3603.5202331,
+      "deadline": 3742.1477145,
+      "jobs": [
+        "matrix-admission",
+        "matrix-admission-recovery-1",
+        "matrix-8",
+        "matrix-32",
+        "matrix-128",
+        "matrix-512",
+        "matrix-1024"
+      ],
+      "stage": "matrix",
+      "started_at": 1942.1477145
+    },
+    {
+      "completed_at": 2195.5008865,
+      "deadline": 2464.6808488,
+      "jobs": [
+        "finalize-19901",
+        "finalize-19911",
+        "finalize-19921"
+      ],
+      "stage": "finalize",
+      "started_at": 2164.6808488
+    }
+  ],
+  "started_at": 716.9891238,
+  "status": "partial",
+  "stop_reason": "Size32 resource monitoring incomplete; its timings remain diagnostic, without rerun",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Comparisons-2026-10-13\\checkout\\fedcore\\experiments\\compression_search_local2.py\", line 293, in run_package\n    raise RuntimeError(f\"Matrix correctness admission failed: {gate}\")\nRuntimeError: Matrix correctness admission failed: {'job': 'matrix-admission', 'kind': 'matrix_admission', 'status': 'failed', 'returncode': 1, 'stop': None, 'result_path': 'C:\\\\Users\\\\user\\\\Documents\\\\Codex\\\\FedCore-Issue99-Local-2026-10-20\\\\local2-run-1\\\\jobs\\\\matrix-admission\\\\result.json', 'svd_telemetry': {'started': 13, 'completed': 13, 'last_started_at': 1950.4450473, 'last_completed_at': 1950.4473837, 'format': '<QQdd; 64-byte file; read after worker termination'}, 'resources': {'started_at': 1942.2143855, 'completed_at': 1951.1903479, 'elapsed_seconds': 8.975962400000071, 'peak_tree_rss_bytes': 375697408, 'minimum_available_ram_bytes': 16610668544, 'samples': 73}, 'error': \"PermissionError: [WinError 5] Отказано в доступе: 'C:\\\\\\\\Users\\\\\\\\user\\\\\\\\Documents\\\\\\\\Codex\\\\\\\\FedCore-Issue99-Local-2026-10-20\\\\\\\\local2-run-1\\\\\\\\jobs\\\\\\\\matrix-admission\\\\\\\\active-request.json.pending' -> 'C:\\\\\\\\Users\\\\\\\\user\\\\\\\\Documents\\\\\\\\Codex\\\\\\\\FedCore-Issue99-Local-2026-10-20\\\\\\\\local2-run-1\\\\\\\\jobs\\\\\\\\matrix-admission\\\\\\\\active-request.json'\"}\n"
+}

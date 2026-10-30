@@ -1,0 +1,3126 @@
+[
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "d7472e9d1bb34e71a6a341bc8a3cbf64d87def20e0b661e657273df67bce4f6b"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "70510ebef108623c3f7b0806de44b0703643f3bd5ffb0f042898da0abe9bdb86"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "71c9328b2e2685f6436fdea25dc81b2f75da4205c19b4a780383d58604c0d726"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "52931940e9911dd1cd83d52cc1d79241d8e13d41f519e10fec0497f2122021d7"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "fdc4df6a616e46224a3798cdba7129480195199a84dc79b45d64a6ac5b0c3afa"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "4afe6626fc2b8f0f2f2bd648d4c869c9e1a48944b0f3d9f907ba4cf80467c388"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "c8044b73d8970a6eb4184b4aa229442934d26c7985d5768fe6f4f66b4f48c79b"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "5886fdc26b8a00d33a93005bff17ca64c7fa73dba4c6eb3e6504468b10cb0a3e"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "5075ccfff9aeddc8fa9825d6fd28e9ed35ca8ea0b1297428a54c7f523f4b5e50"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "285f2bbc61dd887fd652687fe9e6b86f86e7c3b57c92b593427fbefbc5a19517"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "a55c6c1e3fc08f761ce08389d2a0a5d5412be93479a4b5c77d4ec01714b5d314"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "7a8f4fe5b59f18f288b4291e5fa440e10a0e63b9157f305967d38cb7db4a84dd"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "0e8f805cc795a3fb6e0886780d5cb9734bfa85d053a3501f2f5a942845579a23"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "7f6243524c004e2b3434274bf2c6c927d404faeb91c61d715d8b7cd676813a6a"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "970ed89040b2b431639ae6c00c35664ef3b98fc0a58a424fdbc389beee4a369f"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "0e62173b11fdbf546652db9c6803b178274099bc4c1ca5f7c72b03b6704415c5"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "d764e8deabf7bc905e389c014ea92d6737d949b080ff1afcb07d5455c55297fa"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "8aed38e07f89e24119b001d3b82636b9f5219c656f66d9b57f691118a4b0d359"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "9231d60c903cd2cffea04a1b7b1fd9e342cf2aebbda0a0957a9cdacf4879c199"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "481a074dcaf7a4f69a4058d934253c7b0264c64cfd319f39ff38661011aedd73"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "512402bce5c1d7c75bcdcd4e64650ef4a1e0b22fd28f604935421234d23d83e5"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "57140bfcd785b1b5394a8f05e53af607bbd305e741d37f58a1305e49c8771025"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "a9dfd560598e677882519f5568f63052812ea45941741bc4dde7e50c0b32ae44"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "2c2c5c7f0f82abce5e856389925210c1ef7efd7cb18bef9f298e2f1d1f214f5f"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "00e21712969df5ab359d1d34d727b6622b27eb80a552f8e3d9fec37107c78255"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "e7bcec9896fa0c9a000fc2dc77db61740833c2c328a6fcd37a43a39d9a008763"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "984536dda1b8a8d19b0f69d9eddbd0f16cc378151eb65553b2d896e7bc72d807"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "5d3270fd48af362ec1eabf7aa1f64bf46f64e2abad336ca93768b6f4b967b69a"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "8d32152882d49f6a062ac0a0750bbe5dabbb028bd1761f6211bd0d3a6ff30f3a"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "c90fbeb9a862d6056e6373d310bec1e3988fe5ee0fde7f65444f358e08ada596"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "f7bc315772c6824e49e28f6cd599f20a0334ecdc83a7b10ff9a7e75a2a654214"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "f4880ddd3130c9ee834558ffc23fa091b332decfae3d9898d72fe47b2465be67"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "93ec25b4cfe63ddd961c35d3a79d43a2c5924ba8f3d9ff5ba8bf9e6085f394c5"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "c263e5aa03e1fceda1ac17b41053efe6f9ca21ba2e3f4e7f6ae160d78c3c6f71"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "9035454ab4edccfeaf943a8aa42868b2d7d1d053144777cdf6c61c4eb046c80f"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "ab3df5a5641491cd1914b812a22438445aa6d3398c426ba835fe6c998d341157"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "748b4d3d01c319601e622b0da80687fdf60000f42267d726c05ef2d7feb703ec"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "5b2a53d1edd83d6e9b9aaeb27975466edfdc000f0be04af7a8ee6dd5233a27ae"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "d128f8cda8c00bc17938fe3b55b6229a8388aab5908300f4afc0c245658a2a9d"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "d69e1a6cb447f381455a7f40324f9e7d7e41df5c60bbf98c9d0f1504c7e15b69"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "adad747cb49e0392c41c5a4918d0fa221899f3b40407eb96cb54f467b2e03328"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "eaec1435c4c07f6931f0e471a13795b5eb96813da9afe9d94c35f572ac4503b1"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "08e4f86d2410149567cdeb64d59c0ea34d406d1f806f8a731db1ec7fa2bf5874"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "dadc9b957d9bad2a60f44ea114e05ce594e4e3e10db07e62d86acb7237b9b4a5"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "81a1c024fcd353a219bc7995d00a1ec077b3aa94f1d161ee71c6510372c78715"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "931d01123952bf6403642d5e277229b24393a09e5dd48130babe584e59de97f4"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "5d265353e38928f510c213da547fcf839d71521c9b3ef594c5c93ca093779d44"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "b0d4e8870f624263a6efd6f6f42c65d2516b90be38f18e799accce6295e4c005"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "baf373a2555c828b5e9c7024669769c23dfc5246bc6ded98d60f13af79ccb7e7"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "e9b0ee24175f9abc93dd159f1b4cf40d1134207f6d52383f18686bdb3d161e78"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "e9edf9e59569dd6562c8e8ae9197d0842a9665ed19f919b6f64868142c198265"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "53d8858e5f65c1256f6659462981ade5269ab04ba4d4f567ec641c0ca4ab2d8d"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "f51fbd9d986bff55f70ed94187d9447bde0117483c0048045980a8357d4112a2"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "73977b91595c9bc3687bf151ec0a3e89182e70c7a2e2656c417fc5a9ec656516"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "0c0eda06f9b35753e124ef28fd0a37e5b884cfc0fe77e90d436b780955bd2652"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "d7da884e4b084da713f86c2d68306130a0368cf56575c86dc4f63dfd238a9634"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "9f233931b67c6a2233dad1fbd31b6874361896c4717efd1964b422079d8cf784"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "e6185f31b722f21fc949b65f031bc47184f25ecf426fbe6e57652e8ee90f0853"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "6ef052193bc45ada07f5901c24be2d626042b1be71b4afbdd965958f25108477"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "3b1bceb3bc5fce6e147c4cbd539fcfe27fb17e452e30a296c09dd39c5613115d"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "ce2e61f4be7fe471a4fcfd6b0123ca7e546c7f476eb726705c8fe5ecb7b7ae4e"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "7428fa38ba4eff3626d9c0b4a81ad002ec4dfb02e0bf65cb7c53dd767b104e26"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "4bac37fc5eff48dc7af74b0cdd36f383ef13dffba163ad1949e252b195b065fb"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "0a125ca5e87e5018ae538a9becfa66d0de5c95c2b0be90b0380847a48ecada6e"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "4cb4fbe14eb328a55f2fa065c4accd16c864858d1208d598bc26c34ef132307e"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "103ea88b36b85f2b03eccd4ecf14366bbbf57b71e4cd0ecb72fb01a07e6024d2"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "797e0f57b55ad47607c5f50f9c82b4370d7ebe2af8e4a78ea0855ec27e3b7f2c"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "b68eface112e2e3b04ea6f337903bbc1325cc452fdb4f582de431762d28ad1fc"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "45da7851baa1dbb1cade652d994d4d1a9ba2d2b5c6399415ffdcb952168460d4"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "338ccbbe91b9efe28ed5bef8f06f9170075a4ab519f7df8485dbd3fb380b99da"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "689154e421591d2be3876aeaf439cfcce0823139e06b95145d0aaf4c3b83a597"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "aea3ffcc2e33540e57ffc7372ed40f16844c37a7027f2746a2b5e52ef68c4439"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "7cac274ab6bc9f3c27527153b496fc9cbc22df10fafe9f888a31a5ffa2ae4d35"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "06874415df1c2511ffc0613352ae91fed54e34d3ea22a316209433985b4aed99"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 8,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "fb91c1aea683b612db3c306662f42f80a0d770207420efc4847003995f9e5947"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 8,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "81f7805541e6ecc160e8d321001938c5dcb6f79eb4ff3a4fd642cdb8e33ccbb8"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "policy": {
+              "nullspace_policy": "support_only",
+              "rcond": null,
+              "ridge": 0.0
+            },
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "weighted_svd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "29bf77f6f967f6f72fd3048cbb63d07f3702b4d822933a6c92dcc4d31910189d"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.25,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "f0dccb7627943ff814ed1c2f3c225eeacfbabb90eaa159a7f621bc5b4f4d1571"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "preserve",
+            "centering": "none",
+            "rank": 16,
+            "representation": "two_layers",
+            "spec": {
+              "abs_mode": "abs_mean",
+              "alpha": 0.5,
+              "epsilon": 0.0,
+              "zero_policy": "support_only"
+            }
+          },
+          "recipe": "asvd",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "5c6b2edb09b76999a93b3002fa91530f3c65684dffd9f018aa2c82a95d94a17a"
+  },
+  {
+    "genotype": {
+      "genes": [
+        {
+          "aliases": [
+            "0"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        },
+        {
+          "aliases": [
+            "2"
+          ],
+          "choice": {
+            "bias_policy": "affine_mean_correction",
+            "centering": "output_mean",
+            "rank": 16,
+            "representation": "two_layers"
+          },
+          "recipe": "afm",
+          "recovery": "none"
+        }
+      ],
+      "schema_version": 1
+    },
+    "solution_id": "5cbfe0727adb854124221127d501d501ae263c9efdcf33c45ec99d820eb73add"
+  }
+]

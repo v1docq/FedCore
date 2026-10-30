@@ -1,0 +1,167 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+____ test_evolution_saves_portable_genotypes_without_mutating_typed_result ____
+
+tmp_path = WindowsPath('C:/Users/user/Documents/Codex/FedCore-Sparse-CV-A100-2026-10-21/tmp-reporting-red-2026-10-22/test_evolution_saves_portable_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000019FD7C9A3E0>
+
+    def test_evolution_saves_portable_genotypes_without_mutating_typed_result(tmp_path, monkeypatch):
+        from fedcore.algorithm.low_rank import grammar_search
+        from fedcore.algorithm.low_rank.cv_grammar import CVGenotype, cv_genotype_payload
+        result = search_result()
+        identities = [pilot.solution_id(value) for value in result["best_genotypes"]]
+        output = runtime.Output(tmp_path / "out")
+        owner = SimpleNamespace(protocol=PilotProtocol(), records={}, space=object(), output=output,
+                                prefix=pilot.fixed_prefix(pilot.cv_menu()), short=lambda *args: None)
+        monkeypatch.setattr(grammar_search, "run_cv_grammar_search", lambda *args, **kwargs: result)
+>       returned = pilot.Pilot.evolution(owner, time.perf_counter() + 60)
+
+tests\refactoring\test_sparse_cv_search_reporting.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_sparse_pilot.py:209: in evolution
+    self.output.json("search/evolution.json", _canonical(result))
+fedcore\experiments\cv_sparse_runtime.py:234: in json
+    json.dump(value, stream, sort_keys=True, indent=2, allow_nan=False)
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\__init__.py:179: in dump
+    for chunk in iterable:
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:431: in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:405: in _iterencode_dict
+    yield from chunks
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:325: in _iterencode_list
+    yield from chunks
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:438: in _iterencode
+    o = _default(o)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <json.encoder.JSONEncoder object at 0x0000019FE1D0E080>
+o = CVGenotype(genes=(CVScopeGene(path='layer1.0', choice=ChannelPrune(keep_channels=48), recovery=NoRecovery()), CVScopeG...ery()), CVScopeGene(path='layer4.1', choice=ChannelPrune(keep_channels=384), recovery=NoRecovery())), schema_version=1)
+
+    def default(self, o):
+        """Implement this method in a subclass such that it returns
+        a serializable object for ``o``, or calls the base implementation
+        (to raise a ``TypeError``).
+    
+        For example, to support arbitrary iterators, you could
+        implement default like this::
+    
+            def default(self, o):
+                try:
+                    iterable = iter(o)
+                except TypeError:
+                    pass
+                else:
+                    return list(iterable)
+                # Let the base class default method raise the TypeError
+                return JSONEncoder.default(self, o)
+    
+        """
+>       raise TypeError(f'Object of type {o.__class__.__name__} '
+                        f'is not JSON serializable')
+E       TypeError: Object of type CVGenotype is not JSON serializable
+
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:179: TypeError
+_______ test_run_pilot_projects_typed_evolution_again_for_final_report ________
+
+tmp_path = WindowsPath('C:/Users/user/Documents/Codex/FedCore-Sparse-CV-A100-2026-10-21/tmp-reporting-red-2026-10-22/test_run_pilot_projects_typed_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000019FE1EB7940>
+
+    def test_run_pilot_projects_typed_evolution_again_for_final_report(tmp_path, monkeypatch):
+        from fedcore.experiments import cv_sparse_data
+        result = search_result()
+        prefix = pilot.fixed_prefix(pilot.cv_menu())
+        data = SimpleNamespace(roles=SimpleNamespace(sha256="b" * 64, payload=lambda: {}), source_hashes={})
+        class FakeRuntime:
+            def __init__(self, protocol, output, started):
+                self.deadline = started + 60
+                self.environment = {}
+                self.torch = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda: 0,
+                                                                 max_memory_reserved=lambda: 0))
+            def phase(self, name):
+                return nullcontext(self.deadline)
+            def check(self, *args, **kwargs):
+                pass
+        class FakePilot:
+            def __init__(self, runtime, data):
+                self.prefix = prefix
+                self.gpu = object()
+                self.genotypes = {}
+                self.records = {"random": [], "evolution": []}
+                self.byte_ceiling = 80
+                self.space = SimpleNamespace(source_storage_bytes=100)
+            def bind_teacher(self, teacher):
+                pass
+            def short(self, *args):
+                pass
+            def random_search(self, deadline):
+                return {"status": "completed"}
+            def evolution(self, deadline):
+                return result
+        def stop_before_recovery(*args):
+            raise runtime.PilotStop("recovery", "test_boundary_before_numerics")
+        monkeypatch.setattr(pilot, "preparation", lambda *args: {"status": "prepared", "source": {}})
+        monkeypatch.setattr(pilot, "admit_free_gpu", lambda: {})
+        monkeypatch.setattr(pilot, "Runtime", FakeRuntime)
+        monkeypatch.setattr(pilot, "Pilot", FakePilot)
+        monkeypatch.setattr(cv_sparse_data, "CifarData", lambda *args, **kwargs: data)
+        monkeypatch.setattr(pilot.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(stdout=""))
+        monkeypatch.setattr(pilot, "verify_loaded_sources", lambda *args: {})
+        monkeypatch.setattr(pilot, "train_baseline", lambda *args: (object(), {"top1": .95}, {}))
+        monkeypatch.setattr(pilot, "checkpoint", lambda *args, **kwargs: ({"artifact_id": "a" * 64}, object()))
+        monkeypatch.setattr(pilot, "torchscript_artifact", lambda *args: (object(), {}))
+        monkeypatch.setattr(pilot, "independent_torchscript", lambda *args: object())
+        monkeypatch.setattr(pilot, "paired_latency", lambda *args, **kwargs: {"accepted": True})
+        monkeypatch.setattr(pilot, "recovery_tape", stop_before_recovery)
+>       returned = pilot.run_pilot(tmp_path / "data", tmp_path / "out", tmp_path / "source.json")
+
+tests\refactoring\test_sparse_cv_search_reporting.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_sparse_pilot.py:404: in run_pilot
+    output.json("report.json", report)
+fedcore\experiments\cv_sparse_runtime.py:234: in json
+    json.dump(value, stream, sort_keys=True, indent=2, allow_nan=False)
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\__init__.py:179: in dump
+    for chunk in iterable:
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:431: in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:405: in _iterencode_dict
+    yield from chunks
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:405: in _iterencode_dict
+    yield from chunks
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:325: in _iterencode_list
+    yield from chunks
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:438: in _iterencode
+    o = _default(o)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <json.encoder.JSONEncoder object at 0x0000019FE1CDCBB0>
+o = CVGenotype(genes=(CVScopeGene(path='layer1.0', choice=ChannelPrune(keep_channels=48), recovery=NoRecovery()), CVScopeG...ery()), CVScopeGene(path='layer4.1', choice=ChannelPrune(keep_channels=384), recovery=NoRecovery())), schema_version=1)
+
+    def default(self, o):
+        """Implement this method in a subclass such that it returns
+        a serializable object for ``o``, or calls the base implementation
+        (to raise a ``TypeError``).
+    
+        For example, to support arbitrary iterators, you could
+        implement default like this::
+    
+            def default(self, o):
+                try:
+                    iterable = iter(o)
+                except TypeError:
+                    pass
+                else:
+                    return list(iterable)
+                # Let the base class default method raise the TypeError
+                return JSONEncoder.default(self, o)
+    
+        """
+>       raise TypeError(f'Object of type {o.__class__.__name__} '
+                        f'is not JSON serializable')
+E       TypeError: Object of type CVGenotype is not JSON serializable
+
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\json\encoder.py:179: TypeError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_sparse_cv_search_reporting.py::test_evolution_saves_portable_genotypes_without_mutating_typed_result
+FAILED tests/refactoring/test_sparse_cv_search_reporting.py::test_run_pilot_projects_typed_evolution_again_for_final_report
+2 failed in 2.05s

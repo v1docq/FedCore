@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="27.362" timestamp="2026-10-15T12:40:55.628683+03:00" hostname="16-321-IRevin"><testcase classname="tests.refactoring.test_root_dask" name="test_real_caller_owned_dask_client_survives_training" time="10.023"><failure message="AssertionError">tmp_path = Path('C:/Users/user/Documents/Codex/FedCore-SVD-Third-QA-2026-10-15/dask-repro-01/caller-temp/test_real_caller_owned_dask_cl0')
+
+    def test_real_caller_owned_dask_client_survives_training(tmp_path):
+        model = identity_model()
+&gt;       cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False,
+                               protocol='inproc', dashboard_address=None, memory_limit=0)
+
+tests\refactoring\test_root_dask.py:9: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\deploy\local.py:253: in __init__
+    super().__init__(
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\deploy\spec.py:283: in __init__
+    self._loop_runner.start()
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py:551: in start
+    self._start_unlocked()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;distributed.utils.LoopRunner object at 0x000001C2E643A620&gt;
+
+    def _start_unlocked(self) -&gt; None:
+        assert not self._started
+    
+        if self._loop is not None:
+            try:
+                count, real_runner = self._all_loops[self._loop]
+            except KeyError:
+                assert self._loop.asyncio_loop.is_running()  # type: ignore[attr-defined]
+                self._started = True
+                return
+    
+            self._all_loops[self._loop] = count + 1, real_runner
+            self._started = True
+            return
+    
+        assert self._loop_thread is None
+    
+        start_evt = threading.Event()
+        start_exc = None
+        loop = None
+    
+        async def amain() -&gt; None:
+            nonlocal loop
+            loop = IOLoop.current()
+            start_evt.set()
+            await self._stop_event.wait()
+    
+        def run_loop() -&gt; None:
+            nonlocal start_exc
+            try:
+                asyncio_run(amain(), loop_factory=get_loop_factory())
+            except BaseException as e:
+                if start_evt.is_set():
+                    raise
+                start_exc = e
+                start_evt.set()
+    
+        self._loop_thread = _CollectErrorThread(
+            target=run_loop, daemon=True, name="IO loop"
+        )
+        start_evt.wait(timeout=10)
+        if start_exc is not None:
+            raise start_exc
+&gt;       assert loop is not None
+E       AssertionError
+
+D:\data_old\WORK\obsidian\Papers_2025\Проекты для разработки\Исследовательские проекты\Fedcore\work\refactoring\.venv\lib\site-packages\distributed\utils.py:596: AssertionError</failure></testcase></testsuite></testsuites>

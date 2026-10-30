@@ -12,6 +12,10 @@ MODEL_KIND = "fedcore_safe_model"
 
 
 def model_descriptor(model):
+    from fedcore.algorithm.low_rank.topology import inspect_topology
+    topology = inspect_topology(model)
+    if topology.module_aliases or topology.parameter_aliases or topology.storage_aliases:
+        raise ContractError('unsupported_topology', 'Portable model bundles do not support shared modules, Parameters or storage views', 'model')
     if type(model) is nn.Linear:
         config = {"in_features": model.in_features, "out_features": model.out_features, "bias": model.bias is not None}
     elif type(model) in (nn.Conv1d, nn.Conv2d):

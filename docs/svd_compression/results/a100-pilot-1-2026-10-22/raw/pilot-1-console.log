@@ -1,0 +1,7 @@
+/root/fedcore_sparse_cv_20261021/.venv/lib/python3.10/site-packages/hyperopt/atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2026-10-22 13:28:59,180 - Trying to use device <cuda>
+2026-10-22 13:28:59,180 - Device <cuda:0> is selected
+2026-10-22 13:28:59,181 - ModelRegistry initialized: auto_cleanup=False, base_dir=/root/fedcore_sparse_cv_20261021/results/pilot-1/registry
+2026-10-22 13:28:59,181 - Device <cuda:0> is selected
+2026-10-22 13:28:59,181 - Device <cuda:0> is selected

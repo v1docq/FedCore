@@ -1,0 +1,16 @@
+{
+  "schema": "fedcore-poststop-guard-cpu-checks-v1",
+  "tests_passed": true,
+  "torch_imported": false,
+  "numerical_gpu_launches": 0,
+  "seconds": 0.7701401934027672,
+  "source_files_sha256": {
+    "fedcore/__init__.py": "b0ed1246c999a9ea05630b1109724893daf59d9a745e290ab114aaf362714b30",
+    "fedcore/experiments/__init__.py": "77380e8dfe2c5373ccccedf48d9595cf00d45af2f0915a35bafca22c0bb9d6db",
+    "fedcore/experiments/cv_independent_supervision.py": "52f16655b8c6e62e1b4e1288a9168257b78f055c30e876cd1ed7ed13e8ffa37f",
+    "fedcore/experiments/cv_independent_guard.py": "4910c9194b4a89ab227f6f2b31860f2c375ffdd648beeb82fb7d3a0d55f48dad",
+    "tests/refactoring/test_cv_independent_supervision.py": "0dc4b398e6e5fb876ac004f7c9329935b31523500beade72eef29a3139971779",
+    "tests/refactoring/test_cv_independent_guard.py": "3c1b611079fe6240b0d2099d27b92522bbaa3ddee9832e923a71a45df99c184f"
+  },
+  "scope": "Only CPU fakes of guard v2; no host observer, CUDA, real GPU telemetry, models or experiment retry."
+}

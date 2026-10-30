@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-21",
+  "cwd": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Sparse-Integration-2026-10-21\\checkout",
+  "python": "C:\\Users\\user\\Documents\\Codex\\FedCore-SVD-Sparse-Integration-2026-10-21\\.venv\\Scripts\\python.exe",
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "HF_DATASETS_OFFLINE": "1",
+    "PYTHONUTF8": "1",
+    "OMP_NUM_THREADS": "2",
+    "MKL_NUM_THREADS": "2",
+    "OPENBLAS_NUM_THREADS": "2",
+    "NUMEXPR_NUM_THREADS": "2",
+    "TEMP": "task-private tmp",
+    "TMP": "task-private tmp"
+  },
+  "commands": [
+    {
+      "name": "collect-core",
+      "environment": "Original CPU runtime without optional transformers; read-only dependencies",
+      "argv": [
+        "-m",
+        "pytest",
+        "--collect-only",
+        "-q",
+        "tests/refactoring",
+        "tests/petra",
+        "tests/unit/algorithm/low_rank",
+        "tests/unit/low_rank/test_statistical_profiles.py",
+        "tests/unit/low_rank/test_statistical_collectors.py"
+      ],
+      "log": "collect-core.log"
+    },
+    {
+      "name": "targeted-before-fix",
+      "argv": [
+        "-m",
+        "pytest",
+        "-q",
+        "tests/refactoring/test_svd_sparse_coexistence.py",
+        "tests/refactoring/test_losparse_v2_independent.py",
+        "tests/refactoring/test_sparse_integration.py",
+        "tests/refactoring/test_sparse_pretrained_v2.py",
+        "tests/refactoring/test_sparse_v2_data_independent.py",
+        "tests/refactoring/test_svd_execution.py",
+        "tests/refactoring/test_svd_p2_execution.py",
+        "--basetemp",
+        "<task-root>/pytest-targeted"
+      ],
+      "log": "targeted-tests.log"
+    },
+    {
+      "name": "targeted-after-fix",
+      "same_test_list_as": "targeted-before-fix",
+      "basetemp": "<task-root>/pytest-targeted-final",
+      "log": "targeted-tests-final.log"
+    },
+    {
+      "name": "broad",
+      "argv": [
+        "-m",
+        "pytest",
+        "-q",
+        "tests/refactoring",
+        "tests/petra",
+        "tests/unit/algorithm/low_rank",
+        "tests/unit/low_rank/test_statistical_profiles.py",
+        "tests/unit/low_rank/test_statistical_collectors.py",
+        "--ignore=tests/refactoring/test_core_packaging.py",
+        "--basetemp",
+        "<task-root>/pytest-broad"
+      ],
+      "log": "broad-tests.log"
+    },
+    {
+      "name": "packaging",
+      "argv": [
+        "-m",
+        "pytest",
+        "-q",
+        "tests/refactoring/test_core_packaging.py",
+        "--basetemp",
+        "<task-root>/pytest-packaging"
+      ],
+      "log": "packaging-tests.log"
+    },
+    {
+      "name": "example-secrets",
+      "argv": [
+        "scripts/check_example_secrets.py",
+        "examples"
+      ],
+      "log": "example-secrets.log"
+    }
+  ],
+  "execution": "Sequential CPU checks; no training/benchmark experiment series or cluster jobs. Pytest may run tiny synthetic optimization steps as contract tests."
+}

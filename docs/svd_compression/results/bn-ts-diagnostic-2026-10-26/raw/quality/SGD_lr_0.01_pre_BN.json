@@ -1,0 +1,33 @@
+{
+  "SGD_updates": 200,
+  "additional_BN_calibration": false,
+  "artifact_id": "4181324b736d539f0f24cdc76b4e87820bdd30dde915ec60d6d9f47c60d0e38c",
+  "completed_within_deadline": true,
+  "cpu_gpu_probe_max_abs": 2.384185791015625e-06,
+  "file_bytes": 44781374,
+  "gpu_reload_exact": true,
+  "inventory_fingerprint": "c53f67f0af193a72922e6f7c771099997d6d15247742012e94d2cc448df69034",
+  "lr": 0.01,
+  "path": "checkpoints/SGD_lr_0.01_pre_BN.pt",
+  "phase": "diagnostic_SGD_lr_0.01_pre_BN",
+  "recovery_tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+  "sha256": "6956ca51bdb6a55886594163eff78f597832a641a866b20701a58fca9fdd7dd7",
+  "solution_id": "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+  "tensor_bytes": 44734408,
+  "training": {
+    "additional_BN_calibration": false,
+    "lr": 0.01,
+    "optimizer": "fresh_SGD_momentum_0.9_nesterov_weight_decay_0.0005",
+    "tape_sha256": "96210c5bfccab042e699e870fab514abaf9d3b7da89e4e304230de81a9eb301f",
+    "training_BN_updates": true,
+    "updates": 200
+  },
+  "validation": {
+    "correct": 4728,
+    "cross_entropy": 0.2177100896508445,
+    "prediction_file": "predictions/SGD_lr_0.01_pre_BN.npz",
+    "prediction_sha256": "4a1ac475106d023b9112288aec3abb0f83ce159990c8bdd9e4aae8fc0ed3a4d5",
+    "rows": 5000,
+    "top1": 0.9456
+  }
+}

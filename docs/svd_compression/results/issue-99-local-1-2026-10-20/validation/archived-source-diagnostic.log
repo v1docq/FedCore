@@ -1,0 +1,49 @@
+C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[
+  {
+    "seed": 41,
+    "roles": [
+      "calibration",
+      "train",
+      "validation"
+    ],
+    "label_dtypes": {
+      "calibration": "torch.int64",
+      "train": "torch.int64",
+      "validation": "torch.int64"
+    },
+    "archived_role_hashes_match": true,
+    "models_loaded": false
+  },
+  {
+    "seed": 42,
+    "roles": [
+      "calibration",
+      "train",
+      "validation"
+    ],
+    "label_dtypes": {
+      "calibration": "torch.int64",
+      "train": "torch.int64",
+      "validation": "torch.int64"
+    },
+    "archived_role_hashes_match": true,
+    "models_loaded": false
+  },
+  {
+    "seed": 43,
+    "roles": [
+      "calibration",
+      "train",
+      "validation"
+    ],
+    "label_dtypes": {
+      "calibration": "torch.int64",
+      "train": "torch.int64",
+      "validation": "torch.int64"
+    },
+    "archived_role_hashes_match": true,
+    "models_loaded": false
+  }
+]

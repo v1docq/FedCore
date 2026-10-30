@@ -1,0 +1,76 @@
+..................................................FF.F.F.............    [100%]
+================================== FAILURES ===================================
+_ test_one_unmapped_runtime_row_stops_after_valid_sample_without_querying_later_empty_row _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2469/test_one_unmapped_runtime_row_0')
+
+    def test_one_unmapped_runtime_row_stops_after_valid_sample_without_querying_later_empty_row(tmp_path):
+        harness = Harness([(), ('80501, 10'), ('99999, 20'), ()])
+        result = run(harness, tmp_path)
+>       assert result['reason'] == 'gpu_identity_unverified' and result['status'] == 'stopped'
+E       AssertionError: assert ('telemetry_unavailable' == 'gpu_identity_unverified'
+E         
+E         - gpu_identity_unverified
+E         + telemetry_unavailable)
+
+tests\refactoring\test_cv_independent_guard.py:179: AssertionError
+_________ test_foreign_gpu_lifetime_is_never_a_cleanup_signal_target __________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2469/test_foreign_gpu_lifetime_is_n0')
+
+    def test_foreign_gpu_lifetime_is_never_a_cleanup_signal_target(tmp_path):
+        harness = Harness([(), ('80900, 10')])
+    
+        def provider(rows, owned):
+            return NamespaceBinding(verified=True, entries=(PidBinding(80900, ProcessIdentity(900, 1900.)),),
+                                    evidence='test external observer')
+    
+        result = run(harness, tmp_path, provider=provider)
+>       assert result['reason'] == 'foreign_gpu_process'
+E       AssertionError: assert 'telemetry_unavailable' == 'foreign_gpu_process'
+E         
+E         - foreign_gpu_process
+E         + telemetry_unavailable
+
+tests\refactoring\test_cv_independent_guard.py:192: AssertionError
+_ test_verified_owned_gpu_sample_finishes_with_private_session_and_narrow_deadline _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2469/test_verified_owned_gpu_sample0')
+
+    def test_verified_owned_gpu_sample_finishes_with_private_session_and_narrow_deadline(tmp_path):
+        harness = Harness([(), ('80501, 10')])
+        harness.finish_on_poll = True
+        result = run(harness, tmp_path)
+>       assert result['status'] == 'finished' and result['returncode'] == 0
+E       AssertionError: assert ('stopped' == 'finished'
+E         
+E         - finished
+E         + stopped)
+
+tests\refactoring\test_cv_independent_guard.py:214: AssertionError
+_ test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree[vram-vram_limit] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2469/test_live_bridge_enforces_froz1')
+resource = 'vram', reason = 'vram_limit'
+
+    @pytest.mark.parametrize('resource,reason', [('rss', 'tree_rss_limit'), ('vram', 'vram_limit')])
+    def test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree(tmp_path, resource, reason):
+        harness = Harness([(), ('80501, 17000') if resource == 'vram' else ()])
+        if resource == 'rss':
+            harness.worker.rss = MAX_RSS_BYTES+1
+        result = run(harness, tmp_path)
+>       assert result['status'] == 'stopped' and result['reason'] == reason
+E       AssertionError: assert ('stopped' == 'stopped'
+E         
+E           stopped and 'telemetry_unavailable' == 'vram_limit'
+E         
+E         - vram_limit
+E         + telemetry_unavailable)
+
+tests\refactoring\test_cv_independent_guard.py:229: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_cv_independent_guard.py::test_one_unmapped_runtime_row_stops_after_valid_sample_without_querying_later_empty_row
+FAILED tests/refactoring/test_cv_independent_guard.py::test_foreign_gpu_lifetime_is_never_a_cleanup_signal_target
+FAILED tests/refactoring/test_cv_independent_guard.py::test_verified_owned_gpu_sample_finishes_with_private_session_and_narrow_deadline
+FAILED tests/refactoring/test_cv_independent_guard.py::test_live_bridge_enforces_frozen_memory_caps_and_stops_owned_tree[vram-vram_limit]
+4 failed, 65 passed in 1.05s

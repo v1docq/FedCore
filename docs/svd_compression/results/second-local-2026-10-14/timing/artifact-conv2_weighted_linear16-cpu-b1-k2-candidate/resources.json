@@ -1,0 +1,277 @@
+{
+  "admission": {
+    "before_worker_spawn": true,
+    "elapsed_seconds": 2.7810000000026776,
+    "extra_wait_seconds": 0.0,
+    "mandatory_observation_seconds": 2.7810000000026776,
+    "protocol_sha256": "ebb27bb08ca15228c06f59e0502acbc9f8b78c30d13f1adf42932905ad7f6b1c",
+    "samples": [
+      {
+        "elapsed_seconds": 0.25,
+        "quiet_streak": 1,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14625697792,
+          "cpu_percent": 3.0,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14691.0,
+            "physical_used_mib": 1360.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791987552.4412875
+        }
+      },
+      {
+        "elapsed_seconds": 1.514999999999418,
+        "quiet_streak": 2,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14597656576,
+          "cpu_percent": 1.0,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791987553.711928
+        }
+      },
+      {
+        "elapsed_seconds": 2.7810000000026776,
+        "quiet_streak": 3,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14611075072,
+          "cpu_percent": 0.0,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791987554.9783373
+        }
+      }
+    ],
+    "session_id": "artifact-conv2_weighted_linear16-cpu-b1-k2-candidate",
+    "status": "admitted"
+  },
+  "command": [
+    "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+    "-m",
+    "fedcore.experiments.svd_second_package",
+    "--output",
+    "local-svd-second-package",
+    "--worker",
+    "timing",
+    "--job",
+    "local-svd-second-package\\timing\\artifact-conv2_weighted_linear16-cpu-b1-k2-candidate\\job.json"
+  ],
+  "elapsed_seconds": 2.864801499999885,
+  "maximum_recursive_rss_bytes": 378388480,
+  "post_exit_observation": {
+    "drain_seconds": 2.2,
+    "elapsed_seconds": 2.811999999998079,
+    "extra_wait_seconds": 0.0,
+    "mandatory_observation_seconds": 2.811999999998079,
+    "samples": [
+      {
+        "elapsed_seconds": 0.2649999999994179,
+        "quiet_streak": 1,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14647214080,
+          "cpu_percent": 1.2,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14691.0,
+            "physical_used_mib": 1360.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791987560.325128
+        }
+      },
+      {
+        "elapsed_seconds": 1.5460000000020955,
+        "quiet_streak": 2,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14645415936,
+          "cpu_percent": 1.1,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14682.0,
+            "physical_used_mib": 1369.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791987561.6010308
+        }
+      },
+      {
+        "elapsed_seconds": 2.811999999998079,
+        "quiet_streak": 3,
+        "reasons": [],
+        "sample": {
+          "available_ram_bytes": 14639845376,
+          "cpu_percent": 2.3,
+          "gpu": {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4080",
+            "physical_free_mib": 14680.0,
+            "physical_used_mib": 1371.0,
+            "utilization_percent": 0.0
+          },
+          "gpu_scope": "global physical device, no attribution",
+          "observer_pid": 73860,
+          "utc_epoch": 1791987562.877682
+        }
+      }
+    ],
+    "status": "admitted",
+    "worker_exited": true,
+    "worker_returncode": 0
+  },
+  "returncode": 0,
+  "samples": [
+    {
+      "available_ram_bytes": 14604107776,
+      "elapsed_seconds": 0.04233810000005178,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 14811136
+    },
+    {
+      "available_ram_bytes": 14523895808,
+      "elapsed_seconds": 0.2751101999965613,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 208637952
+    },
+    {
+      "available_ram_bytes": 14467108864,
+      "elapsed_seconds": 0.506692099996144,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 269598720
+    },
+    {
+      "available_ram_bytes": 14440386560,
+      "elapsed_seconds": 0.7401624999984051,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 306511872
+    },
+    {
+      "available_ram_bytes": 14451965952,
+      "elapsed_seconds": 0.9799182999995537,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 322134016
+    },
+    {
+      "available_ram_bytes": 14444867584,
+      "elapsed_seconds": 1.207559800001036,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 330534912
+    },
+    {
+      "available_ram_bytes": 14443323392,
+      "elapsed_seconds": 1.43923260000156,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 339288064
+    },
+    {
+      "available_ram_bytes": 14437507072,
+      "elapsed_seconds": 1.6750542000008863,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 343617536
+    },
+    {
+      "available_ram_bytes": 14436999168,
+      "elapsed_seconds": 1.9095009999946342,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "import",
+      "tree_sum_rss_bytes": 349847552
+    },
+    {
+      "available_ram_bytes": 14412464128,
+      "elapsed_seconds": 2.150724999999511,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "setup",
+      "tree_sum_rss_bytes": 378085376
+    },
+    {
+      "available_ram_bytes": 14414286848,
+      "elapsed_seconds": 2.406002999996417,
+      "owned_pids": [
+        44620,
+        31372
+      ],
+      "stage": "timed",
+      "tree_sum_rss_bytes": 378388480
+    },
+    {
+      "available_ram_bytes": 14633893888,
+      "elapsed_seconds": 2.6502680999983568,
+      "owned_pids": [
+        44620
+      ],
+      "stage": "done",
+      "tree_sum_rss_bytes": 0
+    }
+  ],
+  "schema": 2,
+  "session_id": "artifact-conv2_weighted_linear16-cpu-b1-k2-candidate",
+  "violation": null,
+  "worker_pid": 44620
+}

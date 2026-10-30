@@ -1,0 +1,33 @@
+{
+  "conclusion": "success",
+  "jobs": [
+    {
+      "conclusion": "success",
+      "name": "optional-llm"
+    },
+    {
+      "conclusion": "success",
+      "name": "optional-export-service"
+    },
+    {
+      "conclusion": "success",
+      "name": "cpu (windows-latest, 3.10)"
+    },
+    {
+      "conclusion": "success",
+      "name": "cpu (windows-latest, 3.11)"
+    },
+    {
+      "conclusion": "success",
+      "name": "cpu (ubuntu-latest, 3.10)"
+    },
+    {
+      "conclusion": "success",
+      "name": "cpu (ubuntu-latest, 3.11)"
+    }
+  ],
+  "source_commit": "3bc0825a9ef1bcd0ac8eb0181b6d5314b57ebb8d",
+  "status": "completed",
+  "url": "https://github.com/v1docq/FedCore/actions/runs/39617339533",
+  "workflow_run_id": 39617339533
+}

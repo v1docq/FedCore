@@ -1,0 +1,113 @@
+.report-page {
+  --data-app-layout-intent: authored-report;
+  --data-app-content-width: 1120px;
+  max-width: calc(var(--data-app-content-width) + 2 * var(--data-app-report-gutter));
+  margin-inline: auto;
+  padding: 40px var(--data-app-report-gutter) 96px;
+}
+
+.local2-report {
+  display: grid;
+  width: 100%;
+  gap: 40px;
+  min-width: 0;
+  margin-inline: 0;
+}
+
+.local2-report > *,
+.local2-report .local2-group > * {
+  min-width: 0;
+}
+
+.local2-report .local2-group {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.local2-report .local2-hero {
+  display: grid;
+  gap: 20px;
+}
+
+.local2-report .local2-hero h1 {
+  max-width: 100%;
+  margin: 0;
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.local2-report .report-deck {
+  color: var(--secondary);
+}
+
+.local2-report :is(.rich-narrative-content, .report-rich-editable) {
+  font-size: var(--text-md-size, 16px);
+  line-height: 1.6;
+}
+
+.local2-report :is(.rich-narrative-content, .report-rich-editable) :is(h2, h3) {
+  margin-block: 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.local2-report :is(.rich-narrative-content, .report-rich-editable) > :last-child {
+  margin-bottom: 0;
+}
+
+.local2-report .local2-budget-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  min-width: 0;
+}
+
+.local2-report .local2-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.local2-report .local2-table-scroll table {
+  min-width: var(--local2-table-min-width, 640px);
+}
+
+.local2-report .local2-table-scroll:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+}
+
+.local2-report .local2-scope-help {
+  margin: 16px 0 0;
+  color: var(--secondary);
+}
+
+@media (max-width: 900px) {
+  .local2-report .local2-budget-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .report-page {
+    padding: 24px var(--data-app-report-mobile-gutter) 72px;
+  }
+
+  .local2-report {
+    gap: 32px;
+  }
+
+  .local2-report .local2-group {
+    gap: 20px;
+  }
+
+  .local2-report .local2-hero h1 {
+    font-size: 36px;
+  }
+}

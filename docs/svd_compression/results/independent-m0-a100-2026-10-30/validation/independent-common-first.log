@@ -1,0 +1,64 @@
+F...............                                                         [100%]
+================================== FAILURES ===================================
+__________ test_compilation_failures_are_charged_once_before_compile __________
+
+    def test_compilation_failures_are_charged_once_before_compile():
+        space,prefix=space_and_prefix();compiled=[];events=[]
+        def compile_failure(genotype, _space):
+            assert events[-1]['event']=='evaluation_started'
+            compiled.append(genotype)
+            return ValidationFailure((Violation('ForcedFailure','layer','expected compile failure'),))
+        adapter=replace(G3_GRAMMAR_ADAPTER,compile=compile_failure)
+        result=run_grammar_search(space,GrammarSearchConfig(population_size=4,generations=1,
+            max_evaluations=2,max_proposals=8,max_seconds=15),
+            lambda _:pytest.fail('A failed compilation must not run the evaluator'),
+            fitness_context='strict compile failures',initial_genotypes=prefix,
+            grammar_adapter=adapter,charge_before_compile=True,trace_callback=events.append)
+        starts=[e for e in events if e['event']=='evaluation_started']
+        ends=[e for e in events if e['event']=='evaluated']
+        assert result['charged_evaluations']==len(compiled)==len(starts)==len(ends)==2
+        assert len({e['canonical_solution_id'] for e in starts})==2
+>       assert all(e['outcome']=='StructuralInvalid' and e['workflow_fingerprint'] is None for e in ends)
+E       assert False
+E        +  where False = all(<generator object test_compilation_failures_are_charged_once_before_compile.<locals>.<genexpr> at 0x000001E149475150>)
+
+tests\refactoring\test_independent_search_accounting.py:41: AssertionError
+---------------------------- Captured stdout call -----------------------------
+2026-10-30 14:15:06,236 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-30 14:15:06,236 - FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+2026-10-30 14:15:06,237 - FedcoreDispatcher - Number of used CPU's: 1
+2026-10-30 14:15:06,237 - FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+2026-10-30 14:15:06,238 - Objective - Objective evaluation error for graph {'depth': 1, 'length': 1, 'nodes': [compression_genotype]} on metric heldout_quality: Execution has no fitness: CallbackFailure
+2026-10-30 14:15:06,419 - Objective - Objective evaluation error for graph {'depth': 1, 'length': 1, 'nodes': [compression_genotype]} on metric heldout_quality: Execution has no fitness: CallbackFailure
+2026-10-30 14:15:06,579 - OptimisationTimer - Composition time: 0.006 min
+2026-10-30 14:15:06,579 - FedcoreEvoOptimizer - Generation num: 1 size: 0
+2026-10-30 14:15:06,579 - FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (0): []
+2026-10-30 14:15:06,579 - FedcoreEvoOptimizer - no improvements for 1 iterations
+2026-10-30 14:15:06,579 - FedcoreEvoOptimizer - spent time: 0.0 min
+------------------------------ Captured log call ------------------------------
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+INFO     root:fedcore_dispatcher.py:249 FedcoreDispatcher - evaluate_population: 4 total, 4 to evaluate, 0 to skip
+INFO     root:utilities.py:20 FedcoreDispatcher - Number of used CPU's: 1
+INFO     root:fedcore_dispatcher.py:54 FedcoreDispatcher - _multithread_eval: Evaluating 4 individuals, is_singlethread_regime=True
+ERROR    root:objective.py:66 Objective - Objective evaluation error for graph {'depth': 1, 'length': 1, 'nodes': [compression_genotype]} on metric heldout_quality: Execution has no fitness: CallbackFailure
+ERROR    root:objective.py:66 Objective - Objective evaluation error for graph {'depth': 1, 'length': 1, 'nodes': [compression_genotype]} on metric heldout_quality: Execution has no fitness: CallbackFailure
+INFO     root:timer.py:77 OptimisationTimer - Composition time: 0.006 min
+INFO     root:fedcore_optimizer.py:211 FedcoreEvoOptimizer - Generation num: 1 size: 0
+INFO     root:fedcore_optimizer.py:212 FedcoreEvoOptimizer - Best individuals: ParetoFront archive fitness (0): []
+INFO     root:fedcore_optimizer.py:214 FedcoreEvoOptimizer - no improvements for 1 iterations
+INFO     root:fedcore_optimizer.py:215 FedcoreEvoOptimizer - spent time: 0.0 min
+============================== warnings summary ===============================
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_independent_search_accounting.py::test_compilation_failures_are_charged_once_before_compile
+1 failed, 15 passed, 3 warnings in 28.30s

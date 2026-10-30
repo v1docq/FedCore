@@ -1,0 +1,75 @@
+{
+  "BN_factor": "extra reset/calibration; training BN still updates normally",
+  "SGD_trajectories": 10,
+  "automatic_retry": false,
+  "baseline_training_from_scratch": false,
+  "batch": 128,
+  "common_tape_seed": 990032,
+  "completion_inventory_sha256": "c83086ca9f152969aadac7cc41fb750db10aaf78628d430d277d5bd809738d1f",
+  "completion_report_sha256": "2aa82ef99dd7a3137900c191c2fd9d1890f3cdeca6311fedbefee43156d22303",
+  "dense_six_predictions_exact_replay_required": true,
+  "diagnostic_inventory_sha256": "8143a54166160a8f3f61bc8cc76bdc5c73956e496dcb5bd0ac6bf22005798ee7",
+  "diagnostic_report_sha256": "a73489d743b541d58e267e9df75f01557499c92f552cd44c77909466a27848a9",
+  "extra_BN_modes": [
+    "preserve_training_statistics",
+    "reset_and_recalibrate"
+  ],
+  "extra_BN_rows": 1000,
+  "families": [
+    [
+      "M0",
+      "4bb353479eb43b34eebaadeeb8c9ecea779a4ea270444a2ee5e224260c6fe41b",
+      44734408
+    ],
+    [
+      "P75",
+      "ed4d9d408edac3745137924481ca983c7738900c4bbef8eee66a7d884f41c603",
+      33741256
+    ],
+    [
+      "R",
+      "211ec99046465bfcf6bb3046f6798d2cba3a4cac6b2c09fae408074e9d010c40",
+      33593288
+    ],
+    [
+      "E",
+      "ee8d9a0d94d06a62cdd86e3837749454b79225b79f71cb0a653a16a972a7bd94",
+      33316040
+    ],
+    [
+      "hybrid",
+      "62799456f5f1877195b8691469eee3b4c43c3564b6a699b33ed8efe30e329dfd",
+      25733576
+    ]
+  ],
+  "latency_sessions": 0,
+  "learning_rates": [
+    0.01,
+    0.001
+  ],
+  "max_seconds": 1800,
+  "new_search": false,
+  "no_implicit_extra_BN_during_build": true,
+  "official_test_access": false,
+  "optimizer": "fresh SGD; momentum=.9; nesterov=True; weight_decay=.0005",
+  "original_M0_fresh_build_for_each_family": true,
+  "prior_seconds": 3648.862081296742,
+  "quality_rows_per_variant": 5000,
+  "quality_variants": 30,
+  "schema": "fedcore_recovery_extra_bn_matrix_v1",
+  "stages": {
+    "close": 300,
+    "manifest": 300,
+    "quality": 1200
+  },
+  "states": [
+    "no_SGD",
+    "SGD_lr_0.01",
+    "SGD_lr_0.001"
+  ],
+  "total_authorized_seconds": 14400,
+  "total_updates": 2000,
+  "total_validation_rows": 150000,
+  "updates_per_trajectory": 200,
+  "worker_seconds": 1790
+}

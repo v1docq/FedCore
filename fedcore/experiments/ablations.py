@@ -32,11 +32,9 @@ def _hash_model(model):
 
 
 def _replace(model, path, layer):
-    if not path:
-        return layer
-    parent, _, leaf = path.rpartition(".")
-    setattr(model.get_submodule(parent) if parent else model, leaf, layer)
-    return model
+    from fedcore.algorithm.low_rank.topology import validate_parameter_topology, replace_modules_atomically
+    validate_parameter_topology(model, [path])
+    return replace_modules_atomically(model, {path: layer})
 
 
 def _loader(split, batch_size):
@@ -393,12 +391,15 @@ def run_validity_ablation(bundle, protocol, output_dir, *, proposals, validator,
 
 def _merged_lora(model):
     from fedcore.models.network_modules.layers.lora import LoRALayer
+    from fedcore.algorithm.low_rank.topology import validate_parameter_topology, replace_modules_atomically
     result = deepcopy(model).eval()
+    replacements = {}
     for name, layer in list(result.named_modules()):
         if isinstance(layer, LoRALayer):
             layer.merge(safe_merge=True)
-            result = _replace(result, name, deepcopy(layer.base_layer))
-    return result
+            replacements[name] = deepcopy(layer.base_layer)
+    validate_parameter_topology(result, replacements)
+    return replace_modules_atomically(result, replacements)
 
 
 def run_training_cost_controls(bundle, protocol, output_dir, *, lora_rank=1, backend="fbgemm", baseline_checkpoint=None):

@@ -1,0 +1,16 @@
+{
+  "schema": "fedcore-recovery-bn-preservation-v1",
+  "checked_utc": "2026-10-26T11:19:26.340259+00:00",
+  "consumed_parent_files_verified": {
+    "completion": 6,
+    "diagnostic": 10
+  },
+  "old_parent_files_verified": 176,
+  "old_package_files_verified": {
+    "original": 313,
+    "completion": 314,
+    "diagnostic": 316
+  },
+  "old_wheels_unchanged": true,
+  "gpu_compute_processes_after": ""
+}

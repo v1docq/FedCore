@@ -1,0 +1,94 @@
+{
+  "binary_models": "retained on A100; all file hashes, sizes and Torch ZIP storage sizes recorded",
+  "exported_at_utc": "2026-10-22T13:57:51.427147+00:00",
+  "files": {
+    "data-prepared.json": {
+      "bytes": 92,
+      "sha256": "2548bb11a305497f1b3653cb2e8b4cac72951284703352dc44a5a7758e2b820e"
+    },
+    "data_roles.json": {
+      "bytes": 538980,
+      "sha256": "02657ebff2f36eca41744cdd5b093b3b63f2f1beba64a538dd5d90a32345111f"
+    },
+    "environment.json": {
+      "bytes": 476,
+      "sha256": "ee04f8849fe55b338b7564ef31dadbd5389829ad7da2ec4a5743f135e640323c"
+    },
+    "environment_freeze.txt": {
+      "bytes": 3924,
+      "sha256": "327d3185f660307242702ff076c1b09c2e0fd46074d1042c82a134aa56e4698d"
+    },
+    "heartbeats.jsonl": {
+      "bytes": 84048,
+      "sha256": "f937eec2a5f5997d1b1d24d9ba30af9db105d95dd1450ae84902b7021fc966fa"
+    },
+    "imported_sources.json": {
+      "bytes": 6342,
+      "sha256": "2fc8288326fa45e3575ab4eeac4952b59d96de65578c408788387c57c2809ed3"
+    },
+    "interruption-observation-2026-10-22.json": {
+      "bytes": 993,
+      "sha256": "c2f03c3ad1c232c587e3bc80378462321390553a149e6dcb39698f96cc66ab1d"
+    },
+    "launch-packet.json": {
+      "bytes": 1388,
+      "sha256": "2c4034abefd3a4301bda6191af8086018e71440b2d588546383f655bda6e98da"
+    },
+    "launch-receipt-2026-10-22.json": {
+      "bytes": 1259,
+      "sha256": "4a84794571d3b7b03b9de4c0b56fe66850c18c6a5fd3a09b522e8b898e1f3dab"
+    },
+    "ledger.jsonl": {
+      "bytes": 10511,
+      "sha256": "89c59baac5d4bcb08a9a2b9c9cd5129ca689c6f42f655a158934d70df0918c12"
+    },
+    "partial/baseline_epoch_020.pt": {
+      "bytes": 44780798,
+      "sha256": "9983497fc13faffc549e53a143b2d6e1fe9e41a7e04e1322f50f902440822032",
+      "torch_zip_storage_bytes": 44734408,
+      "torch_zip_storage_count": 122
+    },
+    "partial/baseline_epoch_040.pt": {
+      "bytes": 44780798,
+      "sha256": "52b12f6a98b3429841b7536aaf2e7c012a80780dfe5fe5d7bc2eb46408184624",
+      "torch_zip_storage_bytes": 44734408,
+      "torch_zip_storage_count": 122
+    },
+    "pilot-1-console.log": {
+      "bytes": 710,
+      "sha256": "ec5c542a481ce97ed96d56b2418e4dad30c1d33244e48a73f3d395991677bb8a"
+    },
+    "pilot-1-launch-console.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pilot-1-supervision.json": {
+      "bytes": 560,
+      "sha256": "49e073745e7b3c805d5495795ebc9d99ab49391d7dc8a4a4baecfb5367ff2d20"
+    },
+    "pilot-1-supervision.jsonl": {
+      "bytes": 202798,
+      "sha256": "400700ea09c7d4a036a7096ef55fed133b93809b328ed1039135e1baa3e100f8"
+    },
+    "prepared-admission.json": {
+      "bytes": 595,
+      "sha256": "3b287940584c89124656e900afa56829194266726e2fc5add0016d714091635f"
+    },
+    "protocol.json": {
+      "bytes": 2483,
+      "sha256": "ee9b457f32676c6931168c598b627c62c647a2b21b32fd851ece0a52e32db34f"
+    },
+    "source-manifest.json": {
+      "bytes": 37581,
+      "sha256": "5732c95bb51c0afa1fdbdf18bc307ff327b8ffe38e37eb065b5b3b73e9af61e6"
+    },
+    "source_manifest.json": {
+      "bytes": 75122,
+      "sha256": "a0fa02f0c0074fef9c595d82c127aa64797da9c7d04f09c7c7799bd16106519d"
+    }
+  },
+  "pilot_status": "supervisor_interrupted_without_worker_report",
+  "remaining_owned_pids": [],
+  "source_commit": "3bc0825a9ef1bcd0ac8eb0181b6d5314b57ebb8d",
+  "worker_report_present": false
+}

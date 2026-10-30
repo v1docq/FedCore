@@ -1,0 +1,97 @@
+{
+  "AA_after_AB": "M0_post_AB_AA",
+  "AA_before_AB": [
+    "M0_initial_AA",
+    "P75_AA",
+    "R_AA",
+    "E_AA",
+    "hybrid_AA",
+    "M0_pre_AB_AA"
+  ],
+  "AA_sessions": 7,
+  "AB_gate": "own AA plus both pre-AB M0 AA; all comparisons invalidated if post-AB M0 AA fails",
+  "AB_order": [
+    "P75",
+    "R",
+    "E",
+    "hybrid"
+  ],
+  "AB_sessions_max": 4,
+  "TS_official_test_rows": 50000,
+  "TS_validation_CE_atol": 1e-05,
+  "TS_validation_CE_rtol": 1e-05,
+  "TS_validation_predictions_exact": true,
+  "TS_validation_rows": 25000,
+  "additional_BN_calibration": false,
+  "artifacts": [
+    [
+      "M0",
+      "975de01e04cac2bd073beeec030c6a887edc31aa176609971d20c37ff7206889",
+      "791d82534641297e8ece656f2ba3fbf33aac40c37bda4289f2760f3c25250e5a",
+      44734408
+    ],
+    [
+      "P75",
+      "9d45320c7bf9210de9dba27132db094141095459cbe647184a4179a133d9edad",
+      "c8ac14f51f16b43a7087004205a90357b52e02422c95785b9ecc9605ed19f84b",
+      33741256
+    ],
+    [
+      "R",
+      "fcf09ce9e75f07524690dbc13d910109a3b5657d4fc915be3f69885a7443dcd7",
+      "4d314718fba4ab486ef5aa72a626e7ab7de45adda39dba85924608e8b0fcd9ad",
+      33593288
+    ],
+    [
+      "E",
+      "86f685755ffff9acdddb3650bf470c57981b6f1d6e2cbc716a7c936aacdb6586",
+      "41dad637fd49be9572b730d71c3321a0d977ed6f5b9d51271cee9d9f6bd0c1c8",
+      33316040
+    ],
+    [
+      "hybrid",
+      "1bab94c7fd286a1761f513c9c22c2f0edba2b7dcb3e53728cfde5e9a38a6fa02",
+      "72b925bf00756346fc1ece5c794232c93ff4f107da8148baa88134cfc3f8181c",
+      25733576
+    ]
+  ],
+  "automatic_retry": false,
+  "batches": [
+    1,
+    128
+  ],
+  "clocks": [
+    "cuda_event",
+    "synchronized_wall"
+  ],
+  "eager_validation_exact_replay": true,
+  "eager_validation_rows": 25000,
+  "final_comparison_requires_completed_run": true,
+  "latency_pairs_max": 440,
+  "load_policy": "both independent objects directly loaded on CUDA",
+  "max_seconds": 1800,
+  "new_search": false,
+  "official_test_access": true,
+  "official_test_previous_use_disclosed": true,
+  "pairs_per_batch": 20,
+  "parent_inventory_sha256": "e8ec61fa2b8e59350f294c1934196c406668cc7c4b8b07e3bce1a01b88b44e6c",
+  "parent_report_sha256": "dda102a72595317c7f32345806f4c99b95d717a9361ea8592eb28d703590925c",
+  "prior_seconds": 3827.6313528195024,
+  "quality_scope": "descriptive evaluation of frozen validation-selected states; not an untouched final test",
+  "schema": "fedcore_saved_recovery_evaluation_v1",
+  "seal_all_five_sources_and_TS_before_test": true,
+  "stages": {
+    "close": 240,
+    "manifest": 240,
+    "test": 240,
+    "timing": 600,
+    "validation": 480
+  },
+  "test_and_timing_same_persisted_TS": true,
+  "test_population": "same previously used 10000-image official CIFAR-10 test",
+  "timing_calls": 20,
+  "timing_warmup": 20,
+  "total_authorized_seconds": 14400,
+  "training_updates": 0,
+  "worker_seconds": 1790
+}

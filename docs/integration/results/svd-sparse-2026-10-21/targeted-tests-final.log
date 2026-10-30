@@ -1,0 +1,18 @@
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+.............................................................            [100%]
+============================== warnings summary ===============================
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\Lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\Lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+tests/refactoring/test_svd_p2_execution.py::test_fullrank_public_checkpoint_reload_and_torchscript_export[group]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Sparse-Integration-2026-10-21\checkout\fedcore\algorithm\low_rank\structured_layers.py:257: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    if hidden.shape[-1]!=self.embedding_dim:
+
+tests/refactoring/test_svd_p2_execution.py::test_fullrank_public_checkpoint_reload_and_torchscript_export[group]
+  C:\Users\user\Documents\Codex\FedCore-SVD-Sparse-Integration-2026-10-21\checkout\fedcore\algorithm\low_rank\structured_layers.py:262: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+    offsets=torch.tensor((0,)+tuple(self.group_sizes[:-1]),device=hidden.device,dtype=torch.int64).cumsum(0)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+205 passed, 3 warnings in 26.18s

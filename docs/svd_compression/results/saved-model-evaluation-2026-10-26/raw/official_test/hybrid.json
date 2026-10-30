@@ -1,0 +1,10 @@
+{
+  "correct": 9358,
+  "cross_entropy": 0.23865361562433582,
+  "prediction_file": "predictions/hybrid_TS_official_test.npz",
+  "prediction_sha256": "c54852e5a6ff122b69fce18f02a44bccb4854ddc4377b584efbc2c31ace5e40d",
+  "rows": 10000,
+  "source_checkpoint_sha256": "72b925bf00756346fc1ece5c794232c93ff4f107da8148baa88134cfc3f8181c",
+  "top1": 0.9358,
+  "torchscript_sha256": "b3bb1e5cb0ba7606215c671fa7a2773de514e66edc52613d0f7061cbe75fa36a"
+}

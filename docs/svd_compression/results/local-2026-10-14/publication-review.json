@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "afm_forward_throughput_disagreement_explicit": true,
+    "all_numeric_and_nonpath_metadata_preserved": true,
+    "all_report_evidence_links_exist": true,
+    "eight_cpu_timing_report_cells": true,
+    "four_gpu_coverage_and_ratio_report_rows": true,
+    "historical_report_html_and_published_results_unchanged": true,
+    "manifest_original_and_published_hashes": true,
+    "nine_conv_report_rows": true,
+    "no_absolute_local_paths_or_binary_weights": true,
+    "pilot_noise_test_and_recovery_latency_limits_explicit": true,
+    "ten_recovery_report_rows": true,
+    "utf8_lf_and_csv_byte_identity": true
+  },
+  "counts": {
+    "csv_files": 4,
+    "json_files": 154,
+    "manifest_files": 158,
+    "published_bytes": 9115139
+  },
+  "elapsed_seconds": 0.8457137000004877,
+  "publication_audit_script_sha256": "2965ecffa8e4bb81b2a792e1b8da1cedb9458aaac7aede45e25747c925d6ef31",
+  "publication_manifest_sha256": "33762094f269734989b4f422cfff1a480219c2c38b366d320f653792d99eb161",
+  "raw_independent_review_sha256": "d1c28ebb23a5eb92243bb622d6849abce9a20a512124a9b9f3febdec8eb8d295",
+  "report_git_lf_sha256": "8c13e2eb6c3b0a349b3118e9670d981f97cab79a50bfc32ec18c608892dbe8ae",
+  "schema": 1,
+  "scope": "Separate publication certificate; does not change the frozen raw independent review.",
+  "status": "passed"
+}

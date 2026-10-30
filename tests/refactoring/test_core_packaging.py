@@ -10,6 +10,83 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED = {
+    'fedcore/algorithm/low_rank/cv_grammar.py',
+    'fedcore/algorithm/low_rank/cv_execution.py',
+    'fedcore/algorithm/pruning/sparse/cv_channels.py',
+    'fedcore/algorithm/pruning/sparse/cv_checkpoint.py',
+    'fedcore/experiments/cv_sparse_protocol.py',
+    'fedcore/experiments/cv_sparse_data.py',
+    'fedcore/experiments/cv_sparse_runtime.py',
+    'fedcore/experiments/cv_sparse_pilot.py',
+    'fedcore/experiments/cv_sparse_supervision.py',
+    'fedcore/algorithm/low_rank/compression_composition.py',
+    'fedcore/algorithm/low_rank/grouped_workflow.py',
+    'fedcore/algorithm/low_rank/grouped_execution.py',
+    'fedcore/algorithm/low_rank/compression_grammar.py',
+    'fedcore/algorithm/low_rank/grammar_execution.py',
+    'fedcore/algorithm/low_rank/grammar_search.py',
+    'fedcore/algorithm/low_rank/candidate_graph.py',
+    'fedcore/algorithm/low_rank/candidate_storage.py',
+    'fedcore/algorithm/low_rank/artifacts.py',
+    'fedcore/algorithm/low_rank/staged_execution.py',
+    'fedcore/algorithm/low_rank/compression_graph.py',
+    'fedcore/algorithm/low_rank/graph_execution.py',
+    'fedcore/algorithm/pruning/sparse/__init__.py',
+    'fedcore/algorithm/pruning/sparse/specs.py',
+    'fedcore/algorithm/pruning/sparse/layers.py',
+    'fedcore/algorithm/pruning/sparse/linear.py',
+    'fedcore/algorithm/pruning/sparse/channels.py',
+    'fedcore/algorithm/pruning/sparse/architectures.py',
+    'fedcore/algorithm/pruning/sparse/policies.py',
+    'fedcore/algorithm/pruning/sparse/moe.py',
+    'fedcore/algorithm/pruning/sparse/execution.py',
+    'fedcore/algorithm/pruning/sparse/checkpoint.py',
+    'fedcore/algorithm/low_rank/architecture_profiles.py',
+    'fedcore/algorithm/low_rank/architecture_checkpoint.py',
+    'fedcore/algorithm/low_rank/slicegpt_specs.py',
+    'fedcore/algorithm/low_rank/slicegpt_layers.py',
+    'fedcore/algorithm/low_rank/slicegpt_profiles.py',
+    'fedcore/algorithm/low_rank/lightformer_specs.py',
+    'fedcore/algorithm/low_rank/lightformer_layers.py',
+    'fedcore/algorithm/low_rank/lightformer_profiles.py',
+    'fedcore/algorithm/low_rank/lrt_specs.py',
+    'fedcore/algorithm/low_rank/lrt_layers.py',
+    'fedcore/algorithm/low_rank/lrt_profiles.py',
+    'fedcore/algorithm/low_rank/method_specs.py',
+    'fedcore/algorithm/low_rank/method_execution.py',
+    'fedcore/algorithm/low_rank/statistical_profiles.py',
+    'fedcore/algorithm/low_rank/statistical_collectors.py',
+    'fedcore/algorithm/low_rank/structured_profiles.py',
+    'fedcore/algorithm/low_rank/structured_layers.py',
+    'fedcore/algorithm/low_rank/factor_recovery.py',
+    'fedcore/algorithm/low_rank/method_errors.py',
+    'fedcore/algorithm/low_rank/projection_specs.py',
+    'fedcore/algorithm/low_rank/projection_profiles.py',
+    'fedcore/algorithm/low_rank/projection_layers.py',
+    'fedcore/algorithm/low_rank/projection_recovery.py',
+    'fedcore/algorithm/low_rank/projection_execution.py',
+    'fedcore/algorithm/low_rank/coupled_specs.py',
+    'fedcore/algorithm/low_rank/coupled_profiles.py',
+    'fedcore/algorithm/low_rank/coupled_layers.py',
+    'fedcore/algorithm/low_rank/coupled_execution.py',
+    'fedcore/algorithm/low_rank/ars_specs.py',
+    'fedcore/algorithm/low_rank/ars_profiles.py',
+    'fedcore/algorithm/low_rank/dobi_specs.py',
+    'fedcore/algorithm/low_rank/dobi_profiles.py',
+    'fedcore/algorithm/low_rank/dobi_remapping.py',
+    'fedcore/algorithm/low_rank/dobi_remapping_export.py',
+    'fedcore/algorithm/low_rank/rankdyna_specs.py',
+    'fedcore/algorithm/low_rank/rankdyna_profiles.py',
+    'fedcore/algorithm/low_rank/learned_execution.py',
+    'fedcore/algorithm/low_rank/learned_layers.py',
+    'fedcore/experiments/svd_rank_policies.py',
+    'fedcore/experiments/svd_profile_measurement.py',
+    'fedcore/algorithm/low_rank/execution.py',
+    'fedcore/algorithm/low_rank/plans.py',
+    'fedcore/algorithm/low_rank/statistics.py',
+    'fedcore/algorithm/low_rank/approximation.py',
+    'fedcore/algorithm/low_rank/allocation.py',
+    'fedcore/algorithm/low_rank/topology.py',
     'fedcore/experiments/protocol.py',
     'fedcore/experiments/runner.py',
     'fedcore/experiments/scenarios.py',
@@ -33,8 +110,13 @@ def run(args, cwd, env=None):
     return result
 
 
-def test_wheel_sdist_and_installed_package_outside_checkout(tmp_path):
+def test_wheel_sdist_and_installed_package_outside_checkout(tmp_path, monkeypatch):
     pytest.importorskip('build', reason='The declared test extra includes build')
+    temporary = tmp_path / 'temporary'
+    temporary.mkdir()
+    # Windows sandbox TEMP cannot atomically replace setuptools metadata.
+    monkeypatch.setenv('TEMP', str(temporary))
+    monkeypatch.setenv('TMP', str(temporary))
     source = tmp_path / 'source'
     source.mkdir()
     for name in ('fedcore', 'external', 'external_runtime', 'model_exporter'):
@@ -86,5 +168,286 @@ from fedcore.experiments.scenarios import build_tabular
 bundle = build_tabular(seed=42)
 assert bundle.task == 'classification'
 assert ExperimentProtocol().device == 'cpu'
+import torch
+from torch import nn
+from fedcore.algorithm.low_rank.low_rank_opt import LowRankModel
+from fedcore.tools.registry.checkpoint_manager import CheckpointManager
+from fedcore.tools.export import export_model
+torch.set_num_threads(2)
+model = nn.Linear(6, 4).double().eval()
+x = torch.randn(5, 6, dtype=torch.double)
+__import__('os').environ['FEDCORE_MODEL_REGISTRY_PATH'] = str(Path.cwd() / 'registry')
+facade = LowRankModel({'device': 'cpu'})
+result = facade.compress_weighted(model, x, rank=2)
+assert result.model is facade.model_after
+assert result.plan.request.statistics_refs
+manager = CheckpointManager(str(Path.cwd() / 'checkpoint'), auto_cleanup=False)
+path = str(Path.cwd() / 'checkpoint.pt')
+manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+restored = manager.load_from_file(path)
+torch.testing.assert_close(restored(x), result.model(x), rtol=1e-12, atol=1e-12)
+artifact = export_model(restored.eval(), 'torchscript', Path.cwd() / 'export.pt', x[:1])
+with artifact.open('rb') as stream:
+    reloaded = torch.jit.load(stream)
+torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]), rtol=1e-12, atol=1e-12)
+assert Path(fedcore.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+from fedcore.algorithm.low_rank.method_specs import ASVD, AFM, DRONE, SVDLLMV2
+from fedcore.algorithm.low_rank import compression_graph, graph_execution
+from fedcore.algorithm.low_rank import artifacts as graph_artifacts, staged_execution
+from fedcore.algorithm.low_rank import candidate_graph, candidate_storage
+from fedcore.algorithm.low_rank import compression_grammar, grammar_execution, grammar_search
+from fedcore.algorithm.low_rank import grouped_workflow, grouped_execution
+from fedcore.algorithm.low_rank import compression_composition
+assert Path(compression_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(graph_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(graph_artifacts.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(staged_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(candidate_graph.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(candidate_storage.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(compression_grammar.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grammar_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grammar_search.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grouped_workflow.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(grouped_execution.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+assert Path(compression_composition.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+for recipe in ('weighted_svd', 'asvd'):
+    graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2)
+    assert graph.recipe.value == recipe
+    assert compression_graph.validate_fixed_graph(graph) is None
+    result = facade.compress_graph(model, x, graph)
+    assert result.model is facade.model_after and result.graph is graph
+    assert result.evidence['executor'] == 'checked_whole_recipe_v1'
+    assert result.evidence['stage_trace_kind'] == 'declared_inline_whole_recipe_stages'
+    manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(x), result.model(x), rtol=1e-12, atol=1e-12)
+for recipe in ('weighted_svd', 'asvd'):
+    graph = facade.plan_compression_graph(model, x, recipe=recipe, rank=2,
+                                         executor='staged_fixed_recipe_v1')
+    store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+    try:
+        cold = facade.compress_graph(model, x, graph, store=store)
+        warm = facade.compress_graph(model, x, graph, store=store)
+        assert warm.evidence['executor'] == 'staged_fixed_recipe_v1'
+        torch.testing.assert_close(warm.model(x), cold.model(x), rtol=1e-12, atol=1e-12)
+        manager.save_to_file(manager.serialize_to_bytes(warm.model), path)
+        restored = manager.load_from_file(path)
+        torch.testing.assert_close(restored(x), warm.model(x), rtol=1e-12, atol=1e-12)
+    finally:
+        store.close()
+source = nn.Sequential(nn.Linear(6, 4), nn.Tanh(), nn.Linear(4, 3)).double().eval()
+calibration = torch.randn(8, 6, dtype=torch.double)
+recipes = tuple(candidate_graph.CandidateRecipe(method, rank)
+                for method in ('weighted_svd', 'asvd') for rank in (1, 2))
+store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+try:
+    catalog = facade.prepare_candidate_catalog(source, calibration,
+        alternatives={'0': recipes, '2': recipes}, store=store,
+        graph_version='installed-g2b-v1')
+    plan = candidate_graph.allocate_candidate_catalog(catalog, 256, unit='bytes')
+    selected = facade.compress_candidates(source, calibration, plan, store=store)
+    assert selected.model is facade.model_after
+    exported = candidate_graph.verify_candidate_export(selected, format='torch_save_module')
+    assert exported.evidence['actual_cost'] <= 256
+    assert exported.evidence['actual_cost'] == plan.allocation.total_cost
+    assert exported.evidence['serialized_stream_bytes'] > exported.evidence['tensor_bytes']
+    torch.testing.assert_close(exported.model(calibration), selected.model(calibration))
+    manager.save_to_file(manager.serialize_to_bytes(exported.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(calibration), selected.model(calibration))
+finally:
+    store.close()
+grammar_source = nn.Sequential(nn.Linear(4, 4, bias=False), nn.Tanh(), nn.Linear(4, 2)).double().eval()
+grammar_data = torch.randn(8, 4, dtype=torch.double) + 2
+choices = (compression_grammar.WeightedChoice(1), compression_grammar.ASVDChoice(1),
+           compression_grammar.AffinePCAChoice(1))
+space = facade.prepare_compression_grammar(grammar_source, grammar_data,
+    alternatives={'0': choices}, graph_version='installed-g3-v1')
+for choice in choices:
+    genotype = compression_grammar.CompressionGenotype((compression_grammar.ScopeGene(('0',), choice),))
+    workflow = compression_grammar.compile_genotype(genotype, space)
+    assert compression_grammar.validate_workflow(workflow) is None
+    outcome = facade.compress_workflow(grammar_source, grammar_data, workflow)
+    assert type(outcome) is grammar_execution.WorkflowSuccess, outcome
+    assert outcome.model is facade.model_after
+    assert grammar_search.graph_genotype(grammar_search.grammar_graph(genotype), space) == genotype
+    manager.save_to_file(manager.serialize_to_bytes(outcome.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(grammar_data), outcome.model(grammar_data))
+    if type(choice) is compression_grammar.AffinePCAChoice:
+        assert outcome.model[0].bias is not None
+        torch.testing.assert_close(outcome.model[0](grammar_data).mean(0),
+                                   grammar_source[0](grammar_data).mean(0))
+from fedcore.algorithm.low_rank.method_specs import BasisSharing, SVDLLMV1
+from fedcore.algorithm.low_rank.compression_graph import SourceMode
+group_source = nn.Sequential(nn.Linear(4, 4), nn.Tanh(), nn.Linear(4, 3)).double().eval()
+group_data = torch.randn(8, 4, dtype=torch.double)
+shared_axis = grouped_workflow.CoordinateAxis('declared_input', tuple(range(4)))
+bindings = tuple(grouped_workflow.ConsumerCoordinates(target, shared_axis,
+    grouped_workflow.CoordinateAxis(target + ':out', tuple(range(group_source[int(target)].out_features))))
+    for target in ('0', '2'))
+region = grouped_workflow.CompressionRegion('basis_region', ('0', '2'), bindings)
+request = grouped_workflow.GroupRequest('basis', region, ('0', '2'), BasisSharing(), 2)
+workflow = facade.prepare_compression_groups(group_source, group_data, (request,),
+    source_mode=SourceMode.FROZEN_SNAPSHOT, graph_version='installed-g4-basis')
+store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+try:
+    outcome = facade.compress_groups(group_source, group_data, workflow, store=store)
+    assert type(outcome) is grouped_execution.GroupedResult and outcome.model is facade.model_after
+    assert outcome.model[0].right is outcome.model[2].right
+    restored = manager.deserialize_from_bytes(manager.serialize_to_bytes(outcome.model))
+    assert restored[0].right is restored[2].right
+    torch.testing.assert_close(restored(group_data), outcome.model(group_data))
+finally:
+    store.close()
+for method in (DRONE(), SVDLLMV1()):
+    requests = tuple(grouped_workflow.GroupRequest('seq:' + target,
+        grouped_workflow.CompressionRegion('region:' + target, (target,), (
+            grouped_workflow.ConsumerCoordinates(target,
+                grouped_workflow.CoordinateAxis(target + ':in', tuple(range(group_source[int(target)].in_features))),
+                grouped_workflow.CoordinateAxis(target + ':out', tuple(range(group_source[int(target)].out_features)))),)),
+        (target,), method, 2) for target in ('0', '2'))
+    workflow = facade.prepare_compression_groups(group_source, group_data, requests,
+        source_mode=SourceMode.CURRENT_STUDENT, graph_version='installed-g4-sequence')
+    store = graph_artifacts.StatisticsStore(max_bytes=1024**2)
+    try:
+        outcome = facade.compress_groups(group_source, group_data, workflow, store=store)
+        assert outcome.evidence['accepted_versions'] == 2
+        assert [event['stage'] for event in outcome.evidence['trace']] == ['observe', 'solve', 'apply', 'advance'] * 2
+        restored = manager.deserialize_from_bytes(manager.serialize_to_bytes(outcome.model))
+        torch.testing.assert_close(restored(group_data), outcome.model(group_data))
+    finally:
+        store.close()
+composition_source = nn.Sequential(nn.Linear(4, 4)).double().eval()
+packed_step = compression_composition.QuantizeRemapped(
+    tail_dtype='float64', scale_dtype='float64', compute_dtype='float64')
+for steps in ((compression_composition.PruneMask((0, 5)), compression_composition.LowRank(1)),
+              (compression_composition.LowRank(1), packed_step, compression_composition.AddResidual(1)),
+              (compression_composition.LowRank(1), packed_step, compression_composition.AddResidual(1),
+               compression_composition.MaterializeDense())):
+    request = compression_composition.CompositionRequest((
+        compression_composition.CompositionRecipe('0', steps),))
+    workflow = facade.prepare_compression_composition(composition_source, request)
+    assert type(workflow) is compression_composition.CheckedComposition, workflow
+    outcome = facade.compress_composition(composition_source, workflow)
+    assert type(outcome) is compression_composition.CompositionSuccess, outcome
+    assert facade.model_after is outcome.model
+    manager.save_to_file(outcome.checkpoint_bytes, path)
+    restored = manager.load_from_file(path)
+    composition_inputs = torch.arange(12, dtype=torch.float64).reshape(3, 4) / 10
+    torch.testing.assert_close(restored(composition_inputs), outcome.model(composition_inputs), rtol=1e-13, atol=1e-13)
+    assert candidate_storage.inventory_cost(candidate_storage.capture_inventory(restored), 'bytes') == outcome.storage_bytes
+    assert restored._fedcore_method_evidence['fingerprint'] == workflow.fingerprint
+from fedcore.external_runtime import MethodOptions, SUPPORTED_CONTRACT_VERSIONS
+assert SUPPORTED_CONTRACT_VERSIONS == (1, 2, 3, 4)
+from fedcore.algorithm.pruning.sparse.execution import transform_sparse
+from fedcore.algorithm.pruning.sparse.specs import HASSLEFreeSpec, NMStructure
+from fedcore.algorithm.pruning.sparse.moe import ReferenceMoE, MoECompressionSpec
+for source,inputs,method,spec in (
+    (nn.Linear(8,4).eval(),torch.randn(9,8),'hassle_free',
+     HASSLEFreeSpec(structure=NMStructure(rank=1),outer_steps=1,inner_steps=2)),
+    (ReferenceMoE(4,6,3,1).eval(),torch.randn(9,4),'moe_i2',
+     MoECompressionSpec((0,2),(1,1))),
+):
+    sparse = transform_sparse(source,method,spec,calibration=inputs).model.eval()
+    manager.save_to_file(manager.serialize_to_bytes(sparse),path)
+    loaded = manager.load_from_file(path).eval()
+    torch.testing.assert_close(loaded(inputs),sparse(inputs))
+    artifact = export_model(loaded,'torchscript',Path.cwd()/'sparse.ts',inputs)
+    torch.testing.assert_close(torch.jit.load(str(artifact))(inputs),loaded(inputs))
+for spec in (ASVD(), AFM(), DRONE(), SVDLLMV2()):
+    result = facade.compress_profile(model, x, spec, rank=2, target_paths=('',))
+    manager.save_to_file(manager.serialize_to_bytes(result.model), path)
+    restored = manager.load_from_file(path)
+    torch.testing.assert_close(restored(x), result.model(x))
+    artifact = export_model(restored.eval(), 'torchscript', Path.cwd() / 'p2.pt', x[:1])
+    with artifact.open('rb') as stream:
+        reloaded = torch.jit.load(stream)
+    torch.testing.assert_close(reloaded(x[:1]), restored(x[:1]))
+from fedcore.algorithm.low_rank.method_specs import ESPACE, FlatValueOutput, MoDeMLPChannels
+from fedcore.algorithm.low_rank.coupled_layers import ReferenceAttention, ReferenceMLP
+cases = [(nn.Linear(6,4).double().eval(), torch.randn(7,6,dtype=torch.double), ESPACE()),
+         (ReferenceAttention(8,2,1,4,dtype=torch.double).eval(), torch.randn(7,3,8,dtype=torch.double), FlatValueOutput()),
+         (ReferenceMLP(8,12,dtype=torch.double).eval(), torch.randn(7,3,8,dtype=torch.double), MoDeMLPChannels())]
+for model, x, spec in cases:
+    result = facade.compress_profile(model,x,spec,rank=2,target_paths=('',))
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(x),result.model.eval()(x))
+    artifact = export_model(restored,'torchscript',Path.cwd()/'p3.pt',x[:1])
+    with artifact.open('rb') as stream:
+        deployed = torch.jit.load(stream)
+    torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))
+"""
+    code += """
+import math
+from fedcore.algorithm.low_rank.method_specs import ARS,DobiSVD,RankDyna
+from fedcore.experiments.protocol import TensorSplit
+from fedcore.experiments.runner import train_model
+for spec in (ARS(input_size=4,hidden_size=4,mask_bias=0),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8,
+                     remapping='symmetric_int8_v1'),
+             DobiSVD(max_activation_rows=32,max_calibration_batches=8,
+                     remapping='symmetric_int8_v1',remap_tail_dtype='bfloat16'),RankDyna()):
+    source = nn.Linear(6,4).double().eval()
+    x = torch.randn(8,6,dtype=torch.double)
+    split = TensorSplit(x,source(x).detach()+.1,tuple(str(i) for i in range(8)))
+    def recover(current,stage,updates,objective):
+        result = train_model(current,split,'regression',epochs=math.ceil(updates/2),
+            batch_size=4,learning_rate=.001,seed=31,batch_objective=objective,max_updates=updates)
+        return dict(result,updates=result['training_steps'])
+    result = facade.compress_profile(source,x,spec,target_paths=('',),batch_size=4,recovery_executor=recover)
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(x),result.model.eval()(x))
+    artifact = export_model(restored,'torchscript',Path.cwd()/'p4.pt',x[:1])
+    with artifact.open('rb') as stream:
+        deployed = torch.jit.load(stream)
+    torch.testing.assert_close(deployed(x[:1]),restored(x[:1]))
+"""
+    code += """
+from fedcore.algorithm.low_rank.slicegpt_specs import SliceGPT
+from fedcore.algorithm.low_rank.slicegpt_layers import SliceGPTModel
+from fedcore.algorithm.low_rank.lightformer_specs import LightFormer
+from fedcore.algorithm.low_rank.lightformer_layers import LightFormerTransformer
+from fedcore.algorithm.low_rank.lrt_specs import LRT
+tokens = torch.randint(0,13,(3,5))
+cases = [
+    (SliceGPT((6,6,4)), {'source':SliceGPTModel(13,8,1,2,1,4,12,dtype=torch.double).eval(),
+                              'calibration':tokens}, (tokens,)),
+    (LightFormer(2,(0,0),(0,0),(0,),(1,)),
+     {'source':LightFormerTransformer(13,13,8,2,12,(0,1),(0,1),max_positions=8,dtype=torch.double).eval()},
+     (tokens,tokens)),
+    (LRT(vocab_size=13,d_model=8,num_heads=2,d_k=4,d_v=4,d_ff=12,max_seq_len=8),
+     {'dtype':torch.double}, (tokens,)),
+]
+for spec,options,inputs in cases:
+    result = facade.build_architecture(spec,**options)
+    manager.save_to_file(manager.serialize_to_bytes(result.model),path)
+    restored = manager.load_from_file(path).eval()
+    torch.testing.assert_close(restored(*inputs),result.model.eval()(*inputs),rtol=0,atol=0)
+    assert sum(p.numel() for p in restored.parameters()) == result.evidence['parameters_after']
+"""
+    code += """
+from fedcore.algorithm.pruning.sparse.cv_channels import make_cifar_resnet18
+from fedcore.algorithm.low_rank.cv_grammar import ChannelPrune, CVScopeGene, CVGenotype, compile_cv_genotype
+from fedcore.algorithm.low_rank.cv_execution import CVWorkflowSuccess
+from fedcore.algorithm.low_rank.grammar_search import run_cv_grammar_search
+from fedcore.experiments import cv_sparse_protocol, cv_sparse_data, cv_sparse_runtime, cv_sparse_pilot, cv_sparse_supervision
+assert cv_sparse_protocol.PilotProtocol().max_slot_seconds == 14400
+assert Path(cv_sparse_pilot.__file__).is_relative_to(Path(__import__('os').environ['PYTHONPATH']))
+cv_source = make_cifar_resnet18().eval()
+cv_inputs = torch.linspace(-1, 1, 3*32*32).reshape(1,3,32,32)
+choice = ChannelPrune(32)
+cv_space = facade.prepare_cv_grammar(cv_source,cv_inputs,alternatives={'layer1.0':(choice,)})
+cv_workflow = compile_cv_genotype(CVGenotype((CVScopeGene('layer1.0',choice),)),cv_space)
+cv_result = facade.compress_cv_workflow(cv_source,cv_inputs,cv_workflow)
+assert type(cv_result) is CVWorkflowSuccess, cv_result
+assert cv_result.model.layer1[0].conv1.out_channels == 32
+cv_restored = manager.deserialize_from_bytes(cv_result.checkpoint_bytes).eval()
+torch.testing.assert_close(cv_restored(cv_inputs),cv_result.model(cv_inputs),rtol=0,atol=0)
+assert cv_restored.representation_config() == cv_result.model.representation_config()
+assert candidate_storage.inventory_cost(candidate_storage.capture_inventory(cv_restored),'bytes') == cv_workflow.expected_storage_bytes
 """
     run(['-c', code], outside, env)

@@ -1,0 +1,9 @@
+{
+  "artifact_id": "1bab94c7fd286a1761f513c9c22c2f0edba2b7dcb3e53728cfde5e9a38a6fa02",
+  "file_bytes": 25926815,
+  "format": "independently_reloaded_TorchScript",
+  "path": "torchscript/1bab94c7fd286a1761f513c9c22c2f0edba2b7dcb3e53728cfde5e9a38a6fa02.pt",
+  "sha256": "b3bb1e5cb0ba7606215c671fa7a2773de514e66edc52613d0f7061cbe75fa36a",
+  "source_artifact_id": "1bab94c7fd286a1761f513c9c22c2f0edba2b7dcb3e53728cfde5e9a38a6fa02",
+  "source_checkpoint_sha256": "72b925bf00756346fc1ece5c794232c93ff4f107da8148baa88134cfc3f8181c"
+}

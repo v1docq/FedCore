@@ -1,0 +1,186 @@
+{
+  "admission_wait_seconds": 44.640000000006694,
+  "attempts": [
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-dense_dense-cpu-b1\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-dense_dense-cpu-b1",
+      "elapsed_seconds": 2.6883259000023827,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-dense_dense-cpu-b1\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-dense_dense-cpu-b1",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 59396
+    },
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cpu-b1\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cpu-b1",
+      "elapsed_seconds": 3.0595347999988007,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cpu-b1\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-synthetic_256_8_r64-cpu-b1",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 12816
+    },
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-dense_dense-cpu-b64\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-dense_dense-cpu-b64",
+      "elapsed_seconds": 2.8206634000016493,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-dense_dense-cpu-b64\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-dense_dense-cpu-b64",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 25692
+    },
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cpu-b64\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cpu-b64",
+      "elapsed_seconds": 5.94749579999916,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cpu-b64\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-synthetic_256_8_r64-cpu-b64",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 28952
+    },
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-dense_dense-cuda0-b1\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-dense_dense-cuda0-b1",
+      "elapsed_seconds": 3.0556619000053615,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-dense_dense-cuda0-b1\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-dense_dense-cuda0-b1",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 34156
+    },
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cuda0-b1\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cuda0-b1",
+      "elapsed_seconds": 3.0040619000064908,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cuda0-b1\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-synthetic_256_8_r64-cuda0-b1",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 45960
+    },
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-dense_dense-cuda0-b64\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-dense_dense-cuda0-b64",
+      "elapsed_seconds": 3.1267216999985976,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-dense_dense-cuda0-b64\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-dense_dense-cuda0-b64",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 58056
+    },
+    {
+      "admission_status": "admitted",
+      "command": [
+        "local-workspace\\work\\refactoring\\.venv\\Scripts\\python.exe",
+        "-m",
+        "fedcore.experiments.svd_second_package",
+        "--output",
+        "local-svd-second-package",
+        "--worker",
+        "timing",
+        "--job",
+        "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cuda0-b64\\job.json"
+      ],
+      "directory": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cuda0-b64",
+      "elapsed_seconds": 3.0084454999960144,
+      "resources_path": "local-svd-second-package\\pilot\\pilot-synthetic_256_8_r64-cuda0-b64\\resources.json",
+      "returncode": 0,
+      "session_id": "pilot-synthetic_256_8_r64-cuda0-b64",
+      "status": "succeeded",
+      "violation": null,
+      "worker_pid": 63596
+    }
+  ],
+  "charged_seconds": 26.710910900008457,
+  "extra_noise_wait_seconds": 0.0,
+  "mandatory_drain_seconds": 17.599999999999998,
+  "protocol_sha256": "8a3edd02b9517e4e3c8dd23df5086050becf67ddf3f958d29089706fd15e0598",
+  "schema": 2
+}

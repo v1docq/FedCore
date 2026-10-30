@@ -1,0 +1,702 @@
+.F.............................F....................................FFFF [ 23%]
+FFFFFFF.F..ssssss..........................................ssssssss..... [ 46%]
+........................................................................ [ 69%]
+...................................sssss..s............................. [ 92%]
+........................                                                 [100%]
+================================== FAILURES ===================================
+__________ test_parent_admission_reads_only_fourteen_consumed_files ___________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_parent_admission_reads_on0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF576F760>
+
+    def test_parent_admission_reads_only_fourteen_consumed_files(tmp_path,monkeypatch):
+        root,inventory,report,_,_ = miniature_parent(tmp_path,monkeypatch)
+        before = {path:path.read_bytes() for path in root.rglob('*') if path.is_file()}
+>       inspected = module.inspect_recovery(root,inventory)
+
+tests\refactoring\test_sparse_cv_evaluation.py:90: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_parent_admission_reads_on0/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_parent_admission_reads_on0/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_____ test_preflight_binds_new_modules_protocol_and_disjoint_input_trees ______
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_preflight_binds_new_modul0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF59734C0>
+
+    def test_preflight_binds_new_modules_protocol_and_disjoint_input_trees(tmp_path,monkeypatch):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        source = source_payload()
+        monkeypatch.setattr(module,'preparation',lambda *args:{'status':'prepared','source':source})
+        values = (tmp_path/'data',tmp_path/'out',tmp_path/'manifest',root,inventory)
+>       assert module.evaluation_preparation(*values)['status'] == 'prepared'
+
+tests\refactoring\test_sparse_cv_evaluation.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+fedcore\experiments\cv_sparse_evaluation.py:158: in evaluation_preparation
+    return {**prepared, 'recovery':inspect_recovery(parent,recovery_inventory),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_preflight_binds_new_modul0/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_preflight_binds_new_modul0/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_ test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object[None] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CA8AEBBAC0>
+failure = None
+
+    @pytest.mark.parametrize('failure',[None,'eager','TS'])
+    def test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object(tmp_path,monkeypatch,failure):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'validation')
+>       sources = module.copy_sources(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:419: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde0/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde0/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_ test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object[eager] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF59D9DB0>
+failure = 'eager'
+
+    @pytest.mark.parametrize('failure',[None,'eager','TS'])
+    def test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object(tmp_path,monkeypatch,failure):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'validation')
+>       sources = module.copy_sources(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:419: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde1/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde1/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_ test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object[TS] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CA8ABFF4C0>
+failure = 'TS'
+
+    @pytest.mark.parametrize('failure',[None,'eager','TS'])
+    def test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object(tmp_path,monkeypatch,failure):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'validation')
+>       sources = module.copy_sources(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:419: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde2/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_validation_uses_five_inde2/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+____ test_seal_rejects_any_missing_validation_or_changed_lineage[missing] _____
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF5973E80>
+mutation = 'missing'
+
+    @pytest.mark.parametrize('mutation',['missing','CE','eager','TS_SHA','TS_lineage','source_SHA','prediction_bytes'])
+    def test_seal_rejects_any_missing_validation_or_changed_lineage(tmp_path,monkeypatch,mutation):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_0/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_0/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_______ test_seal_rejects_any_missing_validation_or_changed_lineage[CE] _______
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CA8BAD3310>
+mutation = 'CE'
+
+    @pytest.mark.parametrize('mutation',['missing','CE','eager','TS_SHA','TS_lineage','source_SHA','prediction_bytes'])
+    def test_seal_rejects_any_missing_validation_or_changed_lineage(tmp_path,monkeypatch,mutation):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_1/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_1/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_____ test_seal_rejects_any_missing_validation_or_changed_lineage[eager] ______
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF59D8040>
+mutation = 'eager'
+
+    @pytest.mark.parametrize('mutation',['missing','CE','eager','TS_SHA','TS_lineage','source_SHA','prediction_bytes'])
+    def test_seal_rejects_any_missing_validation_or_changed_lineage(tmp_path,monkeypatch,mutation):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_2/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_2/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_____ test_seal_rejects_any_missing_validation_or_changed_lineage[TS_SHA] _____
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CA8B62BA60>
+mutation = 'TS_SHA'
+
+    @pytest.mark.parametrize('mutation',['missing','CE','eager','TS_SHA','TS_lineage','source_SHA','prediction_bytes'])
+    def test_seal_rejects_any_missing_validation_or_changed_lineage(tmp_path,monkeypatch,mutation):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_3/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_3/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+___ test_seal_rejects_any_missing_validation_or_changed_lineage[TS_lineage] ___
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF5973CA0>
+mutation = 'TS_lineage'
+
+    @pytest.mark.parametrize('mutation',['missing','CE','eager','TS_SHA','TS_lineage','source_SHA','prediction_bytes'])
+    def test_seal_rejects_any_missing_validation_or_changed_lineage(tmp_path,monkeypatch,mutation):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_4/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_4/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+___ test_seal_rejects_any_missing_validation_or_changed_lineage[source_SHA] ___
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CA8AAD6710>
+mutation = 'source_SHA'
+
+    @pytest.mark.parametrize('mutation',['missing','CE','eager','TS_SHA','TS_lineage','source_SHA','prediction_bytes'])
+    def test_seal_rejects_any_missing_validation_or_changed_lineage(tmp_path,monkeypatch,mutation):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_5/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_5/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_ test_seal_rejects_any_missing_validation_or_changed_lineage[prediction_bytes] _
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF59D9D20>
+mutation = 'prediction_bytes'
+
+    @pytest.mark.parametrize('mutation',['missing','CE','eager','TS_SHA','TS_lineage','source_SHA','prediction_bytes'])
+    def test_seal_rejects_any_missing_validation_or_changed_lineage(tmp_path,monkeypatch,mutation):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_6/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_seal_rejects_any_missing_6/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+______ test_all_five_TS_are_sealed_before_one_test_open_and_test_reloads ______
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_all_five_TS_are_sealed_be0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CA8ABFFE50>
+
+    def test_all_five_TS_are_sealed_before_one_test_open_and_test_reloads(tmp_path,monkeypatch):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+        output = module.Output(tmp_path/'sealed')
+>       sources,quality = validated_fixture(module.inspect_recovery(root,inventory),output)
+
+tests\refactoring\test_sparse_cv_evaluation.py:489: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_all_five_TS_are_sealed_be0/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_all_five_TS_are_sealed_be0/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+_______ test_terminal_close_failure_invalidates_previously_admitted_AB ________
+
+tmp_path = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_terminal_close_failure_in0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CAF59DA800>
+
+    def test_terminal_close_failure_invalidates_previously_admitted_AB(tmp_path,monkeypatch):
+        root,inventory,_,_,_ = miniature_parent(tmp_path,monkeypatch)
+>       parent = module.inspect_recovery(root,inventory)
+
+tests\refactoring\test_sparse_cv_evaluation.py:532: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+recovery_root = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_terminal_close_failure_in0/parent')
+recovery_inventory = WindowsPath('C:/Users/user/AppData/Local/Temp/pytest-of-user/pytest-2322/test_terminal_close_failure_in0/inventory.json')
+
+    def inspect_recovery(recovery_root, recovery_inventory):
+        """Verify only 14 consumed files; exported controllers need not be in root."""
+        root, inventory = Path(recovery_root).resolve(), Path(recovery_inventory).resolve()
+        if sha256_file(inventory) != evaluation.PARENT_INVENTORY_SHA:
+            raise ValueError('Recovery inventory differs from the pinned evidence')
+        files = json.loads(inventory.read_text(encoding='utf-8')).get('files')
+        if type(files) is not dict:
+            raise ValueError('Recovery inventory requires a file map')
+        verified = {'report.json':_verify_file(root, files, 'report.json')}
+        if verified['report.json']['sha256'] != evaluation.PARENT_REPORT_SHA:
+            raise ValueError('Recovery report differs from the pinned evidence')
+        report = json.loads(confined_file(root, 'report.json').read_text(encoding='utf-8'))
+        if (report.get('status') != 'completed' or report.get('within_slot_deadline') is not True
+                or report.get('protocol_sha256') != PilotProtocol().sha256
+                or report.get('recovery_sha256') != recovery.sha256()
+                or report.get('baseline_training_performed') is not False or report.get('search_performed') is not False
+                or report.get('official_test_access') is not False or report.get('automatic_retry') is not False
+                or report.get('latency_sessions') != 0 or report.get('total_SGD_updates') != 2000
+                or report.get('total_validation_rows') != 150000 or report.get('parents_read_only_verified') is not True
+                or report.get('completion_report_sha256') != recovery.COMPLETION_REPORT_SHA
+                or report.get('completion_inventory_sha256') != recovery.COMPLETION_INVENTORY_SHA
+                or report.get('diagnostic_report_sha256') != recovery.DIAGNOSTIC_REPORT_SHA
+                or report.get('diagnostic_inventory_sha256') != recovery.DIAGNOSTIC_INVENTORY_SHA
+                or type(report.get('total_charged_seconds')) not in (int,float)
+                or report['total_charged_seconds'] != evaluation.PRIOR_SECONDS
+                or not 0 < report.get('charged_slot_seconds',float('inf')) <= recovery.MAX_SECONDS):
+>           raise ValueError('Only completed, timely evidence from the original recovery protocol is admitted')
+E           ValueError: Only completed, timely evidence from the original recovery protocol is admitted
+
+fedcore\experiments\cv_sparse_evaluation.py:124: ValueError
+============================== warnings summary ===============================
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\hyperopt\atpe.py:19: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+..\..\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148
+  C:\Users\user\Documents\Codex\FedCore-Issue99-Local-2026-10-20\.venv\lib\site-packages\pkg_resources\__init__.py:3148: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_parent_admission_reads_only_fourteen_consumed_files
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_preflight_binds_new_modules_protocol_and_disjoint_input_trees
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object[None]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object[eager]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_validation_uses_five_independent_sources_and_fresh_TS_not_export_object[TS]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_seal_rejects_any_missing_validation_or_changed_lineage[missing]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_seal_rejects_any_missing_validation_or_changed_lineage[CE]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_seal_rejects_any_missing_validation_or_changed_lineage[eager]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_seal_rejects_any_missing_validation_or_changed_lineage[TS_SHA]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_seal_rejects_any_missing_validation_or_changed_lineage[TS_lineage]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_seal_rejects_any_missing_validation_or_changed_lineage[source_SHA]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_seal_rejects_any_missing_validation_or_changed_lineage[prediction_bytes]
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_all_five_TS_are_sealed_before_one_test_open_and_test_reloads
+FAILED tests/refactoring/test_sparse_cv_evaluation.py::test_terminal_close_failure_invalidates_previously_admitted_AB
+14 failed, 278 passed, 20 skipped, 3 warnings in 68.45s (0:01:08)

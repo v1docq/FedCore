@@ -1,0 +1,2986 @@
+[
+  {
+    "check": "authorized_window",
+    "passed": true
+  },
+  {
+    "check": "prior_and_total_budget",
+    "passed": true
+  },
+  {
+    "check": "fixed_protocol",
+    "passed": true
+  },
+  {
+    "check": "source_commit",
+    "passed": true
+  },
+  {
+    "check": "wheel",
+    "passed": true
+  },
+  {
+    "check": "frozen_release",
+    "passed": true
+  },
+  {
+    "check": "manifest_bytes",
+    "passed": true
+  },
+  {
+    "check": "launch_receipt",
+    "passed": true
+  },
+  {
+    "check": "completion_report",
+    "passed": true
+  },
+  {
+    "check": "diagnostic_report",
+    "passed": true
+  },
+  {
+    "check": "parent_inventories",
+    "passed": true
+  },
+  {
+    "check": "no_test_search_timing",
+    "passed": true
+  },
+  {
+    "check": "scientific_environment",
+    "passed": true
+  },
+  {
+    "check": "scientific_dependencies",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/E_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/E_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/E_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/E_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/E_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/E_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/M0_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/M0_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/M0_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/M0_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/M0_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/M0_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/P75_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/P75_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/P75_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/P75_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/P75_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/P75_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/R_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/R_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/R_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/R_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/R_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/R_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/hybrid_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/hybrid_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/hybrid_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/hybrid_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:BN_pairs/hybrid_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:BN_pairs/hybrid_no_SGD.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/E_SGD_lr_0.001_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/E_SGD_lr_0.001_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/E_SGD_lr_0.01_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/E_SGD_lr_0.01_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/E_no_SGD_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/E_uncalibrated_start.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/M0_SGD_lr_0.001_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/M0_SGD_lr_0.001_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/M0_SGD_lr_0.01_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/M0_SGD_lr_0.01_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/M0_no_SGD_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/M0_uncalibrated_start.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/P75_SGD_lr_0.001_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/P75_SGD_lr_0.001_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/P75_SGD_lr_0.01_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/P75_SGD_lr_0.01_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/P75_no_SGD_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/P75_uncalibrated_start.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/R_SGD_lr_0.001_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/R_SGD_lr_0.001_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/R_SGD_lr_0.01_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/R_SGD_lr_0.01_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/R_no_SGD_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/R_uncalibrated_start.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/dense_original.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/hybrid_SGD_lr_0.001_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/hybrid_SGD_lr_0.001_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/hybrid_SGD_lr_0.01_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/hybrid_SGD_lr_0.01_pre_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/hybrid_no_SGD_post_BN.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:checkpoints/hybrid_uncalibrated_start.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:completion-file-inventory.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:completion-file-inventory.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:completion_admission.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:completion_admission.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:data_roles.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:data_roles.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic-file-inventory.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:diagnostic-file-inventory.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:diagnostic_admission.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:diagnostic_admission.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:environment.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:environment.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:environment_freeze.txt",
+    "passed": true
+  },
+  {
+    "check": "export_hash:environment_freeze.txt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:export_recovery.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:export_recovery.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:heartbeats.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_hash:heartbeats.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_presence:imported_sources.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:imported_sources.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:inherited/original_M0_predictions.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:inherited/original_M0_predictions.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:install.log",
+    "passed": true
+  },
+  {
+    "check": "export_hash:install.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:installed-cpu-tests.log",
+    "passed": true
+  },
+  {
+    "check": "export_hash:installed-cpu-tests.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:installed-preflight.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:installed-preflight.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_hash:launch-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-packet.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:launch-packet.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch-receipt.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:launch-receipt.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:launch_recovery.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:launch_recovery.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:ledger.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_hash:ledger.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_presence:pip-check.log",
+    "passed": true
+  },
+  {
+    "check": "export_hash:pip-check.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:postrun-preservation.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:postrun-preservation.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/E_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/E_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/E_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/E_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/E_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/E_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/E_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/M0_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/M0_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/M0_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/M0_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/M0_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/M0_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/M0_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/P75_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/P75_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/P75_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/P75_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/P75_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/P75_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/P75_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/R_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/R_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/R_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/R_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/R_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/R_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/R_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/hybrid_SGD_lr_0.001_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/hybrid_SGD_lr_0.001_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/hybrid_SGD_lr_0.01_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/hybrid_SGD_lr_0.01_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/hybrid_no_SGD_post_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:predictions/hybrid_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_hash:predictions/hybrid_no_SGD_pre_BN.npz",
+    "passed": true
+  },
+  {
+    "check": "export_presence:prepare_recovery_environment.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:prepare_recovery_environment.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:probe_recovery_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:probe_recovery_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/E_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/E_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/E_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/E_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/E_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/E_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/E_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/E_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/E_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/E_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/E_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/E_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/M0_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/M0_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/M0_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/M0_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/M0_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/M0_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/M0_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/P75_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/P75_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/P75_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/P75_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/P75_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/P75_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/P75_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/P75_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/P75_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/P75_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/P75_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/P75_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/R_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/R_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/R_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/R_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/R_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/R_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/R_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/R_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/R_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/R_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/R_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/R_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/hybrid_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/hybrid_SGD_lr_0.001_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/hybrid_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/hybrid_SGD_lr_0.001_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/hybrid_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/hybrid_SGD_lr_0.01_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/hybrid_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/hybrid_SGD_lr_0.01_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/hybrid_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/hybrid_no_SGD_post_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:quality/hybrid_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:quality/hybrid_no_SGD_pre_BN.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:read_recovery_status.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:read_recovery_status.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery-1-budget-guard-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery-1-budget-guard-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery-1-budget-guard.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery-1-budget-guard.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery-1-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery-1-console.log",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery-1-supervision.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery-1-supervision.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery-1-supervision.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery-1-supervision.jsonl",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery_budget_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery_budget_guard.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery_protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery_protocol.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:recovery_tape.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:recovery_tape.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751592955760_2026-10-26T11-16-05.390910.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751592955760_2026-10-26T11-16-41.446017.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751592955760_2026-10-26T11-17-12.903766.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751592955760_2026-10-26T11-17-46.658973.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751592955760_2026-10-26T11-18-19.961343.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751595363200_2026-10-26T11-16-05.230807.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751595363200_2026-10-26T11-16-41.226461.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751595363200_2026-10-26T11-17-12.740391.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751595363200_2026-10-26T11-17-46.495768.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/checkpoints/bounded-sparse-cv-pilot/model_130751595363200_2026-10-26T11-18-19.800500.pt",
+    "passed": true
+  },
+  {
+    "check": "export_presence:registry/registries/bounded-sparse-cv-pilot_registry.csv",
+    "passed": true
+  },
+  {
+    "check": "export_hash:registry/registries/bounded-sparse-cv-pilot_registry.csv",
+    "passed": true
+  },
+  {
+    "check": "export_presence:report.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:report.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:run_recovery_installed_checks.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:run_recovery_installed_checks.py",
+    "passed": true
+  },
+  {
+    "check": "export_presence:source-manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:source-manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:source_manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:source_manifest.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:starts/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:starts/E.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:starts/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:starts/M0.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:starts/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:starts/P75.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:starts/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:starts/R.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:starts/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:starts/hybrid.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/E_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/E_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/E_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/E_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/M0_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/M0_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/M0_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/M0_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/P75_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/P75_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/P75_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/P75_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/R_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/R_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/R_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/R_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/hybrid_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/hybrid_SGD_lr_0.001.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:training/hybrid_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_hash:training/hybrid_SGD_lr_0.01.json",
+    "passed": true
+  },
+  {
+    "check": "export_presence:verify_recovery_preservation.py",
+    "passed": true
+  },
+  {
+    "check": "export_hash:verify_recovery_preservation.py",
+    "passed": true
+  },
+  {
+    "check": "same_data_roles",
+    "passed": true
+  },
+  {
+    "check": "original_tape",
+    "passed": true
+  },
+  {
+    "check": "independent_tape_replay",
+    "passed": true
+  },
+  {
+    "check": "ledger_parse",
+    "passed": true
+  },
+  {
+    "check": "live_GPU_telemetry_complete",
+    "passed": true
+  },
+  {
+    "check": "no_foreign_GPU",
+    "passed": true
+  },
+  {
+    "check": "registered_step_total",
+    "passed": true
+  },
+  {
+    "check": "observed_step_counters",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_values:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_values:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_values:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_values:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_values:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_values:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_values:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_values:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_values:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "step_sequence:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "step_values:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "no_timing_events",
+    "passed": true
+  },
+  {
+    "check": "master_labels_SHA",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:E_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:E_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:E_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:E_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:E_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:E_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_prediction_parent_SHA:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_exact_replay:M0_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_prediction_parent_SHA:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_exact_replay:M0_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_prediction_parent_SHA:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_exact_replay:M0_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_prediction_parent_SHA:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_exact_replay:M0_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_prediction_parent_SHA:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_exact_replay:M0_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_prediction_parent_SHA:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "dense_exact_replay:M0_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:P75_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:P75_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:P75_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:P75_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:P75_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:P75_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:R_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:R_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:R_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:R_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:R_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:R_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:hybrid_SGD_lr_0.001_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:hybrid_SGD_lr_0.001_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:hybrid_SGD_lr_0.01_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_training_lineage:hybrid_SGD_lr_0.01_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:hybrid_no_SGD_post_BN",
+    "passed": true
+  },
+  {
+    "check": "fixed_cell_identity:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_SHA:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_schema:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_dtypes_labels:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "prediction_values:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "quality_metrics:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_identity_cost:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "model_artifact_ID:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "same_start:hybrid_no_SGD_pre_BN",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:M0_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:M0_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:M0_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:M0_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:M0_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:P75_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:P75_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:P75_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:P75_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:P75_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:R_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:R_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:R_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:R_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:R_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:E_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:E_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:E_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:E_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:E_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:hybrid_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:hybrid_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:hybrid_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:hybrid_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:hybrid_no_SGD",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "pair_labels:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_parameters:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_buffers:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_allowed_changes:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "BN_pair_same_snapshot:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:E_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:E_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:M0_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:M0_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:P75_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:P75_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:R_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:R_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:hybrid_SGD_lr_0.001",
+    "passed": true
+  },
+  {
+    "check": "trajectory_start:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "trajectory_optimizer:hybrid_SGD_lr_0.01",
+    "passed": true
+  },
+  {
+    "check": "reported_validation_rows",
+    "passed": true
+  },
+  {
+    "check": "successful_termination",
+    "passed": true
+  },
+  {
+    "check": "complete_workload",
+    "passed": true
+  },
+  {
+    "check": "no_partial_trajectory",
+    "passed": true
+  },
+  {
+    "check": "immutable_teacher_and_parents",
+    "passed": true
+  },
+  {
+    "check": "worker_deadline",
+    "passed": true
+  }
+]

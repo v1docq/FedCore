@@ -1,0 +1,428 @@
+{
+  "blocks": [
+    {
+      "final_tensor_bytes": 295944,
+      "gene": {
+        "choice": {},
+        "path": "layer1.0",
+        "recovery": {}
+      },
+      "internal_width": 64,
+      "original_tensor_bytes": 295944,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 295944,
+      "gene": {
+        "choice": {},
+        "path": "layer1.1",
+        "recovery": {}
+      },
+      "internal_width": 64,
+      "original_tensor_bytes": 295944,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 886792,
+      "gene": {
+        "choice": {},
+        "path": "layer2.0",
+        "recovery": {}
+      },
+      "internal_width": 128,
+      "original_tensor_bytes": 886792,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 1181704,
+      "gene": {
+        "choice": {},
+        "path": "layer2.1",
+        "recovery": {}
+      },
+      "internal_width": 128,
+      "original_tensor_bytes": 1181704,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 3543048,
+      "gene": {
+        "choice": {},
+        "path": "layer3.0",
+        "recovery": {}
+      },
+      "internal_width": 256,
+      "original_tensor_bytes": 3543048,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 4722696,
+      "gene": {
+        "choice": {},
+        "path": "layer3.1",
+        "recovery": {}
+      },
+      "internal_width": 256,
+      "original_tensor_bytes": 4722696,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 14163976,
+      "gene": {
+        "choice": {},
+        "path": "layer4.0",
+        "recovery": {}
+      },
+      "internal_width": 512,
+      "original_tensor_bytes": 14163976,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    },
+    {
+      "final_tensor_bytes": 18882568,
+      "gene": {
+        "choice": {},
+        "path": "layer4.1",
+        "recovery": {}
+      },
+      "internal_width": 512,
+      "original_tensor_bytes": 18882568,
+      "rank": null,
+      "solver_workspace_bytes": 0
+    }
+  ],
+  "expected_storage_bytes": 44734408,
+  "external_artifacts": [
+    {
+      "coordinates": "cifar_resnet18_original_channels",
+      "key": "model:M0",
+      "kind": "model_version",
+      "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=28fb2d4eb03f9d79274ad5f5f5f78f6946c262d9a4b1e74bc6e528ff215af7b4",
+      "scope": []
+    },
+    {
+      "coordinates": "NCHW_CIFAR32",
+      "key": "data:calibration",
+      "kind": "calibration_observations",
+      "model_version": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4:frozen_M0:cv=28fb2d4eb03f9d79274ad5f5f5f78f6946c262d9a4b1e74bc6e528ff215af7b4",
+      "scope": []
+    }
+  ],
+  "fingerprint": "937d8198e49688a1717abb88d09cc20cd08e2ee5aa1abbff16bf6dc714d8c8a8",
+  "genotype": {
+    "genes": [
+      {
+        "choice": {},
+        "path": "layer1.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer1.1",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer2.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer2.1",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer3.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer3.1",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer4.0",
+        "recovery": {}
+      },
+      {
+        "choice": {},
+        "path": "layer4.1",
+        "recovery": {}
+      }
+    ],
+    "schema_version": 1
+  },
+  "nodes": [
+    {
+      "inputs": [
+        {
+          "artifact": "model:M0",
+          "kind": "model_version",
+          "name": "model"
+        }
+      ],
+      "key": "cv:apply_batch",
+      "outputs": [
+        {
+          "coordinates": "cifar_resnet18_graph",
+          "key": "model:compressed",
+          "kind": "model_version",
+          "model_version": "28fb2d4eb03f9d79274ad5f5f5f78f6946c262d9a4b1e74bc6e528ff215af7b4:compressed",
+          "scope": []
+        }
+      ],
+      "reads": [],
+      "scope": [],
+      "stage": "apply_replacements",
+      "writes": []
+    }
+  ],
+  "source_semantics": "independent_frozen_M0_coupled_blocks_then_atomic_apply",
+  "space": {
+    "calibration": {
+      "dtype": "float32",
+      "fingerprint": "84b29f87f5440c4259adc35028da3ae1fbd55d35a898e790be071721fecf48b3",
+      "role": "calibration",
+      "shape": [
+        1000,
+        3,
+        32,
+        32
+      ]
+    },
+    "domains": [
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 48
+          },
+          {
+            "keep_channels": 32
+          },
+          {
+            "rank": 32
+          },
+          {
+            "rank": 16
+          },
+          {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          {
+            "keep_channels": 48,
+            "rank": 16
+          }
+        ],
+        "path": "layer1.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 48
+          },
+          {
+            "keep_channels": 32
+          },
+          {
+            "rank": 32
+          },
+          {
+            "rank": 16
+          },
+          {
+            "keep_channels": 48,
+            "rank": 32
+          },
+          {
+            "keep_channels": 48,
+            "rank": 16
+          }
+        ],
+        "path": "layer1.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 96
+          },
+          {
+            "keep_channels": 64
+          },
+          {
+            "rank": 64
+          },
+          {
+            "rank": 32
+          },
+          {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          {
+            "keep_channels": 96,
+            "rank": 32
+          }
+        ],
+        "path": "layer2.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 96
+          },
+          {
+            "keep_channels": 64
+          },
+          {
+            "rank": 64
+          },
+          {
+            "rank": 32
+          },
+          {
+            "keep_channels": 96,
+            "rank": 64
+          },
+          {
+            "keep_channels": 96,
+            "rank": 32
+          }
+        ],
+        "path": "layer2.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 192
+          },
+          {
+            "keep_channels": 128
+          },
+          {
+            "rank": 128
+          },
+          {
+            "rank": 64
+          },
+          {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          {
+            "keep_channels": 192,
+            "rank": 64
+          }
+        ],
+        "path": "layer3.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 192
+          },
+          {
+            "keep_channels": 128
+          },
+          {
+            "rank": 128
+          },
+          {
+            "rank": 64
+          },
+          {
+            "keep_channels": 192,
+            "rank": 128
+          },
+          {
+            "keep_channels": 192,
+            "rank": 64
+          }
+        ],
+        "path": "layer3.1"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 384
+          },
+          {
+            "keep_channels": 256
+          },
+          {
+            "rank": 256
+          },
+          {
+            "rank": 128
+          },
+          {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          {
+            "keep_channels": 384,
+            "rank": 128
+          }
+        ],
+        "path": "layer4.0"
+      },
+      {
+        "alternatives": [
+          {},
+          {
+            "keep_channels": 384
+          },
+          {
+            "keep_channels": 256
+          },
+          {
+            "rank": 256
+          },
+          {
+            "rank": 128
+          },
+          {
+            "keep_channels": 384,
+            "rank": 256
+          },
+          {
+            "keep_channels": 384,
+            "rank": 128
+          }
+        ],
+        "path": "layer4.1"
+      }
+    ],
+    "dtype": "float32",
+    "num_classes": 10,
+    "options": {
+      "batch_size": 16,
+      "max_peak_bytes": 12884901888,
+      "max_workspace_bytes": 268435456,
+      "parameter_budget": null,
+      "tensor_byte_budget": null
+    },
+    "profile": "cifar_resnet18_internal_channel_l1_svd_v1",
+    "source": {
+      "fingerprint": "24cc7106674017a983119272bd1282a73f73810faa3749be0ceb2d1f4a4038e4",
+      "graph_version": "cv-compression-v1"
+    },
+    "source_storage_bytes": 44734408,
+    "source_storage_fingerprint": "1e9f7af154c7e6af99316a9e850bf01d1c67f301b95a9c9d4a6ba56dd374c3d0"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "scope": "bounded diagnosis after the preserved full-suite attempt failed two existing Dask integration tests",
+  "scientific_sources_modified": false,
+  "dependencies_modified": false,
+  "system_changes": false,
+  "network_scope": "local event-loop socketpair only; no external connections requested",
+  "environment": {
+    "python": "3.10.0",
+    "dask": "2024.4.2",
+    "distributed": "2024.4.2",
+    "loop_factory": "_WindowsSelectorEventLoop",
+    "OMP_NUM_THREADS": 8,
+    "MKL_NUM_THREADS": 8,
+    "OPENBLAS_NUM_THREADS": 8,
+    "NUMEXPR_NUM_THREADS": 8,
+    "workspace_temporary_directory": true
+  },
+  "initial_full_suite": {
+    "failed": 2,
+    "passed": 1754,
+    "skipped": 3,
+    "pytest_seconds": 398.94,
+    "evidence": "validation-process/stdout.log and pytest.xml, preserved unchanged"
+  },
+  "isolated_tests": [
+    {
+      "nodeid": "tests/refactoring/test_root_dask.py::test_real_caller_owned_dask_client_survives_training",
+      "status": {
+        "exit_code": 1,
+        "elapsed_seconds": 30.4881397,
+        "threads": 8
+      },
+      "pytest_seconds": 27.59,
+      "result": "failed with same LoopRunner._start_unlocked assertion before FedCore.fit",
+      "stdout": "caller.log",
+      "junit": "caller-junit.xml"
+    },
+    {
+      "nodeid": "tests/petra/test_protocol_runner.py::test_real_runner_fedcore_public_path",
+      "status": {
+        "exit_code": 1,
+        "elapsed_seconds": 31.4467975,
+        "threads": 8
+      },
+      "pytest_seconds": 28.51,
+      "result": "failed candidate again; reason empty, not a preserved candidate traceback",
+      "stdout": "runner.log",
+      "junit": "runner-junit.xml"
+    }
+  ],
+  "minimal_paired_control": {
+    "script": "minimal_dask_loop.py",
+    "sha256": "dff7ecbe5a853f4080fcd89ada5c188c6119e9e9661d250d6c7773412e81b989",
+    "imports_fedcore": false,
+    "default_sandbox": {
+      "returncode": 1,
+      "startup_seconds": 10.013351700000385,
+      "result": "AssertionError after startup timeout",
+      "trace": "IO thread socket.accept -> socket.socketpair -> asyncio.selector_events._make_self_pipe -> WindowsSelectorEventLoop; main thread waits for startup Event",
+      "stdout": "minimal-sandbox.log"
+    },
+    "require_escalated": {
+      "approval": "automatic approval review approved the same local-only diagnostic",
+      "returncode": 0,
+      "startup_seconds": 0.01577350000025035,
+      "tool_command_wall_seconds": 1.2336479,
+      "result": "started and stopped normally",
+      "stdout": "minimal-unsandboxed.log"
+    }
+  },
+  "commands": {
+    "executable": "D:/data_old/WORK/obsidian/Papers_2025/Проекты для разработки/Исследовательские проекты/Fedcore/work/refactoring/.venv/Scripts/python.exe",
+    "isolated": "-m pytest <nodeid> -q --basetemp <fresh caller-temp or runner-temp> --junitxml <matching caller-junit.xml or runner-junit.xml>",
+    "paired": "<absolute QA/dask-repro-01/minimal_dask_loop.py>; identical command and code, execution sandbox changed only"
+  },
+  "conclusion": "The local socketpair event-loop startup fails in the default sandbox and succeeds outside it with identical Dask-only code. The isolated failures rule out dependence on the newly added SVD tests. Full-suite validation outside the sandbox remains a separate required check.",
+  "compute_accounting": {
+    "two_isolated_process_wall_seconds": 61.9349372,
+    "minimal_unsandboxed_tool_wall_seconds": 1.2336479,
+    "minimal_sandbox_startup_seconds": 10.013351700000385,
+    "minimal_sandbox_whole_process_clocked": false,
+    "minimal_sandbox_log_first_to_last_write_seconds": 11.1446842,
+    "conservative_minimal_sandbox_charge_seconds": 15.0,
+    "conservative_total_diagnostic_charge_seconds": 78.1685851,
+    "note": "The sandboxed minimal process did not have a separate full-process stopwatch; do not label the conservative charge as an exact measured duration. Small stdlib summary I/O is separate."
+  }
+}
