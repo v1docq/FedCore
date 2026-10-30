@@ -163,5 +163,7 @@ def source_code_hashes():
              "algorithm/quantization/graph_specs.py", "algorithm/quantization/resources.py",
              "algorithm/low_rank/grammar_search.py", "tools/registry/checkpoint_manager.py",
              "interfaces/fedcore_dispatcher.py", "experiments/fashion_independent_worker.py"]
+    paths.extend(["experiments/fashion_comparison_plan.py", "experiments/fashion_multim0_worker.py"])
     paths.extend(path.relative_to(base).as_posix() for path in (base/"algorithm"/"quantization").rglob("*.py"))
     return {path: file_hash(base/path) for path in sorted(set(paths))}
+

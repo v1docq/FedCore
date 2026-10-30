@@ -164,9 +164,9 @@ def evaluate(model, images, labels, ids, *, reference_predictions=None, batch_si
     return result
 
 
-def make_source():
+def make_source(seed=20261027):
     with torch.random.fork_rng(devices=[]):
-        torch.manual_seed(20261027)
+        torch.manual_seed(seed)
         return nn.Sequential(nn.Linear(784, 256), nn.ReLU(), nn.Linear(256, 128), nn.ReLU(), nn.Linear(128, 10))
 
 
@@ -179,9 +179,9 @@ def train(plan, root, limits):
                 "prepared_sha256": file_hash(root/"prepared.json")})
     training = plan.payload["training"]
     deadline = time.perf_counter()+min(training["max_seconds"], limits.remaining()-3)
-    model = make_source()
+    model = make_source(plan.payload["model"]["seed"])
     optimizer = torch.optim.Adam(model.parameters(), lr=training["lr"])
-    generator = torch.Generator().manual_seed(20261027)
+    generator = torch.Generator().manual_seed(plan.payload["model"]["seed"])
     ids = data["indices"]["fit"]; best_ce = math.inf; best_state = None; history = []
     start = time.perf_counter()
     completed = True
@@ -285,7 +285,7 @@ def unique_initial(space, count, seed):
     return independent_initial(space, count, seed, sample=prefix_sample, payload=genotype_payload)
 
 
-def run_search(plan, root, job, source, data, budget, ledger, seconds, limits, *, initial_sampler=unique_initial):
+def run_search(plan, root, job, source, data, budget, ledger, seconds, limits, *, initial_sampler=unique_initial, comparison=None, space_name=None):
     from fedcore.algorithm.quantization.grammar import (prepare_quantization_space, QUANTIZATION_GRAMMAR_ADAPTER,
         source_identity, calibration_identity, genotype_payload)
     from fedcore.algorithm.quantization.cache import DependencyCache
@@ -295,8 +295,9 @@ def run_search(plan, root, job, source, data, budget, ledger, seconds, limits, *
     calibration = features(data["images"], data["indices"]["C"])
     context = digest({"manifest": plan.fingerprint, "source": source_identity(source), "data": data_identity(data),
                       "trained_sha256": file_hash(root/"trained.json"), "fitness_role": "Vsearch512_ground_truth"})
-    space = prepare_quantization_space(source, alternatives(plan), calibration=calibration, evaluation_context=context,
-        max_storage_bytes=budget, max_peak_bytes=HARD_RSS, prequantize_bits=(2, 4), training_choices=(None,))
+    domain, prefixes = (alternatives(plan), (2, 4)) if comparison is None else __import__("fedcore.experiments.fashion_comparison_plan", fromlist=["search_domain"]).search_domain(plan, space_name)
+    space = prepare_quantization_space(source, domain, calibration=calibration, evaluation_context=context,
+        max_storage_bytes=budget, max_peak_bytes=HARD_RSS, prequantize_bits=prefixes, training_choices=(None,))
     if not hasattr(space, "domains"):
         return None, {"space_failure": jsonable(space), "search": {"status": "failed", "reason": "space preparation"}}
     frozen_data = data_identity(data); cache = DependencyCache(max_bytes=plan.payload["search"]["cache_bytes"])
@@ -330,11 +331,13 @@ def run_search(plan, root, job, source, data, budget, ledger, seconds, limits, *
             record["seconds"] = time.perf_counter()-started
             attempts.append(record); append_json(root/"jobs"/(job+".attempts.jsonl"), record)
     seed = int(job.rsplit("_", 1)[1]); random_panel = job.startswith("random_")
-    initial = initial_sampler(space, 24 if random_panel else 4, seed)
+    evaluations = 24 if comparison is None else comparison.evaluations
+    population = 4 if comparison is None else comparison.population
+    initial = initial_sampler(space, evaluations if random_panel else population, seed)
     adapter = replace(QUANTIZATION_GRAMMAR_ADAPTER, generate=prefix_sample, context_guard=context_guard)
-    config = GrammarSearchConfig(seed=seed, population_size=24 if random_panel else 4,
-        generations=1 if random_panel else 24, max_evaluations=24,
-        max_seconds=max(.001, local_deadline-time.perf_counter()), max_proposals=128)
+    config = GrammarSearchConfig(seed=seed, population_size=evaluations if random_panel else population,
+        generations=1 if random_panel else evaluations, max_evaluations=evaluations,
+        max_seconds=max(.001, local_deadline-time.perf_counter()), max_proposals=max(128, evaluations*8))
     start = time.perf_counter()
     result = run_grammar_search(space, config, assessment, fitness_context=context, grammar_adapter=adapter,
         initial_genotypes=initial, strict_deadline=True,
