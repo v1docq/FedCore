@@ -5,6 +5,7 @@ import pytest
 
 from golem.core.adapter import IdentityAdapter
 from golem.core.optimisers.fitness.multi_objective_fitness import MultiObjFitness
+from golem.core.optimisers.fitness import null_fitness
 from golem.core.optimisers.graph import OptGraph, OptNode
 from golem.core.optimisers.opt_history_objects.individual import GraphEvalResult, Individual
 
@@ -98,6 +99,19 @@ def test_all_new_evaluation_failures_do_not_discard_valid_skipped_members(dispat
     monkeypatch.setattr(instance, "_multithread_eval", lambda items: [None])
     monkeypatch.setattr(instance, "_eval_at_least_one", lambda items: pytest.fail("A retained valid member already supplies fitness"))
     assert_same_objects(instance.evaluate_population([failed, retained]), [retained])
+
+
+def test_null_fitness_results_are_excluded_before_population_admission(dispatcher, monkeypatch):
+    instance = dispatcher.instance
+    failed_a, valid, failed_b = [individual(name) for name in ("failed-a", "valid", "failed-b")]
+    results = [GraphEvalResult(failed_b.uid, null_fitness(), failed_b.graph), result_for(valid),
+               GraphEvalResult(failed_a.uid, null_fitness(), failed_a.graph)]
+    monkeypatch.setattr(instance, "_multithread_eval", lambda items: results)
+    monkeypatch.setattr(instance, "_eval_at_least_one", lambda items: pytest.fail("Finite fitness already exists"))
+    actual = instance.evaluate_population([failed_a, valid, failed_b])
+    assert_same_objects(actual, [valid])
+    assert not failed_a.fitness.valid and not failed_b.fitness.valid
+    assert dispatcher.info == [{"evaluated_pop_size": 1, "pop_size": 3}]
 
 
 def test_all_new_successes_keep_input_order_without_fallback(dispatcher, monkeypatch):
