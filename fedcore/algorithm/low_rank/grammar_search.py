@@ -60,6 +60,14 @@ class GrammarFitness:
 
 
 @dataclass(frozen=True)
+class GrammarMutationDecision:
+    """A checked domain planner may describe one atomic variation."""
+    genotype: object
+    kind: str
+    details: tuple[tuple[str, str | int | float | bool], ...] = ()
+
+
+@dataclass(frozen=True)
 class GrammarAdapter:
     """Runtime capabilities for one checked finite metadata grammar.
 
@@ -75,6 +83,7 @@ class GrammarAdapter:
     payload: Callable
     domain: str = "closed frozen-M0 compression grammar"
     context_guard: Callable | None = None
+    mutation_planner: Callable | None = None
 
 
 G3_GRAMMAR_ADAPTER = GrammarAdapter(
@@ -191,6 +200,8 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
     adapter = grammar_adapter
     if adapter.context_guard is not None and not callable(adapter.context_guard):
         raise ValueError('context_guard must be callable or None')
+    if adapter.mutation_planner is not None and not callable(adapter.mutation_planner):
+        raise ValueError('mutation_planner must be callable or None')
     failure = adapter.validate_space(space)
     if failure is not None:
         return {"status": "structurally_invalid", "failure": failure, "charged_evaluations": 0, "trace": []}
@@ -303,14 +314,31 @@ def run_grammar_search(space, config, evaluate, *, fitness_context, initial_geno
         operator_started = time.perf_counter()
         number, = budget.reserve_proposals(1, operator_started)
         parent = decode(graph)
-        kind = rng.choice((MutationKind.CHOICE, MutationKind.SCOPE))
-        child = adapter.mutate(parent, space, kind=kind, seed=rng.randrange(2**32))
+        details = {}
+        if adapter.mutation_planner is None:
+            kind = rng.choice((MutationKind.CHOICE, MutationKind.SCOPE))
+            child = adapter.mutate(parent, space, kind=kind, seed=rng.randrange(2**32))
+            kind_name = kind.value
+        else:
+            decision = adapter.mutation_planner(parent, space,
+                seed=rng.randrange(2**32), charged=budget.attempts,
+                maximum=config.max_evaluations, initial=config.population_size)
+            if (type(decision) is not GrammarMutationDecision or type(decision.kind) is not str
+                    or not decision.kind or type(decision.details) is not tuple
+                    or any(type(row) is not tuple or len(row) != 2 or type(row[0]) is not str
+                           or type(row[1]) not in (str, int, float, bool)
+                           or type(row[1]) is float and not math.isfinite(row[1])
+                           for row in decision.details)
+                    or len(dict(decision.details)) != len(decision.details)):
+                raise ValueError('A typed finite mutation decision is required')
+            child, kind_name, details = decision.genotype, decision.kind, dict(decision.details)
+        child = adapter.normalize(child, space)
         if isinstance(child, ValidationFailure):
             raise ValueError("Invalid closed-grammar mutation")
-        emit("variation", operator="grammar_mutation", kind=kind.value,
-             parent=adapter.payload(parent), child=adapter.payload(child))
+        emit("variation", operator="grammar_mutation", kind=kind_name,
+             parent=adapter.payload(parent), child=adapter.payload(child), mutation_details=details)
         return proposal(child, "grammar_mutation", [_solution_id(parent, adapter)], number,
-                        operator_started=operator_started, kind=kind.value)
+                        operator_started=operator_started, kind=kind_name)
 
     def cross(first, second, **kwargs):
         operator_started = time.perf_counter()

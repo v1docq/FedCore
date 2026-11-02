@@ -1,0 +1,198 @@
+{
+  "schema": "heterogeneous-evo-only-panel-v1",
+  "protocol": {
+    "model_seeds": [
+      20261121,
+      20261122,
+      20261123
+    ],
+    "search_seeds": [
+      101,
+      211,
+      307
+    ],
+    "arms": [
+      "E0",
+      "E1",
+      "E2"
+    ],
+    "fit_rows": 40000,
+    "calibration_rows": 2000,
+    "search_rows": 4000,
+    "report_rows": 4000,
+    "batch_size": 128,
+    "epochs": 80,
+    "attempts": 64,
+    "population": 8,
+    "recovery_updates": 200,
+    "proposal_multiplier": 10,
+    "controls_per_model": 5
+  },
+  "budget": {
+    "searches": 27,
+    "charged_attempts": 1728,
+    "max_proposals": 17280,
+    "baseline_sgd": 75120,
+    "search_sgd": 345600,
+    "control_sgd": 3000,
+    "total_sgd": 423720,
+    "max_finalists": 45,
+    "latency_sessions": 204,
+    "primary_contrast": "E2-E0",
+    "secondary_contrasts": [
+      "E1-E0",
+      "E2-E1"
+    ],
+    "recovery_tape": "one tape per M0 shared by all arms, search seeds and controls",
+    "cluster_launch_authorized": false,
+    "main_gpu_seconds": null
+  },
+  "pilot": {
+    "models": 1,
+    "recipes": 12,
+    "max_seconds": 7200,
+    "baseline_sgd": 25040,
+    "recovery_sgd": 2400,
+    "total_sgd": 27440,
+    "cluster_launch_authorized": false
+  },
+  "jobs": [
+    {
+      "model_seed": 20261121,
+      "search_seed": 101,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 101,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 101,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 211,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 211,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 211,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 307,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 307,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261121,
+      "search_seed": 307,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 101,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 101,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 101,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 211,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 211,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 211,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 307,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 307,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261122,
+      "search_seed": 307,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 101,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 101,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 101,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 211,
+      "arm": "E0"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 211,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 211,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 307,
+      "arm": "E1"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 307,
+      "arm": "E2"
+    },
+    {
+      "model_seed": 20261123,
+      "search_seed": 307,
+      "arm": "E0"
+    }
+  ],
+  "execution": "not launched; cluster remains stopped",
+  "required_hardware_gate": "trusted host binding + private whole-tree OS deadline + A100 backend pilot"
+}

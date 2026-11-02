@@ -1,0 +1,85 @@
+# Реализация гетерогенного CV-сжатия
+
+Реализация находится в отдельной ветке `integration/heterogeneous-compression`. Merge `7431c1c` объединяет SVD/CV `8cfa54d2abdc1e56fc3dbbd457a06588fe4d6e52` и все локальные quant-коммиты до `56bda18662790981822490324748dcd1b33efb9b`. Исходные рабочие копии сохранены. Сохранены также более поздние предохранители CV и исправление фильтрации невалидных оценок квантования.
+
+Утверждённая постановка и бюджет: [PLAN_EVO_ONLY.md](PLAN_EVO_ONLY.md).
+
+## Публичные компоненты
+
+| Файл | Назначение |
+|---|---|
+| `fedcore/algorithm/heterogeneous/contracts.py` | Представления, версии, координаты и допустимая композиция областей |
+| `cv.py` | Конечная G1, компиляция, сериализация и согласованное построение float-кандидата |
+| `policy.py`, `search.py` | E0/E1/E2 поверх общего GOLEM/SPEA2, одинаковый оплаченный префикс |
+| `backend.py` | ONNX Q/DQ, ORT, TensorRT 10, самостоятельная загрузка и реальный размер пакета |
+| `selection.py`, `protocol.py` | Выбор финалистов, неполные исходы и счётный бюджет |
+| `fedcore/experiments/heterogeneous_data.py` | Только train-корпус CIFAR-10, роли и детерминированное преобразование изображений |
+| `heterogeneous_runtime.py` | Фиксированное восстановление, оценка загруженного артефакта и журнал частичных расходов |
+| `heterogeneous_series.py` | Полная последовательность независимых M0, контролей, поисков, общей фиксации, Vreport и аппаратных границ |
+| `heterogeneous_host.py`, `heterogeneous_direct_host.py` | Ограниченный транспорт и доказуемая принадлежность наблюдаемых процессов |
+| `heterogeneous_device.py`, `heterogeneous_deadline.py` | Один GPU UUID и внешний срок собственной systemd/cgroup unit |
+
+## Безопасная подготовка манифеста
+
+После установки пакета команда ниже только записывает конфигурацию и 27 заданий; обучение, CUDA, SSH и systemd не запускаются:
+
+```powershell
+python scripts/plan_heterogeneous_cv.py --output panel-plan.json
+```
+
+Экспортные зависимости уже выделены в существующую optional-группу `export`: ONNX 1.16.2 и ONNX Runtime 1.18.1. Они не устанавливаются при импорте. Для реального TensorRT нужен отдельный проверенный GPU-профиль; автоматического обновления основного окружения нет.
+
+## Пример соединения одного поиска
+
+Следующий код описывает вычислительный вход для будущего разрешённого запуска. Это не команда возобновления остановленного кластера.
+
+```python
+from fedcore.algorithm.heterogeneous import default_alternatives, prepare_space
+from fedcore.algorithm.heterogeneous.backend import BackendSpec
+from fedcore.algorithm.heterogeneous.policy import SearchArm
+from fedcore.algorithm.heterogeneous.search import common_initial, run_search
+from fedcore.algorithm.low_rank.compression_graph import RuntimeOptions
+from fedcore.algorithm.low_rank.grammar_search import GrammarSearchConfig
+from fedcore.experiments.heterogeneous_runtime import (
+    CandidateEvaluator, RecoveryConfig, recovery_tape,
+)
+
+# source: завершённая независимая M0 на CPU, в eval-режиме.
+# data: CifarTrainingData; deadline: общий абсолютный срок time.perf_counter.
+calibration = data.calibration_tensor()
+space = prepare_space(source, calibration, alternatives=default_alternatives(),
+    options=RuntimeOptions(max_workspace_bytes=512*1024**2,
+                           max_peak_bytes=4*1024**3))
+config = GrammarSearchConfig(seed=101, population_size=8, generations=64,
+    max_evaluations=64, max_proposals=640, max_seconds=search_seconds)
+recovery = RecoveryConfig()
+tape = recovery_tape(data.roles.fit, model_seed=model_seed, config=recovery)
+backend = BackendSpec(runtime="tensorrt", device_uuid=target_gpu_uuid)
+evaluator = CandidateEvaluator(source, calibration, tape, data.training,
+    data.search_batches, fresh_job_directory, deadline, backend,
+    validation_identity=data.fingerprint+":Vsearch:"+data.roles.sha256,
+    validation_rows=4000, recovery_config=recovery, device="cuda:0")
+result = run_search(space, config, evaluator, arm=SearchArm.STAGED,
+    fitness_context=evaluator.validation_identity,
+    initial_genotypes=common_initial(space, 8, config.seed),
+    context_guard=check_frozen_source_and_data,
+    absolute_deadline=deadline)
+```
+
+Входы должны быть подготовлены контроллером с утверждённым бюджетом. Восстановление и исходное обучение обязаны связать GPU UUID до первой инициализации CUDA. Отдельный каталог нужен для каждого поиска: прошлые артефакты и квитанции не перезаписываются.
+
+## Учёт неуспехов
+
+`progress.jsonl` хранит начало попытки, переходы стадий, начало и завершение каждого SGD-шага. `receipt.json` атомарно сохраняет исход, фактические расходы и качество. При аварийной остановке незавершённый шаг остаётся явно начатым, а не исчезает из расхода. Общий поисковый счётчик отдельно списывает попытку до компиляции.
+
+`load_deployment` сверяет хеш основного файла и состав пакета. Для PTQ сохраняются источник M0, версия восстановленных весов, калибровочные данные и координаты. Реальная проверка ONNX/ORT на CPU не считается аппаратным допуском A100.
+
+## Условия аппаратного допуска
+
+Перед первым новым запуском отдельно требуются: возобновление кластерной работы владельцем, доступная выделенная A100, проверенный direct-host профиль, рабочая systemd delegation/cgroup v2, закреплённый TensorRT 10 и одно новое окно пилота. Часы основной панели определяются после измерения стоимости пилота. Автоматических повторов и переноса старого восьмичасового разрешения нет.
+
+`run_series` соединяет вычислительные этапы и требует исходный срок контроллера, отдельный предел поиска и заранее зафиксированный протокол измерений. Число повторов, прогревы и критерии A/A определяются после пилота. Внешние аппаратные функции измерения и pre/post A/A передаются явно; исполнитель проверяет их сырые результаты и не заменяет их таймером CPU. Вариант `SeriesEffects` с подставными исполнителями предназначен для проверок счётчиков и порядка стадий и помечается как не являющийся аппаратной проверкой.
+
+Для настоящего запуска нужен собственный guard/worker внутри подтверждённой cgroup. `SystemdDeadlineLauncher` готовит и проверяет эту границу, `DirectHostBindingProvider` связывает процессы, `query_device_gpu_rows` наблюдает объявленный UUID. `require_cuda_binding` дополнительно сравнивает UUID текущего контекста через CUDA Driver API. Эти API не обнаруживают доступ к кластеру и не предоставляют разрешение на запуск. Источник определения UUID: [CUDA Driver API](https://docs.nvidia.com/cuda/archive/12.5.0/cuda-driver-api/group__CUDA__DEVICE.html).
+
+Документация API: [TensorRT Q/DQ](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/quantized-types-explicit-quantization.html), [Engine Inspector](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/engine-tools.html). Применение конкретной версии проверяется на её фактическом формате inspector; неизвестный формат приводит к отказу.
