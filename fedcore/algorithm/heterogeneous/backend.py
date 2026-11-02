@@ -440,6 +440,10 @@ def _confirmed_int8_layer(layers, selected):
         if "conv" not in str(item.get("LayerType", "")).lower():
             continue
         inputs = item.get("Inputs", [])
+        # Explicit floating computation contradicts integer-kernel evidence;
+        # quantized storage alone cannot override a reported float precision.
+        if "Precision" in item and not has_int8_type(item["Precision"]):
+            continue
         activation_int8 = type(inputs) is list and bool(inputs) and has_int8_type(inputs[0])
         kernel_int8 = has_int8_type(item.get("Precision", "")) or has_int8_type(item.get("Weights", {}))
         constant_int8 = type(inputs) is list and len(inputs) > 1 and has_int8_type(inputs[1])

@@ -86,6 +86,8 @@ def test_tensorrt_coverage_requires_exact_metadata_and_integer_conv_precision():
     assert not _confirmed_int8_layer([layer], "Conv_1")
     assert not _confirmed_int8_layer([{**layer, "Metadata": "", "Name": "Conv_10"}], "Conv_10")
     assert not _confirmed_int8_layer([{**layer, "Precision": "Float", "Outputs": [{"Datatype": "INT8"}]}], "Conv_10")
+    assert not _confirmed_int8_layer([{**layer, "Precision": "Float", "Weights": {"Datatype": "INT8"},
+                                      "Inputs": [{"Datatype": "INT8"}, {"Datatype": "INT8"}]}], "Conv_10")
     assert not _confirmed_int8_layer([{**layer, "LayerType": "Reformat"}], "Conv_10")
     assert not _confirmed_int8_layer([{**layer, "Inputs": [{"Datatype": "Float"}]}], "Conv_10")
     class Unsupported:

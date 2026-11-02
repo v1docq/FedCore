@@ -1,6 +1,6 @@
 {
   "schema": "heterogeneous-local-validation-v1",
-  "created_at": "2026-11-02T19:35:42+03:00",
+  "created_at": "2026-11-02T19:53:33+03:00",
   "reviewed_merge": "7431c1c",
   "parents": {
     "svd": "8cfa54d2abdc1e56fc3dbbd457a06588fe4d6e52",
@@ -12,7 +12,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 165.0,
+      "seconds": 170.171,
       "evidence": "final-all-heterogeneous.xml"
     },
     "integration_regression": {
@@ -28,7 +28,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 125.273,
+      "seconds": 134.314,
       "evidence": "installed-wheel-tests.xml"
     }
   },
@@ -42,10 +42,10 @@
   },
   "wheel": {
     "file": "fedcore-0.0.5.4-py3-none-any.whl",
-    "sha256": "e6311a46fba8092e80d166f12c4d6e00402b6065cbd29e68146ccd855f14e01e",
+    "sha256": "e5189b622b89494e69492d8e2d79e64f7e08b7ed49968efee291bd825d19431b",
     "source_modules_match": true
   },
-  "code_tree_sha256": "46de66193f6289cecdabac0800e9a4848829820291572dc56154bee03e05978f",
+  "code_tree_sha256": "fe59943d8b8bc830cdd9683758a06a6a542954eea93d69628513eb146b83492a",
   "sources": [
     {
       "path": "fedcore/algorithm/heterogeneous/__init__.py",
@@ -53,7 +53,7 @@
     },
     {
       "path": "fedcore/algorithm/heterogeneous/backend.py",
-      "sha256": "036553c1d01f6fadbb2795b908ba96c9a8a7c63957f5e9282ebdb5f46b47ed5b"
+      "sha256": "1de956c79bb052241b02682084d5884452fe6d968b640a490b7e1c882b0a1182"
     },
     {
       "path": "fedcore/algorithm/heterogeneous/contracts.py",
@@ -121,7 +121,7 @@
     },
     {
       "path": "tests/refactoring/test_heterogeneous_cv_backend.py",
-      "sha256": "4212811d510d87a972ab7ca57762ab925eaa9fd42ceb284fec2b00a0682827d7"
+      "sha256": "13435556fcf17c1820e290c2557fa9a6d16c6056a90a42793a2159289a50783d"
     },
     {
       "path": "tests/refactoring/test_heterogeneous_deadline.py",
@@ -175,5 +175,6 @@
     "TensorRT and CUDA Driver UUID queries not run on hardware",
     "Real systemd/cgroup/host profile not admitted",
     "Main GPU-hours and raw timing protocol require post-pilot approval"
-  ]
+  ],
+  "followup": "Explicit floating kernel precision is rejected even if inspector storage hints are INT8; full new suite and installed-wheel subset repeated."
 }
