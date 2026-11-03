@@ -51,7 +51,7 @@ def recovery_tape(fit_indices, *, model_seed, config=RecoveryConfig()):
 
 
 def recover_owned(model, tape, load_batch, *, config=RecoveryConfig(), device='cpu',
-                  deadline, clock=time.perf_counter, progress=None):
+                  deadline, clock=time.perf_counter, progress=None, synchronize_updates=False):
     """Fresh optimizer on an owned candidate; no parent weight/state inheritance."""
     import torch
     if (type(config) is not RecoveryConfig or type(tape) is not tuple or len(tape) != config.updates
@@ -59,7 +59,7 @@ def recover_owned(model, tape, load_batch, *, config=RecoveryConfig(), device='c
                    or any(type(i) is not int or i < 0 for i in b.indices)
                    or type(b.augmentation_seed) is not int or b.augmentation_seed < 0 for b in tape)
             or type(deadline) not in (int,float) or not math.isfinite(deadline)
-            or not callable(load_batch)):
+            or not callable(load_batch) or type(synchronize_updates) is not bool):
         raise ValueError('A complete fixed recovery tape, loader and absolute deadline are required')
     if clock() >= deadline:
         raise TimeoutError('Recovery deadline expired before model transfer')
@@ -89,7 +89,10 @@ def recover_owned(model, tape, load_batch, *, config=RecoveryConfig(), device='c
                 if not bool(torch.isfinite(loss)):
                     raise ValueError('Nonfinite recovery loss')
                 if progress is not None: progress('sgd_attempted', updates + 1)
-                loss.backward(); optimizer.step(); updates += 1
+                loss.backward(); optimizer.step()
+                if synchronize_updates and target.type == 'cuda':
+                    torch.cuda.synchronize(target)
+                updates += 1
                 if progress is not None: progress('sgd_completed', updates)
             if target.type == 'cuda': torch.cuda.synchronize(target)
             if clock() >= deadline:
@@ -181,6 +184,7 @@ class CandidateEvaluator:
     validation_rows: int = 4000
     recovery_config: RecoveryConfig = RecoveryConfig()
     device: str = 'cpu'
+    synchronize_updates: bool = False
 
     def __call__(self, workflow):
         from fedcore.algorithm.heterogeneous.cv import execute_float_workflow
@@ -189,7 +193,8 @@ class CandidateEvaluator:
         from fedcore.algorithm.low_rank.grammar_search import GrammarFitness
         from fedcore.algorithm.low_rank.grammar_execution import ResourceFailure, NumericalFailure
         if (type(self.validation_identity) is not str or not self.validation_identity
-                or type(self.validation_rows) is not int or self.validation_rows < 1):
+                or type(self.validation_rows) is not int or self.validation_rows < 1
+                or type(self.synchronize_updates) is not bool):
             raise ValueError('The sealed Vsearch identity and row count are mandatory')
         if time.perf_counter() >= self.deadline:
             return ResourceFailure('CandidateDeadline','No candidate may start after its deadline')
@@ -207,7 +212,8 @@ class CandidateEvaluator:
                 details['failure'] = asdict(result); return result
             ledger.phase('float_recovery')
             recovery = recover_owned(result.model,self.tape,self.load_batch,
-                config=self.recovery_config,device=self.device,deadline=self.deadline,progress=ledger.progress)
+                config=self.recovery_config,device=self.device,deadline=self.deadline,progress=ledger.progress,
+                synchronize_updates=self.synchronize_updates)
             if time.perf_counter() >= self.deadline: raise TimeoutError('No late export')
             ledger.phase('calibrate_export_reload')
             artifact = export_onnx_qdq(result.model,self.calibration,workflow,

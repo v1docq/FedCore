@@ -9,10 +9,44 @@ import psutil
 import pytest
 
 from fedcore.experiments.cv_independent_guard import (
-    GuardEffects, MAX_RSS_BYTES, MAX_SECONDS, MAX_VRAM_BYTES, MINIMUM_DISK_BYTES,
+    GuardEffects, GuardLimits, MAX_RSS_BYTES, MAX_SECONDS, MAX_VRAM_BYTES, MINIMUM_DISK_BYTES,
     WORKER_SECONDS, run_guard,
 )
 from fedcore.experiments.cv_independent_supervision import NamespaceBinding, PidBinding, ProcessIdentity
+
+
+@pytest.mark.parametrize('window,reserve', [(True, 10), (7201, False), (7200, 7200),
+                                         (28801, 10), (float('inf'), 10), (7200, 0)])
+def test_guard_rejects_invalid_explicit_window(window, reserve):
+    with pytest.raises(ValueError):
+        GuardLimits(window, reserve)
+
+
+def test_pilot_guard_preserves_original_two_hour_window_and_cleanup(tmp_path, monkeypatch):
+    monkeypatch.delenv('FEDCORE_PILOT_ABSOLUTE_DEADLINE', raising=False)
+    harness = Harness([(), (), ()])
+    def expire(seconds):
+        harness.now = 7271.
+    result = run_guard(['cpu-noop-placeholder'], receipt_path=tmp_path / 'pilot-guard.json',
+        binding_provider=harness.provider, effects=replace(harness.effects(), sleep=expire),
+        limits=GuardLimits(7200, 60), started_at=70.)
+    assert result['started_at'] == 70. and result['guard_started_at'] == 100.
+    assert result['max_seconds'] == 7200 and result['worker_seconds'] == 7140
+    assert result['absolute_deadline'] == 7210.
+    assert float(harness.launches[0][1]['env']['FEDCORE_PILOT_ABSOLUTE_DEADLINE']) == 7210.
+    assert result['elapsed_seconds'] == 7201.
+    assert result['within_authorized_window'] is False
+    assert result['reason'] == 'authorized_window_exceeded'
+
+
+@pytest.mark.parametrize('start', [True, -1, 101., float('nan')])
+def test_guard_rejects_reset_or_invalid_original_start(tmp_path, start):
+    harness = Harness([])
+    with pytest.raises(ValueError):
+        run_guard(['unused'], receipt_path=tmp_path / 'unused.json',
+                  effects=harness.effects(), started_at=start)
+    assert harness.launches == []
+    assert not (tmp_path / 'unused.json').exists()
 
 
 class FakeTimer:

@@ -255,8 +255,14 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
         if spec.runtime == 'tensorrt':
             from fedcore.experiments.heterogeneous_device import require_cuda_binding
             cuda_binding = require_cuda_binding(spec.device_uuid)
+        # Own the exact calibration bytes before checking their workflow binding.
+        # A caller mutation between validation and PTQ must never become a new
+        # implicitly accepted calibration identity.
+        _calibration(calibration)
+        calibration_source = calibration
+        calibration = calibration.detach().clone(memory_format=torch.contiguous_format)
         _check_recovered(model, calibration, workflow)
-        calibration_identity = _calibration(calibration)
+        calibration_identity = workflow.space.structural_space.calibration.fingerprint
         import onnx
         import onnxruntime as ort
         output = Path(destination).resolve()
@@ -266,7 +272,8 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
         source_inventory = capture_inventory(model)
         recovered_identity = inventory_fingerprint(source_inventory)
         peak = workflow.space.structural_space.options.max_peak_bytes
-        storage_guard(6 * inventory_cost(source_inventory, "bytes"), peak)
+        storage_guard(6 * inventory_cost(source_inventory, "bytes")
+                      + calibration.numel() * calibration.element_size(), peak)
         folded = _fold_bn(model)
         selected_paths = _selected_convs(folded, workflow)
         with tempfile.TemporaryDirectory(prefix="fedcore-heterogeneous-") as temporary:
@@ -351,7 +358,8 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
             manifest["backend_probe_max_abs_error"] = float(np.max(np.abs(hardware_output - qoutput)))
         if inventory_fingerprint(capture_inventory(model)) != recovered_identity:
             raise BackendContractError("SourceMutation", "Export changed the caller-owned recovered candidate")
-        if _calibration(calibration) != calibration_identity:
+        if (_calibration(calibration) != calibration_identity
+                or _calibration(calibration_source) != calibration_identity):
             raise BackendContractError("StaleCalibration", "Calibration changed during export or independent reload")
         # Publish the self-contained loader entry only after every postcondition.
         # Failed exports can retain diagnostic files, but are not loadable packages.

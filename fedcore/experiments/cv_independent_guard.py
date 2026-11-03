@@ -40,6 +40,23 @@ class BindingProvider(Protocol):
         """Return fresh mappings/evidence within the host adapter's externally enforced time bound."""
 
 
+@dataclass(frozen=True)
+class GuardLimits:
+    """Explicit original window; defaults preserve the historical CV protocol."""
+    max_seconds: float = MAX_SECONDS
+    cleanup_seconds: float = MAX_SECONDS - WORKER_SECONDS
+
+    def __post_init__(self):
+        if (any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0
+                for v in (self.max_seconds, self.cleanup_seconds))
+                or not self.cleanup_seconds < self.max_seconds <= MAX_SECONDS):
+            raise ValueError('A bounded explicit guard window and cleanup reserve are required')
+
+    @property
+    def worker_seconds(self):
+        return self.max_seconds - self.cleanup_seconds
+
+
 def query_gpu_rows():
     result = subprocess.run(['nvidia-smi', '--query-compute-apps=pid,used_memory',
         '--format=csv,noheader,nounits'], capture_output=True, text=True, check=True, timeout=5)
@@ -158,8 +175,8 @@ def _gpu_bytes(rows):
     return used
 
 
-def _absolute_deadline(began, environment):
-    limits = [began+WORKER_SECONDS]
+def _absolute_deadline(began, environment, worker_seconds=WORKER_SECONDS):
+    limits = [began+worker_seconds]
     for raw in (os.environ.get('FEDCORE_PILOT_ABSOLUTE_DEADLINE'),
                 (environment or {}).get('FEDCORE_PILOT_ABSOLUTE_DEADLINE')):
         if raw is not None:
@@ -170,19 +187,29 @@ def _absolute_deadline(began, environment):
     return min(limits)
 
 
-def run_guard(command, *, receipt_path, binding_provider=None, cwd=None, environment=None, effects=None):
+def run_guard(command, *, receipt_path, binding_provider=None, cwd=None, environment=None, effects=None,
+              limits=None, started_at=None):
     """Run at most one private child; persist every stop and owned cleanup result."""
     effects = GuardEffects() if effects is None else effects
+    limits = GuardLimits() if limits is None else limits
+    if type(limits) is not GuardLimits:
+        raise ValueError('A typed guard window is required')
+    guard_started_at = effects.clock()
+    began = guard_started_at if started_at is None else started_at
+    if (type(began) not in (int, float) or not math.isfinite(began)
+            or began < 0 or began > guard_started_at):
+        raise ValueError('The original monotonic start must not be reset or lie in the future')
     receipt = Path(receipt_path).resolve()
     ledger, console = receipt.with_name(receipt.name+'.jsonl'), receipt.with_name(receipt.name+'.console.log')
     if any(path.exists() for path in (receipt, ledger, console)):
         raise FileExistsError('Preserve earlier guard evidence; choose a new receipt')
     receipt.parent.mkdir(parents=True, exist_ok=True)
-    began, tree = effects.clock(), OwnedTree(effects)
+    tree = OwnedTree(effects)
     state = {'schema': 'fedcore-independent-cv-guard-v2', 'status': 'blocked', 'automatic_retry': False,
-        'spawned_child_count': 0, 'max_seconds': MAX_SECONDS, 'worker_seconds': WORKER_SECONDS,
+        'spawned_child_count': 0, 'max_seconds': limits.max_seconds, 'worker_seconds': limits.worker_seconds,
         'max_rss_bytes': MAX_RSS_BYTES, 'max_vram_bytes': MAX_VRAM_BYTES,
-        'started_at': began, 'telemetry_failures': 0, 'peak_tree_rss_bytes': 0, 'peak_gpu_used_bytes': 0}
+        'started_at': began, 'guard_started_at': guard_started_at,
+        'telemetry_failures': 0, 'peak_tree_rss_bytes': 0, 'peak_gpu_used_bytes': 0}
     child, timer, deadline_fired, monitor = None, None, threading.Event(), SupervisionState()
 
     def record(row):
@@ -208,7 +235,7 @@ def run_guard(command, *, receipt_path, binding_provider=None, cwd=None, environ
         if effects.disk_free(cwd or receipt.parent) < MINIMUM_DISK_BYTES:
             state['reason'] = 'less_than_100_GiB_free_disk'
             return state
-        absolute = _absolute_deadline(began, environment)
+        absolute = _absolute_deadline(began, environment, limits.worker_seconds)
         state['absolute_deadline'] = absolute
         if effects.clock() >= absolute:
             state['reason'] = 'absolute_deadline_before_spawn'
@@ -271,10 +298,10 @@ def run_guard(command, *, receipt_path, binding_provider=None, cwd=None, environ
         if child is not None and not tree.owned and child.poll() is None:
             state['cleanup']['unknown'].append({'local_pid': child.pid, 'reason': 'spawned_child_birth_not_captured'})
         if child is not None:
-            try: state['returncode'] = child.wait(timeout=max(0., min(1., began+MAX_SECONDS-effects.clock())))
+            try: state['returncode'] = child.wait(timeout=max(0., min(1., began+limits.max_seconds-effects.clock())))
             except subprocess.TimeoutExpired: state['returncode'] = child.poll()
         state.update(elapsed_seconds=effects.clock()-began, owned=[asdict(x) for x in tree.owned])
-        state['within_authorized_window'] = state['elapsed_seconds'] <= MAX_SECONDS
+        state['within_authorized_window'] = state['elapsed_seconds'] <= limits.max_seconds
         if not state['within_authorized_window']:
             state.update(status='stopped', reason='authorized_window_exceeded')
         if state['cleanup']['live'] or state['cleanup']['unknown']:
