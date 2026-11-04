@@ -167,3 +167,55 @@ def test_control_publication_is_fresh_and_no_retry(tmp_path):
     assert json.loads(target.read_text()) == dict(token="owned")
     with pytest.raises(FileExistsError):
         container._publish(target, dict(token="overwrite"))
+
+
+@pytest.mark.parametrize("exit_code", [1, -9, None])
+def test_guard_handles_exit_between_poll_and_ready_process_read(tmp_path, monkeypatch, exit_code):
+    from fedcore.experiments import heterogeneous_host
+    cfg = container.pilot_config_from_payload(plan().config)
+    p = SimpleNamespace(**{**vars(plan()), "run_directory": str(tmp_path)})
+    identity = container.LocalProcess(77, 10003, 3, 1, 1, ("worker",), "/python")
+
+    class Worker:
+        pid, returncode, polls = 77, None, 0
+        def poll(self):
+            self.polls += 1
+            if self.polls >= 2:
+                self.returncode = exit_code
+            return self.returncode
+
+    worker = Worker()
+    reads = []
+    def process(pid):
+        if pid != worker.pid:
+            return identity
+        reads.append(pid)
+        if len(reads) > 1:
+            raise FileNotFoundError("worker exited during procfs observation")
+        return identity
+
+    (tmp_path / "worker-ready.json").write_text(json.dumps(dict(token=p.token,
+        pid=worker.pid, birth_ticks=identity.birth_ticks, gpu_uuid=GPU,
+        actual_gpu_uuid=GPU.lower())), encoding="utf-8")
+    monkeypatch.setattr(container, "_config", lambda path: cfg)
+    monkeypatch.setattr(container, "_protect_parent", lambda parent: None)
+    monkeypatch.setattr(container, "_boundary", lambda *args: {})
+    monkeypatch.setattr(container, "_prctl", lambda *args: None)
+    monkeypatch.setattr(container.os, "getppid", lambda: 3)
+    monkeypatch.setattr(container, "local_process", process)
+    monkeypatch.setattr(container, "OwnedDescendants", lambda: SimpleNamespace(capture=lambda: (0, ())))
+    monkeypatch.setattr(container, "_spawn", lambda *args: worker)
+    cleanup = []
+    monkeypatch.setattr(container, "_finish_owned", lambda *args, **kwargs: cleanup.append(True))
+    monkeypatch.setattr(container.time, "monotonic", lambda: 102.)
+    monkeypatch.setattr(container.shutil, "disk_usage", lambda path: SimpleNamespace(free=container.MIN_DISK_BYTES + 1))
+    monkeypatch.setattr(heterogeneous_host, "query_device_gpu_rows", lambda gpu: ())
+
+    assert container.run_guard(p) == 1
+    receipt = json.loads((tmp_path / "guard.json").read_text(encoding="utf-8"))
+    assert receipt["returncode"] == exit_code
+    if exit_code is not None:
+        assert receipt["reason"] == "worker_exited"
+    else:
+        assert "FileNotFoundError" in receipt["reason"]
+    assert cleanup == [True] and reads == [77, 77]

@@ -1,0 +1,46 @@
+{
+  "status": "admission_failed",
+  "run_source": "952cf0b64c49ff5b362d8c966183aedfdd952055",
+  "elapsed_seconds": 39.42824595421553,
+  "charged_for_next_budget_seconds": 40,
+  "proposed_repeat_seconds": 7160,
+  "repeat_authorized": false,
+  "automatic_retry": false,
+  "GPU_retest_of_bias_fix": false,
+  "archive_sha256": "93141b024eb2f08ce76920fadac869a1327e98ebaceea02b131a9ff8d9b5c343",
+  "archive_bytes": 96119485,
+  "source_sha256": {
+    "fedcore/algorithm/heterogeneous/backend.py": "7281e34d79dfb7bff60dc8a2a076cd0bd5dac093f6b35e7a92217ae65422eeb2",
+    "fedcore/experiments/heterogeneous_pilot.py": "cd60cad2485d353091afb3df3e827320380ff41ab9416aa029524d7104d65dfb",
+    "fedcore/experiments/heterogeneous_container.py": "86750de7a8e508f15895ac96af9528d9d0da1e15f8172860825de8ca91e912aa",
+    "tests/refactoring/test_heterogeneous_container.py": "3213d616d69f6197a9fb7fc3da4e9b56a5069c4f352569b663a20d8df2b056b1",
+    "tests/refactoring/test_heterogeneous_container_independent.py": "716511ce4adc9aa41e190f9571886ead6cb0019c80ead82e5f5df4c43e733c3e",
+    "tests/refactoring/test_heterogeneous_cv_backend.py": "1f4367f808bc6bfbf9b19892f1d299acae3ffb978647b525d7661cde1dcad9ef"
+  },
+  "tests": {
+    "bias-test.xml": {
+      "cases": 1,
+      "skips": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    "container-tests.xml": {
+      "cases": 73,
+      "skips": 1,
+      "failures": 0,
+      "errors": 0
+    },
+    "linux-container-tests-before-fix.xml": {
+      "cases": 56,
+      "skips": 0,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "bias_policy_after_fix": "float32, QuantizeBias=False; activation/weight signed INT8 QDQ retained",
+  "limits": [
+    "Container NVML PID association is temporal correlation; host PID identity is not proven",
+    "GNU timeout covers trusted ordinary process-group descendants",
+    "Dense hardware admission succeeded; compact TensorRT artifact acceptance remains pending"
+  ]
+}

@@ -162,6 +162,10 @@ def inspect_qdq(graph, selected_nodes):
         conv = nodes.get(name)
         if conv is None or conv.op_type != "Conv":
             raise BackendContractError("MissingQuantizedConv", name)
+        if len(conv.input) > 2:
+            bias_producer = producers.get(conv.input[2])
+            if bias_producer is not None and bias_producer.op_type == "DequantizeLinear":
+                raise BackendContractError("QuantizedBias", "Conv bias must retain its float32 representation")
         for index in (0, 1):
             dq = producers.get(conv.input[index])
             if dq is None or dq.op_type != "DequantizeLinear" or len(dq.input) != 3:
@@ -308,7 +312,8 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
                                 activation_type=QuantType.QInt8, weight_type=QuantType.QInt8,
                                 per_channel=True, nodes_to_quantize=list(selected.values()), op_types_to_quantize=["Conv"],
                                 extra_options={"ActivationSymmetric": True, "WeightSymmetric": True,
-                                               "CalibTensorRangeSymmetric": True, "QDQKeepRemovableActivations": True})
+                                               "CalibTensorRangeSymmetric": True, "QDQKeepRemovableActivations": True,
+                                               "QuantizeBias": False})
             else:
                 model_path.write_bytes(float_path.read_bytes())
         graph = onnx.load(str(model_path), load_external_data=False)
@@ -331,6 +336,7 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
                     "representation": model.representation_config(),
                     "selected_conv_paths": list(selected_paths), "selected_conv_nodes": selected,
                     "qdq_verified_nodes": list(coverage), "stem_head_downsample_policy": "float32",
+                    "conv_bias_policy": "float32_no_INT32_dequantize",
                     "float_export_max_abs_error": float(np.max(np.abs(reference - actual))),
                     "quantized_probe_max_abs_error": float(np.max(np.abs(reference - qoutput))),
                     "float_tensor_bytes": inventory_cost(source_inventory, "bytes"),

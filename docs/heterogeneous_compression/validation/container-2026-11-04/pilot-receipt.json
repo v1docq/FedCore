@@ -1,0 +1,77 @@
+{
+  "Vreport_opened": false,
+  "admission": null,
+  "automatic_retries": 0,
+  "baseline": null,
+  "baseline_in_flight_unconfirmed": 0,
+  "budget": {
+    "automatic_retries": 0,
+    "baseline_sgd": 25040,
+    "max_seconds": 7200.0,
+    "models": 1,
+    "recipes": 12,
+    "recovery_sgd": 2400,
+    "searches": 0,
+    "total_sgd": 27440
+  },
+  "candidates": {},
+  "config": {
+    "cleanup_seconds": 60.0,
+    "device": "cuda:0",
+    "gpu_seconds": 7200.0,
+    "gpu_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+    "max_peak_bytes": 8589934592,
+    "model_seed": 20261124,
+    "protocol": {
+      "batch_size": 128,
+      "calibration_rows": 2000,
+      "epochs": 80,
+      "fit_rows": 40000,
+      "recovery_updates": 200,
+      "report_rows": 4000,
+      "search_rows": 4000
+    },
+    "recipes": [
+      "dense_recovery",
+      "uniform_P",
+      "uniform_SVD",
+      "Q_only",
+      "uniform_P_SVD",
+      "uniform_P_Q",
+      "uniform_SVD_Q",
+      "uniform_P_SVD_Q",
+      "uniform_P_half",
+      "uniform_SVD_low",
+      "uniform_P_SVD_Q_half",
+      "mixed_eight_families"
+    ],
+    "source_revision": "952cf0b64c49ff5b362d8c966183aedfdd952055",
+    "split_seed": 20261102
+  },
+  "counters": {
+    "baseline_sgd_attempted": 0,
+    "baseline_sgd_completed": 0,
+    "recovery_sgd_attempted": 0,
+    "recovery_sgd_completed": 0
+  },
+  "deadline": 21346974.587741897,
+  "ended_at": 21339872.235200427,
+  "execution_mode": "native",
+  "experiment_started": false,
+  "failure": {
+    "message": "Synthetic TensorRT admission failed: StructuralInvalid(violations=(Violation(code='TensorRTParse', path='heterogeneous.export', message='In node 3 with name: layer1.0.conv1.bias_DequantizeLinear and operator: DequantizeLinear (parseNode): INVALID_NODE: Invalid Node - layer1.0.conv1.bias_DequantizeLinear\\n[dequantizeLayer.cpp::setPrecision::94] Error Code 3: API Usage Error (Parameter check failed at: optimizer/api/layers/dequantizeLayer.cpp::setPrecision::94, condition: isQuantized(dataType) A DequantizeLayer can only run in DataType::kINT8, DataType::kFP8 or DataType::kINT4 precision)'),))",
+    "type": "PilotError"
+  },
+  "interpretation": "cost pilot only; no 27-search panel, inference latency claim or ranking validation",
+  "official_test_opened": false,
+  "phase_seconds": {
+    "live_boundary": 0.005631998181343079,
+    "synthetic_admission": 33.55626864358783
+  },
+  "recovery_in_flight_unconfirmed": 0,
+  "schema": "heterogeneous-pilot-receipt-v1",
+  "searches": 0,
+  "started_at": 21339834.587741897,
+  "status": "admission_failed",
+  "unknown_sgd": []
+}

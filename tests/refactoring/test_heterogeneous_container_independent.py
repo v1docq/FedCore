@@ -320,3 +320,73 @@ def test_dynamic_trt_inspection_binds_context_and_preserves_rejected_diagnostics
     assert events == ["shape_bound", "context_inspected"]
     assert (output / "engine-inspector.json").read_text(encoding="utf-8") == diagnostic
     assert not (output / "manifest.json").exists()
+
+
+def test_native_compact_qdq_export_preserves_nonzero_float_biases(tmp_path, monkeypatch):
+    """Real CPU export: INT8 activation/weight QDQ and unchanged FP32 biases."""
+    import numpy as np
+    import torch
+
+    onnx = pytest.importorskip("onnx")
+    pytest.importorskip("onnxruntime")
+    from onnxruntime import quantization
+    from fedcore.algorithm.heterogeneous import backend
+    from fedcore.algorithm.heterogeneous.cv import (
+        BlockRecipe, HeterogeneousGene, HeterogeneousGenotype, compile_genotype,
+        execute_float_workflow, prepare_space)
+    from fedcore.algorithm.low_rank.cv_execution import CVWorkflowSuccess
+    from fedcore.algorithm.pruning.sparse.cv_channels import CifarResNet18
+
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(29)
+        model = CifarResNet18().eval()
+        calibration = torch.randn(2, 3, 32, 32)
+    # Default BN produces all-zero folded biases, which cannot detect silent
+    # bias rounding/removal. Exercise different nonzero per-channel values.
+    with torch.no_grad():
+        block = model.layer1[0]
+        block.bn1.bias.copy_(torch.linspace(.125, .375, block.bn1.num_features))
+        block.bn2.bias.copy_(torch.linspace(-.625, -.25, block.bn2.num_features))
+    recipe = BlockRecipe(16, 8, True)
+    space = prepare_space(model, calibration, alternatives={
+        "layer1.0": (recipe,), "layer1.1": (BlockRecipe(),)})
+    workflow = compile_genotype(HeterogeneousGenotype((
+        HeterogeneousGene("layer1.0", recipe),
+        HeterogeneousGene("layer1.1", BlockRecipe()))), space)
+    built = execute_float_workflow(model, calibration, workflow)
+    assert type(built) is CVWorkflowSuccess
+    original_quantize = quantization.quantize_static
+    float_biases, selected_names = {}, []
+
+    def record_float_biases(model_input, model_output, reader, **kwargs):
+        graph = onnx.load(model_input)
+        initializers = {item.name: item for item in graph.graph.initializer}
+        selected_names.extend(kwargs["nodes_to_quantize"])
+        for node in graph.graph.node:
+            if node.name in selected_names and len(node.input) == 3:
+                assert node.op_type == "Conv"
+                bias = initializers[node.input[2]]
+                assert bias.data_type == onnx.TensorProto.FLOAT
+                float_biases[node.name] = onnx.numpy_helper.to_array(bias).copy()
+        return original_quantize(model_input, model_output, reader, **kwargs)
+
+    monkeypatch.setattr(quantization, "quantize_static", record_float_biases)
+    artifact = backend.export_onnx_qdq(built.model, calibration, workflow,
+        tmp_path / "cpu-deployment", spec=backend.BackendSpec(max_batch_size=8, opt_batch_size=2))
+    assert type(artifact) is backend.DeploymentArtifact, artifact
+    graph = onnx.load(artifact.model_path)
+    initializers = {item.name: item for item in graph.graph.initializer}
+    nodes = {node.name: node for node in graph.graph.node}
+    assert len(selected_names) == 3  # compact conv1 plus the two SVD factors
+    assert float_biases and all(np.any(value != 0) for value in float_biases.values())
+    for name, expected in float_biases.items():
+        bias = initializers[nodes[name].input[2]]
+        assert bias.data_type == onnx.TensorProto.FLOAT
+        assert np.array_equal(onnx.numpy_helper.to_array(bias), expected)
+    assert set(backend.inspect_qdq(graph, selected_names)) == set(selected_names)
+    for node in graph.graph.node:
+        if node.op_type == "DequantizeLinear" and node.input[0] in initializers:
+            assert initializers[node.input[0]].data_type != onnx.TensorProto.INT32
+    reloaded = artifact.load()(calibration.numpy())
+    assert reloaded.shape == (2, 10) and np.isfinite(reloaded).all()
+    assert artifact.evidence["hardware_validation"] == "CPU_ONNX_Runtime_only"

@@ -41,6 +41,13 @@ def test_real_compact_factor_conv_qdq_export_and_independent_reload(tmp_path):
     assert type(artifact) is DeploymentArtifact, artifact
     graph = onnx.load(artifact.model_path)
     assert len(inspect_qdq(graph, artifact.evidence["qdq_verified_nodes"])) == 3
+    # TensorRT 10.0.1 rejects INT32 bias DequantizeLinear. Preserve float
+    # biases while activations and Conv weights remain explicitly INT8.
+    constants = {weight.name: weight for weight in graph.graph.initializer}
+    assert not any(node.op_type == "DequantizeLinear" and node.input[0] in constants
+                   and constants[node.input[0]].data_type == onnx.TensorProto.INT32
+                   for node in graph.graph.node)
+    assert artifact.evidence["conv_bias_policy"] == "float32_no_INT32_dequantize"
     assert any(weight.data_type == onnx.TensorProto.INT8 for weight in graph.graph.initializer)
     assert artifact.storage_bytes == deployment_size(artifact.manifest_path)
     loaded = load_deployment(artifact.manifest_path)

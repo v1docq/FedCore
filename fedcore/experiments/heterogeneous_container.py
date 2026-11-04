@@ -400,9 +400,21 @@ def run_guard(plan):
             ready = ready_path.is_file()
             if ready:
                 value = json.loads(_read(ready_path))
-                if (value != dict(token=plan.token, pid=worker.pid, birth_ticks=worker_identity.birth_ticks,
-                        gpu_uuid=cfg.gpu_uuid, actual_gpu_uuid=cfg.gpu_uuid.lower())
-                        or local_process(worker.pid) != worker_identity):
+                if value != dict(token=plan.token, pid=worker.pid, birth_ticks=worker_identity.birth_ticks,
+                        gpu_uuid=cfg.gpu_uuid, actual_gpu_uuid=cfg.gpu_uuid.lower()):
+                    raise PilotError("CUDA-ready handshake does not match the sole worker lifetime")
+                try:
+                    observed_identity = local_process(worker.pid)
+                except (FileNotFoundError, ProcessLookupError):
+                    # The worker may exit after the poll above but before its
+                    # procfs record is read. Only waitpid-backed Popen evidence
+                    # can turn this missing lifetime into a completed worker.
+                    returncode = worker.poll()
+                    if returncode is None:
+                        raise
+                    result, reason = returncode, "worker_exited"
+                    break
+                if observed_identity != worker_identity:
                     raise PilotError("CUDA-ready handshake does not match the sole worker lifetime")
             rows = query_device_gpu_rows(cfg.gpu_uuid)
             _event(root, "gpu_sample", raw_rows=rows, worker_ready=ready)
