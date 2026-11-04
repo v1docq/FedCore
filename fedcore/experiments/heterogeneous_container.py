@@ -24,6 +24,7 @@ import signal
 import subprocess
 import sys
 import time
+import traceback
 
 from .heterogeneous_pilot import PilotConfig, PilotError, pilot_config_from_payload, wait_for_start_gate
 
@@ -428,7 +429,7 @@ def run_guard(plan):
             time.sleep(POLL_SECONDS)
     except Exception as error:
         reason = repr(error)
-        _event(root, "guard_stopped", reason=reason)
+        _event(root, "guard_stopped", reason=reason, traceback=traceback.format_exc())
     finally:
         if worker is not None:
             _finish_owned(root, tree, worker, name="guard")

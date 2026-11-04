@@ -1,0 +1,27 @@
+{
+  "run_source": "6b7a92a3779a4a4ac9bd9921c8d6e74ea1bd7e38",
+  "status": "incomplete",
+  "repeat_seconds": 1107.0618075020611,
+  "total_charged_seconds": 1147.0618075020611,
+  "valid_recipes": 3,
+  "failed_recipes": 1,
+  "unexecuted_recipes": 8,
+  "counters": {
+    "baseline_sgd_attempted": 25040,
+    "baseline_sgd_completed": 25040,
+    "recovery_sgd_attempted": 800,
+    "recovery_sgd_completed": 800
+  },
+  "archive_sha256": "845793245f1722e46a66601d7642b8c305c4fbab23671fb09694cc4105791acb",
+  "archive_bytes": 481260251,
+  "independent_audit": "M0/engine/manifest/inspector hashes, consecutive SGD+epoch journals, data roles, storage and quality verified",
+  "diagnostic_CPU_tests": 8,
+  "diagnostic_GPU_replay": false,
+  "tolerance_changed": false,
+  "further_GPU_authorized": false,
+  "source_sha256": {
+    "fedcore/algorithm/heterogeneous/backend.py": "8c0609847f71a74a93e61f2ee7ed5c40cb9f3057c76a304afd86d81a3e087d80",
+    "fedcore/experiments/heterogeneous_container.py": "1cc7f8aa2fceba23d78cbdc572462f44df9c48df28f2b78b72b53a026103b767",
+    "tests/refactoring/test_heterogeneous_cv_backend.py": "3594068a14105ee673ef8dc9026a103bdee13bae0d868d7a2182b69d7e4301bb"
+  }
+}

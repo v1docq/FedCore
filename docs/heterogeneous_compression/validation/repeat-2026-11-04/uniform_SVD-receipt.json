@@ -1,0 +1,37 @@
+{
+  "schema": "heterogeneous-attempt-v1",
+  "status": "succeeded",
+  "workflow_fingerprint": "1f90f73a04bffaf460c532ec659553189fa59405e81f1f28dbda5ab40b35dff9",
+  "validation_rows": 4000,
+  "validation_identity": "74727fe62ccab45226a0c18c860049883ac84faf34e3cfe83461403bbe051e14:Vsearch",
+  "sgd_attempted": 200,
+  "sgd_completed": 200,
+  "phase": "finished",
+  "started_at": 21343767.19694445,
+  "phase_seconds": {
+    "structural_build": 2.537803679704666,
+    "float_recovery": 6.1411382630467415,
+    "calibrate_export_reload": 12.437345247715712,
+    "deployed_Vsearch": 0.4407084174454212
+  },
+  "ended_at": 21343788.754350837,
+  "quality": {
+    "cross_entropy": 0.23756382274627685,
+    "accuracy": 0.94,
+    "rows": 4000
+  },
+  "storage_bytes": 38739731,
+  "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/uniform_SVD/1f90f73a04bffaf460c532ec659553189fa59405e81f1f28dbda5ab40b35dff9/artifact/manifest.json",
+  "recovery": {
+    "updates": 200,
+    "config": {
+      "updates": 200,
+      "batch_size": 128,
+      "learning_rate": 0.001,
+      "momentum": 0.9,
+      "weight_decay": 0.0005
+    },
+    "extra_bn_passes": 0,
+    "semantics": "fixed_float_SGD_before_PTQ; new optimizer; common M0 tape"
+  }
+}

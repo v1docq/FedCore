@@ -16,6 +16,44 @@ from fedcore.algorithm.low_rank.grammar_execution import StructuralInvalid
 from fedcore.algorithm.pruning.sparse.cv_channels import CifarResNet18
 
 
+def test_backend_probe_failure_keeps_logits_and_existing_tolerances(tmp_path):
+    from fedcore.algorithm.heterogeneous.backend import _check_backend_probe
+    reference = np.array([[1., 2.], [3., 4.]], dtype=np.float32)
+    actual = reference.copy()
+    actual[0, 1] += .5
+    path = tmp_path / "backend-probe.json"
+    with pytest.raises(BackendContractError, match="max_abs_error=0.5"):
+        _check_backend_probe(reference, actual, BackendSpec(), path)
+    evidence = json.loads(path.read_text())
+    assert evidence["accepted"] is False
+    assert evidence["backend_rtol"] == evidence["backend_atol"] == .02
+    assert evidence["max_abs_error"] == .5 and evidence["argmax_agreement"] == 1.
+    assert evidence["violating_count"] == 1 and evidence["violating_indices"] == [[0, 1]]
+    assert evidence["cpu_qdq_logits"] == reference.tolist()
+    assert evidence["tensorrt_logits"] == actual.tolist()
+    assert not (tmp_path / "manifest.json").exists()
+
+
+@pytest.mark.parametrize("actual", [np.ones((1, 3), dtype=np.float32),
+                                    np.array([[np.nan]], dtype=np.float32)])
+def test_backend_probe_rejects_shape_or_nonfinite_outputs(tmp_path, actual):
+    from fedcore.algorithm.heterogeneous.backend import _check_backend_probe
+    with pytest.raises(BackendContractError, match="Finite matching"):
+        _check_backend_probe(np.ones((1, 1), dtype=np.float32), actual, BackendSpec(),
+                             tmp_path / "invalid.json")
+    assert not (tmp_path / "invalid.json").exists()
+
+
+def test_backend_probe_zero_tolerance_keeps_finite_json_diagnostics(tmp_path):
+    from fedcore.algorithm.heterogeneous.backend import _check_backend_probe
+    path = tmp_path / "zero-tolerance.json"
+    with pytest.raises(BackendContractError):
+        _check_backend_probe(np.zeros((1, 2), dtype=np.float32), np.ones((1, 2), dtype=np.float32),
+            BackendSpec(backend_rtol=0, backend_atol=0), path)
+    evidence = json.loads(path.read_text())
+    assert evidence["max_normalized_error"] is None and evidence["zero_bound_violations"] == 2
+
+
 def fixture():
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(2)

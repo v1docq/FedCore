@@ -84,6 +84,34 @@ def _json(path, value):
     Path(path).write_text(json.dumps(value, sort_keys=True, indent=2, allow_nan=False), encoding="utf-8")
 
 
+def _check_backend_probe(reference, actual, spec, diagnostic_path, *, provenance=None):
+    """Preserve numerical evidence before rejecting a backend comparison."""
+    if (not isinstance(reference, np.ndarray) or not isinstance(actual, np.ndarray)
+            or reference.ndim != 2 or actual.shape != reference.shape
+            or not reference.size or not np.isfinite(reference).all() or not np.isfinite(actual).all()):
+        raise BackendContractError("TensorRTOutputContract", "Finite matching classifier output arrays required")
+    difference = np.abs(actual.astype(np.float64) - reference.astype(np.float64))
+    close = np.isclose(actual, reference, rtol=spec.backend_rtol, atol=spec.backend_atol)
+    accepted = bool(close.all())
+    bounds = spec.backend_atol + spec.backend_rtol * np.abs(reference.astype(np.float64))
+    zero_bound_violations = int(np.count_nonzero((bounds == 0) & (difference > 0)))
+    normalized = np.divide(difference, bounds, out=np.zeros_like(difference), where=bounds > 0)
+    comparison = dict(schema="heterogeneous_backend_probe_v1", accepted=accepted,
+        shape=list(reference.shape), backend_rtol=spec.backend_rtol, backend_atol=spec.backend_atol,
+        max_abs_error=float(difference.max()), mean_abs_error=float(difference.mean()),
+        violating_count=int(np.count_nonzero(~close)), violating_indices=np.argwhere(~close).tolist(),
+        max_normalized_error=None if zero_bound_violations else float(normalized.max()),
+        zero_bound_violations=zero_bound_violations, provenance=provenance,
+        argmax_agreement=float(np.mean(actual.argmax(1) == reference.argmax(1))),
+        cpu_qdq_logits=reference.tolist(), tensorrt_logits=actual.tolist())
+    _json(diagnostic_path, comparison)
+    if not accepted:
+        raise BackendContractError("TensorRTOutputMismatch",
+            "Reloaded TensorRT engine differs from CPU Q/DQ reference; max_abs_error="
+            + str(comparison["max_abs_error"]))
+    return comparison
+
+
 def deployment_size(manifest_path):
     path = Path(manifest_path)
     manifest = json.loads(path.read_text(encoding="utf-8"))
@@ -358,10 +386,11 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
                 raise BackendContractError("ReloadMismatch", "Fresh deployment load changed Q/DQ outputs")
         else:
             hardware_output = runtime(probe.numpy())
-            if not np.allclose(hardware_output, qoutput, rtol=spec.backend_rtol, atol=spec.backend_atol):
-                raise BackendContractError("TensorRTOutputMismatch", "Reloaded TensorRT engine differs from CPU Q/DQ reference")
+            comparison = _check_backend_probe(qoutput, hardware_output, spec, output / "backend-probe.json",
+                provenance=dict(probe_fingerprint=_calibration(probe),
+                    onnx_sha256=_sha(model_path), engine_sha256=_sha(primary)))
             manifest["hardware_validation"] = "TensorRT_engine_reloaded_kernel_inspected_probe_verified_not_benchmarked"
-            manifest["backend_probe_max_abs_error"] = float(np.max(np.abs(hardware_output - qoutput)))
+            manifest["backend_probe_max_abs_error"] = comparison["max_abs_error"]
         if inventory_fingerprint(capture_inventory(model)) != recovered_identity:
             raise BackendContractError("SourceMutation", "Export changed the caller-owned recovered candidate")
         if (_calibration(calibration) != calibration_identity
