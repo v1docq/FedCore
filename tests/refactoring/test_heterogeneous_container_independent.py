@@ -138,7 +138,8 @@ def test_linux_cpu_timeout_covers_verified_roles_and_sleeping_grandchild(tmp_pat
     psutil = pytest.importorskip("psutil")
     version = subprocess.run((container.TIMEOUT, "--version"), capture_output=True,
         text=True, check=True, timeout=2).stdout
-    assert version.startswith("timeout (GNU coreutils)")
+    if not version.startswith("timeout (GNU coreutils)"):
+        pytest.skip("Native smoke requires the GNU timeout profile: " + version.strip())
     repository = Path(container.__file__).resolve().parents[2]
     script = tmp_path / "cpu_control_smoke.py"
     script.write_text("\n".join([

@@ -12,6 +12,19 @@ from fedcore.experiments.heterogeneous_pilot import PilotConfig, PilotError
 GPU = "GPU-12345678-1234-1234-1234-123456789abc"
 
 
+def test_launch_rejects_uutils_before_spawning_or_creating_output(tmp_path, monkeypatch):
+    monkeypatch.setattr(container.sys, "platform", "linux")
+    monkeypatch.setattr(container, "_config", lambda path: PilotConfig(GPU, "a" * 40))
+    monkeypatch.setattr(container.subprocess, "run", lambda *args, **kwargs:
+                        SimpleNamespace(stdout="timeout (uutils coreutils) 0.10.0\n"))
+    monkeypatch.setattr(container.subprocess, "Popen", lambda *args, **kwargs:
+                        pytest.fail("Unsupported timeout spawned a process"))
+    output = tmp_path / "never-created"
+    with pytest.raises(PilotError, match="GNU timeout"):
+        container.launch(config_path="/unused", data_root="/unused", run_directory=output)
+    assert not output.exists()
+
+
 def plan():
     cfg = PilotConfig(GPU, "a" * 40)
     return container.ContainerPlan(100., 101., 7186., "b" * 32,
