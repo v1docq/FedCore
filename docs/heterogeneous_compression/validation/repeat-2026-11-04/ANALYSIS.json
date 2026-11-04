@@ -183,19 +183,6 @@
     "synthetic_admission": 60.399559281766415
   },
   "best_fixed_under_half_budget": null,
-  "pricing_scenarios_without_final_measurements": {
-    "minimum": {
-      "candidate_seconds": 20.49789121374488,
-      "hours": 10.640826267699401
-    },
-    "median": {
-      "candidate_seconds": 21.49744764715433,
-      "hours": 11.124778174208478
-    },
-    "maximum": {
-      "candidate_seconds": 22.81383142247796,
-      "hours": 11.762127318761001
-    }
-  },
-  "pricing_assumption": "Three M0 trainings and 1743 complete valid candidate evaluations at observed fixed-recipe time. Excludes final Vreport, latency sessions and infrastructure preparation. Not a guaranteed bound or unbiased estimate."
+  "full_panel_budget_established": false,
+  "pricing_limit": "Only three successful float recipes are available. Q-only failed before Vsearch. PTQ and hybrid full-evaluation costs remain unvalidated."
 }
