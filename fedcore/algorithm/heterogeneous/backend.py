@@ -404,8 +404,16 @@ def _compile_tensorrt(model_path, output, spec, selected_nodes):
     engine = runtime.deserialize_cuda_engine(engine_path.read_bytes())
     if engine is None:
         raise BackendContractError("TensorRTReload", "Independent serialized engine load failed")
+    inspection_context = engine.create_execution_context()
+    if inspection_context is None or not inspection_context.set_input_shape(
+            "images", (spec.opt_batch_size, 3, 32, 32)):
+        raise BackendContractError("TensorRTInspector", "A concrete input shape is required for kernel inspection")
     inspector = engine.create_engine_inspector()
+    inspector.execution_context = inspection_context
     description = inspector.get_engine_information(trt.LayerInformationFormat.JSON)
+    # Keep rejected inspection evidence for diagnosis. Only the deployment
+    # manifest marks an accepted independently validated artifact.
+    (output / "engine-inspector.json").write_text(description, encoding="utf-8")
     information = json.loads(description)
     layers = information if type(information) is list else information.get("Layers", [])
     if type(layers) is not list:
@@ -413,7 +421,6 @@ def _compile_tensorrt(model_path, output, spec, selected_nodes):
     for selected in selected_nodes:
         if not _confirmed_int8_layer(layers, selected):
             raise BackendContractError("TensorRTFloatFallback", "No confirmed INT8 kernel for " + selected)
-    _json(output / "engine-inspector.json", information)
     return engine_path, {"versions_tensorrt": trt.__version__, "hardware_validation": "TensorRT_engine_reloaded_kernel_inspected_not_benchmarked",
                          "tensorrt_int8_verified_nodes": list(selected_nodes), "inspector_sha256": _sha(output / "engine-inspector.json")}
 

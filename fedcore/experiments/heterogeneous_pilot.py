@@ -282,7 +282,9 @@ def _native_admission(directory, config, deadline, clock):
     if clock() >= deadline:
         raise TimeoutError("No late synthetic admission")
     versions = {package: importlib.metadata.version(package) for package in
-                ("torch", "onnx", "onnxruntime", "tensorrt")}
+                ("torch", "onnx", "onnxruntime")}
+    import tensorrt
+    versions["tensorrt"] = tensorrt.__version__
     return dict(kind="native_A100_synthetic_export_reload", device_name=name, cuda_binding=binding,
                 synthetic=True, sgd_attempted=0, sgd_completed=0, artifacts=rows, versions=versions)
 
