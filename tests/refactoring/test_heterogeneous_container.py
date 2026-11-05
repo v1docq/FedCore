@@ -196,6 +196,9 @@ def test_guard_handles_exit_between_poll_and_ready_process_read(tmp_path, monkey
             if self.polls >= 2:
                 self.returncode = exit_code
             return self.returncode
+        def wait(self, *, timeout):
+            assert 0 <= timeout <= container.POLL_SECONDS
+            raise container.subprocess.TimeoutExpired("captured worker", timeout)
 
     worker = Worker()
     reads = []
@@ -232,3 +235,114 @@ def test_guard_handles_exit_between_poll_and_ready_process_read(tmp_path, monkey
     else:
         assert "FileNotFoundError" in receipt["reason"]
     assert cleanup == [True] and reads == [77, 77]
+
+
+def _guard_teardown_harness(tmp_path, monkeypatch, worker, *, observation_error=None, now=102.):
+    """Drive the real guard loop with a captured child and synthetic procfs/NVML."""
+    from fedcore.experiments import heterogeneous_host
+    cfg = container.pilot_config_from_payload(plan().config)
+    p = SimpleNamespace(**{**vars(plan()), "run_directory": str(tmp_path)})
+    identity = container.LocalProcess(worker.pid, 10003, 3, 1, 1, ("worker",), "/python")
+    reads, queries, cleanup = [], [], []
+
+    def process(pid):
+        if pid != worker.pid:
+            return identity
+        reads.append(pid)
+        if len(reads) > 1 and observation_error is not None:
+            raise observation_error
+        return identity
+
+    def query(gpu):
+        queries.append(gpu)
+        return () if len(queries) == 1 else ("999999, 10",)
+
+    (tmp_path / "worker-ready.json").write_text(json.dumps(dict(token=p.token,
+        pid=worker.pid, birth_ticks=identity.birth_ticks, gpu_uuid=GPU,
+        actual_gpu_uuid=GPU.lower())), encoding="utf-8")
+    monkeypatch.setattr(container, "_config", lambda path: cfg)
+    monkeypatch.setattr(container, "_protect_parent", lambda parent: None)
+    monkeypatch.setattr(container, "_boundary", lambda *args: {})
+    monkeypatch.setattr(container, "_prctl", lambda *args: None)
+    monkeypatch.setattr(container.os, "getppid", lambda: 3)
+    monkeypatch.setattr(container, "local_process", process)
+    monkeypatch.setattr(container, "OwnedDescendants", lambda: SimpleNamespace(capture=lambda: (0, ())))
+    monkeypatch.setattr(container, "_spawn", lambda *args: worker)
+    monkeypatch.setattr(container, "_finish_owned", lambda *args, **kwargs: cleanup.append(True))
+    monkeypatch.setattr(container.time, "monotonic", lambda: now)
+    monkeypatch.setattr(container.shutil, "disk_usage", lambda path: SimpleNamespace(free=container.MIN_DISK_BYTES + 1))
+    monkeypatch.setattr(heterogeneous_host, "query_device_gpu_rows", query)
+    return p, reads, queries, cleanup
+
+
+@pytest.mark.parametrize("exit_code", [0, 1, -9])
+@pytest.mark.parametrize("missing", [FileNotFoundError("/proc/77/exe"), ProcessLookupError("worker teardown")])
+def test_guard_waits_for_captured_child_after_procfs_disappears(tmp_path, monkeypatch, exit_code, missing):
+    class Worker:
+        pid, returncode = 77, None
+        def __init__(self):
+            self.waits, self.polls = [], 0
+        def poll(self):
+            self.polls += 1
+            return self.returncode
+        def wait(self, *, timeout):
+            self.waits.append(timeout)
+            self.returncode = exit_code
+            return self.returncode
+
+    worker = Worker()
+    p, reads, queries, cleanup = _guard_teardown_harness(tmp_path, monkeypatch, worker, observation_error=missing)
+    assert container.run_guard(p) == (0 if exit_code == 0 else 1)
+    receipt = json.loads((tmp_path / "guard.json").read_text(encoding="utf-8"))
+    assert receipt["returncode"] == exit_code and receipt["reason"] == "worker_exited"
+    assert worker.polls == 2 and worker.waits == [container.POLL_SECONDS]
+    assert reads == [77, 77] and queries == [GPU] and cleanup == [True]
+    assert not (tmp_path / "worker-go.json").exists()
+
+
+@pytest.mark.parametrize("now,expected_grace", [(102., container.POLL_SECONDS), (7239.9, .1)])
+def test_guard_wait_timeout_is_bounded_by_original_deadline_and_fails_closed(tmp_path, monkeypatch, now, expected_grace):
+    class Worker:
+        pid, returncode = 77, None
+        def __init__(self):
+            self.waits = []
+        def poll(self):
+            return None
+        def wait(self, *, timeout):
+            self.waits.append(timeout)
+            raise container.subprocess.TimeoutExpired("captured worker", timeout)
+
+    worker = Worker()
+    p, reads, queries, cleanup = _guard_teardown_harness(tmp_path, monkeypatch, worker,
+        observation_error=FileNotFoundError("/proc/77/exe"), now=now)
+    assert container.run_guard(p) == 1
+    receipt = json.loads((tmp_path / "guard.json").read_text(encoding="utf-8"))
+    assert receipt["returncode"] is None and "FileNotFoundError" in receipt["reason"]
+    assert worker.waits == [pytest.approx(expected_grace)]
+    assert reads == [77, 77] and queries == [GPU] and cleanup == [True]
+    assert not (tmp_path / "worker-go.json").exists()
+
+
+def test_guard_does_not_wait_or_ignore_unrelated_procfs_error(tmp_path, monkeypatch):
+    worker = SimpleNamespace(pid=77, returncode=None, poll=lambda: None,
+        wait=lambda **kw: pytest.fail("Only a missing lifetime may receive teardown grace"))
+    p, reads, queries, cleanup = _guard_teardown_harness(tmp_path, monkeypatch, worker,
+        observation_error=PermissionError("procfs access denied"))
+    assert container.run_guard(p) == 1
+    receipt = json.loads((tmp_path / "guard.json").read_text(encoding="utf-8"))
+    assert receipt["returncode"] is None and "PermissionError" in receipt["reason"]
+    assert reads == [77, 77] and queries == [GPU] and cleanup == [True]
+
+
+def test_guard_live_worker_keeps_identity_nvml_and_admission_checks_without_wait(tmp_path, monkeypatch):
+    worker = SimpleNamespace(pid=77, returncode=None,
+        wait=lambda **kw: pytest.fail("A live observed worker must not enter teardown grace"))
+    worker.poll = lambda: worker.returncode
+    p, reads, queries, cleanup = _guard_teardown_harness(tmp_path, monkeypatch, worker)
+    monkeypatch.setattr(container.time, "sleep", lambda seconds: setattr(worker, "returncode", 0))
+    assert container.run_guard(p) == 0
+    receipt = json.loads((tmp_path / "guard.json").read_text(encoding="utf-8"))
+    assert receipt["returncode"] == 0 and receipt["reason"] == "worker_exited"
+    assert receipt["correlation"] == dict(host_pid=999999, admitted=True)
+    assert reads == [77, 77] and queries == [GPU, GPU] and cleanup == [True]
+    assert json.loads((tmp_path / "worker-go.json").read_text(encoding="utf-8"))["assumed_host_pid"] == 999999

@@ -406,13 +406,21 @@ def run_guard(plan):
                     raise PilotError("CUDA-ready handshake does not match the sole worker lifetime")
                 try:
                     observed_identity = local_process(worker.pid)
-                except (FileNotFoundError, ProcessLookupError):
+                except (FileNotFoundError, ProcessLookupError) as missing_lifetime:
                     # The worker may exit after the poll above but before its
-                    # procfs record is read. Only waitpid-backed Popen evidence
-                    # can turn this missing lifetime into a completed worker.
+                    # procfs record is read. /proc/PID/exe may disappear before
+                    # waitpid can reap that captured child. Allow one bounded
+                    # wait within the original cooperative window; only Popen
+                    # exit evidence can classify this lifetime as completed.
                     returncode = worker.poll()
                     if returncode is None:
-                        raise
+                        grace = max(0., min(POLL_SECONDS, deadline - time.monotonic()))
+                        try:
+                            returncode = worker.wait(timeout=grace)
+                        except subprocess.TimeoutExpired:
+                            raise missing_lifetime from None
+                    if returncode is None:
+                        raise missing_lifetime
                     result, reason = returncode, "worker_exited"
                     break
                 if observed_identity != worker_identity:

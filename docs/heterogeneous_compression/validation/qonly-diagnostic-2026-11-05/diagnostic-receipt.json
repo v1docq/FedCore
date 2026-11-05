@@ -1,0 +1,151 @@
+{
+  "Vreport_opened": false,
+  "Vsearch_opened": false,
+  "array_sha256_encoding": "SHA256(str((tuple(shape), str(numpy_dtype))).encode() + contiguous_array_bytes)",
+  "artifacts_after": {
+    "attempt_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/receipt.json",
+      "sha256": "41281ad759454fb1e0a05ec2f42309292fd0381fe0fe1c463b3fc300a6e8eb65"
+    },
+    "files": {
+      "engine-inspector.json": {
+        "bytes": 46858,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/engine-inspector.json",
+        "sha256": "a64af8ae462e6357a5a30643313cc14b9d6048eabc7c4640ba1442615a1e6214"
+      },
+      "model.engine": {
+        "bytes": 13830076,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.engine",
+        "sha256": "858d52d319f012483f25d83205fb02affe041cca55dfc8050e0af330f108feba"
+      },
+      "model.onnx": {
+        "bytes": 11780084,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.onnx",
+        "sha256": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a"
+      }
+    },
+    "original_status": "rejected_no_manifest",
+    "pilot_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/receipt.json",
+      "sha256": "b80fb15636cd1160f1ea2e5890cc2e595c58074c1660912d5b1a53fadd6620b0"
+    },
+    "workflow_fingerprint": "4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9"
+  },
+  "artifacts_before": {
+    "attempt_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/receipt.json",
+      "sha256": "41281ad759454fb1e0a05ec2f42309292fd0381fe0fe1c463b3fc300a6e8eb65"
+    },
+    "files": {
+      "engine-inspector.json": {
+        "bytes": 46858,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/engine-inspector.json",
+        "sha256": "a64af8ae462e6357a5a30643313cc14b9d6048eabc7c4640ba1442615a1e6214"
+      },
+      "model.engine": {
+        "bytes": 13830076,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.engine",
+        "sha256": "858d52d319f012483f25d83205fb02affe041cca55dfc8050e0af330f108feba"
+      },
+      "model.onnx": {
+        "bytes": 11780084,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.onnx",
+        "sha256": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a"
+      }
+    },
+    "original_status": "rejected_no_manifest",
+    "pilot_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/receipt.json",
+      "sha256": "b80fb15636cd1160f1ea2e5890cc2e595c58074c1660912d5b1a53fadd6620b0"
+    },
+    "workflow_fingerprint": "4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9"
+  },
+  "automatic_retries": 0,
+  "backend_atol": 0.02,
+  "backend_rtol": 0.02,
+  "boundary": {
+    "gpu_provenance": "empty-device preflight + one CUDA-ready worker + one unchanged raw NVML PID; temporal correlation only, no authenticated host PID identity proof",
+    "hard_deadline_at": 21427671.173252273,
+    "host_pid_identity_proven": false,
+    "kind": "live_gnu_timeout_container_boundary",
+    "live_posix_timer_observed": true,
+    "original_started_at": 21427371.173252273,
+    "pgid": 2644432,
+    "receipt_sha256": "db9a112fdd12ba2ef27a2a75b3da656d25d3b0495bc89f3237ffac818a6934e3",
+    "timeout_birth_ticks": 2142737128,
+    "timeout_pid": 2644432,
+    "timeout_seconds": 286.891,
+    "worker_deadline": 21427611.173252273,
+    "worker_pid": 2644436
+  },
+  "calibration_fingerprint": "f15d9a418dbbb1210915d304d215e5cfabc780264e8b64e77050a0dda5ad8d61",
+  "calibration_fingerprint_encoding": "existing cv_execution._calibration with torch dtype prefix",
+  "config": {
+    "artifact_directory": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact",
+    "batch_size": 128,
+    "gpu_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+    "rows": 2000,
+    "source_revision": "fd951a6b697a310bc7d7f2056f5b696aa5fff224"
+  },
+  "container_module_sha256": "1cc7f8aa2fceba23d78cbdc572462f44df9c48df28f2b78b72b53a026103b767",
+  "cuda_binding": {
+    "actual_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+    "declared_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+    "evidence": "CUDA Driver cuCtxGetDevice + cuDeviceGetUuid_v2",
+    "pid": 2644436
+  },
+  "data_sha256": "66fad8df85ae5f50d331d559168e38039b84242caaeec89f256961d6ec598e4b",
+  "deployment_accepted": false,
+  "diagnostic_config_sha256": "e6184981ae499fc218777318c98f8b43e6f97a7eaa29b7427a06ec950c03521b",
+  "ended_at": 21427398.62027437,
+  "engine_builds": 0,
+  "exports": 0,
+  "failure": null,
+  "guard_budget_semantics": "PilotConfig budget is boundary transport only; actual diagnostic SGD/export/search budget is zero",
+  "hard_deadline": 21427671.173252273,
+  "host_pid_identity_proven": false,
+  "interpretation": "read-only calibration numerical diagnosis; original rejection unchanged; no quality or latency claim",
+  "labels_evaluated": false,
+  "module_sha256": "2b9ce0c59aa8e014a4b151acb395cf71a239b3092767c1e49d4ae9521dee6122",
+  "official_test_opened": false,
+  "original_artifact_status": "rejected_no_manifest",
+  "original_first_two_probe_fingerprint": "6d579ddbc7f7600352a56ee49fcc7ce616eab71b6fc920b405db546c6e441fed",
+  "python": "3.10.12 (main, Jun 22 2026, 18:55:27) [GCC 11.4.0]",
+  "roles_sha256": "74727fe62ccab45226a0c18c860049883ac84faf34e3cfe83461403bbe051e14",
+  "schema": "heterogeneous-qonly-diagnostic-v1",
+  "script_sha256": "e115eee8a143c719a2e471d2f208a259256717859d48d9bca20f65b6b9bfb5dd",
+  "searches": 0,
+  "sgd_attempted": 0,
+  "sgd_completed": 0,
+  "split_seed": 20261102,
+  "started_at": 21427371.173252273,
+  "status": "complete",
+  "summary": {
+    "argmax_agreement": 0.996,
+    "batches": 17,
+    "inference_row_visits_both_runtimes": 4000,
+    "inference_row_visits_per_runtime": 2000,
+    "logits_per_runtime": 20000,
+    "max_abs_error": 1.120222568511963,
+    "max_normalized_error": 26.892710835310062,
+    "mean_abs_error": 0.07414138916402153,
+    "original_first_two_probe": {
+      "batch_number": 0,
+      "input_sha256": "bc7ff2f72fc7ded4d71f16c9715946eef63a73f72621b6159e8a3eb2f91fa69d",
+      "max_abs_error": 0.16108113527297974,
+      "rows": 2,
+      "violating_count": 6,
+      "within_original_tolerance": false
+    },
+    "pairs_sha256": "f2ce33689ff0647130bb293636b792615ea9e00a6b637a4c6e8946f2acd3337f",
+    "unique_calibration_rows": 2000,
+    "violating_count": 9201,
+    "within_original_tolerance": false
+  },
+  "versions": {
+    "onnxruntime": "1.18.1",
+    "tensorrt": "10.0.1",
+    "torch": "2.2.0+cu121"
+  },
+  "worker_deadline": 21427611.173252273
+}

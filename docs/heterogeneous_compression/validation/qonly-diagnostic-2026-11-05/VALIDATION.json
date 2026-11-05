@@ -1,0 +1,56 @@
+{
+  "source_revision": "fd951a6b697a310bc7d7f2056f5b696aa5fff224",
+  "local_tests": {
+    "passed": 115,
+    "skipped": 1
+  },
+  "server_cpu_tests": {
+    "passed": 99,
+    "skipped": 0
+  },
+  "verified_checks": [
+    "17 batches cover 2000 unique calibration rows exactly once",
+    "float32 paired-logit hashes and original tolerance masks recomputed",
+    "all summary statistics recomputed from logit pairs",
+    "artifact before/after and code hashes match",
+    "one raw GPU process with empty preflight and completed owned cleanup",
+    "numeric and supervision statuses kept separate"
+  ],
+  "files": {
+    "ANALYSIS.json": "61d92466c1cdbf9c34a9b67b2547d65b7f0daf1f3229e748a508c2309800de6d",
+    "console.log": "ac593746b00ea6cc956027404f1ec5f040de6b8257262bb4a074a8f8da54961f",
+    "container-events.jsonl": "90d9ee672793cf1dfe03277d852f7cbad3cd20628ddb934cabd87dd07689a3da",
+    "diagnostic-launch.json": "0ebbb178535a007e143469027c735d35c4b56f6d99da7e31b726e2ab55c57fad",
+    "diagnostic-receipt.json": "b194f0c510dde56d4be5709b3ed25161d5c8050004e4b6721967beda1cb2248c",
+    "diagnostic-seal.json": "c71ea1352a3ed88fa542da4019538e552861d467aa6a1f559fae2af5eb05d815",
+    "diagnostic.json": "e6184981ae499fc218777318c98f8b43e6f97a7eaa29b7427a06ec950c03521b",
+    "final-cpu-tests.xml": "da0290b1f5e21289f78abc71e9ff30020eeb23fe0ed50cf0ec9115d5357f1fb7",
+    "guard.json": "b1c871d4df550ce1c03ce11431db98cc5a1f5fdee535688d5212fd82a42f7e38",
+    "local-tests.xml": "58f833ec640818f85d31b394f5b42dab6b03744f1cef19a9b1291c8b6afaf2eb",
+    "logit-pairs.jsonl": "f2ce33689ff0647130bb293636b792615ea9e00a6b637a4c6e8946f2acd3337f",
+    "os-boundary.json": "db9a112fdd12ba2ef27a2a75b3da656d25d3b0495bc89f3237ffac818a6934e3",
+    "server-cpu-tests.xml": "f52e731b8c655fe7e2192a610095115c6a8e10815bb3256995d0d58256792783",
+    "supervisor.json": "9b9c4af429a18e877468be141343d1ff6af2f87aeb6d457f026b51803f6a38d9"
+  },
+  "post_run_exit_race_fix": {
+    "gpu_executed": false,
+    "local_cpu_tests": {
+      "passed": 126,
+      "skipped": 1,
+      "failed": 0
+    },
+    "semantics": "bounded captured-child wait within original deadline; original failed supervision receipts preserved"
+  },
+  "independent_cpu_audit": {
+    "status": "passed",
+    "scope": [
+      "archive hashes",
+      "all paired errors, masks and summaries",
+      "2000 ordered unique rows and 17 batches",
+      "source module and script hashes",
+      "budget and supervision error distinction",
+      "later bounded exit-race fix"
+    ],
+    "limitation": "Calibration bytes are not archived; input fingerprint verification is recorded by the runner."
+  }
+}
