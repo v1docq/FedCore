@@ -1,0 +1,45 @@
+{
+  "schema": "heterogeneous-block-oracle-validation-v1",
+  "arithmetic_tests": {
+    "tests": 86,
+    "failures": 0,
+    "skipped": 0
+  },
+  "resource_tests": {
+    "tests": 14,
+    "failures": 0,
+    "skipped": 0
+  },
+  "independent_audit": "passed for59arrays,allcomparisons,sourcehashes,proofs,resourceownershipandcumulativebudget",
+  "native_numerical_calls": 2,
+  "native_integer_convolutions": 12,
+  "GPU_requested": false,
+  "source_revisions": [
+    "04e9cdd594ea7f3856e33a61c3fa2fdf6903e931",
+    "addbcceca74d7dd760765ec44ff3e6720fa5909f"
+  ],
+  "raw_first_RSS_not_certified": true,
+  "files": {
+    "ANALYSIS.json": "0bbe2daddf8a70ad5128089e2e58c8ed4c5f00d487a98003157bad42e9f073aa",
+    "ARCHIVE.json": "4acdce31729ecb0bdcd912f33da5b1a5da7c3c66cbf2faf38ebd90f8f62413bd",
+    "ARRAYS.json": "363235b820fa44315a76fbdf84d0dadf63e9a7754bf6d5995a1567d724c9369d",
+    "combined-tests.xml": "f009d99a11cb17b78763525951b8d5f7ff5f68778c87c311ea4edfa48c5aa9ed",
+    "supervisor-tests.xml": "ad80d1a3c638d3997a200b21e866ea682e1db0df695b9aea01fb4b080d72f76c",
+    "run-01/baseline-control.json": "b6bc5f3dcd6947fde74eb2eb48fd752a882166a815ed1782318142a27b95a074",
+    "run-01/comparisons.json": "14d7d9ffa09f3fbee5df61b42d66247ef4b5cb17f8bcec8d40c1d342265745c6",
+    "run-01/console.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-01/contract.json": "9486cab09d4cea1d57c291026f2b0a15bb1447bd3af878ada2ca92142ccea099",
+    "run-01/plan.json": "c080f8e0528cc74ec7fcf874e315d5b90afe51d0cee17d8d1680b854232c7b26",
+    "run-01/progress.jsonl": "575f0dd6e69035805d3a7b02efd20cfc7177436066dc439ab0c2f6e9a80515bf",
+    "run-01/receipt.json": "d493399fe62f56ae7d3cd2da11a80f53ec2bae4abfaaa9be27fe2a398abc450d",
+    "run-01/supervisor.json": "75746abe447c596b7baee5bac56c9a4d87e03a30c6658afc5423513137cc43bb",
+    "run-02/baseline-control.json": "b6bc5f3dcd6947fde74eb2eb48fd752a882166a815ed1782318142a27b95a074",
+    "run-02/comparisons.json": "14d7d9ffa09f3fbee5df61b42d66247ef4b5cb17f8bcec8d40c1d342265745c6",
+    "run-02/console.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-02/contract.json": "9486cab09d4cea1d57c291026f2b0a15bb1447bd3af878ada2ca92142ccea099",
+    "run-02/plan.json": "0ffdab796e841f59ff5a552db536494d9a5a926e399c55e5f47e9db9cc49db5a",
+    "run-02/progress.jsonl": "aacdcea67220cc7ddc7dc5ba4573084fbc7cc2b795f4e0d45decfe91f1b1f9f4",
+    "run-02/receipt.json": "e2f24321a072d2661a4a526f0a7f0261bf44086c0a244725645f18e4e2e17f03",
+    "run-02/supervisor.json": "f05a9c7f6253613b03c52529b774a395e89ea66c240e66b272279367beaf1eae"
+  }
+}

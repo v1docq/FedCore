@@ -1,0 +1,40 @@
+{
+  "returncode": 0,
+  "reason": "worker_exited",
+  "failure": null,
+  "peak_RSS_bytes": 235368448,
+  "captured_pid": 68032,
+  "captured_birth": 1793890799.5501025,
+  "owned_processes": [
+    {
+      "pid": 68032,
+      "birth": 1793890799.5501025,
+      "depth": 0
+    },
+    {
+      "pid": 40856,
+      "birth": 1793890799.558453,
+      "depth": 1
+    },
+    {
+      "pid": 68320,
+      "birth": 1793890799.578238,
+      "depth": 1
+    }
+  ],
+  "reused_pids_not_signalled": [],
+  "cleanup_signals": [],
+  "known_owned_tree_gone": true,
+  "remaining_owned_pids": [],
+  "RSS_semantics": "sampled sum of stable owned launcher and recursively captured descendants; no OS memory quota",
+  "started_at": 21177.078,
+  "ended_at": 21180.343,
+  "previous_seconds": 3.139999999999418,
+  "elapsed_seconds": 3.264999999999418,
+  "cumulative_seconds": 6.404999999998836,
+  "remaining_seconds": 176.86000000000058,
+  "within_original_total_budget": true,
+  "max_seconds": 180.0,
+  "max_RSS_bytes": 1073741824,
+  "GPU_requested": false
+}

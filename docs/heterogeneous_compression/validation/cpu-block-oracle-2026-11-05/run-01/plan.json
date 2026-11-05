@@ -1,0 +1,27 @@
+{
+  "source_revision": "04e9cdd594ea7f3856e33a61c3fa2fdf6903e931",
+  "started_at": 19894.375,
+  "deadline": 20070.375,
+  "max_seconds": 180.0,
+  "max_RSS_bytes": 1073741824,
+  "script_sha256": "f25bb01c955c64da379d01158fe9dcdd7af88b33358b480f20f156abf9d8098e",
+  "module_sha256": "749e83f987664b683888127167ca8bc06c7279701f7220d53ae1938f90937e77",
+  "model": "C:\\Users\\user\\Documents\\Codex\\FedCore-Heterogeneous-2026-11-02\\container-pilot-2026-11-04\\evidence-run-02\\run-02\\pilot\\recipes\\Q_only\\4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9\\artifact\\model.onnx",
+  "evidence": "C:\\Users\\user\\Documents\\Codex\\FedCore-Heterogeneous-2026-11-02\\layerwise-preparation-2026-11-05\\evidence\\layerwise-01",
+  "unique_saved_rows": 8,
+  "literal_ORT_calls": 1,
+  "mathematical_variants": 3,
+  "integer_convolutions": 6,
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "CUDA_VISIBLE_DEVICES": ""
+  },
+  "GPU_requested": false,
+  "training": false,
+  "search": false,
+  "cleanup_reserve_seconds": 4.0,
+  "monitoring_poll_seconds": 0.05,
+  "RSS_semantics": "sampled worker RSS; no OS memory quota"
+}

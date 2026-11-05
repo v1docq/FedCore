@@ -1,0 +1,18 @@
+{
+  "shape": [
+    8,
+    64,
+    32,
+    32
+  ],
+  "reference_dtype": "float32",
+  "actual_dtype": "float32",
+  "bitwise_equal": true,
+  "equal_value_count": 524288,
+  "elements": 524288,
+  "max_abs_error": 0.0,
+  "mean_abs_error": 0.0,
+  "rms_error": 0.0,
+  "original_logit_tolerance_violations": 0,
+  "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+}

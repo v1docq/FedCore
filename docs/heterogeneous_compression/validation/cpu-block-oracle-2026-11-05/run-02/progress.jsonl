@@ -1,0 +1,14 @@
+{"event": "literal_ORT_started", "at": 21177.937, "attempted": 1, "output_count": 13}
+{"event": "literal_ORT_completed", "at": 21177.984, "completed": 1}
+{"event": "integer_conv_started", "at": 21178.0, "variant": "exact_acc_unrounded_bias", "convolution": 1, "attempted": 1, "completed": 0}
+{"event": "integer_conv_completed", "at": 21178.156, "variant": "exact_acc_unrounded_bias", "convolution": 1, "attempted": 1, "completed": 1}
+{"event": "integer_conv_started", "at": 21178.187, "variant": "exact_acc_unrounded_bias", "convolution": 2, "attempted": 2, "completed": 1}
+{"event": "integer_conv_completed", "at": 21178.343, "variant": "exact_acc_unrounded_bias", "convolution": 2, "attempted": 2, "completed": 2}
+{"event": "integer_conv_started", "at": 21178.359, "variant": "exact_acc_int32_rounded_bias", "convolution": 1, "attempted": 3, "completed": 2}
+{"event": "integer_conv_completed", "at": 21178.515, "variant": "exact_acc_int32_rounded_bias", "convolution": 1, "attempted": 3, "completed": 3}
+{"event": "integer_conv_started", "at": 21178.546, "variant": "exact_acc_int32_rounded_bias", "convolution": 2, "attempted": 4, "completed": 3}
+{"event": "integer_conv_completed", "at": 21178.703, "variant": "exact_acc_int32_rounded_bias", "convolution": 2, "attempted": 4, "completed": 4}
+{"event": "integer_conv_started", "at": 21178.734, "variant": "remove_only_conv1_output_qdq", "convolution": 1, "attempted": 5, "completed": 4}
+{"event": "integer_conv_completed", "at": 21178.906, "variant": "remove_only_conv1_output_qdq", "convolution": 1, "attempted": 5, "completed": 5}
+{"event": "integer_conv_started", "at": 21178.906, "variant": "remove_only_conv1_output_qdq", "convolution": 2, "attempted": 6, "completed": 5}
+{"event": "integer_conv_completed", "at": 21179.062, "variant": "remove_only_conv1_output_qdq", "convolution": 2, "attempted": 6, "completed": 6}

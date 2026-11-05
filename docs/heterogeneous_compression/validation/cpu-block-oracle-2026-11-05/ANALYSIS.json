@@ -1,0 +1,697 @@
+{
+  "schema": "heterogeneous-block-oracle-analysis-v1",
+  "first_source": "04e9cdd594ea7f3856e33a61c3fa2fdf6903e931",
+  "canonical_source": "addbcceca74d7dd760765ec44ff3e6720fa5909f",
+  "arithmetic_module_sha256": "749e83f987664b683888127167ca8bc06c7279701f7220d53ae1938f90937e77",
+  "execution_status": "complete",
+  "baseline_bitwise_reproduced": true,
+  "both_runs_all_59_arrays_identical": true,
+  "arrays_NPZ_sha256": "8a0917d7ce49f7f715009fcf2f7d2f4e995ef412de57538912aec742e9193424",
+  "variants": {
+    "exact_acc_unrounded_bias": {
+      "vs_saved_ORT": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "vs_saved_rebuilt_TensorRT": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 236069,
+        "elements": 524288,
+        "max_abs_error": 0.0708686113357544,
+        "mean_abs_error": 0.005007108858206632,
+        "rms_error": 0.008287669859798362,
+        "original_logit_tolerance_violations": 7893,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "exact_code_mismatches_vs_literal": {
+        "stem_codes": 0,
+        "conv1_codes": 0,
+        "conv2_input_codes": 0,
+        "conv2_codes": 0
+      }
+    },
+    "exact_acc_int32_rounded_bias": {
+      "vs_saved_ORT": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 523748,
+        "elements": 524288,
+        "max_abs_error": 0.03075277805328369,
+        "mean_abs_error": 3.115120531660409e-05,
+        "rms_error": 0.0009763698498473154,
+        "original_logit_tolerance_violations": 474,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "vs_saved_rebuilt_TensorRT": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 236068,
+        "elements": 524288,
+        "max_abs_error": 0.0708686113357544,
+        "mean_abs_error": 0.0050081853532792705,
+        "rms_error": 0.00829062340358415,
+        "original_logit_tolerance_violations": 7922,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "exact_code_mismatches_vs_literal": {
+        "stem_codes": 0,
+        "conv1_codes": 102,
+        "conv2_input_codes": 60,
+        "conv2_codes": 923
+      }
+    },
+    "remove_only_conv1_output_qdq": {
+      "vs_saved_ORT": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 480801,
+        "elements": 524288,
+        "max_abs_error": 0.06150555610656738,
+        "mean_abs_error": 0.0025317047829780392,
+        "rms_error": 0.008843024794689975,
+        "original_logit_tolerance_violations": 38472,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "vs_saved_rebuilt_TensorRT": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 236249,
+        "elements": 524288,
+        "max_abs_error": 0.015376344323158264,
+        "mean_abs_error": 0.004217645188320468,
+        "rms_error": 0.006552843191507244,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "exact_code_mismatches_vs_literal": {
+        "stem_codes": 0,
+        "conv2_input_codes": 85700,
+        "conv2_codes": 77833
+      }
+    }
+  },
+  "paired_effects": {
+    "exact_acc_int32_rounded_bias": {
+      "stem_codes": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int8",
+        "actual_dtype": "int8",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 0,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "stem_dq": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv1_accumulator": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int64",
+        "actual_dtype": "int64",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 0,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv1_pre_q": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float64",
+        "actual_dtype": "float64",
+        "bitwise_equal": false,
+        "equal_value_count": 0,
+        "elements": 524288,
+        "max_abs_error": 3.048450311871065e-05,
+        "mean_abs_error": 5.1402755652585084e-06,
+        "rms_error": 7.394582598400625e-06,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv1_codes": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int8",
+        "actual_dtype": "int8",
+        "bitwise_equal": false,
+        "equal_value_count": 524186,
+        "elements": 524288,
+        "max_abs_error": 1.0,
+        "mean_abs_error": 0.000194549560546875,
+        "rms_error": 0.013948102399497755,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 102,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv1_dq": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 524186,
+        "elements": 524288,
+        "max_abs_error": 0.02407735586166382,
+        "mean_abs_error": 4.684233537943783e-06,
+        "rms_error": 0.00033583303332448484,
+        "original_logit_tolerance_violations": 56,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "relu1": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 524228,
+        "elements": 524288,
+        "max_abs_error": 0.02407735586166382,
+        "mean_abs_error": 2.755431545153897e-06,
+        "rms_error": 0.00025757218354212423,
+        "original_logit_tolerance_violations": 32,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv2_input_codes": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int8",
+        "actual_dtype": "int8",
+        "bitwise_equal": false,
+        "equal_value_count": 524228,
+        "elements": 524288,
+        "max_abs_error": 2.0,
+        "mean_abs_error": 0.000164031982421875,
+        "rms_error": 0.016223874732261865,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 60,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv2_input_dq": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 524228,
+        "elements": 524288,
+        "max_abs_error": 0.03365764021873474,
+        "mean_abs_error": 2.760464106188465e-06,
+        "rms_error": 0.00027302861000242187,
+        "original_logit_tolerance_violations": 26,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv2_accumulator": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int64",
+        "actual_dtype": "int64",
+        "bitwise_equal": false,
+        "equal_value_count": 492628,
+        "elements": 524288,
+        "max_abs_error": 316.0,
+        "mean_abs_error": 2.4359207153320312,
+        "rms_error": 14.47710031085799,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 31660,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv2_pre_q": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float64",
+        "actual_dtype": "float64",
+        "bitwise_equal": false,
+        "equal_value_count": 0,
+        "elements": 524288,
+        "max_abs_error": 0.022079807116149763,
+        "mean_abs_error": 5.2885892502916305e-05,
+        "rms_error": 0.00035265692585818625,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv2_codes": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int8",
+        "actual_dtype": "int8",
+        "bitwise_equal": false,
+        "equal_value_count": 523365,
+        "elements": 524288,
+        "max_abs_error": 1.0,
+        "mean_abs_error": 0.0017604827880859375,
+        "rms_error": 0.04195810753699382,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 923,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv2_dq": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 523365,
+        "elements": 524288,
+        "max_abs_error": 0.030752718448638916,
+        "mean_abs_error": 5.41396157274221e-05,
+        "rms_error": 0.0012903254914366504,
+        "original_logit_tolerance_violations": 884,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "add": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 523365,
+        "elements": 524288,
+        "max_abs_error": 0.03075277805328369,
+        "mean_abs_error": 5.413961604716633e-05,
+        "rms_error": 0.001290325499057281,
+        "original_logit_tolerance_violations": 859,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "block_out": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 523748,
+        "elements": 524288,
+        "max_abs_error": 0.03075277805328369,
+        "mean_abs_error": 3.115120531660409e-05,
+        "rms_error": 0.0009763698498473154,
+        "original_logit_tolerance_violations": 474,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      }
+    },
+    "remove_only_conv1_output_qdq": {
+      "stem_codes": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int8",
+        "actual_dtype": "int8",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 0,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "stem_dq": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv1_accumulator": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int64",
+        "actual_dtype": "int64",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 0,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv1_pre_q": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float64",
+        "actual_dtype": "float64",
+        "bitwise_equal": true,
+        "equal_value_count": 524288,
+        "elements": 524288,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "rms_error": 0.0,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "relu1": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 283593,
+        "elements": 524288,
+        "max_abs_error": 0.012038620188832283,
+        "mean_abs_error": 0.002740933082198475,
+        "rms_error": 0.004674540287590067,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv2_input_codes": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int8",
+        "actual_dtype": "int8",
+        "bitwise_equal": false,
+        "equal_value_count": 438588,
+        "elements": 524288,
+        "max_abs_error": 1.0,
+        "mean_abs_error": 0.16345977783203125,
+        "rms_error": 0.4043015926657119,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 85700,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv2_input_dq": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 438588,
+        "elements": 524288,
+        "max_abs_error": 0.01682889461517334,
+        "mean_abs_error": 0.0027508348128861826,
+        "rms_error": 0.0068039178246841366,
+        "original_logit_tolerance_violations": 0,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv2_accumulator": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int64",
+        "actual_dtype": "int64",
+        "bitwise_equal": false,
+        "equal_value_count": 770,
+        "elements": 524288,
+        "max_abs_error": 2267.0,
+        "mean_abs_error": 235.17120933532715,
+        "rms_error": 304.2538914960559,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 523518,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv2_pre_q": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float64",
+        "actual_dtype": "float64",
+        "bitwise_equal": false,
+        "equal_value_count": 770,
+        "elements": 524288,
+        "max_abs_error": 0.0730885795033398,
+        "mean_abs_error": 0.004554695101087766,
+        "rms_error": 0.006689835617467339,
+        "original_logit_tolerance_violations": 4484,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "conv2_codes": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "int8",
+        "actual_dtype": "int8",
+        "bitwise_equal": false,
+        "equal_value_count": 446455,
+        "elements": 524288,
+        "max_abs_error": 2.0,
+        "mean_abs_error": 0.1489124298095703,
+        "rms_error": 0.38707616453783394,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim",
+        "exact_code_mismatches": 77833,
+        "comparison_rule": "exact integer-code equality"
+      },
+      "conv2_dq": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 446455,
+        "elements": 524288,
+        "max_abs_error": 0.06150543689727783,
+        "mean_abs_error": 0.004579460635174115,
+        "rms_error": 0.01190364068661675,
+        "original_logit_tolerance_violations": 74952,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "add": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 446455,
+        "elements": 524288,
+        "max_abs_error": 0.06150555610656738,
+        "mean_abs_error": 0.004579460627468279,
+        "rms_error": 0.011903640666525996,
+        "original_logit_tolerance_violations": 72324,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      },
+      "block_out": {
+        "shape": [
+          8,
+          64,
+          32,
+          32
+        ],
+        "reference_dtype": "float32",
+        "actual_dtype": "float32",
+        "bitwise_equal": false,
+        "equal_value_count": 480801,
+        "elements": 524288,
+        "max_abs_error": 0.06150555610656738,
+        "mean_abs_error": 0.0025317047829780392,
+        "rms_error": 0.008843024794689975,
+        "original_logit_tolerance_violations": 38472,
+        "tolerance_semantics": "descriptive original logit tolerance only; no block-level acceptance or kernel equivalence claim"
+      }
+    }
+  },
+  "observed_accumulator_max_abs": {
+    "exact_acc_unrounded_bias__conv1_accumulator": 77629,
+    "exact_acc_unrounded_bias__conv2_accumulator": 84761,
+    "exact_acc_int32_rounded_bias__conv1_accumulator": 77629,
+    "exact_acc_int32_rounded_bias__conv2_accumulator": 84761,
+    "remove_only_conv1_output_qdq__conv1_accumulator": 77629,
+    "remove_only_conv1_output_qdq__conv2_accumulator": 85389
+  },
+  "conservative_accumulator_bound": 9437184,
+  "within_INT32_and_exact_FP32_integer_range": true,
+  "run_count": 2,
+  "total_literal_ORT_calls": 2,
+  "total_integer_convolutions": 12,
+  "total_map_evaluations": 6,
+  "cumulative_wall_seconds": 6.404999999998836,
+  "first_full_worker_RSS_verified": false,
+  "canonical_sampled_tree_peak_RSS_bytes": 235368448,
+  "canonical_sampled_tree_peak_RSS_MiB": 224.46484375,
+  "canonical_worker_observed_in_tree": true,
+  "canonical_owned_tree_gone": true,
+  "canonical_forced_signals": false,
+  "GPU_requested": false,
+  "GPU_budget_remaining_seconds": 5965.248360384256,
+  "deployment_accepted": false,
+  "original_engine_first_divergence_located": false,
+  "production_QDQ_policy_changed": false,
+  "interpretation_limits": [
+    "FP64epilogueandoutputQaredeclaredmathematicalmaps,notidentifiedTensorRTinternals",
+    "ComparedTensorRTtapisfromrebuiltgraph,notoriginalengine",
+    "DropQDQisnotanequivalenttransformationandisnotimplementedinproduction",
+    "FirstattemptfullRSSwasnotmeasured;rawreceiptpreserved",
+    "Allclose0.02isdescriptiveonfloatblockarrays;integercodescompareexactly"
+  ]
+}

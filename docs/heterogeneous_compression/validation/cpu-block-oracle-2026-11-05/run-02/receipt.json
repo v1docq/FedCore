@@ -1,0 +1,49 @@
+{
+  "schema": "heterogeneous-block-oracle-v1",
+  "execution_status": "complete",
+  "failure": null,
+  "worker_pid": 68320,
+  "parent_pid": 68032,
+  "baseline_status": "bitwise_reproduced",
+  "baseline_gate_passed": true,
+  "causal_attribution_to_TensorRT_supported": false,
+  "source_revision": "addbcceca74d7dd760765ec44ff3e6720fa5909f",
+  "started_at": 21177.078,
+  "ended_at": 21180.234,
+  "deadline": 21349.938000000002,
+  "literal_ORT_calls": 1,
+  "integer_convs_started": 6,
+  "integer_convs_completed": 6,
+  "completed_variants": [
+    "exact_acc_unrounded_bias",
+    "exact_acc_int32_rounded_bias",
+    "remove_only_conv1_output_qdq"
+  ],
+  "before": {
+    "tap-batch-0.npz": "8d0f12c3bbbd469e6ce90ec5086af657e78cf554d684a206734d30d0bd1229fb",
+    "tap-batch-1.npz": "252846acd82b82b5906daf11ae0e541133a84576be2932b3fdd2c6e72dfd9083",
+    "diagnostic-receipt.json": "8b5810325a6b0da099284800b91d6707c0308519251e0a0b2c634d2be237428c",
+    "source_model": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a"
+  },
+  "after": {
+    "tap-batch-0.npz": "8d0f12c3bbbd469e6ce90ec5086af657e78cf554d684a206734d30d0bd1229fb",
+    "tap-batch-1.npz": "252846acd82b82b5906daf11ae0e541133a84576be2932b3fdd2c6e72dfd9083",
+    "diagnostic-receipt.json": "8b5810325a6b0da099284800b91d6707c0308519251e0a0b2c634d2be237428c",
+    "source_model": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a"
+  },
+  "CPU_versions": {
+    "numpy": "1.26.4",
+    "onnx": "1.16.2",
+    "onnxruntime": "1.18.1"
+  },
+  "GPU_requested": false,
+  "SGD": 0,
+  "training": false,
+  "search": false,
+  "official_test": false,
+  "deployment_accepted": false,
+  "original_engine_first_divergence_located": false,
+  "source_module_sha256": "749e83f987664b683888127167ca8bc06c7279701f7220d53ae1938f90937e77",
+  "script_sha256": "9049b05c4eaba9fe7823d4764c9d803c37e39fd4061d0f14fd4be38ebc558963",
+  "interpretation": "Frozen mathematical maps only; similarity does not identify actual TensorRT kernel or original engine"
+}

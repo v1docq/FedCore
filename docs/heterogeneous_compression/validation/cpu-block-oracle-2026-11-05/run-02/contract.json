@@ -1,0 +1,38 @@
+{
+  "precision": "source activation Q: FP32 divide, round-to-nearest-even, add zero point, clamp INT8; DQ/Relu/residual Add: FP32; Conv: exact int64 A -> FP64, multiply sx64 THEN sw64, then add stored FP32 bias converted to FP64; output Q: FP64 divide and round-even, DQ returns FP32; rounded-bias variant: RNE(b64/(sx64*sw64)) checked INT32, added to int64 A before scaling; removed-QDQ variant: only Conv1 output Q/DQ omitted, Conv1 result cast FP32 before Relu; no fused multiply-add; no downstream block-output Q/DQ; not bitexact ORT or TensorRT",
+  "variants": [
+    "exact_acc_unrounded_bias",
+    "exact_acc_int32_rounded_bias",
+    "remove_only_conv1_output_qdq"
+  ],
+  "selected_train_ids": [
+    11,
+    20,
+    33848,
+    3998,
+    11666,
+    3192,
+    31270,
+    6088
+  ],
+  "source_hashes": {
+    "tap-batch-0.npz": "8d0f12c3bbbd469e6ce90ec5086af657e78cf554d684a206734d30d0bd1229fb",
+    "tap-batch-1.npz": "252846acd82b82b5906daf11ae0e541133a84576be2932b3fdd2c6e72dfd9083",
+    "diagnostic-receipt.json": "8b5810325a6b0da099284800b91d6707c0308519251e0a0b2c634d2be237428c",
+    "source_model": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a"
+  },
+  "literal_output_count": 13,
+  "literal_node_count": 15,
+  "array_hash_rule": "SHA256(shape,dtype prefix + contiguous bytes)",
+  "parameters": {
+    "stem_scale": 0.02139183320105076,
+    "conv1_scale": 0.02407732792198658,
+    "conv2_input_scale": 0.01682881824672222,
+    "conv2_scale": 0.03075270913541317
+  },
+  "CPU_versions": {
+    "numpy": "1.26.4",
+    "onnx": "1.16.2",
+    "onnxruntime": "1.18.1"
+  }
+}
