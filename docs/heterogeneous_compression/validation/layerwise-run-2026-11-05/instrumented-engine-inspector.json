@@ -1,0 +1,1625 @@
+{"Layers": [{
+  "Name": "/conv1/Conv + /relu/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "images",
+    "Location": "Device",
+    "Dimensions": [128,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/relu/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 1728},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "ampere_scudnn_128x64_relu_small_nn_v1",
+  "TacticValue": "0x3f243c490d502deb",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /conv1/Conv]\u001e[ONNX Layer: /relu/Relu]"
+},{
+  "Name": "/relu/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/relu/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer1.0.conv1.weight_quantized + /layer1/layer1.0/conv1/Conv + PWN(/layer1/layer1.0/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer1/layer1.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "sm80_xmma_fprop_avdt_dense_int8int8_tilesize64x256x32_tapsperload3_threadspercta128_r3s3_u1v1_scalebias_relu",
+  "TacticValue": "0x9dafb2758560cc1d",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer1/layer1.0/conv1/Conv]\u001e[ONNX Layer: /layer1/layer1.0/relu/Relu]"
+},{
+  "Name": "layer1.0.conv2.weight_quantized + /layer1/layer1.0/conv2/Conv + PWN(/layer1/layer1.0/Add + /layer1/layer1.0/relu_1/Relu)",
+  "LayerType": "CaskJitConv",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  },
+  {
+    "Name": "/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer1.0.conv2.weight_quantized + /layer1/layer1.0/conv2/Conv + PWN(/layer1/layer1.0/Add + /layer1/layer1.0/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var1"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 1,
+  "PointWiseExpressionLiterals": ["0.000000e+00f"],
+  "NbPointWiseExpressionOperations": 2,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iPlus(arg0, arg1);", "auto const var1 = pwgen::iMax(var0, literal0);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize256x64x64_stage4_warpsize4x1x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xd3d41ef6de22d9b6",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer1/layer1.0/conv2/Conv]\u001e[ONNX Layer: /layer1/layer1.0/Add]\u001e[ONNX Layer: /layer1/layer1.0/relu_1/Relu]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to layer1.0.conv2.weight_quantized + /layer1/layer1.0/conv2/Conv + PWN(/layer1/layer1.0/Add + /layer1/layer1.0/relu_1/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer1.0.conv2.weight_quantized + /layer1/layer1.0/conv2/Conv + PWN(/layer1/layer1.0/Add + /layer1/layer1.0/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer1/layer1.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer1/layer1.0/relu_1/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer1/layer1.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer1.1.conv1.weight_quantized + /layer1/layer1.1/conv1/Conv + PWN(/layer1/layer1.1/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer1/layer1.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "sm80_xmma_fprop_avdt_dense_int8int8_tilesize64x256x32_tapsperload3_threadspercta128_r3s3_u1v1_scalebias_relu",
+  "TacticValue": "0x9dafb2758560cc1d",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer1/layer1.1/conv1/Conv]\u001e[ONNX Layer: /layer1/layer1.1/relu/Relu]"
+},{
+  "Name": "layer1.1.conv2.weight_quantized + /layer1/layer1.1/conv2/Conv + PWN(/layer1/layer1.1/Add + /layer1/layer1.1/relu_1/Relu)",
+  "LayerType": "CaskJitConv",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  },
+  {
+    "Name": "/layer1/layer1.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer1.1.conv2.weight_quantized + /layer1/layer1.1/conv2/Conv + PWN(/layer1/layer1.1/Add + /layer1/layer1.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var1"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 1,
+  "PointWiseExpressionLiterals": ["0.000000e+00f"],
+  "NbPointWiseExpressionOperations": 2,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iPlus(arg0, arg1);", "auto const var1 = pwgen::iMax(var0, literal0);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize256x64x64_stage4_warpsize4x1x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xd3d41ef6de22d9b6",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer1/layer1.1/conv2/Conv]\u001e[ONNX Layer: /layer1/layer1.1/Add]\u001e[ONNX Layer: /layer1/layer1.1/relu_1/Relu]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to layer1.1.conv2.weight_quantized + /layer1/layer1.1/conv2/Conv + PWN(/layer1/layer1.1/Add + /layer1/layer1.1/relu_1/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer1.1.conv2.weight_quantized + /layer1/layer1.1/conv2/Conv + PWN(/layer1/layer1.1/Add + /layer1/layer1.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer1/layer1.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer1/layer1.1/relu_1/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer1/layer1.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer2.0.conv1.weight_quantized + /layer2/layer2.0/conv1/Conv + PWN(/layer2/layer2.0/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 73728},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize128x128x64_stage4_warpsize2x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xea88b51105501f96",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer2/layer2.0/conv1/Conv]\u001e[ONNX Layer: /layer2/layer2.0/relu/Relu]"
+},{
+  "Name": "layer2.0.conv2.weight_quantized + /layer2/layer2.0/conv2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.0/conv2/Conv_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize256x64x64_stage4_warpsize4x1x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xd3d41ef6de22d9b6",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer2/layer2.0/conv2/Conv]"
+},{
+  "Name": "/layer2/layer2.0/conv2/Conv_output_0_DequantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.0/conv2/Conv_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.0/conv2/Conv_output_0_DequantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer1/layer1.1/relu_1/Relu_output_0_DequantizeLinear_clone_0",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer1/layer1.1/relu_1/Relu_output_0_DequantizeLinear_Output_clone_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer2/layer2.0/downsample/downsample.0/Conv + /layer2/layer2.0/Add + /layer2/layer2.0/relu_1/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer1/layer1.1/relu_1/Relu_output_0_DequantizeLinear_Output_clone_0",
+    "Location": "Device",
+    "Dimensions": [128,64,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/layer2/layer2.0/conv2/Conv_output_0_DequantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 8192},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 1,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "ampere_scudnn_128x64_relu_interior_nn_v1",
+  "TacticValue": "0xc3cf6e1d1c6aff27",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer2/layer2.0/downsample/downsample.0/Conv]\u001e[ONNX Layer: /layer2/layer2.0/Add]\u001e[ONNX Layer: /layer2/layer2.0/relu_1/Relu]"
+},{
+  "Name": "/layer2/layer2.0/relu_1/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer2.1.conv1.weight_quantized + /layer2/layer2.1/conv1/Conv + PWN(/layer2/layer2.1/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "CLIPPED_RELU",
+  "ParameterSubType": "[0.000000,inf]",
+  "TacticName": "sm80_xmma_fprop_avdt_dense_int8int8_tilesize64x128x32_tapsperload3_threadspercta128_r3s3_u1v1_scalebias_relu",
+  "TacticValue": "0x214f03e23f252333",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer2/layer2.1/conv1/Conv]\u001e[ONNX Layer: /layer2/layer2.1/relu/Relu]"
+},{
+  "Name": "layer2.1.conv2.weight_quantized + /layer2/layer2.1/conv2/Conv + PWN(/layer2/layer2.1/Add + /layer2/layer2.1/relu_1/Relu)",
+  "LayerType": "CaskJitConv",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  },
+  {
+    "Name": "/layer2/layer2.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer2.1.conv2.weight_quantized + /layer2/layer2.1/conv2/Conv + PWN(/layer2/layer2.1/Add + /layer2/layer2.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var1"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 1,
+  "PointWiseExpressionLiterals": ["0.000000e+00f"],
+  "NbPointWiseExpressionOperations": 2,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iPlus(arg0, arg1);", "auto const var1 = pwgen::iMax(var0, literal0);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize128x128x64_stage4_warpsize2x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xea88b51105501f96",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer2/layer2.1/conv2/Conv]\u001e[ONNX Layer: /layer2/layer2.1/Add]\u001e[ONNX Layer: /layer2/layer2.1/relu_1/Relu]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to layer2.1.conv2.weight_quantized + /layer2/layer2.1/conv2/Conv + PWN(/layer2/layer2.1/Add + /layer2/layer2.1/relu_1/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer2.1.conv2.weight_quantized + /layer2/layer2.1/conv2/Conv + PWN(/layer2/layer2.1/Add + /layer2/layer2.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x00000000000003ea",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer2/layer2.1/relu_1/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to layer3.0.conv1.weight_quantized + /layer3/layer3.0/conv1/Conv + PWN(/layer3/layer3.0/relu/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to layer3.0.conv1.weight_quantized + /layer3/layer3.0/conv1/Conv + PWN(/layer3/layer3.0/relu/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer3.0.conv1.weight_quantized + /layer3/layer3.0/conv1/Conv + PWN(/layer3/layer3.0/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to layer3.0.conv1.weight_quantized + /layer3/layer3.0/conv1/Conv + PWN(/layer3/layer3.0/relu/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 294912},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "CLIPPED_RELU",
+  "ParameterSubType": "[0.000000,inf]",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize192x128x64_stage3_warpsize4x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xd9f3bbc3e16b16ac",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer3/layer3.0/conv1/Conv]\u001e[ONNX Layer: /layer3/layer3.0/relu/Relu]"
+},{
+  "Name": "layer3.0.conv2.weight_quantized + /layer3/layer3.0/conv2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.0/conv2/Conv_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 589824},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize96x256x64_stage3_warpsize2x4x1_g1_tensor16x8x32",
+  "TacticValue": "0x4b860619b6031662",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer3/layer3.0/conv2/Conv]"
+},{
+  "Name": "/layer3/layer3.0/conv2/Conv_output_0_DequantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.0/conv2/Conv_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.0/conv2/Conv_output_0_DequantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer2/layer2.1/relu_1/Relu_output_0_DequantizeLinear_clone_0",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer2/layer2.1/relu_1/Relu_output_0_DequantizeLinear_Output_clone_0",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer3/layer3.0/downsample/downsample.0/Conv + /layer3/layer3.0/Add + /layer3/layer3.0/relu_1/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer2/layer2.1/relu_1/Relu_output_0_DequantizeLinear_Output_clone_0",
+    "Location": "Device",
+    "Dimensions": [128,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/layer3/layer3.0/conv2/Conv_output_0_DequantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 32768},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 1,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x865894c4635db7fd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer3/layer3.0/downsample/downsample.0/Conv]\u001e[ONNX Layer: /layer3/layer3.0/Add]\u001e[ONNX Layer: /layer3/layer3.0/relu_1/Relu]"
+},{
+  "Name": "/layer3/layer3.0/relu_1/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to layer3.1.conv1.weight_quantized + /layer3/layer3.1/conv1/Conv + PWN(/layer3/layer3.1/relu/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to layer3.1.conv1.weight_quantized + /layer3/layer3.1/conv1/Conv + PWN(/layer3/layer3.1/relu/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer3.1.conv1.weight_quantized + /layer3/layer3.1/conv1/Conv + PWN(/layer3/layer3.1/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to layer3.1.conv1.weight_quantized + /layer3/layer3.1/conv1/Conv + PWN(/layer3/layer3.1/relu/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 589824},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "CLIPPED_RELU",
+  "ParameterSubType": "[0.000000,inf]",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize96x128x64_stage3_warpsize2x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xf33711e7c9ed4673",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer3/layer3.1/conv1/Conv]\u001e[ONNX Layer: /layer3/layer3.1/relu/Relu]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 1 to layer3.1.conv2.weight_quantized + /layer3/layer3.1/conv2/Conv + PWN(/layer3/layer3.1/Add + /layer3/layer3.1/relu_1/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 1 to layer3.1.conv2.weight_quantized + /layer3/layer3.1/conv2/Conv + PWN(/layer3/layer3.1/Add + /layer3/layer3.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer3.1.conv2.weight_quantized + /layer3/layer3.1/conv2/Conv + PWN(/layer3/layer3.1/Add + /layer3/layer3.1/relu_1/Relu)",
+  "LayerType": "CaskJitConv",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  },
+  {
+    "Name": "Reformatted Input Tensor 1 to layer3.1.conv2.weight_quantized + /layer3/layer3.1/conv2/Conv + PWN(/layer3/layer3.1/Add + /layer3/layer3.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer3.1.conv2.weight_quantized + /layer3/layer3.1/conv2/Conv + PWN(/layer3/layer3.1/Add + /layer3/layer3.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 589824},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var1"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 1,
+  "PointWiseExpressionLiterals": ["0.000000e+00f"],
+  "NbPointWiseExpressionOperations": 2,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iPlus(arg0, arg1);", "auto const var1 = pwgen::iMax(var0, literal0);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize64x128x64_stage6_warpsize2x2x1_g1_tensor16x8x32",
+  "TacticValue": "0x3818ca0093333b50",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer3/layer3.1/conv2/Conv]\u001e[ONNX Layer: /layer3/layer3.1/Add]\u001e[ONNX Layer: /layer3/layer3.1/relu_1/Relu]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to layer3.1.conv2.weight_quantized + /layer3/layer3.1/conv2/Conv + PWN(/layer3/layer3.1/Add + /layer3/layer3.1/relu_1/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer3.1.conv2.weight_quantized + /layer3/layer3.1/conv2/Conv + PWN(/layer3/layer3.1/Add + /layer3/layer3.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer3/layer3.1/relu_1/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to layer4.0.conv1.weight_quantized + /layer4/layer4.0/conv1/Conv + PWN(/layer4/layer4.0/relu/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to layer4.0.conv1.weight_quantized + /layer4/layer4.0/conv1/Conv + PWN(/layer4/layer4.0/relu/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer4.0.conv1.weight_quantized + /layer4/layer4.0/conv1/Conv + PWN(/layer4/layer4.0/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to layer4.0.conv1.weight_quantized + /layer4/layer4.0/conv1/Conv + PWN(/layer4/layer4.0/relu/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer4/layer4.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 512,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 1179648},
+  "Bias": {"Type": "Float", "Count": 512},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "CLIPPED_RELU",
+  "ParameterSubType": "[0.000000,inf]",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize96x128x64_stage3_warpsize2x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xf33711e7c9ed4673",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer4/layer4.0/conv1/Conv]\u001e[ONNX Layer: /layer4/layer4.0/relu/Relu]"
+},{
+  "Name": "layer4.0.conv2.weight_quantized + /layer4/layer4.0/conv2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer4/layer4.0/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer4/layer4.0/conv2/Conv_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 512,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 2359296},
+  "Bias": {"Type": "Float", "Count": 512},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize96x128x64_stage3_warpsize2x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xf33711e7c9ed4673",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer4/layer4.0/conv2/Conv]"
+},{
+  "Name": "/layer4/layer4.0/conv2/Conv_output_0_DequantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer4/layer4.0/conv2/Conv_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer4/layer4.0/conv2/Conv_output_0_DequantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer3/layer3.1/relu_1/Relu_output_0_DequantizeLinear_clone_0",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.1/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Four wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer3/layer3.1/relu_1/Relu_output_0_DequantizeLinear_Output_clone_0",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/layer4/layer4.0/downsample/downsample.0/Conv + /layer4/layer4.0/Add + /layer4/layer4.0/relu_1/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer3/layer3.1/relu_1/Relu_output_0_DequantizeLinear_Output_clone_0",
+    "Location": "Device",
+    "Dimensions": [128,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/layer4/layer4.0/conv2/Conv_output_0_DequantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer4/layer4.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 512,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 131072},
+  "Bias": {"Type": "Float", "Count": 512},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 1,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0xa31d27de74b895ff",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer4/layer4.0/downsample/downsample.0/Conv]\u001e[ONNX Layer: /layer4/layer4.0/Add]\u001e[ONNX Layer: /layer4/layer4.0/relu_1/Relu]"
+},{
+  "Name": "/layer4/layer4.0/relu_1/Relu_output_0_QuantizeLinear",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/layer4/layer4.0/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer4/layer4.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "QDQ",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "layer4.1.conv1.weight_quantized + /layer4/layer4.1/conv1/Conv + PWN(/layer4/layer4.1/relu/Relu)",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/layer4/layer4.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer4/layer4.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 512,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 2359296},
+  "Bias": {"Type": "Float", "Count": 512},
+  "HasBias": 1,
+  "HasReLU": 1,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize96x128x64_stage3_warpsize2x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xf33711e7c9ed4673",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer4/layer4.1/conv1/Conv]\u001e[ONNX Layer: /layer4/layer4.1/relu/Relu]"
+},{
+  "Name": "layer4.1.conv2.weight_quantized + /layer4/layer4.1/conv2/Conv + PWN(/layer4/layer4.1/Add + /layer4/layer4.1/relu_1/Relu)",
+  "LayerType": "CaskJitConv",
+  "Inputs": [
+  {
+    "Name": "/layer4/layer4.1/relu/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  },
+  {
+    "Name": "/layer4/layer4.0/relu_1/Relu_output_0_QuantizeLinear_Output",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major Int8 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer4.1.conv2.weight_quantized + /layer4/layer4.1/conv2/Conv + PWN(/layer4/layer4.1/Add + /layer4/layer4.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 512,
+  "Groups": 1,
+  "Weights": {"Type": "Int8", "Count": 2359296},
+  "Bias": {"Type": "Float", "Count": 512},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var1"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 1,
+  "PointWiseExpressionLiterals": ["0.000000e+00f"],
+  "NbPointWiseExpressionOperations": 2,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iPlus(arg0, arg1);", "auto const var1 = pwgen::iMax(var0, literal0);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_interleaved_i8i8_i8i32_f32_nchw_vect_c_32kcrs_vect_c_32_nchw_vect_c_32_tilesize128x128x64_stage4_warpsize2x2x1_g1_tensor16x8x32_t1r3s3",
+  "TacticValue": "0xea88b51105501f96",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /layer4/layer4.1/conv2/Conv]\u001e[ONNX Layer: /layer4/layer4.1/Add]\u001e[ONNX Layer: /layer4/layer4.1/relu_1/Relu]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to layer4.1.conv2.weight_quantized + /layer4/layer4.1/conv2/Conv + PWN(/layer4/layer4.1/Add + /layer4/layer4.1/relu_1/Relu)",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to layer4.1.conv2.weight_quantized + /layer4/layer4.1/conv2/Conv + PWN(/layer4/layer4.1/Add + /layer4/layer4.1/relu_1/Relu)",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Thirty-two wide channel vectorized row major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/layer4/layer4.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/avgpool/GlobalAveragePool",
+  "LayerType": "CaskPooling",
+  "Inputs": [
+  {
+    "Name": "/layer4/layer4.1/relu_1/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/avgpool/GlobalAveragePool_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Pooling",
+  "PoolingType": "AVERAGE",
+  "WindowSize": [4,4],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "BlendFactor": 0,
+  "AverageCountExcludesPadding": 1,
+  "TacticName": "sm50_xmma_pooling_fw_4d_FP32FP32NCHW_Average_FastDiv",
+  "TacticValue": "0x933eceba7b866d59",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /avgpool/GlobalAveragePool]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /Flatten",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/avgpool/GlobalAveragePool_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /Flatten",
+    "Location": "Device",
+    "Dimensions": [128,512,1,1],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/Flatten",
+  "LayerType": "Shuffle",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /Flatten",
+    "Location": "Device",
+    "Dimensions": [128,512,1,1],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/Flatten_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Shuffle",
+  "FirstTranspose": [0,1,2,3],
+  "Reshape": [-9,512],
+  "SecondTranspose": [0,1],
+  "ZeroIsPlaceholder": 0,
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /Flatten]"
+},{
+  "Name": "reshape_before_/fc/Gemm",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/Flatten_output_0",
+    "Location": "Device",
+    "Dimensions": [128,512],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "reshape_before_/fc/Gemm",
+    "Location": "Device",
+    "Dimensions": [128,512,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /fc/Gemm]"
+},{
+  "Name": "/fc/Gemm + (Unnamed Layer* 281) [ElementWise]",
+  "LayerType": "CaskGemmConvolution",
+  "Inputs": [
+  {
+    "Name": "reshape_before_/fc/Gemm",
+    "Location": "Device",
+    "Dimensions": [128,512,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/fc/Gemm_conv_out",
+    "Location": "Device",
+    "Dimensions": [128,10,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 10,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 5120},
+  "Bias": {"Type": "Float", "Count": 10},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_gemm_f32f32_f32f32_f32_tn_n_tilesize32x32x8_stage3_warpsize1x2x1_ffma_aligna4_alignc4",
+  "TacticValue": "0x000000000608064d",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /fc/Gemm]"
+},{
+  "Name": "reshape_after_/fc/Gemm",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/fc/Gemm_conv_out",
+    "Location": "Device",
+    "Dimensions": [128,10,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "logits",
+    "Location": "Device",
+    "Dimensions": [128,10],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /fc/Gemm]"
+}],
+"Bindings": ["images"
+,"logits"
+,"/relu/Relu_output_0"
+,"/layer1/layer1.0/relu_1/Relu_output_0"
+,"/layer1/layer1.1/relu_1/Relu_output_0"
+,"/layer2/layer2.0/relu_1/Relu_output_0"
+,"/layer2/layer2.1/relu_1/Relu_output_0"
+,"/layer3/layer3.0/relu_1/Relu_output_0"
+,"/layer3/layer3.1/relu_1/Relu_output_0"
+,"/layer4/layer4.0/relu_1/Relu_output_0"
+,"/layer4/layer4.1/relu_1/Relu_output_0"
+,"/avgpool/GlobalAveragePool_output_0"
+,"/Flatten_output_0"
+]}

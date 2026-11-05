@@ -1,0 +1,23 @@
+{
+  "automatic_retries": 0,
+  "budget": {
+    "automatic_retries": 0,
+    "baseline_sgd": 25040,
+    "max_seconds": 600.0,
+    "models": 1,
+    "recipes": 1,
+    "recovery_sgd": 200,
+    "searches": 0,
+    "total_sgd": 25240
+  },
+  "correlation": {
+    "admitted": true,
+    "host_pid": 1667169
+  },
+  "ended_at": 21440233.59390753,
+  "gpu_provenance": "empty-device preflight + one CUDA-ready worker + one unchanged raw NVML PID; temporal correlation only, no authenticated host PID identity proof",
+  "hard_kill_may_leave_partial_receipt": true,
+  "host_pid_identity_proven": false,
+  "reason": "FileNotFoundError(2, 'No such file or directory')",
+  "returncode": null
+}

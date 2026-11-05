@@ -1,0 +1,57 @@
+{
+  "one_layerwise_run": true,
+  "max_seconds": 600,
+  "max_unique_calibration_images": 8,
+  "max_application_inference_calls": 28,
+  "max_combined_row_visits": 72,
+  "max_engine_builds": 1,
+  "max_sgd": 0,
+  "max_searches": 0,
+  "Vsearch": false,
+  "Vreport": false,
+  "official_test": false,
+  "automatic_retries": 0,
+  "previous_charged_seconds": 1175.8133317418396,
+  "remaining_combined_seconds_before": 6024.18666825816,
+  "combined_authorized_seconds": 7200,
+  "user_answer": "Разрешаю один запуск до 600 секунд",
+  "requested_at_utc": "2026-11-05T13:08:35.560314+00:00",
+  "source_revision": "c360fe405d504f9872211f593e7a024a3acf20bf",
+  "config": {
+    "source_revision": "c360fe405d504f9872211f593e7a024a3acf20bf",
+    "artifact_directory": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact",
+    "profile": "layerwise_v1",
+    "rows": 8,
+    "batch_size": 8
+  },
+  "GPU_preflight": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8, NVIDIA A100-PCIE-40GB, 40960 MiB\n",
+  "artifact_snapshot": {
+    "files": {
+      "model.onnx": {
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.onnx",
+        "sha256": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a",
+        "bytes": 11780084
+      },
+      "model.engine": {
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.engine",
+        "sha256": "858d52d319f012483f25d83205fb02affe041cca55dfc8050e0af330f108feba",
+        "bytes": 13830076
+      },
+      "engine-inspector.json": {
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/engine-inspector.json",
+        "sha256": "a64af8ae462e6357a5a30643313cc14b9d6048eabc7c4640ba1442615a1e6214",
+        "bytes": 46858
+      }
+    },
+    "attempt_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/receipt.json",
+      "sha256": "41281ad759454fb1e0a05ec2f42309292fd0381fe0fe1c463b3fc300a6e8eb65"
+    },
+    "pilot_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/receipt.json",
+      "sha256": "b80fb15636cd1160f1ea2e5890cc2e595c58074c1660912d5b1a53fadd6620b0"
+    },
+    "original_status": "rejected_no_manifest",
+    "workflow_fingerprint": "4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9"
+  }
+}

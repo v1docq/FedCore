@@ -1,0 +1,5 @@
+{
+  "returncode": 0,
+  "stdout": "{\"run_directory\": \"/root/fedcore_heterogeneous_20261104/layerwise-01\", \"timeout_pid\": 2644782, \"started_at\": 21440174.914240327, \"deadline_at\": 21440774.914240327, \"automatic_retries\": 0}\n",
+  "stderr": ""
+}

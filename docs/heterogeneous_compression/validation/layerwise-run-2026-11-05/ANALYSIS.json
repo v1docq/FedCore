@@ -1,0 +1,271 @@
+{
+  "schema": "heterogeneous-layerwise-analysis-v1",
+  "source_revision": "c360fe405d504f9872211f593e7a024a3acf20bf",
+  "numeric_status": "complete",
+  "supervision_status": "failed_after_numeric_completion_worker_exit_unconfirmed",
+  "Q_only_accepted": false,
+  "unique_calibration_rows": 8,
+  "selected_train_ids": [
+    11,
+    20,
+    33848,
+    3998,
+    11666,
+    3192,
+    31270,
+    6088
+  ],
+  "calls": 28,
+  "combined_row_visits": 72,
+  "ORT_row_visits": 32,
+  "TensorRT_row_visits": 40,
+  "engine_builds": 1,
+  "original_ORT_vs_TensorRT": {
+    "violating_count": 45,
+    "max_abs_error": 1.0398271083831787,
+    "mean_abs_error": 0.13337625418789684,
+    "max_normalized_error": 13.888316226381013,
+    "argmax_agree_count": 2,
+    "within_original_tolerance": false
+  },
+  "controls": {
+    "independent_binding_vs_existing_TensorRT": {
+      "violating_count": 0,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "max_normalized_error": 0.0,
+      "argmax_agree_count": 8,
+      "within_original_tolerance": true
+    },
+    "enriched_ORT_vs_original_ORT": {
+      "violating_count": 0,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "max_normalized_error": 0.0,
+      "argmax_agree_count": 8,
+      "within_original_tolerance": true
+    },
+    "instrumented_TensorRT_vs_original_TensorRT": {
+      "violating_count": 54,
+      "max_abs_error": 0.8674559593200684,
+      "mean_abs_error": 0.14337638416327536,
+      "max_normalized_error": 15.793062035885843,
+      "argmax_agree_count": 4,
+      "within_original_tolerance": false
+    },
+    "instrumented_ORT_vs_TensorRT": {
+      "violating_count": 43,
+      "max_abs_error": 0.6556768417358398,
+      "mean_abs_error": 0.11755740437656641,
+      "max_normalized_error": 15.248792650908664,
+      "argmax_agree_count": 6,
+      "within_original_tolerance": false
+    },
+    "original_ORT_singletons_vs_partitioned": {
+      "violating_count": 0,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "max_normalized_error": 0.0,
+      "argmax_agree_count": 8,
+      "within_original_tolerance": true
+    },
+    "original_ORT_whole_vs_partitioned": {
+      "violating_count": 0,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "max_normalized_error": 0.0,
+      "argmax_agree_count": 8,
+      "within_original_tolerance": true
+    },
+    "original_TensorRT_singletons_vs_partitioned": {
+      "violating_count": 0,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "max_normalized_error": 0.0,
+      "argmax_agree_count": 8,
+      "within_original_tolerance": true
+    },
+    "original_TensorRT_whole_vs_partitioned": {
+      "violating_count": 0,
+      "max_abs_error": 0.0,
+      "mean_abs_error": 0.0,
+      "max_normalized_error": 0.0,
+      "argmax_agree_count": 8,
+      "within_original_tolerance": true
+    }
+  },
+  "prior_selected_logits_bitwise_reproduced": true,
+  "taps": [
+    {
+      "landmark": "stem",
+      "elements": 524288,
+      "violating_count": 0,
+      "max_abs_error": 5.066394805908203e-07,
+      "mean_abs_error": 5.9935123530863166e-09,
+      "max_normalized_error": 2.0245797101675914e-05,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer1.0",
+      "elements": 524288,
+      "violating_count": 7811,
+      "max_abs_error": 0.0708686113357544,
+      "mean_abs_error": 0.005007108858206632,
+      "max_normalized_error": 2.8970845184670644,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer1.1",
+      "elements": 524288,
+      "violating_count": 54379,
+      "max_abs_error": 0.15988485515117645,
+      "mean_abs_error": 0.008551424065816772,
+      "max_normalized_error": 6.750875175818804,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer2.0",
+      "elements": 262144,
+      "violating_count": 18652,
+      "max_abs_error": 0.15588295459747314,
+      "mean_abs_error": 0.005472847624864219,
+      "max_normalized_error": 5.644458765521988,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer2.1",
+      "elements": 262144,
+      "violating_count": 27341,
+      "max_abs_error": 0.19792494177818298,
+      "mean_abs_error": 0.007197384973424415,
+      "max_normalized_error": 7.629587589758775,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer3.0",
+      "elements": 131072,
+      "violating_count": 5652,
+      "max_abs_error": 0.07725682854652405,
+      "mean_abs_error": 0.0029369435657047305,
+      "max_normalized_error": 3.2161158499952482,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer3.1",
+      "elements": 131072,
+      "violating_count": 7734,
+      "max_abs_error": 0.11110541224479675,
+      "mean_abs_error": 0.00443370929724389,
+      "max_normalized_error": 4.673598240184606,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer4.0",
+      "elements": 65536,
+      "violating_count": 1440,
+      "max_abs_error": 0.0651867687702179,
+      "mean_abs_error": 0.0023507004368639173,
+      "max_normalized_error": 2.6210823144531967,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "layer4.1",
+      "elements": 65536,
+      "violating_count": 8115,
+      "max_abs_error": 0.15126299858093262,
+      "mean_abs_error": 0.010277478569646309,
+      "max_normalized_error": 5.75540630241389,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "pool",
+      "elements": 4096,
+      "violating_count": 201,
+      "max_abs_error": 0.10812544822692871,
+      "mean_abs_error": 0.007293467851891611,
+      "max_normalized_error": 2.4373510162228236,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "flatten",
+      "elements": 4096,
+      "violating_count": 201,
+      "max_abs_error": 0.10812544822692871,
+      "mean_abs_error": 0.007293467851891611,
+      "max_normalized_error": 2.4373510162228236,
+      "provenance": "rebuilt_graph_only"
+    },
+    {
+      "landmark": "logits",
+      "elements": 80,
+      "violating_count": 43,
+      "max_abs_error": 0.6556768417358398,
+      "mean_abs_error": 0.11755740437656641,
+      "max_normalized_error": 15.248792650908664,
+      "provenance": "rebuilt_graph_only"
+    }
+  ],
+  "stem_INT8_code_comparison": {
+    "scale": 0.02139183320105076,
+    "zero_point": 0,
+    "elements": 524288,
+    "differing_codes": 0,
+    "semantics": "NumPy round-to-even and signed INT8 clamp of captured stem arrays; not a new model inference"
+  },
+  "optimized_ORT_operator_counts": {
+    "original-ort-optimized.onnx": {
+      "com.microsoft.nchwc::Conv": 4,
+      "com.microsoft.nchwc::ReorderOutput": 4,
+      "QuantizeLinear": 32,
+      "DequantizeLinear": 56,
+      "Conv": 16,
+      "Relu": 16,
+      "Add": 8,
+      "com.microsoft.nchwc::ReorderInput": 3,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+    },
+    "instrumented-ort-optimized.onnx": {
+      "com.microsoft.nchwc::Conv": 4,
+      "com.microsoft.nchwc::ReorderOutput": 4,
+      "QuantizeLinear": 32,
+      "DequantizeLinear": 56,
+      "Conv": 16,
+      "Relu": 16,
+      "Add": 8,
+      "com.microsoft.nchwc::ReorderInput": 3,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+    }
+  },
+  "optimized_ORT_node_bodies_identical": true,
+  "optimized_ORT_initializers_identical": true,
+  "original_inspector_layers": 37,
+  "instrumented_inspector_layers": 49,
+  "tap_payload_bytes": 19989120,
+  "worker_seconds": 57.51620638743043,
+  "charged_seconds": 58.938307873904705,
+  "build_seconds": 49.426933869719505,
+  "total_charged_seconds": 1234.7516396157444,
+  "remaining_combined_seconds": 5965.248360384256,
+  "GPU_samples": 166,
+  "peak_VRAM_MiB": 1024,
+  "host_pid_identity_proven": false,
+  "archive": {
+    "path": "/root/fedcore_heterogeneous_20261104/evidence-layerwise-01.tar.gz",
+    "sha256": "532c1568aeb0ee57a1539fe3cb86304239d49f4d80946206c32790b21de4bda4",
+    "bytes": 48512901,
+    "gpu_processes_after": "",
+    "gpu_after": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8, 1 MiB, 0 %\n"
+  },
+  "actual_SGD": 0,
+  "future_GPU_authorized": false,
+  "interpretation_limits": [
+    "Intermediate tensors belong to a different rebuilt execution; original first divergence is not located.",
+    "Selected8 are chosen for prior disagreement; argmax agreement is not dataset accuracy.",
+    "Small batch and independent binding controls reduce tested alternatives only.",
+    "Guard forced owned cleanup after grace expiry; natural worker exit was not confirmed."
+  ]
+}

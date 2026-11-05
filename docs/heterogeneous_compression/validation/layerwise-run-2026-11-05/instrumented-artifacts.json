@@ -1,0 +1,17 @@
+{
+  "instrumented-engine-inspector.json": {
+    "bytes": 56333,
+    "path": "/root/fedcore_heterogeneous_20261104/layerwise-01/instrumented-engine-inspector.json",
+    "sha256": "39fba339186822e079396ee206ed0217dc4b8b2e91679474d3ffdfa42323c752"
+  },
+  "instrumented.engine": {
+    "bytes": 14118540,
+    "path": "/root/fedcore_heterogeneous_20261104/layerwise-01/instrumented.engine",
+    "sha256": "6ea8675112ee63f272595b3be276d444d78fde3d5e9a9266f9f4bfd113318d2a"
+  },
+  "instrumented.onnx": {
+    "bytes": 11780814,
+    "path": "/root/fedcore_heterogeneous_20261104/layerwise-01/instrumented.onnx",
+    "sha256": "8dce8d3b6c11b33928dac2b76477947c21f0e97c17916489acb95ddfda233b80"
+  }
+}
