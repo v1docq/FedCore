@@ -128,7 +128,7 @@ def test_invalid_previous_cost_cannot_expand_or_reset_budget(previous):
 def test_native_short_cpu_redirector_child_is_measured_and_reaped():
     psutil = pytest.importorskip("psutil")
     # A synthetic redirector waits for its child; the child holds 12 MiB briefly.
-    code = "import subprocess,sys; p=subprocess.Popen([sys.executable,'-u','-c','import time; x=bytearray(12*1024*1024); x[::4096]=bytes([1])*(len(x)//4096); print(\"ready\",flush=True); time.sleep(.75)'],creationflags=0x08000000 if sys.platform=='win32' else 0); p.wait()"
+    code = "import subprocess,sys; p=subprocess.Popen([sys.executable,'-u','-c','import time; x=bytearray(12*1024*1024); x[::4096]=bytes([1])*(len(x)//4096); print(\"ready\",flush=True); time.sleep(.75)'],stdout=sys.stdout,stderr=sys.stderr,creationflags=0x08000000 if sys.platform=='win32' else 0); p.wait()"
     started = time.monotonic()
     child = subprocess.Popen([sys.executable, "-u", "-c", code], stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
