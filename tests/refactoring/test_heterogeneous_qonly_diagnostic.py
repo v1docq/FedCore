@@ -23,6 +23,59 @@ def test_config_round_trip_and_frozen_zero_work_control_window():
     assert control.split_seed == 20261102 and control.recipes == ("Q_only",)
 
 
+def test_legacy_profile_defaults_to_saved_pairing_with_no_build_budget():
+    payload = asdict(config())
+    del payload["profile"]
+    restored = diagnostic.config_from_payload(payload)
+    assert restored.profile == "paired_logits_v1"
+    assert restored.control_config().gpu_seconds == 300.
+    assert restored.actual_budget()["engine_builds"] == 0
+
+
+def test_layerwise_profile_is_a_fixed_600s_eight_image_one_build_request():
+    cfg = config(profile="layerwise_v1", rows=8, batch_size=8)
+    assert diagnostic.config_from_payload(json.loads(json.dumps(asdict(cfg)))) == cfg
+    control = cfg.control_config()
+    assert control.gpu_seconds == 600. and control.cleanup_seconds == 60.
+    budget = cfg.actual_budget()
+    assert budget["unique_calibration_rows"] == 8
+    assert budget["inference_row_visits_both_runtimes"] == 72
+    assert budget["inference_calls"] == 28 and budget["engine_builds"] == 1
+    assert budget["sgd"] == budget["searches"] == budget["automatic_retries"] == 0
+    plan = diagnostic.container.ContainerPlan(100., 101., 586., "b" * 32,
+        "/env/bin/python", "/repo/scripts/" + diagnostic.SCRIPT, "/run/config.json", "/data", "/run",
+        json.loads(json.dumps(asdict(control))))
+    with pytest.raises(ValueError):
+        replace(plan, timeout_seconds=586.001)
+
+
+@pytest.mark.parametrize("fields", [dict(profile="unknown"), dict(profile=True),
+    dict(profile="layerwise_v1"), dict(profile="layerwise_v1", rows=9, batch_size=8),
+    dict(profile="layerwise_v1", rows=8, batch_size=16)])
+def test_layerwise_controls_cannot_expand_or_silently_reuse_pairing_defaults(fields):
+    with pytest.raises(ValueError):
+        config(**fields)
+
+
+def test_layerwise_worker_dispatch_happens_only_after_existing_admission(monkeypatch, tmp_path):
+    import sys
+    cfg = config(profile="layerwise_v1", rows=8, batch_size=8)
+    plan = SimpleNamespace(run_directory=str(tmp_path))
+    calls = []
+    monkeypatch.setattr(diagnostic, "_diagnostic_config", lambda root, plan: (cfg, "seal"))
+    def admit(plan, cfg):
+        calls.append("admit")
+        return "binding", "boundary", 640.
+    monkeypatch.setattr(diagnostic, "_admit_worker", admit)
+    def run(*args):
+        assert calls == ["admit"]
+        assert args == (plan, cfg, "binding", "boundary", "seal")
+        return 7
+    monkeypatch.setitem(sys.modules, "fedcore.experiments.heterogeneous_layerwise_runtime",
+                        SimpleNamespace(run_layerwise_worker=run))
+    assert diagnostic.run_worker(plan) == 7
+
+
 def test_diagnostic_plan_keeps_exact_roles_and_original_300s_timeout_ceiling():
     control = config().control_config()
     plan = diagnostic.container.ContainerPlan(100., 101., 286., "b" * 32,

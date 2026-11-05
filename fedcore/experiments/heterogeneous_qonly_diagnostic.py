@@ -1,9 +1,9 @@
 """One bounded read-only comparison of the rejected 2026-11-04 Q-only files.
 
-This fixed driver reuses the container supervisor and guard, including their
-correlation-only GPU process evidence. It never calls an exporter, builder,
-training method or quality-evaluation method and never publishes a deployment
-manifest. Importing this module does not import a numerical runtime.
+The paired-logit profile reuses saved files only. A separate fixed layerwise
+profile permits one diagnostic instrumented-engine build. Both reuse the
+container supervisor/guard, perform no training or quality evaluation, and
+never publish a deployment manifest. Importing this module imports no runtime.
 """
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ import secrets
 import subprocess
 import sys
 import time
+from typing import Literal
 
 from . import heterogeneous_container as container
 from .heterogeneous_pilot import PilotConfig, PilotError, wait_for_start_gate
@@ -30,6 +31,7 @@ GPU_UUID = "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8"
 DATA_SHA256 = "66fad8df85ae5f50d331d559168e38039b84242caaeec89f256961d6ec598e4b"
 ROLES_SHA256 = "74727fe62ccab45226a0c18c860049883ac84faf34e3cfe83461403bbe051e14"
 CALIBRATION_SHA256 = "f15d9a418dbbb1210915d304d215e5cfabc780264e8b64e77050a0dda5ad8d61"
+PRIOR_PAIRS_SHA256 = "f2ce33689ff0647130bb293636b792615ea9e00a6b637a4c6e8946f2acd3337f"
 SAVED_SHA256 = {
     "model.onnx": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a",
     "model.engine": "858d52d319f012483f25d83205fb02affe041cca55dfc8050e0af330f108feba",
@@ -48,6 +50,7 @@ class DiagnosticConfig:
     rows: int = 2000
     batch_size: int = 128
     gpu_uuid: str = GPU_UUID
+    profile: Literal["paired_logits_v1", "layerwise_v1"] = "paired_logits_v1"
 
     def __post_init__(self):
         if (type(self.source_revision) is not str
@@ -56,16 +59,28 @@ class DiagnosticConfig:
                 or not (Path(self.artifact_directory).is_absolute() or self.artifact_directory.startswith("/"))
                 or any(c in self.artifact_directory for c in ("\0", "\n", "\r"))
                 or self.gpu_uuid != GPU_UUID
+                or self.profile not in ("paired_logits_v1", "layerwise_v1")
                 or type(self.rows) is not int or not 2 <= self.rows <= 2000
-                or type(self.batch_size) is not int or not 1 <= self.batch_size <= 128):
+                or type(self.batch_size) is not int or not 1 <= self.batch_size <= 128
+                or self.profile == "layerwise_v1" and (self.rows != 8 or self.batch_size != 8)):
             raise ValueError("Exact saved Q-only device/revision, absolute artifact path and 2..2000 rows required")
 
     def control_config(self):
         # PilotConfig is only the existing boundary's transport contract. Its
         # training budget is unused; diagnostic.json records the actual zero
         # training/export/search budget of this fixed driver.
-        return PilotConfig(self.gpu_uuid, self.source_revision, gpu_seconds=300.,
+        return PilotConfig(self.gpu_uuid, self.source_revision,
+                           gpu_seconds=600. if self.profile == "layerwise_v1" else 300.,
                            cleanup_seconds=60., recipes=("Q_only",))
+
+    def actual_budget(self):
+        if self.profile == "layerwise_v1":
+            return dict(max_seconds=600, cleanup_seconds=60, unique_calibration_rows=8,
+                        inference_row_visits_both_runtimes=72, inference_calls=28,
+                        onnx_instrumentations=1, engine_builds=1, sgd=0, exports=0,
+                        searches=0, automatic_retries=0)
+        return dict(max_seconds=300, cleanup_seconds=60, calibration_rows=self.rows,
+                    sgd=0, exports=0, engine_builds=0, searches=0, automatic_retries=0)
 
 
 def config_from_payload(value):
@@ -235,9 +250,8 @@ def _diagnostic_config(root, plan):
     return cfg, seal["sha256"]
 
 
-def run_worker(plan):
+def _admit_worker(plan, cfg):
     root = Path(plan.run_directory)
-    cfg, config_sha = _diagnostic_config(root, plan)
     control = cfg.control_config()
     container._protect_parent(container.local_process(os.getppid()))
     wait_for_start_gate(root / "worker-start.json", timeout=10.)
@@ -261,6 +275,16 @@ def run_worker(plan):
             or gate.get("gpu_provenance") != container.PROVENANCE):
         raise PilotError("Missing explicit correlation-only guard admission")
     boundary = container._boundary(root, control, plan.started_at, "worker")
+    return binding, boundary, deadline
+
+
+def run_worker(plan):
+    root = Path(plan.run_directory)
+    cfg, config_sha = _diagnostic_config(root, plan)
+    binding, boundary, deadline = _admit_worker(plan, cfg)
+    if cfg.profile == "layerwise_v1":
+        from .heterogeneous_layerwise_runtime import run_layerwise_worker
+        return run_layerwise_worker(plan, cfg, binding, boundary, config_sha)
     status, failure, summary, before, after, versions = "failed", None, None, None, None, {}
     original_probe_fingerprint = None
     try:
@@ -316,10 +340,12 @@ def run_worker(plan):
 
 
 def launch(*, config_path, data_root, run_directory):
-    """One fresh 300s original window under the unchanged GNU-timeout controls."""
+    """One fresh fixed-profile window under the unchanged GNU-timeout controls."""
     started_at = time.monotonic()
     cfg = config_from_payload(json.loads(container._read(config_path)))
     control = cfg.control_config()
+    hard_deadline = started_at + control.gpu_seconds
+    worker_deadline = hard_deadline - control.cleanup_seconds
     if sys.platform != "linux":
         raise PilotError("Diagnostic launch requires Linux and GNU timeout")
     version = subprocess.run((container.TIMEOUT, "--version"), capture_output=True, text=True, check=True, timeout=2).stdout
@@ -339,36 +365,35 @@ def launch(*, config_path, data_root, run_directory):
     container._publish(root / "config.json", asdict(control))
     container._publish(root / "diagnostic.json", asdict(cfg))
     compiled_at = time.monotonic()
-    duration = math.floor((started_at + 300. - compiled_at - container.HARD_RESERVE_SECONDS
+    duration = math.floor((hard_deadline - compiled_at - container.HARD_RESERVE_SECONDS
                            - container.LAUNCH_RESERVE_SECONDS) * 1000) / 1000
     plan = container.ContainerPlan(started_at, compiled_at, duration, secrets.token_hex(16),
         str(Path(sys.executable).absolute()), str(cwd / "scripts" / SCRIPT), str(root / "config.json"),
         str(data), str(root), json.loads(json.dumps(asdict(control))))
     container._publish(root / "diagnostic-seal.json", dict(token=plan.token, sha256=_sha(root / "diagnostic.json")))
-    container._publish(root / "diagnostic-launch.json", dict(artifacts=before, actual_budget=dict(
-        max_seconds=300, cleanup_seconds=60, calibration_rows=cfg.rows, sgd=0, exports=0, engine_builds=0,
-        searches=0, automatic_retries=0), diagnostic_config_sha256=_sha(root / "diagnostic.json")))
+    container._publish(root / "diagnostic-launch.json", dict(artifacts=before, actual_budget=cfg.actual_budget(),
+        diagnostic_config_sha256=_sha(root / "diagnostic.json")))
     environment = dict(os.environ, CUDA_VISIBLE_DEVICES=cfg.gpu_uuid,
-        FEDCORE_PILOT_ABSOLUTE_DEADLINE=str(started_at + 240.))
+        FEDCORE_PILOT_ABSOLUTE_DEADLINE=str(worker_deadline))
     with (root / "console.log").open("x", encoding="utf-8") as console:
         child = subprocess.Popen(plan.timeout_argv, stdin=subprocess.DEVNULL, shell=False,
             stdout=console, stderr=subprocess.STDOUT, start_new_session=True, env=environment, cwd=cwd)
     try:
         captured = container.local_process(child.pid)
-        end = min(started_at + 300., time.monotonic() + 2.)
+        end = min(hard_deadline, time.monotonic() + 2.)
         while (captured.argv != plan.timeout_argv or captured.pgid != captured.pid
                 or not container._timer_is_present(captured.pid)):
             if time.monotonic() >= end or child.poll() is not None:
                 raise PilotError("GNU timeout failed to establish its private group")
             time.sleep(.01); captured = container.local_process(child.pid)
-        if time.monotonic() + duration > started_at + 300. - container.HARD_RESERVE_SECONDS:
+        if time.monotonic() + duration > hard_deadline - container.HARD_RESERVE_SECONDS:
             raise PilotError("Timeout submission consumed its original-window launch reserve")
         container._publish(root / "os-boundary.json", dict(schema="fedcore-container-timeout-v1",
             plan=asdict(plan), timeout=asdict(captured)))
-        container._event(root, "diagnostic_launched", timeout_pid=child.pid, max_seconds=300,
+        container._event(root, "diagnostic_launched", timeout_pid=child.pid, max_seconds=control.gpu_seconds,
             actual_sgd_budget=0, gpu_provenance=container.PROVENANCE, host_pid_identity_proven=False)
         return dict(run_directory=str(root), timeout_pid=child.pid, started_at=started_at,
-                    deadline_at=started_at + 300., automatic_retries=0)
+                    deadline_at=hard_deadline, automatic_retries=0)
     except Exception:
         child.kill(); child.wait(timeout=2)
         raise
