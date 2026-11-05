@@ -4,8 +4,6 @@ import hashlib
 import json
 
 import numpy as np
-import onnx
-from onnx import TensorProto, helper
 import pytest
 
 from fedcore.experiments import heterogeneous_layerwise as layerwise
@@ -21,6 +19,8 @@ def selection():
 
 
 def graph():
+    onnx = pytest.importorskip("onnx")
+    TensorProto, helper = onnx.TensorProto, onnx.helper
     nodes = [helper.make_node("Relu", ["images"], ["stem"], name="/relu/Relu"),
              helper.make_node("QuantizeLinear", ["stem", "scale", "zero"], ["stem_q"], name="Q"),
              helper.make_node("DequantizeLinear", ["stem_q", "scale", "zero"], ["stem_dq"], name="DQ"),
@@ -71,6 +71,7 @@ def test_selection_with_no_disagreements_keeps_only_original_two():
 
 
 def test_real_cpu_ort_instrumentation_preserves_logits_and_exposes_planned_values():
+    onnx = pytest.importorskip("onnx")
     ort = pytest.importorskip("onnxruntime")
     model = graph()
     # Nonconstant logits expose shape/order mistakes that zero weights would hide.
@@ -123,7 +124,7 @@ def test_instrumentation_returns_independent_valid_copy_preserving_source_and_lo
     assert len({v.name for v in copied.graph.output}) == 12
     assert [n.SerializeToString() for n in copied.graph.node] == [n.SerializeToString() for n in model.graph.node]
     assert [n.SerializeToString() for n in copied.graph.initializer] == [n.SerializeToString() for n in model.graph.initializer]
-    onnx.checker.check_model(copied)
+    pytest.importorskip("onnx").checker.check_model(copied)
 
 
 def test_instrumentation_rejects_changed_source():
