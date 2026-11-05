@@ -1,0 +1,56 @@
+{
+  "schema": "heterogeneous-layerwise-preparation-validation-v1",
+  "source_revision": "c360fe405d504f9872211f593e7a024a3acf20bf",
+  "implementation": "prepared",
+  "GPU_started": false,
+  "GPU_authorized": false,
+  "original_Q_only_accepted": false,
+  "local_tests": {
+    "passed": 159,
+    "skipped": 1,
+    "failed": 0
+  },
+  "server_CPU_tests": {
+    "passed": 160,
+    "skipped": 0,
+    "failed": 0
+  },
+  "local_server_static_plans_agree": true,
+  "code_sha256": {
+    "fedcore/experiments/heterogeneous_qonly_diagnostic.py": "d83bbae3635c3c5fe25eeb6fe1d6f8de543a461577c92f8d082f763a6ae84472",
+    "fedcore/experiments/heterogeneous_layerwise.py": "a28890fafd186fa52718953d43d69f44526e889c50d43c5545244f82da80bc81",
+    "fedcore/experiments/heterogeneous_layerwise_runtime.py": "22a48f6ceb9d13e454795d985da5100f25cb0a5f1b594410bb239b73dfe694ce",
+    "scripts/plan_heterogeneous_layerwise.py": "d98685ac05752b933a2727657b69cd015d8f4f6a207ed943fe4a27a876c93088",
+    "tests/refactoring/test_heterogeneous_qonly_diagnostic.py": "c2d8afed40bbefa722c792553bef61ee07d89ee67b75c6b85d7df72a7e90b3a2",
+    "tests/refactoring/test_heterogeneous_layerwise.py": "c88cab1cca46719f8fb70f46cbbd70246a66353d741fe0e235ecdb112e404c25",
+    "tests/refactoring/test_heterogeneous_layerwise_runtime.py": "650dc56cacf6a28308e3f2500113e2d50892d1b334e081b1ed882fdf301cf16b"
+  },
+  "proposed_budget": {
+    "max_seconds": 600,
+    "cleanup_seconds": 60,
+    "unique_calibration_rows": 8,
+    "inference_row_visits_both_runtimes": 72,
+    "inference_calls": 28,
+    "onnx_instrumentations": 1,
+    "engine_builds": 1,
+    "sgd": 0,
+    "exports": 0,
+    "searches": 0,
+    "automatic_retries": 0
+  },
+  "independent_review": "No blocking findings; source and tests reviewed without GPU/SSH.",
+  "remaining_combined_seconds": 6024.18666825816,
+  "files": {
+    "local-cpu-tests.xml": "03e54df06baf61ae7008276019c28ce36bd1c619bd206ce85df987c5dbfac1c2",
+    "server-cpu-tests.xml": "57a0607feb639d8181ae19a1ce7c416beef93c1b3bc2e53e6c9141b9e40ef03a",
+    "SERVER_PREPARATION.json": "364d11e7ac931ee18c5bab01726b8bb97a5d692e7a3a16c849dcda06575bbf7c",
+    "STATIC_PLAN.json": "91d3e242e6cf94aa7db22beb53e9e4a8e2a1c9d07f4d2ed3569c4a33bfec5ff3"
+  },
+  "limits": [
+    "Native layerwise GPU execution and engine build have not run.",
+    "Proposed600s requires a new explicit decision; prior300s run is complete.",
+    "Taps belong to separately rebuilt graph; final controls do not prove identical internals.",
+    "Batch128 is not probed.",
+    "Intermediate .02 comparisons are descriptive; original deployment gate unchanged."
+  ]
+}

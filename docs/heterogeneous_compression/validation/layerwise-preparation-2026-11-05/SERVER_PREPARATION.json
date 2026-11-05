@@ -1,0 +1,34 @@
+{
+  "prepared_at_utc": "2026-11-05T10:12:40.305492+00:00",
+  "source_revision": "c360fe405d504f9872211f593e7a024a3acf20bf",
+  "GPU_started": false,
+  "cuda_visibility_during_tests": "",
+  "CPU_tests_returncode": 0,
+  "CPU_tests_tail": "........................................................................ [ 45%]\n........................................................................ [ 90%]\n................                                                         [100%]\n=============================== warnings summary ===============================\ntests/refactoring/test_heterogeneous_cv_backend.py::test_real_compact_factor_conv_qdq_export_and_independent_reload\ntests/refactoring/test_heterogeneous_cv_backend.py::test_real_compact_factor_conv_qdq_export_and_independent_reload\ntests/refactoring/test_heterogeneous_cv_backend.py::test_real_compact_factor_conv_qdq_export_and_independent_reload\n  /root/fedcore_heterogeneous_20261104/.venv/lib/python3.10/site-packages/onnxruntime/quantization/base_quantizer.py:475: DeprecationWarning: `mapping.TENSOR_TYPE_TO_NP_TYPE` is now deprecated and will be removed in a future release.To silence this warning, please use `helper.tensor_dtype_to_np_dtype` instead.\n    dtype=onnx.mapping.TENSOR_TYPE_TO_NP_TYPE[weight_qType],\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n- generated xml file: /root/fedcore_heterogeneous_20261104/logs/layerwise-preparation-tests.xml -\n160 passed, 3 warnings in 18.97s\n",
+  "static_plan_stdout": "{\"output\": \"/root/fedcore_heterogeneous_20261104/logs/layerwise-static-plan.json\", \"selected_train_ids\": [11, 20, 33848, 3998, 11666, 3192, 31270, 6088], \"landmarks\": 12, \"tap_bytes\": 9994560, \"GPU_started\": false}\n",
+  "runtime_API": {
+    "tensorrt": "10.0.1",
+    "torch": "2.2.0+cu121",
+    "onnxruntime": "1.18.1",
+    "CUDA_VISIBLE_DEVICES": "",
+    "ICudaEngine": {
+      "get_tensor_location": true,
+      "get_tensor_format": true,
+      "get_tensor_mode": true,
+      "is_debug_tensor": true
+    },
+    "IExecutionContext": {
+      "get_tensor_address": true,
+      "set_tensor_address": true,
+      "set_input_shape": true,
+      "execute_async_v3": true
+    },
+    "INetworkDefinition": {
+      "mark_debug": true,
+      "mark_unfused_tensors_as_debug_tensors": false
+    },
+    "CUDA_context_requested": false
+  },
+  "gpu_processes_at_end": "",
+  "source_dirty": ""
+}
