@@ -1,0 +1,151 @@
+{
+  "schema": "heterogeneous-qonly-analysis-v1",
+  "source_revision": "fd951a6b697a310bc7d7f2056f5b696aa5fff224",
+  "diagnostic_complete": true,
+  "supervision_status": "secondary_exit_teardown_error_cleanup_complete",
+  "deployment_accepted": false,
+  "rows": 2000,
+  "logits_per_runtime": 20000,
+  "batches": 17,
+  "batch_sizes": [
+    2,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    128,
+    78
+  ],
+  "original_probe": {
+    "batch_number": 0,
+    "input_sha256": "bc7ff2f72fc7ded4d71f16c9715946eef63a73f72621b6159e8a3eb2f91fa69d",
+    "max_abs_error": 0.16108113527297974,
+    "rows": 2,
+    "violating_count": 6,
+    "within_original_tolerance": false
+  },
+  "violation_count": 9201,
+  "violation_fraction": 0.46005,
+  "samples_with_violations": 1978,
+  "max_abs_error": 1.120222568511963,
+  "mean_abs_error": 0.07414138916402153,
+  "max_normalized_error": 26.892710835310062,
+  "abs_error_quantiles": {
+    "0.5": 0.04967114329338074,
+    "0.9": 0.16449445486068734,
+    "0.95": 0.22800348997116077,
+    "0.99": 0.39888735055923213,
+    "1.0": 1.120222568511963
+  },
+  "normalized_error_quantiles": {
+    "0.5": 0.8938630108616683,
+    "0.9": 3.536993196624006,
+    "0.95": 4.950200510209138,
+    "0.99": 9.285292640860117,
+    "1.0": 26.892710835310062
+  },
+  "argmax_agreement": 0.996,
+  "argmax_disagreement_count": 8,
+  "argmax_disagreements": [
+    {
+      "calibration_position": 10,
+      "train_index": 189,
+      "ort_argmax": 0,
+      "trt_argmax": 9,
+      "ort_top2_margin": 0.008857250213623047
+    },
+    {
+      "calibration_position": 107,
+      "train_index": 3192,
+      "ort_argmax": 4,
+      "trt_argmax": 9,
+      "ort_top2_margin": 0.26514625549316406
+    },
+    {
+      "calibration_position": 160,
+      "train_index": 3998,
+      "ort_argmax": 8,
+      "trt_argmax": 0,
+      "ort_top2_margin": 0.4116230010986328
+    },
+    {
+      "calibration_position": 243,
+      "train_index": 6088,
+      "ort_argmax": 5,
+      "trt_argmax": 3,
+      "ort_top2_margin": 0.15334606170654297
+    },
+    {
+      "calibration_position": 470,
+      "train_index": 11666,
+      "ort_argmax": 4,
+      "trt_argmax": 3,
+      "ort_top2_margin": 0.39162635803222656
+    },
+    {
+      "calibration_position": 629,
+      "train_index": 15697,
+      "ort_argmax": 3,
+      "trt_argmax": 6,
+      "ort_top2_margin": 0.0780482292175293
+    },
+    {
+      "calibration_position": 1239,
+      "train_index": 31270,
+      "ort_argmax": 6,
+      "trt_argmax": 2,
+      "ort_top2_margin": 0.21105718612670898
+    },
+    {
+      "calibration_position": 1356,
+      "train_index": 33848,
+      "ort_argmax": 2,
+      "trt_argmax": 5,
+      "ort_top2_margin": 1.0386903285980225
+    }
+  ],
+  "worker_seconds": 27.44702209532261,
+  "charged_seconds": 28.75152423977852,
+  "previous_charged_seconds": 1147.0618075020611,
+  "total_charged_seconds": 1175.8133317418396,
+  "remaining_combined_seconds": 6024.18666825816,
+  "gpu_samples": 79,
+  "raw_gpu_pids": [
+    "668018"
+  ],
+  "peak_vram_mib": 524,
+  "host_pid_identity_proven": false,
+  "actual_sgd": 0,
+  "additional_gpu_authorized": false,
+  "versions": {
+    "onnxruntime": "1.18.1",
+    "tensorrt": "10.0.1",
+    "torch": "2.2.0+cu121"
+  },
+  "source_hashes_verified": true,
+  "paired_logits_sha256": "f2ce33689ff0647130bb293636b792615ea9e00a6b637a4c6e8946f2acd3337f",
+  "archive": {
+    "path": "/root/fedcore_heterogeneous_20261104/evidence-qonly-diagnostic-01.tar.gz",
+    "sha256": "0f338ae46160eec64f08c0e78d39dd8d6a4c387f9d43b29d72ede19c535ae558",
+    "bytes": 989719,
+    "gpu_processes_after": "",
+    "gpu_after": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8, 1 MiB, 0 %\n"
+  },
+  "interpretation_limits": [
+    "Calibration agreement is not accuracy or generalization.",
+    "No same-input alternative-batch comparison; batch sensitivity is not measured.",
+    "No layerwise evidence proves arithmetic/fusion as cause.",
+    "Original rejection and 0.02 tolerances are unchanged.",
+    "Numeric completion and controller exit status are separate."
+  ]
+}

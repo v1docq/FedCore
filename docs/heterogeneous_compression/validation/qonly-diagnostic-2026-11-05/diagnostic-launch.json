@@ -1,0 +1,42 @@
+{
+  "actual_budget": {
+    "automatic_retries": 0,
+    "calibration_rows": 2000,
+    "cleanup_seconds": 60,
+    "engine_builds": 0,
+    "exports": 0,
+    "max_seconds": 300,
+    "searches": 0,
+    "sgd": 0
+  },
+  "artifacts": {
+    "attempt_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/receipt.json",
+      "sha256": "41281ad759454fb1e0a05ec2f42309292fd0381fe0fe1c463b3fc300a6e8eb65"
+    },
+    "files": {
+      "engine-inspector.json": {
+        "bytes": 46858,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/engine-inspector.json",
+        "sha256": "a64af8ae462e6357a5a30643313cc14b9d6048eabc7c4640ba1442615a1e6214"
+      },
+      "model.engine": {
+        "bytes": 13830076,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.engine",
+        "sha256": "858d52d319f012483f25d83205fb02affe041cca55dfc8050e0af330f108feba"
+      },
+      "model.onnx": {
+        "bytes": 11780084,
+        "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact/model.onnx",
+        "sha256": "fe2a9052f9ea093339bfbb7a24f796961440dc655591bc50ea5455ca74b19f2a"
+      }
+    },
+    "original_status": "rejected_no_manifest",
+    "pilot_receipt": {
+      "path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/receipt.json",
+      "sha256": "b80fb15636cd1160f1ea2e5890cc2e595c58074c1660912d5b1a53fadd6620b0"
+    },
+    "workflow_fingerprint": "4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9"
+  },
+  "diagnostic_config_sha256": "e6184981ae499fc218777318c98f8b43e6f97a7eaa29b7427a06ec950c03521b"
+}

@@ -1,0 +1,81 @@
+{
+  "array_sha256": "e0f01c674caf79cffb0d2ffec36de6bb5a4e970a79534279228c36f0ec004ef8",
+  "bytes": 98432,
+  "dtype": "float32",
+  "hash_encoding": "array_sha256 uses NumPy shape/dtype prefix plus contiguous bytes; sha256 hashes the complete NPY file",
+  "path": "/root/fedcore_heterogeneous_20261104/layerwise-01/selected-inputs.npy",
+  "selected_rows": [
+    {
+      "calibration_position": 0,
+      "ort_argmax": 7,
+      "ort_top2_margin": 8.929393649101257,
+      "reason": "original_first_two",
+      "train_index": 11,
+      "trt_argmax": 7
+    },
+    {
+      "calibration_position": 1,
+      "ort_argmax": 4,
+      "ort_top2_margin": 6.390600681304932,
+      "reason": "original_first_two",
+      "train_index": 20,
+      "trt_argmax": 4
+    },
+    {
+      "calibration_position": 1356,
+      "ort_argmax": 2,
+      "ort_top2_margin": 1.0386903285980225,
+      "reason": "largest_ORT_margin_disagreement",
+      "train_index": 33848,
+      "trt_argmax": 5
+    },
+    {
+      "calibration_position": 160,
+      "ort_argmax": 8,
+      "ort_top2_margin": 0.4116230010986328,
+      "reason": "largest_ORT_margin_disagreement",
+      "train_index": 3998,
+      "trt_argmax": 0
+    },
+    {
+      "calibration_position": 470,
+      "ort_argmax": 4,
+      "ort_top2_margin": 0.39162635803222656,
+      "reason": "largest_ORT_margin_disagreement",
+      "train_index": 11666,
+      "trt_argmax": 3
+    },
+    {
+      "calibration_position": 107,
+      "ort_argmax": 4,
+      "ort_top2_margin": 0.26514625549316406,
+      "reason": "largest_ORT_margin_disagreement",
+      "train_index": 3192,
+      "trt_argmax": 9
+    },
+    {
+      "calibration_position": 1239,
+      "ort_argmax": 6,
+      "ort_top2_margin": 0.21105718612670898,
+      "reason": "largest_ORT_margin_disagreement",
+      "train_index": 31270,
+      "trt_argmax": 2
+    },
+    {
+      "calibration_position": 243,
+      "ort_argmax": 5,
+      "ort_top2_margin": 0.15334606170654297,
+      "reason": "largest_ORT_margin_disagreement",
+      "train_index": 6088,
+      "trt_argmax": 3
+    }
+  ],
+  "sha256": "07bdc9e8dd513e0c521624bae5b8a1a9e222f35fa6e51d788c813060552e1124",
+  "shape": [
+    8,
+    3,
+    32,
+    32
+  ],
+  "source_calibration_fingerprint": "f15d9a418dbbb1210915d304d215e5cfabc780264e8b64e77050a0dda5ad8d61"
+}

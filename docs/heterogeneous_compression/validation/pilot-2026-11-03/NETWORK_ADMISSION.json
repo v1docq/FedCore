@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-11-03T10:26:39.132003+00:00",
+  "port": 22,
+  "alias": "hasboost-a100",
+  "numerical_pilot_started": false,
+  "gpu_window_seconds_spent": 0,
+  "tcp": {
+    "error": "TimeoutError",
+    "message": "timed out"
+  },
+  "ssh": {
+    "returncode": 255,
+    "stdout": "",
+    "stderr": "ssh: connect to host [configured endpoint] port 22: Connection timed out\n"
+  },
+  "status": "network_unreachable_before_authentication",
+  "gpu_status": "not_observed",
+  "hardware_admission": "not_started",
+  "authorization_seconds": 7200,
+  "max_sgd": 27440,
+  "automatic_retries": 0
+}

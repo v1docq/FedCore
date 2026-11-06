@@ -1,0 +1,207 @@
+{
+  "Vreport_opened": false,
+  "admission": {
+    "artifacts": {
+      "dense_recovery": {
+        "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/admission/dense_recovery/manifest.json",
+        "manifest_sha256": "6e25cd552052188f89e0b17aa85e4250aa92e68c2fbe148c71a1336ded5bb51b",
+        "storage_bytes": 52714260,
+        "updates": 0
+      },
+      "uniform_P_SVD_Q": {
+        "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/admission/uniform_P_SVD_Q/manifest.json",
+        "manifest_sha256": "87e79f870bf782e8b797691e0b0fe2fe03d3fb352a774bd896e8203d1e0a3fcd",
+        "storage_bytes": 9376707,
+        "updates": 0
+      }
+    },
+    "cuda_binding": {
+      "actual_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+      "declared_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+      "evidence": "CUDA Driver cuCtxGetDevice + cuDeviceGetUuid_v2",
+      "pid": 2640499
+    },
+    "device_name": "NVIDIA A100-PCIE-40GB",
+    "kind": "native_A100_synthetic_export_reload",
+    "sgd_attempted": 0,
+    "sgd_completed": 0,
+    "synthetic": true,
+    "versions": {
+      "onnx": "1.16.2",
+      "onnxruntime": "1.18.1",
+      "tensorrt": "10.0.1",
+      "torch": "2.2.0+cu121"
+    }
+  },
+  "automatic_retries": 0,
+  "baseline": {
+    "S0": {
+      "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/S0/manifest.json",
+      "storage_bytes": 52892463
+    },
+    "S0_manifest_sha256": "d4000e08e8f6208bb17d5b8b8b5d6f9e2866ab3e8182000a6dce45430df51809",
+    "checkpoint_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/M0/baseline.pt",
+    "checkpoint_sha256": "2e2fe8addc560f21fb3a833e1492123e1c18a10df998394e34f03daba126b323",
+    "recovery_tape_fingerprint": "c586d258e263f04e431e07ab1b2261b21224fb00566789bc930796c31837e02e",
+    "source_identity": "fc377936303ca6654205ce8e529873c265085a21dfe7252c323339bc46ef1cf4",
+    "updates": 25040
+  },
+  "baseline_in_flight_unconfirmed": 0,
+  "budget": {
+    "automatic_retries": 0,
+    "baseline_sgd": 25040,
+    "max_seconds": 7160.0,
+    "models": 1,
+    "recipes": 12,
+    "recovery_sgd": 2400,
+    "searches": 0,
+    "total_sgd": 27440
+  },
+  "candidates": {
+    "Q_only": {
+      "outcome": "StructuralInvalid",
+      "receipt_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/receipt.json",
+      "sgd_attempted": 200,
+      "sgd_completed": 200,
+      "workflow": "4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9"
+    },
+    "dense_recovery": {
+      "artifact": {
+        "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/dense_recovery/87a292db34f39aecd52e274edc67e8faec7acca8592791f9f127316e8f3fefb6/artifact/manifest.json",
+        "storage_bytes": 52733472
+      },
+      "cross_entropy_Vsearch": 0.23278320705890657,
+      "manifest_sha256": "240fa3f1b67cf1f3f5ee99cac202e1e34f082b2e23a01fa2418e477ff3aabe2d",
+      "outcome": "GrammarFitness",
+      "phase_seconds": {
+        "calibrate_export_reload": 12.577563058584929,
+        "deployed_Vsearch": 0.5355423949658871,
+        "float_recovery": 5.288727130740881,
+        "structural_build": 1.8050850294530392
+      },
+      "quality": {
+        "accuracy": 0.9405,
+        "cross_entropy": 0.23278320705890657,
+        "rows": 4000
+      },
+      "receipt_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/dense_recovery/87a292db34f39aecd52e274edc67e8faec7acca8592791f9f127316e8f3fefb6/receipt.json",
+      "sgd_attempted": 200,
+      "sgd_completed": 200,
+      "workflow": "87a292db34f39aecd52e274edc67e8faec7acca8592791f9f127316e8f3fefb6"
+    },
+    "uniform_P": {
+      "artifact": {
+        "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/uniform_P/c22daf0de1e8126cb2b3c7c449dbc5b0e8c7b4fe6acfd1ac8bc4aaa39d6ca248/artifact/manifest.json",
+        "storage_bytes": 40344322
+      },
+      "cross_entropy_Vsearch": 0.2535833532810211,
+      "manifest_sha256": "c22ad5631bc2395b8ec053c9c4abdff619207b155905177790b54dcbdae42837",
+      "outcome": "GrammarFitness",
+      "phase_seconds": {
+        "calibrate_export_reload": 11.8691013045609,
+        "deployed_Vsearch": 0.45050330460071564,
+        "float_recovery": 5.385046172887087,
+        "structural_build": 1.5666186846792698
+      },
+      "quality": {
+        "accuracy": 0.93525,
+        "cross_entropy": 0.2535833532810211,
+        "rows": 4000
+      },
+      "receipt_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/uniform_P/c22daf0de1e8126cb2b3c7c449dbc5b0e8c7b4fe6acfd1ac8bc4aaa39d6ca248/receipt.json",
+      "sgd_attempted": 200,
+      "sgd_completed": 200,
+      "workflow": "c22daf0de1e8126cb2b3c7c449dbc5b0e8c7b4fe6acfd1ac8bc4aaa39d6ca248"
+    },
+    "uniform_SVD": {
+      "artifact": {
+        "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/uniform_SVD/1f90f73a04bffaf460c532ec659553189fa59405e81f1f28dbda5ab40b35dff9/artifact/manifest.json",
+        "storage_bytes": 38739731
+      },
+      "cross_entropy_Vsearch": 0.23756382274627685,
+      "manifest_sha256": "d31e1cc0b65bf4b5fe7aec421c9943b0817aedaadb6d5bc7ecaa8e4c806b6259",
+      "outcome": "GrammarFitness",
+      "phase_seconds": {
+        "calibrate_export_reload": 12.437345247715712,
+        "deployed_Vsearch": 0.4407084174454212,
+        "float_recovery": 6.1411382630467415,
+        "structural_build": 2.537803679704666
+      },
+      "quality": {
+        "accuracy": 0.94,
+        "cross_entropy": 0.23756382274627685,
+        "rows": 4000
+      },
+      "receipt_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/uniform_SVD/1f90f73a04bffaf460c532ec659553189fa59405e81f1f28dbda5ab40b35dff9/receipt.json",
+      "sgd_attempted": 200,
+      "sgd_completed": 200,
+      "workflow": "1f90f73a04bffaf460c532ec659553189fa59405e81f1f28dbda5ab40b35dff9"
+    }
+  },
+  "config": {
+    "cleanup_seconds": 60.0,
+    "device": "cuda:0",
+    "gpu_seconds": 7160.0,
+    "gpu_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+    "max_peak_bytes": 8589934592,
+    "model_seed": 20261124,
+    "protocol": {
+      "batch_size": 128,
+      "calibration_rows": 2000,
+      "epochs": 80,
+      "fit_rows": 40000,
+      "recovery_updates": 200,
+      "report_rows": 4000,
+      "search_rows": 4000
+    },
+    "recipes": [
+      "dense_recovery",
+      "uniform_P",
+      "uniform_SVD",
+      "Q_only",
+      "uniform_P_SVD",
+      "uniform_P_Q",
+      "uniform_SVD_Q",
+      "uniform_P_SVD_Q",
+      "uniform_P_half",
+      "uniform_SVD_low",
+      "uniform_P_SVD_Q_half",
+      "mixed_eight_families"
+    ],
+    "source_revision": "6b7a92a3779a4a4ac9bd9921c8d6e74ea1bd7e38",
+    "split_seed": 20261102
+  },
+  "counters": {
+    "baseline_sgd_attempted": 25040,
+    "baseline_sgd_completed": 25040,
+    "recovery_sgd_attempted": 800,
+    "recovery_sgd_completed": 800
+  },
+  "deadline": 21349877.880057804,
+  "ended_at": 21343882.873661015,
+  "execution_mode": "native",
+  "experiment_started": true,
+  "failure": {
+    "message": "Fixed recipe failed; no fallback or automatic retry: Q_only",
+    "type": "PilotError"
+  },
+  "interpretation": "cost pilot only; no 27-search panel, inference latency claim or ranking validation",
+  "official_test_opened": false,
+  "phase_seconds": {
+    "baseline_deployment": 17.39123761281371,
+    "baseline_training": 859.7167260535061,
+    "live_boundary": 0.005453534424304962,
+    "prepare_space_and_fixed_plan": 1.304785382002592,
+    "recipe:Q_only": 92.00652738288045,
+    "recipe:dense_recovery": 21.49744764715433,
+    "recipe:uniform_P": 20.49789121374488,
+    "recipe:uniform_SVD": 22.81383142247796,
+    "synthetic_admission": 60.399559281766415
+  },
+  "recovery_in_flight_unconfirmed": 0,
+  "schema": "heterogeneous-pilot-receipt-v1",
+  "searches": 0,
+  "started_at": 21342777.880057804,
+  "status": "incomplete",
+  "unknown_sgd": []
+}

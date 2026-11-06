@@ -1,0 +1,7 @@
+{
+  "source_revision": "c360fe405d504f9872211f593e7a024a3acf20bf",
+  "artifact_directory": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact",
+  "profile": "layerwise_v1",
+  "rows": 8,
+  "batch_size": 8
+}

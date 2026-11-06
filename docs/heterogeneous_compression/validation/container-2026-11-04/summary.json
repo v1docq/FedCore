@@ -1,0 +1,27 @@
+{
+  "source_revision": "952cf0b64c49ff5b362d8c966183aedfdd952055",
+  "started_at": 21339834.587741897,
+  "ended_at": 21339874.01598785,
+  "elapsed_seconds": 39.42824595421553,
+  "status": "admission_failed",
+  "counters": {
+    "baseline_sgd_attempted": 0,
+    "baseline_sgd_completed": 0,
+    "recovery_sgd_attempted": 0,
+    "recovery_sgd_completed": 0
+  },
+  "failure": {
+    "message": "Synthetic TensorRT admission failed: StructuralInvalid(violations=(Violation(code='TensorRTParse', path='heterogeneous.export', message='In node 3 with name: layer1.0.conv1.bias_DequantizeLinear and operator: DequantizeLinear (parseNode): INVALID_NODE: Invalid Node - layer1.0.conv1.bias_DequantizeLinear\\n[dequantizeLayer.cpp::setPrecision::94] Error Code 3: API Usage Error (Parameter check failed at: optimizer/api/layers/dequantizeLayer.cpp::setPrecision::94, condition: isQuantized(dataType) A DequantizeLayer can only run in DataType::kINT8, DataType::kFP8 or DataType::kINT4 precision)'),))",
+    "type": "PilotError"
+  },
+  "peak_sampled_vram_mib": 872,
+  "raw_gpu_pids": [
+    4059034
+  ],
+  "accepted_admission_manifests": [
+    "pilot/admission/dense_recovery/manifest.json"
+  ],
+  "gpu_after": "",
+  "original_window_seconds": 7200,
+  "automatic_retry": false
+}

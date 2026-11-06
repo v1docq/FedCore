@@ -1,0 +1,16 @@
+{
+  "one_repeat": true,
+  "max_seconds": 7160,
+  "max_sgd": 27440,
+  "previous_charged_seconds": 40,
+  "combined_authorized_seconds": 7200,
+  "further_automatic_retries": 0,
+  "config": {
+    "gpu_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+    "source_revision": "6b7a92a3779a4a4ac9bd9921c8d6e74ea1bd7e38",
+    "gpu_seconds": 7160.0,
+    "cleanup_seconds": 60.0
+  },
+  "launch_request_utc": "2026-11-04T10:05:18.529730+00:00",
+  "user_answer": "Разрешаю один повтор до 7160 секунд"
+}

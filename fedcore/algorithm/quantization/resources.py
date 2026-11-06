@@ -1,0 +1,79 @@
+"""Shared stage ledger; counters include failed work and explicit safe points."""
+from dataclasses import dataclass, replace
+from contextlib import contextmanager
+import time
+import psutil
+from fedcore.algorithm.low_rank.grammar_execution import ResourceFailure
+from fedcore.algorithm.low_rank.candidate_storage import CandidateStorageError
+from .graph_specs import DEFAULT_MAX_PEAK_BYTES
+
+
+def storage_resource_failure(error):
+    if isinstance(error,CandidateStorageError):
+        for violation in error.violations:
+            if violation.code=='ResourceLimitExceeded':
+                return ResourceFailure(violation.code,violation.message)
+    return None
+
+
+class StageBudgetExceeded(RuntimeError):
+    def __init__(self,code,message):
+        self.failure = ResourceFailure(code,message)
+        super().__init__(message)
+
+
+@dataclass(frozen=True)
+class StageBudgets:
+    max_seconds: float = 60.
+    max_training_steps: int = 32
+    max_stages: int = 4096
+    max_rss_bytes: int = DEFAULT_MAX_PEAK_BYTES
+
+    def __post_init__(self):
+        import math
+        if (type(self.max_seconds) not in (int,float) or not math.isfinite(self.max_seconds) or self.max_seconds<=0
+                or any(type(v) is not int or v<0 for v in (self.max_training_steps,self.max_stages,self.max_rss_bytes))):
+            raise ValueError('Finite stage budgets required')
+
+
+class ResourceLedger:
+    def __init__(self,budgets=StageBudgets()):
+        self.budgets,self.started = budgets,time.perf_counter()
+        self.training_steps,self.stages,self.events = 0,0,[]
+        self.actual_training_steps=0
+        self._rss_failure_code='RSSBudget'
+
+    @contextmanager
+    def limit_rss(self,max_bytes):
+        """A program may narrow an existing ledger, never relax its owner limit."""
+        previous=self.budgets
+        previous_code=self._rss_failure_code
+        self.budgets=replace(previous,max_rss_bytes=min(previous.max_rss_bytes,max_bytes))
+        if max_bytes<=previous.max_rss_bytes:self._rss_failure_code='ResourceLimitExceeded'
+        try:
+            yield
+        finally:
+            self.budgets=previous
+            self._rss_failure_code=previous_code
+
+    def checkpoint(self,stage,*,training_steps=0):
+        now = time.perf_counter()
+        event = {'stage':stage,'elapsed_seconds':now-self.started,'training_steps':training_steps,'status':'charged'}
+        self.events.append(event)
+        self.training_steps += training_steps; self.stages += 1
+        code = ('StageDeadline' if now-self.started>self.budgets.max_seconds else
+                'TrainingBudget' if self.training_steps>self.budgets.max_training_steps else
+                'StageCountBudget' if self.stages>self.budgets.max_stages else
+                self._rss_failure_code if psutil.Process().memory_info().rss>self.budgets.max_rss_bytes else None)
+        if code:
+            event['status'] = 'refused'
+            raise StageBudgetExceeded(code,'Shared stage resource budget exhausted')
+
+    def complete_training_step(self,stage):
+        self.actual_training_steps+=1
+        self.events.append({'stage':stage,'status':'update_completed','actual_training_steps':self.actual_training_steps,
+                            'elapsed_seconds':time.perf_counter()-self.started})
+
+    def evidence(self):
+        return {'attempted_training_steps':self.training_steps,'actual_training_steps':self.actual_training_steps,'stages':self.stages,'events':list(self.events),
+                'wall_seconds':time.perf_counter()-self.started,'memory_semantics':'RSS admission samples; not measured peak'}

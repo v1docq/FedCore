@@ -1,0 +1,26 @@
+{
+  "schema": "heterogeneous-attempt-v1",
+  "status": "failed",
+  "workflow_fingerprint": "4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9",
+  "validation_rows": 4000,
+  "validation_identity": "74727fe62ccab45226a0c18c860049883ac84faf34e3cfe83461403bbe051e14:Vsearch",
+  "sgd_attempted": 200,
+  "sgd_completed": 200,
+  "phase": "finished",
+  "started_at": 21343790.922807258,
+  "phase_seconds": {
+    "structural_build": 1.6874057315289974,
+    "float_recovery": 5.342884164303541,
+    "calibrate_export_reload": 84.91609123721719
+  },
+  "ended_at": 21343882.870161593,
+  "failure": {
+    "violations": [
+      {
+        "code": "TensorRTOutputMismatch",
+        "path": "heterogeneous.export",
+        "message": "Reloaded TensorRT engine differs from CPU Q/DQ reference"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "heterogeneous-attempt-v1",
+  "status": "succeeded",
+  "workflow_fingerprint": "87a292db34f39aecd52e274edc67e8faec7acca8592791f9f127316e8f3fefb6",
+  "validation_rows": 4000,
+  "validation_identity": "74727fe62ccab45226a0c18c860049883ac84faf34e3cfe83461403bbe051e14:Vsearch",
+  "sgd_attempted": 200,
+  "sgd_completed": 200,
+  "phase": "finished",
+  "started_at": 21343723.424981114,
+  "phase_seconds": {
+    "structural_build": 1.8050850294530392,
+    "float_recovery": 5.288727130740881,
+    "calibrate_export_reload": 12.577563058584929,
+    "deployed_Vsearch": 0.5355423949658871
+  },
+  "ended_at": 21343743.632290527,
+  "quality": {
+    "cross_entropy": 0.23278320705890657,
+    "accuracy": 0.9405,
+    "rows": 4000
+  },
+  "storage_bytes": 52733472,
+  "manifest_path": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/dense_recovery/87a292db34f39aecd52e274edc67e8faec7acca8592791f9f127316e8f3fefb6/artifact/manifest.json",
+  "recovery": {
+    "updates": 200,
+    "config": {
+      "updates": 200,
+      "batch_size": 128,
+      "learning_rate": 0.001,
+      "momentum": 0.9,
+      "weight_decay": 0.0005
+    },
+    "extra_bn_passes": 0,
+    "semantics": "fixed_float_SGD_before_PTQ; new optimizer; common M0 tape"
+  }
+}

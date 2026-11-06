@@ -1,0 +1,7 @@
+{
+  "automatic_retries": 0,
+  "ended_at": 21440233.8525482,
+  "gpu_provenance": "empty-device preflight + one CUDA-ready worker + one unchanged raw NVML PID; temporal correlation only, no authenticated host PID identity proof",
+  "host_pid_identity_proven": false,
+  "returncode": 1
+}

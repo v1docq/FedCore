@@ -1,0 +1,7 @@
+{
+  "artifact_directory": "/root/fedcore_heterogeneous_20261104/run-02/pilot/recipes/Q_only/4fb0722e39b1fd3a8a0ad1cfefe3b6195feb25cd54694fe61f7cc7c90bb987d9/artifact",
+  "batch_size": 128,
+  "gpu_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+  "rows": 2000,
+  "source_revision": "fd951a6b697a310bc7d7f2056f5b696aa5fff224"
+}

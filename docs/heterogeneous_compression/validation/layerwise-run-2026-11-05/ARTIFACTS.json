@@ -1,0 +1,152 @@
+{
+  "config.json": {
+    "bytes": 508,
+    "sha256": "39f04d70379085241610a9807cf6a919c1c488428d662a8df2bab17086282ea4",
+    "stored_in_Git": false
+  },
+  "console.log": {
+    "bytes": 958,
+    "sha256": "2141b337ea76ab9fbf0a34974c651d1349cf34b4a40e13bf8675f9676731224a",
+    "stored_in_Git": true
+  },
+  "container-events.jsonl": {
+    "bytes": 18307,
+    "sha256": "3bdf8eb5f4558bdf40cb232f238bee8b9e23e34ef96e884292a0145a88fd7fb3",
+    "stored_in_Git": true
+  },
+  "diagnostic-launch.json": {
+    "bytes": 2030,
+    "sha256": "c8b3248835576a875b8ab08288d61f0ee3b98ab328e8f65abd570de03d75e1f9",
+    "stored_in_Git": true
+  },
+  "diagnostic-receipt.json": {
+    "bytes": 132905,
+    "sha256": "8b5810325a6b0da099284800b91d6707c0308519251e0a0b2c634d2be237428c",
+    "stored_in_Git": true
+  },
+  "diagnostic-seal.json": {
+    "bytes": 129,
+    "sha256": "d60d3862b6fecc1d6f4cec61a4b7b94023c504c88db195008e0fe28b5711d26c",
+    "stored_in_Git": true
+  },
+  "diagnostic.json": {
+    "bytes": 352,
+    "sha256": "f8ac38aaefc4ee08bc990b8f2b572ed71a670178d1dc5e0cf290ff8e8c438847",
+    "stored_in_Git": true
+  },
+  "guard.json": {
+    "bytes": 672,
+    "sha256": "17f75d2c597af2478ce7520f931d9bf88abe1c5c7e1fa7c1a4bb33b7e67d1164",
+    "stored_in_Git": true
+  },
+  "instrumentation-controls.json": {
+    "bytes": 45016,
+    "sha256": "c9d7a49d872befaae6c529aba72a51d8110504736bd087ffffc8d1f0fb495f08",
+    "stored_in_Git": true
+  },
+  "instrumented-artifacts.json": {
+    "bytes": 688,
+    "sha256": "6e69326b1d36cb74f21a5f507e503ec680a4b1f2aeeea90812288eaa328743c3",
+    "stored_in_Git": true
+  },
+  "instrumented-engine-inspector.json": {
+    "bytes": 56333,
+    "sha256": "39fba339186822e079396ee206ed0217dc4b8b2e91679474d3ffdfa42323c752",
+    "stored_in_Git": true
+  },
+  "instrumented-ort-optimized.onnx": {
+    "bytes": 11783861,
+    "sha256": "c8eff2774a996f75f55b87c763bd04dd0b114a79cd4db7483bab0464aa22c696",
+    "stored_in_Git": false
+  },
+  "instrumented.engine": {
+    "bytes": 14118540,
+    "sha256": "6ea8675112ee63f272595b3be276d444d78fde3d5e9a9266f9f4bfd113318d2a",
+    "stored_in_Git": false
+  },
+  "instrumented.onnx": {
+    "bytes": 11780814,
+    "sha256": "8dce8d3b6c11b33928dac2b76477947c21f0e97c17916489acb95ddfda233b80",
+    "stored_in_Git": false
+  },
+  "layerwise-logits.jsonl": {
+    "bytes": 37820,
+    "sha256": "0579709d482b4aad3155c9ac59fb5090f973e6b40420faaf56e580e41e6697e9",
+    "stored_in_Git": true
+  },
+  "layerwise-plan.json": {
+    "bytes": 128766,
+    "sha256": "e82430dcd7f178c494159745dcffb760901f1f12648e325483744599c203dbeb",
+    "stored_in_Git": true
+  },
+  "layerwise-progress.jsonl": {
+    "bytes": 43037,
+    "sha256": "8442bf130cbe6ab6f24f8b3eb86c37b75297591c17c0b8591df13fad5e6c3ced",
+    "stored_in_Git": true
+  },
+  "original-controls.json": {
+    "bytes": 62503,
+    "sha256": "86d3efc5725cb6ec7015a048a5179457e4fa5220d0adaf9dc8a746a5abd3f9f7",
+    "stored_in_Git": true
+  },
+  "original-ort-optimized.onnx": {
+    "bytes": 11783131,
+    "sha256": "a0fb0fc1de07488a543f09c83b210d16bd3f48bc80255f22b7d91085a5155cbc",
+    "stored_in_Git": false
+  },
+  "os-boundary.json": {
+    "bytes": 2043,
+    "sha256": "3148d9ded39c004d0a1d4fd82506fa19b62d346e61cd001d454f1f748d287031",
+    "stored_in_Git": true
+  },
+  "quantization-parameters.json": {
+    "bytes": 219011,
+    "sha256": "ced9e65bc9d6b752f39bd693574409a5090b922d6a64b3e568ee37863014a9e0",
+    "stored_in_Git": true
+  },
+  "selected-inputs.json": {
+    "bytes": 2292,
+    "sha256": "44b5c042d5faea21565a68cd65960016cadc13da9d6ddbef45065ab285e95c01",
+    "stored_in_Git": true
+  },
+  "selected-inputs.npy": {
+    "bytes": 98432,
+    "sha256": "07bdc9e8dd513e0c521624bae5b8a1a9e222f35fa6e51d788c813060552e1124",
+    "stored_in_Git": true
+  },
+  "supervisor.json": {
+    "bytes": 284,
+    "sha256": "842ec26709779fe7fa6087d3c7227cdf32c7ebebd5513742cc6763d2ef2997b1",
+    "stored_in_Git": true
+  },
+  "tap-batch-0.npz": {
+    "bytes": 5003450,
+    "sha256": "8d0f12c3bbbd469e6ce90ec5086af657e78cf554d684a206734d30d0bd1229fb",
+    "stored_in_Git": false
+  },
+  "tap-batch-1.npz": {
+    "bytes": 14998010,
+    "sha256": "252846acd82b82b5906daf11ae0e541133a84576be2932b3fdd2c6e72dfd9083",
+    "stored_in_Git": false
+  },
+  "tap-summaries.jsonl": {
+    "bytes": 61893,
+    "sha256": "09a94588d9faf5fe9c891ab19eec050ce3b574f5b1528c328f1547ce92a96be0",
+    "stored_in_Git": true
+  },
+  "worker-go.json": {
+    "bytes": 285,
+    "sha256": "20db6c913544008ebad04ac93f28fd93013636bf4904147885a90735cc735065",
+    "stored_in_Git": false
+  },
+  "worker-ready.json": {
+    "bytes": 219,
+    "sha256": "a8f3b205067e459f57848e4cda8b65f17c1828a1b3f6c7a21f710ed0c0b8d8cf",
+    "stored_in_Git": false
+  },
+  "worker-start.json": {
+    "bytes": 96,
+    "sha256": "fe2d83b32c22b8480ebba8027d7f62da0e1d3df6778ca233ad9b904c45526c27",
+    "stored_in_Git": false
+  }
+}

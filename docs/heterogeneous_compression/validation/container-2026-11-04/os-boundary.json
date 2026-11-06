@@ -1,0 +1,75 @@
+{
+  "plan": {
+    "compiled_at": 21339834.646288477,
+    "config": {
+      "cleanup_seconds": 60.0,
+      "device": "cuda:0",
+      "gpu_seconds": 7200.0,
+      "gpu_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+      "max_peak_bytes": 8589934592,
+      "model_seed": 20261124,
+      "protocol": {
+        "batch_size": 128,
+        "calibration_rows": 2000,
+        "epochs": 80,
+        "fit_rows": 40000,
+        "recovery_updates": 200,
+        "report_rows": 4000,
+        "search_rows": 4000
+      },
+      "recipes": [
+        "dense_recovery",
+        "uniform_P",
+        "uniform_SVD",
+        "Q_only",
+        "uniform_P_SVD",
+        "uniform_P_Q",
+        "uniform_SVD_Q",
+        "uniform_P_SVD_Q",
+        "uniform_P_half",
+        "uniform_SVD_low",
+        "uniform_P_SVD_Q_half",
+        "mixed_eight_families"
+      ],
+      "source_revision": "952cf0b64c49ff5b362d8c966183aedfdd952055",
+      "split_seed": 20261102
+    },
+    "config_path": "/root/fedcore_heterogeneous_20261104/run-01/config.json",
+    "data_root": "/root/fedcore_sparse_cv_20261021/data",
+    "python": "/root/fedcore_heterogeneous_20261104/.venv/bin/python",
+    "run_directory": "/root/fedcore_heterogeneous_20261104/run-01",
+    "script": "/root/fedcore_heterogeneous_20261104/source/scripts/run_heterogeneous_container_pilot.py",
+    "started_at": 21339834.587741897,
+    "timeout_seconds": 7186.941,
+    "token": "d9c4e5c16606e20299ef99279f175a6f"
+  },
+  "schema": "fedcore-container-timeout-v1",
+  "timeout": {
+    "argv": [
+      "/usr/bin/timeout",
+      "--signal=KILL",
+      "7186.941s",
+      "/root/fedcore_heterogeneous_20261104/.venv/bin/python",
+      "-u",
+      "/root/fedcore_heterogeneous_20261104/source/scripts/run_heterogeneous_container_pilot.py",
+      "--mode",
+      "supervisor",
+      "--config",
+      "/root/fedcore_heterogeneous_20261104/run-01/config.json",
+      "--data-root",
+      "/root/fedcore_sparse_cv_20261021/data",
+      "--run-directory",
+      "/root/fedcore_heterogeneous_20261104/run-01",
+      "--started-at",
+      "21339834.587741897",
+      "--token",
+      "d9c4e5c16606e20299ef99279f175a6f"
+    ],
+    "birth_ticks": 2133983464,
+    "executable": "/usr/bin/timeout",
+    "pgid": 2639567,
+    "pid": 2639567,
+    "ppid": 2639556,
+    "session": 2639567
+  }
+}

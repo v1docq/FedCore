@@ -95,6 +95,11 @@ def describe_model(model):
     except ValueError as error:
         raise CheckpointError(str(error)) from error
     _validate_remapped_state(model,model.state_dict())
+    from fedcore.algorithm.quantization.checkpoint import validate_quantized_storage
+    try:
+        validate_quantized_storage(model)
+    except (ValueError,TypeError,KeyError) as error:
+        raise CheckpointError('Invalid private quantization storage') from error
     return _describe_model(model, {}, '')
 
 
@@ -260,6 +265,13 @@ def _describe_model(model, seen, path):
     if id(model) in seen:
         return {'type': 'ModuleAlias', 'target': seen[id(model)]}
     seen[id(model)] = path
+    from fedcore.algorithm.quantization.checkpoint import describe_quantized
+    try:
+        quantized_description = describe_quantized(model)
+    except (ValueError, TypeError, KeyError) as error:
+        raise CheckpointError('Invalid quantization graph representation') from error
+    if quantized_description is not None:
+        return quantized_description
     from fedcore.algorithm.pruning.sparse.cv_checkpoint import describe_cv
     try:
         cv_description = describe_cv(model)
@@ -421,6 +433,12 @@ def build_model(description):
 def _build_model(description, seen, path):
     if not isinstance(description, dict):
         raise CheckpointError('Architecture is missing: provide model= or model_factory=')
+    if not path:
+        from fedcore.algorithm.quantization.checkpoint import validate_descriptor_budget
+        try:
+            validate_descriptor_budget(description)
+        except (ValueError,TypeError,KeyError) as error:
+            raise CheckpointError('Invalid quantization allocation descriptor') from error
     if description.get('type') == 'ModuleAlias':
         if set(description) != {'type', 'target'} or description.get('target') not in seen:
             raise CheckpointError('Invalid or forward module alias reference')
@@ -439,6 +457,14 @@ def _build_model(description, seen, path):
     from fedcore.models.network_impl.decomposed_layers import DecomposableLayers
     decomposed = {cls.__name__: cls for cls in DecomposableLayers.values()}
     kind = description.get('type')
+    if kind == 'QuantizationGraph':
+        from fedcore.algorithm.quantization.checkpoint import build_quantized
+        try:
+            model = build_quantized(description)
+        except (ValueError, TypeError, KeyError) as error:
+            raise CheckpointError('Invalid quantization graph descriptor') from error
+        seen[path] = model
+        return model
     if kind == 'CVArchitecture':
         if path:
             raise CheckpointError('The CIFAR CV checkpoint profile requires an architecture root')
@@ -886,6 +912,11 @@ class CheckpointManager:
             raise CheckpointError(str(error)) from error
         _validate_remapped_state(candidate,candidate.state_dict())
         _validate_remapped_state(candidate,state)
+        from fedcore.algorithm.quantization.checkpoint import validate_quantized_storage
+        try:
+            validate_quantized_storage(candidate,state)
+        except (ValueError,TypeError,KeyError) as error:
+            raise CheckpointError('Invalid private quantization storage') from error
         buffer_ties = _validate_tied_buffers(candidate,state)
         try:
             topology = validate_tied_state(candidate, state)
@@ -900,6 +931,8 @@ class CheckpointManager:
         from fedcore.algorithm.pruning.sparse.cv_channels import validate_cv_state
         for path, layer in module_paths(candidate).items():
             try:
+                from fedcore.algorithm.quantization.checkpoint import validate_quantized_state
+                validate_quantized_state(layer, state, path + '.' if path else '')
                 validate_p5_state(layer, state, path + '.' if path else '')
                 validate_sparse_state(layer, state, path + '.' if path else '')
                 validate_cv_state(layer, state, path + '.' if path else '')

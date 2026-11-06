@@ -1,0 +1,64 @@
+{
+  "plan": {
+    "compiled_at": 21427371.281702295,
+    "config": {
+      "cleanup_seconds": 60.0,
+      "device": "cuda:0",
+      "gpu_seconds": 300.0,
+      "gpu_uuid": "GPU-c31a29dc-f57d-9ce4-0303-849ada1f7cb8",
+      "max_peak_bytes": 8589934592,
+      "model_seed": 20261124,
+      "protocol": {
+        "batch_size": 128,
+        "calibration_rows": 2000,
+        "epochs": 80,
+        "fit_rows": 40000,
+        "recovery_updates": 200,
+        "report_rows": 4000,
+        "search_rows": 4000
+      },
+      "recipes": [
+        "Q_only"
+      ],
+      "source_revision": "fd951a6b697a310bc7d7f2056f5b696aa5fff224",
+      "split_seed": 20261102
+    },
+    "config_path": "/root/fedcore_heterogeneous_20261104/diagnostic-01/config.json",
+    "data_root": "/root/fedcore_sparse_cv_20261021/data",
+    "python": "/root/fedcore_heterogeneous_20261104/.venv/bin/python",
+    "run_directory": "/root/fedcore_heterogeneous_20261104/diagnostic-01",
+    "script": "/root/fedcore_heterogeneous_20261104/source/scripts/run_heterogeneous_qonly_diagnostic.py",
+    "started_at": 21427371.173252273,
+    "timeout_seconds": 286.891,
+    "token": "ca905ad85176355e2687032943295566"
+  },
+  "schema": "fedcore-container-timeout-v1",
+  "timeout": {
+    "argv": [
+      "/usr/bin/timeout",
+      "--signal=KILL",
+      "286.891s",
+      "/root/fedcore_heterogeneous_20261104/.venv/bin/python",
+      "-u",
+      "/root/fedcore_heterogeneous_20261104/source/scripts/run_heterogeneous_qonly_diagnostic.py",
+      "--mode",
+      "supervisor",
+      "--config",
+      "/root/fedcore_heterogeneous_20261104/diagnostic-01/config.json",
+      "--data-root",
+      "/root/fedcore_sparse_cv_20261021/data",
+      "--run-directory",
+      "/root/fedcore_heterogeneous_20261104/diagnostic-01",
+      "--started-at",
+      "21427371.173252273",
+      "--token",
+      "ca905ad85176355e2687032943295566"
+    ],
+    "birth_ticks": 2142737128,
+    "executable": "/usr/bin/timeout",
+    "pgid": 2644432,
+    "pid": 2644432,
+    "ppid": 2644421,
+    "session": 2644432
+  }
+}

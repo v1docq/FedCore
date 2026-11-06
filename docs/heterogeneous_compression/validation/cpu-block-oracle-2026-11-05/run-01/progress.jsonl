@@ -1,0 +1,14 @@
+{"event": "literal_ORT_started", "at": 19895.312, "attempted": 1, "output_count": 13}
+{"event": "literal_ORT_completed", "at": 19895.343, "completed": 1}
+{"event": "integer_conv_started", "at": 19895.375, "variant": "exact_acc_unrounded_bias", "convolution": 1, "attempted": 1, "completed": 0}
+{"event": "integer_conv_completed", "at": 19895.546, "variant": "exact_acc_unrounded_bias", "convolution": 1, "attempted": 1, "completed": 1}
+{"event": "integer_conv_started", "at": 19895.562, "variant": "exact_acc_unrounded_bias", "convolution": 2, "attempted": 2, "completed": 1}
+{"event": "integer_conv_completed", "at": 19895.718, "variant": "exact_acc_unrounded_bias", "convolution": 2, "attempted": 2, "completed": 2}
+{"event": "integer_conv_started", "at": 19895.75, "variant": "exact_acc_int32_rounded_bias", "convolution": 1, "attempted": 3, "completed": 2}
+{"event": "integer_conv_completed", "at": 19895.89, "variant": "exact_acc_int32_rounded_bias", "convolution": 1, "attempted": 3, "completed": 3}
+{"event": "integer_conv_started", "at": 19895.921, "variant": "exact_acc_int32_rounded_bias", "convolution": 2, "attempted": 4, "completed": 3}
+{"event": "integer_conv_completed", "at": 19896.078, "variant": "exact_acc_int32_rounded_bias", "convolution": 2, "attempted": 4, "completed": 4}
+{"event": "integer_conv_started", "at": 19896.093, "variant": "remove_only_conv1_output_qdq", "convolution": 1, "attempted": 5, "completed": 4}
+{"event": "integer_conv_completed", "at": 19896.25, "variant": "remove_only_conv1_output_qdq", "convolution": 1, "attempted": 5, "completed": 5}
+{"event": "integer_conv_started", "at": 19896.265, "variant": "remove_only_conv1_output_qdq", "convolution": 2, "attempted": 6, "completed": 5}
+{"event": "integer_conv_completed", "at": 19896.421, "variant": "remove_only_conv1_output_qdq", "convolution": 2, "attempted": 6, "completed": 6}

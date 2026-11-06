@@ -1,0 +1,72 @@
+{
+  "schema": "heterogeneous-a100-pilot-preparation-v1",
+  "updated_at": "2026-11-03T13:37:45.166983+03:00",
+  "source_base": "0b062cb7b42afa2c6d93ff899be466326f097679",
+  "branch": "integration/heterogeneous-compression",
+  "implementation": "implemented",
+  "local_verification": "passed",
+  "hardware_acceptance": "pending",
+  "experiment_status": "not_started_network_unreachable",
+  "gpu_hours_spent": 0,
+  "completed_M0": 0,
+  "completed_recipes": 0,
+  "completed_searches": 0,
+  "budget": {
+    "gpu_seconds": 7200,
+    "models": 1,
+    "fixed_recipes": 12,
+    "baseline_sgd": 25040,
+    "recovery_sgd": 2400,
+    "max_sgd": 27440,
+    "searches": 0,
+    "automatic_retries": 0
+  },
+  "official_test_opened": false,
+  "Vreport_opened": false,
+  "tests": {
+    "final-tests.xml": {
+      "passed": 216,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "verifier-tests.xml": {
+      "passed": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "installed-tests.xml": {
+      "passed": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "source_unique_cases": 221,
+  "test_scope": "Local CPU and injected CUDA/systemd effects; installed checks repeat 23 cases. No A100/TensorRT execution. Source broad suite predates final plan recompile hardening; 13 verifier/independent cases rerun afterwards.",
+  "source_hashes": {
+    "fedcore/algorithm/heterogeneous/backend.py": "88ae6460a7753b409a718e16cb5d48544161ae2c8422a271de840138ab125cca",
+    "fedcore/experiments/cv_independent_guard.py": "a246ba8c69b6194cb5d9d3dd3ea4800f94bd07ad34ae41a359a0d0e4e11d3999",
+    "fedcore/experiments/heterogeneous_runtime.py": "f02b1f002d392b22e8034a7433597252001c0d8b03b1ded91949ba3ddd19d97d",
+    "fedcore/experiments/heterogeneous_pilot.py": "a29f08907de71c54993f0b1dc1ede9862274b6643b99459e6600aa7355672b85",
+    "fedcore/experiments/heterogeneous_pilot_guard.py": "ab0c2070ccfce8ee605db7058be26bf059b7e93150c0d907edbacee8aa15f5a2",
+    "scripts/run_heterogeneous_a100_pilot.py": "cb7c0c37304b6ebd7eb857909f663605e6ab35eedde34b05ca38c991605e4fd1",
+    "scripts/launch_heterogeneous_a100_pilot.py": "0eb7c41dab36eed2b2e759ef5f420518a6e4e41a1500737139058d2a9fa5beda",
+    "tests/refactoring/test_cv_independent_guard.py": "db5d7fa7ca28d106e3cb020d6459b83603de92c46400efcac6dabae39a5907d3",
+    "tests/refactoring/test_heterogeneous_pilot.py": "ae852e41b3c3c87d16ae77845e22dac5db84fce7d30683820acf9a4dd76262d7",
+    "tests/refactoring/test_heterogeneous_pilot_independent.py": "4830236ff261a6320dae8a917a2e25d6e5268f8d57aab8757964112b2aa468e5"
+  },
+  "wheel_sha256": "8c62f9b1a57ae34e170dc989e4b1b8cab28363f858ff1c03228fa4f478a18ba8",
+  "installed_source_check": {
+    "fedcore_path": "C:\\Users\\user\\Documents\\Codex\\FedCore-Heterogeneous-2026-11-02\\a100-pilot-2026-11-03\\installed-wheel\\fedcore\\__init__.py",
+    "source_hashes": {
+      "fedcore/experiments/heterogeneous_pilot.py": "a29f08907de71c54993f0b1dc1ede9862274b6643b99459e6600aa7355672b85",
+      "fedcore/experiments/heterogeneous_pilot_guard.py": "ab0c2070ccfce8ee605db7058be26bf059b7e93150c0d907edbacee8aa15f5a2",
+      "fedcore/experiments/heterogeneous_runtime.py": "f02b1f002d392b22e8034a7433597252001c0d8b03b1ded91949ba3ddd19d97d",
+      "fedcore/experiments/cv_independent_guard.py": "a246ba8c69b6194cb5d9d3dd3ea4800f94bd07ad34ae41a359a0d0e4e11d3999",
+      "fedcore/algorithm/heterogeneous/backend.py": "88ae6460a7753b409a718e16cb5d48544161ae2c8422a271de840138ab125cca"
+    }
+  },
+  "next_step": "Restore SSH, verify actual host/GPU/runtime and clean exact revision, then one authorized pilot; no 27-search panel yet."
+}

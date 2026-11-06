@@ -46,6 +46,12 @@ class ArtifactKind(str, Enum):
     APPROXIMATION = "low_rank_approximation"
     CHANNEL_SELECTION = "selected_structural_channels"
     REPLACEMENT = "operator_replacement"
+    WEIGHT_MATRIX = "operator_weight_out_in"
+    REAL_FACTORS = "real_factor_pair"
+    QUANTIZED_TENSOR = "packed_uniform_tensor"
+    QUANTIZED_FACTORS = "packed_factor_pair"
+    QUANTIZED_SUM = "quantized_sum_candidate"
+    TENDER_GROUPS = "tender_fixed_channel_groups"
 
 
 class Stage(str, Enum):

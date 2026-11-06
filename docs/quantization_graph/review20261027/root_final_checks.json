@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "scope": "Independent root public-boundary probes; mocked RSS, no large allocation",
+  "checks": {
+    "program_memory_limit_after_compression": true,
+    "backend_constant_budget": true,
+    "canonical_shared_region": true,
+    "noncanonical_shared_region": true
+  },
+  "inputs": [
+    "root_boundary_probes_fixed.py",
+    "root_alias_backend_probe_fixed.py"
+  ],
+  "results": [
+    {
+      "program_request_peak_limit": {
+        "returned": "ResourceFailure",
+        "declared_limit": 1073741824,
+        "final_rss": 2147483648
+      },
+      "backend_constant_allocation_budget": {
+        "returned": "rejected",
+        "error": "Quantization checkpoint declared allocation budget exceeded"
+      }
+    },
+    {
+      "0": {
+        "result": "ProgramArtifact",
+        "failure": null,
+        "quantized_operator_count": 1,
+        "operators": [
+          "RegisteredBackendLinear"
+        ]
+      },
+      "2": {
+        "result": "ProgramArtifact",
+        "failure": null,
+        "quantized_operator_count": 1,
+        "operators": [
+          "RegisteredBackendLinear"
+        ]
+      }
+    }
+  ]
+}

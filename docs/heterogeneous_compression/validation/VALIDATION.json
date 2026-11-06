@@ -1,0 +1,180 @@
+{
+  "schema": "heterogeneous-local-validation-v1",
+  "created_at": "2026-11-02T19:53:33+03:00",
+  "reviewed_merge": "7431c1c",
+  "parents": {
+    "svd": "8cfa54d2abdc1e56fc3dbbd457a06588fe4d6e52",
+    "quant": "56bda18662790981822490324748dcd1b33efb9b"
+  },
+  "tests": {
+    "new_components": {
+      "tests": 118,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 170.171,
+      "evidence": "final-all-heterogeneous.xml"
+    },
+    "integration_regression": {
+      "tests": 232,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 36.261,
+      "evidence": "integration-regression.xml"
+    },
+    "installed_wheel_outside_checkout": {
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 134.314,
+      "evidence": "installed-wheel-tests.xml"
+    }
+  },
+  "python": "3.10.0",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "runtime": {
+    "torch": "2.2.0+cpu",
+    "numpy": "1.26.4",
+    "onnx": "1.16.2",
+    "onnxruntime": "1.18.1"
+  },
+  "wheel": {
+    "file": "fedcore-0.0.5.4-py3-none-any.whl",
+    "sha256": "e5189b622b89494e69492d8e2d79e64f7e08b7ed49968efee291bd825d19431b",
+    "source_modules_match": true
+  },
+  "code_tree_sha256": "fe59943d8b8bc830cdd9683758a06a6a542954eea93d69628513eb146b83492a",
+  "sources": [
+    {
+      "path": "fedcore/algorithm/heterogeneous/__init__.py",
+      "sha256": "949a77559c3aab69d408f3089a7d50e9b93796d02d0a42873aa34964c66ab319"
+    },
+    {
+      "path": "fedcore/algorithm/heterogeneous/backend.py",
+      "sha256": "1de956c79bb052241b02682084d5884452fe6d968b640a490b7e1c882b0a1182"
+    },
+    {
+      "path": "fedcore/algorithm/heterogeneous/contracts.py",
+      "sha256": "751ea60e4242d8b2a717ee18f9b1af35223625e891ab71fe024c002062fbf83d"
+    },
+    {
+      "path": "fedcore/algorithm/heterogeneous/cv.py",
+      "sha256": "b021c18bf2ace6b93c68377bd25f56166f4b3d8b0c81d3623765ad12b5364b9c"
+    },
+    {
+      "path": "fedcore/algorithm/heterogeneous/policy.py",
+      "sha256": "92a7d11f6479e97c2c396ab1a351704eeaf0be66671767e78c1a041eb2c5676c"
+    },
+    {
+      "path": "fedcore/algorithm/heterogeneous/protocol.py",
+      "sha256": "2d381018b087feb8a592f6bae32fe7464fbd5a35edeb4190b3dd7d54e85c015c"
+    },
+    {
+      "path": "fedcore/algorithm/heterogeneous/search.py",
+      "sha256": "e4ef915272f5032f28121c4587ae6ae9bca88e6e89c698059a8c91b609d10a4b"
+    },
+    {
+      "path": "fedcore/algorithm/heterogeneous/selection.py",
+      "sha256": "b42f20f1db6d37e48a2b17c8085dd5c25e95b953e197b3027271a2eb85a86e3b"
+    },
+    {
+      "path": "fedcore/algorithm/low_rank/grammar_search.py",
+      "sha256": "3efc4112677d4b54abb0b81a4586140af8ba230837d5b679f105fdb07e379670"
+    },
+    {
+      "path": "fedcore/experiments/heterogeneous_data.py",
+      "sha256": "61a76061cc6350afb0f43f18bab4a741ef441d91443c6499d2e581e831509da3"
+    },
+    {
+      "path": "fedcore/experiments/heterogeneous_deadline.py",
+      "sha256": "fbeacae822619ab8fa11a2bcef6191bb4c5bfbb7b9b9bdb2a5c22bd26c448c17"
+    },
+    {
+      "path": "fedcore/experiments/heterogeneous_device.py",
+      "sha256": "4a22bbc3e5d931d3b933c5d603e462103d1907fd9cc3bdb2800cdf5c9d8bd581"
+    },
+    {
+      "path": "fedcore/experiments/heterogeneous_direct_host.py",
+      "sha256": "75a5efa79a61f1ab9cb3134cca432d619aff58bba5a5218018b91b8433faba32"
+    },
+    {
+      "path": "fedcore/experiments/heterogeneous_host.py",
+      "sha256": "0e0214b7ad54f75dbc78c08699b838234eab417b5ddc14ca6233ccc55c037a4a"
+    },
+    {
+      "path": "fedcore/experiments/heterogeneous_runtime.py",
+      "sha256": "38f1fb8ff1ac2fb3de51b5e9c4a04f1ce9a3c114ff63a7ec4504b15054b987cb"
+    },
+    {
+      "path": "fedcore/experiments/heterogeneous_series.py",
+      "sha256": "7e565ca0a08d8c3978abc9f99ce861b4f6af0ddc3ca6a0560d71f0e517957ccd"
+    },
+    {
+      "path": "scripts/plan_heterogeneous_cv.py",
+      "sha256": "9215561bbc3b2fc4a7886b918c6df13b1252386deb70fabb12c0dd7322d96bfc"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_contracts.py",
+      "sha256": "2d21612749570994a350beda9f628496f5c687f6558525d490942009a884016b"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_cv_backend.py",
+      "sha256": "13435556fcf17c1820e290c2557fa9a6d16c6056a90a42793a2159289a50783d"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_deadline.py",
+      "sha256": "b25a5585daf50eda47544517f726c63b45af408317a04a90ece62777d4d7d575"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_device.py",
+      "sha256": "417dccfcc7fe26d99032247fdd1149fa2dc9917948c73e4a104c5da38fbaa061"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_direct_host.py",
+      "sha256": "9f1d1ada93faa5d815fe0fb0947971473a36f42812b3171efd00076446002e4e"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_independent.py",
+      "sha256": "5dd28f41a1f1aed67ffacdf9f747d7aa31137774e87956a02918ed25ba70be48"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_runtime.py",
+      "sha256": "700bdab3aead37816ab7c2eea03011c9e24825c0acab4658ddcca0479c165722"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_search.py",
+      "sha256": "97e1274ab83f60ba49c448db13b2f8389d6c4d6e6b3feccaf946b5aab5e8ad97"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_selection.py",
+      "sha256": "fcecebea6709d55a14bf05e1d0fb6ca59a7621c59df6b3c773d061b9d60f479f"
+    },
+    {
+      "path": "tests/refactoring/test_heterogeneous_series.py",
+      "sha256": "fb3fa98afc83e34504184929380385619d4ef97eef174b002710b0e5d2720f60"
+    }
+  ],
+  "independent_review": "No open material findings in local P0-P4 scope; A100 admission remains unverified",
+  "gpu_experiments_launched": false,
+  "cluster_connections": false,
+  "official_test_opened": false,
+  "proposed_panel": {
+    "arms": [
+      "E0",
+      "E1",
+      "E2"
+    ],
+    "searches": 27,
+    "charged_attempts": 1728,
+    "max_sgd": 423720,
+    "max_latency_sessions": 204
+  },
+  "limitations": [
+    "TensorRT and CUDA Driver UUID queries not run on hardware",
+    "Real systemd/cgroup/host profile not admitted",
+    "Main GPU-hours and raw timing protocol require post-pilot approval"
+  ],
+  "followup": "Explicit floating kernel precision is rejected even if inspector storage hints are INT8; full new suite and installed-wheel subset repeated."
+}

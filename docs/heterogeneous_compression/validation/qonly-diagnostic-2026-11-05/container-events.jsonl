@@ -1,0 +1,84 @@
+{"at": 21427371.295061354, "event": "diagnostic_launched", "timeout_pid": 2644432, "max_seconds": 300, "actual_sgd_budget": 0, "gpu_provenance": "empty-device preflight + one CUDA-ready worker + one unchanged raw NVML PID; temporal correlation only, no authenticated host PID identity proof", "host_pid_identity_proven": false}
+{"at": 21427371.524169523, "event": "empty_gpu_preflight", "raw_rows": []}
+{"at": 21427371.609483853, "event": "gpu_sample", "raw_rows": [], "worker_ready": false}
+{"at": 21427371.92158491, "event": "gpu_sample", "raw_rows": [], "worker_ready": false}
+{"at": 21427372.244989, "event": "gpu_sample", "raw_rows": [], "worker_ready": false}
+{"at": 21427372.574850164, "event": "gpu_sample", "raw_rows": [], "worker_ready": false}
+{"at": 21427372.9275438, "event": "gpu_sample", "raw_rows": ["668018, 12"], "worker_ready": false}
+{"at": 21427373.277488265, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427373.6356046, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427373.99467565, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427374.343150754, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427374.67444691, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427375.02043084, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427375.371119335, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427375.72154524, "event": "gpu_sample", "raw_rows": ["668018, 414"], "worker_ready": true}
+{"at": 21427376.073907007, "event": "gpu_sample", "raw_rows": ["668018, 504"], "worker_ready": true}
+{"at": 21427376.395313736, "event": "gpu_sample", "raw_rows": ["668018, 504"], "worker_ready": true}
+{"at": 21427376.73603316, "event": "gpu_sample", "raw_rows": ["668018, 504"], "worker_ready": true}
+{"at": 21427377.08374264, "event": "gpu_sample", "raw_rows": ["668018, 504"], "worker_ready": true}
+{"at": 21427377.43589187, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427377.785422005, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427378.140445363, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427378.494713925, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427378.842249393, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427379.195584167, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427379.54864207, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427379.909692112, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427380.264189254, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427380.622789763, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427380.977492847, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427381.332592763, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427381.671115484, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427382.014342222, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427382.36853523, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427382.725378625, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427383.074157637, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427383.433211904, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427383.788255233, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427384.136543494, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427384.480937887, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427384.831294425, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427385.172197852, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427385.521386188, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427385.87501913, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427386.224923387, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427386.56308396, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427386.885602687, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427387.20709285, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427387.550817173, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427387.90854156, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427388.258995485, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427388.61313832, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427388.966682736, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427389.321674716, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427389.669890616, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427390.01559991, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427390.37378935, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427390.720423795, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427391.068568327, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427391.41358664, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427391.76929303, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427392.11522526, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427392.46889641, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427392.815720186, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427393.166436236, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427393.520540025, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427393.873440232, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427394.223913804, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427394.57008452, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427394.92619097, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427395.2803548, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427395.63282616, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427395.98561405, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427396.337632842, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427396.69334938, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427397.039140344, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427397.384651516, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427397.744403463, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427398.099125307, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427398.442644313, "event": "gpu_sample", "raw_rows": ["668018, 524"], "worker_ready": true}
+{"at": 21427398.78865668, "event": "gpu_sample", "raw_rows": ["668018, 436"], "worker_ready": true}
+{"at": 21427399.107217364, "event": "guard_stopped", "reason": "FileNotFoundError(2, 'No such file or directory')", "traceback": "Traceback (most recent call last):\n  File \"/root/fedcore_heterogeneous_20261104/source/fedcore/experiments/heterogeneous_container.py\", line 408, in run_guard\n    observed_identity = local_process(worker.pid)\n  File \"/root/fedcore_heterogeneous_20261104/source/fedcore/experiments/heterogeneous_container.py\", line 82, in local_process\n    executable = os.readlink(root / \"exe\")\nFileNotFoundError: [Errno 2] No such file or directory: '/proc/2644436/exe'\n"}
+{"at": 21427399.53331563, "event": "guard_cleanup_complete", "signals": [{"pid": 2644436, "birth": 1793871311.52, "result": "owned_kill_sent"}]}
+{"at": 21427399.92396864, "event": "supervisor_cleanup_complete", "signals": [{"pid": 2644436, "result": "already_exited"}, {"pid": 2644434, "result": "already_exited"}]}
