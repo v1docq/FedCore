@@ -50,7 +50,8 @@ class DiagnosticConfig:
     rows: int = 2000
     batch_size: int = 128
     gpu_uuid: str = GPU_UUID
-    profile: Literal["paired_logits_v1", "layerwise_v1"] = "paired_logits_v1"
+    profile: Literal["paired_logits_v1", "layerwise_v1", "placement_v1"] = "paired_logits_v1"
+    candidate_onnx: str | None = None
 
     def __post_init__(self):
         if (type(self.source_revision) is not str
@@ -59,21 +60,32 @@ class DiagnosticConfig:
                 or not (Path(self.artifact_directory).is_absolute() or self.artifact_directory.startswith("/"))
                 or any(c in self.artifact_directory for c in ("\0", "\n", "\r"))
                 or self.gpu_uuid != GPU_UUID
-                or self.profile not in ("paired_logits_v1", "layerwise_v1")
+                or self.profile not in ("paired_logits_v1", "layerwise_v1", "placement_v1")
                 or type(self.rows) is not int or not 2 <= self.rows <= 2000
                 or type(self.batch_size) is not int or not 1 <= self.batch_size <= 128
                 or self.profile == "layerwise_v1" and (self.rows != 8 or self.batch_size != 8)):
             raise ValueError("Exact saved Q-only device/revision, absolute artifact path and 2..2000 rows required")
+        if self.profile == "placement_v1":
+            if (self.rows != 2000 or self.batch_size != 128 or type(self.candidate_onnx) is not str
+                    or not (Path(self.candidate_onnx).is_absolute() or self.candidate_onnx.startswith("/"))
+                    or any(c in self.candidate_onnx for c in ("\0", "\n", "\r"))):
+                raise ValueError("Placement requires the fixed 2000 rows, batch 128 and an absolute candidate path")
+        elif self.candidate_onnx is not None:
+            raise ValueError("A candidate graph is only valid for the placement diagnostic")
 
     def control_config(self):
         # PilotConfig is only the existing boundary's transport contract. Its
         # training budget is unused; diagnostic.json records the actual zero
         # training/export/search budget of this fixed driver.
         return PilotConfig(self.gpu_uuid, self.source_revision,
-                           gpu_seconds=600. if self.profile == "layerwise_v1" else 300.,
+                           gpu_seconds=300. if self.profile == "paired_logits_v1" else 600.,
                            cleanup_seconds=60., recipes=("Q_only",))
 
     def actual_budget(self):
+        if self.profile == "placement_v1":
+            return dict(max_seconds=600, cleanup_seconds=60, unique_calibration_rows=2000,
+                        inference_row_visits_both_runtimes=8000, inference_calls=68,
+                        engine_builds=1, sgd=0, exports=0, searches=0, automatic_retries=0)
         if self.profile == "layerwise_v1":
             return dict(max_seconds=600, cleanup_seconds=60, unique_calibration_rows=8,
                         inference_row_visits_both_runtimes=72, inference_calls=28,
@@ -250,7 +262,7 @@ def _diagnostic_config(root, plan):
     return cfg, seal["sha256"]
 
 
-def _admit_worker(plan, cfg):
+def _admit_worker(plan, cfg, *, preflight=None):
     root = Path(plan.run_directory)
     control = cfg.control_config()
     container._protect_parent(container.local_process(os.getppid()))
@@ -260,11 +272,15 @@ def _admit_worker(plan, cfg):
     if json.loads(container._read(root / "worker-start.json")) != dict(
             token=plan.token, pid=identity.pid, birth_ticks=identity.birth_ticks):
         raise PilotError("Worker start gate names a different lifetime")
+    deadline = plan.started_at + control.gpu_seconds - control.cleanup_seconds
+    if preflight is not None:
+        preflight()
+    if time.monotonic() >= deadline:
+        raise TimeoutError("Original diagnostic deadline exhausted before CUDA binding")
     from .heterogeneous_device import require_cuda_binding
     binding = require_cuda_binding(cfg.gpu_uuid)
     container._publish(root / "worker-ready.json", dict(token=plan.token, pid=identity.pid,
         birth_ticks=identity.birth_ticks, gpu_uuid=cfg.gpu_uuid, actual_gpu_uuid=binding["actual_uuid"].lower()))
-    deadline = plan.started_at + control.gpu_seconds - control.cleanup_seconds
     handshake_end = min(deadline, time.monotonic() + container.HANDSHAKE_SECONDS)
     while not (root / "worker-go.json").is_file():
         if time.monotonic() >= handshake_end:
@@ -281,6 +297,11 @@ def _admit_worker(plan, cfg):
 def run_worker(plan):
     root = Path(plan.run_directory)
     cfg, config_sha = _diagnostic_config(root, plan)
+    if cfg.profile == "placement_v1":
+        from .heterogeneous_placement_admission import placement_snapshot, run_placement_worker
+        frozen = {}
+        binding, boundary, deadline = _admit_worker(plan, cfg, preflight=lambda: frozen.update(placement_snapshot(cfg)))
+        return run_placement_worker(plan, cfg, binding, boundary, deadline, config_sha, frozen)
     binding, boundary, deadline = _admit_worker(plan, cfg)
     if cfg.profile == "layerwise_v1":
         from .heterogeneous_layerwise_runtime import run_layerwise_worker
@@ -357,13 +378,22 @@ def launch(*, config_path, data_root, run_directory):
     if head != cfg.source_revision or dirty.strip():
         raise PilotError("Clean source checkout must match the frozen diagnostic revision")
     before = artifact_snapshot(cfg)
+    placement = None
+    if cfg.profile == "placement_v1":
+        from .heterogeneous_placement_admission import placement_snapshot
+        placement = placement_snapshot(cfg)
     data, root = Path(data_root).resolve(strict=True), Path(run_directory).resolve()
     artifact = Path(cfg.artifact_directory).resolve(strict=True)
     if not data.is_dir() or root == artifact or root in artifact.parents or artifact in root.parents:
         raise PilotError("Existing local CIFAR directory and separate fresh output directory required")
+    if placement is not None and root in Path(cfg.candidate_onnx).resolve().parents:
+        raise PilotError("The prepared candidate must be separate from the fresh launch directory")
     root.mkdir(parents=True, exist_ok=False)
     container._publish(root / "config.json", asdict(control))
-    container._publish(root / "diagnostic.json", asdict(cfg))
+    payload = asdict(cfg)
+    if cfg.candidate_onnx is None:
+        payload.pop("candidate_onnx")
+    container._publish(root / "diagnostic.json", payload)
     compiled_at = time.monotonic()
     duration = math.floor((hard_deadline - compiled_at - container.HARD_RESERVE_SECONDS
                            - container.LAUNCH_RESERVE_SECONDS) * 1000) / 1000
@@ -371,8 +401,11 @@ def launch(*, config_path, data_root, run_directory):
         str(Path(sys.executable).absolute()), str(cwd / "scripts" / SCRIPT), str(root / "config.json"),
         str(data), str(root), json.loads(json.dumps(asdict(control))))
     container._publish(root / "diagnostic-seal.json", dict(token=plan.token, sha256=_sha(root / "diagnostic.json")))
-    container._publish(root / "diagnostic-launch.json", dict(artifacts=before, actual_budget=cfg.actual_budget(),
-        diagnostic_config_sha256=_sha(root / "diagnostic.json")))
+    receipt = dict(artifacts=before, actual_budget=cfg.actual_budget(),
+                   diagnostic_config_sha256=_sha(root / "diagnostic.json"))
+    if placement is not None:
+        receipt["placement"] = placement
+    container._publish(root / "diagnostic-launch.json", receipt)
     environment = dict(os.environ, CUDA_VISIBLE_DEVICES=cfg.gpu_uuid,
         FEDCORE_PILOT_ABSOLUTE_DEADLINE=str(worker_deadline))
     with (root / "console.log").open("x", encoding="utf-8") as console:
@@ -419,5 +452,9 @@ def main(argv=None):
             or args.data_root != plan.data_root or args.run_directory != plan.run_directory
             or plan.script != str(Path(__file__).resolve().parents[2] / "scripts" / SCRIPT)):
         raise PilotError("Diagnostic child command differs from the fixed launch record")
-    _diagnostic_config(args.run_directory, plan)
+    cfg, _ = _diagnostic_config(args.run_directory, plan)
+    if args.mode == "guard" and cfg.profile == "placement_v1":
+        return container.run_guard(plan, require_terminal_handoff=True)
+    if args.mode == "supervisor" and cfg.profile == "placement_v1":
+        return container.run_supervisor(plan, require_clean_exit=True)
     return {"supervisor": container.run_supervisor, "guard": container.run_guard, "worker": run_worker}[args.mode](plan)

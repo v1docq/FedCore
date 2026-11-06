@@ -34,6 +34,7 @@ HARD_RESERVE_SECONDS = 10.
 LAUNCH_RESERVE_SECONDS = 3.
 HANDSHAKE_SECONDS = 60.
 POLL_SECONDS = .25
+TERMINAL_GRACE_SECONDS = 10.
 MAX_RSS_BYTES = 32 * 1024**3
 MAX_VRAM_MIB = 16 * 1024
 MIN_DISK_BYTES = 100 * 1024**3
@@ -318,9 +319,11 @@ def _spawn(plan, role):
 
 def _finish_owned(root, tree, child, *, name):
     """Never let timeout's direct child exit while a known/adopted child lives."""
+    intervention = False
     while True:
         try:
             signals = tree.kill()
+            intervention |= any(item["result"] != "already_exited" for item in signals)
             child.poll()
             # Reap children adopted after an intermediate guard dies.
             while True:
@@ -333,15 +336,16 @@ def _finish_owned(root, tree, child, *, name):
             _, live = tree.capture()
             if not live:
                 _event(root, name + "_cleanup_complete", signals=signals)
-                return
+                return intervention
         except Exception as error:
             # Keep timeout alive on uncertain cleanup rather than releasing
             # its kernel timer while descendants may remain.
             _event(root, name + "_cleanup_uncertain", error=repr(error))
+            intervention = True
         time.sleep(POLL_SECONDS)
 
 
-def run_supervisor(plan):
+def run_supervisor(plan, *, require_clean_exit=False):
     root, cfg = Path(plan.run_directory), _config(plan.config_path)
     _protect_parent(local_process(os.getppid()))
     wait_for_start_gate(root / "os-boundary.json", timeout=10.)
@@ -357,13 +361,52 @@ def run_supervisor(plan):
             time.sleep(POLL_SECONDS)
         result = guard.poll()
     finally:
-        _finish_owned(root, tree, guard, name="supervisor")
+        intervention = _finish_owned(root, tree, guard, name="supervisor")
+    if require_clean_exit:
+        from .heterogeneous_host import query_device_gpu_rows
+        try:
+            rows = query_device_gpu_rows(cfg.gpu_uuid)
+            _event(root, "supervisor_gpu_after_cleanup", raw_rows=rows, cleanup_intervention=intervention)
+            if rows or intervention:
+                result = 1
+        except Exception as error:
+            _event(root, "supervisor_final_telemetry_failed", error=repr(error))
+            result = 1
     _publish(root / "supervisor.json", dict(returncode=result, ended_at=time.monotonic(),
         host_pid_identity_proven=False, gpu_provenance=PROVENANCE, automatic_retries=0))
     return 0 if result == 0 else 1
 
 
-def run_guard(plan):
+def _wait_for_terminal_worker(root, plan, cfg, worker, identity, state, tree, deadline, query_rows,
+                              *, gpu_released=False):
+    """A terminal handoff permits GPU release while waiting for the captured child."""
+    terminal = json.loads(_read(root / "worker-terminal.json"))
+    if (not state.admitted or not (root / "diagnostic-receipt.json").is_file()
+            or terminal != dict(token=plan.token, pid=identity.pid, birth_ticks=identity.birth_ticks)):
+        raise PilotError("Terminal handoff does not match the admitted worker")
+    end = min(deadline, time.monotonic() + TERMINAL_GRACE_SECONDS)
+    while time.monotonic() < end:
+        rss, _ = tree.capture()
+        if rss > MAX_RSS_BYTES:
+            raise PilotError("Local RAM guard limit reached during worker teardown")
+        rows = query_rows(cfg.gpu_uuid)
+        _event(root, "terminal_gpu_sample", raw_rows=rows)
+        if rows:
+            if gpu_released:
+                raise PilotError("A raw GPU row reappeared during terminal teardown")
+            observe_gpu(rows, state, ready=True)
+        else:
+            gpu_released = True
+        returncode = worker.poll()
+        if returncode is not None and gpu_released:
+            if time.monotonic() >= end:
+                break
+            return returncode
+        time.sleep(min(POLL_SECONDS, max(0., end - time.monotonic())))
+    raise TimeoutError("Captured worker exit and GPU release were not confirmed within terminal grace")
+
+
+def run_guard(plan, *, require_terminal_handoff=False):
     from .heterogeneous_host import query_device_gpu_rows
     root, cfg = Path(plan.run_directory), _config(plan.config_path)
     _protect_parent(local_process(os.getppid()))
@@ -392,7 +435,15 @@ def run_guard(plan):
             rss, _ = tree.capture()
             if rss > MAX_RSS_BYTES or shutil.disk_usage(root).free < MIN_DISK_BYTES:
                 raise PilotError("Local RAM or free-disk guard limit reached")
-            if worker.poll() is not None:
+            returncode = worker.poll()
+            if require_terminal_handoff and (root / "worker-terminal.json").is_file():
+                result = _wait_for_terminal_worker(root, plan, cfg, worker, worker_identity,
+                    state, tree, deadline, query_device_gpu_rows)
+                reason = "worker_exited"
+                break
+            if returncode is not None:
+                if require_terminal_handoff and returncode == 0:
+                    raise PilotError("A zero worker exit needs a validated terminal handoff")
                 result, reason = worker.returncode, "worker_exited"
                 break
             if time.monotonic() >= deadline:
@@ -407,6 +458,13 @@ def run_guard(plan):
                 try:
                     observed_identity = local_process(worker.pid)
                 except (FileNotFoundError, ProcessLookupError) as missing_lifetime:
+                    if require_terminal_handoff:
+                        if not (root / "worker-terminal.json").is_file():
+                            raise
+                        result = _wait_for_terminal_worker(root, plan, cfg, worker, worker_identity,
+                            state, tree, deadline, query_device_gpu_rows)
+                        reason = "worker_exited"
+                        break
                     # The worker may exit after the poll above but before its
                     # procfs record is read. /proc/PID/exe may disappear before
                     # waitpid can reap that captured child. Allow one bounded
@@ -427,6 +485,11 @@ def run_guard(plan):
                     raise PilotError("CUDA-ready handshake does not match the sole worker lifetime")
             rows = query_device_gpu_rows(cfg.gpu_uuid)
             _event(root, "gpu_sample", raw_rows=rows, worker_ready=ready)
+            if require_terminal_handoff and not rows and (root / "worker-terminal.json").is_file():
+                result = _wait_for_terminal_worker(root, plan, cfg, worker, worker_identity,
+                    state, tree, deadline, query_device_gpu_rows, gpu_released=True)
+                reason = "worker_exited"
+                break
             state = observe_gpu(rows, state, ready=ready)
             if not state.admitted and time.monotonic() >= ready_deadline:
                 raise TimeoutError("CUDA-ready/raw-row handshake did not complete")
@@ -440,7 +503,15 @@ def run_guard(plan):
         _event(root, "guard_stopped", reason=reason, traceback=traceback.format_exc())
     finally:
         if worker is not None:
-            _finish_owned(root, tree, worker, name="guard")
+            intervention = _finish_owned(root, tree, worker, name="guard")
+            if require_terminal_handoff and result == 0:
+                try:
+                    rows = query_device_gpu_rows(cfg.gpu_uuid)
+                    _event(root, "guard_gpu_after_cleanup", raw_rows=rows, cleanup_intervention=intervention)
+                    if rows or intervention:
+                        reason = "terminal_cleanup_not_clean"
+                except Exception as error:
+                    reason = repr(error)
         _publish(root / "guard.json", dict(returncode=result, reason=reason, ended_at=time.monotonic(),
             correlation=asdict(state), host_pid_identity_proven=False, gpu_provenance=PROVENANCE,
             budget=cfg.budget(), automatic_retries=0, hard_kill_may_leave_partial_receipt=True))
