@@ -23,8 +23,10 @@ from fedcore.algorithm.low_rank.cv_execution import _calibration
 from fedcore.algorithm.low_rank.grammar_execution import StructuralInvalid, NumericalFailure, ResourceFailure
 from fedcore.algorithm.low_rank.plans import Violation
 from fedcore.algorithm.pruning.sparse.cv_channels import BLOCK_PATHS, validate_cv_model
-from .contracts import fingerprint
-from .cv import validate_workflow
+from .contracts import BackendContractError, PTQPlacement, fingerprint
+from .cv import HeterogeneousWorkflow, validate_workflow
+from .qdq_placement import (LEGACY_SCHEMA, PLACEMENT_SCHEMA, bind_placement_evidence, plan_output_placement,
+                            remove_output_pairs, verify_placement_evidence)
 
 
 @dataclass(frozen=True)
@@ -52,12 +54,6 @@ class BackendSpec:
                 or any(type(v) not in (float, int) or not np.isfinite(v) or v < 0
                        for v in (self.float_rtol, self.float_atol, self.backend_rtol, self.backend_atol))):
             raise ValueError("Explicit bounded backend profile and finite export tolerances required")
-
-
-class BackendContractError(ValueError):
-    def __init__(self, code, message):
-        self.code = code
-        super().__init__(message)
 
 
 @dataclass(frozen=True)
@@ -120,8 +116,11 @@ def deployment_size(manifest_path):
 
 
 def _check_manifest(path, manifest):
-    if (type(manifest) is not dict or manifest.get("schema") != "heterogeneous_deployment_v1"
-            or manifest.get("backend") not in ("onnxruntime", "tensorrt")):
+    if (type(manifest) is not dict or manifest.get("schema") not in (LEGACY_SCHEMA, PLACEMENT_SCHEMA)
+            or manifest.get("backend") not in ("onnxruntime", "tensorrt")
+            or (manifest["schema"] == PLACEMENT_SCHEMA and manifest["backend"] != "onnxruntime")
+            or (manifest["schema"] == LEGACY_SCHEMA
+                and {"ptq_placement", "ptq_placement_fingerprint"}.intersection(manifest))):
         raise BackendContractError("InvalidManifest", "Unknown self-contained deployment schema")
     primary = "model.onnx" if manifest["backend"] == "onnxruntime" else "model.engine"
     required = [primary, "manifest.json"]
@@ -273,6 +272,26 @@ def _check_recovered(model, calibration, workflow):
             raise BackendContractError("RepresentationMismatch", "Recovered shape/rank differs from checked CV workflow")
 
 
+def _workflow_placement(workflow):
+    if type(workflow) is not HeterogeneousWorkflow:
+        return None
+    targets = tuple(path for step in workflow.deferred_ptq if step.ptq_placement is not None
+                    for path in step.ptq_placement.omit_output_qdq)
+    return PTQPlacement(targets) if targets else None
+
+
+def validate_placement_backend(workflow, spec):
+    """Admit the explicit placement variant only to its verified runtime."""
+    if spec.runtime == "onnxruntime":
+        return
+    failure = validate_workflow(workflow)
+    if failure is not None:
+        raise BackendContractError("UncheckedWorkflow", str(failure))
+    if _workflow_placement(workflow) is not None:
+        raise BackendContractError("UnsupportedPTQPlacementBackend",
+                                   "Explicit PTQ placement requires CPU ONNX Runtime")
+
+
 def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSpec(), recovery_evidence=None):
     """Export the actual recovered candidate; training remains caller-owned.
 
@@ -283,6 +302,7 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
     try:
         if type(spec) is not BackendSpec:
             raise BackendContractError("InvalidBackend", "A typed backend profile is required")
+        validate_placement_backend(workflow, spec)
         cuda_binding = None
         if spec.runtime == 'tensorrt':
             from fedcore.experiments.heterogeneous_device import require_cuda_binding
@@ -294,6 +314,7 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
         calibration_source = calibration
         calibration = calibration.detach().clone(memory_format=torch.contiguous_format)
         _check_recovered(model, calibration, workflow)
+        placement = _workflow_placement(workflow)
         calibration_identity = workflow.space.structural_space.calibration.fingerprint
         import onnx
         import onnxruntime as ort
@@ -320,11 +341,19 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
             graph = onnx.load(str(float_path))
             onnx.checker.check_model(graph)
             selected = _conv_nodes(graph, selected_paths)
+            if placement is not None:
+                boundaries = plan_output_placement(graph, selected, placement)
+                expected_biases = {}
+                for path in selected:
+                    bias = folded.get_submodule(path).bias
+                    expected_biases[path] = None if bias is None else bias.detach().numpy().tobytes()
+                folded_fp32_sha = _sha(float_path)
             session = _ort_session(float_path)
             actual = session.run(None, {"images": probe.numpy()})[0]
             if not np.allclose(reference, actual, rtol=spec.float_rtol, atol=spec.float_atol):
                 raise BackendContractError("FloatExportMismatch", "BN-folded float ONNX differs from the recovered model")
             model_path = output / "model.onnx"
+            calibrated_path = model_path if placement is None else Path(temporary) / "standard_qdq.onnx"
             if selected:
                 from onnxruntime.quantization import CalibrationDataReader, QuantFormat, QuantType, quantize_static
                 class Reader(CalibrationDataReader):
@@ -336,7 +365,7 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
                         start = self.index
                         self.index += min(spec.calibration_batch_size, spec.max_batch_size)
                         return {"images": calibration[start:self.index].contiguous().numpy()}
-                quantize_static(str(float_path), str(model_path), Reader(), quant_format=QuantFormat.QDQ,
+                quantize_static(str(float_path), str(calibrated_path), Reader(), quant_format=QuantFormat.QDQ,
                                 activation_type=QuantType.QInt8, weight_type=QuantType.QInt8,
                                 per_channel=True, nodes_to_quantize=list(selected.values()), op_types_to_quantize=["Conv"],
                                 extra_options={"ActivationSymmetric": True, "WeightSymmetric": True,
@@ -344,17 +373,19 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
                                                "QuantizeBias": False})
             else:
                 model_path.write_bytes(float_path.read_bytes())
-        graph = onnx.load(str(model_path), load_external_data=False)
+            graph = onnx.load(str(calibrated_path), load_external_data=False)
+            if placement is not None:
+                standard_qdq_sha = _sha(calibrated_path)
         storage_guard(0, peak)
         if any(t.data_location == onnx.TensorProto.EXTERNAL for t in graph.graph.initializer):
             raise BackendContractError("ExternalWeights", "First deployment profile requires self-contained ONNX")
-        onnx.checker.check_model(graph)
+        if placement is None:
+            onnx.checker.check_model(graph)
+        else:
+            _check_placement_graph(graph)
+            receipts = remove_output_pairs(graph, boundaries)
         coverage = inspect_qdq(graph, selected.values())
-        loaded = _ort_session(model_path)
-        qoutput = loaded.run(None, {"images": probe.numpy()})[0]
-        if qoutput.shape != reference.shape or not np.isfinite(qoutput).all():
-            raise BackendContractError("OutputContract", "Independent Q/DQ session must produce finite classifier outputs")
-        manifest = {"schema": "heterogeneous_deployment_v1", "backend": spec.runtime,
+        manifest = {"schema": LEGACY_SCHEMA, "backend": spec.runtime,
                     "cuda_binding": cuda_binding,
                     "backend_spec": asdict(spec), "workflow_fingerprint": workflow.fingerprint,
                     "source_M0": workflow.space.structural_space.source.fingerprint,
@@ -366,10 +397,20 @@ def export_onnx_qdq(model, calibration, workflow, destination, *, spec=BackendSp
                     "qdq_verified_nodes": list(coverage), "stem_head_downsample_policy": "float32",
                     "conv_bias_policy": "float32_no_INT32_dequantize",
                     "float_export_max_abs_error": float(np.max(np.abs(reference - actual))),
-                    "quantized_probe_max_abs_error": float(np.max(np.abs(reference - qoutput))),
                     "float_tensor_bytes": inventory_cost(source_inventory, "bytes"),
                     "recovery": recovery_evidence, "versions": {"torch": str(torch.__version__), "onnx": onnx.__version__, "onnxruntime": ort.__version__},
                     "hardware_validation": "CPU_ONNX_Runtime_only"}
+        if placement is not None:
+            bind_placement_evidence(graph, manifest, placement, receipts,
+                                    folded_fp32_sha=folded_fp32_sha, standard_qdq_sha=standard_qdq_sha,
+                                    calibration_rows=calibration.shape[0])
+            onnx.save(graph, str(model_path))
+            _load_onnx_graph(model_path, manifest, expected_biases=expected_biases)
+        loaded = _ort_session(model_path)
+        qoutput = loaded.run(None, {"images": probe.numpy()})[0]
+        if qoutput.shape != reference.shape or not np.isfinite(qoutput).all():
+            raise BackendContractError("OutputContract", "Independent Q/DQ session must produce finite classifier outputs")
+        manifest["quantized_probe_max_abs_error"] = float(np.max(np.abs(reference - qoutput)))
         primary = model_path
         if spec.runtime == "tensorrt":
             primary, details = _compile_tensorrt(model_path, output, spec, tuple(selected.values()))
@@ -559,15 +600,49 @@ class TensorRTDeployment:
         return y
 
 
+def _check_placement_graph(graph):
+    import onnx
+
+    if graph.functions or graph.training_info or graph.graph.sparse_initializer:
+        raise BackendContractError("UnsupportedPTQBoundary", "PTQ placement requires a flat ONNX inference graph")
+    tensors = list(graph.graph.initializer)
+    for node in graph.graph.node:
+        for attribute in node.attribute:
+            if attribute.type in (onnx.AttributeProto.GRAPH, onnx.AttributeProto.GRAPHS,
+                                   onnx.AttributeProto.SPARSE_TENSOR, onnx.AttributeProto.SPARSE_TENSORS):
+                raise BackendContractError("UnsupportedPTQBoundary", "PTQ placement requires flat dense ONNX operations")
+            if attribute.HasField("t"):
+                tensors.append(attribute.t)
+            tensors.extend(attribute.tensors)
+    if any(tensor.data_location == onnx.TensorProto.EXTERNAL or tensor.external_data for tensor in tensors):
+        raise BackendContractError("ExternalWeights", "PTQ placement requires self-contained ONNX")
+    try:
+        onnx.checker.check_model(graph)
+    except onnx.checker.ValidationError as error:
+        raise BackendContractError("InvalidPTQPlacementGraph", str(error)) from error
+
+
+def _load_onnx_graph(path, manifest, *, expected_biases=None):
+    import onnx
+
+    graph = onnx.load(str(path), load_external_data=False)
+    placement = manifest["schema"] == PLACEMENT_SCHEMA
+    if placement:
+        _check_placement_graph(graph)
+    verify_placement_evidence(graph, manifest, expected_biases=expected_biases)
+    selected = manifest["selected_conv_nodes"]
+    coverage = [selected[path] for path in manifest["selected_conv_paths"]] if placement else list(selected.values())
+    if manifest.get("qdq_verified_nodes") != coverage:
+        raise BackendContractError("InvalidCoverage", "Manifest must preserve complete selected Conv coverage")
+    inspect_qdq(graph, coverage)
+
+
 def load_deployment(manifest_path):
     path = Path(manifest_path).resolve()
     manifest = json.loads(path.read_text(encoding="utf-8"))
     _check_manifest(path, manifest)
     if manifest["backend"] == "onnxruntime":
-        import onnx
-        graph = onnx.load(str(path.parent / "model.onnx"), load_external_data=False)
-        if manifest["qdq_verified_nodes"] != list(manifest["selected_conv_nodes"].values()):
-            raise BackendContractError("InvalidCoverage", "Manifest must preserve complete selected Conv coverage")
-        inspect_qdq(graph, manifest["qdq_verified_nodes"])
-        return OnnxRuntimeDeployment(path.parent / "model.onnx", manifest)
+        model_path = path.parent / "model.onnx"
+        _load_onnx_graph(model_path, manifest)
+        return OnnxRuntimeDeployment(model_path, manifest)
     return TensorRTDeployment(path.parent / "model.engine", manifest)

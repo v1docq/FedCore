@@ -188,10 +188,12 @@ class CandidateEvaluator:
 
     def __call__(self, workflow):
         from fedcore.algorithm.heterogeneous.cv import execute_float_workflow
-        from fedcore.algorithm.heterogeneous.backend import export_onnx_qdq, DeploymentArtifact
+        from fedcore.algorithm.heterogeneous.backend import (
+            BackendContractError, DeploymentArtifact, export_onnx_qdq, validate_placement_backend)
         from fedcore.algorithm.low_rank.cv_execution import CVWorkflowSuccess
         from fedcore.algorithm.low_rank.grammar_search import GrammarFitness
-        from fedcore.algorithm.low_rank.grammar_execution import ResourceFailure, NumericalFailure
+        from fedcore.algorithm.low_rank.grammar_execution import ResourceFailure, NumericalFailure, StructuralInvalid
+        from fedcore.algorithm.low_rank.plans import Violation
         if (type(self.validation_identity) is not str or not self.validation_identity
                 or type(self.validation_rows) is not int or self.validation_rows < 1
                 or type(self.synchronize_updates) is not bool):
@@ -202,6 +204,12 @@ class CandidateEvaluator:
                                self.validation_rows,self.validation_identity)
         status, details = 'failed', {}
         try:
+            try:
+                validate_placement_backend(workflow, self.backend_spec)
+            except BackendContractError as error:
+                failure = StructuralInvalid((Violation(error.code, 'heterogeneous.export', str(error)),))
+                details['failure'] = asdict(failure)
+                return failure
             if self.backend_spec.runtime == 'tensorrt':
                 from .heterogeneous_device import require_cuda_binding
                 if self.device not in ('cuda','cuda:0'):

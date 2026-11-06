@@ -74,6 +74,40 @@ def test_cuda_resident_entry_rejects_cpu_input_without_touching_cuda():
         runtime.infer_device(torch.zeros(1,3,32,32))
 
 
+def test_candidate_rejects_cpu_only_ptq_placement_before_cuda_or_recovery(tmp_path, monkeypatch):
+    from fedcore.algorithm.heterogeneous import (
+        BlockRecipe, HeterogeneousGene, HeterogeneousGenotype, PTQPlacement, compile_genotype, prepare_space)
+    from fedcore.algorithm.heterogeneous.backend import BackendSpec
+    from fedcore.algorithm.low_rank.grammar_execution import StructuralInvalid
+    from fedcore.algorithm.pruning.sparse.cv_channels import CifarResNet18
+    from fedcore.experiments import heterogeneous_device, heterogeneous_runtime
+
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(2)
+        source = CifarResNet18().eval()
+        calibration = torch.randn(1, 3, 32, 32)
+    path = 'layer1.0'
+    recipe = BlockRecipe(ptq=True, ptq_placement=PTQPlacement(omit_output_qdq=(path + '.conv1',)))
+    space = prepare_space(source, calibration, alternatives={path: (recipe,)})
+    workflow = compile_genotype(HeterogeneousGenotype((HeterogeneousGene(path, recipe),)), space)
+
+    def unexpected(*args, **kwargs):
+        pytest.fail('unsupported placement reached CUDA or recovery')
+
+    monkeypatch.setattr(heterogeneous_device, 'require_cuda_binding', unexpected)
+    monkeypatch.setattr(heterogeneous_runtime, 'recover_owned', unexpected)
+    evaluator = heterogeneous_runtime.CandidateEvaluator(
+        source, calibration, (), unexpected, unexpected, tmp_path, time.perf_counter() + 30,
+        BackendSpec(runtime='tensorrt'), 'heldout-source', device='cuda:0')
+    result = evaluator(workflow)
+    assert type(result) is StructuralInvalid
+    assert 'ONNX Runtime' in result.violations[0].message
+    receipt = json.loads((tmp_path / workflow.fingerprint / 'receipt.json').read_text())
+    assert receipt['status'] == 'failed'
+    assert receipt['sgd_attempted'] == receipt['sgd_completed'] == 0
+    assert receipt['failure']['violations'][0]['code'] == result.violations[0].code
+
+
 def test_gpu_telemetry_is_scoped_to_the_explicit_uuid(monkeypatch):
     from fedcore.experiments import heterogeneous_host as host
     calls = []

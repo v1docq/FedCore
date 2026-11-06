@@ -5,7 +5,7 @@ stale M0, or turns procedure branches into parallel model execution.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 import random
 from fedcore.algorithm.low_rank.compression_graph import RuntimeOptions
 from fedcore.algorithm.low_rank.cv_grammar import (
@@ -15,7 +15,7 @@ from fedcore.algorithm.low_rank.cv_execution import prepare_cv_grammar_space, ex
 from fedcore.algorithm.low_rank.plans import ValidationFailure, Violation, _metadata_only
 from fedcore.algorithm.pruning.sparse.cv_channels import BLOCK_INPUTS, BLOCK_OUTPUTS, BLOCK_PATHS
 from .contracts import (Dependency, JoinApplyReplacements, Operation, ParallelDisjoint,
-                        Representation, Scope, Sequence, Step, TensorRepresentation, fingerprint, payload)
+                        PTQPlacement, Representation, Scope, Sequence, Step, TensorRepresentation, fingerprint, payload)
 
 
 def _failure(code, message):
@@ -27,11 +27,14 @@ class BlockRecipe:
     keep_channels: int | None = None
     rank: int | None = None
     ptq: bool = False
+    ptq_placement: PTQPlacement | None = field(default=None, metadata={"omit_none": True})
 
     def __post_init__(self):
         if (type(self.ptq) is not bool or any(v is not None and (type(v) is not int or v < 1)
                                               for v in (self.keep_channels, self.rank))):
             raise ValueError("Explicit positive channel/rank choices and Boolean PTQ required")
+        if self.ptq_placement is not None and (not self.ptq or type(self.ptq_placement) is not PTQPlacement):
+            raise ValueError("Explicit placement requires an enabled PTQ step and a typed policy")
 
     @property
     def structural(self):
@@ -130,6 +133,11 @@ def validate_space(space):
                 or len(set(domain.alternatives)) != len(domain.alternatives)
                 or any(type(c) is not BlockRecipe or c.structural not in base.alternatives for c in domain.alternatives)):
             return _failure("InvalidDomain", "Closed distinct G1 alternatives required")
+        allowed_targets = {domain.path + ".conv1", domain.path + ".conv2"}
+        for recipe in domain.alternatives:
+            if recipe.ptq_placement is not None and not allowed_targets.issuperset(
+                    recipe.ptq_placement.omit_output_qdq):
+                return _failure("InvalidPTQPlacement", "Every target must belong to its PTQ block")
     return None
 
 
@@ -165,10 +173,15 @@ def genotype_from_payload(value, space):
         for item in value["genes"]:
             if (type(item) is not dict or set(item) != {"aliases", "recipe"}
                     or type(item["aliases"]) is not list or len(item["aliases"]) != 1
-                    or type(item["aliases"][0]) is not str or type(item["recipe"]) is not dict
-                    or set(item["recipe"]) != {"keep_channels", "rank", "ptq"}):
+                    or type(item["aliases"][0]) is not str or type(item["recipe"]) is not dict):
                 raise ValueError("Malformed complete scope")
-            genes.append(HeterogeneousGene(item["aliases"][0], BlockRecipe(**item["recipe"])))
+            recipe = item["recipe"].copy()
+            placement = None
+            if "ptq_placement" in recipe:
+                placement = PTQPlacement.from_payload(recipe.pop("ptq_placement"))
+            if set(recipe) != {"keep_channels", "rank", "ptq"}:
+                raise ValueError("Malformed complete recipe")
+            genes.append(HeterogeneousGene(item["aliases"][0], BlockRecipe(**recipe, ptq_placement=placement)))
         return normalize_genotype(HeterogeneousGenotype(tuple(genes)), space)
     except (ValueError, TypeError, KeyError):
         return _failure("InvalidGenotypePayload", "Exact tagged G1 payload required")
@@ -228,7 +241,7 @@ def compile_genotype(genotype, space):
             # fingerprint by export_onnx_qdq, never used as a calibration-cache key.
             current = Dependency(source, calibration, previous.channel_coordinates, "current_student",
                                  "deferred_recovered_candidate:" + identity)
-            deferred.append(Step(Operation.PTQ, previous, target, current))
+            deferred.append(Step(Operation.PTQ, previous, target, current, gene.recipe.ptq_placement))
             regions.append(gene.path)
         branches.append(Scope(gene.path, Sequence(tuple(steps)), source, (gene.path,), (gene.path,),
                               (BLOCK_INPUTS[index], outgoing)))

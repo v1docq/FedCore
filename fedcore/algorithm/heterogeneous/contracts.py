@@ -1,10 +1,11 @@
 """Immutable contracts for the closed CV compression procedure (not a neural DAG)."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from enum import Enum
 import hashlib
 import json
+import re
 
 
 class Representation(str, Enum):
@@ -24,7 +25,12 @@ def payload(value):
     if isinstance(value, Enum):
         return value.value
     if is_dataclass(value):
-        return {key: payload(item) for key, item in asdict(value).items()}
+        result = {}
+        for descriptor in fields(value):
+            item = getattr(value, descriptor.name)
+            if item is not None or not descriptor.metadata.get("omit_none"):
+                result[descriptor.name] = payload(item)
+        return result
     if type(value) in (tuple, list):
         return [payload(item) for item in value]
     if type(value) is dict:
@@ -35,6 +41,34 @@ def payload(value):
 def fingerprint(value):
     return hashlib.sha256(json.dumps(payload(value), sort_keys=True, allow_nan=False,
                                      separators=(",", ":")).encode()).hexdigest()
+
+
+@dataclass(frozen=True)
+class PTQPlacement:
+    """Omit output Q/DQ at explicitly named logical residual convolutions."""
+
+    omit_output_qdq: tuple[str, ...]
+
+    def __post_init__(self):
+        paths = self.omit_output_qdq
+        if (type(paths) is not tuple or not paths
+                or any(type(path) is not str or not re.fullmatch(r"layer[1-4]\.[01]\.conv[12]", path)
+                       for path in paths)
+                or paths != tuple(sorted(set(paths)))):
+            raise ValueError("Use a nonempty sorted tuple of distinct logical Conv module paths")
+
+    @classmethod
+    def from_payload(cls, value):
+        if (type(value) is not dict or set(value) != {"omit_output_qdq"}
+                or type(value["omit_output_qdq"]) is not list):
+            raise ValueError("Exact PTQ placement payload required")
+        return cls(tuple(value["omit_output_qdq"]))
+
+
+class BackendContractError(ValueError):
+    def __init__(self, code, message):
+        self.code = code
+        super().__init__(message)
 
 
 @dataclass(frozen=True)
@@ -95,11 +129,15 @@ class Step:
     incoming: TensorRepresentation
     outgoing: TensorRepresentation
     dependency: Dependency
+    ptq_placement: PTQPlacement | None = field(default=None, metadata={"omit_none": True})
 
     def __post_init__(self):
         if (type(self.operation) is not Operation or type(self.incoming) is not TensorRepresentation
                 or type(self.outgoing) is not TensorRepresentation or type(self.dependency) is not Dependency):
             raise ValueError("Exact typed operation, tensor boundaries and dependencies required")
+        if self.ptq_placement is not None and (self.operation is not Operation.PTQ
+                                               or type(self.ptq_placement) is not PTQPlacement):
+            raise ValueError("An explicit placement policy applies only to PTQ")
         a, b = self.incoming, self.outgoing
         if self.operation is Operation.PRUNE:
             if (a.kind is not Representation.DENSE or b.kind is not Representation.COMPACT
