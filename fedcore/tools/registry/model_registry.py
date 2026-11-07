@@ -191,6 +191,15 @@ class ModelRegistry:
                 self.update_metrics(fedcore_id, model_id, last_gen_metrics)
                 self.logger.info("Saved optimization metrics from evaluator to registry")
 
+    def get_metrics_change_by_params(self, params) -> list:
+        """Return metric improvements associated with the given search-space parameters.
+
+        Used by the RL search-space agent (fedcore.tools.search_space_manager)
+        to compute rewards. Stub implementation: returns a neutral improvement
+        of 0.0, so the optional agent does not affect the optimization process.
+        """
+        return [0.0]
+
     def get_latest_record(self, fedcore_id: str, model_id: str) -> Optional[dict]:
         return self.storage.get_latest_record(fedcore_id, model_id)
 

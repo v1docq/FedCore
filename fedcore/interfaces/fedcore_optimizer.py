@@ -41,11 +41,21 @@ class FedcoreEvoOptimizer(EvoGraphOptimizer):
         self.evaluated_population = []
         self.requirements = requirements
         self.initial_graphs = initial_graphs
+        self.space_manager = self._init_space_manager()
         self.eval_dispatcher = FedcoreDispatcher(
             adapter=graph_generation_params.adapter,
             n_jobs=requirements.n_jobs,
             graph_cleanup_fn=_try_unfit_graph,
             delegate_evaluator=graph_generation_params.remote_evaluator)
+
+    def _init_space_manager(self):
+        """Create RL search-space manager (optional, does not affect optimization logic)."""
+        try:
+            from fedcore.tools.search_space_manager import SearchSpaceManager
+
+            return SearchSpaceManager()
+        except Exception:
+            return None
 
     def _init_industrial_optimizer_params(self, graph_optimizer_params, optimisation_params):
         self.mutation_agent_dict = {'random': RandomAgent,
