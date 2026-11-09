@@ -135,12 +135,15 @@ class PerformanceEvaluator:
                 self.model = model.model  # Model container
             else:
                 self.model = model
+            # Quantized (fbgemm/qnnpack) models are CPU-only
+            if getattr(self.model, '_is_quantized', False):
+                self.device = torch.device('cpu')
             if self.device is None:
                 self.device = extract_device(self.model)
             else:
                 self.model.to(self.device)
             self.model.eval()  # Set to evaluation mode
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize model: {e}")
             raise
@@ -346,6 +349,20 @@ class PerformanceEvaluator:
             times.append(end_time - start_time)
         return [len(batch) / t for t in times]  # samples per second
 
+    def _state_dict_size_mb(self) -> float:
+        """Model footprint (params + buffers) in MB.
+
+        Quantized models keep their weights as plain tensors or packed
+        params, so neither ``parameters()`` nor torchinfo see them; the
+        state dict covers both cases.
+        """
+        total_bytes = sum(
+            t.numel() * t.element_size()
+            for t in self.model.state_dict().values()
+            if torch.is_tensor(t)
+        )
+        return total_bytes / self.BYTES_TO_MB
+
     def measure_model_size(self, device=None) -> Tuple[float, float]:
         """Measure model size in MB
         device is for compatibility, not used"""
@@ -353,12 +370,16 @@ class PerformanceEvaluator:
         try:
             model_summary = summary(self.model, verbose=0)
             size_mb = model_summary.total_param_bytes / self.BYTES_TO_MB
+            if size_mb == 0 and self._state_dict_size_mb() > 0:
+                # e.g. FX-quantized models: weights are not nn.Parameters,
+                # so torchinfo reports zero bytes
+                size_mb = self._state_dict_size_mb()
             return round(size_mb, 3), 0.0  # std is 0 for deterministic measurement
         except Exception as e:
             logger.warning(f"Model size measurement failed: {e}")
-            # Fallback: calculate size manually
-            total_params = sum(p.numel() for p in self.model.parameters())
-            size_mb = (total_params * 4) / self.BYTES_TO_MB  # Assume float32
+            # Fallback: count both parameters and buffers (covers quantized
+            # models whose weights are stored as plain tensors / packed params)
+            size_mb = self._state_dict_size_mb()
             return round(size_mb, 3), 0.0
 
     @torch.no_grad()

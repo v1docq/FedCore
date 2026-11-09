@@ -115,6 +115,11 @@ def _problem_based_output_convertor(problem):
                 if isinstance(predict, CompressionOutputData):
                     predict = predict.predict
                 assert isinstance(target, torch.Tensor) and isinstance(predict, torch.Tensor), f'Current types are: {type(target)} and {type(predict)}'
+                # normalize one-hot / probability targets to class indices
+                if (problem == 'classification'
+                        and target.dtype.is_floating_point
+                        and target.shape == predict.shape):
+                    target = target.argmax(dim=-1)
             try: 
                 return metric(cls, target, predict, **metric_kw)
             except (ValueError):
@@ -234,9 +239,12 @@ class MetricFactory:
                 reference_data = reference_data.train_dataloader
             assert isinstance(reference_data, torch.utils.data.DataLoader), f'{type(reference_data)}'
             pe = PerformanceEvaluator(pipeline, data=reference_data, model_regime=model_regime)
-            metric = getattr(pe, method_name)(
-                device=torch.device('cpu') if is_cpu or not torch.cuda.is_available() else torch.device('cuda')
-            )
+            # quantized (fbgemm/qnnpack) models run on CPU only
+            if getattr(pe.model, '_is_quantized', False):
+                device = torch.device('cpu')
+            else:
+                device = torch.device('cpu') if is_cpu or not torch.cuda.is_available() else torch.device('cuda')
+            metric = getattr(pe, method_name)(device=device)
             if isinstance(metric, tuple):
                 return float(metric[0])
             return float(metric)

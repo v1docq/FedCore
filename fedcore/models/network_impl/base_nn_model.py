@@ -149,8 +149,7 @@ class BaseNeuralModel(torch.nn.Module, BaseTrainer):
 
 
     def __substitute_device_quant(self):
-        return
-        if not getattr(self.model, '_is_quantized', False):
+        if getattr(self.model, '_is_quantized', False):
             self.device = default_device('cpu')
             self.model.to(self.device)
             logging.info('Quantized model inference supports CPU only')

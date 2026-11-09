@@ -691,17 +691,15 @@ class QuantizationTemplate(TrainingTemplate):
     Attributes
     ----------
     quant_type : str
-        Quantization mode, one of :class:`QuantMode` values.
+        Quantization mode: ``"dynamic"`` (default), ``"static"`` or
+        ``"qat"`` (quantization-aware training).
     allow_emb : bool
         Whether embedding layers can be quantized.
     allow_conv : bool
         Whether convolution layers can be quantized.
-    quant_each : int
-        Apply quantization hook every N epochs. ``-1`` disables periodic
-        quantization. For QAT this usually marks the final conversion epoch.
-    prepare_qat_after_epoch : int
-        Epoch number at which quantization-aware training should be prepared
-        via ``prepare_qat``. Must be less than ``quant_each`` for QAT.
+    qat_params : TrainingTemplate
+        Fine-tuning settings (``epochs``, ``optimizer``, ``criterion``,
+        ``lr``) used for quantization-aware training.
     """
 
     """Example of specific node template"""

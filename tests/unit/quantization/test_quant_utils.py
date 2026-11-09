@@ -4,15 +4,15 @@ import torch.nn as nn
 from copy import deepcopy
 from torch.utils.data import DataLoader, TensorDataset
 
-from fedcore.algorithm.quantization.hooks import (
-    DynamicQuantizationHook, StaticQuantizationHook, QATHook
-)
 from fedcore.algorithm.quantization.utils import (
     uninplace, get_flattened_qconfig_dict,
     QDQWrapper, QDQWrapping
 )
 from fedcore.models.network_impl.base_nn_model import BaseNeuralModel
 from fedcore.algorithm.low_rank.reassembly.core_reassemblers import ParentalReassembler
+from fedcore.algorithm.quantization.quantizers import BaseQuantizer
+from fedcore.data.data import CompressionInputData
+from fedot.core.repository.tasks import Task, TaskTypesEnum
 
 
 def test_uninplace_recursively():
@@ -75,44 +75,84 @@ def test_add_quant_entry_exit_inserts_wrappers():
     assert output.dtype == torch.float32
     assert torch.isfinite(output).all()
 
-@pytest.fixture
 def simple_dl():
     x = torch.randn(10, 3, 8, 8)
-    y = torch.randint(0,2,(10,))
-    return DataLoader(TensorDataset(x,y), batch_size=5)
-
-def test_dynamic_quant_hook_does_not_crash(simple_dl):
-    hook = DynamicQuantizationHook(1, torch.qint8, set(), -1, "fbgemm")
-    hook.model = nn.Linear(3*8*8,2)
-    assert hook.trigger(1, dict())
-    hook.action(1, {})
-
-def test_static_quant_hook_runs_validation(simple_dl):
-    dummy = type('ID', (), {})()
-    dummy.features = type('F', (), {})()
-    dummy.features.val_dataloader = simple_dl
-    hook = StaticQuantizationHook(1, torch.qint8, set(), -1, "fbgemm")
-    hookable_trainer = BaseNeuralModel(nn.Conv2d(3,3,3), {}, [])
-    hook.link_to_trainer(hookable_trainer)
-    assert hook.trigger(1, {})
-    hook.action(1, {"val_loader": simple_dl})
+    y = torch.randint(0, 2, (10,))
+    return DataLoader(TensorDataset(x, y), batch_size=5)
 
 
-def test_qat_hook_train_loop(simple_dl):
-    dummy = type('ID', (), {})()
-    dummy.features = type('F', (), {})()
-    dummy.features.train_dataloader = simple_dl
-    params = {
-        'input_data': dummy,
-        'epochs':1,
-        'optimizer': torch.optim.SGD,
-        'criterion': nn.CrossEntropyLoss(),
-        'lr': 0.01,
-        'device': torch.device('cpu')
-    }
-    hook = QATHook(-1, torch.qint8, set(), 1, "fbgemm")
-    hookable_trainer = BaseNeuralModel(nn.Sequential(nn.Flatten(), nn.Linear(3*8*8,2)), {"epoch": 20}, [hook])
-    hook.link_to_trainer(hookable_trainer)
-    #hookable_trainer.fit(dummy) TODO correct test with BaseQuantizer
-    assert hook.trigger(1, {})
-    hook.action(1, {})
+def _state_dict_size_mb(model):
+    return sum(
+        t.numel() * t.element_size()
+        for t in model.state_dict().values()
+        if torch.is_tensor(t)
+    ) / (1 << 20)
+
+
+def _cifar_like_resnet(num_classes=10):
+    from torchvision.models import resnet18
+    model = resnet18(weights=None)
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    model.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+    model.maxpool = nn.Identity()
+    return model.eval()
+
+
+def _compression_input_data(model, dataloader):
+    example_input = next(iter(dataloader))[0]
+    return CompressionInputData(
+        features=example_input,
+        model=model,
+        train_dataloader=dataloader,
+        val_dataloader=dataloader,
+        test_dataloader=dataloader,
+        task=Task(TaskTypesEnum.classification),
+        input_dim=example_input.size(-1),
+    )
+
+
+@pytest.mark.parametrize('quant_type', ['dynamic', 'static', 'qat'])
+def test_base_quantizer_fit_predict(quant_type):
+    """BaseQuantizer quantizes a CIFAR-like ResNet18 as a pipeline node."""
+    torch.manual_seed(0)
+    model = _cifar_like_resnet()
+    dataloader = simple_dl()
+    input_data = _compression_input_data(model, dataloader)
+
+    quantizer = BaseQuantizer({'quant_type': quant_type,
+                               'allow_emb': False,
+                               'allow_conv': True,
+                               'qat_params': {'epochs': 1}})
+    quant_model = quantizer.fit(input_data)
+
+    assert quant_model is not None
+    assert getattr(quant_model, '_is_quantized', False)
+    # the original model must stay untouched and float
+    assert not getattr(model, '_is_quantized', False)
+    assert all(p.dtype == torch.float32 for p in model.parameters())
+    # quantized models are CPU-only and keep the output shape
+    with torch.no_grad():
+        out = quant_model(next(iter(dataloader))[0])
+    assert out.shape == (5, 10)
+
+    if quant_type in ('static', 'qat'):
+        # weights are quantized to int8 -> ~4x smaller footprint
+        assert _state_dict_size_mb(quant_model) < 0.5 * _state_dict_size_mb(model)
+
+    prediction = quantizer.predict(input_data, output_mode='fedcore')
+    assert prediction is not None
+    original_prediction = quantizer.predict(input_data, output_mode='original')
+    assert original_prediction is not None
+
+
+def test_base_quantizer_dynamic_only_quantizes_allowed_modules():
+    """allow_conv/allow_emb flags restrict the quantized module set."""
+    torch.manual_seed(0)
+    model = _cifar_like_resnet()
+    dataloader = simple_dl()
+    input_data = _compression_input_data(model, dataloader)
+
+    quantizer = BaseQuantizer({'quant_type': 'dynamic', 'allow_conv': True})
+    quant_model = quantizer.fit(input_data)
+    # dynamic quantization covers Linear layers but not convolutions
+    assert isinstance(quant_model.fc, nn.quantized.dynamic.Linear)

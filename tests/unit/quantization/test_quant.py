@@ -12,8 +12,7 @@ from fedcore.api.api_configs import (
     LearningConfigTemplate, 
     ModelArchitectureConfigTemplate, 
     TrainingTemplate,
-    QuantMode, 
-    QuantTemplate
+    QuantizationTemplate,
     )
 from fedcore.algorithm.quantization.quantizers import BaseQuantizer
 from fedcore.api.config_factory import ConfigFactory
@@ -65,11 +64,9 @@ def get_api_template(quant_type: str):
 
     automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
     
-    peft_config = QuantTemplate(quant_type=quant_type,
+    peft_config = QuantizationTemplate(quant_type=quant_type,
                                 allow_emb=False,
                                 allow_conv=True,
-                                prepare_qat_after_epoch=6,
-                                quant_each=-1,
                                 epochs=10
                                 )
     
@@ -111,7 +108,7 @@ def get_reduction(model_before, model_after):
     params_after = sum(p.numel() for p in model_after.parameters() if p.requires_grad)
     return params_after / params_before
 
-@pytest.mark.parametrize('quant_type', [QuantMode.DYNAMIC.value, QuantMode.STATIC.value, QuantMode.QAT.value])
+@pytest.mark.parametrize('quant_type', ["dynamic", "static", "qat"])
 def test_quantizers(quant_type):
     api = get_api_template(quant_type=quant_type)
     APIConfig = ConfigFactory.from_template(api)
@@ -123,14 +120,18 @@ def test_quantizers(quant_type):
     input_data.train_dataloader = train_dataloader
     input_data.val_dataloader = val_dataloader
     data_cls = DataCheck(
-        peft_task=PEFT_PROBLEM,
         model=api_config.automl_config.fedot_config['initial_assumption'],
         learning_params=api_config.learning_config.learning_strategy_params
     )
     train_data = Either.insert(input_data).then(deepcopy).then(data_cls.check_input_data).value
 
     quant_params = api_config.learning_config.peft_strategy_params
-    quantizer = BaseQuantizer(quant_params.to_dict())
+    if isinstance(quant_params, (list, tuple)):
+        quant_params = quant_params[0]
+    if isinstance(quant_params, tuple):
+        # template call result: (TemplateClass, kwargs_dict)
+        quant_params = quant_params[1]
+    quantizer = BaseQuantizer(dict(quant_params))
 
     quant_model = quantizer.fit(input_data=train_data)
     assert quant_model is not None
