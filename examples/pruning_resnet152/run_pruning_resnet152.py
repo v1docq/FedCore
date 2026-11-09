@@ -7,26 +7,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from fedcore.api.config_factory import ConfigFactory
-from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
-                                     LearningConfigTemplate, ModelArchitectureConfigTemplate,
-                                     TrainingTemplate, PruningTemplate)
-from fedcore.architecture.dataset.api_loader import ApiLoader
+from fedcore.api.presets import CompressionPreset, get_preset
 from fedcore.data.dataloader import load_data
-from fedcore.tools.example_utils import get_scenario_for_api
 from fedcore.api.main import FedCore
 from torchvision import models
-
-##########################################################################
-### DEFINE ML PROBLEM (classification, object_detection, regression,   ###
-### ts_forecasting), PEFT problem (pruning, quantisation, distillation,###
-### low_rank) and appropriate loss function both for model and compute ###
-##########################################################################
-
-METRIC_TO_OPTIMISE = ['MulticlassAccuracy__10', 'Latency', 
-                       'ModelSize']
-LOSS = 'cross_entropy'
-PROBLEM = 'classification'
 
 pretrained_resnet152 = models.resnet152(weights=models.ResNet152_Weights.DEFAULT)
 pretrained_resnet152.fc = torch.nn.Linear(2048, 10) 
@@ -48,40 +32,6 @@ def load_benchmark_dataset(dataset_name, train_dataloader_params, test_dataloade
     return fedcore_train_data, fedcore_test_data
 
 
-################################################################################
-### CREATE SCENARIO FOR FEDCORE AGENT (TRAIN AND OPTIMISE MODEL FROM SCRATCH ###
-### or optimise pretrained model with PEFT strategies                        ###
-################################################################################
-
-fedot_config = FedotConfigTemplate(problem='classification',
-                                   metric=METRIC_TO_OPTIMISE,
-                                   pop_size=1,
-                                   timeout=1,
-                                   initial_assumption=INITIAL_ASSUMPTION)
-
-automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
-
-finetune_config = TrainingTemplate(epochs=3,
-                                            log_each=3,
-                                            eval_each=3,
-                                            )
-
-
-peft_config = PruningTemplate(importance="magnitude",
-                              prune_each=5,
-                              epochs=9,
-                              save_each=0,
-                              eval_each=5,
-                              pruning_ratio=0.4,
-                              )
-
-learning_config = LearningConfigTemplate(criterion='cross_entropy',
-                                         learning_strategy='from_checkpoint',
-                                         peft_strategy_params=[peft_config])
-
-api_template = APIConfigTemplate(automl_config=automl_config,
-                                 learning_config=learning_config)
-
 if __name__ == "__main__":
     import argparse
 
@@ -90,13 +40,12 @@ if __name__ == "__main__":
                         help='Check training, pruning and reporting on a small CIFAR-10 subset.')
     args = parser.parse_args()
     if args.smoke:
-        peft_config[1].update(epochs=1, prune_each=1, eval_each=1)
-        fedot_config[1].update(timeout=0.001, n_jobs=1)
         train_dataloader_params.update(subset=0.002, batch_size=16, num_workers=0)
         test_dataloader_params.update(subset=0.0064, batch_size=16, num_workers=0)
 
-    APIConfig = ConfigFactory.from_template(api_template)
-    api_config = APIConfig()
+    api_config = get_preset(CompressionPreset.PRUNING,
+                            initial_assumption=INITIAL_ASSUMPTION,
+                            smoke=args.smoke)
     fedcore_compressor = FedCore(api_config)
     fedcore_train_data, fedcore_test_data = load_benchmark_dataset('CIFAR10', train_dataloader_params,
                                                                    test_dataloader_params)

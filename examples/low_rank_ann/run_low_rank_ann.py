@@ -14,13 +14,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from fedcore.api.config_factory import ConfigFactory
-from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
-                                     LearningConfigTemplate,
-                                       ModelArchitectureConfigTemplate,
-                                     TrainingTemplate,
-                                       DeviceConfigTemplate, ComputeConfigTemplate,
-                                     LowRankTemplate)
+from fedcore.api.presets import CompressionPreset, get_preset
 # from fedcore.architecture.dataset.api_loader import ApiLoader
 # from fedcore.data.dataloader import load_data
 from datasets import load_dataset
@@ -252,50 +246,11 @@ def main():
     )
 
     ################################################################################
-    ### CONFIGURE FEDCORE WITH LLMTrainer AND LOW_RANK PEFT ###
+    ### COMPRESS WITH THE BUILT-IN LOW_RANK PRESET ###
     ################################################################################
 
-    peft_config = LowRankTemplate(
-        strategy='explained_variance',
-        rank_prune_each=1,
-        custom_criterions=None,
-        non_adaptive_threshold=0.7,
-        epochs=10,
-        log_each=1,
-        eval_each=1,
-        decomposer='svd',
-        rank=None,
-        distortion_factor=0.6,
-        random_init='normal',
-        power=3,
-    )
-
-    fedot_config = FedotConfigTemplate(
-        problem='classification',
-        metric= [
-            'BinaryAccuracy',
-                  'Latency',
-                  'ModelSize'
-                  ],
-        pop_size=1,
-        timeout=0.1,
-        initial_assumption=model
-    )
-
-    device_config = DeviceConfigTemplate(device='cuda' if torch.cuda.is_available() else 'cpu')
-
-    automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
-
-
-    learning_config = LearningConfigTemplate(criterion='cross_entropy',
-                                             learning_strategy='from_checkpoint',
-                                             peft_strategy_params=[peft_config])
-
-    api_template = APIConfigTemplate(automl_config=automl_config,
-                                     learning_config=learning_config)
-
-    APIConfig = ConfigFactory.from_template(api_template)
-    api_config = APIConfig()
+    api_config = get_preset(CompressionPreset.LOW_RANK,
+                            initial_assumption=model)
     fedcore_compressor = FedCore(api_config)
     fedcore_compressor.fit(compression_data)
     model_comparison = fedcore_compressor.get_report(compression_data)

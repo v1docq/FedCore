@@ -1,15 +1,9 @@
 from __future__ import annotations
 
 import argparse
-import copy
-import csv
-import json
-import logging
 import random
-import statistics
 import sys
-import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -17,7 +11,6 @@ MODEL_EXPORTER_DIR = REPO_ROOT / "model_exporter"
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(MODEL_EXPORTER_DIR))
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from fedot.core.repository.tasks import Task, TaskTypesEnum
@@ -26,19 +19,9 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 from torchvision.models import resnet18
 
-from fedcore.algorithm.quantization.quantizers import BaseQuantizer
-from fedcore.algorithm.quantization.utils import QDQWrapper, QDQWrapping
 from fedcore.data.data import CompressionInputData
-from fedcore.models.backbone.convolutional.resnet import CLF_MODELS
 
-from fedcore.api.config_factory import ConfigFactory
-from fedcore.api.api_configs import (APIConfigTemplate, AutoMLConfigTemplate, FedotConfigTemplate,
-                                     LearningConfigTemplate,
-                                       ModelArchitectureConfigTemplate,
-                                     TrainingTemplate, 
-                                       DeviceConfigTemplate, ComputeConfigTemplate,
-                                     QuantizationTemplate)
-
+from fedcore.api.presets import CompressionPreset, get_preset
 from fedcore.api.main import FedCore
 
 
@@ -156,6 +139,40 @@ def parse_args() -> Config:
 
 
 
+def train_model(model: nn.Module, data: Cifar10Data, config: Config) -> None:
+    """Обучение ResNet18 на CIFAR-10 перед квантизацией.
+
+    Целевые метки one-hot, поэтому используется cross_entropy с вероятностными
+    метками (поддерживается nn.CrossEntropyLoss).
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
+    criterion = nn.CrossEntropyLoss()
+
+    for epoch in range(config.epochs):
+        model.train()
+        running_loss, correct, total = 0.0, 0, 0
+        for inputs, targets in data.train:
+            inputs, targets = inputs.to(device), targets.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+            correct += (outputs.argmax(1) == targets.argmax(1)).sum().item()
+            total += targets.size(0)
+        print(
+            f"epoch {epoch + 1}/{config.epochs} "
+            f"loss={running_loss / len(data.train):.4f} "
+            f"train_acc={correct / total:.4f}"
+        )
+    model.eval()
+
+
+
+
 def main() -> None:
     """Последовательность: обучение → static PTQ → сравнение метрик."""
 
@@ -185,6 +202,9 @@ def main() -> None:
     model.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
     model.maxpool = nn.Identity()  # Remove maxpool to keep dimensions
 
+    if config.epochs > 0:
+        train_model(model, data, config)
+
     example_batch = next(iter(data.train))
     example_input = example_batch[0]  
     compression_data = CompressionInputData(
@@ -197,39 +217,13 @@ def main() -> None:
         input_dim=example_input.size(-1),
     )
 
-    fedot_config = FedotConfigTemplate(
-        problem='classification',
-        metric= [
-            'MulticlassAccuracy__10',
-                'Latency', 
-                'ModelSize'
-                ],
-        pop_size=1,
-        timeout=0.1,
-        initial_assumption=model
-    )
-
-    peft_config = QuantizationTemplate(quant_type='static', # 'static', 'dynamic', 'qat'
-                                allow_emb=False,
-                                allow_conv=True,
-                                    )
-
-    automl_config = AutoMLConfigTemplate(fedot_config=fedot_config)
-
-    learning_config = LearningConfigTemplate(criterion='cross_entropy',
-                                            learning_strategy='from_checkpoint',                                          
-                                            peft_strategy_params=[peft_config])
-
-    api_template = APIConfigTemplate(automl_config=automl_config,
-                                    learning_config=learning_config)
-    
-    APIConfig = ConfigFactory.from_template(api_template)
-    api_config = APIConfig()
+    api_config = get_preset(CompressionPreset.QUANTIZATION,
+                            initial_assumption=model)
     fedcore_compressor = FedCore(api_config)
     fedcore_compressor.fit(compression_data)
     model_comparison = fedcore_compressor.get_report(compression_data)
     print(model_comparison)
-    save_path = (REPO_ROOT / 'results' / 'quantization_resnet18/')
+    save_path = config.output_dir
     save_path.mkdir(parents=True, exist_ok=True)
     model_comparison.to_csv(save_path / 'metrics.csv')
 
